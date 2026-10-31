@@ -1,7 +1,6 @@
 //! 🧱️ Foundation of the semio artifact family: the vocabulary, codec primitives and editor plumbing every subset shares.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
@@ -129,6 +128,15 @@ macro_rules! semio_native_default {
     )+};
 }
 
+/// 🧷️ A snapshot whose binary pack is its derived record document: the sqlite native codecs read and write that document
+/// body directly under their caller-owned allocation control.
+pub trait SemioRecordPack: Sized {
+    /// 📤️ Encodes the record document body that sits inside the semio pack envelope, charging the caller's encode control.
+    fn record_binary(&self, control: &mut semio_framework_value::native_encoding::NativeEncodeControl<'_>) -> Result<Vec<u8>, semio_framework_value::ValueError>;
+    /// 📥️ Receives the record document body into its typed owner under the caller's decode control and database limits.
+    fn from_record_binary(body: &[u8], control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, limits: store::sqlite_snapshot::SqliteDatabaseLimits) -> Result<Self, semio_framework_value::ValueError>;
+}
+
 /// 📦️ Implements one subset snapshot's binary pack as its derived record document inside the semio pack envelope, so a
 /// member opens by receiving that record natively; the crate that owns the snapshot invokes it.
 #[macro_export]
@@ -152,6 +160,18 @@ macro_rules! semio_snapshot_record_pack {
 
             fn record_spec() -> Option<::semio_framework_dsl_record::RecordSpec> {
                 Some(Self::__dsl_spec())
+            }
+        }
+
+        impl $crate::SemioRecordPack for $snapshot {
+            fn record_binary(&self, control: &mut ::semio_framework_value::native_encoding::NativeEncodeControl<'_>) -> Result<Vec<u8>, ::semio_framework_value::ValueError> {
+                ::semio_framework_os_kernel::os_pack::pack_rt::encode_document_controlled(&Self::__dsl_spec(), &self.__dsl_to_record(), &::semio_framework_os_kernel::os_store::PackEncodeOptions::default(), control).map_err(|error| error.into_value_error())
+            }
+
+            fn from_record_binary(body: &[u8], control: &mut ::semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, limits: ::semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits) -> Result<Self, ::semio_framework_value::ValueError> {
+                let (record, _report) = ::semio_framework_os_kernel::os_pack::pack_rt::decode_document_controlled(body, &Self::__dsl_spec(), &$crate::io::sqlite::snapshot::native_decoding::record_decode_options(limits), control).map_err(|error| error.into_value_error())?;
+                $crate::io::sqlite::snapshot::native_decoding::admit_record_rows(&record, control, limits)?;
+                Self::__dsl_from_record_controlled(&record, control)
             }
         }
     };

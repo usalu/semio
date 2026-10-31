@@ -38,7 +38,7 @@ fn canonical_store_original_native_source_preserves_semantic_paged_identity_hash
 struct BoolFactory;
 impl semio_framework_value::ArtifactOwnedValueRetirementFactory<bool> for BoolFactory{
  fn retirement_birth_bytes(&self,_:&bool)->usize{semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<bool>()}
- fn retire_owned(&self,original:bool,g:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,bool)>{semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(original,g).map(|(owner,receipt)|(owner as Box<dyn ErasedSnapshotRetirement>,receipt))}
+ fn retire_owned(&self,original:bool,g:RetainedCloneGrant)-> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,bool)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,bool)> {semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(original,g).map(|(owner,receipt)|(owner as Box<dyn ErasedSnapshotRetirement>,receipt))})(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RootFactory;

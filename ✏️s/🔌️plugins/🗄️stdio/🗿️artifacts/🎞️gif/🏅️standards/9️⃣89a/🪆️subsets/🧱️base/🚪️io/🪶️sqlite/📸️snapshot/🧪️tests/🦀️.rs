@@ -28,11 +28,11 @@ fn sqlite_snapshot_gif89_controlled_output_reaches_literal_string_interior(){
  let plan:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🪶️sqlite/🚦️control.json")).unwrap();
  let mut snapshot=fixture();snapshot.schema="世界\0".repeat(plan["largeTextBytes"].as_u64().unwrap() as usize);
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
-  let payload=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();
+  let payload=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,control, native_owner))).unwrap();
   assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| GifSnapshot::decode_sqlite_snapshot_native(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap(),snapshot);
   let mut reached=false;let mut callback=|event:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotProgress|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.total==snapshot.schema.len()&&event.completed>=65536&&event.completed<event.total{reached=true;false}else{true}};
-  assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default()), native_owner)).is_err());assert!(reached);
-  assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_value_bytes:128,..SqliteDatabaseLimits::default()}), native_owner)).is_err());
+  assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut callback, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,control, native_owner))).is_err());assert!(reached);
+  assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits{max_value_bytes:128,..SqliteDatabaseLimits::default()}, &mut |_|true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,control, native_owner))).is_err());
  }
 }
 

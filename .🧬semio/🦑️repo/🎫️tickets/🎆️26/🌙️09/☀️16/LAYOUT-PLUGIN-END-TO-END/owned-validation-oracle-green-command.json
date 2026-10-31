@@ -1,0 +1,54 @@
+{
+  "mode": "reference-harness-only-no-Native-parity",
+  "cwd": "/Users/ueli/Documents/semio",
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/green-1",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/green-1/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/green-1/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/green-1/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/green-1/tmp"
+  },
+  "argv": [
+    "repo",
+    "--service=off",
+    "tools",
+    "exec",
+    "bun",
+    "--",
+    "test",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.test.ts"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/green-1/selftest.log",
+  "shell": "SEMIO_BUILD_MODE=prototype SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/green-1' TMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/green-1/tmp' TMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/green-1/tmp' TEMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/green-1/tmp' TEMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/green-1/tmp' repo --service=off tools exec bun -- test '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.test.ts' > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/green-1/selftest.log' 2>&1",
+  "preInputs": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.ts",
+      "sha256": "7071cb50b98ecbca6028d5d160315d9194d6b14529d57bfcea9b1d5b08d81bc5"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.test.ts",
+      "sha256": "5c95d382793f549f6c83e77e395fc996f2458bef123aed4486ddba44cdd259ab"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.schema.json",
+      "sha256": "2fef90d2866b377d214b26e1b9110ef7df9d64d7abf233954bdfb2eb21d78d39"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle-mutants.json",
+      "sha256": "7ab6172319e311c2d9c49f18661937cd22c8abc430e78e9c645f7647fd040842"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🧪️tests/🔣️.json",
+      "sha256": "c2108c2f7247ad81357f0ec9ffe6cc89b6a52a30d9a51d6a62be9ad24e47f897"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🧪️tests/📐️.json",
+      "sha256": "fa56ac205d298c8930cc6b45778d84a09695e10d143415826ea90b0830a29f09"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✅️validation/🔣️.json",
+      "sha256": "6d80a7c91eb1dba8512875d8e7d2096c9abdf8d40d710f137a209fb34595bdf9"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 //! 🔗️ Captured snapshot sources keep the original Store read and its installed typed retirement issuer.
-use super::{SnapshotRead,SnapshotReadReturn,SnapshotReadLeaseRefusal,SnapshotReadRegistryAliasRetirement,try_return_original_snapshot_read,snapshot_registry_alias_demands,snapshot_registry_alias_close_step,advance_returned_snapshot_read,artifact_retirement_box_demands,artifact_retirement_box_close_step};
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,FactoryAuthority,RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
+use super::{SnapshotRead,SnapshotReadReturn,SnapshotReadLeaseRefusal,SnapshotReadRegistryAliasRetirement,try_return_original_snapshot_read,snapshot_registry_alias_demands,snapshot_registry_alias_close_step,advance_returned_snapshot_read,artifact_retirement_box_demands,artifact_retirement_box_close_step,bounded_outcome,outcome_retirement_step};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,FactoryAuthority,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use std::{mem::{ManuallyDrop,size_of},sync::Arc};
 
 /// 🧳️ The projected snapshot needs no intrinsic retirement when its original Store issuer owns that capability.
@@ -39,14 +39,17 @@ impl<T:Send+Sync+'static> CapturedSnapshotRetirement<T>{
   self.factory_close.as_ref().map_or(Ok(Default::default()),|factory|factory.demands(body))
  }
  /// ↩️ Returns this original read before releasing registry custody or retiring any original payload.
- fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}let d=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if let Some(read)=self.read.as_mut(){let witness=match try_return_original_snapshot_read(&mut read.owner,&mut read.lease){Ok(witness)=>witness,Err(())=>return Ok(RetainedCloneStep::Progress(Default::default()))};*self.registry=Some(SnapshotReadRegistryAliasRetirement::new(witness.registry));self.read.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
+ fn step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+  let refuse=|error:ValueError|RetainedWorkOutcome{result:Err(error),work:0};
+  let moved=|progress:RetainedCloneProgress|RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work:1};
+  if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}let d=match self.close_demand(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return refuse(error)};if !retained_clone_grant_admits(grant,d){return bounded_outcome(Ok(RetainedCloneStep::Progress(Default::default())));}
+  if let Some(read)=self.read.as_mut(){let witness=match try_return_original_snapshot_read(&mut read.owner,&mut read.lease){Ok(witness)=>witness,Err(())=>return bounded_outcome(Ok(RetainedCloneStep::Progress(Default::default())))};*self.registry=Some(SnapshotReadRegistryAliasRetirement::new(witness.registry));self.read.take();return moved(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()});}
   let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth.saturating_sub(1),..grant};
-  if self.active.is_some(){return artifact_retirement_box_close_step(&mut self.active,child).map(|step|RetainedCloneStep::Progress(step.progress()));}
-  if let Some(registry)=self.registry.as_ref(){if registry.strong_count()==1&&registry.has_returned(){return advance_returned_snapshot_read(registry,&mut self.active,self.factory.as_ref().ok_or_else(||invalid("captured snapshot source lost its installed issuer"))?,child).map(|step|RetainedCloneStep::Progress(step.progress()));}return snapshot_registry_alias_close_step(&mut self.registry,grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-  if let Some(factory)=self.factory.take(){self.factory_close=Some(FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
-  let factory=self.factory_close.as_mut().ok_or_else(||invalid("captured snapshot source lost its final issuer cursor"))?;let step=factory.step(grant)?;if factory.terminal_is_empty(){self.factory_close=None;}Ok(RetainedCloneStep::Progress(step.progress()))
+  if self.active.is_some(){return artifact_retirement_box_close_step(&mut self.active,child);}
+  if let Some(registry)=self.registry.as_ref(){if registry.strong_count()==1&&registry.has_returned(){let Some(factory)=self.factory.as_ref()else{return refuse(invalid("captured snapshot source lost its installed issuer"))};return advance_returned_snapshot_read(registry,&mut self.active,factory,child);}return bounded_outcome(snapshot_registry_alias_close_step(&mut self.registry,grant));}
+  if let Some(factory)=self.factory.take(){self.factory_close=Some(FactoryAuthority::new(factory));return moved(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()});}
+  let Some(factory)=self.factory_close.as_mut()else{return refuse(invalid("captured snapshot source lost its final issuer cursor"))};let turn=factory.step(grant);if factory.terminal_is_empty(){self.factory_close=None;}
+  RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}
  }
  /// 🫙️ Every original read, registry backing, typed payload ticket and issuer has returned.
  fn empty(&self)->bool{self.read.is_none()&&self.registry.is_none()&&self.active.is_none()&&self.factory.is_none()&&self.factory_close.is_none()}
@@ -60,7 +63,7 @@ impl<T:Send+Sync+'static> RetireOwned for CapturedSnapshotSource<T>{
 }
 impl<T:Send+Sync+'static> RetirementCursor for CapturedSnapshotRetirement<T>{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demand(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.step(grant){Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Complete(p)|RetainedCloneStep::Progress(p))=>RetirementStep::Progress(p),Err(error)=>RetirementStep::Failure(error)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{outcome_retirement_step(self.step(grant))}
  fn terminal_is_empty(&self)->bool{self.empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(0)?.copy_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.close_demand(body).ok().map(|d|d.capacity_bytes)}

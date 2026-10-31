@@ -6,6 +6,10 @@ import { Footer, navbarFillItem } from "@semio-tech/ui-react";
 import { ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND, ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND, ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND, ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND, ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND, ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND, ENTWERFEN_MIT_BESTAND_STATIK_BRAND, ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND, ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, isEntwerfenMitBestandBrandId } from "../../🪧️brand.ts";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, UDK_LOGO_URL, LUH_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../⚛️footer.tsx";
 
+type Cells = { readonly native: { readonly de: string }; readonly reuse: { readonly de: string } };
+const german = (label: unknown): string => (label as Cells).native.de;
+const deLabel = (de: string) => expect.objectContaining({ native: expect.objectContaining({ de }), reuse: expect.objectContaining({ de }) });
+
 describe("demonstrator shell brands", () => {
   it("registers all eight Entwerfen mit Bestand demonstrator shell brands", () => {
     expect(ENTWERFEN_MIT_BESTAND_BRAND_IDS).toEqual([
@@ -42,58 +46,58 @@ describe("demonstrator shell brands", () => {
       { kind: "pan", id: "puzzle3d-main" },
       { kind: "orbit", id: "puzzle3d-main" },
     ]);
-    expect(viewport.interactions.map((interaction) => interaction.label)).toEqual(["Zoomen (Mausrad)", "Verschieben (Mittelklick ziehen)", "Orbitieren (Alt + Rechtsklick ziehen)"]);
-    expect(viewport.body).toMatch(/Mausrad|Mittelklick|Alt \+ Rechtsklick/i);
+    expect(viewport.interactions.map((interaction) => german(interaction.label))).toEqual(["Zoomen (Mausrad)", "Verschieben (Mittelklick ziehen)", "Orbitieren (Alt + Rechtsklick ziehen)"]);
+    expect(german(viewport.body)).toMatch(/Mausrad|Mittelklick|Alt \+ Rechtsklick/i);
     expect(steps.find((step) => step.id === "panels")).toMatchObject({
       introduce: "framework.panel.catalogue",
-      interactions: [{ on: { kind: "panel", id: "framework.panel.catalogue" }, label: "Katalog-Reiter anklicken" }],
+      interactions: [{ on: { kind: "panel", id: "framework.panel.catalogue" }, label: deLabel("Katalog-Reiter anklicken") }],
     });
-    expect(steps.find((step) => step.id === "panels")?.body).toMatch(/linken Maustaste|Katalog-Reiter/i);
+    expect(german(steps.find((step) => step.id === "panels")?.body)).toMatch(/linken Maustaste|Katalog-Reiter/i);
     expect(steps.find((step) => step.id === "catalogue-objects")).toMatchObject({
       introduce: "puzzle3d-play-kinds.objects",
       placement: "right",
-      interactions: [{ on: { kind: "expand", id: "puzzle3d-play-kinds.objects" }, label: "»Baukomponenten« anklicken" }],
+      interactions: [{ on: { kind: "expand", id: "puzzle3d-play-kinds.objects" }, label: deLabel("»Baukomponenten« anklicken") }],
       show: ["framework.panelTab.framework.panel.catalogue"],
     });
-    expect(steps.find((step) => step.id === "catalogue-objects")?.body).toMatch(/linken Maustaste|Baukomponenten/i);
+    expect(german(steps.find((step) => step.id === "catalogue-objects")?.body)).toMatch(/linken Maustaste|Baukomponenten/i);
     expect(steps.find((step) => step.id === "add-object")).toMatchObject({
       introduce: "framework.panelTab.framework.panel.catalogue.firstDraggable",
       placement: "right",
-      interactions: [{ on: { kind: "action", id: "addObjectKind" }, label: "Mit linker Maustaste in die Ansicht ziehen" }],
+      interactions: [{ on: { kind: "action", id: "addObjectKind" }, label: deLabel("Mit linker Maustaste in die Ansicht ziehen") }],
       show: ["framework.panelTab.framework.panel.catalogue", "framework.window.puzzle3dMain"],
     });
-    expect(steps.find((step) => step.id === "add-object")?.body).toMatch(/linken Maustaste|Drag-and-Drop/i);
+    expect(german(steps.find((step) => step.id === "add-object")?.body)).toMatch(/linken Maustaste|Drag-and-Drop/i);
     expect(steps.find((step) => step.id === "transform-utility")).toMatchObject({
       introduce: "transform",
-      interactions: [{ on: { kind: "utility", id: "transform" }, label: "Transformieren anklicken" }],
+      interactions: [{ on: { kind: "utility", id: "transform" }, label: deLabel("Transformieren anklicken") }],
       show: ["framework.window.puzzle3dMain"],
     });
-    expect(steps.find((step) => step.id === "transform-utility")?.body).toMatch(/linken Maustaste|Transformieren/i);
+    expect(german(steps.find((step) => step.id === "transform-utility")?.body)).toMatch(/linken Maustaste|Transformieren/i);
     expect(steps.find((step) => step.id === "verbindungspunkte")).toMatchObject({
       introduce: "puzzle3d-play-vortex-show",
-      interactions: [{ on: { kind: "action", id: "setVortexShow" }, label: "»Verbindungspunkte anzeigen« auf »Immer« stellen" }],
+      interactions: [{ on: { kind: "action", id: "setVortexShow" }, label: deLabel("»Verbindungspunkte anzeigen« auf »Immer« stellen") }],
       show: ["framework.window.puzzle3dMain"],
     });
-    expect(steps.find((step) => step.id === "verbindungspunkte")?.body).toMatch(/Linksklick|Verbindungspunkte/i);
+    expect(german(steps.find((step) => step.id === "verbindungspunkte")?.body)).toMatch(/Linksklick|Verbindungspunkte/i);
     expect(steps.find((step) => step.id === "suggest-objects")).toMatchObject({
       introduce: "framework.window.puzzle3dMain",
-      interactions: [{ on: { kind: "action", id: "acceptSuggestion" }, label: "Vorschlag per Linksklick wählen" }],
+      interactions: [{ on: { kind: "action", id: "acceptSuggestion" }, label: deLabel("Vorschlag per Linksklick wählen") }],
     });
-    expect(steps.find((step) => step.id === "suggest-objects")?.body).toMatch(/Linksklick|Rechtsklick|Aktionsmenü/i);
+    expect(german(steps.find((step) => step.id === "suggest-objects")?.body)).toMatch(/Linksklick|Rechtsklick|Aktionsmenü/i);
     expect(steps.find((step) => step.id === "fill-tool")).toMatchObject({
       introduce: "tool.fill",
-      interactions: [{ on: { kind: "tool", id: "fill" }, label: "»Füllen« anklicken" }],
+      interactions: [{ on: { kind: "tool", id: "fill" }, label: deLabel("»Füllen« anklicken") }],
       show: [],
       placement: "top",
     });
-    expect(steps.find((step) => step.id === "fill-tool")?.body).toMatch(/linken Maustaste|Füllen/i);
+    expect(german(steps.find((step) => step.id === "fill-tool")?.body)).toMatch(/linken Maustaste|Füllen/i);
     expect(steps.find((step) => step.id === "fill-distribution")).toMatchObject({
       introduce: "puzzle3d-play-distribution",
       interactions: [],
       show: ["puzzle3d-fill-count", "framework.panelTab.tool.fill"],
       placement: "top",
     });
-    expect(steps.find((step) => step.id === "fill-distribution")?.body).toMatch(/Schieberegler|Verteilung/i);
+    expect(german(steps.find((step) => step.id === "fill-distribution")?.body)).toMatch(/Schieberegler|Verteilung/i);
 
     const funding = ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION.steps.find((step) => step.id === "funding")!;
     expect(funding.logos).toHaveLength(3);
@@ -134,9 +138,11 @@ describe("demonstrator shell brands", () => {
     expect(projectOfEnMarkup).toContain("A project of");
     expect(projectOfEnMarkup).toContain("and");
     const fundedByIconOnlyMarkup = renderToStaticMarkup(createElement(Footer, { items: [fundedByZukunftBauFooterItem("fundedByIconOnly", "en", true)] }));
-    expect(fundedByIconOnlyMarkup).not.toContain("Funded by");
+    expect(fundedByIconOnlyMarkup).not.toContain(">Funded by<");
+    expect(fundedByIconOnlyMarkup).toContain('aria-label="Funded by Zukunft Bau (opens in a new tab)"');
     const projectOfIconOnlyMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem("projectOfIconOnly", "de", true)] }));
-    expect(projectOfIconOnlyMarkup).not.toContain("Ein Projekt von");
+    expect(projectOfIconOnlyMarkup).not.toContain(">Ein Projekt von<");
+    expect(projectOfIconOnlyMarkup).toContain('aria-label="Leibniz Universität Hannover (öffnet in einem neuen Tab)"');
     expect(projectOfIconOnlyMarkup).not.toContain(">und<");
     expect(projectOfIconOnlyMarkup).toContain(LUH_LOGO_URL);
     expect(projectOfIconOnlyMarkup).toContain(UDK_LOGO_URL);

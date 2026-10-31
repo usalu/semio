@@ -16,8 +16,11 @@
     "receipt",
     "granted",
     "nested",
-    "selfFunded",
-    "cases"
+    "cases",
+    "originalLifetime",
+    "freshRootPerTurn",
+    "readOnlyCallbackWork",
+    "genuineCaller"
   ],
   "properties": {
     "schema": {
@@ -68,26 +71,19 @@
     },
     "granted": {
       "const": {
-        "fuelPerBody": 1,
         "bodyGrant": "caller-remaining-retained-grant",
         "progress": "debited-once-after-body",
         "refusal": "whole-value-error-debited-then-original-failure",
-        "exhaustedFuel": "pending-without-running-body"
+        "exhaustedFuel": "pending-without-running-body",
+        "work": "direct-producer-outcome"
       }
     },
     "nested": {
       "const": {
         "bodyContext": "same-borrowed-caller-cx",
         "debit": "reported-minus-posted-by-nested-callers",
-        "underReport": "invariant-violated"
-      }
-    },
-    "selfFunded": {
-      "const": {
-        "lentGrant": "exactly-the-supplied-grant",
-        "fuel": "unbounded",
-        "deadline": "unbounded",
-        "failure": "returned-whole"
+        "underReport": "invariant-violated",
+        "work": "already-posted-by-context-aware-body"
       }
     },
     "cases": {
@@ -128,6 +124,31 @@
             "type": "boolean"
           }
         }
+      }
+    },
+    "originalLifetime": {
+      "const": {
+        "items": 100000,
+        "copyBytes": 262144,
+        "capacityBytes": 262144,
+        "releaseBytes": 262144,
+        "depth": 128,
+        "fuel": 100000,
+        "maximumTurns": 100000
+      }
+    },
+    "freshRootPerTurn": {
+      "const": false
+    },
+    "readOnlyCallbackWork": {
+      "const": 0
+    },
+    "genuineCaller": {
+      "const": {
+        "lentGrant": "exactly-the-current-caller-view",
+        "fuel": "one-finite-original-lifetime",
+        "deadline": "same-original-absolute-deadline",
+        "failure": "returned-whole"
       }
     }
   }

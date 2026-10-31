@@ -103,10 +103,10 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             if let Some(original)=self.instance_owner.take(){self.instance_retirement=Some(semio_framework_plugin::ArtifactInstanceOperationOwnerAliasRetirement::new(original));return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
             if let Some(owner)=self.instance_retirement.as_mut(){
                 let grant=semio_framework_value::RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-                let result=owner.step(grant);
+                let result=owner.step(cx,grant);
                 let terminal=owner.terminal_is_empty();
                 if terminal{self.instance_retirement=None;}
-                return Ok(match result{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Err(fault)=>return Err(semio_framework_job::OriginalTurnFailure::debit_original(fault,cx))});
+                return Ok(match result{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Err(fault)=>return Err(semio_framework_job::OriginalTurnFailure::from(fault.debit_original(cx)))});
             }
             Ok(Step::Complete{progress:Default::default()})
         })
@@ -171,6 +171,10 @@ impl FlowContributionsJobFactoryProofs {
         factory_type: FlowContributionsJobFactory,
         contract: flow_contributions_contract(),
         tools: ["setContributions"]
+    }
+
+    pub(super) fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        Self::bounded_first_step_tool_proofs()
     }
 }
 //#endregion 🧩️ContributionsRoute

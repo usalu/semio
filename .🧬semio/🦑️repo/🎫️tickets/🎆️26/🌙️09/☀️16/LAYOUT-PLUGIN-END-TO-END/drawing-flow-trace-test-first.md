@@ -1,0 +1,7 @@
+# Original Flow Trace Test First
+
+Root released the reached FlowAction2605 boundary redesign. The defining neutral schema/data and direct Original caller law were authored before implementation under the action owning trace module. Cases cover filled square, empty image, invalid dimensions and exact input extent fault. The law uses genuine FlowArguments payload/spans, OriginalJobFixtureCaller, one schema-pinned finite stock across actual work, owner close and returned-byte close, independent serde_json output encoding/parsing, and real heap request/release comparison against actual posted receipts. No default production grant or numeric-to-byte conversion is introduced.
+
+The baseline removed trace helper was inspected through read-only git: max_pixels16777216/max_edges65536/max_segments65536/max_work100000000. Error JSON must retain constructor prefix `invalid input: ` and algorithm prefix `operation failed: ` while staging exact String bytes under actual grant. These limits and semantics are unchanged in the fixture design.
+
+The test currently targets the forthcoming FlowTraceCursor new/advance_original/begin_close/close_original/terminal_is_empty/last_turn_work interface. It is not yet mounted or run and is not a Native pass. The typed canonical wire encoder actual CPU contract is coordinated with Root before implementation. No runtime, manifests, or unrelated action bodies were changed. File packet: drawing-flow-trace-test-first-files.json.

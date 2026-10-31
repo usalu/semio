@@ -1,7 +1,6 @@
 //! 🔖️ v2-0 of `semio-s-artifact-stdio-gltf-model` — a path-preserving carve of the artifact root mounts.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 #[path = "."]
 pub mod standards {

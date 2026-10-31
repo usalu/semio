@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "owner": "rust",
+  "state": "source-correction-review-pending-no-compiler-rerun",
+  "actualRedSession": 6942,
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🦀️.rs",
+      "beforeSha256": "694e92a14059cd0b70b492e070a395ed5517412bdc9f7d7aef054465496bfe18",
+      "afterSha256": "9a51d5565aa4b32cfa68592fa049235f9093ebee0a2bf76d22b866a71aa425d6",
+      "change": "Two intended ownership bounds now name canonical retirement trait; derive macro paths unchanged"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🌱️birth/📤️transfer/🦀️.rs",
+      "beforeSha256": "6491760a4a7bfae2ae923536bedaec8d3caa01bec39116612a4237bd33920cdb",
+      "afterSha256": "c30de168951f62947936f5346e0d6e83d5f3ec30c5b30fae7269317c8f34e1a2",
+      "change": "Import canonical retirement trait for two generic transfer bounds; function bodies unchanged"
+    }
+  ],
+  "runtimeLaunched": false,
+  "rootSchemaValidatorOwner": "dependency_layout",
+  "canonicalTrait": "semio_framework_value::retirement::RetireOwned",
+  "behaviorChanged": false,
+  "newTraitBoundsAdded": false,
+  "report": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-retirement-trait.md",
+  "testsCoverage": "existing Native3 compiler RED; existing ownership/transfer laws preserved; fresh native execution pending Root release"
+}

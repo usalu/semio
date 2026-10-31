@@ -13,21 +13,21 @@ use semio_s_artifact_procedural_2d_mutations::Generation2dMutation;
 #[cfg(test)]
 
 
-use semio_s_artifact_procedural_2d_io_text::snapshot::camera_from_dsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::camera_to_dsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::form_generation_from_dsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::form_generation_to_dsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::layout_from_dsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::layout_to_dsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::synapse_from_dsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::synapse_to_dsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::widget_from_dsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::widget_to_dsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::CameraJsonDsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::FormGenerationDsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::SynapseSpecDsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::WidgetDsl;
-use semio_s_artifact_procedural_2d_io_text::snapshot::WidgetLayoutDsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::camera_from_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::camera_to_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::form_generation_from_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::form_generation_to_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::layout_from_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::layout_to_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::synapse_from_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::synapse_to_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::widget_from_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::widget_to_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::CameraJsonDsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::FormGenerationDsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::SynapseSpecDsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::WidgetDsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::WidgetLayoutDsl;
 #[cfg(test)] use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
 use protocol::OpBinary;
 
@@ -341,11 +341,11 @@ pub fn generation2d_all_retained_mutation_fixtures_for_test() -> Vec<Generation2
 
 
 
-use semio_s_artifact_procedural_2d_io_text::mutations::Generation2dOperationDsl;
-use semio_s_artifact_procedural_2d_io_text::mutations::generation2d_operation_to_dsl;
-use semio_s_artifact_procedural_2d_io_text::mutations::generation2d_operation_from_dsl;
-#[cfg(test)] use semio_s_artifact_procedural_2d_mutations::central_apply::{GENERATION2D_MAXIMUM_DOMAIN_ITEMS, GENERATION2D_OWNER_BYTES, GENERATION2D_RETAINED_STACK_CAPACITY, generation2d_apply_initialization_mutation, generation2d_copy_generation, generation2d_copy_string, generation2d_copy_synapse, generation2d_copy_widget};
-#[cfg(test)]
+use crate::text::Generation2dOperationDsl;
+use crate::text::generation2d_operation_to_dsl;
+use crate::text::generation2d_operation_from_dsl;
+#[cfg(any(test, feature = "testkit"))] use semio_s_artifact_procedural_2d_mutations::central_apply::{GENERATION2D_MAXIMUM_DOMAIN_ITEMS, GENERATION2D_OWNER_BYTES, GENERATION2D_RETAINED_STACK_CAPACITY, generation2d_apply_initialization_mutation, generation2d_copy_generation, generation2d_copy_string, generation2d_copy_synapse, generation2d_copy_widget};
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_apply_retained_mutations_for_test;
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_retire_mutations_cold;

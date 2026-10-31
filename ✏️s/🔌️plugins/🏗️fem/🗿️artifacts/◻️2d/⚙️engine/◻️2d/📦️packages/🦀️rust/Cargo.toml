@@ -26,6 +26,7 @@ semio-s-fem-model = { workspace = true }
 semio-s-fem-static = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value = { workspace = true }
 semio-s-fem-material = { path = "../../../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
 semio-s-fem-node = { path = "../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

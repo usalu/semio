@@ -194,6 +194,26 @@
       "description": { "en": "cache status|gc: the disk budget of this machine for this call (an integer or a number with KiB, MiB, GiB, TiB, e.g. 40GiB); it beats the SEMIO_CACHE_BUDGET_BYTES variable, which beats the machine file in the repository cache root, which beats the declared default.", "de": "cache status|gc: das Platzbudget dieses Rechners für diesen Aufruf (eine ganze Zahl oder eine Zahl mit KiB, MiB, GiB, TiB, z. B. 40GiB); es schlägt die Variable SEMIO_CACHE_BUDGET_BYTES, diese die Rechnerdatei im Repository-Cache-Wurzelordner, diese den deklarierten Standard." }
     },
     {
+      "name": "--partition",
+      "value": "required",
+      "valueName": "id",
+      "operations": ["cache"],
+      "description": { "en": "cache grow (required): the cache partition whose image grows; only rust is declared.", "de": "cache grow (erforderlich): die Cache-Partition, deren Image wächst; nur rust ist deklariert." }
+    },
+    {
+      "name": "--stop-collectors",
+      "value": "none",
+      "operations": ["cache"],
+      "description": { "en": "cache grow: after the exclusive image lease is held, ask the background unit-cache collector of that image to stop (SIGTERM, its documented cancel); without it a collector that keeps files open in the image makes the growth refuse after ten minutes.", "de": "cache grow: bittet, sobald die exklusive Image-Lease gehalten wird, den Hintergrund-Sammler des Unit-Caches dieses Images, sich zu beenden (SIGTERM, sein dokumentierter Abbruch); ohne dies lehnt die Vergrößerung nach zehn Minuten ab, wenn ein Sammler Dateien im Image offen hält." }
+    },
+    {
+      "name": "--bytes",
+      "value": "required",
+      "valueName": "n",
+      "operations": ["cache"],
+      "description": { "en": "cache grow: an exact target size in bytes (a whole number of MiB at most the declared size); without it the image grows as far as the policy and the host reserve allow.", "de": "cache grow: eine genaue Zielgröße in Bytes (eine ganze Zahl von MiB, höchstens die deklarierte Größe); ohne sie wächst das Image so weit, wie Richtlinie und Host-Reserve erlauben." }
+    },
+    {
       "name": "--deep",
       "value": "none",
       "operations": ["cache"],
@@ -1272,7 +1292,7 @@
     {
       "name": "cache",
       "requires": "none",
-      "synopsis": "cache status|gc|verify|dedupe|clear",
+      "synopsis": "cache status|gc|verify|dedupe|grow|clear",
       "summary": {
         "en": "Show and collect every declared cache home with its budget, or clear the selected tool's local task cache.",
         "de": "Zeigt und sammelt jede deklarierte Cache-Heimat mit ihrem Budget oder leert den lokalen Task-Cache des gewählten Werkzeugs."
@@ -1314,9 +1334,17 @@
             "de": "Findet identische große Dateien in den deklarierten Orten des Rechner-Budgets (Bazel-Ergebnisse und -Workspaces, Vite-Produkte, Werkzeug-Installationen) und ersetzt jedes Duplikat durch einen Copy-on-Write-Klon einer kanonischen Datei, wodurch die doppelten Blöcke frei werden; kürzlich benutzte, flüchtig benannte oder zwischenzeitlich geänderte Dateien bleiben, ein Volume ohne Klon-Unterstützung behält alles, und --dry-run meldet nur, was höchstens frei würde."
           }
         },
+        {
+          "name": "grow",
+          "synopsis": "cache grow --partition=rust [--bytes=<n>] [--dry-run] [--stop-collectors]", "flags": ["--partition", "--bytes", "--dry-run", "--stop-collectors"],
+          "summary": {
+            "en": "Grow the fixed image of a cache partition to the size its policy declares without building it again: bounded by the declared size, the elastic maximum and the host free-space reserve, it takes the exclusive image lease (running commands finish first), detaches the image, resizes the backing file offline, attaches it again and re-stamps the receipt and storage journal; a killed run resumes. --dry-run only prints the plan.",
+            "de": "Vergrößert das feste Image einer Cache-Partition auf die von der Richtlinie deklarierte Größe, ohne es neu zu bauen: begrenzt durch die deklarierte Größe, das elastische Maximum und die Freiplatz-Reserve des Hosts nimmt es die exklusive Image-Lease (laufende Befehle enden zuerst), hängt das Image aus, vergrößert die Sicherungsdatei offline, hängt es wieder ein und stempelt Beleg und Speicherjournal neu; ein abgebrochener Lauf wird fortgesetzt. --dry-run gibt nur den Plan aus."
+          }
+        },
         { "name": "clear", "synopsis": "cache clear", "flags": [], "summary": { "en": "Empty the cache and print a CacheClear.", "de": "Leert den Cache und gibt einen CacheClear aus." } }
       ],
-      "flags": ["--json", "--dry-run", "--area", "--budget", "--deep", "--tasks"],
+      "flags": ["--json", "--dry-run", "--area", "--budget", "--deep", "--tasks", "--partition", "--bytes", "--stop-collectors"],
       "examples": [
         { "command": "repo cache status", "description": { "en": "Show every cache partition and area against its budget.", "de": "Zeigt jede Cache-Partition und jeden Bereich gegen sein Budget." } },
         { "command": "repo cache gc --dry-run", "description": { "en": "List what the collector would remove.", "de": "Listet auf, was der Sammler entfernen würde." } },

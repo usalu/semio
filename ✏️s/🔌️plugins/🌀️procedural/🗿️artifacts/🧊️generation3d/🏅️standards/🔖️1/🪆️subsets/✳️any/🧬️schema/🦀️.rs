@@ -1,6 +1,7 @@
 //! 🧬️ Generation3d artifact schema — every field of the artifact with its state class.
 #![allow(clippy::result_large_err)]
 extern crate semio_framework_os_kernel as protocol;
+extern crate self as semio_s_artifact_procedural_3d_model;
 
 #[path = "🧭️transforms/🦀️.rs"]
 pub mod transforms;
@@ -16,7 +17,7 @@ use semio_framework_os_flow::{flow_host_with_session, FlowEvalSession, FlowHost}
 use semio_framework_plugin::ActionDescriptor;
 
 //#region 🔖️Generation3dArtifact
-/// 🧬️ Generation3dArtifact facet type.
+/// 🙂️ Generation3dArtifact facet type.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.generation3d")]
@@ -30,7 +31,8 @@ pub struct Generation3dArtifact {
 
 //#region 🔖️PreviewCamera
 /// 📷️ 3D preview viewport camera (schema twin of the app config record).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Generation3dPreviewCamera {
     pub position_x: f64,
     pub position_y: f64,
@@ -60,7 +62,7 @@ impl Generation3dArtifact {
         Generation3dSnapshot { host_snapshot: self.host_snapshot.clone(), generation: self.generation.clone() }
     }
 
-    /// 🧬️ Builds the document artifact from its snapshot.
+    /// 🏗️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Generation3dSnapshot) -> Self {
         Self { host_snapshot: snapshot.host_snapshot, generation: snapshot.generation }
     }
@@ -73,7 +75,7 @@ impl Generation3dArtifact {
 }
 
 //#region 🔖️Descriptor
-/// 🧬️ Descriptor for `s.procedural.generation3d` — twenty-two handcrafted mutation leaves.
+/// 🌀️ Descriptor for `s.procedural.generation3d` — twenty-two handcrafted mutation leaves.
 pub fn generation3d_artifact_schema_descriptor() -> ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
     ::semio_framework_schema_registry::ArtifactSchemaDescriptor {
         id: "s.procedural.generation3d",
@@ -117,7 +119,7 @@ pub fn generation3d_artifact_schema_descriptor() -> ::semio_framework_schema_reg
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️DocumentHelpers
-/// 🧬️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
+/// 🗑️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
 /// pure helpers over document types (`FlowHostSnapshot`/`DagHostSnapshot`/`FlowHost`), not app-referencing (the
 /// Config-referencing preview/mesh-export helpers that used to sit alongside these stayed in
 /// `crate::editor::generation3d` instead — see that file's own `PreviewPipeline`/`MeshBridge` regions).
@@ -240,7 +242,7 @@ pub fn with_host<R>(host_snapshot: &FlowHostSnapshot, body: impl FnOnce(&mut Flo
     })
 }
 
-/// 🏠️ A host that shares `session`'s neural cache and converged evaluation baseline, installed under `grant`.
+/// 🔗️ A host that shares `session`'s neural cache and converged evaluation baseline, installed under `grant`.
 pub fn host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<FlowHost, semio_framework_value::ValueError> {
     match flow_host_with_session(FlowHost::from_host_snapshot(host_snapshot.clone()).with_history_store_factory(::semio_framework_artifact_flow_flow::FLOW_HISTORY_STORE_FACTORY), session, grant) {
         Ok((host, _)) => Ok(host),
@@ -251,7 +253,7 @@ pub fn host_with_session(host_snapshot: &FlowHostSnapshot, session: &FlowEvalSes
     }
 }
 
-/// 🏠️ [`with_host`]'s session-backed twin: the host shares `session`'s neural cache and converged
+/// 🎟️ [`with_host`]'s session-backed twin: the host shares `session`'s neural cache and converged
 /// evaluation baseline, and is retired the same way. `body` receives the session back alongside the
 /// host because every real caller needs it mutably (`sync`/`tick`), which a captured `&mut` could
 /// not provide while the scope itself holds the session borrow.
@@ -273,7 +275,7 @@ pub fn with_host_session<R>(host_snapshot: &FlowHostSnapshot, session: &mut Flow
 
 pub const GENERATION_3D_SCHEMA: &str = "generation.3d";
 
-/// 🎯️ This subset's canonical dialect (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
+/// ⏲️ This subset's canonical dialect (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET
 /// contract §2.1/§7.4) — lives at the ARTIFACT level (not under `editor`/`viewer`) specifically so a
 /// viewer file can read it without ever importing through the sibling `editor` module.
 /// `artifact_kind` matches this artifact's own `s.generation3d.schema.artifact` capability descriptor
@@ -362,7 +364,7 @@ pub const GENERATION_3D_PLAY_APP_ID: &str = "procedural3d-play";
 /// 🪪️ The editor surface id every tool transaction's `tool` is scoped by (`<appId>#<verb>`, design §2).
 pub const GENERATION3D_EDITOR_APP_ID: &str = "s.procedural.generation3d@1/*#editor";
 
-/// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
+/// 📱️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🍱️panes/*`, `☑️options/*`) builds its `on_change`/item actions with.
 pub fn generation3d_action(action: &str, args: Option<semio_framework_value::DslValue>) -> ActionDescriptor {
     ActionDescriptor { controller_id: GENERATION_3D_PLAY_APP_ID.into(), action: action.into(), args }
@@ -401,8 +403,23 @@ pub fn widget_index(host_snapshot: &FlowHostSnapshot, id: &str) -> Option<usize>
     host_snapshot.widgets.iter().position(|widget| widget_id(widget) == id)
 }
 
-/// 🔎️ BASE-state synapse index lookup by id — shared by every synapse triad leaf's inverse.
+/// 🧱️ BASE-state synapse index lookup by id — shared by every synapse triad leaf's inverse.
 pub fn synapse_index(host_snapshot: &FlowHostSnapshot, id: &str) -> Option<usize> {
     host_snapshot.synapses.iter().position(|synapse| synapse.id == id)
 }
 //#endregion 🔖️AddressHelpers
+
+#[path = "../🚪️io/📝️text/📸️snapshot/🪞️dsl-mirror/🦀️.rs"]
+pub mod dsl_mirror;
+
+#[path = "../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+pub mod diff_text;
+
+#[path = "../🚪️io/💾️binary/📸️snapshot/🪞️pack-codec/🦀️.rs"]
+mod pack_codec;
+
+#[path = "../🚪️io/🪶️sqlite/📸️snapshot/🪞️sqlite-codec/🦀️.rs"]
+pub mod sqlite_codec;
+
+#[path = "../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+pub mod diff_binary;

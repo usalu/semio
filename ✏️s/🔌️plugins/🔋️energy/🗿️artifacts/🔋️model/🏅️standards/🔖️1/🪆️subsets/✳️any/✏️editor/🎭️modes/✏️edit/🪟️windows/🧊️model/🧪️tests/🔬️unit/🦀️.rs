@@ -105,7 +105,7 @@ async fn an_overlay_replaces_a_surfaces_colour_and_a_caption_wraps_the_scene() {
     assert_eq!(captioned.children.len(), 2, "the caption sits above the scene stack");
 }
 
-/// 🔑️ The exact shape the results run drives: an overlay AND a caption at once. Before the caption
+/// 🔷️ The exact shape the results run drives: an overlay AND a caption at once. Before the caption
 /// nodes carried explicit ids, both siblings defaulted to `#0` and every publication of
 /// `energy.model.3d` faulted with `DuplicateSiblingKey parent=#0 key=#0`, blanking the window for the
 /// whole run (`🗑️generated/energy-results-w1/console.txt`). This is the regression guard.
@@ -181,7 +181,7 @@ async fn the_window_declares_the_camera_verb_the_world3d_host_dispatches() {
     );
 }
 
-/// 🎥️ A window that has been orbited republishes ITS OWN pose, not the model-derived default — that
+/// 🪟️ A window that has been orbited republishes ITS OWN pose, not the model-derived default — that
 /// is what stops a re-render (a selection, a results tick) from yanking the camera back.
 #[semio_framework_async_macros::async_test]
 async fn a_stored_camera_replaces_the_model_derived_one() {
@@ -200,7 +200,7 @@ async fn a_stored_camera_replaces_the_model_derived_one() {
     assert_eq!(default_scene.domain_id, stored_scene.domain_id);
 }
 
-/// 🎥️ Rendering the SAME model twice must publish byte-identical `fit_json` and `camera_json` —
+/// 🖼️ Rendering the SAME model twice must publish byte-identical `fit_json` and `camera_json` —
 /// `world3dAutoFitKey` keys the one-shot framing on exactly those, so a drifting value would re-frame
 /// the viewport on every publication and fight the user's orbit.
 #[semio_framework_async_macros::async_test]
@@ -303,6 +303,6 @@ async fn original_indexed_results_paint_the_real_scene_with_localized_bounded_re
  struct Original<'a>{bytes:&'a[u8],reads:&'a Cell<usize>}
  impl EnergyResultSource for Original<'_>{fn complete(&self)->bool{true}fn byte_len(&self)->usize{self.bytes.len()}fn read_fixed<const N:usize>(&self,offset:usize)->Option<[u8;N]>{assert!(N<=64);self.reads.set(self.reads.get()+1);self.bytes.get(offset..offset.checked_add(N)?)?.try_into().ok()}}
  let law:serde_json::Value=serde_json::from_str(include_str!("indexed-render.json")).unwrap();let model=bestest_600();let id=model.surfaces[0].id.0;let mut bytes=[0u8;100];bytes[..4].copy_from_slice(law["magic"].as_str().unwrap().as_bytes());bytes[4..8].copy_from_slice(&1u32.to_le_bytes());for field in 0..4{for index in 0..2{bytes[12+field*16+index*8..20+field*16+index*8].copy_from_slice(&law["bounds"][index].as_f64().unwrap().to_le_bytes());}}bytes[76..80].copy_from_slice(&id.to_le_bytes());bytes[96..100].fill(law["band"].as_u64().unwrap()as u8);let original=bytes.as_ptr();let reads=Cell::new(0);let result=IndexedEnergyResults::new(Original{bytes:&bytes,reads:&reads}).unwrap();let color=crate::editor_results::hex_to_rgb01(crate::editor_results::SURFACE_ENERGY_BANDS[law["band"].as_u64().unwrap()as usize]);let expected=HashMap::from([(id,color)]);let expected=scene_of(&render(&model,&EnergyModelInteractionSnapshot::default(),Some(&expected),None,Locale::En).unwrap()).meshes_json;
- for repaint in 0..law["repaints"].as_u64().unwrap(){let locale_index=repaint as usize%law["locales"].as_array().unwrap().len();let locale=match law["locales"][locale_index].as_str().unwrap(){"en"=>Locale::En,"de"=>Locale::De,_=>unreachable!()};let interaction=EnergyModelInteractionSnapshot{selected_ids:Vec::new(),hovered_ids:vec![id.to_string()]};let node=render_indexed(&model,&interaction,Some(&result),crate::editor_results::ResultField::ConductionLoss,locale,None).unwrap();assert_eq!(scene_of(surface_node(&node)).meshes_json,expected);let labels=text_values(&node);assert!(labels.iter().any(|value|value.contains(law["captions"][locale_index].as_str().unwrap())));assert!(labels.iter().any(|value|value==law["upperLabels"][locale_index].as_str().unwrap()));assert_sibling_keys_unique(&node,"original indexed scene");}
+ for repaint in 0..law["repaints"].as_u64().unwrap(){let locale_index=repaint as usize%law["locales"].as_array().unwrap().len();let locale=match law["locales"][locale_index].as_str().unwrap(){"en"=>Locale::En,"de"=>Locale::De,_=>unreachable!()};let interaction=EnergyModelInteractionSnapshot{selected_ids:Vec::new(),hovered_ids:vec![id.to_string()]};let node=render_indexed(&model,&interaction,Some(&result),crate::editor_config::ResultField::ConductionLoss,locale,None).unwrap();assert_eq!(scene_of(surface_node(&node)).meshes_json,expected);let labels=text_values(&node);assert!(labels.iter().any(|value|value.contains(law["captions"][locale_index].as_str().unwrap())));assert!(labels.iter().any(|value|value==law["upperLabels"][locale_index].as_str().unwrap()));assert_sibling_keys_unique(&node,"original indexed scene");}
  assert_eq!(bytes.as_ptr(),original);assert!(reads.get()<3000,"repaint probes remain bounded by binary-search paths");
 }

@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "partialStopAfter",
+    "invalidMembers",
+    "invalidSources"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "source",
+          "member",
+          "expectedWire"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "document"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "index"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "page"
+                  },
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            ]
+          },
+          "member": {
+            "$ref": "#/$defs/member"
+          },
+          "expectedWire": {
+            "$ref": "#/$defs/member"
+          }
+        }
+      }
+    },
+    "partialStopAfter": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uniqueItems": true
+    },
+    "invalidMembers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "value"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "value": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "invalidSources": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "document"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "index"
+            ],
+            "properties": {
+              "kind": {
+                "const": "page"
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "$defs": {
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handle"
+      ],
+      "properties": {
+        "handle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "childId",
+            "target"
+          ],
+          "properties": {
+            "childId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "target": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "artifactId",
+                "dialect"
+              ],
+              "properties": {
+                "artifactId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "dialect": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "artifactKind",
+                    "standard",
+                    "subset"
+                  ],
+                  "properties": {
+                    "artifactKind": {
+                      "const": "s.draw.drawing"
+                    },
+                    "standard": {
+                      "const": "1"
+                    },
+                    "subset": {
+                      "const": "*"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

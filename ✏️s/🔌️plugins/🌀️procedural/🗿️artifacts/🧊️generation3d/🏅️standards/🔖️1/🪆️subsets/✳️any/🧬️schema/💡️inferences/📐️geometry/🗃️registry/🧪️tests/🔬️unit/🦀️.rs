@@ -1,5 +1,6 @@
 //! 🧪️ Registry laws: one compute per catalogue kind, no unknown or duplicate ids, every registered compute honours the output contract.
 
+use semio_s_artifact_procedural_3d_geometry_compute::testing::step_with_fuel;
 use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
 use super::*;
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
@@ -46,7 +47,7 @@ fn a_kind_without_a_compute_answers_with_a_localized_compute_missing_fault() {
     let Some(id) = missing_kinds(catalogue()).first().copied() else { return };
     let kind = catalogue().kind(id).expect("a missing kind is catalogued");
     let mut job = start(kind, WidgetInputs::new_cold("w", kind, Default::default()));
-    let WidgetStep::Done(evaluation) = job.step(1) else { panic!("a missing compute is already finished") };
+    let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 1) else { panic!("a missing compute is already finished") };
     let fault = evaluation.fault.expect("no compute is a fault");
     assert_eq!(fault.code, format!("{FAULT_PREFIX}compute-missing"));
     assert!(localized(&fault) && evaluation.outputs.is_empty());
@@ -61,7 +62,7 @@ fn every_registered_compute_with_default_inputs_honours_the_output_contract_or_f
             Ok(inputs) => {
                 let mut job = lookup(id).expect("registered")(kind, inputs);
                 loop {
-                    if let WidgetStep::Done(evaluation) = job.step(1_000) {
+                    if let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 1_000) {
                         break evaluation;
                     }
                 }

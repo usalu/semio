@@ -106,15 +106,6 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
 fn admit_production_envelope(app: &mut crate::context::Process3dApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Process3d production ingress credits");
-    semio_s_artifact_process_process3d_host::process3d_admit_publication_authority(
-        handle.operation,
-        handle.generation,
-        handle.generation.0,
-        handle.generation.0,
-        handle.generation.0,
-        semio_s_artifact_process_process3d_host::Process3dPublicationLimits { maximum_items: 8_192, maximum_output_pages: semio_s_artifact_process_process3d_host::PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: semio_s_artifact_process_process3d_host::PROCESS3D_MOUNTED_CONTROL_CREDITS },
-    )
-    .expect("Process3d production publication authority");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
         let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..chunk.len()].copy_from_slice(chunk);
@@ -127,7 +118,6 @@ fn admit_production_envelope(app: &mut crate::context::Process3dApp, wire: &[u8]
 
 fn drive_production_envelope(app: &mut crate::context::Process3dApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..200_000 {
-        semio_s_artifact_process_process3d_host::process3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("Process3d authority refresh immediately before production maintenance");
         PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one Process3d production maintenance turn");
         let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("Process3d production load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
@@ -138,11 +128,9 @@ fn drive_production_envelope(app: &mut crate::context::Process3dApp, handle: sem
     panic!("Process3d production envelope load did not reach terminal")
 }
 
-/// 🔐️ LAW: the real `VcsArtifactApp` maintenance branch cannot swap around Process3d's
-/// atomic authority hook; accepted and every hostile lease retire their displaced/candidate owner.
+/// 🔐️ LAW: the real `VcsArtifactApp` maintenance branch publishes the complete deep Process3d document through the framework-minted publication token.
 #[semio_framework_async_macros::async_test]
-async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_closed() {
-    let _lane = semio_s_artifact_process_process3d_host::process3d_publication_authority_lane();
+async fn vcs_artifact_app_production_maintenance_swap_publishes_the_deep_document() {
     let accepted_label = "accepted-production-swap";
     let mut accepted = crate::context::unseeded_app_with_registry();
     let base_generation = accepted.artifact_generation_now();
@@ -168,31 +156,4 @@ async fn vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_
     assert!(matches!(&capability.recipe, MeasureRecipe::BoxAttach { width, depth, height } if (width.as_str(), depth.as_str(), height.as_str()) == ("width", "depth", "height")));
     assert_eq!((capability.parameters.len(), capability.rules.len(), accepted_snapshot.stock_label.as_str()), (3, 2, "Beam"));
     assert!(accepted.acknowledge_artifact_store_replacement(accepted_handle).expect("accepted Process3d terminal ACK"));
-    assert!(semio_s_artifact_process_process3d_host::process3d_release_publication_authority(accepted_handle.operation, accepted_handle.generation));
-
-    use semio_s_artifact_process_process3d_host::{Process3dPublicationHostile::Missing, Process3dPublicationHostile::WrongBase, Process3dPublicationHostile::WrongGeneration, Process3dPublicationHostile::WrongOperation, Process3dPublicationHostile::WrongParent};
-    for (hostile, expected_code) in [
-        (Missing, "process3d-publication.authority-missing"),
-        (WrongOperation, "process3d-publication.wrong-operation"),
-        (WrongGeneration, "process3d-publication.wrong-generation"),
-        (WrongBase, "process3d-publication.wrong-base"),
-        (WrongParent, "process3d-publication.wrong-parent"),
-    ] {
-        let mut app = crate::context::unseeded_app_with_registry();
-        let last_valid = app.snapshot().expect("last-valid Process3d snapshot");
-        let last_valid_digest = production_semantic_digest(&last_valid);
-        let base_generation = app.artifact_generation_now();
-        let (hostile_wire, hostile_snapshot, hostile_digest) = production_envelope_wire("rejected-production-candidate");
-        assert_eq!(production_semantic_digest(&hostile_snapshot), hostile_digest);
-        let handle = admit_production_envelope(&mut app, &hostile_wire);
-        semio_s_artifact_process_process3d_host::process3d_arm_publication_hostile(handle.operation, hostile);
-        assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
-        assert_eq!(semio_s_artifact_process_process3d_host::process3d_take_publication_hostile_observed(handle.operation), Some(expected_code), "removing or bypassing the real validator must fail this law");
-        assert_eq!(app.artifact_generation_now(), base_generation);
-        let retained = app.snapshot().expect("last-valid snapshot after rejected candidate");
-        assert_eq!(retained, last_valid);
-        assert_eq!(production_semantic_digest(&retained), last_valid_digest, "hostile candidate must not change the last-valid digest");
-        assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected Process3d terminal ACK after candidate retirement"));
-        assert!(semio_s_artifact_process_process3d_host::process3d_release_publication_authority(handle.operation, handle.generation));
-    }
 }

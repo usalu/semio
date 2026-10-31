@@ -1,0 +1,5 @@
+# Native Record Schema Matcher Test First
+
+Closed neutral original-name/ordinal/flatten/ambiguous/missing and long-common-prefix cases plus a genuine Source/heap/denial/finite-bank/paid-close owning law precede the matcher body. Borrowed leaf/flatten descriptor metadata is traversed via actual funded PagedList frames, with no new schema nesting cap. Actual original keys are bound, not copied into proxy owners. One comparison turn reads at most64 bytes and physicalcopy0; real stack reservation/row publication/release use actual defining outcomes. Serde independently pins match output; old derived receiver semantic fixtures remain mandatory. Source only, unmounted and unexecuted.
+
+Before adding enum-union descriptor behavior, two new closed name/ordinal cases pin that the same key appearing in separate variant alternatives selects the containing field once; it remains ambiguous when repeated inside one record alternative. This preserves prior max-per-variant flatten membership semantics. No hardcoded schema nesting cap is introduced.

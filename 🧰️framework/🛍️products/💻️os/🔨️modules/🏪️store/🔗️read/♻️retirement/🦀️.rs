@@ -1,7 +1,7 @@
 //! 🔗️ Original Store read guards retain exact generation and registry custody through funded closure.
-use super::{SnapshotRead,SnapshotReadLeaseRegistry,SnapshotReadLeaseRefusal,snapshot_registry_alias_demands,snapshot_registry_alias_close_step,artifact_retirement_box_demands,artifact_retirement_box_close_step};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,arc_custody::{SharedControlledRetirement,admit_shared_retirement}}};
-use std::{mem::ManuallyDrop,sync::Arc};
+use super::{SnapshotRead,SnapshotReadLeaseRefusal,snapshot_registry_alias_demands,snapshot_registry_alias_close_step,artifact_retirement_box_demands,artifact_retirement_box_close_step,bounded_outcome,outcome_retirement_step};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedWorkOutcome,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,arc_custody::{SharedControlledRetirement,admit_shared_retirement}}};
+use std::mem::ManuallyDrop;
 
 struct SnapshotReadRetirement<T:RetireOwned+Sync> {
     read:ManuallyDrop<Option<SnapshotRead<T>>>,
@@ -20,27 +20,34 @@ impl<T:RetireOwned+Sync> SnapshotReadRetirement<T> {
         if let Some(registry)=self.registry.as_ref(){if registry.strong_count()==1&&registry.has_returned(){return nested(registry.returned_admission_demands::<T>(|_|RetirementDemand{capacity_bytes:size_of::<SharedControlledRetirement<T>>(),depth:1,..Default::default()}).map_err(SnapshotReadLeaseRefusal::into_value_error)?);}}
         snapshot_registry_alias_demands(&self.registry)
     }
-    fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
-        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        let demand=self.demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"Store read closure exceeds admitted depth"));}
-        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if let Some(read)=self.read.as_mut(){if let Some(owner)=read.owner.take(){*self.alias=Some(SharedControlledRetirement::lease(owner));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}}
+    fn step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+        let refuse=|error:ValueError|RetainedWorkOutcome{result:Err(error),work:0};
+        let moved=|copied_items:usize|RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items,..Default::default()})),work:1};
+        if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
+        if grant.maximum_items==0{return bounded_outcome(Ok(RetainedCloneStep::Progress(Default::default())));}
+        let demand=match self.demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return refuse(error)};
+        if grant.maximum_depth<demand.depth{return refuse(ValueError::literal(ValueRefusalKind::DepthLimit,"Store read closure exceeds admitted depth"));}
+        if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return bounded_outcome(Ok(RetainedCloneStep::Progress(Default::default())));}
+        if let Some(read)=self.read.as_mut(){if let Some(owner)=read.owner.take(){*self.alias=Some(SharedControlledRetirement::lease(owner));return moved(1);}}
         let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
         if let Some(alias)=self.alias.as_mut(){
-            if alias.terminal_is_empty(){self.alias.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
-            return alias.step(child).map(|step|RetainedCloneStep::Progress(step.progress()));
+            if alias.terminal_is_empty(){self.alias.take();return moved(1);}
+            let result=alias.step(child).map(|step|RetainedCloneStep::Progress(step.progress()));
+            return RetainedWorkOutcome{result,work:alias.last_turn_work()};
         }
-        if let Some(mut read)=self.read.take(){if let Some(mut lease)=read.lease.take(){lease.return_now();*self.registry=Some(crate::SnapshotReadRegistryAliasRetirement::new(lease.registry));}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
-        if self.active_returned.is_some(){return artifact_retirement_box_close_step(&mut self.active_returned,child).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if let Some(registry)=self.registry.as_ref(){if registry.strong_count()==1&&registry.has_returned(){return match registry.try_admit_one_returned::<T,_>(child,|root,grant|admit_shared_retirement(root,grant,true)){Ok((owner,receipt))=>{*self.active_returned=owner;if !receipt.fits(child){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"retained read constructor exceeded its original grant"));}Ok(RetainedCloneStep::Progress(receipt))},Err(SnapshotReadLeaseRefusal::Busy)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(reason)=>Err(reason.into_value_error())};}}
-        snapshot_registry_alias_close_step(&mut self.registry,grant)
+        if let Some(mut read)=self.read.take(){if let Some(mut lease)=read.lease.take(){lease.return_now();*self.registry=Some(crate::SnapshotReadRegistryAliasRetirement::new(lease.registry));}return moved(1);}
+        if self.active_returned.is_some(){return artifact_retirement_box_close_step(&mut self.active_returned,child);}
+        if let Some(registry)=self.registry.as_ref(){if registry.strong_count()==1&&registry.has_returned(){
+            let turn=registry.try_admit_one_returned::<T,_>(child,|root,grant|admit_shared_retirement(root,grant,true));
+            let result=match turn.result{Ok((owner,receipt))=>{*self.active_returned=owner;if !receipt.fits(child){Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"retained read constructor exceeded its original grant"))}else{Ok(RetainedCloneStep::Progress(receipt))}},Err(SnapshotReadLeaseRefusal::Busy)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(reason)=>Err(reason.into_value_error())};
+            return RetainedWorkOutcome{result,work:turn.work};
+        }}
+        bounded_outcome(snapshot_registry_alias_close_step(&mut self.registry,grant))
     }
 }
 impl<T:RetireOwned+Sync> RetirementCursor for SnapshotReadRetirement<T> {
-    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
+    fn next_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.demands(body) }
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{outcome_retirement_step(self.step(grant))}
     fn terminal_is_empty(&self)->bool{self.read.is_none()&&self.alias.is_none()&&self.registry.is_none()&&self.active_returned.is_none()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
     fn allows_admitted_narrow_work(&self)->bool{true}

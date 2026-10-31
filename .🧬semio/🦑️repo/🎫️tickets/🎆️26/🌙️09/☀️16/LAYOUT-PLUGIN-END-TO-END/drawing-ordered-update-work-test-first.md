@@ -1,0 +1,3 @@
+# Ordered Update Work Test First
+
+Closed neutral cases cover all four AVL rotation orders, replacement and declared cancellation prefixes. A genuine UpdateCursor owning law precedes the staged allocation rewrite: same explicit finite bank, actual allocator request/release conservation, real one-request allocator refusal followed by same-stock retry, before-effect denial, independent CPU and BTreeMap/serde_json output. Every actual shared entry/node birth must be a separate funded turn retaining inputs on null. Read comparisons use bounded CPU and physical copy0; public semantic byte observations remain independent. Ordered --lib remains mandatory, unexecuted.

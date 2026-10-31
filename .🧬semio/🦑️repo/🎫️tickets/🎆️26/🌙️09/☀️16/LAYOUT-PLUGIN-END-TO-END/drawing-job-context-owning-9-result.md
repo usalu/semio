@@ -1,0 +1,5 @@
+# Context Owning 9 Runtime Result
+
+Actual outer28418 ended1/native101. The complete request clears canonical Source and compilation and runs all35 laws:16 pass,19 fail,zero ignored/filtered. Native receiving3 and real return-place1 pass. The newly authored actual child-ledger null-birth law establishes the intended real RED: measured allocation attempt1 but Context CPU0 instead of1, with physical0. The production correction can now follow that observed behavior frontier.
+
+Other concrete groups are source loan alias-return/header validation reading an already-transferred sealed handle, child close matching its already-returned upstream alias, two miswired fixture lookups, physical-q1 mistaken for CPU-q1 in one unpaid-body receiver law, and four original Builder fixture comparisons now owned by Rust. No stock, original guard, threshold or case is dropped. Log 802177 bytes SHA256 4910b468bc8073bf71b5fb818b130bff6a33d6221835fc29972a12b14ecc61d6. 886/891 input observations match; all per-path drift and Source totals remain in generated terminal.json.

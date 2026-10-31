@@ -1,0 +1,5 @@
+# Actual Scoped Outline Version3
+
+The exact Root-authorized normal managed Bun owning request70326 completed outer0:5pass/0fail,5894 assertions,217ms. All original four laws and strengthened exact directed-contour oracle law pass, including genuine paid birth versus true underfilled Frame-row denial, cancellation ownership, same-bank output close, OpenType glyph geometry, exact semantic ceiling with physical denial/resume, and hostile endpoint/control/orientation/nonzero line/closed-QUAD cases.
+
+Sequential captured strict4 request71627 completed outer0 with no diagnostics. Every17 pre/testpost/strictpost/current digest matches. No producer/stock/fuel/profile change or retry occurred in this attempt. The original version1 and2 actual red logs/receipts remain intact. Full command authority, actual handles/exits/log hashes and observations are in generated/drawing-ts-font-outline-3/launch-receipt.json. Root independent review remains the final hold-release step; broader Run/Font/Drawing acceptance is not implied.

@@ -100,6 +100,8 @@ impl<T> OriginalActorInput<T>{
   cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<T>(),..Default::default()})?;cx.consume_fuel(1);Ok(self.input.take())
  }
  /// 📬️ Transfers the original input only after paid readiness and successful semantic dispatch.
+ /// 💀️ A trapped guest instance is destroyed with its checkout: voids the held guest loan and issued turn and hands the still-owned input back to the host so it can reach its terminal owner.
+ pub fn void_trapped_checkout(&mut self)->Option<T>{self.guest=None;self.guest_policy=None;self.refused=None;self.issued=None;self.input.take()}
  pub fn take_dispatched_input(&mut self)->Result<Option<T>,ValueError>{if self.phase!=ActorGuestPhase::Dispatched||self.guest.is_some()||self.refused.is_some(){return Err(refusal("original Host input still requires its receiving owner"))}Ok(self.input.take())}
 }
 impl<T> Drop for OriginalActorInput<T>{fn drop(&mut self){assert!(std::thread::panicking()||(self.input.is_none()&&self.guest.is_none()&&self.refused.is_none()),"original Host input reached Drop before its receiving owner transferred it")}}
@@ -134,7 +136,7 @@ pub use original_job_source_wire::{OriginalJobSourceWireCursor,OriginalJobSource
 
 #[path="💼️job/⏸️park/🦀️.rs"]
 mod original_actor_park;
-pub use original_actor_park::{OriginalActorParkRefusal,OriginalActorParkedTurn,OriginalActorParkedOutcome,OriginalActorParkedReturn};
+pub use original_actor_park::{OriginalActorParkAdmission,OriginalActorParkAdmissionFailure,OriginalActorParkedTurn,OriginalActorParkedOutcome,OriginalActorParkedReturn};
 
 
 

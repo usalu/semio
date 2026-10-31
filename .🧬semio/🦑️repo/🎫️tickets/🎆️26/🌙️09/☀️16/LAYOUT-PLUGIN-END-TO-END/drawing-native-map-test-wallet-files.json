@@ -1,0 +1,22 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🎟️work/📐️.json",
+    "bytes": 137,
+    "sha256": "785f84977f730d945496d70848a1b6d87336bf7acd5bbcdaa8122fca96812cd3"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🎟️work/🔣️.json",
+    "bytes": 539,
+    "sha256": "4ee371bd3a3398db1511f8feef45c0117cf4833ec49a4bb9cd9be37ca398d835"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🔣️.json",
+    "bytes": 183,
+    "sha256": "c80cbb7e3d1119ed783a613238447cdbe2a81a1e78987b59d6edb13b48c0fe72"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🦀️.rs",
+    "bytes": 6104,
+    "sha256": "2c224b422e6ae96b322f2125752976c24f254f0ee71d29ab90aaf0885b208165"
+  }
+]

@@ -1,0 +1,31 @@
+{
+  "state": "prepared-current-unfiltered-owning",
+  "cwd": "/Users/ueli/Documents/semio",
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/🧰️framework/Cargo.toml",
+    "-p",
+    "semio-framework-job-failure",
+    "--doc"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-failure-docs-1",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-failure-docs-1/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-failure-docs-1/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-failure-docs-1/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-failure-docs-1/tmp"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-failure-docs-1/native.log",
+  "sourcePacket": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-job-failure-docs-1-inputs.json",
+  "sourcePacketSha256": "ca41a379ba8c0af48ff8701b488d755b8c4bc8aa8d69bff63577e3f5559a44ef",
+  "metadataSha256": "859d6d4a50a84d41660af62743ac1d231f64333e38589444e10b43fd48ab3836",
+  "scope": "Separate genuine Failure docs gate; conservative alltargets source observations, not an owning-test rerun."
+}

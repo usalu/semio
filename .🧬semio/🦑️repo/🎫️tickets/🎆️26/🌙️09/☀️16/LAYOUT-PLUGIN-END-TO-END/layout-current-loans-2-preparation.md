@@ -1,0 +1,5 @@
+# Current Layout Loan Narrow Successor
+
+Prepared only, no runtime. Same actual unfiltered10 registrations and strict11, same249 captured inputs plus refreshed dedicated importer;244 common input bytes remain exact. Only four reviewed files change: canonical readonly glyph/segment InputSequence.at (both actual pages and borrowed arrays implement it directly); explicit3/4-axis tuple annotations; checked defined matrix elements with unchanged valid arithmetic; existing vector.index guards for private missing path ordinals; explicit original fixture-page defined guard. Entire prior file bytes reconstruct by inverse in layout-current-loans-2-reversal.json. No cast/default/suppressor/golden/fixture/stock/tolerance changes. First9/1 and strict40 logs/receipt remain immutable.
+
+The previous actual geometry/read/loan passes remain historical, not relabelled current. Fresh10/strict11 needs Root review/release. Wider numeric/composition/outline retained output funding, DrawingText16/glyph14, wholeLayout phases, Native/browser remain open.

@@ -1,0 +1,34 @@
+{
+  "state": "prepared-after-actual-Core1-old-Source-constructor-RED",
+  "cwd": "/Users/ueli/Documents/semio",
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/🧰️framework/Cargo.toml",
+    "-p",
+    "semio-framework-value-retained-clone",
+    "--all-targets",
+    "--no-fail-fast",
+    "--",
+    "--nocapture"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-clone-core-owning-2",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-clone-core-owning-2/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-clone-core-owning-2/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-clone-core-owning-2/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-clone-core-owning-2/tmp"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-clone-core-owning-2/native.log",
+  "sourcePacket": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-clone-core-owning-2-inputs.json",
+  "scope": "Unfiltered same-package Core alltargets old27 consumer gate with current genuine SourceTesting fixture; not a Source/Host funding inference.",
+  "sourcePacketSha256": "da64e8475f4353f4fc0a59c03682bb77ade3bd129bb19364773482fce1d27ec0",
+  "metadataSha256": "a30e4342a15c7b52fc771d9dfa3307647c19f5e41e0d7c581d5fea9e6da6694d"
+}

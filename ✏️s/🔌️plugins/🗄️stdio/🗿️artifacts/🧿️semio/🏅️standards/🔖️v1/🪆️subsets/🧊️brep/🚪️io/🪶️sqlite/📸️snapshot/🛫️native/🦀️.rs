@@ -33,7 +33,7 @@ fn surface(value:&BrepSurface,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Resul
  BrepSurface::Torus{center,axis,major_radius,minor_radius}=>{tag(4,b'T',w,e)?;point3(center,w,e)?;comma(w,e)?;point3(axis,w,e)?;comma(w,e)?;w.number(*major_radius,e)?;comma(w,e)?;w.number(*minor_radius,e)?},
  BrepSurface::Nurbs{control_points,weights,u_count,v_count,degree_u,degree_v,knots_u,knots_v}=>{tag(5,b'N',w,e)?;w.list(control_points,e,|w,value|point3(value,w,e))?;comma(w,e)?;numbers(weights,w,e)?;for value in[u_count,v_count,degree_u,degree_v]{comma(w,e)?;w.integer(u64::from(*value),e)?}comma(w,e)?;numbers(knots_u,w,e)?;comma(w,e)?;numbers(knots_v,w,e)?}
  }w.delimiter(b"]",e)}
-pub fn fields(value:&SemioBrepSnapshot,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{
+pub fn fields(value:&SemioBrepSnapshot,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{if e==SnapshotEncoding::Binary{return semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::record_binary(value,w)}
  w.entities(1)?;if e==SnapshotEncoding::Binary{w.byte(1)?}else{w.bytes(b"schema=")?}w.string(&value.schema,e)?;
  w.delimiter(b"\nvertices=",e)?;w.list(&value.vertices,e,|w,value|{w.delimiter(b"[",e)?;w.string(&value.id,e)?;comma(w,e)?;point3(&value.point,w,e)?;comma(w,e)?;w.number(value.tol,e)?;w.delimiter(b"]",e)})?;
  w.delimiter(b"\nedges=",e)?;w.list(&value.edges,e,|w,value|{w.delimiter(b"[",e)?;for(index,value)in[&value.id,&value.start_vertex,&value.end_vertex].into_iter().enumerate(){if index!=0{comma(w,e)?}w.string(value,e)?}comma(w,e)?;curve(&value.curve,w,e)?;comma(w,e)?;w.number(value.tol,e)?;w.delimiter(b"]",e)})?;

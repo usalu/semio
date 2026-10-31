@@ -363,7 +363,7 @@
         "proceeds": true
       },
       {
-        "id": "holder-of-the-resource-waits-for-a-foreign-young-writer",
+        "id": "holder-of-the-resource-passes-a-foreign-young-writer",
         "requester": {
           "mode": "shared",
           "sharedCohort": false,
@@ -380,7 +380,7 @@
             "pid": 9
           }
         ],
-        "proceeds": false
+        "proceeds": true
       },
       {
         "id": "old-writer-between-readers-stands-aside",

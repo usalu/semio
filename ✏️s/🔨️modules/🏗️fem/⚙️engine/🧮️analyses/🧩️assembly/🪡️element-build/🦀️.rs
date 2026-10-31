@@ -70,6 +70,10 @@ impl AnalysisModelOwner<'_> {
     }
 }
 
+/// 🏷️ Which finished byte string the pending publication delivers to the caller.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum AssemblyPublicationKind { Checkpoint, Preview, Complete }
+
 pub struct AssemblyJob<'model> {
     pub(super) model: AnalysisModelOwner<'model>,
     pub(super) operation: Operation,
@@ -79,6 +83,7 @@ pub struct AssemblyJob<'model> {
     pub(super) close_lane: u8,
     pub(super) model_close: AnalysisModelCloseCursor,
     pub(super) desk: NumericalOutcomeDesk,
+    pub(super) publication: Option<(AssemblyPublicationKind, NumericalBytesPublication)>,
 }
 
 impl<'model> AssemblyJob<'model> {
@@ -130,6 +135,7 @@ impl<'model> AssemblyJob<'model> {
             close_lane: 0,
             model_close: AnalysisModelCloseCursor::default(),
             desk: NumericalOutcomeDesk::default(),
+            publication: None,
         })
     }
 

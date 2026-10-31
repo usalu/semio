@@ -1,0 +1,9 @@
+# Retained Dependency Owner Review
+
+Root reviewed the actual private withRepositoryDependencyRetirementReferencesV1, its selected-effect call sites and the retained-generation/reference/funding DATA module. The reviewed flow takes actual exclusive pins for every physical roster member, keeps historical and current Source aliases, rejects unknown nonempty generations and inbound retained references, holds native/bindings/Source custody, and rechecks fingerprints through receipt-last effects. No concrete additional safety defect was found in this bounded source review. This is not a kernel-custody or live-retirement proof.
+
+The dependency owner reported original managed25540 terminal green: five focused tests,716 expectations, zero failures,977ms after admission. The suite uses production import/transpilation plus source-boundary ports and independent SQLite/Ajv checks. Control-aware declared-owner integration is unexecuted. No live cache action or production recipe/config rollout occurred.
+
+The executable setup orchestrator must first rematerialize and qualify current Source bindings while respecting actual retained8GiB funding and temporary old-plus-fresh payload. It may then retire only proved inactive candidates, reserve/settle additional funding through the actual issuer and run the complete canonical publication witness. Neither successful inert DATA parsing nor JSON funding claims grant authority. Unknown graphs, pins and unsupported old payload must continue to retain/refuse. Agents were explicitly asked to preserve these gates.
+
+Native original86334 remains live: latest child-owner receipt reports headroom reservations13.2 to6.0GiB, approximately618seconds in that phase, no compiler or test result. Its same four-package selection and terminal HOLD remain. Full Layout activation and browser evidence remain absent; goal and ticket stay active.

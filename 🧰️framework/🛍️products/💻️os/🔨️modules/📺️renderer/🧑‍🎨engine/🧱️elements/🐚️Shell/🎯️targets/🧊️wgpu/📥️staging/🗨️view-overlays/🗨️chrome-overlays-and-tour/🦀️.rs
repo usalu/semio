@@ -292,7 +292,8 @@ pub fn chrome_tour_layout(state: &OverlaysViewCtx<'_>, atlas: &mut FontAtlas, th
         .enumerate()
         .map(|(index, interaction)| {
             let done = state.chrome.chrome_build.tour_state.as_ref().is_some_and(|tour| tour.completed_interactions.contains(&index));
-            let label = if step.ordered { format!("{}. {}", index + 1, interaction.label) } else { interaction.label.clone() };
+            let caption = interaction.label.resolve(state.prefs.active_terminology(), state.prefs.active_locale());
+            let label = if step.ordered { format!("{}. {}", index + 1, caption) } else { caption.to_string() };
             (label, done)
         })
         .collect();

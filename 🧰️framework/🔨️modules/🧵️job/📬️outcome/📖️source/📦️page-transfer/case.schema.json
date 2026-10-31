@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "maximumTurns",
+    "physicalTransferCopyBytes",
+    "metadataWork",
+    "cases",
+    "deniedAxes",
+    "paidHeapBytes",
+    "cachedWork",
+    "refusedPostingKeepsOutput"
+  ],
+  "properties": {
+    "stock": {
+      "const": "existing PayloadCase finite bank; no new source"
+    },
+    "maximumTurns": {
+      "const": 64
+    },
+    "physicalTransferCopyBytes": {
+      "const": 0
+    },
+    "metadataWork": {
+      "const": 1
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "single",
+          "pages": [
+            {
+              "value": 1
+            }
+          ],
+          "transferTurns": 1,
+          "remainingPages": 0
+        },
+        {
+          "name": "shared-ledger",
+          "pages": [
+            {
+              "value": 1
+            },
+            {
+              "value": 2
+            }
+          ],
+          "transferTurns": 2,
+          "remainingPages": 1
+        }
+      ]
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "depth"
+      ]
+    },
+    "paidHeapBytes": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "refusedPostingKeepsOutput": {
+      "const": true
+    }
+  }
+}

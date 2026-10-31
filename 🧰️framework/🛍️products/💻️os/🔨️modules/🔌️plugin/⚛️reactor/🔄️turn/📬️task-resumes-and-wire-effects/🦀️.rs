@@ -31,8 +31,12 @@ pub fn drain_task_resumes<PA: semio_framework_plugin_reactor_app::PluginApp>(run
         let Some(resume) = TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop()) else {
             return delivering;
         };
-        if native_close_key(runtime, resume.instance).is_err() {
-            TASK_RESUMES.with(|resumes| resumes.borrow_mut().push_admitted(resume));
+        if let Err(fault) = native_close_key(runtime, resume.instance) {
+            if resume_waits_for_lifecycle(&fault) {
+                TASK_RESUMES.with(|resumes| resumes.borrow_mut().push_admitted(resume));
+            } else {
+                effects.push(shell_fault_effect(resume.instance, &fault));
+            }
             continue;
         }
         let input = match resume.outcome {
@@ -51,17 +55,29 @@ pub fn drain_task_resumes<PA: semio_framework_plugin_reactor_app::PluginApp>(run
             route_app_frame(resume.instance, &frame_bytes, effects);
         }
         for one in &output.effects {
-            if let Ok(effect) = decode_wire_effect(one) {
-                push_admitted_effect(effects, resume.instance, effect);
+            match decode_wire_effect(one) {
+                Ok(effect) => push_admitted_effect(effects, resume.instance, effect),
+                Err(()) => effects.push(shell_fault_effect(resume.instance, &undecodable_resume_output("effect"))),
             }
         }
         for one in &output.events {
-            if let Ok(event) = decode_wire_app_event(one) {
-                effects.push(Effect::PublishEvent { topic: event.kind, payload: store::pack_rt::encode_wire_value(&event.payload) });
+            match decode_wire_app_event(one) {
+                Ok(event) => effects.push(Effect::PublishEvent { topic: event.kind, payload: store::pack_rt::encode_wire_value(&event.payload) }),
+                Err(()) => effects.push(shell_fault_effect(resume.instance, &undecodable_resume_output("event"))),
             }
         }
     }
     delivering || !TASK_RESUMES.with(|resumes| resumes.borrow().is_empty())
+}
+
+/// ⏳️ Only a busy lifecycle authority is transient: a resume for an instance without an acknowledged live lifetime terminates with a fault instead of re-queuing forever.
+pub fn resume_waits_for_lifecycle(fault: &semio_framework::Fault) -> bool {
+    fault.message == "lifecycle authority busy"
+}
+
+/// 🧯️ The fault a resumed task's output raises when one of its wire outputs cannot be decoded, so the action never silently vanishes.
+pub fn undecodable_resume_output(kind: &'static str) -> semio_framework::Fault {
+    semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.resume-output-undecodable"), format!("task resume produced an undecodable wire {kind}"))
 }
 
 // 🚫️async: E5 executor bridge — `store::pack_rt::decode_wire_value` is genuinely `async fn`
@@ -121,4 +137,22 @@ pub(super) fn push_admitted_effect(effects: &mut Vec<Effect>, instance: u32, eff
 pub(super) fn decode_wire_app_event(bytes: &[u8]) -> Result<semio_framework::kernel::AppEvent, ()> {
     let value = store::pack_rt::decode_wire_value(bytes).map_err(|_| ())?;
     semio_framework_value::FromValue::from_value(value).map_err(|_| ())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_a_busy_lifecycle_authority_requeues_a_resume() {
+        assert!(resume_waits_for_lifecycle(&reactor_close_fault("lifecycle authority busy")));
+        assert!(!resume_waits_for_lifecycle(&reactor_close_fault("instance has no acknowledged live lifetime")));
+    }
+
+    #[test]
+    fn an_undecodable_resume_output_names_its_kind_in_a_framework_fault() {
+        let fault = undecodable_resume_output("effect");
+        assert_eq!(fault.code.0, "plugin.resume-output-undecodable");
+        assert!(fault.message.contains("effect"));
+    }
 }

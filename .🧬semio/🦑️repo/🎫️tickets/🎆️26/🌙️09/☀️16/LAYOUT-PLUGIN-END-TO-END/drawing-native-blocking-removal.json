@@ -1,0 +1,11 @@
+{
+  "state": "false-funding-api-removed-downstream-migration-open",
+  "removed": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔁️blocking/🦀️.rs",
+      "bytes": 4960,
+      "beforeSha256": "19f1bffb261f0b3aec58ae9174a9bea9d0b5c3f61dc067a3d10aa90a5873b46f"
+    }
+  ],
+  "actualClients": "drawing-native-blocking-caller-roster.json"
+}

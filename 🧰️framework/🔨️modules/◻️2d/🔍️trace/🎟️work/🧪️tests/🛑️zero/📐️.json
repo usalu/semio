@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "sourceCase": "single pixel",
+  "quantum": 1,
+  "grant": {
+    "maximumItems": 0,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 0
+  },
+  "expected": {
+    "work": 0,
+    "edges": 0
+  },
+  "rules": {
+    "existingApiBeforeNewMethods": true,
+    "originalMaskBorrowUnchanged": true,
+    "primaryAndCleanupErrorsRetained": true,
+    "notHostSourceAuthority": true
+  }
+}

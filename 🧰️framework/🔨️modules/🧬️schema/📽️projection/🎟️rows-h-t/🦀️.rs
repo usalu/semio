@@ -128,9 +128,9 @@ export type IntroductionGesture = { "kind": "leftClick", at: IntroductionPoint, 
  */
 export type IntroductionInteraction = { on: IntroductionInteractionKind,
 /**
- * 🏷️ Short checklist label shown in the step's info box.
+ * 🏷️ Short checklist label shown in the step's info box, locale×terminology-checked like the step's `title`.
  */
-label: string,
+label: unknown,
 /**
  * 🎉️ Element id stamped `data-celebrated` on completion; `None` falls back to the step's `introduce`.
  */

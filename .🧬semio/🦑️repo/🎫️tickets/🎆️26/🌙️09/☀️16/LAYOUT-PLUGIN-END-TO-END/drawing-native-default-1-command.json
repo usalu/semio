@@ -1,0 +1,50 @@
+{
+  "release": "Root explicitly released fresh Default all-targets/docs in current thread; one invocation each, docs only after all-target0 and exact postcheck",
+  "program": "repo",
+  "arguments": [
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "🧰️framework/Cargo.toml",
+    "-p",
+    "semio-framework-value-native-default",
+    "--all-targets",
+    "--",
+    "--nocapture"
+  ],
+  "conditionalDocsArguments": [
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "🧰️framework/Cargo.toml",
+    "-p",
+    "semio-framework-value-native-default",
+    "--doc",
+    "--",
+    "--nocapture"
+  ],
+  "cwd": "/Users/ueli/Documents/semio",
+  "environment": {
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-default-1",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-default-1",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-default-1",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-default-1",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-default-1",
+    "SEMIO_BUILD_MODE": "prototype"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-default-1/test.log",
+  "docsLog": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-default-1/docs.log",
+  "inputPacket": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-native-default-3-inputs.json",
+  "inputPacketSha256": "2eac51453cb70f6998607ebf67029bc0919cb90a4ba1cdec6f67ebf68a558ee3",
+  "expectedOwningLaws": 4,
+  "expectedDocLaws": 1,
+  "scope": "Canonical lower NativeDefault all-target owner after real production extraction; no NativeOwned/Context readiness claim"
+}

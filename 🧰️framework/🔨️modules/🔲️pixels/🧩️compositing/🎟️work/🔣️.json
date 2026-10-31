@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "axes",
+    "tile",
+    "referenceBytes",
+    "compileSemanticWork"
+  ],
+  "properties": {
+    "axes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "tile": {
+      "const": 256
+    },
+    "referenceBytes": {
+      "const": 4
+    },
+    "compileSemanticWork": {
+      "const": 0
+    }
+  }
+}

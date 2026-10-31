@@ -32,11 +32,25 @@
     "bind-original-source",
     "select-stream",
     "initialize-original-bindings",
-    "append-original-slice",
+    "retain-original-ledger-alias",
+    "reserve-original-page",
+    "allocate-original-page",
+    "publish-original-page",
+    "copy-original-source",
     "seal-original",
     "borrow-original",
     "acknowledge-original-descriptor",
     "close-original-pages",
     "remove-original-publication"
-  ]
+  ],
+  "originalStock": [
+    12000,
+    65536,
+    65536,
+    65536,
+    9
+  ],
+  "originalFuel": 12000,
+  "maximumSourceTurns": 2000,
+  "maximumCloseTurns": 10000
 }

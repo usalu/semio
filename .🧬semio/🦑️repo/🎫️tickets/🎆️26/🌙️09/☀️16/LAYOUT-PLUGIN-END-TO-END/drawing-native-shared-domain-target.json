@@ -1,0 +1,35 @@
+{
+  "beforeWholeLawHash": "bd6995ada35ccd7c704b8f38065c4de1f2d89802849810a6cfe36e682bcb1643",
+  "privateLawNames": [
+    "native_shared_original_receive_exact_prefix_cancellation_and_transfer",
+    "native_shared_original_callback_refusal_retains_paid_child_authority"
+  ],
+  "publicLawNames": [
+    "native_record32_single_active_child_fits4096_and_preserves_every_original_prefix",
+    "native_declared_defaults_keep_missing_fields_original_and_heapless",
+    "native_flattened_original_record_preserves_source_schema_and_all_partial_custody",
+    "native_flattened_ordinals_refuse_ambiguous_declared_ids"
+  ],
+  "nestedPublicLawFile": "🫙️empty/🦀️.rs",
+  "exactWholeLawInverseVerified": true,
+  "publicForeignCheck": "After an actual first paid bind, turns>0 observes the original source binding; no new public field hook.",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/🦀️.rs",
+      "sha256": "dfc03c97dca315b3f29abddabc2187dd84d02ffb7bf61d45d17803c4c6ba7434"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/📥️driver/🦀️.rs",
+      "sha256": "705b05277ff3cd2d2135d683ebfc36f452245fbbdaefe58d62ffbc3bc9048976"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/📖️public/🦀️.rs",
+      "sha256": "87c52434bc459e06f26774ed12c5bfddf7a84466a1e8c88c5f894390ada4c9aa"
+    }
+  ],
+  "manifestBefore": "f0b188119140d97d93bd897f5b78c9c20846cbb92f9fe78f4374da785d15d95c",
+  "manifestAfter": "f156bbb924d318f638a6fa6224d6485f8eb5500fb2ec1debee16958b326884eb",
+  "samePackage": true,
+  "allTargetsRequired": true,
+  "capsUnchanged": true
+}

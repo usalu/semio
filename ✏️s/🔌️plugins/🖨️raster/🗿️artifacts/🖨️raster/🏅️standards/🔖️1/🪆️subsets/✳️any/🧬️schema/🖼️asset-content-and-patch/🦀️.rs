@@ -7,7 +7,7 @@ use super::*;
 pub struct RasterImageAsset {
     pub mime: String,
     #[dsl(base64)]
-    #[value(with = "asset_data_base64")]
+    #[value(with = "semio_framework_value::bytes")]
     pub data: Vec<u8>,
 }
 
@@ -28,7 +28,7 @@ pub fn image_asset_child_handle(asset_id: &str, asset: &RasterImageAsset) -> Ras
     mint_asset_child_handle(asset_id, &[asset.mime.as_bytes(), b"\x1f", &asset.data].concat())
 }
 
-/// 🕸️ Deterministic content-addressed CHILD handle, hashed off the composed child's own CANONICAL
+/// 👶️ Deterministic content-addressed CHILD handle, hashed off the composed child's own CANONICAL
 /// content (`SemioImageSnapshot`'s real pack bytes) rather than the source encoding's raw bytes —
 /// this is the handle `mint_raster_asset_child` actually persists whenever decode succeeds. Necessary
 /// because two different (but pixel-identical) PNG byte streams — e.g. a hand-authored fixture vs.
@@ -58,7 +58,7 @@ pub fn adopt_raster_asset_owner(source: &RasterAssetChild, target: &mut RasterAs
     }
 }
 
-/// 🖼️ Nullable pixel attachment and display extent, preserved exactly by undo.
+/// 🟦️ Nullable pixel attachment and display extent, preserved exactly by undo.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
@@ -191,12 +191,12 @@ pub fn raster_image_content_id(prefix: &str, image: &SemioImageSnapshot) -> Stri
     format!("{prefix}-{}", framework_hash::hex_lower(&hash.finalize()[..8]))
 }
 
-/// 🪆️ Attaches decoded image content without reading or writing a physical representation.
+/// 🔓️ Attaches decoded image content without reading or writing a physical representation.
 pub fn mint_raster_image_child(asset_id: &str, image: &SemioImageSnapshot) -> RasterAssetChild {
     image_content_child_handle(asset_id, image).with_local_owner(std::sync::Arc::new(image.clone()))
 }
 
-/// 🖼️ Reads the decoded content owned by this exact snapshot child.
+/// 🧲️ Reads the decoded content owned by this exact snapshot child.
 pub fn raster_image(assets: &RasterOwnedMap<RasterAssetChild>, asset_id: &str) -> Option<SemioImageSnapshot> {
     Some(assets.get(asset_id)?.local_owner::<SemioImageSnapshot>()?.as_ref().clone())
 }
@@ -229,7 +229,7 @@ pub fn retire_raster_value_cold<T: semio_framework_value::retirement::RetireOwne
     }
 }
 
-/// 🧹️ Drives one admitted retirement frame to terminal-empty through grants sized exactly by its own quotes.
+/// 🚪️ Drives one admitted retirement frame to terminal-empty through grants sized exactly by its own quotes.
 pub fn close_raster_owner_cold(mut owner: Box<dyn store::ErasedSnapshotRetirement>) {
     let mut turns = 0usize;
     while !owner.terminal_is_empty() {

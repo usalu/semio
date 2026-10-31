@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "denials",
+    "work",
+    "receipt",
+    "cancellation"
+  ],
+  "properties": {
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth",
+        "maximumTurns"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumTurns": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "denials": {
+      "const": [
+        "items",
+        "depth"
+      ]
+    },
+    "work": {
+      "const": {
+        "denied": 0,
+        "alias": 1,
+        "returned": 1,
+        "cached": 0
+      }
+    },
+    "receipt": {
+      "const": {
+        "copied_items": 1,
+        "copied_bytes": 0,
+        "retained_capacity_bytes": 0,
+        "released_bytes": 0
+      }
+    },
+    "cancellation": {
+      "const": [
+        false,
+        true
+      ]
+    }
+  }
+}

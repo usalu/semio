@@ -1,9 +1,11 @@
 //! ⏱️ Phased kernel jobs: the stepped widget job of every compute that imports shape values into a fresh kernel session, runs kernel steps against it and exports the result.
 //!
-//! A [`Pipeline`] is an ordered list of steps over one [`Work`] (the session, the imported inputs and the groups of result handles). A step that is a lane J operation job is advanced with the remaining fuel of the grant, every other step is one unit, so a widget job yields between import, kernel call and export. A panic inside the kernel becomes a `generation3d.geometry.kernel` fault instead of tearing the engine down.
+//! A [`Pipeline`] is an ordered list of steps over one [`Work`] (the session, the imported inputs and the groups of result handles). A step that is a lane J operation job is advanced with the remaining fuel of the caller's `StepContext`, every other step is one unit, so a widget job yields between import, kernel call and export. A panic inside the kernel becomes a `generation3d.geometry.kernel` fault instead of tearing the engine down.
 #![allow(clippy::result_large_err)]
 
 use semio_s_artifact_procedural_3d_model::catalogue::{Kind, Quality};
+use semio_s_artifact_procedural_3d_geometry_compute::{fuel_budget, settle, spend, unfunded};
+use semio_s_artifact_procedural_3d_geometry_compute::{OriginalTurnFailure, StepContext, StepFault};
 use semio_s_artifact_procedural_3d_geometry_compute::finish;
 use semio_s_artifact_procedural_3d_geometry_compute::KernelSession;
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
@@ -96,7 +98,7 @@ impl Work {
         self.imported.get(index).map(|imported| imported.handle.clone()).ok_or_else(pipeline_fault)
     }
 
-    /// 📥️ The session handles of every imported input, in import order.
+    /// 🎟️ The session handles of every imported input, in import order.
     pub fn handles(&self) -> Vec<GeometryHandle> {
         self.imported.iter().map(|imported| imported.handle.clone()).collect()
     }
@@ -146,7 +148,7 @@ pub enum Flow {
     Finish(Outputs),
 }
 
-type Step = Box<dyn FnMut(&mut Work, usize) -> Result<Flow, WidgetFault> + Send>;
+type Step = Box<dyn FnMut(&mut Work, &mut StepContext<'_>) -> Result<Flow, StepFault> + Send>;
 
 /// 🧵️ The builder of a phased widget job.
 pub struct Pipeline {
@@ -168,14 +170,14 @@ impl Pipeline {
         Self { quality: kind.quality, sources: Vec::new(), steps: Vec::new() }
     }
 
-    /// 📥️ Imports a shape value into the session; its handle is `Work::handle(n)` for the n-th import.
+    /// 🔷️ Imports a shape value into the session; its handle is `Work::handle(n)` for the n-th import.
     pub fn import(mut self, shape: &Arc<ShapeValue>) -> Self {
         let index = self.sources.len();
         self.sources.push(shape.clone());
-        self.step(move |work, _| work.import(index).map(|()| Flow::Next))
+        self.step(move |work, _| Ok(work.import(index).map(|()| Flow::Next)?))
     }
 
-    /// 🧱️ Adds an input shape value that stays out of the session, for steps that read the value itself.
+    /// ➕️ Adds an input shape value that stays out of the session, for steps that read the value itself.
     pub fn input(mut self, shape: &Arc<ShapeValue>) -> Self {
         self.sources.push(shape.clone());
         self
@@ -184,51 +186,54 @@ impl Pipeline {
     /// 🔺️ Tessellates the input at `index` into `Work::meshes`, a slice of units per call.
     pub fn tessellate(self, index: usize, deflection: f64) -> Self {
         let mut running: Option<ShapeTessellationJob> = None;
-        self.step(move |work, fuel| {
+        self.step(move |work, cx| {
             if running.is_none() {
                 running = Some(work.source(index)?.tessellate_job(deflection).map_err(|error| kernel_fault(&error))?);
             }
             let job = running.as_mut().ok_or_else(pipeline_fault)?;
-            match job.step(fuel).map_err(|error| kernel_fault(&error))? {
+            let budget = fuel_budget(cx);
+            let step = job.step(budget).map_err(|error| kernel_fault(&error))?;
+            settle(cx, budget, matches!(step, TessellationStep::Working(_)));
+            match step {
                 TessellationStep::Working(progress) => Ok(Flow::Working(fraction(progress.units_done, progress.units_total))),
                 TessellationStep::Done(_) => {
                     let (mesh, _) = running.take().and_then(ShapeTessellationJob::into_mesh).ok_or_else(pipeline_fault)?;
                     work.meshes.push(mesh);
                     Ok(Flow::Next)
                 }
-                TessellationStep::Cancelled(_) => Err(cancelled_fault()),
+                TessellationStep::Cancelled(_) => Err(cancelled_fault().into()),
             }
         })
     }
 
-    /// 🪜️ A step that may take several calls.
-    pub fn step(mut self, run: impl FnMut(&mut Work, usize) -> Result<Flow, WidgetFault> + Send + 'static) -> Self {
+    /// 👣️ A step that may take several calls.
+    pub fn step(mut self, run: impl FnMut(&mut Work, &mut StepContext<'_>) -> Result<Flow, StepFault> + Send + 'static) -> Self {
         self.steps.push(Box::new(run));
         self
     }
 
-    /// 🪜️ A step that is one unit of work.
+    /// 🌀️ A step that is one unit of work.
     pub fn once(self, run: impl FnOnce(&mut Work) -> Result<(), WidgetFault> + Send + 'static) -> Self {
         let mut run = Some(run);
         self.step(move |work, _| match run.take() {
-            Some(run) => run(work).map(|()| Flow::Next),
-            None => Err(pipeline_fault()),
+            Some(run) => Ok(run(work).map(|()| Flow::Next)?),
+            None => Err(pipeline_fault().into()),
         })
     }
 
-    /// ⏱️ A lane J operation job: planned from the work on its first call, advanced with the remaining fuel, its result handles become group 0.
+    /// 💼️ A lane J operation job: planned from the work on its first call, advanced with the remaining fuel, its result handles become group 0.
     pub fn operation(self, plan: impl FnOnce(&mut Work) -> Result<BrepOperation, WidgetFault> + Send + 'static) -> Self {
         self.operations(move |work| plan(work).map(|operation| vec![operation]))
     }
 
-    /// ⏱️ Lane J operation jobs run one after the other, each advanced with the remaining fuel; the result handles of all of them, in order, become group 0.
+    /// 🏃️ Lane J operation jobs run one after the other, each advanced with the remaining fuel; the result handles of all of them, in order, become group 0.
     pub fn operations(self, plan: impl FnOnce(&mut Work) -> Result<Vec<BrepOperation>, WidgetFault> + Send + 'static) -> Self {
         let mut plan = Some(plan);
         let mut queue: VecDeque<BrepOperation> = VecDeque::new();
         let mut total = 0usize;
         let mut running: Option<BrepOperationJob> = None;
         let mut collected: Vec<GeometryHandle> = Vec::new();
-        self.step(move |work, fuel| {
+        self.step(move |work, cx| {
             if let Some(plan) = plan.take() {
                 queue = plan(work)?.into();
                 total = queue.len();
@@ -249,7 +254,10 @@ impl Pipeline {
                 }
                 let job = running.as_mut().ok_or_else(pipeline_fault)?;
                 let finished = total.saturating_sub(queue.len() + 1);
-                match work.session.brep().step_operation_job_sync(job, fuel).map_err(|error| kernel_fault(&error))? {
+                let budget = fuel_budget(cx);
+                let step = work.session.brep().step_operation_job_sync(job, budget).map_err(|error| kernel_fault(&error))?;
+                settle(cx, budget, matches!(step, BrepOperationStep::Working(_)));
+                match step {
                     BrepOperationStep::Working(progress) => return Ok(Flow::Working((finished as f32 + fraction(progress.done, progress.total)) / total.max(1) as f32)),
                     BrepOperationStep::Ready(handles) => {
                         collected.extend(handles);
@@ -258,23 +266,23 @@ impl Pipeline {
                             return Ok(Flow::Working((finished + 1) as f32 / total.max(1) as f32));
                         }
                     }
-                    BrepOperationStep::Cancelled(_) => return Err(cancelled_fault()),
+                    BrepOperationStep::Cancelled(_) => return Err(cancelled_fault().into()),
                 }
             }
         })
     }
 
-    /// 📤️ Exports every handle of every group to `Work::values`, as many per call as the fuel allows.
+    /// 🤲️ Exports every handle of every group to `Work::values`, as many per call as the fuel allows.
     pub fn export_groups(self) -> Self {
         let mut position = (0usize, 0usize);
-        self.step(move |work, fuel| {
+        self.step(move |work, cx| {
             if work.values.len() != work.groups.len() {
                 work.values = vec![Vec::new(); work.groups.len()];
             }
             let total: usize = work.groups.iter().map(Vec::len).sum();
             let mut done: usize = work.groups.iter().take(position.0).map(Vec::len).sum::<usize>() + position.1;
-            let mut budget = fuel.max(1);
-            while position.0 < work.groups.len() && budget > 0 {
+            let mut exported = 0usize;
+            while position.0 < work.groups.len() && (exported == 0 || !cx.should_yield()) {
                 let Some(handle) = work.groups[position.0].get(position.1).cloned() else {
                     position = (position.0 + 1, 0);
                     continue;
@@ -283,7 +291,8 @@ impl Pipeline {
                 work.values[position.0].push(value);
                 position.1 += 1;
                 done += 1;
-                budget -= 1;
+                exported += 1;
+                spend(cx, 1);
             }
             while position.0 < work.groups.len() && position.1 >= work.groups[position.0].len() {
                 position = (position.0 + 1, 0);
@@ -300,13 +309,13 @@ impl Pipeline {
     pub fn finish(self, build: impl FnOnce(&mut Work) -> Result<Outputs, WidgetFault> + Send + 'static) -> Box<dyn WidgetJob> {
         let mut build = Some(build);
         self.step(move |work, _| match build.take() {
-            Some(build) => build(work).map(Flow::Finish),
-            None => Err(pipeline_fault()),
+            Some(build) => Ok(build(work).map(Flow::Finish)?),
+            None => Err(pipeline_fault().into()),
         })
         .start()
     }
 
-    /// 🏁️ Ends the pipeline with the first result handle exported as the shape output `port`.
+    /// 🚰️ Ends the pipeline with the first result handle exported as the shape output `port`.
     pub fn exported(self, port: &'static str) -> Box<dyn WidgetJob> {
         self.finish(move |work| {
             let handle = work.result(0)?;
@@ -350,29 +359,32 @@ impl PhasedJob {
 }
 
 impl WidgetJob for PhasedJob {
-    fn step(&mut self, fuel: usize) -> WidgetStep {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> Result<Option<WidgetStep>, OriginalTurnFailure> {
         if let Some(evaluation) = &self.finished {
-            return WidgetStep::Done(evaluation.clone());
+            return Ok(Some(WidgetStep::Done(evaluation.clone())));
         }
-        let mut left = fuel.max(1);
+        if unfunded(cx) {
+            return Ok(None);
+        }
         loop {
             let (Some(work), Some(step)) = (self.work.as_mut(), self.steps.get_mut(self.cursor)) else {
-                return self.end(Err(pipeline_fault()));
+                return Ok(Some(self.end(Err(pipeline_fault()))));
             };
-            let outcome = catch_unwind(AssertUnwindSafe(|| step(work, left))).unwrap_or_else(|_| Err(panic_fault()));
+            let outcome = catch_unwind(AssertUnwindSafe(|| step(work, cx))).unwrap_or_else(|_| Err(panic_fault().into()));
             match outcome {
-                Err(fault) => return self.end(Err(fault)),
-                Ok(Flow::Finish(outputs)) => return self.end(Ok(outputs)),
+                Err(StepFault::Turn(failure)) => return Err(failure),
+                Err(StepFault::Widget(fault)) => return Ok(Some(self.end(Err(fault)))),
+                Ok(Flow::Finish(outputs)) => return Ok(Some(self.end(Ok(outputs)))),
                 Ok(Flow::Working(inner)) => {
                     self.inner = inner.clamp(0.0, 1.0);
-                    return WidgetStep::Working { progress: self.progress().min(0.999) };
+                    return Ok(Some(WidgetStep::Working { progress: self.progress().min(0.999) }));
                 }
                 Ok(Flow::Next) => {
                     self.cursor += 1;
                     self.inner = 0.0;
-                    left = left.saturating_sub(1);
-                    if left == 0 {
-                        return WidgetStep::Working { progress: self.progress().min(0.999) };
+                    spend(cx, 1);
+                    if cx.should_yield() {
+                        return Ok(Some(WidgetStep::Working { progress: self.progress().min(0.999) }));
                     }
                 }
             }

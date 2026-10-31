@@ -38,7 +38,7 @@ fn triangle_area(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
     (0.5 * ((p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]))).abs()
 }
 
-/// 🌉️ Shared node/element resolution for `build_model` and `fem2d_solve_all`: base document
+/// 🔗️ Shared node/element resolution for `build_model` and `fem2d_solve_all`: base document
 /// nodes/elements (`Bar2`/`BeamEb2`, `density: material.rho`) plus every `FemRegion` meshed into
 /// `Tri3Cst` elements (plane-stress, `PlaneKind::Stress`) — a region boundary point that coincides
 /// (within `1e-9`, both x and y) with an existing document node reuses that node's id, so supports and
@@ -46,7 +46,7 @@ fn triangle_area(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
 /// point as `{region_id}_m{point_index}`.
 pub(crate) fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<ResolvedGeometry, Fem2dError> {
     let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id.as_str() == id);
-    let mut nodes: Vec<Node> = doc.nodes.iter().map(|n| Node { id: n.id.clone(), pos: [n.x, n.y, 0.0] }).collect();
+    let mut nodes: Vec<Node> = doc.nodes.iter().map(|n| Node { id: n.id.as_str().to_owned(), pos: [n.x, n.y, 0.0] }).collect();
 
     let mut elements: Vec<Elements> = Vec::with_capacity(doc.elements.len());
     for element in &doc.elements {
@@ -82,7 +82,7 @@ pub(crate) fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<ResolvedGe
         let mut node_ids = Vec::with_capacity(tri_mesh.points.len());
         for (point_index, p) in tri_mesh.points.iter().enumerate() {
             let id = match doc.nodes.iter().find(|n| (n.x - p[0]).abs() < 1e-9 && (n.y - p[1]).abs() < 1e-9) {
-                Some(n) => n.id.clone(),
+                Some(n) => n.id.as_str().to_owned(),
                 None => {
                     let synthetic_id = format!("{}_m{}", region.id, point_index);
                     nodes.push(Node { id: synthetic_id.clone(), pos: [p[0], p[1], 0.0] });
@@ -105,7 +105,7 @@ pub(crate) fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<ResolvedGe
     Ok((nodes, elements, meshed_regions))
 }
 
-/// ⚖️ Lumped self-weight nodal loads (downward, global `-Y`) — `ρ·A·L` split evenly at a bar/beam's
+/// 📤️ Lumped self-weight nodal loads (downward, global `-Y`) — `ρ·A·L` split evenly at a bar/beam's
 /// two end nodes, `ρ·thickness·triangleArea` split evenly at each region triangle's 3 nodes, summed
 /// per node. A simple document-bridge translation feeding ONLY the frozen `fem2d_solve`/`build_model`
 /// path (which has no native self-weight concept) — `fem2d_solve_all` never calls this helper, since it
@@ -161,7 +161,7 @@ pub(crate) fn area_load_nodal_loads(region: &MeshedRegion, pressure: f64) -> Vec
 /// 🏋️ Resolved loads shared by static, multi-case and prestress analyses.
 pub(crate) type TranslatedLoads = (Vec<NodalLoad>, Vec<(String, MemberUdl)>);
 
-/// 🌉️ Lowers authored loads onto the complete resolved mesh, rejecting dangling area targets.
+/// 🛂️ Lowers authored loads onto the complete resolved mesh, rejecting dangling area targets.
 pub(crate) fn translate_loads(loads: &[FemLoad], regions: &[MeshedRegion]) -> Result<TranslatedLoads, Fem2dError> {
     let mut nodal_loads = Vec::new();
     let mut member_loads = Vec::new();

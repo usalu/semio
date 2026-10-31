@@ -228,7 +228,7 @@ impl ArtifactStoreDiagnosticStage {
 
 impl ErasedSnapshotRetirement for ArtifactStoreDiagnosticStage {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.close_demands(body) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Self::close_step(self, grant) }
+    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{let result=Self::close_step(self,grant);let work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=semio_framework_value::RetainedCloneProgress::default()));semio_framework_value::RetainedWorkOutcome{result,work}}
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.close_demands(body)?.capacity_bytes) }

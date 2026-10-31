@@ -152,13 +152,13 @@ fn retained_json_cursor_owns_exact_borrowed_source_view(){
 fn close_borrowed_json<S:JsonReadSource+Copy,V:JsonParsedValue>(cursor:JsonSourceCursor<S,V>,maximum_bytes:usize){
     use semio_framework_value::{retained_clone::RetainedCloneGrant,close_factory_ticket};
     let grant=RetainedCloneGrant::one_capacity_turn(cursor.retirement_birth_bytes(),256);
-    let(owner,birth)=cursor.into_retirement(grant).map_err(|(error,_)|error).unwrap();
+    let(owner,birth)=cursor.into_retirement(grant).result.map_err(|(error,_)|error).unwrap();
     assert!(birth.fits(grant));
     let mut owner=Some(owner);
     for _ in 0..100000{
         let Some(cursor)=owner.as_ref()else{return;};
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:cursor.next_capacity_byte_demand(maximum_bytes).unwrap(),maximum_release_bytes:if cursor.terminal_is_empty(){std::mem::size_of_val(cursor.as_ref())}else{cursor.next_release_byte_demand().unwrap()},maximum_depth:if cursor.terminal_is_empty(){1}else{cursor.next_depth_demand().unwrap()}};
-        assert!(close_factory_ticket(&mut owner,grant).unwrap().progress().fits(grant));
+        assert!(close_factory_ticket(&mut owner,grant).result.unwrap().progress().fits(grant));
     }
     panic!("original borrowed JSON owner failed to retire");
 }
@@ -177,11 +177,11 @@ fn borrowed_json_retirement_admission_preserves_original_source_on_refusal(){
         let birth=cursor.retirement_birth_bytes();
         let grant=RetainedCloneGrant{maximum_items:row["items"].as_u64().unwrap()as usize,maximum_copy_bytes:0,maximum_capacity_bytes:if row["capacity"].as_str().unwrap()=="exact"{birth}else{birth-1},maximum_release_bytes:0,maximum_depth:row["depth"].as_u64().unwrap()as usize};
         if row["accepted"].as_bool().unwrap(){
-            let(owner,progress)=cursor.into_retirement(grant).map_err(|(error,_)|error).unwrap();assert!(progress.fits(grant));assert_eq!(progress.retained_capacity_bytes,birth);
+            let(owner,progress)=cursor.into_retirement(grant).result.map_err(|(error,_)|error).unwrap();assert!(progress.fits(grant));assert_eq!(progress.retained_capacity_bytes,birth);
             let mut owner=Some(owner);
-            while let Some(cursor)=owner.as_ref(){let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:cursor.next_capacity_byte_demand(65536).unwrap(),maximum_release_bytes:if cursor.terminal_is_empty(){std::mem::size_of_val(cursor.as_ref())}else{cursor.next_release_byte_demand().unwrap()},maximum_depth:if cursor.terminal_is_empty(){1}else{cursor.next_depth_demand().unwrap()}};assert!(semio_framework_value::close_factory_ticket(&mut owner,grant).unwrap().progress().fits(grant));}
+            while let Some(cursor)=owner.as_ref(){let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:65536,maximum_capacity_bytes:cursor.next_capacity_byte_demand(65536).unwrap(),maximum_release_bytes:if cursor.terminal_is_empty(){std::mem::size_of_val(cursor.as_ref())}else{cursor.next_release_byte_demand().unwrap()},maximum_depth:if cursor.terminal_is_empty(){1}else{cursor.next_depth_demand().unwrap()}};assert!(semio_framework_value::close_factory_ticket(&mut owner,grant).result.unwrap().progress().fits(grant));}
         }else{
-            let(error,restored)=cursor.into_retirement(grant).err().expect("original handoff must refuse");cursor=restored;
+            let(error,restored)=cursor.into_retirement(grant).result.err().expect("original handoff must refuse");cursor=restored;
             assert_eq!(error.kind.as_str(),row["kind"].as_str().unwrap());assert_eq!(cursor.position(),position);assert_eq!(cursor.source().as_ptr(),pointer);
             let parsed=loop{if let Some(value)=cursor.step(1,&mut control,JSON_NORMAL_TEST_POLICY).unwrap(){break value;}};
             assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&parsed)).unwrap(),serde_json::from_str::<serde_json::Value>(source).unwrap());

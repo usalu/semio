@@ -1,0 +1,5 @@
+# Exact Flatten Neutral Schema Pin
+
+Root authorized this change after Rust confirmed the shared file is outside Core4's held 298 inputs; the PDF/SVG gate had also reached both terminal outcomes first. The only semantic schema change is adding the exact existing reference rectangle/pixel object to its top-level const. Every data byte, stock, case, pixel, existing required/property constraint and all other schema content is unchanged. Removing that one added member and serializing identically reconstructs the entire original schema bytes/hash.
+
+Before: 5616 bytes, SHA 5c80ce222ed49774fe2bbb3089a1fa28bd2861329cbfebb54c4dba6a1c20246d. After: 9240 bytes, SHA ae71101ad40608c4d44aff62ac4cb3c1e88a503e55299de136d36191c0f3a922. The increased schema bytes are genuine source input and must be observed by any future normal Native admission; no cap or Source-selection change is assumed. Actual third-party neutral validation remains pending a normal managed command. Source packet: drawing-flatten-schema-reference-working-file.json.

@@ -104,7 +104,7 @@ export type ColdPairWaitPolicy = Readonly<{
   sleep: (ms: number) => Promise<void>;
 }>;
 
-/** ⏱️ The host's cold-pair wait: 5 minutes of wall time, back to back for the first 4096 turns (≈ 20 s of continuous
+/** 🏠️ The host's cold-pair wait: 5 minutes of wall time, back to back for the first 4096 turns (≈ 20 s of continuous
  * folding at a 4–5 ms turn), then backing off 1 → 64 ms. */
 export const COLD_PAIR_WAIT_POLICY: ColdPairWaitPolicy = Object.freeze({
   deadlineMs: 300_000,
@@ -133,7 +133,7 @@ async function coldPairWaitTurn(policy: ColdPairWaitPolicy, started: number, tur
   if (delay > 0) await policy.sleep(delay);
 }
 
-/** ⏳️ Settles the last page of a cold-pair transfer whose guest answers `loading` while its whole-document load runs across
+/** 📃️ Settles the last page of a cold-pair transfer whose guest answers `loading` while its whole-document load runs across
  * turns: polls empty turns until the guest answers anything else, holds every `loading` to exactly the last page of this
  * transfer, and releases every answer it moves past. Answers the settling turn (the caller requires `applied`). Cancelling
  * is `poll` throwing — the owner stopped being current — and leaves the guest to restore its previous document. The wait is
@@ -179,8 +179,8 @@ export function wipeBrowserActorValue(value: BrowserActorChildValue): void {
   for (const buffer of measureChildValue(value, BROWSER_ACTOR_CHILD_LIMITS.outputBytes).transfers) if (buffer.byteLength) new Uint8Array(buffer).fill(0);
 }
 
-export function browserActorTurnBudget(): BrowserActorChildValue {
-  return { fuel: 80_000_000n, deadlineMs: BROWSER_ACTOR_CHILD_LIMITS.invokeMs, maxEffects: 512, maxPatchBytes: 2_097_152, maxFrames: 8 };
+export function browserActorTurnShape(): BrowserActorChildValue {
+  return { maxEffects: 512, maxPatchBytes: 2_097_152, maxFrames: 8 };
 }
 
 export function browserActorBytes(value: BrowserActorChildValue | undefined, code: string): Uint8Array {

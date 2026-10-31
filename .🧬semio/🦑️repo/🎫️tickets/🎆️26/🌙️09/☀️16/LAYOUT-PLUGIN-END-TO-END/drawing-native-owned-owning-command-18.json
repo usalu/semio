@@ -1,0 +1,45 @@
+{
+  "release": "Root standing genuine frontier successor: canonical linear batch eliminates repeated wrappers, new direct owning Err law first, obsolete fixed-stock helper removed after zero-consumer census; same caps/old53laws+newcomposition1",
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/🧰️framework/Cargo.toml",
+    "-p",
+    "semio-framework-value-native-owned",
+    "--all-targets",
+    "--",
+    "--nocapture"
+  ],
+  "docsArgv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/🧰️framework/Cargo.toml",
+    "-p",
+    "semio-framework-value-native-owned",
+    "--doc"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-owned-owning18",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-owned-owning18/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-owned-owning18/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-owned-owning18/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-owned-owning18/tmp"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-owned-owning18/test.log",
+  "docsLog": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-owned-owning18/docs.log",
+  "inputPacket": "drawing-native-owned-18-inputs.json",
+  "inputPacketSha256": "fa25826ce86ddf897a7e64067162a321ed32644fbdf44e6f3604d5a8945eb456"
+}

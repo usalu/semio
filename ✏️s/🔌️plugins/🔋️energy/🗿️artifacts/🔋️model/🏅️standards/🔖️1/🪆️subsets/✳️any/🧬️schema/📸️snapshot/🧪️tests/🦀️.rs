@@ -90,3 +90,7 @@ pub mod reference {
     #[path = "🔬️composition/🦀️.rs"]
     mod composition_tests;
 }
+
+#[cfg(test)]
+#[path = "🔬️bestest-load/🦀️.rs"]
+mod bestest_load;

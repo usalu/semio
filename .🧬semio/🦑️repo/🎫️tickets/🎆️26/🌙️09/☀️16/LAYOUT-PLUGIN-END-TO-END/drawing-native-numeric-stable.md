@@ -1,0 +1,5 @@
+# Stable Native Numeric Production Slice
+
+Source only; no owning numeric tests or compiler ran. Production now uses real PagedList slot/push for new retained Node rows, with actual value/previous custody. Existing fixed root/search/link/replace/tombstone/AVL metadata moves use item/depth and actual bounded CPU, copy bytes0. Explicit Pending/Progress/Complete outcomes distinguish paid page preparation, partial search/repair CPU and one completed numeric operation. last_turn_semantic_work is separate from actual last_turn_work and stays0 until completion/failure.
+
+Production and six captured schema/test/wrapper inputs can freeze for Root isolated diagnostic dependency compilation. Exact packet SHA 79b38b7483aaf93b4ab2c50f0fbbc1266d89ad8eb7c6a234b733438e0e256bd6. This is not Numeric owning semantic/heap proof. The authored direct test law still needs the approved monotonically remaining shared test-wallet migration before an owning numeric test door is ready. That test-source migration is held while Root captures/runs diagnostics. Existing generic algorithms/callers elsewhere remain unfinished and outside this stable production slice.

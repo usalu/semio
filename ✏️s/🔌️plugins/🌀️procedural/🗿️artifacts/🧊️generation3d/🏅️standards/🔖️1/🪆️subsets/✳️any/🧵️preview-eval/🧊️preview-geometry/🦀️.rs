@@ -7,7 +7,7 @@ use super::*;
 /// inside the kernel, never the round trip's own bound.
 pub const PREVIEW_TESSELLATE_STEP_BUDGET: u32 = 24;
 
-/// ⏱️ Wall-clock microseconds one `tessellate` ROUND TRIP may spend stepping before it answers.
+/// 🕐️ Wall-clock microseconds one `tessellate` ROUND TRIP may spend stepping before it answers.
 ///
 /// ⚖️ This is the bound that actually matters, because a unit is not a unit of time: on this kernel
 /// one step measured 29 µs and another 5.9 s. Bounding only the units made five consecutive
@@ -26,13 +26,13 @@ pub fn preview_tolerance(lod_mode: &str) -> f64 {
     }
 }
 
-/// 🧊️ The flow-domain id of the geometry extension whose kernel tessellates every preview handle.
+/// 🌊️ The flow-domain id of the geometry extension whose kernel tessellates every preview handle.
 /// It is NOT an invocation address: the host resolves an extension actor by the CONTRIBUTING
 /// PLUGIN's id, which [`semio_framework_os_flow::flow_extension_invocation_address`] — the ONE
 /// translation surface — looks up from the live contribution table.
 pub const GENERATION_3D_GEOMETRY_EXTENSION_ID: &str = "brep";
 
-/// 🧊️ The geometry kernel's invocation address, resolved through the one translation surface every
+/// ➕️ The geometry kernel's invocation address, resolved through the one translation surface every
 /// producer and every status projection shares. Both callers own the same typed miss, so an
 /// unaddressable kernel reaches a preview window as `phase: "faulted"` with its own English/German
 /// label instead of a per-tick `eprintln!` nobody reads.
@@ -68,7 +68,7 @@ pub enum PreviewInlineGeometry {
     Mesh { preview: String, data: String },
 }
 
-/// 🔌️ One previewable value found on one output channel of one widget — the channel-aware
+/// 🏆️ One previewable value found on one output channel of one widget — the channel-aware
 /// replacement for unordered handle flattening, so preview instance ids can be channel-qualified
 /// (`{widgetId}@{channel}#{index}`).
 #[derive(Clone, Debug, PartialEq)]
@@ -88,7 +88,7 @@ fn preview_channel_list_entries(map: &semio_framework_pack_json::Object) -> Vec<
     entries.into_iter().map(|(_, value)| value).collect()
 }
 
-/// 🔎️ Depth-first walk of one channel's evaluated value, emitting one [`PreviewChannelItem`] per
+/// 🕳️ Depth-first walk of one channel's evaluated value, emitting one [`PreviewChannelItem`] per
 /// geometry-bearing leaf in encounter order. Arrays and `$schema: "list"` dictionaries recurse; a
 /// handle passing [`is_brep_geometry_handle`] or an `x`/`y`/`z` point/vector is a leaf; everything
 /// else is pure data and yields nothing.
@@ -132,7 +132,7 @@ fn collect_preview_channel_items(channel: &str, value: &semio_framework_pack_jso
     }
 }
 
-/// 🔌️ Channel-by-channel enumeration of one widget's preview-bearing values: sorted `"out"` channel
+/// 📺️ Channel-by-channel enumeration of one widget's preview-bearing values: sorted `"out"` channel
 /// keys (falling back to `"in"` only when the widget has no `"out"` at all), each walked depth-first
 /// into its geometry-bearing leaves.
 pub fn preview_channel_items_for_widget(eval: &semio_framework_pack_json::Value, widget_id: &str) -> Vec<PreviewChannelItem> {
@@ -171,7 +171,7 @@ pub fn mesh_has_preview_geometry(data: &MeshData) -> bool {
 /// a vector channel.
 pub const PREVIEW_MESH_ROLES: [&str; 4] = ["solid", "wire", "point", "vector"];
 
-/// 🏷️ What ONE published preview mesh is, stamped into the payload beside its geometry so a reader
+/// 📢️ What ONE published preview mesh is, stamped into the payload beside its geometry so a reader
 /// never has to re-derive it from the arrays.
 ///
 /// ⚖️ A preview publishes one mesh per geometry-bearing output CHANNEL, so a document whose graph
@@ -229,7 +229,7 @@ pub fn preview_payload_bounds(meshes_json: &str) -> Option<([f64; 3], [f64; 3])>
 /// on top of the exact fitting distance, so this padding only has to say "do not hug the box".
 pub const PREVIEW_FIT_PADDING: f64 = 1.12;
 
-/// 🎯️ Which DOCUMENT the preview is framing, as a number the render hosts key their one-shot fit on.
+/// 📄️ Which DOCUMENT the preview is framing, as a number the render hosts key their one-shot fit on.
 ///
 /// ⚖️ Hashed over the graph's TOPOLOGY (widget ids, their kinds, the synapse wiring) and never over
 /// parameter values: switching example replaces the whole graph, while dragging a slider keeps it,
@@ -261,7 +261,7 @@ pub fn preview_fit_revision(host_snapshot: &semio_framework_artifact_flow_flow::
     (hash >> 32) as u32
 }
 
-/// 🏷️ The kind tag [`preview_fit_revision`] hashes per widget — what the node IS, never what it is
+/// 🔑️ The kind tag [`preview_fit_revision`] hashes per widget — what the node IS, never what it is
 /// currently set to.
 fn widget_kind_tag(widget: &semio_framework_artifact_flow_flow::Widget) -> &str {
     use semio_framework_artifact_flow_flow::Widget;
@@ -273,16 +273,16 @@ fn widget_kind_tag(widget: &semio_framework_artifact_flow_flow::Widget) -> &str 
     }
 }
 
-/// 🎯️ The `World3dScene.fit_json` every generation3d preview window publishes: frame the delivered
+/// 🌍️ The `World3dScene.fit_json` every generation3d preview window publishes: frame the delivered
 /// bounds once per document, never again while that document is on screen.
 pub fn preview_fit_json(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, meshes_json: &str) -> String {
     semio_framework_ui_declaration::ui::world3d_fit_json(preview_fit_revision(host_snapshot), PREVIEW_FIT_PADDING, preview_payload_bounds(meshes_json))
 }
 
-/// 🔌️ Half-extent (world units) of the axis cross drawn for a [`PreviewInlineGeometry::Point`].
+/// ✏️ Half-extent (world units) of the axis cross drawn for a [`PreviewInlineGeometry::Point`].
 const PREVIEW_POINT_MARKER_HALF_EXTENT: f64 = 0.05;
 
-/// 🔌️ A small axis cross at `(x, y, z)` — the point-channel preview marker, built without a kernel
+/// 🌀️ A small axis cross at `(x, y, z)` — the point-channel preview marker, built without a kernel
 /// round-trip. Carries both `positions` (so `"points"` show mode still has something to draw once
 /// [`apply_show_mode_mesh`] strips `edge_positions`) and the cross itself as edges.
 pub fn point_marker_mesh(x: f64, y: f64, z: f64) -> MeshData {
@@ -291,7 +291,7 @@ pub fn point_marker_mesh(x: f64, y: f64, z: f64) -> MeshData {
     MeshData { positions: vec![x, y, z], edge_positions: vec![x - e, y, z, x + e, y, z, x, y - e, z, x, y + e, z, x, y, z - e, x, y, z + e], ..Default::default() }
 }
 
-/// 🔌️ A line segment from the world origin to `(x, y, z)` — the vector-channel preview marker,
+/// ➡️ A line segment from the world origin to `(x, y, z)` — the vector-channel preview marker,
 /// built without a kernel round-trip.
 pub fn vector_marker_mesh(x: f64, y: f64, z: f64) -> MeshData {
     let (x, y, z) = (x as f32, y as f32, z as f32);
@@ -334,11 +334,11 @@ pub fn decode_preview_mesh_pack(base64_body: &str) -> Option<MeshData> {
 /// decoded into typed arrays. `None` while the tessellate round trip is still in flight, and `None`
 /// forever once the handle carries diagnostics.
 pub fn session_preview_mesh(handle: &str, session: &FlowEvalSession) -> Option<MeshData> {
-    let data = decode_preview_mesh_pack(session.preview_mesh_pack(handle)?)?;
-    mesh_has_preview_geometry(&data).then_some(data)
+    let data = session.preview_mesh(handle)?;
+    mesh_has_preview_geometry(data).then(|| data.clone())
 }
 
-/// 🧵️ Rendering consumes only mesh output completed by the retained preview chain.
+/// 🖼️ Rendering consumes only mesh output completed by the retained preview chain.
 pub fn mesh_data_for_preview_handle(handle: &str, _tolerance: f64, session: Option<&FlowEvalSession>) -> Option<MeshData> {
     session_preview_mesh(handle, session?)
 }
@@ -349,9 +349,9 @@ pub fn mesh_data_for_preview_handle(handle: &str, _tolerance: f64, session: Opti
 /// holds — true after convergence superseded the handle and retired the old one from every eval text.
 fn superseded_preview_mesh_handle(session: &FlowEvalSession, painted_handle: &str) -> Option<String> {
     let mut candidates = session
-        .preview_packed_handles()
-        .into_iter()
-        .filter(|handle| handle != painted_handle && session_preview_mesh(handle, session).is_some())
+        .preview_mesh_handles()
+        .filter(|handle| *handle != painted_handle && session_preview_mesh(handle, session).is_some())
+        .map(str::to_string)
         .collect::<Vec<_>>();
     match candidates.len() {
         0 => None,
@@ -373,7 +373,7 @@ fn converged_preview_handle(session: &FlowEvalSession, _host_snapshot: &semio_fr
         .filter(|handle| !handle.is_empty())
 }
 
-/// 🧵️ Mesh lookup for one preview channel while a live evaluation is in flight: the new handle's
+/// 🕸️ Mesh lookup for one preview channel while a live evaluation is in flight: the new handle's
 /// pack when it exists, otherwise the last converged handle's retained pack — never a second kernel
 /// round trip on geometry the session already tessellated.
 pub fn mesh_data_for_session_preview_channel(
@@ -399,7 +399,12 @@ pub fn mesh_data_for_session_preview_channel(
     superseded_preview_mesh_handle(session, handle).and_then(|fallback| session_preview_mesh(&fallback, session))
 }
 
-/// 📏️ Fingerprint of whichever mesh pack a preview channel would paint — the live handle's or the
+/// 📏️ The resident size of one published preview mesh — the element count the fingerprint tracks.
+fn mesh_residency_size(mesh: &MeshData) -> usize {
+    mesh.positions.len() + mesh.indices.len() + mesh.edge_positions.len()
+}
+
+/// 🎁️ Fingerprint of whichever mesh pack a preview channel would paint — the live handle's or the
 /// converged fallback's while tessellation is outstanding.
 pub fn preview_mesh_pack_fingerprint(
     session: &FlowEvalSession,
@@ -410,23 +415,23 @@ pub fn preview_mesh_pack_fingerprint(
     if item.handle.is_empty() {
         return 0;
     }
-    if let Some(pack) = session.preview_mesh_pack(&item.handle) {
-        return pack.len();
+    if let Some(mesh) = session.preview_mesh(&item.handle) {
+        return mesh_residency_size(mesh);
     }
     if session.preview_diagnostics(&item.handle).is_some() {
         return 0;
     }
     if let Some(fallback) = converged_preview_handle(session, host_snapshot, widget_id, &item.channel, item.index).filter(|fallback| *fallback != item.handle) {
-        if let Some(pack) = session.preview_mesh_pack(&fallback) {
-            return pack.len();
+        if let Some(mesh) = session.preview_mesh(&fallback) {
+            return mesh_residency_size(mesh);
         }
     }
     superseded_preview_mesh_handle(session, &item.handle)
-        .and_then(|fallback| session.preview_mesh_pack(&fallback))
-        .map_or(0, |pack| pack.len())
+        .and_then(|fallback| session.preview_mesh(&fallback).map(mesh_residency_size))
+        .unwrap_or(0)
 }
 
-/// 📏️ What the preview would paint from `eval` given the session's current mesh packs — changes when
+/// 🖌️ What the preview would paint from `eval` given the session's current mesh packs — changes when
 /// `flowTessellateResolve` lands even though the evaluation text did not move one byte.
 fn preview_mesh_residency_digest(session: &FlowEvalSession, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, eval: &semio_framework_pack_json::Value) -> u64 {
     use std::hash::{Hash, Hasher};
@@ -492,14 +497,14 @@ pub fn preview_mesh_retention_handles(eval: &semio_framework_pack_json::Value, h
         }
     }
     if channel_missing_pack {
-        for handle in session.preview_packed_handles() {
-            live.insert(handle);
+        for handle in session.preview_mesh_handles() {
+            live.insert(handle.to_string());
         }
     }
     live
 }
 
-/// 🧊 Geometry handles on preview widgets that still need an extension tessellate. Takes the ALREADY
+/// 🤲️ Geometry handles on preview widgets that still need an extension tessellate. Takes the ALREADY
 /// PARSED evaluation: its caller parses the same document one line earlier to collect the live
 /// handle set, and re-parsing a whole eval session per tick is the cost this path exists to avoid.
 pub fn pending_preview_tessellate_handles(eval: &semio_framework_pack_json::Value, host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot, session: &FlowEvalSession) -> Vec<String> {
@@ -556,7 +561,7 @@ pub fn preview_tessellate_invocations(window_id: &str, window_kind_id: &str, ses
     Ok(invocations)
 }
 
-/// 🧹️ Retains exactly the live roster of preview meshes, one granted retention turn at a time, and refuses a retention that stops making progress.
+/// 💚️ Retains exactly the live roster of preview meshes, one granted retention turn at a time, and refuses a retention that stops making progress.
 pub fn retain_preview_meshes(session: &mut FlowEvalSession, live: HashSet<String>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     session.begin_retain_preview_meshes(live.into_iter().collect()).map_err(|(error, _)| error)?;
     while !session.preview_retention_terminal_is_empty() {

@@ -44,6 +44,8 @@ pub mod standards {
                     pub mod text {
                         #[path = "../../../../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
                         pub mod snapshot;
+                        #[path = "../../../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+                        pub mod diff;
                     }
                     #[path = "."]
                     pub mod sqlite {
@@ -52,6 +54,8 @@ pub mod standards {
                     }
                     #[path = "."]
                     pub mod binary {
+                        #[path = "../../../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+                        pub mod diff;
                         #[path = "."]
                         pub mod snapshot {
                             #[path = "../../../../../🚪️io/💾️binary/📸️snapshot/📦️pack/🦀️.rs"]

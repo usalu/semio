@@ -1,5 +1,8 @@
 //! 📋️ Complete authored documents become private typed plans under work grants.
 use semio_framework_value::paged::Utf8Text;
+use semio_framework_value_persistent::work::RetainedWorkLedger;
+use semio_framework_value::RetirementDemand;
+use semio_framework_job::{StepContext,OriginalWorkFailure};
 use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, FillStyle, StrokeStyle, PathSegment};
@@ -67,10 +70,26 @@ pub fn validate_scene_source_address(path:&[u16],locks:u32)->Result<(),DocumentS
 #[derive(Clone,Debug)]
 pub struct DocumentSceneProgress{pub phase:&'static str,pub layers:usize,pub assets:usize,pub segments:usize,pub references:usize,pub source_bytes:usize,pub work:u64,pub done:bool}
 #[derive(Clone,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
-pub enum DocumentSceneError{Invalid(String),Incomplete,Cancelled}
-impl std::fmt::Display for DocumentSceneError{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match self{Self::Invalid(message)=>f.write_str(message),Self::Incomplete=>f.write_str("Document scene preparation incomplete"),Self::Cancelled=>f.write_str("Document scene preparation cancelled")}}}
+pub enum DocumentSceneMessage{Literal(&'static str),Owned(Arc<String>)}
+impl AsRef<str> for DocumentSceneMessage{fn as_ref(&self)->&str{match self{Self::Literal(value)=>value,Self::Owned(value)=>value.as_str()}}}
+impl From<&'static str> for DocumentSceneMessage{fn from(value:&'static str)->Self{Self::Literal(value)}}
+impl PartialEq<str> for DocumentSceneMessage{fn eq(&self,other:&str)->bool{self.as_ref()==other}}
+impl PartialEq<&str> for DocumentSceneMessage{fn eq(&self,other:&&str)->bool{self.as_ref()==*other}}
+#[derive(Clone,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
+pub enum DocumentSceneError{Invalid(DocumentSceneMessage),PathRaster(semio_s_artifact_draw_drawing_geometry::raster::PathRasterError),AffineImage(semio_framework_pixels::affine_sampling::AffineImageError),Incomplete,Cancelled}
+impl DocumentSceneError{pub fn literal(message:&'static str)->Self{Self::Invalid(DocumentSceneMessage::Literal(message))}pub fn held()->Self{Self::literal("Scene preparation lost its working state")}pub fn owned(message:Arc<String>)->Self{Self::Invalid(DocumentSceneMessage::Owned(message))}}
+#[path="⚠️failure/🦀️.rs"]
+mod original_failure;
+impl std::fmt::Display for DocumentSceneError{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.write_str(self.message())}}
+impl From<semio_s_artifact_draw_drawing_geometry::raster::PathRasterError> for DocumentSceneError{fn from(error:semio_s_artifact_draw_drawing_geometry::raster::PathRasterError)->Self{Self::PathRaster(error)}}
+impl From<semio_framework_pixels::affine_sampling::AffineImageError> for DocumentSceneError{fn from(error:semio_framework_pixels::affine_sampling::AffineImageError)->Self{Self::AffineImage(error)}}
 impl std::error::Error for DocumentSceneError{}
-fn invalid(message:impl Into<String>)->DocumentSceneError{DocumentSceneError::Invalid(message.into())}
+impl From<&'static str> for DocumentSceneError{fn from(message:&'static str)->Self{Self::literal(message)}}
+impl From<semio_framework_2d::flatten::PathFlattenError> for DocumentSceneError{fn from(error:semio_framework_2d::flatten::PathFlattenError)->Self{match error{semio_framework_2d::flatten::PathFlattenError::Invalid(message)=>Self::literal(message),semio_framework_2d::flatten::PathFlattenError::Incomplete=>Self::Incomplete,semio_framework_2d::flatten::PathFlattenError::Cancelled=>Self::Cancelled}}}
+impl From<semio_framework_2d::stroke::StrokeOutlineError> for DocumentSceneError{fn from(error:semio_framework_2d::stroke::StrokeOutlineError)->Self{match error{semio_framework_2d::stroke::StrokeOutlineError::Invalid(message)=>Self::literal(message),semio_framework_2d::stroke::StrokeOutlineError::Incomplete=>Self::Incomplete,semio_framework_2d::stroke::StrokeOutlineError::Cancelled=>Self::Cancelled}}}
+impl From<semio_framework_2d::booleans::BooleanError> for DocumentSceneError{fn from(error:semio_framework_2d::booleans::BooleanError)->Self{match error{semio_framework_2d::booleans::BooleanError::Invalid(message)=>Self::literal(message),semio_framework_2d::booleans::BooleanError::Incomplete=>Self::Incomplete,semio_framework_2d::booleans::BooleanError::Cancelled=>Self::Cancelled}}}
+
+fn invalid(message:impl Into<DocumentSceneMessage>)->DocumentSceneError{DocumentSceneError::Invalid(message.into())}
 fn coordinate(n:f64)->Result<f64,DocumentSceneError>{if n.is_finite()&&n.abs()<=1e9{Ok(n)}else{Err(invalid("Invalid authored scene coordinate"))}}
 fn positive(n:f64)->Result<f64,DocumentSceneError>{coordinate(n)?;if n>0.0{Ok(n)}else{Err(invalid("Expected positive authored scene dimension"))}}
 fn unit(n:f64)->Result<f64,DocumentSceneError>{if n.is_finite()&&(0.0..=1.0).contains(&n){Ok(n)}else{Err(invalid("Expected unit paint or opacity"))}}
@@ -104,118 +123,231 @@ fn scene_layer_at<'d>(document:&'d impl DrawingSceneSource,path:&[usize])->Resul
 fn scene_layer_count(document:&impl DrawingSceneSource,path:&[usize])->Result<usize,DocumentSceneError>{if path.is_empty(){return Ok(document.root_count());}let DrawingLayerNode::Group(group)=scene_layer_at(document,path)? else{return Err(invalid("Captured scene group changed"));};Ok(group.children.len())}
 fn scene_child_at<'d>(document:&'d impl DrawingSceneSource,path:&[usize],index:usize)->Result<&'d DrawingLayerNode,DocumentSceneError>{if path.is_empty(){return document.root(index).ok_or_else(||invalid("Captured scene root disappeared"));}let DrawingLayerNode::Group(group)=scene_layer_at(document,path)? else{return Err(invalid("Captured scene group changed"));};group.children.get(index).ok_or_else(||invalid("Captured scene layer disappeared"))}
 fn scene_source_key(key:&dyn Utf8Text)->Result<String,DocumentSceneError>{id(key)?;let mut result=String::with_capacity(key.text_bytes());for at in 0..key.text_chunk_count(){result.push_str(key.text_chunk(at).ok_or_else(||invalid("Captured asset key changed"))?);}Ok(result)}
-#[derive(semio_framework_value::RetireOwned)]
-struct Frame{locked_ancestors:u32,path:Vec<usize>,at:usize,matrix:[f64;6],visible:bool,groups:Vec<DrawingSceneGroup>}
-/// 🧱️ Retains source positions and copies each character or geometry entry under a grant.
+#[derive(Clone,Copy,semio_framework_value::RetireOwned)]
+struct Frame{path:[usize;32],depth:usize,at:usize,matrix:[f64;6],visible:bool,locks:u32,groups:[usize;32],group_count:usize}
+impl Frame{const EMPTY:Self=Self{path:[0;32],depth:0,at:0,matrix:[1.0,0.0,0.0,1.0,0.0,0.0],visible:true,locks:0,groups:[0;32],group_count:0};}
+/// 🧱️ Inline bounded traversal retains only the output payloads admitted by the original work ledger.
 struct DocumentSceneCursor{
- limits:DocumentSceneLimits,asset_key:Option<String>,asset_active:bool,asset_samples:Vec<u8>,asset_char:usize,
- frames:Vec<Frame>,retired_frames:Vec<Frame>,retired_groups:Vec<DrawingSceneGroup>,retired_paths:Vec<Vec<usize>>,retired_texts:Vec<String>,current:Option<Vec<usize>>,node:Option<DocumentSceneNode>,plan:DocumentScenePlan,ids:OwnedTable<String,usize>,asset_ids:OwnedSet<String>,
- phase:&'static str,layers:usize,assets:usize,segments:usize,references:usize,source_bytes:usize,work:u64,at:usize,stroke_at:usize,text_at:usize,text_chars:usize,text_chunk:usize,text_chunk_offset:usize,
- validate_at:usize,ref_at:usize,cycle_at:usize,graph:Vec<(usize,usize)>,visited:OwnedSet<usize>,visiting:OwnedSet<usize>,cancelled:bool,failure:Option<DocumentSceneError>,cleanup_slot:u8,
+ limits:DocumentSceneLimits,frames:[Frame;33],frame_count:usize,path:[usize;32],depth:usize,parent:Frame,node:Option<DocumentSceneNode>,plan:DocumentScenePlan,
+ asset_samples:Vec<u8>,asset_id:String,reference:String,group:Option<DrawingSceneGroup>,asset_char:usize,text_chunk:usize,
+ phase:&'static str,layers:usize,assets:usize,segments:usize,references:usize,source_bytes:usize,work:u64,last_turn_work:u64,last_turn_semantic_work:u64,step_work:u64,pending:semio_framework_value::RetirementDemand,
+ at:usize,stroke_at:usize,text_at:usize,text_chars:usize,text_chunk_offset:usize,group_at:usize,
+ validate_at:usize,ref_at:usize,cycle_at:usize,graph:[(usize,usize);1024],graph_len:usize,visited:[bool;1024],visiting:[bool;1024],cancelled:bool,failure:Option<DocumentSceneError>,
+}
+fn preparation_invalid(message:&'static str)->DocumentSceneError{DocumentSceneError::literal(message)}
+fn scene_vector_slot<T>(values:&mut Vec<T>,work:&mut semio_framework_2d_text_font::work::RetainedWorkLedger)->Result<bool,DocumentSceneError>{
+ let target=if values.len()==values.capacity(){values.capacity().checked_mul(2).unwrap_or(usize::MAX).max(16)}else{values.len()+1};if !work.reserve_vec(values,target).map_err(preparation_invalid)?{return Ok(false);}work.vec_slot(values).map_err(preparation_invalid)
+}
+fn scene_text_copy(source:&(impl Utf8Text+?Sized),target:&mut String,chunk:&mut usize,work:&mut semio_framework_2d_text_font::work::RetainedWorkLedger)->Result<(bool,bool),DocumentSceneError>{
+ if !work.reserve_string(target,source.text_bytes()).map_err(preparation_invalid)?{if target.capacity()>=source.text_bytes(){work.require_child(semio_framework_value::RetirementDemand{copy_bytes:source.text_chunk(*chunk).map_or(0,str::len),depth:1,..Default::default()}).map_err(preparation_invalid)?;}return Ok((false,false));}
+ if let Some(part)=source.text_chunk(*chunk){if !work.string_push(target,part).map_err(preparation_invalid)?{return Ok((false,false));}*chunk+=1;return Ok((false,true));}Ok((true,false))
 }
 impl DocumentSceneCursor{
  pub fn new(document:&impl DrawingSceneSource,limits:DocumentSceneLimits)->Result<Self,DocumentSceneError>{
-  if !(1..=1024).contains(&limits.max_nodes)||!(1..=32).contains(&limits.max_depth)||!(1..=65536).contains(&limits.max_segments)||!(1..=32768).contains(&limits.max_references)||!(1..=268439552).contains(&limits.max_source_bytes)||document.root_count()>limits.max_nodes||document.asset_count()>1024{return Err(invalid("Invalid scene preparation limits or document"));}
-  Ok(Self{limits,asset_key:None,asset_active:false,asset_samples:Vec::new(),asset_char:0,frames:vec![Frame{locked_ancestors:0,path:Vec::new(),at:0,matrix:[1.0,0.0,0.0,1.0,0.0,0.0],visible:true,groups:Vec::new()}],retired_frames:Vec::new(),retired_groups:Vec::new(),retired_paths:Vec::new(),retired_texts:Vec::new(),current:None,node:None,plan:DocumentScenePlan::default(),ids:OwnedTable::new(),asset_ids:OwnedSet::new(),phase:"assets",layers:0,assets:0,segments:0,references:0,source_bytes:0,work:0,at:0,stroke_at:0,text_at:0,text_chars:0,text_chunk:0,text_chunk_offset:0,validate_at:0,ref_at:0,cycle_at:0,graph:Vec::new(),visited:OwnedSet::new(),visiting:OwnedSet::new(),cancelled:false,failure:None,cleanup_slot:0})
+  if !(1..=1024).contains(&limits.max_nodes)||!(1..=32).contains(&limits.max_depth)||!(1..=65536).contains(&limits.max_segments)||!(1..=32768).contains(&limits.max_references)||!(1..=268439552).contains(&limits.max_source_bytes)||document.root_count()>limits.max_nodes||document.asset_count()>1024{return Err(preparation_invalid("Invalid scene preparation limits or document"));}
+  Ok(Self{limits,frames:[Frame::EMPTY;33],frame_count:1,path:[0;32],depth:0,parent:Frame::EMPTY,node:None,plan:DocumentScenePlan::default(),asset_samples:Vec::new(),asset_id:String::new(),reference:String::new(),group:None,asset_char:0,text_chunk:0,phase:"assets",layers:0,assets:0,segments:0,references:0,source_bytes:0,work:0,last_turn_work:0,last_turn_semantic_work:0,step_work:0,pending:semio_framework_value::RetirementDemand{depth:1,..Default::default()},at:0,stroke_at:0,text_at:0,text_chars:0,text_chunk_offset:0,group_at:0,validate_at:0,ref_at:0,cycle_at:0,graph:[(0,0);1024],graph_len:0,visited:[false;1024],visiting:[false;1024],cancelled:false,failure:None})
  }
- fn start(&mut self,layer:&DrawingLayerNode,path:Vec<usize>,parent:[f64;6],visible:bool,groups:Vec<DrawingSceneGroup>,locks:u32)->Result<(),DocumentSceneError>{
-  if path.is_empty()||path.len()>self.limits.max_depth{return Err(invalid("Scene source path exceeds depth limit"));}
-  let source_path=path.iter().map(|index|u16::try_from(*index).map_err(|_|invalid("Scene source index exceeds limit"))).collect::<Result<Vec<_>,_>>()?;
-  let b=layer_base(layer);let locked_ancestors=locks|if b.locked{1u32<<(path.len()-1)}else{0};id(&b.id)?;let authored_id=b.id.to_string_owner();if self.layers>=self.limits.max_nodes||self.ids.contains_key(&authored_id){return Err(invalid("Duplicate scene identity or layer limit"));}
+ fn layer<'d>(&self,document:&'d impl DrawingSceneSource)->Result<&'d DrawingLayerNode,DocumentSceneError>{scene_layer_at(document,&self.path[..self.depth])}
+ fn transition(&mut self,phase:&'static str){self.phase=phase;self.text_chunk=0;}
+ fn begin(&mut self,document:&impl DrawingSceneSource)->Result<(),DocumentSceneError>{
+  let layer=self.layer(document)?;let b=layer_base(layer);id(&b.id)?;
+  if self.layers>=self.limits.max_nodes||self.plan.nodes.iter().any(|node|b.id.eq_str(&node.id)){return Err(preparation_invalid("Duplicate scene identity or layer limit"));}
   for n in [b.transform.x,b.transform.y,b.transform.scale_x,b.transform.scale_y,b.transform.shear,b.transform.rotation]{coordinate(n)?;}
-  let transform=matrix(parent,drawing_transform_to_matrix(&b.transform))?;let opacity=unit(b.opacity)?;if !semio_s_artifact_draw_drawing_model::DRAWING_BLEND_MODES.iter().any(|mode| b.blend_mode.eq_str(mode)){return Err(invalid("Invalid authored scene blend"));}
-  let rule=b.attributes.fill_rule.clone();
-  let content=match layer{
+  let transform=matrix(self.parent.matrix,drawing_transform_to_matrix(&b.transform))?;let opacity=unit(b.opacity)?;
+  if !semio_s_artifact_draw_drawing_model::DRAWING_BLEND_MODES.iter().any(|mode|b.blend_mode.eq_str(mode)){return Err(preparation_invalid("Invalid authored scene blend"));}
+  let rule=b.attributes.fill_rule.clone();let content=match layer{
    DrawingLayerNode::Path(_)|DrawingLayerNode::Shape(_)=>DocumentSceneContent::Path{segments:Vec::new(),fill_rule:rule,fill:None,stroke:None},
-   DrawingLayerNode::Image(v)=>{id(&v.image_key)?;DocumentSceneContent::Image{asset:v.image_key.to_string_owner(),width:positive(v.width)?,height:positive(v.height)?}},
-   DrawingLayerNode::Group(v)=>{if v.children.len()>1024{return Err(invalid("Invalid scene group"));}DocumentSceneContent::Group{children:Vec::new(),isolation:v.isolation}},
-   DrawingLayerNode::Text(v)=>{if v.content.len()>262144{return Err(invalid("Scene text exceeds limit"));}DocumentSceneContent::Text{content:String::new(),x:coordinate(v.x)?,y:coordinate(v.y)?,size:positive(v.size)?,font_family:v.font_family,fill_rule:rule,fill:None,stroke:None}},
-   DrawingLayerNode::Boolean(v)=>{if !semio_s_artifact_draw_drawing_model::DRAWING_BOOLEAN_OPERATIONS.iter().any(|operation| v.operation.eq_str(operation))||v.children.len()>1024{return Err(invalid("Invalid boolean scene work"));}DocumentSceneContent::Boolean{operation:v.operation.to_string_owner(),children:Vec::new(),reference_transform:parent,fill_rule:rule,fill:None,stroke:None}},
-   DrawingLayerNode::Trace(v)=>{id(&v.source_key)?;let epsilon=coordinate(v.params.simplify_epsilon)?;if epsilon<0.0{return Err(invalid("Invalid trace epsilon"));}DocumentSceneContent::Trace{source:v.source_key.to_string_owner(),threshold:unit(v.params.threshold)?,simplify_epsilon:epsilon,fill_rule:rule,fill:None,stroke:None}},
+   DrawingLayerNode::Image(v)=>{id(&v.image_key)?;DocumentSceneContent::Image{asset:String::new(),width:positive(v.width)?,height:positive(v.height)?}},
+   DrawingLayerNode::Group(v)=>{if v.children.len()>1024{return Err(preparation_invalid("Invalid scene group"));}DocumentSceneContent::Group{children:Vec::new(),isolation:v.isolation}},
+   DrawingLayerNode::Text(v)=>{if v.content.len()>262144{return Err(preparation_invalid("Scene text exceeds limit"));}DocumentSceneContent::Text{content:String::new(),x:coordinate(v.x)?,y:coordinate(v.y)?,size:positive(v.size)?,font_family:v.font_family,fill_rule:rule,fill:None,stroke:None}},
+   DrawingLayerNode::Boolean(v)=>{if !semio_s_artifact_draw_drawing_model::DRAWING_BOOLEAN_OPERATIONS.iter().any(|operation|v.operation.eq_str(operation))||v.children.len()>1024{return Err(preparation_invalid("Invalid boolean scene work"));}DocumentSceneContent::Boolean{operation:String::new(),children:Vec::new(),reference_transform:self.parent.matrix,fill_rule:rule,fill:None,stroke:None}},
+   DrawingLayerNode::Trace(v)=>{id(&v.source_key)?;let epsilon=coordinate(v.params.simplify_epsilon)?;if epsilon<0.0{return Err(preparation_invalid("Invalid trace epsilon"));}DocumentSceneContent::Trace{source:String::new(),threshold:unit(v.params.threshold)?,simplify_epsilon:epsilon,fill_rule:rule,fill:None,stroke:None}},
   };
-  self.ids.insert(authored_id.clone(),self.plan.nodes.len());self.layers+=1;self.node=Some(DocumentSceneNode{source_path,locked_ancestors,id:authored_id,groups,transform,opacity,blend_mode:b.blend_mode.to_string_owner(),visible:visible&&b.visible,content});self.current=Some(path);self.at=0;self.stroke_at=0;self.text_at=0;self.text_chars=0;self.text_chunk=0;self.text_chunk_offset=0;self.phase="paint";Ok(())
+  self.node=Some(DocumentSceneNode{source_path:Vec::new(),locked_ancestors:self.parent.locks|if b.locked{1u32<<(self.depth-1)}else{0},id:String::new(),groups:Vec::new(),transform,opacity,blend_mode:String::new(),visible:self.parent.visible&&b.visible,content});self.layers+=1;self.at=0;self.stroke_at=0;self.text_at=0;self.text_chars=0;self.text_chunk_offset=0;self.group_at=0;self.transition("nodeIdentity");Ok(())
  }
- fn paint(&mut self,document:&impl DrawingSceneSource)->Result<(),DocumentSceneError>{
-  let b=layer_base(scene_layer_at(document,self.current.as_deref().unwrap())?);
-  if let Some((out_fill,out_stroke))=self.node.as_mut().unwrap().content.paint(){
-   let source=b.attributes.fill.as_ref();
-   if self.at==0{
-    *out_fill=match source{None=>None,Some(FillStyle::Solid{color:c})=>Some(FillStyle::Solid{color:color(*c)?}),Some(FillStyle::LinearGradient{x1,y1,x2,y2,stops})=>{if stops.is_empty()||stops.len()>64{return Err(invalid("Invalid scene gradient stops"));}Some(FillStyle::LinearGradient{x1:coordinate(*x1)?,y1:coordinate(*y1)?,x2:coordinate(*x2)?,y2:coordinate(*y2)?,stops:Default::default()})},Some(FillStyle::RadialGradient{cx,cy,r,stops})=>{if stops.is_empty()||stops.len()>64{return Err(invalid("Invalid scene gradient stops"));}Some(FillStyle::RadialGradient{cx:coordinate(*cx)?,cy:coordinate(*cy)?,r:positive(*r)?,stops:Vec::new().into()})}};self.at+=1;return Ok(());
-   }
-   let stops=match source{Some(FillStyle::LinearGradient{stops,..})|Some(FillStyle::RadialGradient{stops,..})=>Some(stops),_=>None};
-   if let Some(stop)=stops.and_then(|v|v.get(self.at-1)){let stop=semio_s_artifact_draw_drawing_model::GradientStop{offset:unit(stop.offset)?,color:color(stop.color)?};match out_fill{Some(FillStyle::LinearGradient{stops,..})|Some(FillStyle::RadialGradient{stops,..})=>stops.push(stop),_=>unreachable!()}self.at+=1;return Ok(());}
-   let stroke=b.attributes.stroke.as_ref();
-   if self.stroke_at==0{if let Some(s)=stroke{coordinate(s.width)?;if s.width<0.0||s.dash.as_ref().is_some_and(|d|d.len()>1024){return Err(invalid("Invalid scene stroke"));}*out_stroke=Some(StrokeStyle{color:color(s.color)?,width:s.width,cap:s.cap.clone(),join:s.join.clone(),dash:s.dash.as_ref().map(|_|Default::default())});}self.stroke_at+=1;return Ok(());}
-   if let Some(value)=stroke.and_then(|s|s.dash.as_ref()).and_then(|v|v.get(self.stroke_at-1)){coordinate(*value)?;if *value<0.0{return Err(invalid("Invalid scene dash"));}out_stroke.as_mut().unwrap().dash.as_mut().unwrap().push(*value);self.stroke_at+=1;return Ok(());}
-  }
-  self.at=0;self.phase=if matches!(scene_layer_at(document,self.current.as_deref().unwrap())?,DrawingLayerNode::Group(_)|DrawingLayerNode::Boolean(_)){"references"}else{"geometry"};Ok(())
- }
- fn finish(&mut self,document:&impl DrawingSceneSource)->Result<(),DocumentSceneError>{
-  if matches!(scene_layer_at(document,self.current.as_deref().unwrap())?,DrawingLayerNode::Group(group) if self.frames.len()>=self.limits.max_depth&&!group.children.is_empty()){return Err(invalid("Scene depth limit exceeded"));}
-  let n=self.node.take().unwrap();
-  if let DrawingLayerNode::Group(group)=scene_layer_at(document,self.current.as_deref().unwrap())?{
-   let mut groups=n.groups.clone();if group.isolation||n.opacity!=1.0||n.blend_mode!="normal"{groups.push(DrawingSceneGroup{id:n.id.clone(),opacity:n.opacity,blend_mode:n.blend_mode.clone()});}
-   self.frames.push(Frame{locked_ancestors:n.locked_ancestors,path:self.current.as_ref().unwrap().clone(),at:0,matrix:n.transform,visible:n.visible,groups});
-  }
-  self.plan.nodes.push(n);if let Some(path)=self.current.take(){self.retired_paths.push(path);}self.phase="layers";Ok(())
- }
- fn step(&mut self,document:&impl DrawingSceneSource)->Result<(),DocumentSceneError>{
+ fn step(&mut self,document:&impl DrawingSceneSource,work:&mut semio_framework_2d_text_font::work::RetainedWorkLedger)->Result<bool,DocumentSceneError>{
   match self.phase{
    "assets"=>{
-    if self.asset_active{
-     let key=self.asset_key.as_ref().unwrap();let asset=document.asset(key).ok_or_else(||invalid("Captured scene asset disappeared"))?;
-     if self.asset_char==asset.samples.len(){self.plan.assets.push(RasterSceneAsset{id:key.clone(),image:Arc::new(semio_framework_pixels::RasterImage{width:asset.width,height:asset.height,pixels:std::mem::take(&mut self.asset_samples)})});self.asset_ids.insert(key.clone());self.asset_active=false;self.assets+=1;return Ok(());}
-     let sample=asset.samples.get(self.asset_char).ok_or_else(||invalid("Captured scene image sample changed"))?;self.asset_samples.try_reserve(4).map_err(|_|invalid("Scene sample allocation failed"))?;self.asset_samples.extend_from_slice(sample);self.asset_char+=1;self.source_bytes+=4;return Ok(());
+    let Some((key,asset))=document.asset_at(self.assets)else{if work.can_step(){self.transition("layers");}return Ok(true);};
+    id(key)?;let count=(asset.width as usize).checked_mul(asset.height as usize).ok_or_else(||preparation_invalid("Scene image extent overflow"))?;
+    if count==0||count>16_777_216||asset.samples.len()!=count||count.checked_mul(4).is_none_or(|bytes|bytes>self.limits.max_source_bytes.saturating_sub(self.source_bytes)){return Err(preparation_invalid("Invalid intrinsic image extent or sample byte limit"));}
+    let(complete,semantic)=scene_text_copy(key,&mut self.asset_id,&mut self.text_chunk,work)?;if !complete{return Ok(semantic);}self.asset_char=0;self.transition("samples");
+   },
+   "samples"=>{
+    let (_,asset)=document.asset_at(self.assets).ok_or_else(||preparation_invalid("Captured scene asset disappeared"))?;
+    if let Some(sample)=asset.samples.get(self.asset_char){if !work.reserve_vec(&mut self.asset_samples,(self.asset_char+1)*4).map_err(preparation_invalid)?{return Ok(false);}if !work.copy_bytes(4){return Ok(false);}self.asset_samples.extend_from_slice(sample);self.asset_char+=1;self.source_bytes+=4;return Ok(true);}
+    if !scene_vector_slot(&mut self.plan.assets,work)?||!work.arc_ready::<semio_framework_pixels::RasterImage>().map_err(preparation_invalid)?{return Ok(false);}
+    let image=work.arc_new(semio_framework_pixels::RasterImage{width:asset.width,height:asset.height,pixels:std::mem::take(&mut self.asset_samples)}).map_err(|(error,_)|preparation_invalid(error))?;
+    work.vec_push(&mut self.plan.assets,RasterSceneAsset{id:std::mem::take(&mut self.asset_id),image}).map_err(|(error,_)|preparation_invalid(error))?;self.assets+=1;self.transition("assets");
+   },
+   "layers"=>{
+    if self.frame_count==0{if work.can_step(){self.transition("validation");}return Ok(true);}
+    let f=self.frames[self.frame_count-1];let count=scene_layer_count(document,&f.path[..f.depth])?;
+    if f.at==count{if work.can_step(){self.frame_count-=1;}return Ok(true);}
+    if f.depth>=self.limits.max_depth{return Err(preparation_invalid("Scene depth limit exceeded"));}
+    if !work.can_step(){return Ok(false);}
+    self.parent=f;self.path=f.path;self.path[f.depth]=f.at;self.depth=f.depth+1;self.frames[self.frame_count-1].at+=1;
+    if self.depth==1{self.parent.visible&=document.root_visible(f.at);}
+    self.begin(document)?;
+   },
+   "nodeIdentity"|"nodeBlend"|"nodeContent"=>{
+    let layer=self.layer(document)?;let b=layer_base(layer);let node=self.node.as_mut().ok_or_else(DocumentSceneError::held)?;let phase=self.phase;
+    let(complete,semantic)=match phase{
+     "nodeIdentity"=>scene_text_copy(&b.id,&mut node.id,&mut self.text_chunk,work)?,
+     "nodeBlend"=>scene_text_copy(&b.blend_mode,&mut node.blend_mode,&mut self.text_chunk,work)?,
+     _=>match (layer,&mut node.content){(DrawingLayerNode::Image(v),DocumentSceneContent::Image{asset,..})=>scene_text_copy(&v.image_key,asset,&mut self.text_chunk,work)?,(DrawingLayerNode::Boolean(v),DocumentSceneContent::Boolean{operation,..})=>scene_text_copy(&v.operation,operation,&mut self.text_chunk,work)?,(DrawingLayerNode::Trace(v),DocumentSceneContent::Trace{source,..})=>scene_text_copy(&v.source_key,source,&mut self.text_chunk,work)?,_=>(true,false)}
+    };if !complete{return Ok(semantic);}if complete&&work.can_step(){self.transition(match phase{"nodeIdentity"=>"nodeBlend","nodeBlend"=>"nodeContent",_=>"nodeAddress"});}
+   },
+   "nodeAddress"=>{
+    let node=self.node.as_mut().ok_or_else(DocumentSceneError::held)?;if let Some(index)=self.path.get(node.source_path.len()).filter(|_|node.source_path.len()<self.depth){let value=u16::try_from(*index).map_err(|_|preparation_invalid("Scene source index exceeds limit"))?;if !scene_vector_slot(&mut node.source_path,work)?{return Ok(false);}work.vec_push(&mut node.source_path,value).map_err(|(error,_)|preparation_invalid(error))?;}else if work.can_step(){self.transition("nodeGroups");}
+   },
+   "nodeGroups"=>{
+    if self.group_at==self.parent.group_count{if work.can_step(){self.transition("paint");}return Ok(true);}
+    if self.group.is_none(){if !work.can_step(){return Ok(false);}let source=&self.plan.nodes[self.parent.groups[self.group_at]];self.group=Some(DrawingSceneGroup{id:String::new(),opacity:source.opacity,blend_mode:String::new()});self.transition("groupIdentity");}
+   },
+   "groupIdentity"|"groupBlend"=>{
+    let source=&self.plan.nodes[self.parent.groups[self.group_at]];let group=self.group.as_mut().ok_or_else(DocumentSceneError::held)?;let phase=self.phase;
+    let(complete,semantic)=if phase=="groupIdentity"{scene_text_copy(&source.id,&mut group.id,&mut self.text_chunk,work)?}else{scene_text_copy(&source.blend_mode,&mut group.blend_mode,&mut self.text_chunk,work)?};
+    if !complete{return Ok(semantic);}if complete{if phase=="groupIdentity"{if work.can_step(){self.transition("groupBlend");}}else{let groups=&mut self.node.as_mut().ok_or_else(DocumentSceneError::held)?.groups;if !scene_vector_slot(groups,work)?{return Ok(false);}work.vec_push(groups,self.group.take().ok_or_else(DocumentSceneError::held)?).map_err(|(error,_)|preparation_invalid(error))?;self.group_at+=1;self.transition("nodeGroups");}}
+   },
+   "paint"=>{
+    let b=layer_base(self.layer(document)?);let Some((out_fill,out_stroke))=self.node.as_mut().ok_or_else(DocumentSceneError::held)?.content.paint()else{if work.can_step(){self.transition(if matches!(self.layer(document)?,DrawingLayerNode::Group(_)|DrawingLayerNode::Boolean(_)){"references"}else{"geometry"});}return Ok(true);};
+    let source=b.attributes.fill.as_ref();
+    if self.at==0{
+     if !work.can_step(){return Ok(false);}
+     *out_fill=match source{None=>None,Some(FillStyle::Solid{color:c})=>Some(FillStyle::Solid{color:color(*c)?}),Some(FillStyle::LinearGradient{x1,y1,x2,y2,stops})=>{if stops.is_empty()||stops.len()>64{return Err(preparation_invalid("Invalid scene gradient stops"));}Some(FillStyle::LinearGradient{x1:coordinate(*x1)?,y1:coordinate(*y1)?,x2:coordinate(*x2)?,y2:coordinate(*y2)?,stops:Default::default()})},Some(FillStyle::RadialGradient{cx,cy,r,stops})=>{if stops.is_empty()||stops.len()>64{return Err(preparation_invalid("Invalid scene gradient stops"));}Some(FillStyle::RadialGradient{cx:coordinate(*cx)?,cy:coordinate(*cy)?,r:positive(*r)?,stops:Default::default()})}};self.at+=1;return Ok(true);
     }
-    let next=document.asset_at(self.assets);
-    if let Some((key,asset))=next{id(key)?;let count=(asset.width as usize).checked_mul(asset.height as usize).ok_or_else(||invalid("Scene image extent overflow"))?;if count==0||count>16_777_216||asset.samples.len()!=count||count.checked_mul(4).is_none_or(|bytes|bytes>self.limits.max_source_bytes.saturating_sub(self.source_bytes)){return Err(invalid("Invalid intrinsic image extent or sample byte limit"));}self.asset_key=Some(scene_source_key(key)?);self.asset_active=true;self.asset_char=0;}else{self.phase="layers";}
-   }
-   "layers"=>{let Some(f)=self.frames.last_mut()else{self.phase="validation";return Ok(());};let count=scene_layer_count(document,&f.path)?;if f.at==count{if let Some(group)=f.groups.pop(){self.retired_groups.push(group);}else{self.retired_frames.push(self.frames.pop().unwrap());}return Ok(());}let layer=scene_child_at(document,&f.path,f.at)?;let mut path=f.path.clone();path.push(f.at);f.at+=1;let(parent,visible,groups,locks)=(f.matrix,f.visible&&(path.len()!=1||document.root_visible(path[0])),f.groups.clone(),f.locked_ancestors);self.start(layer,path,parent,visible,groups,locks)?;}
-   "paint"=>self.paint(document)?,
+    let stops=match source{Some(FillStyle::LinearGradient{stops,..})|Some(FillStyle::RadialGradient{stops,..})=>Some(stops),_=>None};
+    if let Some(stop)=stops.and_then(|values|values.get(self.at-1)){let stop=semio_s_artifact_draw_drawing_model::GradientStop{offset:unit(stop.offset)?,color:color(stop.color)?};let target=match out_fill{Some(FillStyle::LinearGradient{stops,..})|Some(FillStyle::RadialGradient{stops,..})=>stops,_=>unreachable!()};if !work.slot(target).map_err(preparation_invalid)?{return Ok(false);}work.push(target,stop).map_err(|(error,_)|preparation_invalid(error))?;self.at+=1;return Ok(true);}
+    let stroke=b.attributes.stroke.as_ref();
+    if self.stroke_at==0{if let Some(s)=stroke{coordinate(s.width)?;if s.width<0.0||s.dash.as_ref().is_some_and(|d|d.len()>1024){return Err(preparation_invalid("Invalid scene stroke"));}if !work.can_step(){return Ok(false);}*out_stroke=Some(StrokeStyle{color:color(s.color)?,width:s.width,cap:s.cap.clone(),join:s.join.clone(),dash:s.dash.as_ref().map(|_|Default::default())});}else if !work.can_step(){return Ok(false);}self.stroke_at+=1;return Ok(true);}
+    if let Some(value)=stroke.and_then(|s|s.dash.as_ref()).and_then(|v|v.get(self.stroke_at-1)){coordinate(*value)?;if *value<0.0{return Err(preparation_invalid("Invalid scene dash"));}let target=out_stroke.as_mut().ok_or_else(DocumentSceneError::held)?.dash.as_mut().ok_or_else(DocumentSceneError::held)?;if !work.slot(target).map_err(preparation_invalid)?{return Ok(false);}work.push(target,*value).map_err(|(error,_)|preparation_invalid(error))?;self.stroke_at+=1;return Ok(true);}
+    if work.can_step(){self.at=0;self.transition(if matches!(self.layer(document)?,DrawingLayerNode::Group(_)|DrawingLayerNode::Boolean(_)){"references"}else{"geometry"});}
+   },
    "geometry"=>{
-    let next=match scene_layer_at(document,self.current.as_deref().unwrap())?{DrawingLayerNode::Path(p)=>p.segments.get(self.at).cloned(),DrawingLayerNode::Shape(s)=>{let absent=if s.shape_kind.eq_str("rect"){s.rect.is_none()}else if s.shape_kind.eq_str("ellipse"){s.ellipse.is_none()}else if s.shape_kind.eq_str("circle"){s.circle.is_none()}else if s.shape_kind.eq_str("line"){s.line.is_none()}else if s.shape_kind.eq_str("polygon"){s.polygon.is_none()}else{true};if absent{return Err(invalid("Missing or unknown primitive geometry"));}shape_path_segment(s,self.at)},_=>None};
-    if let Some(next)=next{validate_segment(&next)?;if self.segments>=self.limits.max_segments{return Err(invalid("Scene segment limit exceeded"));}let DocumentSceneContent::Path{segments,..}=&mut self.node.as_mut().unwrap().content else{unreachable!()};segments.push(next);self.segments+=1;self.at+=1;return Ok(());}
-    if let DrawingLayerNode::Text(text)=scene_layer_at(document,self.current.as_deref().unwrap())?{if self.text_at<text.content.len(){let Some(ch)=text_scalar(&text.content,&mut self.text_chunk,&mut self.text_chunk_offset)? else{return Ok(());};self.text_at+=ch.len_utf8();self.text_chars+=1;if self.text_chars>65536{return Err(invalid("Scene text exceeds limit"));}let DocumentSceneContent::Text{content,..}=&mut self.node.as_mut().unwrap().content else{unreachable!()};content.try_reserve(ch.len_utf8()).map_err(|_|invalid("Scene text allocation failed"))?;content.push(ch);return Ok(());}}
-    self.finish(document)?;
-   }
-   "references"=>{let key=match scene_layer_at(document,self.current.as_deref().unwrap())?{DrawingLayerNode::Group(g)=>g.children.get(self.at).map(|n|&layer_base(n).id),DrawingLayerNode::Boolean(b)=>b.children.get(self.at),_=>unreachable!()};if let Some(key)=key{id(key)?;if self.references>=self.limits.max_references{return Err(invalid("Scene reference limit exceeded"));}match &mut self.node.as_mut().unwrap().content{DocumentSceneContent::Group{children,..}|DocumentSceneContent::Boolean{children,..}=>children.push(key.to_string_owner()),_=>unreachable!()}self.references+=1;self.at+=1;}else{self.finish(document)?;}}
-   "validation"=>{let Some(n)=self.plan.nodes.get(self.validate_at)else{self.phase="cycles";return Ok(());};let asset=match &n.content{DocumentSceneContent::Image{asset,..}=>Some(asset),DocumentSceneContent::Trace{source,..}=>Some(source),_=>None};if asset.is_some_and(|key|!self.asset_ids.contains(key)){return Err(invalid("Missing scene source asset"));}if let Some(key)=n.content.children().get(self.ref_at){if !self.ids.contains_key(key){return Err(invalid("Missing scene operand"));}self.ref_at+=1;}else{self.validate_at+=1;self.ref_at=0;}}
-   "cycles"=>{if let Some((index,at))=self.graph.last_mut(){if let Some(key)=self.plan.nodes[*index].content.children().get(*at){*at+=1;let next=self.ids[key];if self.visiting.contains(&next){return Err(invalid("Cyclic scene operands"));}if !self.visited.contains(&next){self.visiting.insert(next);self.graph.push((next,0));}}else{let(index,_)=self.graph.pop().unwrap();self.visiting.remove(&index);self.visited.insert(index);}}else if self.cycle_at<self.plan.nodes.len(){let index=self.cycle_at;self.cycle_at+=1;if !self.visited.contains(&index){self.visiting.insert(index);self.graph.push((index,0));}}else{if self.cleanup(){self.phase="complete";}}}
+    let next=match self.layer(document)?{DrawingLayerNode::Path(p)=>p.segments.get(self.at).cloned(),DrawingLayerNode::Shape(s)=>{let absent=if s.shape_kind.eq_str("rect"){s.rect.is_none()}else if s.shape_kind.eq_str("ellipse"){s.ellipse.is_none()}else if s.shape_kind.eq_str("circle"){s.circle.is_none()}else if s.shape_kind.eq_str("line"){s.line.is_none()}else if s.shape_kind.eq_str("polygon"){s.polygon.is_none()}else{true};if absent{return Err(preparation_invalid("Missing or unknown primitive geometry"));}shape_path_segment(s,self.at)},_=>None};
+    if let Some(next)=next{validate_segment(&next)?;if self.segments>=self.limits.max_segments{return Err(preparation_invalid("Scene segment limit exceeded"));}let DocumentSceneContent::Path{segments,..}=&mut self.node.as_mut().ok_or_else(DocumentSceneError::held)?.content else{unreachable!()};if !scene_vector_slot(segments,work)?{return Ok(false);}work.vec_push(segments,next).map_err(|(error,_)|preparation_invalid(error))?;self.segments+=1;self.at+=1;return Ok(true);}
+    if let DrawingLayerNode::Text(text)=self.layer(document)?{if self.text_at<text.content.len(){let mut chunk=self.text_chunk;let mut offset=self.text_chunk_offset;let next=text_scalar(&text.content,&mut chunk,&mut offset)?;let Some(ch)=next else{if work.can_step(){self.text_chunk=chunk;self.text_chunk_offset=offset;}return Ok(true);};if self.text_chars>=65536{return Err(preparation_invalid("Scene text exceeds limit"));}let DocumentSceneContent::Text{content,..}=&mut self.node.as_mut().ok_or_else(DocumentSceneError::held)?.content else{unreachable!()};if !work.reserve_string(content,text.content.len()).map_err(preparation_invalid)?{return Ok(false);}let mut bytes=[0;4];if !work.string_push(content,ch.encode_utf8(&mut bytes)).map_err(preparation_invalid)?{return Ok(false);}self.text_chunk=chunk;self.text_chunk_offset=offset;self.text_at+=ch.len_utf8();self.text_chars+=1;return Ok(true);}}
+    if work.can_step(){self.transition("finish");}
+   },
+   "references"=>{
+    let key=match self.layer(document)?{DrawingLayerNode::Group(g)=>g.children.get(self.at).map(|n|&layer_base(n).id),DrawingLayerNode::Boolean(b)=>b.children.get(self.at),_=>unreachable!()};
+    let Some(key)=key else{if work.can_step(){self.transition("finish");}return Ok(true);};id(key)?;if self.references>=self.limits.max_references{return Err(preparation_invalid("Scene reference limit exceeded"));}
+    let(complete,semantic)=scene_text_copy(key,&mut self.reference,&mut self.text_chunk,work)?;if !complete{return Ok(semantic);}let children=match &mut self.node.as_mut().ok_or_else(DocumentSceneError::held)?.content{DocumentSceneContent::Group{children,..}|DocumentSceneContent::Boolean{children,..}=>children,_=>unreachable!()};if !scene_vector_slot(children,work)?{return Ok(false);}work.vec_push(children,std::mem::take(&mut self.reference)).map_err(|(error,_)|preparation_invalid(error))?;self.references+=1;self.at+=1;self.text_chunk=0;
+   },
+   "finish"=>{
+    if !scene_vector_slot(&mut self.plan.nodes,work)?{return Ok(false);}let node=self.node.take().ok_or_else(DocumentSceneError::held)?;let index=self.plan.nodes.len();
+    if matches!(node.content,DocumentSceneContent::Group{..}){let mut frame=Frame{path:self.path,depth:self.depth,at:0,matrix:node.transform,visible:node.visible,locks:node.locked_ancestors,groups:self.parent.groups,group_count:self.parent.group_count};if matches!(node.content,DocumentSceneContent::Group{isolation:true,..})||node.opacity!=1.0||node.blend_mode!="normal"{frame.groups[frame.group_count]=index;frame.group_count+=1;}self.frames[self.frame_count]=frame;self.frame_count+=1;}
+    work.vec_push(&mut self.plan.nodes,node).map_err(|(error,_)|preparation_invalid(error))?;self.transition("layers");
+   },
+   "validation"=>{
+    let Some(node)=self.plan.nodes.get(self.validate_at)else{if work.can_step(){self.transition("cycles");}return Ok(true);};
+    let asset=match &node.content{DocumentSceneContent::Image{asset,..}=>Some(asset),DocumentSceneContent::Trace{source,..}=>Some(source),_=>None};if asset.is_some_and(|key|!self.plan.assets.iter().any(|asset|&asset.id==key)){return Err(preparation_invalid("Missing scene source asset"));}
+    if let Some(key)=node.content.children().get(self.ref_at){if !self.plan.nodes.iter().any(|node|&node.id==key){return Err(preparation_invalid("Missing scene operand"));}if work.can_step(){self.ref_at+=1;}}else if work.can_step(){self.validate_at+=1;self.ref_at=0;}
+   },
+   "cycles"=>{
+    if self.graph_len>0{let(index,at)=self.graph[self.graph_len-1];if let Some(key)=self.plan.nodes[index].content.children().get(at){let next=self.plan.nodes.iter().position(|node|&node.id==key).ok_or_else(||preparation_invalid("Missing scene operand"))?;if self.visiting[next]{return Err(preparation_invalid("Cyclic scene operands"));}if !work.can_step(){return Ok(false);}self.graph[self.graph_len-1].1+=1;if !self.visited[next]{self.visiting[next]=true;self.graph[self.graph_len]=(next,0);self.graph_len+=1;}}else if work.can_step(){self.graph_len-=1;self.visiting[index]=false;self.visited[index]=true;}}
+    else if self.cycle_at<self.plan.nodes.len(){if !work.can_step(){return Ok(false);}let index=self.cycle_at;self.cycle_at+=1;if !self.visited[index]{self.visiting[index]=true;self.graph[0]=(index,0);self.graph_len=1;}}
+    else if work.can_step(){self.transition("complete");self.step_work=1;return Ok(false);}
+   },
    _=>{}
-  }Ok(())
+  }Ok(true)
  }
- pub fn advance(&mut self,document:&impl DrawingSceneSource,budget:usize)->Result<DocumentSceneProgress,DocumentSceneError>{if budget==0||budget as u128>9_007_199_254_740_991{return Err(invalid("Invalid scene preparation work grant"));}if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}for _ in 0..budget{if self.phase=="complete"{break;}if let Err(error)=self.step(document){self.failure=Some(error.clone());return Err(error);}self.work+=1;}Ok(DocumentSceneProgress{phase:self.phase,layers:self.layers,assets:self.assets,segments:self.segments,references:self.references,source_bytes:self.source_bytes,work:self.work,done:self.phase=="complete"})}
- fn cleanup(&mut self)->bool{true}
+ pub fn settlement_pending(&self)->bool{self.phase=="complete"||self.phase=="cycles"&&self.graph_len==0&&self.cycle_at>=self.plan.nodes.len()}
+ pub fn failure_pending(&self)->bool{self.failure.is_some()}
+ pub fn next_work_demand(&self)->semio_framework_value::RetirementDemand{self.pending}
+ pub fn last_turn_work(&self)->u64{self.last_turn_work}
+ pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
+ fn progress(&self)->DocumentSceneProgress{DocumentSceneProgress{phase:self.phase,layers:self.layers,assets:self.assets,segments:self.segments,references:self.references,source_bytes:self.source_bytes,work:self.work,done:self.phase=="complete"}}
+ pub fn advance(&mut self,document:&impl DrawingSceneSource,budget:usize,work:&mut semio_framework_2d_text_font::work::RetainedWorkLedger)->Result<DocumentSceneProgress,DocumentSceneError>{
+  self.last_turn_work=0;self.last_turn_semantic_work=0;if budget==0||budget as u128>9_007_199_254_740_991{return Err(preparation_invalid("Invalid scene preparation work grant"));}if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}
+  let d=self.pending;if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.progress());}
+  let Some(root)=work.enter()else{self.pending=work.next_demand();return Ok(self.progress());};
+  let result=(||{for _ in 0..budget{if self.phase=="complete"{break;}if !work.can_step(){break;}let before=work.receipt();self.step_work=0;let exhausted=self.progress.work>=self.limits.max_work&&!settling&&!self.settlement_pending();let result=if exhausted{Err(DocumentSceneError::literal("Document vector work limit exceeded"))}else{self.step(document,work)};let semantic=result.as_ref().copied().unwrap_or(true);let actual=semantic||self.step_work>0||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}if work.blocked(){break;}}Ok(self.progress())})();work.exit();result
+ }
  fn into_retirement(mut self)->(DocumentSceneRetirement,Option<DocumentScenePlan>){let output=if self.phase=="complete"&&!self.cancelled&&self.failure.is_none(){Some(std::mem::take(&mut self.plan))}else{None};self.cancelled=true;(DocumentSceneRetirement::new(self),output)}
  pub fn cancel(&mut self){self.cancelled=true;}
  pub fn result(&mut self)->Result<DocumentScenePlan,DocumentSceneError>{if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}if self.phase!="complete"{return Err(DocumentSceneError::Incomplete);}Ok(std::mem::take(&mut self.plan))}
 }
 #[derive(semio_framework_value::RetireOwned)]
-struct DocumentSceneOwners{asset_key:Option<String>,asset_samples:Vec<u8>,frames:Vec<Frame>,retired_frames:Vec<Frame>,retired_groups:Vec<DrawingSceneGroup>,retired_paths:Vec<Vec<usize>>,retired_texts:Vec<String>,current:Option<Vec<usize>>,node:Option<DocumentSceneNode>,plan:DocumentScenePlan,ids:OwnedTable<String,usize>,asset_ids:OwnedSet<String>,graph:Vec<(usize,usize)>,visited:OwnedSet<usize>,visiting:OwnedSet<usize>,failure:Option<DocumentSceneError>}
-impl RetireOwned for DocumentSceneCursor{fn retirement(self)->Box<dyn RetirementCursor>{DocumentSceneOwners{asset_key:self.asset_key,asset_samples:self.asset_samples,frames:self.frames,retired_frames:self.retired_frames,retired_groups:self.retired_groups,retired_paths:self.retired_paths,retired_texts:self.retired_texts,current:self.current,node:self.node,plan:self.plan,ids:self.ids,asset_ids:self.asset_ids,graph:self.graph,visited:self.visited,visiting:self.visiting,failure:self.failure}.retirement()} fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.asset_key),deferred_birth_bytes_for(&self.asset_samples),deferred_birth_bytes_for(&self.frames),deferred_birth_bytes_for(&self.retired_frames),deferred_birth_bytes_for(&self.retired_groups),deferred_birth_bytes_for(&self.retired_paths),deferred_birth_bytes_for(&self.current),deferred_birth_bytes_for(&self.node),deferred_birth_bytes_for(&self.plan),deferred_birth_bytes_for(&self.ids),deferred_birth_bytes_for(&self.asset_ids),deferred_birth_bytes_for(&self.graph),deferred_birth_bytes_for(&self.visited),deferred_birth_bytes_for(&self.visiting),deferred_birth_bytes_for(&self.failure)])} fn controlled_retirement_supported()->bool{DocumentSceneOwners::controlled_retirement_supported()}}
-semio_framework_2d::physical_work_retirement!(DocumentSceneRetirement,DocumentSceneCursor,DocumentSceneError,|error:&str|invalid(error));
+struct DocumentSceneOwners{node:Option<DocumentSceneNode>,plan:DocumentScenePlan,asset_samples:Vec<u8>,asset_id:String,reference:String,group:Option<DrawingSceneGroup>,failure:Option<DocumentSceneError>}
+impl RetireOwned for DocumentSceneCursor{
+ fn retirement(self)->Box<dyn RetirementCursor>{DocumentSceneOwners{node:self.node,plan:self.plan,asset_samples:self.asset_samples,asset_id:self.asset_id,reference:self.reference,group:self.group,failure:self.failure}.retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.node),deferred_birth_bytes_for(&self.plan),deferred_birth_bytes_for(&self.asset_samples),deferred_birth_bytes_for(&self.asset_id),deferred_birth_bytes_for(&self.reference),deferred_birth_bytes_for(&self.group),deferred_birth_bytes_for(&self.failure)])}
+ fn controlled_retirement_supported()->bool{DocumentSceneOwners::controlled_retirement_supported()}
+}
+semio_framework_2d::physical_work_retirement!(DocumentSceneRetirement,DocumentSceneCursor);
 /// 🧭️ Owns source positions so a retained caller supplies its immutable document per work grant.
 pub struct DocumentScenePreparation{cursor:DocumentSceneCursor}
 impl DocumentScenePreparation{
  pub fn new(document:&impl DrawingSceneSource,limits:DocumentSceneLimits)->Result<Self,DocumentSceneError>{Ok(Self{cursor:DocumentSceneCursor::new(document,limits)?})}
- pub fn advance(&mut self,document:&impl DrawingSceneSource,budget:usize)->Result<DocumentSceneProgress,DocumentSceneError>{self.cursor.advance(document,budget)}
- pub fn cancel(&mut self){self.cursor.cancelled=true;}
+ pub fn advance(&mut self,document:&impl DrawingSceneSource,budget:usize,work:&mut semio_framework_2d_text_font::work::RetainedWorkLedger)->Result<DocumentSceneProgress,DocumentSceneError>{self.cursor.advance(document,budget,work)}
+ pub fn settlement_pending(&self)->bool{self.cursor.settlement_pending()}
+ pub fn failure_pending(&self)->bool{self.cursor.failure_pending()}
+ pub fn next_work_demand(&self)->semio_framework_value::RetirementDemand{self.cursor.next_work_demand()}
+ pub fn last_turn_work(&self)->u64{self.cursor.last_turn_work()}
+ pub fn last_turn_semantic_work(&self)->u64{self.cursor.last_turn_semantic_work()}
+ pub fn cancel(&mut self){self.cursor.cancel();}
  pub fn result(&mut self)->Result<DocumentScenePlan,DocumentSceneError>{self.cursor.result()}
  pub fn into_retirement(self)->(DocumentSceneRetirement,Option<DocumentScenePlan>){self.cursor.into_retirement()}
 }
-/// 🧱️ Borrows one stable document while retaining only source positions in its traversal cursor.
+/// 🧱️ Borrows one stable document while retaining inline bounded source positions.
 pub struct DocumentSceneJob<'a>{document:&'a DrawingSnapshot,pub cursor:DocumentSceneCursor}
 impl<'a> DocumentSceneJob<'a>{
  pub fn new(document:&'a DrawingSnapshot,limits:DocumentSceneLimits)->Result<Self,DocumentSceneError>{Ok(Self{document,cursor:DocumentSceneCursor::new(document,limits)?})}
- pub fn advance(&mut self,budget:usize)->Result<DocumentSceneProgress,DocumentSceneError>{self.cursor.advance(self.document,budget)}
+ pub fn advance(&mut self,budget:usize,work:&mut semio_framework_2d_text_font::work::RetainedWorkLedger)->Result<DocumentSceneProgress,DocumentSceneError>{self.cursor.advance(self.document,budget,work)}
+ pub fn settlement_pending(&self)->bool{self.cursor.settlement_pending()}
+ pub fn failure_pending(&self)->bool{self.cursor.failure_pending()}
+ pub fn next_work_demand(&self)->semio_framework_value::RetirementDemand{self.cursor.next_work_demand()}
+ pub fn last_turn_work(&self)->u64{self.cursor.last_turn_work()}
+ pub fn last_turn_semantic_work(&self)->u64{self.cursor.last_turn_semantic_work()}
  pub fn cancel(&mut self){self.cursor.cancel();}
  pub fn result(&mut self)->Result<DocumentScenePlan,DocumentSceneError>{self.cursor.result()}
- /// 🧹️ Preserve complete output while transferring partial preparation into its retirement cursor.
  pub fn into_retirement(self)->(DocumentSceneRetirement,Option<DocumentScenePlan>){self.cursor.into_retirement()}
 }
-/// 🚪️ Complete prepared path/image plans enter raster; unresolved work is an explicit refusal.
-pub fn resolved_scene_input(plan:DocumentScenePlan,viewport:DocumentSceneViewport)->Result<RasterSceneInput,DocumentSceneError>{
- let mut nodes=Vec::new();for n in plan.nodes{let content=match n.content{DocumentSceneContent::Group{..}=>continue,DocumentSceneContent::Path{segments,fill_rule,fill,stroke}=>RasterSceneContent::Path{segments,fill_rule,fill,stroke},DocumentSceneContent::Image{asset,width,height}=>RasterSceneContent::Image{asset,width,height},_=>return Err(invalid(format!("Unresolved scene layer: {}",n.id)))};nodes.push(RasterSceneNode{id:n.id,groups:n.groups,transform:n.transform,opacity:n.opacity,blend_mode:n.blend_mode,visible:n.visible,content});}Ok(viewport.input(plan.assets,nodes))
+/// 🚪️ Retains unresolved input and consumed source backing until funded physical retirement.
+pub struct ResolvedSceneInputJob{
+ source:DocumentScenePlan,viewport:DocumentSceneViewport,nodes:Vec<RasterSceneNode>,retired:Vec<DocumentSceneNode>,paths:Vec<Vec<u16>>,done:bool,cancelled:bool,reversed:bool,reverse_at:usize,failure:Option<DocumentSceneError>,work:u64,last_turn_work:u64,last_turn_semantic_work:u64,pending:semio_framework_value::RetirementDemand,message:String,message_part:usize,invalid:bool,
+}
+impl ResolvedSceneInputJob{
+ pub fn new(source:DocumentScenePlan,viewport:DocumentSceneViewport)->Self{Self{source,viewport,nodes:Vec::new(),retired:Vec::new(),paths:Vec::new(),done:false,cancelled:false,reversed:false,reverse_at:0,failure:None,work:0,last_turn_work:0,last_turn_semantic_work:0,pending:semio_framework_value::RetirementDemand{depth:1,..Default::default()},message:String::new(),message_part:0,invalid:false}}
+ pub fn settlement_pending(&self)->bool{self.source.nodes.is_empty()&&!self.invalid&&self.failure.is_none()}
+ pub fn failure_pending(&self)->bool{self.invalid||self.failure.is_some()}
+ pub fn next_work_demand(&self)->semio_framework_value::RetirementDemand{self.pending}
+ pub fn last_turn_work(&self)->u64{self.last_turn_work}
+ pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
+ pub fn cancel(&mut self){self.cancelled=true;}
+ pub fn advance(&mut self,items:usize,work:&mut semio_framework_2d_text_font::work::RetainedWorkLedger)->Result<bool,DocumentSceneError>{
+  self.last_turn_work=0;self.last_turn_semantic_work=0;if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}if items==0{return Err(preparation_invalid("Invalid resolved scene work grant"));}
+  let d=self.pending;if !work.admits_absolute(d){work.require_absolute(d);return Ok(self.done);}
+  let Some(root)=work.enter()else{self.pending=work.next_demand();return Ok(self.done);};
+  let result=(||{for _ in 0..items{if self.done||!work.can_step(){break;}let before=work.receipt();let settling=self.invalid;let result=self.step(work);let semantic=!settling&&matches!(&result,Ok((true,_))|Err(_));let actual=matches!(&result,Ok((_,true))|Err(_))||work.receipt()!=before;if actual{work.note_source(root);self.last_turn_work+=1;}if semantic{self.work+=1;self.last_turn_semantic_work+=1;}self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}if work.blocked(){break;}}Ok(self.done)})();work.exit();result
+ }
+ fn step(&mut self,work:&mut semio_framework_2d_text_font::work::RetainedWorkLedger)->Result<(bool,bool),DocumentSceneError>{
+  if self.invalid{
+   let prefix="Unresolved scene layer: ";let node=self.source.nodes.last().ok_or_else(DocumentSceneError::held)?;let total=prefix.len().checked_add(node.id.len()).ok_or_else(||preparation_invalid("Resolved diagnostic extent overflow"))?;
+   if !work.reserve_string(&mut self.message,total).map_err(preparation_invalid)?{return Ok((false,false));}
+   if self.message_part<2{let part=if self.message_part==0{prefix}else{node.id.as_str()};if !work.string_push(&mut self.message,part).map_err(preparation_invalid)?{return Ok((false,false));}self.message_part+=1;return Ok((false,true));}
+   if !work.arc_ready::<String>().map_err(preparation_invalid)?{return Ok((false,false));}let message=work.arc_new(std::mem::take(&mut self.message)).map_err(|(error,_)|preparation_invalid(error))?;return Err(DocumentSceneError::owned(message));
+  }
+  let Some(node)=self.source.nodes.last()else{
+   if !self.reversed{let half=self.nodes.len()/2;if self.reverse_at<half{let right=self.nodes.len()-1-self.reverse_at;self.nodes.swap(self.reverse_at,right);self.reverse_at+=1;return Ok((false,true));}self.reversed=true;return Ok((false,true));}self.done=true;return Ok((false,true));
+  };
+  if matches!(node.content,DocumentSceneContent::Group{..}){if !scene_vector_slot(&mut self.retired,work)?{return Ok((false,false));}work.vec_push(&mut self.retired,self.source.nodes.pop().ok_or_else(DocumentSceneError::held)?).map_err(|(error,_)|preparation_invalid(error))?;return Ok((true,true));}
+  if !matches!(node.content,DocumentSceneContent::Path{..}|DocumentSceneContent::Image{..}){self.invalid=true;return Ok((true,true));}
+  if !scene_vector_slot(&mut self.nodes,work)?||!scene_vector_slot(&mut self.paths,work)?{return Ok((false,false));}
+  let node=self.source.nodes.pop().ok_or_else(DocumentSceneError::held)?;let content=match node.content{DocumentSceneContent::Path{segments,fill_rule,fill,stroke}=>RasterSceneContent::Path{segments,fill_rule,fill,stroke},DocumentSceneContent::Image{asset,width,height}=>RasterSceneContent::Image{asset,width,height},_=>unreachable!()};
+  work.vec_push(&mut self.paths,node.source_path).map_err(|(error,_)|preparation_invalid(error))?;
+  work.vec_push(&mut self.nodes,RasterSceneNode{id:node.id,groups:node.groups,transform:node.transform,opacity:node.opacity,blend_mode:node.blend_mode,visible:node.visible,content}).map_err(|(error,_)|preparation_invalid(error))?;Ok((true,true))
+ }
+ pub fn result(&mut self)->Result<RasterSceneInput,DocumentSceneError>{if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}if !self.done{return Err(DocumentSceneError::Incomplete);}Ok(self.viewport.input(std::mem::take(&mut self.source.assets),std::mem::take(&mut self.nodes)))}
+}
+#[derive(semio_framework_value::RetireOwned)]
+struct ResolvedSceneInputOwners{source:DocumentScenePlan,nodes:Vec<RasterSceneNode>,retired:Vec<DocumentSceneNode>,paths:Vec<Vec<u16>>,failure:Option<DocumentSceneError>,message:String}
+impl RetireOwned for ResolvedSceneInputJob{
+ fn retirement(self)->Box<dyn RetirementCursor>{ResolvedSceneInputOwners{source:self.source,nodes:self.nodes,retired:self.retired,paths:self.paths,failure:self.failure,message:self.message}.retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.source),deferred_birth_bytes_for(&self.nodes),deferred_birth_bytes_for(&self.retired),deferred_birth_bytes_for(&self.paths),deferred_birth_bytes_for(&self.failure),deferred_birth_bytes_for(&self.message)])}
+ fn controlled_retirement_supported()->bool{ResolvedSceneInputOwners::controlled_retirement_supported()}
 }
 #[cfg(any(test, feature = "testkit"))]
 #[path="🧰️testkit/🦀️.rs"]
@@ -231,15 +363,15 @@ impl Default for DocumentAlgorithmLimits{fn default()->Self{Self{max_work:100000
 #[derive(Clone,Debug)]
 pub struct DocumentVectorProgress{pub phase:&'static str,pub preparation:DocumentSceneProgress,pub tracing:Option<DocumentTraceProgress>,pub resolution:Option<DocumentBooleanProgress>,pub work:u64,pub done:bool}
 impl Default for DocumentVectorProgress{fn default()->Self{Self{phase:"preparing",preparation:DocumentSceneProgress{phase:"assets",layers:0,assets:0,segments:0,references:0,source_bytes:0,work:0,done:false},tracing:None,resolution:None,work:0,done:false}}}
+fn vector_slot<T>(values:&mut Vec<T>,work:&mut RetainedWorkLedger)->Result<bool,DocumentSceneError>{let needed=values.len().checked_add(1).ok_or_else(||DocumentSceneError::literal("Vector retained frontier overflow"))?;if values.capacity()<needed{let target=needed.checked_next_power_of_two().ok_or_else(||DocumentSceneError::literal("Vector retained capacity overflow"))?;if !work.reserve_vec(values,target).map_err(DocumentSceneError::literal)?{return Ok(false);}}work.vec_slot(values).map_err(DocumentSceneError::literal)}
 enum DocumentVectorSource<'a>{Borrowed(&'a DrawingSnapshot),SnapshotRead(store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>)}
 impl DocumentVectorSource<'_>{fn document(&self)->&DrawingSnapshot{match self{Self::Borrowed(document)=>document,Self::SnapshotRead(read)=>read.get()}}}
 #[derive(semio_framework_value::RetireOwned)]
 enum VectorChildRetirement{Preparation(DocumentSceneRetirement),Trace(DocumentTraceRetirement),Text(DocumentTextRetirement),Boolean(DocumentBooleanRetirement)}
-impl VectorChildRetirement{fn advance(&mut self,grant:usize)->Result<WorkRetirementProgress,DocumentSceneError>{match self{Self::Preparation(job)=>job.advance(grant),Self::Trace(job)=>job.advance(grant),Self::Text(job)=>job.advance(grant),Self::Boolean(job)=>job.advance(grant)}}}
 /// 🎬️ Resolves one stable source while retaining text and authored paint metadata.
 pub struct DocumentVectorJob<'a>{
  pub source:Option<DocumentVectorSource<'a>>,pub preparation:Option<DocumentSceneCursor>,pub traces:Option<DocumentTraceJob>,texts:Option<DocumentTextJob>,pub algorithms:Option<DocumentBooleanJob>,progress:DocumentVectorProgress,
- pub output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,cancelled:bool,limits:DocumentAlgorithmLimits,pub closing:Option<VectorChildRetirement>,discard:Option<ScenePlanCloseJob>,handoff:Option<DocumentScenePlan>,retired_children:Vec<VectorChildRetirement>,retired_plans:Vec<ScenePlanCloseJob>,
+ pub output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,cancelled:bool,limits:DocumentAlgorithmLimits,pub closing:Option<VectorChildRetirement>,discard:Option<ScenePlanCloseJob>,handoff:Option<DocumentScenePlan>,retired_children:Vec<VectorChildRetirement>,retired_plans:Vec<ScenePlanCloseJob>,pending:RetirementDemand,last_turn_work:u64,last_turn_semantic_work:u64,step_semantic:bool,step_cpu:bool,
 }
 impl<'a> DocumentVectorJob<'a>{
  pub fn new(document:&'a DrawingSnapshot,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits)->Result<Self,DocumentSceneError>{Self::from_source(DocumentVectorSource::Borrowed(document),limits,algorithms)}
@@ -248,59 +380,70 @@ impl<'a> DocumentVectorJob<'a>{
  pub fn from_scene_source(document:&impl DrawingSceneSource,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits)->Result<Self,DocumentSceneError>{
   if !(1..=1000000000).contains(&algorithms.max_work){return Err(invalid("Invalid document vector work limit"));}
   let preparation=DocumentSceneCursor::new(document,limits)?;
-  let mut boolean=DocumentBooleanJob::new(DocumentBooleanInput{plan:DocumentScenePlan::default(),limits:algorithms.booleans})?;boolean.cancel();
-  let mut trace=DocumentTraceJob::new(DocumentTraceInput{plan:DocumentScenePlan::default(),limits:algorithms.trace})?;trace.cancel();
-  let(boolean_close,boolean_input,boolean_output)=boolean.into_retirement();let(trace_close,trace_input,trace_output)=trace.into_retirement();
-  let mut retired_plans=vec![ScenePlanCloseJob::new(boolean_input),ScenePlanCloseJob::new(trace_input)];for plan in [boolean_output,trace_output].into_iter().flatten(){retired_plans.push(ScenePlanCloseJob::new(plan));}
-  Ok(Self{preparation:Some(preparation),source:None,traces:None,texts:None,algorithms:None,progress:DocumentVectorProgress::default(),output:None,failure:None,cancelled:false,limits:algorithms,closing:None,discard:None,handoff:None,retired_children:vec![VectorChildRetirement::Boolean(boolean_close),VectorChildRetirement::Trace(trace_close)],retired_plans})
+  DocumentBooleanJob::validate_limits(algorithms.booleans)?;DocumentTraceJob::validate_limits(algorithms.trace)?;
+  Ok(Self{preparation:Some(preparation),source:None,traces:None,texts:None,algorithms:None,progress:DocumentVectorProgress::default(),output:None,failure:None,cancelled:false,limits:algorithms,closing:None,discard:None,handoff:None,retired_children:Vec::new(),retired_plans:Vec::new(),pending:RetirementDemand{depth:1,..Default::default()},last_turn_work:0,last_turn_semantic_work:0,step_semantic:false,step_cpu:false})
  }
  /// 🔐️ Owns the genuine immutable store read while preparation retains only source positions.
  pub fn from_snapshot_read(read:store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits)->DocumentVectorJob<'static>{
-  let mut job=DocumentVectorJob{preparation:None,source:Some(DocumentVectorSource::SnapshotRead(read)),traces:None,texts:None,algorithms:None,progress:DocumentVectorProgress::default(),output:None,failure:None,cancelled:false,limits:algorithms,closing:None,discard:None,handoff:None,retired_children:Vec::new(),retired_plans:Vec::new()};
+  let mut job=DocumentVectorJob{preparation:None,source:Some(DocumentVectorSource::SnapshotRead(read)),traces:None,texts:None,algorithms:None,progress:DocumentVectorProgress::default(),output:None,failure:None,cancelled:false,limits:algorithms,closing:None,discard:None,handoff:None,retired_children:Vec::new(),retired_plans:Vec::new(),pending:RetirementDemand{depth:1,..Default::default()},last_turn_work:0,last_turn_semantic_work:0,step_semantic:false,step_cpu:false};
   let admitted=(||->Result<(),DocumentSceneError>{
    if !(1..=1000000000).contains(&algorithms.max_work){return Err(invalid("Invalid document vector work limit"));}
-   let mut boolean=DocumentBooleanJob::new(DocumentBooleanInput{plan:DocumentScenePlan::default(),limits:algorithms.booleans})?;boolean.cancel();let(close,input,output)=boolean.into_retirement();job.retired_children.push(VectorChildRetirement::Boolean(close));job.retired_plans.push(ScenePlanCloseJob::new(input));if let Some(plan)=output{job.retired_plans.push(ScenePlanCloseJob::new(plan));}
-   let mut trace=DocumentTraceJob::new(DocumentTraceInput{plan:DocumentScenePlan::default(),limits:algorithms.trace})?;trace.cancel();let(close,input,output)=trace.into_retirement();job.retired_children.push(VectorChildRetirement::Trace(close));job.retired_plans.push(ScenePlanCloseJob::new(input));if let Some(plan)=output{job.retired_plans.push(ScenePlanCloseJob::new(plan));}
+   DocumentBooleanJob::validate_limits(algorithms.booleans)?;DocumentTraceJob::validate_limits(algorithms.trace)?;
    job.preparation=Some(DocumentSceneCursor::new(job.source.as_ref().unwrap().document(),limits)?);Ok(())
   })();job.failure=admitted.err();job
  }
  /// 🛂️ Checks the captured generation and revision against the store's current event authority.
  pub fn snapshot_authority_matches(&self,generation:u64,revision:[u8;32])->bool{match &self.source{Some(DocumentVectorSource::SnapshotRead(read))=>read.commit_authority_matches(generation,revision),_=>false}}
- fn step(&mut self,document:&impl DrawingSceneSource)->Result<(),DocumentSceneError>{
-  if let Some(close)=self.closing.take(){self.retired_children.push(close);return Ok(());}
-  if let Some(close)=self.discard.take(){self.retired_plans.push(close);return Ok(());}
-  if let Some(plan)=self.handoff.take(){match self.progress.phase{"preparing"=>{self.traces=Some(DocumentTraceJob::new(DocumentTraceInput{plan,limits:self.limits.trace})?);self.progress.phase="tracing";},"tracing"=>{self.texts=Some(DocumentTextJob::new(plan,self.limits.max_work));self.progress.phase="text";},"text"=>{self.algorithms=Some(DocumentBooleanJob::new(DocumentBooleanInput{plan,limits:self.limits.booleans})?);self.progress.phase="algorithms";},_=>{self.output=Some(plan);self.progress.phase="complete";self.progress.done=true;}}return Ok(());}
+ fn step(&mut self,document:&impl DrawingSceneSource,work:&mut RetainedWorkLedger)->Result<(),DocumentSceneError>{
+  if self.closing.is_some(){if !vector_slot(&mut self.retired_children,work)?{return Ok(());}work.vec_push(&mut self.retired_children,self.closing.take().ok_or_else(DocumentSceneError::held)?).map_err(|_|DocumentSceneError::literal("Vector child archive authority lost"))?;self.step_cpu=true;return Ok(());}
+  if self.discard.is_some(){if !vector_slot(&mut self.retired_plans,work)?{return Ok(());}work.vec_push(&mut self.retired_plans,self.discard.take().ok_or_else(DocumentSceneError::held)?).map_err(|_|DocumentSceneError::literal("Vector plan archive authority lost"))?;self.step_cpu=true;return Ok(());}
+  if self.handoff.is_some(){if !work.can_step(){return Ok(());}let plan=self.handoff.take().ok_or_else(DocumentSceneError::held)?;match self.progress.phase{"preparing"=>{self.traces=Some(DocumentTraceJob::new(DocumentTraceInput{plan,limits:self.limits.trace}));self.progress.phase="tracing";},"tracing"=>{self.texts=Some(DocumentTextJob::new(plan,self.limits.max_work));self.progress.phase="text";},"text"=>{self.algorithms=Some(DocumentBooleanJob::new(DocumentBooleanInput{plan,limits:self.limits.booleans}));self.progress.phase="algorithms";},_=>{self.output=Some(plan);self.progress.phase="complete";self.progress.done=true;}}self.step_cpu=true;return Ok(());}
   match self.progress.phase{
-   "preparing"=>{self.progress.preparation=self.preparation.as_mut().unwrap().advance(document,1)?;if self.progress.preparation.done{let(close,plan)=self.preparation.take().unwrap().into_retirement();self.closing=Some(VectorChildRetirement::Preparation(close));self.handoff=plan;}}
-   "tracing"=>{let p=self.traces.as_mut().unwrap().advance(1)?;self.progress.tracing=Some(p);if p.done{let(close,input,plan)=self.traces.take().unwrap().into_retirement();self.closing=Some(VectorChildRetirement::Trace(close));self.discard=Some(ScenePlanCloseJob::new(input));self.handoff=plan;}}
-   "text"=>{let p=self.texts.as_mut().unwrap().advance(1)?;if p.done{let(close,plan)=self.texts.take().unwrap().into_retirement();self.closing=Some(VectorChildRetirement::Text(close));self.handoff=plan;}}
-   "algorithms"=>{let p=self.algorithms.as_mut().unwrap().advance(1)?;self.progress.resolution=Some(p);if p.done{let(close,input,plan)=self.algorithms.take().unwrap().into_retirement();self.closing=Some(VectorChildRetirement::Boolean(close));self.discard=Some(ScenePlanCloseJob::new(input));self.handoff=plan;}}
+   "preparing"=>{if self.progress.preparation.done{let(close,plan)=self.preparation.take().ok_or_else(DocumentSceneError::held)?.into_retirement();self.closing=Some(VectorChildRetirement::Preparation(close));self.handoff=plan;self.step_cpu=true;return Ok(());}let child=self.preparation.as_mut().ok_or_else(DocumentSceneError::held)?;let result=child.advance(document,1,work);self.last_turn_work+=child.last_turn_work();self.last_turn_semantic_work+=child.last_turn_semantic_work();self.progress.preparation=result?;}
+   "tracing"=>{if self.traces.as_ref().ok_or_else(DocumentSceneError::held)?.result().is_ok(){let(close,input,plan)=self.traces.take().ok_or_else(DocumentSceneError::held)?.into_retirement();self.closing=Some(VectorChildRetirement::Trace(close));self.discard=Some(ScenePlanCloseJob::new(input));self.handoff=plan;self.step_cpu=true;return Ok(());}let child=self.traces.as_mut().ok_or_else(DocumentSceneError::held)?;let result=child.advance(1,work);self.last_turn_work+=child.last_turn_work();self.last_turn_semantic_work+=child.last_turn_semantic_work();self.progress.tracing=Some(result?);}
+   "text"=>{if self.texts.as_ref().ok_or_else(DocumentSceneError::held)?.result().is_ok(){let(close,plan)=self.texts.take().ok_or_else(DocumentSceneError::held)?.into_retirement();self.closing=Some(VectorChildRetirement::Text(close));self.handoff=plan;self.step_cpu=true;return Ok(());}let child=self.texts.as_mut().ok_or_else(DocumentSceneError::held)?;let result=child.advance(1,work);self.last_turn_work+=child.last_turn_work();self.last_turn_semantic_work+=child.last_turn_semantic_work();result?;}
+   "algorithms"=>{if self.algorithms.as_ref().ok_or_else(DocumentSceneError::held)?.result().is_ok(){let(close,input,plan)=self.algorithms.take().ok_or_else(DocumentSceneError::held)?.into_retirement();self.closing=Some(VectorChildRetirement::Boolean(close));self.discard=Some(ScenePlanCloseJob::new(input));self.handoff=plan;self.step_cpu=true;return Ok(());}let child=self.algorithms.as_mut().ok_or_else(DocumentSceneError::held)?;let result=child.advance(1,work);self.last_turn_work+=child.last_turn_work();self.last_turn_semantic_work+=child.last_turn_semantic_work();self.progress.resolution=Some(result?);}
    _=>{}
   }Ok(())
  }
- pub fn advance_scene_source(&mut self,document:&impl DrawingSceneSource,budget:usize)->Result<DocumentVectorProgress,DocumentSceneError>{
-  if budget==0||budget as u128>9_007_199_254_740_991{return Err(invalid("Invalid document vector work grant"));}if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(e)=&self.failure{return Err(e.clone());}
-  for _ in 0..budget{if self.progress.done{break;}let result=if self.progress.work>=self.limits.max_work{Err(invalid("Document vector work limit exceeded"))}else{self.step(document)};if let Err(e)=result{self.failure=Some(e.clone());return Err(e);}self.progress.work+=1;}Ok(self.progress.clone())
+ pub fn failure_pending(&self)->bool{self.failure.is_some()||self.preparation.as_ref().is_some_and(DocumentSceneCursor::failure_pending)||self.traces.as_ref().is_some_and(DocumentTraceJob::failure_pending)||self.texts.as_ref().is_some_and(DocumentTextJob::failure_pending)||self.algorithms.as_ref().is_some_and(DocumentBooleanJob::failure_pending)}
+ pub fn settlement_pending(&self)->bool{if self.progress.done||self.closing.is_some()||self.discard.is_some(){return true;}if self.handoff.is_some(){return true;}match self.progress.phase{"preparing"=>self.preparation.as_ref().is_some_and(DocumentSceneCursor::settlement_pending),"tracing"=>self.traces.as_ref().is_some_and(DocumentTraceJob::settlement_pending),"text"=>self.texts.as_ref().is_some_and(DocumentTextJob::settlement_pending),"algorithms"=>self.algorithms.as_ref().is_some_and(DocumentBooleanJob::settlement_pending),_=>false}}
+ pub fn next_work_demand(&self)->RetirementDemand{self.pending}
+ pub fn last_turn_work(&self)->u64{self.last_turn_work}
+ pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
+ pub fn advance_scene_source(&mut self,document:&impl DrawingSceneSource,budget:usize,work:&mut RetainedWorkLedger)->Result<DocumentVectorProgress,DocumentSceneError>{
+  self.last_turn_work=0;self.last_turn_semantic_work=0;if budget==0||budget as u128>9_007_199_254_740_991{return Err(DocumentSceneError::literal("Invalid document work grant"));}if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}
+  for _ in 0..budget{
+   if self.progress.done{break;}let d=self.pending;
+   if !work.admits_absolute(d){work.require_absolute(d);break;}
+   if self.progress.work>=self.limits.max_work&&!self.failure_pending(){let error=DocumentSceneError::literal("Document vector work limit exceeded");self.failure=Some(error.clone());return Err(error);}
+   let settling=self.failure_pending();let before=work.receipt();let before_cpu=self.last_turn_work;let before_semantic=self.last_turn_semantic_work;self.step_semantic=false;self.step_cpu=false;let entered=work.enter();
+   if entered.is_none(){self.pending=work.next_demand();break;}
+   let result=self.step(document,work);let child_cpu=self.last_turn_work-before_cpu;let child_semantic=self.last_turn_semantic_work-before_semantic;let actual=child_cpu>0||work.receipt()!=before||self.step_cpu||result.is_err();
+   if actual{work.note_source(entered==Some(true));if child_cpu==0{self.last_turn_work+=1;}}if !settling&&!exhausted&&child_semantic==0&&(self.step_semantic||result.is_err()){self.last_turn_semantic_work+=1;}if !settling{self.progress.work+=self.last_turn_semantic_work-before_semantic;}work.exit();
+   self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}
+   if work.blocked()||!actual{break;}
+  }Ok(self.progress.clone())
  }
- pub fn advance(&mut self,budget:usize)->Result<DocumentVectorProgress,DocumentSceneError>{let source=self.source.take().ok_or_else(||invalid("Borrowed scene producer requires its real source each turn"))?;let result=self.advance_scene_source(source.document(),budget);self.source=Some(source);result}
+ pub fn advance(&mut self,budget:usize,work:&mut RetainedWorkLedger)->Result<DocumentVectorProgress,DocumentSceneError>{let source=self.source.take().ok_or_else(||DocumentSceneError::literal("Borrowed scene producer requires its real source each turn"))?;let result=self.advance_scene_source(source.document(),budget,work);self.source=Some(source);result}
+ pub fn advance_original(&mut self,cx:&mut StepContext<'_>)->Result<DocumentVectorProgress,OriginalWorkFailure<DocumentSceneError>>{
+  self.last_turn_work=0;self.last_turn_semantic_work=0;OriginalWorkFailure::qualify(cx)?;let mut work=RetainedWorkLedger::new(cx.retained_grant());let result=if cx.is_cancelled(){Err(DocumentSceneError::Cancelled)}else if cx.should_yield(){Ok(self.progress.clone())}else{self.advance(1,&mut work)};
+  match result{Ok(progress)=>{OriginalWorkFailure::<DocumentSceneError>::fold(cx,None,work.receipt(),self.last_turn_work)?;Ok(progress)},Err(error)=>Err(OriginalWorkFailure::fold(cx,Some(error),work.receipt(),self.last_turn_work).expect_err("an original body failure remains owned"))}
+ }
  /// 🧹️ Retain actual source authority while all child and intermediate plan owners drain.
  pub fn into_retirement(mut self)->(DocumentVectorRetirement<'a>,Option<DocumentScenePlan>){
-  let mut children=self.retired_children;let mut child=self.closing.take();let mut plans=self.retired_plans;if let Some(discard)=self.discard.take(){plans.push(discard);}
-  if let Some(preparation)=self.preparation.take(){let(close,output)=preparation.into_retirement();child=Some(VectorChildRetirement::Preparation(close));if let Some(plan)=output{plans.push(ScenePlanCloseJob::new(plan));}}
-  if let Some(trace)=self.traces.take(){let(close,input,output)=trace.into_retirement();child=Some(VectorChildRetirement::Trace(close));plans.push(ScenePlanCloseJob::new(input));if let Some(plan)=output{plans.push(ScenePlanCloseJob::new(plan));}}
-  if let Some(text)=self.texts.take(){let(close,output)=text.into_retirement();child=Some(VectorChildRetirement::Text(close));if let Some(plan)=output{plans.push(ScenePlanCloseJob::new(plan));}}
-  if let Some(algorithms)=self.algorithms.take(){let(close,input,output)=algorithms.into_retirement();child=Some(VectorChildRetirement::Boolean(close));plans.push(ScenePlanCloseJob::new(input));if let Some(plan)=output{plans.push(ScenePlanCloseJob::new(plan));}}
-  if let Some(plan)=self.handoff.take(){plans.push(ScenePlanCloseJob::new(plan));}let output=if self.progress.done&&!self.cancelled&&self.failure.is_none(){self.output.take()}else{None};if let Some(plan)=self.output.take(){plans.push(ScenePlanCloseJob::new(plan));}
-  if let Some(child)=child.take(){children.push(child);}(DocumentVectorRetirement{source:self.source.take(),owner:ControlledRetirement::new(DocumentVectorOwners{children,plans,failure:self.failure}).unwrap_or_else(|(error,_)|panic!("physical document vector owner refused: {error}")),work:0},output)
+  let output=if self.progress.done&&!self.cancelled&&self.failure.is_none(){self.output.take()}else{None};
+  let owners=DocumentVectorOwners{children:self.retired_children,plans:self.retired_plans,preparation:self.preparation,traces:self.traces,texts:self.texts,algorithms:self.algorithms,closing:self.closing,discard:self.discard,handoff:self.handoff,output:self.output,failure:self.failure};
+  (DocumentVectorRetirement{source:self.source.take(),owner:ControlledRetirement::retain(owners)},output)
  }
  pub fn cancel(&mut self){self.cancelled=true;}
  pub fn result(&mut self)->Result<DocumentScenePlan,DocumentSceneError>{if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(e)=&self.failure{return Err(e.clone());}if !self.progress.done{return Err(DocumentSceneError::Incomplete);}self.output.take().ok_or(DocumentSceneError::Incomplete)}
 }
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
-struct DocumentVectorOwners{children:Vec<VectorChildRetirement>,plans:Vec<ScenePlanCloseJob>,failure:Option<DocumentSceneError>}
+struct DocumentVectorOwners{children:Vec<VectorChildRetirement>,plans:Vec<ScenePlanCloseJob>,preparation:Option<DocumentSceneCursor>,traces:Option<DocumentTraceJob>,texts:Option<DocumentTextJob>,algorithms:Option<DocumentBooleanJob>,closing:Option<VectorChildRetirement>,discard:Option<ScenePlanCloseJob>,handoff:Option<DocumentScenePlan>,output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>}
 /// 🔐️ Actual private byte ownership closes before the exact source read returns to its registry.
-pub struct DocumentVectorRetirement<'a>{pub source:Option<DocumentVectorSource<'a>>,owner:ControlledRetirement<DocumentVectorOwners>,work:u64}
+pub struct DocumentVectorRetirement<'a>{pub source:Option<DocumentVectorSource<'a>>,owner:ControlledRetirement<DocumentVectorOwners>}
 impl DocumentVectorRetirement<'_>{
  pub fn private_is_empty(&self)->bool{self.owner.terminal_is_empty()}
  pub fn terminal_is_empty(&self)->bool{self.private_is_empty()&&self.source.is_none()}
@@ -315,11 +458,7 @@ impl DocumentVectorRetirement<'_>{
  pub fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.owner.next_capacity_byte_demand(body)}
  pub fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_release_byte_demand()}
  pub fn next_depth_demand(&self)->Result<usize,ValueError>{if self.private_is_empty(){Ok(usize::from(self.source.is_some()))}else{self.owner.next_depth_demand()}}
- pub fn advance(&mut self,items:usize)->Result<DocumentVectorRetirementProgress,DocumentSceneError>{
-  if items==0||items as u128>9_007_199_254_740_991{return Err(invalid("Invalid vector retirement work grant"));}
-  for _ in 0..items{if self.private_is_empty(){break;}let copy=self.next_copy_byte_demand().map_err(|error|invalid(error.to_string()))?;let release=self.next_release_byte_demand().map_err(|error|invalid(error.to_string()))?;let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_capacity_byte_demand(if copy>0{copy}else{release}).map_err(|error|invalid(error.to_string()))?,maximum_release_bytes:release,maximum_depth:self.next_depth_demand().map_err(|error|invalid(error.to_string()))?};let step=self.close_step(grant).map_err(|error|invalid(error.to_string()))?;self.work+=step.progress().copied_items as u64;}
-  Ok(WorkRetirementProgress{phase:if self.private_is_empty(){"complete"}else{"closing"},work:self.work,done:self.private_is_empty()})
- }
+
 }
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
@@ -328,7 +467,16 @@ struct BorrowedVectorOwners{preparation:Option<DocumentSceneCursor>,traces:Optio
 pub struct DocumentVectorPreparationJob{job:DocumentVectorJob<'static>}
 impl DocumentVectorPreparationJob{
  pub fn new(source:&impl DrawingSceneSource,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits)->Result<Self,DocumentSceneError>{Ok(Self{job:DocumentVectorJob::from_scene_source(source,limits,algorithms)?})}
- pub fn advance(&mut self,source:&impl DrawingSceneSource,grant:usize)->Result<DocumentVectorProgress,DocumentSceneError>{self.job.advance_scene_source(source,grant)}
+ pub fn advance(&mut self,source:&impl DrawingSceneSource,grant:usize,work:&mut RetainedWorkLedger)->Result<DocumentVectorProgress,DocumentSceneError>{self.job.advance_scene_source(source,grant,work)}
+ pub fn next_work_demand(&self)->RetirementDemand{self.job.next_work_demand()}
+ pub fn last_turn_work(&self)->u64{self.job.last_turn_work()}
+ pub fn last_turn_semantic_work(&self)->u64{self.job.last_turn_semantic_work()}
+ pub fn settlement_pending(&self)->bool{self.job.settlement_pending()}
+ pub fn failure_pending(&self)->bool{self.job.failure_pending()}
+ pub fn advance_original(&mut self,source:&impl DrawingSceneSource,cx:&mut StepContext<'_>)->Result<DocumentVectorProgress,OriginalWorkFailure<DocumentSceneError>>{
+  self.job.last_turn_work=0;self.job.last_turn_semantic_work=0;OriginalWorkFailure::qualify(cx)?;let mut work=RetainedWorkLedger::new(cx.retained_grant());let result=if cx.is_cancelled(){Err(DocumentSceneError::Cancelled)}else if cx.should_yield(){Ok(self.job.progress.clone())}else{self.advance(source,1,&mut work)};
+  match result{Ok(progress)=>{OriginalWorkFailure::<DocumentSceneError>::fold(cx,None,work.receipt(),self.last_turn_work())?;Ok(progress)},Err(error)=>Err(OriginalWorkFailure::fold(cx,Some(error),work.receipt(),self.last_turn_work()).expect_err("an original body failure remains owned"))}
+ }
  pub fn cancel(&mut self){self.job.cancel();}
  pub fn result(&mut self)->Result<DocumentScenePlan,DocumentSceneError>{self.job.result()}
  pub fn into_retirement(mut self)->(DocumentVectorPreparationRetirement,Option<DocumentScenePlan>){let output=if self.job.progress.done&&!self.job.cancelled&&self.job.failure.is_none(){self.job.output.take()}else{None};self.cancel();(DocumentVectorPreparationRetirement::new(self),output)}
@@ -338,40 +486,75 @@ impl RetireOwned for DocumentVectorPreparationJob{
  fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};let job=&self.job;sequence_birth_bytes(&[deferred_birth_bytes_for(&job.preparation),deferred_birth_bytes_for(&job.traces),deferred_birth_bytes_for(&job.texts),deferred_birth_bytes_for(&job.algorithms),deferred_birth_bytes_for(&job.output),deferred_birth_bytes_for(&job.failure),deferred_birth_bytes_for(&job.closing),deferred_birth_bytes_for(&job.discard),deferred_birth_bytes_for(&job.handoff),deferred_birth_bytes_for(&job.retired_children),deferred_birth_bytes_for(&job.retired_plans)])}
  fn controlled_retirement_supported()->bool{BorrowedVectorOwners::controlled_retirement_supported()}
 }
-semio_framework_2d::physical_work_retirement!(DocumentVectorPreparationRetirement,DocumentVectorPreparationJob,DocumentSceneError,|error:&str|invalid(error));
+semio_framework_2d::physical_work_retirement!(DocumentVectorPreparationRetirement,DocumentVectorPreparationJob);
 /// 📷️ Resolves each raster record after the common document vector producer completes.
 pub struct DocumentRasterJob<'a>{
  vector:Option<DocumentVectorJob<'a>>,prepared:DocumentVectorProgress,source:VecDeque<DocumentSceneNode>,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>,retired_nodes:Vec<DocumentSceneNode>,retired_paths:Vec<Vec<u16>>,retired_texts:Vec<String>,at:usize,work:u64,phase:&'static str,
  raster:Option<crate::raster::RasterSceneJob>,rendered:Option<crate::raster::RasterSceneProgress>,output:Option<semio_framework_pixels::RasterImage>,failure:Option<DocumentSceneError>,cancelled:bool,viewport:DocumentSceneViewport,max_work:u64,
  vector_retirement:Option<DocumentVectorRetirement<'a>>,raster_retirement:Option<crate::raster::RasterSceneRetirement>,handoff:Option<DocumentScenePlan>,
- pixel_scale:[f64;2],
+ pixel_scale:[f64;2],pending:RetirementDemand,last_turn_work:u64,last_turn_semantic_work:u64,step_semantic:bool,step_cpu:bool,
 }
 impl<'a> DocumentRasterJob<'a>{
  pub fn new(document:&'a DrawingSnapshot,limits:DocumentSceneLimits,viewport:DocumentSceneViewport,resolution_limits:DocumentAlgorithmLimits)->Result<Self,DocumentSceneError>{
   Self::from_vector(DocumentVectorJob::new(document,limits,resolution_limits)?,viewport,resolution_limits.max_work)
  }
  fn from_vector(vector:DocumentVectorJob<'a>,viewport:DocumentSceneViewport,max_work:u64)->Result<Self,DocumentSceneError>{
-  let mut check=crate::raster::RasterSceneJob::new(viewport.input(Vec::new(),Vec::new())).map_err(|e|invalid(e.to_string()))?;check.cancel();
-  Ok(Self{vector:Some(vector),prepared:DocumentVectorProgress::default(),source:VecDeque::new(),assets:Vec::new(),nodes:Vec::new(),retired_nodes:Vec::new(),retired_paths:Vec::new(),retired_texts:Vec::new(),at:0,work:0,phase:"preparing",raster:None,rendered:None,output:None,failure:None,cancelled:false,viewport,max_work,vector_retirement:None,raster_retirement:None,handoff:None,pixel_scale:[1.0;2]})
+  crate::raster::validate_scene_input(&viewport.input(Vec::new(),Vec::new())).map_err(DocumentSceneError::from)?;
+  Ok(Self{vector:Some(vector),prepared:DocumentVectorProgress::default(),source:VecDeque::new(),assets:Vec::new(),nodes:Vec::new(),retired_nodes:Vec::new(),retired_paths:Vec::new(),retired_texts:Vec::new(),at:0,work:0,phase:"preparing",raster:None,rendered:None,output:None,failure:None,cancelled:false,viewport,max_work,vector_retirement:None,raster_retirement:None,handoff:None,pixel_scale:[1.0;2],pending:RetirementDemand{depth:1,..Default::default()},last_turn_work:0,last_turn_semantic_work:0,step_semantic:false,step_cpu:false})
  }
  /// 🔐️ Retains the actual immutable store read through every raster and output handoff.
  pub fn from_snapshot_read(read:store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>,limits:DocumentSceneLimits,viewport:DocumentSceneViewport,algorithms:DocumentAlgorithmLimits)->DocumentRasterJob<'static>{
-  let failure=crate::raster::validate_scene_input(&viewport.input(Vec::new(),Vec::new())).err().map(|error|invalid(error.to_string()));
-  DocumentRasterJob{vector:Some(DocumentVectorJob::from_snapshot_read(read,limits,algorithms)),prepared:DocumentVectorProgress::default(),source:VecDeque::new(),assets:Vec::new(),nodes:Vec::new(),retired_nodes:Vec::new(),retired_paths:Vec::new(),retired_texts:Vec::new(),at:0,work:0,phase:"preparing",raster:None,rendered:None,output:None,failure,cancelled:false,viewport,max_work:algorithms.max_work,vector_retirement:None,raster_retirement:None,handoff:None,pixel_scale:[1.0;2]}
+  let failure=crate::raster::validate_scene_input(&viewport.input(Vec::new(),Vec::new())).err().map(DocumentSceneError::from);
+  DocumentRasterJob{vector:Some(DocumentVectorJob::from_snapshot_read(read,limits,algorithms)),prepared:DocumentVectorProgress::default(),source:VecDeque::new(),assets:Vec::new(),nodes:Vec::new(),retired_nodes:Vec::new(),retired_paths:Vec::new(),retired_texts:Vec::new(),at:0,work:0,phase:"preparing",raster:None,rendered:None,output:None,failure,cancelled:false,viewport,max_work:algorithms.max_work,vector_retirement:None,raster_retirement:None,handoff:None,pixel_scale:[1.0;2],pending:RetirementDemand{depth:1,..Default::default()},last_turn_work:0,last_turn_semantic_work:0,step_semantic:false,step_cpu:false}
  }
  /// 🔍️ Maps the immutable artboard extent to the exact requested pixel extent.
  pub fn set_pixel_scale(&mut self,x:f64,y:f64)->Result<(),DocumentSceneError>{if self.work!=0||![x,y].into_iter().all(|n|n.is_finite()&&n>0.0){return Err(invalid("Invalid document pixel scale"));}self.pixel_scale=[x,y];Ok(())}
- fn step(&mut self)->Result<(),DocumentSceneError>{
-  if self.vector_retirement.is_some(){if let Some(plan)=self.handoff.take(){self.source=plan.nodes.into();self.assets=plan.assets;return Ok(());}}
+ fn step(&mut self,work:&mut RetainedWorkLedger)->Result<(),DocumentSceneError>{
+  if self.vector_retirement.is_some(){if self.handoff.is_some(){if !work.can_step(){return Ok(());}let plan=self.handoff.take().ok_or_else(DocumentSceneError::held)?;self.source=plan.nodes.into();self.assets=plan.assets;self.step_cpu=true;return Ok(());}}
   
-  if let Some(vector)=&mut self.vector{self.prepared=vector.advance(1)?;if self.prepared.done{let(close,plan)=self.vector.take().unwrap().into_retirement();self.vector_retirement=Some(close);self.handoff=plan;self.phase="resolving";}else{self.phase=self.prepared.phase;}return Ok(());}
+  if self.vector.is_some(){if self.prepared.done{let(close,plan)=self.vector.take().ok_or_else(DocumentSceneError::held)?.into_retirement();self.vector_retirement=Some(close);self.handoff=plan;self.phase="resolving";self.step_cpu=true;return Ok(());}let vector=self.vector.as_mut().ok_or_else(DocumentSceneError::held)?;let result=vector.advance(1,work);self.last_turn_work+=vector.last_turn_work();self.last_turn_semantic_work+=vector.last_turn_semantic_work();self.prepared=result?;if !self.prepared.done{self.phase=self.prepared.phase;}return Ok(());}
   match self.phase{
-   "resolving"=>{if let Some(n)=self.source.pop_front(){self.at+=1;if !n.visible||matches!(&n.content,DocumentSceneContent::Group{..}){self.retired_nodes.push(n);return Ok(());}if !matches!(&n.content,DocumentSceneContent::Path{..}|DocumentSceneContent::Glyphs{..}|DocumentSceneContent::Image{..}){let error=invalid(format!("Unresolved scene layer: {}",n.id));self.retired_nodes.push(n);return Err(error);}let content=match n.content{DocumentSceneContent::Path{segments,fill_rule,fill,stroke}=>RasterSceneContent::Path{segments,fill_rule,fill,stroke},DocumentSceneContent::Glyphs{content,segments,fill_rule,fill,stroke,..}=>{self.retired_texts.push(content);RasterSceneContent::Path{segments,fill_rule,fill,stroke}},DocumentSceneContent::Image{asset,width,height}=>RasterSceneContent::Image{asset,width,height},_=>unreachable!()};self.retired_paths.push(n.source_path);let m=n.transform;let [x,y]=self.pixel_scale;self.nodes.push(RasterSceneNode{id:n.id,groups:n.groups,transform:[m[0]*x,m[1]*y,m[2]*x,m[3]*y,m[4]*x,m[5]*y],opacity:n.opacity,blend_mode:n.blend_mode,visible:n.visible,content});}else{self.raster=Some(crate::raster::RasterSceneJob::new(self.viewport.input(std::mem::take(&mut self.assets),std::mem::take(&mut self.nodes))).map_err(|e|invalid(e.to_string()))?);self.phase="raster";}}
-   "raster"=>{let p=self.raster.as_mut().unwrap().advance(1).map_err(|e|invalid(e.to_string()))?;let done=p.done;self.rendered=Some(p);if done{let(close,image)=self.raster.take().unwrap().into_retirement();self.output=image;self.raster_retirement=Some(close);self.phase="complete";}}
+   "resolving"=>{
+    if let Some(n)=self.source.front(){
+     let hidden=!n.visible||matches!(&n.content,DocumentSceneContent::Group{..});let glyph=matches!(&n.content,DocumentSceneContent::Glyphs{..});
+     if hidden{if !vector_slot(&mut self.retired_nodes,work)?{return Ok(());}}
+     else{
+      if !matches!(&n.content,DocumentSceneContent::Path{..}|DocumentSceneContent::Glyphs{..}|DocumentSceneContent::Image{..}){return Err(DocumentSceneError::literal("Unresolved scene layer"));}
+      if !vector_slot(&mut self.retired_paths,work)?{return Ok(());}
+      if glyph{if !vector_slot(&mut self.retired_texts,work)?{return Ok(());}}
+      if !vector_slot(&mut self.nodes,work)?{return Ok(());}
+     }
+     let n=self.source.pop_front().ok_or_else(DocumentSceneError::held)?;self.at+=1;
+     if hidden{work.vec_push(&mut self.retired_nodes,n).map_err(|_|DocumentSceneError::literal("Raster hidden source authority lost"))?;self.step_semantic=true;self.step_cpu=true;return Ok(());}
+     let content=match n.content{DocumentSceneContent::Path{segments,fill_rule,fill,stroke}=>RasterSceneContent::Path{segments,fill_rule,fill,stroke},DocumentSceneContent::Glyphs{content,segments,fill_rule,fill,stroke,..}=>{work.vec_push(&mut self.retired_texts,content).map_err(|_|DocumentSceneError::literal("Raster text archive authority lost"))?;RasterSceneContent::Path{segments,fill_rule,fill,stroke}},DocumentSceneContent::Image{asset,width,height}=>RasterSceneContent::Image{asset,width,height},_=>unreachable!()};
+     work.vec_push(&mut self.retired_paths,n.source_path).map_err(|_|DocumentSceneError::literal("Raster source address authority lost"))?;let m=n.transform;let[x,y]=self.pixel_scale;work.vec_push(&mut self.nodes,RasterSceneNode{id:n.id,groups:n.groups,transform:[m[0]*x,m[1]*y,m[2]*x,m[3]*y,m[4]*x,m[5]*y],opacity:n.opacity,blend_mode:n.blend_mode,visible:n.visible,content}).map_err(|_|DocumentSceneError::literal("Raster node authority lost"))?;self.step_semantic=true;self.step_cpu=true;
+    }else{if !work.can_step(){return Ok(());}self.raster=Some(crate::raster::RasterSceneJob::new(self.viewport.input(std::mem::take(&mut self.assets),std::mem::take(&mut self.nodes))));self.phase="raster";self.step_cpu=true;}
+   }
+   "raster"=>{if self.rendered.as_ref().is_some_and(|progress|progress.done){let(close,image)=self.raster.take().ok_or_else(DocumentSceneError::held)?.into_retirement();self.output=image;self.raster_retirement=Some(close);self.phase="complete";self.step_cpu=true;return Ok(());}let child=self.raster.as_mut().ok_or_else(DocumentSceneError::held)?;let result=child.advance(1,work);self.last_turn_work+=child.last_turn_work();self.last_turn_semantic_work+=child.last_turn_semantic_work();self.rendered=Some(result.map_err(DocumentSceneError::from)?);}
    _=>{}
   }Ok(())
  }
- pub fn advance(&mut self,budget:usize)->Result<DocumentRasterProgress,DocumentSceneError>{if budget==0||budget as u128>9_007_199_254_740_991{return Err(invalid("Invalid document raster work grant"));}if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(e)=&self.failure{return Err(e.clone());}for _ in 0..budget{if self.phase=="complete"{break;}let result=if self.work>=self.max_work{Err(invalid("Document raster work limit exceeded"))}else{self.step()};if let Err(e)=result{self.failure=Some(e.clone());return Err(e);}self.work+=1;}Ok(DocumentRasterProgress{phase:self.phase,preparation:self.prepared.preparation.clone(),tracing:self.prepared.tracing,resolution:self.prepared.resolution,raster:self.rendered.clone(),nodes:self.at,work:self.work,done:self.phase=="complete"})}
+ pub fn failure_pending(&self)->bool{self.failure.is_some()||self.vector.as_ref().is_some_and(DocumentVectorJob::failure_pending)||self.raster.as_ref().is_some_and(crate::raster::RasterSceneJob::failure_pending)}
+ pub fn settlement_pending(&self)->bool{self.phase=="complete"||self.handoff.is_some()||self.phase=="resolving"&&self.source.is_empty()||self.vector.as_ref().is_some_and(DocumentVectorJob::settlement_pending)||self.raster.as_ref().is_some_and(crate::raster::RasterSceneJob::settlement_pending)}
+ pub fn next_work_demand(&self)->RetirementDemand{self.pending}
+ pub fn last_turn_work(&self)->u64{self.last_turn_work}
+ pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
+ pub fn progress(&self)->DocumentRasterProgress{DocumentRasterProgress{phase:self.phase,preparation:self.prepared.preparation.clone(),tracing:self.prepared.tracing,resolution:self.prepared.resolution,raster:self.rendered.clone(),nodes:self.at,work:self.work,done:self.phase=="complete"}}
+ pub fn advance(&mut self,budget:usize,work:&mut RetainedWorkLedger)->Result<DocumentRasterProgress,DocumentSceneError>{
+  self.last_turn_work=0;self.last_turn_semantic_work=0;if budget==0||budget as u128>9_007_199_254_740_991{return Err(DocumentSceneError::literal("Invalid document work grant"));}if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}
+  for _ in 0..budget{
+   if self.phase=="complete"{break;}let d=self.pending;
+   if !work.admits_absolute(d){work.require_absolute(d);break;}
+   if self.work>=self.max_work&&!self.failure_pending(){let error=DocumentSceneError::literal("Document raster work limit exceeded");self.failure=Some(error.clone());return Err(error);}
+   let settling=self.failure_pending();let before=work.receipt();let before_cpu=self.last_turn_work;let before_semantic=self.last_turn_semantic_work;self.step_semantic=false;self.step_cpu=false;let entered=work.enter();if entered.is_none(){self.pending=work.next_demand();break;}
+   let exhausted=self.work>=self.max_work&&!settling&&!self.settlement_pending();let result=if exhausted{Err(DocumentSceneError::literal("Document raster work limit exceeded"))}else{self.step(work)};let child_cpu=self.last_turn_work-before_cpu;let child_semantic=self.last_turn_semantic_work-before_semantic;let actual=child_cpu>0||work.receipt()!=before||self.step_cpu||result.is_err();
+   if actual{work.note_source(entered==Some(true));if child_cpu==0{self.last_turn_work+=1;}}if !settling&&!exhausted&&child_semantic==0&&(self.step_semantic||result.is_err()){self.last_turn_semantic_work+=1;}if !settling{self.work+=self.last_turn_semantic_work-before_semantic;}work.exit();self.pending=work.next_demand();if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}if work.blocked()||!actual{break;}
+  }Ok(self.progress())
+ }
+ pub fn advance_original(&mut self,cx:&mut StepContext<'_>)->Result<DocumentRasterProgress,OriginalWorkFailure<DocumentSceneError>>{
+  self.last_turn_work=0;self.last_turn_semantic_work=0;OriginalWorkFailure::qualify(cx)?;let mut work=RetainedWorkLedger::new(cx.retained_grant());let result=if cx.is_cancelled(){Err(DocumentSceneError::Cancelled)}else if cx.should_yield(){Ok(self.progress())}else{self.advance(1,&mut work)};
+  match result{Ok(progress)=>{OriginalWorkFailure::<DocumentSceneError>::fold(cx,None,work.receipt(),self.last_turn_work)?;Ok(progress)},Err(error)=>Err(OriginalWorkFailure::fold(cx,Some(error),work.receipt(),self.last_turn_work).expect_err("an original body failure remains owned"))}
+ }
  pub fn cancel(&mut self){self.cancelled=true;}
  pub fn result(&mut self)->Result<semio_framework_pixels::RasterImage,DocumentSceneError>{if self.cancelled{return Err(DocumentSceneError::Cancelled);}if let Some(e)=&self.failure{return Err(e.clone());}if self.phase!="complete"{return Err(DocumentSceneError::Incomplete);}self.output.take().ok_or(DocumentSceneError::Incomplete)}
  /// 🛂️ Verifies the actual retained source against the current store event authority.
@@ -382,14 +565,14 @@ impl<'a> DocumentRasterJob<'a>{
   if let Some(vector)=self.vector.take(){let(close,plan)=vector.into_retirement();self.vector_retirement=Some(close);self.handoff=plan;}
   if let Some(raster)=self.raster.take(){let(close,image)=raster.into_retirement();self.raster_retirement=Some(close);if let Some(image)=image{self.output=Some(image);}}
   let owners=DocumentRasterOwners{source:self.source,assets:self.assets,nodes:self.nodes,retired_nodes:self.retired_nodes,retired_paths:self.retired_paths,retired_texts:self.retired_texts,raster:self.raster_retirement,handoff:self.handoff,output:self.output,failure:self.failure};
-  (DocumentRasterRetirement{vector:self.vector_retirement,owner:ControlledRetirement::new(owners).unwrap_or_else(|(error,_)|panic!("physical document raster owner refused: {error}")),work:0},output)
+  (DocumentRasterRetirement{vector:self.vector_retirement,owner:ControlledRetirement::retain(owners)},output)
  }
 }
 /// 🧺️ Source handback follows actual vector, raster and private candidate retirement.
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
 struct DocumentRasterOwners{source:VecDeque<DocumentSceneNode>,assets:Vec<RasterSceneAsset>,nodes:Vec<RasterSceneNode>,retired_nodes:Vec<DocumentSceneNode>,retired_paths:Vec<Vec<u16>>,retired_texts:Vec<String>,raster:Option<crate::raster::RasterSceneRetirement>,handoff:Option<DocumentScenePlan>,output:Option<semio_framework_pixels::RasterImage>,failure:Option<DocumentSceneError>}
-pub struct DocumentRasterRetirement<'a>{vector:Option<DocumentVectorRetirement<'a>>,owner:ControlledRetirement<DocumentRasterOwners>,work:u64}
+pub struct DocumentRasterRetirement<'a>{vector:Option<DocumentVectorRetirement<'a>>,owner:ControlledRetirement<DocumentRasterOwners>}
 impl DocumentRasterRetirement<'_>{
  pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()&&self.vector.as_ref().is_none_or(DocumentVectorRetirement::terminal_is_empty)}
  pub fn take_snapshot_read(&mut self)->Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>{if !self.owner.terminal_is_empty(){return None;}self.vector.as_mut()?.take_snapshot_read()}
@@ -402,9 +585,5 @@ impl DocumentRasterRetirement<'_>{
  pub fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if !self.owner.terminal_is_empty(){self.owner.next_capacity_byte_demand(body)}else{self.vector.as_ref().map_or(Ok(0),|vector|vector.next_capacity_byte_demand(body))}}
  pub fn next_release_byte_demand(&self)->Result<usize,ValueError>{if !self.owner.terminal_is_empty(){self.owner.next_release_byte_demand()}else{self.vector.as_ref().map_or(Ok(0),DocumentVectorRetirement::next_release_byte_demand)}}
  pub fn next_depth_demand(&self)->Result<usize,ValueError>{if !self.owner.terminal_is_empty(){self.owner.next_depth_demand()}else{self.vector.as_ref().map_or(Ok(0),DocumentVectorRetirement::next_depth_demand)}}
- pub fn advance(&mut self,items:usize)->Result<WorkRetirementProgress,DocumentSceneError>{
-  if items==0||items as u128>9_007_199_254_740_991{return Err(invalid("Invalid document raster retirement work grant"));}
-  for _ in 0..items{if self.terminal_is_empty(){break;}let copy=self.next_copy_byte_demand().map_err(|error|invalid(error.to_string()))?;let release=self.next_release_byte_demand().map_err(|error|invalid(error.to_string()))?;let step=self.close_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:self.next_capacity_byte_demand(if copy>0{copy}else{release}).map_err(|error|invalid(error.to_string()))?,maximum_release_bytes:release,maximum_depth:self.next_depth_demand().map_err(|error|invalid(error.to_string()))?}).map_err(|error|invalid(error.to_string()))?;self.work+=step.progress().copied_items as u64;}
-  Ok(WorkRetirementProgress{phase:if self.terminal_is_empty(){"complete"}else{"closing"},work:self.work,done:self.terminal_is_empty()})
- }
+
 }

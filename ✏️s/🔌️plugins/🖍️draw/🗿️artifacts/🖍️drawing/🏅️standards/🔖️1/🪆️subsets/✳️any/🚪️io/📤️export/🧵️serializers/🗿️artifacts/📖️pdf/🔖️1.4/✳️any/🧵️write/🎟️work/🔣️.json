@@ -1,0 +1,197 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "pageBytes",
+    "logicalScalarBytes",
+    "logicalUtf16Bytes",
+    "objectReferenceBytes",
+    "offsetBytes",
+    "bodyRowBytes",
+    "recordRowBytes",
+    "spanRowBytes",
+    "quanta",
+    "caseNames",
+    "cancelPhases",
+    "deniedAxes",
+    "sourceCustody",
+    "outputCustody",
+    "arcRecordBytes",
+    "arcCase",
+    "pathAdmissionSegments"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "pageBytes": {
+      "const": 3072
+    },
+    "logicalScalarBytes": {
+      "const": 8
+    },
+    "logicalUtf16Bytes": {
+      "const": 2
+    },
+    "objectReferenceBytes": {
+      "const": 8
+    },
+    "offsetBytes": {
+      "const": 8
+    },
+    "bodyRowBytes": {
+      "const": 40
+    },
+    "recordRowBytes": {
+      "const": 48
+    },
+    "spanRowBytes": {
+      "const": 32
+    },
+    "quanta": {
+      "const": [
+        1,
+        7,
+        4096
+      ]
+    },
+    "caseNames": {
+      "const": [
+        "rectangle",
+        "linear gradient",
+        "radial gradient",
+        "multiply blend",
+        "isolated group opacity",
+        "evenodd hole",
+        "gradient alpha",
+        "duplicate stops"
+      ]
+    },
+    "cancelPhases": {
+      "const": [
+        "init",
+        "node",
+        "parent",
+        "call",
+        "layerState",
+        "preparePaint",
+        "spans",
+        "paintState",
+        "shade",
+        "functionStart",
+        "functionPieces",
+        "functionBounds",
+        "functionEncode",
+        "maskForm",
+        "maskState",
+        "bodyStart",
+        "stroke",
+        "fill",
+        "path",
+        "pathPaint",
+        "leafEnd",
+        "next",
+        "catalog",
+        "pages",
+        "page",
+        "resources",
+        "resourceEntries",
+        "fileHeader",
+        "objectHeader",
+        "objectData",
+        "freeChain",
+        "xref",
+        "complete"
+      ]
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "depth",
+        "release"
+      ]
+    },
+    "sourceCustody": {
+      "const": "borrowed-and-unchanged"
+    },
+    "outputCustody": {
+      "const": "owned-byte-pages"
+    },
+    "arcRecordBytes": {
+      "const": 56
+    },
+    "arcCase": {
+      "const": {
+        "name": "funded original half-circle arc",
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              1
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 1,
+            "ry": 1,
+            "rotation": 0,
+            "largeArc": false,
+            "sweep": true,
+            "to": [
+              2,
+              1
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "svg": "M0 1 A1 1 0 0 1 2 1 Z",
+        "expected": [
+          255,
+          0,
+          0,
+          255,
+          255,
+          0,
+          0,
+          255
+        ],
+        "channelTolerance": 2
+      }
+    },
+    "pathAdmissionSegments": {
+      "const": [
+        {
+          "kind": "move",
+          "to": [
+            0,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            0
+          ]
+        },
+        {
+          "kind": "line",
+          "to": [
+            2,
+            1
+          ]
+        },
+        {
+          "kind": "close"
+        }
+      ]
+    }
+  }
+}

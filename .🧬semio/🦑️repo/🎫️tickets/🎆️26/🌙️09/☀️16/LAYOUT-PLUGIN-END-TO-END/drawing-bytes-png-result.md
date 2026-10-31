@@ -1,0 +1,7 @@
+# Byte and PNG Scoped Result
+
+The original owning test request86887 actually terminated EXIT0 after ordinary managed2GiB admission: ten passed, zero failed,1912 assertions,246ms. All five Byte and five PNG named registrations appear in the retained log. All sixteen input hashes matched prelaunch and after terminal; the reviewed packet is235f480ac04eae803fdef891afd4f811d4547e3de02dfe24ccf4a1d52ee3b4f6. Test log3387bytes SHAad8294655ecfefeb64c09e2b022b3c77b5e49ffcbd06aebc3bcf798d041c4a87. Receipt/log: generated/drawing-ts-bytes-png/test/terminal.json and test.log.
+
+The authorized sequential strict4 request36068 is currently LIVE; no strict outcome is inferred. Exact sixteen inputs remain frozen through its actual terminal/postcheck. This verifies actual standalone byte custody/CPU/effect behavior and PNG output against SQLite/Sharp within the declared cases; it does not verify the unexecuted Drawing controller caller test, wider Font/Scene/lower APIs, full Native/Layout gates or browser.
+
+Sequential canonical strict4 request36068 authoritatively terminated EXIT0. All sixteen pre/test-post/strict-post/current hashes match reviewed inputs. Strict log 1096bytes SHAa68218ae94af85071674d818504f0da5eb834e2d75f32c20f1331ed710b9064d; strict/terminal.json retains current per-file hashes. No compiler diagnostics. The scoped Byte5+PNG5 behavior and strict gates are now actual green; remaining full Drawing/Font/Native/browser acceptance is unchanged.

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.text-splice.native.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "context", "generative", "cancelCuts", "undergrantAxes"],
+  "properties": {
+    "schema": { "const": "semio.text-splice.native.v1" },
+    "context": { "const": 32 },
+    "generative": {
+      "type": "object", "additionalProperties": false,
+      "required": ["seed", "cases", "maximumScalars", "alphabet"],
+      "properties": {
+        "seed": { "const": 941177 }, "cases": { "const": 128 }, "maximumScalars": { "const": 24 },
+        "alphabet": { "const": ["a", "b", "😀", "é", "́"] }
+      }
+    },
+    "cancelCuts": { "const": [0, 1, 64, 512, 2048, 4096, 8192] },
+    "undergrantAxes": { "const": ["items", "copyBytes", "capacityBytes", "depth"] }
+  }
+}

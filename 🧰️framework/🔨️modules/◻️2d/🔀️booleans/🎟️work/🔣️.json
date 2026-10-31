@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/2d/boolean/work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "values",
+    "sorted",
+    "stock",
+    "maxTurns",
+    "implicitEndpoints",
+    "finalPublicationSemanticWork"
+  ],
+  "properties": {
+    "values": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "sorted": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "stock": {
+      "const": {
+        "items": 4194304,
+        "copy": 268435456,
+        "capacity": 33554432,
+        "release": 67108864,
+        "depth": 256
+      }
+    },
+    "maxTurns": {
+      "const": 262144
+    },
+    "implicitEndpoints": {
+      "const": true
+    },
+    "finalPublicationSemanticWork": {
+      "const": 0
+    }
+  }
+}

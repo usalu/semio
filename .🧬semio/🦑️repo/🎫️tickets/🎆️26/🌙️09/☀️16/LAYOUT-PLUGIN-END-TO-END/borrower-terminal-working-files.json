@@ -1,0 +1,129 @@
+{
+  "status": "scoped source ready: actual five-law normal suite and final canonical strict passed; independent source review clear; all effects held",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts",
+      "sha256": "728689d9d98ec076523e5053770e165e3688036d23fa908c5436623fd4d77977"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🔒️leases/🧹️cleanup/🧬️schema/🔣️.json",
+      "sha256": "8908f5da5842add8ea6530a526ccecb4af8afcb95318420e86c24722ace01438"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📥️borrower/🟦️.ts",
+      "sha256": "f72359eab184079b0f2f231af03879f631d61acf7f158e2431d610ababa458cc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📥️borrower/🧪️tests/🟦️.ts",
+      "sha256": "9e1afa3cb603613244fed225897d2f630f67c6864a4b37b118020e11cac9da2f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📥️borrower/🧪️tests/🔣️.json",
+      "sha256": "b24509be223f897ba20b0b618110150426cbbf0e37919786dca5d1e620732eda"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📥️borrower/🧪️tests/🧬️schema/🔣️.json",
+      "sha256": "92a5e05c4ba41a310ccd36483e1112bde269964d54ae7de592ad224f9fc59a6b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts",
+      "sha256": "bb364a4d270fd3916da35f86be48ee50171751682e4e2f72cd9bd3f4848cec52"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/🎛️command/🟦️.ts",
+      "sha256": "fecdc3baa51f2a0de2ff255324031ba3f72dc96ddd67fa5fca69f5d16d15cd07"
+    }
+  ],
+  "proof": {
+    "productionFailure": "compiler-inactive-preview.log original65226 expired body custody during ordinary close",
+    "normalRed": "borrower-terminal-red.log original33368 API-only missing released observation",
+    "original54108": {
+      "status": "terminal",
+      "exitCode": 0,
+      "classification": "normal post-fix runtime validation; not RED",
+      "passed": 1,
+      "failed": 0,
+      "filtered": 4,
+      "assertions": 8,
+      "cases": "actual expired and cancelled shared guard release, body refusal, independent SQLite EX availability",
+      "log": "🗑️generated/borrower-expiry-red.log"
+    },
+    "fullGreen": {
+      "session": 60637,
+      "status": "terminal",
+      "exitCode": 0,
+      "log": "🗑️generated/borrower-terminal-green-3.log",
+      "admission": "normal",
+      "passed": 5,
+      "failed": 0,
+      "filtered": 0,
+      "assertions": 35,
+      "oracle": {
+        "clean": "same observer blocked before exact release; BEGIN active and ROLLBACK inactive after; wrapper called once across idempotent close",
+        "hostile": "actual hardlink pin refusal; release callback0; private Issued retention; no healed or posttamper kernel claim",
+        "failedRelease": "actual wrapper failure retained native borrower and live kernel SH; actual independent EX refused",
+        "independentSQLiteOnly": {
+          "blocked": {
+            "error": "SQLITE_BUSY",
+            "errno": 5,
+            "active": false
+          },
+          "after": {
+            "error": "SQLITE_IOERR_VNODE",
+            "errno": 6922,
+            "active": false
+          }
+        }
+      }
+    },
+    "strict": {
+      "session": 78490,
+      "status": "terminal",
+      "admission": "normal canonical tsc",
+      "roots": 5,
+      "log": "🗑️generated/borrower-terminal-strict-final.log",
+      "exitCode": 0,
+      "diagnostics": 0
+    },
+    "fullGreenAttempt1": {
+      "session": 45981,
+      "exitCode": 1,
+      "passed": 3,
+      "failed": 3,
+      "actualFailure": "hardlink law final combined SQLite BEGIN/ROLLBACK reports no active transaction; final failure-retention law then refused by poisoned shared Original; cause not yet established",
+      "log": "🗑️generated/borrower-terminal-green.log"
+    },
+    "fullGreenAttempt2": {
+      "session": 23380,
+      "exitCode": 1,
+      "passed": 3,
+      "failed": 3,
+      "assertions": 23,
+      "failure": "same observer explicit BEGIN after hardlink cycle raises SQLITE_IOERR_VNODE6922; final wrapper failure law admission refused by poisoned Original",
+      "log": "🗑️generated/borrower-terminal-green-2.log"
+    },
+    "strictPrior": {
+      "session": 66928,
+      "log": "🗑️generated/borrower-terminal-strict.log",
+      "admission": "normal canonical tsc",
+      "roots": 5,
+      "status": "terminal",
+      "exitCode": 0,
+      "diagnostics": 0
+    }
+  },
+  "limits": [
+    "Actual Mac/fixed platform receiver fault-injection runtime not executed; source control-flow reviewed separately.",
+    "Hostile pin and failed-wrapper fixtures retain actual accepted owners through test process exit. No posttamper kernel-validity or cleanup-drained claim.",
+    "Windows kernel execution not witnessed on this macOS host.",
+    "No preview, native build, publication, or retirement retry."
+  ],
+  "effectStatus": {
+    "activeOwnedJobs": [],
+    "native": "HOLD",
+    "preview": "HOLD",
+    "setupPublication": "HOLD",
+    "retirement": "HOLD",
+    "compilerStorageRecovered": false
+  }
+}

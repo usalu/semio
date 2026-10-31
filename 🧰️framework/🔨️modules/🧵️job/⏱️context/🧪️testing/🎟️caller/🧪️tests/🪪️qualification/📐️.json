@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.job.original-source-qualification",
+  "const": {
+    "operation": 752,
+    "foreignOperation": 753,
+    "generation": 7,
+    "expected": {
+      "foreign": {
+        "kind": "invariantViolated",
+        "message": "owned original reply requires its genuine source receiver"
+      },
+      "retiring": {
+        "kind": "invariantViolated",
+        "message": "original source parent has entered physical retirement"
+      }
+    }
+  }
+}

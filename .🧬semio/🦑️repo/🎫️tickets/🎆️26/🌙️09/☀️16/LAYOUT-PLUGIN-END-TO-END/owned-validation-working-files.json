@@ -1,0 +1,53 @@
+{
+  "state": "source-authored-awaiting-review-and-normal-map-no-native",
+  "package": "semio-s-artifact-layout-layout-model-validation-tests",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🦀️.rs",
+      "sha256": "6e6b9c3479d52e93cb68e22be1c73264981cee4c14ed223542f6afb1a288269a",
+      "bytes": 7826
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🔣️.json",
+      "sha256": "dc7b047bfff83fe596b11c99f2f271ac2ef3d27a3441ce84ea0a6dd6e537972c",
+      "bytes": 1200
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🟦️.ts",
+      "sha256": "0a12c2db4063847f3d7577a333bc81a81845c301e057d24ec7ff0046febd8677",
+      "bytes": 3820
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🧪️tests/🦀️.rs",
+      "sha256": "8a6912479ccb6e23641c782375fe0a6c66b48d552ede01e97ae09ad77306c31f",
+      "bytes": 9795
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🧪️tests/🔣️.json",
+      "sha256": "c2108c2f7247ad81357f0ec9ffe6cc89b6a52a30d9a51d6a62be9ad24e47f897",
+      "bytes": 1129
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🧪️tests/📐️.json",
+      "sha256": "fa56ac205d298c8930cc6b45778d84a09695e10d143415826ea90b0830a29f09",
+      "bytes": 1486
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧪️tests/🦀️.rs",
+      "sha256": "d43a129b344fed3ea1c0f2a14cd75b810abf1b1b6566b734a0bec9838b5999bc",
+      "bytes": 1389
+    }
+  ],
+  "productionBeforeSha256": "a867394879318ce4412e7bea09a5ed90da0595cd3fc8472812b823830bc07047",
+  "existingValidationLawsPreserved": 6,
+  "newTestFunctions": [
+    "owned_graph_reader_moves_across_denied_live_and_cancelled_continuations"
+  ],
+  "neutralCases": 6,
+  "maxObservedTurnsPerCase": 4096,
+  "runtimeExternalDependenciesAdded": 0,
+  "unsafeLifetimeErasuresRemoved": 2,
+  "newUnsafeBlocksOrImpls": 0,
+  "oracleOwner": "dependency_layout",
+  "oracleRequiresActualFreshNativeLog": true
+}

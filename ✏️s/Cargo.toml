@@ -14,6 +14,7 @@ members = [
     "🔨️modules/🏗️fem/⚙️engine/🔢️sparse/📦️packages/🦀️rust",
     "🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🔁️pcg/📦️packages/🦀️rust",
     "🔨️modules/🏗️fem/⚙️engine/🔢️sparse/🔺️ldlt/📦️packages/🦀️rust",
+    "🔨️modules/🏗️fem/⚙️engine/📮️payload-turns/📦️packages/🦀️rust",
     "🔨️modules/🏗️fem/⚙️engine/🕸️mesh/📦️packages/🦀️rust",
     "🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧬️derived/📦️packages/🦀️rust",
     "🔨️modules/🏗️fem/⚙️engine/🧪️tests/🧰️support/📦️packages/🦀️rust",
@@ -350,6 +351,9 @@ path = "🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🧬️derived/📦�
 
 [workspace.dependencies.semio-s-fem-model]
 path = "🔨️modules/🏗️fem/⚙️engine/🏗️model/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-fem-payload-turns]
+path = "🔨️modules/🏗️fem/⚙️engine/📮️payload-turns/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-fem-sparse]
 path = "🔨️modules/🏗️fem/⚙️engine/🔢️sparse/📦️packages/🦀️rust"

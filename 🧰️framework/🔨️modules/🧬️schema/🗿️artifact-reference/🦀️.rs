@@ -22,7 +22,7 @@ pub struct Dialect { pub artifact_kind:&'static str,pub standard:StandardId,pub 
 /// 🧭️ An owned artifact dialect with three exact identity fields.
 #[derive(Clone,Debug,PartialEq,Eq,PartialOrd,Ord,Hash,Serialize,Deserialize,ToValue,FromValue,semio_framework_value::RetainedClone,semio_framework_value::RetainedEquality,semio_framework_value::NativeReceive)]
 #[serde(crate="semio_framework_value::serde",rename_all="camelCase")]
-#[value(rename_all="camelCase",deny_unknown_fields)]
+#[value(rename_all="camelCase",deny_unknown_fields,equality="::semio_framework_value_persistent")]
 pub struct ArtifactDialect { pub artifact_kind:String,pub standard:String,pub subset:String }
 impl From<Dialect> for ArtifactDialect {
  fn from(value:Dialect)->Self {Self{artifact_kind:value.artifact_kind.into(),standard:value.standard.0.into(),subset:value.subset.0.into()}}
@@ -75,7 +75,7 @@ pub use semio_framework_artifact_reference_borrow::{BorrowedArtifactRef, is_cano
 
 /// 🔗️ One artifact identity and its owned dialect.
 #[derive(Clone,Debug,PartialEq,Eq,Hash,ToValue,FromValue,semio_framework_value::RetainedClone,semio_framework_value::RetainedEquality,semio_framework_value::NativeReceive)]
-#[value(rename_all="camelCase",deny_unknown_fields)]
+#[value(rename_all="camelCase",deny_unknown_fields,equality="::semio_framework_value_persistent")]
 pub struct ArtifactRef{pub artifact_id:String,pub dialect:ArtifactDialect}
 
 impl ArtifactRef {

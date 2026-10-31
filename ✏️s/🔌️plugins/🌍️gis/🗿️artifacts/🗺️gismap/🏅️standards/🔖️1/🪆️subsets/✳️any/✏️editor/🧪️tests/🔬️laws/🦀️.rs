@@ -17,3 +17,5 @@ mod panels_tests;
 mod map_window_tests;
 #[path = "../../🎮️commands/🗺️features/🧪️tests/🔬️unit/🦀️.rs"]
 mod features_tests;
+#[path = "../🪧️pane-smoke/🦀️.rs"]
+mod pane_smoke_tests;

@@ -38,10 +38,12 @@ impl<J> WorkerJobOutcome<J> {
 
     pub fn job_mut(&mut self)->Result<&mut J,ValueError>{self.authority.as_mut().expect("original outcome retains its authority").job_mut()}
     pub fn retained_failure(&self)->Option<&OriginalTurnFailure>{self.authority.as_ref().and_then(OriginalWorkerJobAuthority::retained_failure)}
+    /// 👁️ Borrows every original cause only after its actual physical receipt was accepted.
+    pub fn continuation(&self)->Option<OriginalJobContinuationView<'_>>{self.authority.as_ref().and_then(OriginalWorkerJobAuthority::continuation).map(OriginalJobContinuation::view)}
     /// 🪪️ Borrows original semantic metadata while its payload remains in this worker authority.
     pub fn outcome_descriptor(&self)->Option<&JobOutcomeDescriptor>{self.authority.as_ref().and_then(OriginalWorkerJobAuthority::outcome_descriptor)}
     pub fn outcome(&self)->Result<Option<JobOutcomeView<'_>>,ValueError>where J:InteractiveJob{self.authority.as_ref().expect("original outcome retains its authority").outcome()}
-    pub fn acknowledge_outcome(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{self.authority.as_mut().expect("original outcome retains its authority").acknowledge_outcome(grant)}
+    pub fn acknowledge_outcome(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.authority.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original outcome retains its authority"))?.acknowledge_outcome(cx)}
 
     #[expect(clippy::result_large_err, reason = "Refused resumption returns the checked-out job authority and retained outcome without allocation or ownership loss.")]
     pub fn resume(mut self) -> Result<(), Self> {
@@ -106,14 +108,6 @@ impl<J> Drop for WorkerJobRejected<J> {
     }
 }
 
-pub(super) fn worker_rejection_code(kind: semio_framework_async::WorkerSubmitErrorKind) -> u8 {
-    match kind {
-        semio_framework_async::WorkerSubmitErrorKind::Shutdown => 0,
-        semio_framework_async::WorkerSubmitErrorKind::Contended => 1,
-        semio_framework_async::WorkerSubmitErrorKind::Poisoned => 2,
-        semio_framework_async::WorkerSubmitErrorKind::Saturated => 3,
-    }
-}
 
 pub(super) fn worker_rejection_kind(code: u8) -> semio_framework_async::WorkerSubmitErrorKind {
     match code {

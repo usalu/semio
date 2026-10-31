@@ -1,0 +1,40 @@
+{
+  "state": "prepared-current-unfiltered-owning",
+  "cwd": "/Users/ueli/Documents/semio",
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/🧰️framework/Cargo.toml",
+    "-p",
+    "semio-framework-job-context",
+    "--no-fail-fast",
+    "--all-targets",
+    "--features",
+    "testkit",
+    "--",
+    "--nocapture"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-context-owning-4",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-context-owning-4/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-context-owning-4/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-context-owning-4/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-context-owning-4/tmp"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-context-owning-4/native.log",
+  "sourcePacket": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-job-context-owning-4-inputs.json",
+  "scope": "Actual unfiltered Context alltargets+testkit after genuine lower Failure owner extraction; all previous Context laws plus return-place, continuation view and ACK cases retained. Not a filtered suite or increased Source cap. Genuine full Work Failure law now has its defining integration target; actual Failure13 PASS before this gate.",
+  "features": [
+    "testkit"
+  ],
+  "filter": null,
+  "sourcePacketSha256": "14d5bc8c36926497bc55ff92205c703cadd263a0ca01605a9ab628103ef10e3c",
+  "metadataSha256": "cab3b7073f6a1808d6e3e96739c954de35a55aa275a41ff0f37190d72dd59293"
+}

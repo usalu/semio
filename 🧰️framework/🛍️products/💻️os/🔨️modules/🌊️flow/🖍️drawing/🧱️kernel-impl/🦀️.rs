@@ -97,18 +97,15 @@ impl DrawingKernel for DrawingStore {
         for handle in handles {
             segments_list.push(DrawingStore::node_to_segments(&self.entry(handle)?.node));
         }
-        let merged = semio_framework_2d::booleans::boolean_paths_many(&segments_list, operation)?;
+        let merged = boolean_path_operands(&segments_list.iter().map(Vec::as_slice).collect::<Vec<_>>(), operation)?;
         self.register(DrawingKind::Path, DrawingNode::Path { segments: merged })
     }
 
     fn boolean_segments(&self, a: &[semio_framework_2d::PathSegment], b: &[semio_framework_2d::PathSegment], operation: &str) -> Result<Vec<semio_framework_2d::PathSegment>, semio_framework_2d::DrawingError> {
-        semio_framework_2d::booleans::boolean_paths(a, b, operation)
+        boolean_path_operands(&[a, b], operation)
     }
 
-    fn trace_bitmap(&mut self, width: u32, height: u32, mask_or_luma: &[u8], threshold: f64, simplify_epsilon: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
-        let segments = semio_framework_2d::trace::trace_bitmap_paths(width, height, mask_or_luma, threshold, simplify_epsilon)?;
-        self.register(DrawingKind::Path, DrawingNode::Path { segments })
-    }
+
 
     fn text(&mut self, x: f64, y: f64, content: &str, size: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         self.register(DrawingKind::Text, DrawingNode::Text { x, y, content: content.to_string(), size })
@@ -149,8 +146,47 @@ impl DrawingStore {
     fn bool_operation(&mut self, a: &DrawingHandle, b: &DrawingHandle, operation: &str) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
         let a_segments = DrawingStore::node_to_segments(&self.entry(a)?.node);
         let b_segments = DrawingStore::node_to_segments(&self.entry(b)?.node);
-        let merged = semio_framework_2d::booleans::boolean_paths(&a_segments, &b_segments, operation)?;
+        let merged = boolean_path_operands(&[&a_segments, &b_segments], operation)?;
         self.register(DrawingKind::Path, DrawingNode::Path { segments: merged })
     }
 }
 // #endregion 🔖️KernelImpl
+
+/// 🎯️ Drives one bounded planar boolean over closed linear operands to completion and drains its physical owners.
+fn boolean_path_operands(inputs: &[&[semio_framework_2d::PathSegment]], operation: &str) -> Result<Vec<semio_framework_2d::PathSegment>, semio_framework_2d::DrawingError> {
+    use semio_framework_2d::booleans::paths::{PathBooleanInput, PathBooleanJob, PathBooleanOperand};
+    use semio_framework_2d::booleans::{BooleanFillRule, BooleanOperation};
+    use semio_framework_2d::{DrawingError, PathSegment};
+    use semio_framework_value::{work::RetainedWorkLedger, RetainedCloneGrant};
+    const STOCK: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1 << 22, maximum_copy_bytes: 1 << 28, maximum_capacity_bytes: 1 << 25, maximum_release_bytes: 1 << 26, maximum_depth: 256 };
+    let operation = BooleanOperation::parse(operation).map_err(|error| DrawingError::InvalidInput(error.to_string()))?;
+    if inputs.is_empty() || inputs.len() > 1024 {
+        return Err(DrawingError::InvalidInput("Boolean needs one to 1024 operands".into()));
+    }
+    let magnitude = inputs.iter().flat_map(|path| path.iter()).fold(0.0f64, |m, segment| match segment {
+        PathSegment::Move { to } | PathSegment::Line { to } => m.max(to[0].abs()).max(to[1].abs()),
+        _ => m,
+    });
+    let operands = inputs.iter().map(|path| PathBooleanOperand { segments: path.to_vec(), transform: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], tolerance: 0.01, fill_rule: BooleanFillRule::Nonzero }).collect();
+    let mut job = PathBooleanJob::new(PathBooleanInput { operation, operands, epsilon: 1e-8f64.max(magnitude * f64::EPSILON * 32.0), max_edges: 65536, max_parameters: 262144, max_atomic_edges: 65536, max_segments: 65536, max_work: 100000000 });
+    let outcome = (|| loop {
+        let progress = job.advance(4096, &mut RetainedWorkLedger::new(STOCK)).map_err(|error| DrawingError::Operation(error.to_string()))?;
+        if progress.done {
+            return job.result().map(<[PathSegment]>::to_vec).map_err(|error| DrawingError::Operation(error.to_string()));
+        }
+        if job.last_turn_work() == 0 {
+            return Err(DrawingError::Operation("Boolean made no progress under its ledger".into()));
+        }
+    })();
+    let (mut retired, _) = job.into_retirement();
+    let refused = |_| DrawingError::Operation("Boolean retirement refused its physical grant".into());
+    while !retired.terminal_is_empty() {
+        let copy = retired.next_copy_byte_demand().map_err(refused)?;
+        let release = retired.next_release_byte_demand().map_err(refused)?;
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: retired.next_capacity_byte_demand(if copy > 0 { copy } else { release }).map_err(refused)?, maximum_release_bytes: release, maximum_depth: retired.next_depth_demand().map_err(refused)? };
+        if retired.close_step(grant).map_err(refused)?.progress() == Default::default() {
+            return Err(DrawingError::Operation("Boolean retirement made no progress".into()));
+        }
+    }
+    outcome
+}

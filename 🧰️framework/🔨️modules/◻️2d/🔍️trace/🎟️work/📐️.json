@@ -1,0 +1,57 @@
+{
+  "cases": [
+    {
+      "width": 1,
+      "height": 1,
+      "mask": [
+        255
+      ],
+      "epsilon": 0,
+      "foreground": [
+        1
+      ]
+    },
+    {
+      "width": 3,
+      "height": 3,
+      "mask": [
+        255,
+        255,
+        0,
+        255,
+        0,
+        0,
+        255,
+        255,
+        255
+      ],
+      "epsilon": 0.55,
+      "foreground": [
+        1,
+        1,
+        0,
+        1,
+        0,
+        0,
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "stock": {
+    "items": 4194304,
+    "copy": 268435456,
+    "capacity": 33554432,
+    "release": 67108864,
+    "depth": 256
+  },
+  "maxTurns": 262144,
+  "allocatorTurn": {
+    "semanticWork": 0,
+    "actualWork": 1
+  },
+  "blankSemanticWork": 8195,
+  "blankMaximumWork": 8196,
+  "finalPublicationSemanticWork": 0
+}

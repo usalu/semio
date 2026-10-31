@@ -2,7 +2,6 @@
 //! `CONVERSION` that registers and declares their composer rows.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as store;
 
@@ -119,7 +118,7 @@ fn register() {
     register_composer_entries(entries()).expect("static Stdio registration must be available and conflict-free");
 }
 
-/// 🧾️ The file bytes of `mesh` in `format` — the one call every domain artifact that projects into a
+/// 📄️ The file bytes of `mesh` in `format` — the one call every domain artifact that projects into a
 /// mesh makes, so each standard format has exactly one writer in the repository.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_mesh(mesh: &semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot, format: SemioMeshFormat) -> Result<Vec<u8>, String> {

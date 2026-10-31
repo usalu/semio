@@ -1,0 +1,21 @@
+{
+  "state": "source-authored-neutral-law-before-protocol-hunk-no-runtime",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🦀️.rs",
+      "sha256": "2cfbdb698d6a810a8606b1227d6fb2136b3ec8eab9c381971ec8de19da88a861"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "e5af6d1f7c979ed0f703ac56556096efdbad73756dfee71acae279c234b5d9cf"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎟️work/🏁️settlement/🔣️.json",
+      "sha256": "6f6c684eb483c70b08f9658ffe109be370f7fc4e8f83b201cde0959b5d170efc"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎟️work/🏁️settlement/🧫️fixtures/🔣️.json",
+      "sha256": "5f5ffdfdbd4a3459f0726a66e5ec51079ae2840ed1ab933cdbb918b870f011fd"
+    }
+  ]
+}

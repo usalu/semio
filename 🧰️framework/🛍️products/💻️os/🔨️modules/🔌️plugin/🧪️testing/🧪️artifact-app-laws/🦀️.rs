@@ -1,6 +1,6 @@
 //! 🧪️ The generic test-harness helpers for `ArtifactApp` implementors, with the shared imports of the former inline module. See [`super`].
 
-//! 🧪️ Generic test-harness helpers for `ArtifactApp` implementors. Factors out the ~24x duplicated
+//! 🧰️ Generic test-harness helpers for `ArtifactApp` implementors. Factors out the ~24x duplicated
 //! `meta()`/`new_app()`/`new_app_with_registry()`/`paired_apps()` boilerplate plus the repeated
 //! undo-redo / two-instance-convergence / ingest-idempotency test *bodies* (parameterized by closures
 //! for the app-specific action names/snapshot shape, so only the control flow is shared). Not
@@ -21,7 +21,7 @@ use store::os_store::backbone::{Backbone, BackboneMessage, MemoryBackbone};
 pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture};
     use semio_framework_value::ErasedSnapshotRetirement;
 
-    /// 🧪️ Observes each production page presentation with the exact original fixture grant.
+    /// 📃️ Observes each production page presentation with the exact original fixture grant.
 
     pub fn take_fixture_result_page<P:PluginApp>(app:&mut P,receiver:u32,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<semio_framework_plugin_job::TypedOperationResultPage>,semio_framework::Fault>{
 
@@ -47,7 +47,7 @@ pub use super::{OriginalFixtureCaller, OriginalFixtureScope, OriginalWorkFixture
 mod fixture_dispatch_steps_and_document_loading;
 pub use fixture_dispatch_steps_and_document_loading::{
     assert_editor_genesis_children_declared, assert_viewer_genesis_children_declared,
-    dispatch_fixture_action, dispatch_original_fixture_command, FixtureOriginalJob, dispatch_fixture_command, dispatch_fixture_response_action, poll_fixture_media_export, produce_fixture_media, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk, drain_maintenance_pressure, export_fixture_media,
+    dispatch_fixture_action, dispatch_original_fixture_command, ensure_fixture_cancellation_issuer, FixtureOriginalJob, dispatch_fixture_command, dispatch_fixture_response_action, poll_fixture_media_export, produce_fixture_media, retain_fixture_media_export_result, submit_fixture_media_export, take_fixture_media_export_chunk, drain_maintenance_pressure, export_fixture_media,
     fixture_identity, fixture_job_outcome, fixture_mounted_policy, fixture_payload_bytes, fixture_pending_effects,
     fixture_progress, fixture_retained_turn, fixture_step, fixture_step_context,
     fixture_step_context_for, load_document, load_document_text, plugin_load_document,
@@ -88,6 +88,14 @@ pub use paired_apps_history_and_convergence_laws::{
     assert_undo_redo_round_trip, paired_apps, paired_registered_apps,
     paired_registered_apps_with_members, settle_history_verb,
 };
+
+#[path = "👥️presence-round-trip-law/🦀️.rs"]
+mod presence_round_trip_law;
+pub use presence_round_trip_law::{assert_presence_round_trip, publish_fixture_presence_roster};
+
+#[path = "🪧️pane-smoke-law/🦀️.rs"]
+mod pane_smoke_law;
+pub use pane_smoke_law::{assert_pane_smoke, assert_pane_smoke_by_example};
 
 #[path = "🔎️declared-verb-probing/🦀️.rs"]
 mod declared_verb_probing;

@@ -1,0 +1,63 @@
+{
+  "outerExit": 0,
+  "session": 32319,
+  "pass": 6,
+  "failed": 0,
+  "ignored": 0,
+  "filtered": 0,
+  "ownerFilesUnchanged": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🦀️.rs",
+      "before": "79af624a5d852af5f572dfe60f092af183eca83f714c62fc99ae514864b3895f",
+      "after": "79af624a5d852af5f572dfe60f092af183eca83f714c62fc99ae514864b3895f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🧪️tests/🦀️.rs",
+      "before": "1ef9aa5ea9f1ed7c9f704d98354fc12918c7c16039355737575437ead1dbac46",
+      "after": "1ef9aa5ea9f1ed7c9f704d98354fc12918c7c16039355737575437ead1dbac46"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🧪️tests/🧫️fixtures/📦️return.json",
+      "before": "f8f5ac7ef1a6ef7aa04c599d9a8ecc86c6617b0f17cfafec49b82b028f28ecfb",
+      "after": "f8f5ac7ef1a6ef7aa04c599d9a8ecc86c6617b0f17cfafec49b82b028f28ecfb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🧬️schema/🔣️.json",
+      "before": "9e0a82a4eaa1b717d38d55ea9ee47f9192585db59721b07c4945f6c86d333a42",
+      "after": "9e0a82a4eaa1b717d38d55ea9ee47f9192585db59721b07c4945f6c86d333a42"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🔗️shared/🦀️.rs",
+      "before": "04c012b3460929542c34521f2cbce35ade81878c9ae22dc677b761552bfa83d3",
+      "after": "04c012b3460929542c34521f2cbce35ade81878c9ae22dc677b761552bfa83d3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🔗️shared/🧪️tests/🦀️.rs",
+      "before": "1043cac8fe03f8df129428a528c9bb1c1ff801c58ad279241d2e8756d9c97f2c",
+      "after": "1043cac8fe03f8df129428a528c9bb1c1ff801c58ad279241d2e8756d9c97f2c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🔗️shared/🧪️tests/🧫️fixtures/🔣️.json",
+      "before": "7cbbdddc2eadc6fe9115983c47a599eb0cfa92a1d856ea7469b57b60ca70e0d0",
+      "after": "7cbbdddc2eadc6fe9115983c47a599eb0cfa92a1d856ea7469b57b60ca70e0d0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🔗️shared/🧬️schema/🔣️.json",
+      "before": "21a53f927271e237c2902bb84307341a6a6f05629b38f45bd902114d9cf3019b",
+      "after": "21a53f927271e237c2902bb84307341a6a6f05629b38f45bd902114d9cf3019b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/📦️packages/🦀️rust/Cargo.toml",
+      "before": "ec0ce4e3ab91d7e5e71c9e43391f1baa4d1d7c490652b0f147aab53a7002f75b",
+      "after": "ec0ce4e3ab91d7e5e71c9e43391f1baa4d1d7c490652b0f147aab53a7002f75b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/📦️packages/🦀️rust/📋️project.json",
+      "before": "0a30c3d5d768dc64f61537417b168bf903d37fbd0d1a1f698bfa54afdddf36d4",
+      "after": "0a30c3d5d768dc64f61537417b168bf903d37fbd0d1a1f698bfa54afdddf36d4"
+    }
+  ],
+  "logSha256": "b986222cd4ce980a73d00cd1ec4a7e3099916aabc462f0fd9afaae0525d0a822",
+  "scope": "Unfiltered backend owning --lib, original three return laws plus three new genuine shared allocation laws; exact pre/post observations limited to owner input files, no full transitive Source acceptance.",
+  "warning": "Broader retirement/Sealed/Source/Native/Drawing acceptance not established by this independent backend gate."
+}

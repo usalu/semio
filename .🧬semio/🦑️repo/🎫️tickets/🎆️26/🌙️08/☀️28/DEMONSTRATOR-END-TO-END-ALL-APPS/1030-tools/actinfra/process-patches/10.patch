@@ -1,0 +1,10 @@
+--- a/🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json
++++ b/🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🔣️policy.json
+@@ -22,6 +22,7 @@
+   "fairness": {
+     "queuedWithResourceLeases": true,
+     "writerPreferenceMilliseconds": 120000,
++    "reentrantPassCeilingMilliseconds": 21600000,
+     "writerPreferenceByPrefix": [{ "prefix": "native-fixed-image:", "milliseconds": 3600000 }]
+   },
+   "gate": {

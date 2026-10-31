@@ -1,0 +1,5 @@
+# Prepared Fill Test First
+
+Before modifying the defining sampling implementation, Root authored a closed language-neutral finite-stock fixture/schema and two genuine owner laws. The first checks allocation-free owned construction, five-axis denied turns, actual heap receipts, one finite lifetime wallet, TinySkia linear-gradient pixels and paid output/private close. The second retains malformed owned gradient input and checks cached error CPU/semantic/heap neutrality through paid close. TinySkia and Trace dependencies are test-only and already workspace-qualified.
+
+Existing exact fill vectors, invalid numbers, immutable preparation and private stop retirement cases must remain. Their private ramp storage assertions require the actual production model test owner rather than an external companion exposing private fields; the mount will be corrected with the implementation. No production source, compiler or runtime was changed/executed at this packet. Actual owning model --lib and full affected Drawing gates remain required.

@@ -1,0 +1,31 @@
+{
+  "status": "Authored, unexecuted, not SourceReady",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🦀️.rs",
+      "bytes": 28992,
+      "sha256": "ca8fc9a1457a22d0e9e0e85d3cc3933f7f365d8c9e7fdf0be4dc2dbff4395661"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 21043,
+      "sha256": "d2dc649d175bae6a7886916c5ca2b2bc510a74ad701953bdba87f4040d9143a1"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🎟️work/🔣️.json",
+      "bytes": 524,
+      "sha256": "82e47e9700bd6f51bda6184021156de0dd7120796f4f0851497713277fb0481d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🎟️work/📐️.json",
+      "bytes": 305,
+      "sha256": "96e45b60b992146a79d7830acd3caab6b872f3e4ac523ebcfceb055ca96b2f0b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧪️tests/🥣️companion/🦀️.rs",
+      "bytes": 2500,
+      "sha256": "83ad8d94c7c5f5d1a5e567aabcd352877ba46677c0bd0dcf7791890c0fda9185"
+    }
+  ],
+  "sharedHunk": "Remove only companion raster test mount; no other companion body attribution"
+}

@@ -12,6 +12,7 @@ struct Source {operation:u64,generation:u64,parent:usize,widget:usize,widget_byt
 semio_framework_value::artifact_retire_leaf!(Source);
 
 #[derive(Default,semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct State {
     source:Option<Source>,
     widget:String,
@@ -57,7 +58,7 @@ impl WidgetInputsConstruction {
                 if grant.maximum_copy_bytes<Insert::constructor_copy_bytes()||grant.maximum_capacity_bytes<Insert::constructor_capacity_bytes(){return Ok(None)}
                 let map=state.labels.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"widget input labels have no original workspace"))?;
                 let key=std::mem::take(&mut state.name);let label=Localized{en:std::mem::take(&mut state.en),de:std::mem::take(&mut state.de)};
-                match Insert::admit(map,key,label,grant){
+                match {let outcome=Insert::admit(map,key,label,grant);cx.consume_fuel(outcome.work);outcome.result}{
                     Ok((insertion,receipt))=>{state.insertion=Some(insertion);state.phase=7;post(cx,receipt)?;}
                     Err((error,map,key,label))=>{state.labels=Some(map);state.name=key;state.en=label.en;state.de=label.de;return Err(OriginalTurnFailure::debit_original(error,cx));}
                 }
@@ -67,14 +68,14 @@ impl WidgetInputsConstruction {
                 if insertion.output_ready(){
                     post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.labels=insertion.take();insertion.begin_close();state.phase=8;
                 }else{
-                    let grant=cx.retained_grant();let step=insertion.advance(RetainedOrderedMapInsertGrant{retirement:grant,comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:1},maximum_moved_items:grant.maximum_items,maximum_moved_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes}).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;
+                    let grant=cx.retained_grant();let step={let outcome=insertion.advance(RetainedOrderedMapInsertGrant{retirement:grant,comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:1},maximum_moved_items:grant.maximum_items,maximum_moved_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes});cx.consume_fuel(outcome.work);outcome.result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?};
                     let receipt=match step{RetainedOrderedMapInsertStep::Progress(receipt)|RetainedOrderedMapInsertStep::Complete{progress:receipt,..}=>receipt};
                     post(cx,insert_receipt(receipt)?)?;
                 }
             }
             8=>{
                 let insertion=state.insertion.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"widget input insertion close disappeared"))?;
-                let receipt=insertion.close_step(cx.retained_grant()).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?.progress();post(cx,receipt)?;
+                let receipt={let outcome=insertion.close_step(cx.retained_grant());cx.consume_fuel(outcome.work);outcome.result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?.progress()};post(cx,receipt)?;
                 if insertion.terminal_is_empty(){state.insertion.take();state.port+=1;state.phase=2;}
             }
             9=>{
@@ -102,7 +103,7 @@ fn open(cx:&StepContext<'_>)->bool{let grant=cx.retained_grant();!cx.should_yiel
 fn post(cx:&mut StepContext<'_>,receipt:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{let result=cx.consume_retained(receipt);cx.consume_fuel(1);result.map_err(|error|error.with_retained_progress(receipt).into())}
 fn insert_receipt(receipt:RetainedOrderedMapInsertProgress)->Result<RetainedCloneProgress,ValueError>{receipt.retirement.checked_add(RetainedCloneProgress{copied_items:receipt.moved_items,copied_bytes:receipt.moved_bytes,retained_capacity_bytes:receipt.retained_capacity_bytes,..Default::default()})}
 
-pub(crate) fn text_event(output:&mut String,source:&str,byte:&mut usize,reserved:&mut bool,binding:&mut Option<(usize,usize)>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+pub fn text_event(output:&mut String,source:&str,byte:&mut usize,reserved:&mut bool,binding:&mut Option<(usize,usize)>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
     let identity=(source.as_ptr() as usize,source.len());
     if binding.is_some_and(|original|original!=identity){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"widget input UTF8 source identity changed").into())}
     let grant=cx.retained_grant();

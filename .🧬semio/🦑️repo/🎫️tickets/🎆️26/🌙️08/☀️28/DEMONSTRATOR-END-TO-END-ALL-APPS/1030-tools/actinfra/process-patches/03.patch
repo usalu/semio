@@ -1,0 +1,47 @@
+--- a/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🚪️gate/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/🏗️build/🌡️host-capacity/🧪️tests/🚪️gate/🟦️.ts
+@@ -5,7 +5,7 @@
+ import {join} from "node:path";
+ import {setTimeout as sleep} from "node:timers/promises";
+ import {enterScriptProcessWaitV1,liveChildPidsV1} from "../../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
+-import {attachHostCapacityProcessV1,bindHostCapacityWaitMarkerV1,hostCapacityDirectoryV1,hostTreeOnlyWaitsV1,readHostCapacityWaitMarkersV1,newHostCapacityIdV1,readHostCapacityPolicyV1,readHostCapacityStatusV1,takeHostLockV1,withHostCapacityV1,type HostCapacityOptionsV1,type HostSampleV1} from "../../🟦️.ts";
++import {attachHostCapacityProcessV1,bindHostCapacityWaitMarkerV1,hostCapacityDirectoryV1,hostTreeWaitsV1,processStartV1,readHostCapacityWaitMarkersV1,newHostCapacityIdV1,readHostCapacityPolicyV1,readHostCapacityStatusV1,takeHostLockV1,withHostCapacityV1,type HostCapacityOptionsV1,type HostSampleV1} from "../../🟦️.ts";
+ import decisionFixture from "../🧫️fixtures/🔣️.json";
+ 
+ const base=readHostCapacityPolicyV1(decisionFixture.policy),policy=readHostCapacityPolicyV1({...decisionFixture.policy,load:{...decisionFixture.policy.load,overrideAfterMilliseconds:150},wait:{...decisionFixture.policy.wait,pollMilliseconds:10,progressMilliseconds:20,heartbeatMilliseconds:20,sampleMaximumAgeMilliseconds:0,lockStaleMilliseconds:2000,staleMilliseconds:60000}});
+@@ -384,8 +384,8 @@
+ 
+ /** 🛌️ The two-level admission convoy: a run holds its memory grant while its child sits at an inner gate (image headroom, lease queue). The child publishes its wait to the grant, the holder sees that the whole tree only waits and lends the reservation, so the blocked admissions at the door get through. */
+ test("A grant whose whole process tree waits at an inner gate (the child publishes it) is lent back and resumes when the child runs again",async()=>{
+- const directory=fresh();let markers=new Map<number,number>(),skew=0;const children=[4242];
+- await withHostCapacityV1(options(directory,{observe:async()=>100,waited:()=>0,children:()=>children,markers:()=>markers,now:()=>Date.now()+skew}),async handle=>{
++ const directory=fresh();let markers=new Map<number,number>(),skew=0;const children=[4242],tree=()=>new Map<number,readonly number[]>([[process.pid,[...children]]]);
++ await withHostCapacityV1(options(directory,{observe:async()=>100,waited:()=>0,children:()=>children,tree,markers:()=>markers,now:()=>Date.now()+skew}),async handle=>{
+   const read=()=>JSON.parse(readFileSync(join(directory,"grants",`${handle.id}.json`),"utf8"));
+   await sleep(200);expect(read().lentSinceMs,"a child that does not wait keeps the grant").toBeUndefined();
+   skew=40000;markers=new Map([[4242,Date.now()+skew-30000]]);await sleep(250);expect(typeof read().lentSinceMs,"every descendant waits: lent").toBe("number");
+@@ -405,5 +405,22 @@
+  const again=enterScriptProcessWaitV1();expect(readHostCapacityWaitMarkersV1(directory,id).has(process.pid)).toBe(true);expect(readHostCapacityWaitMarkersV1(directory,id,()=>false).size,"a dead process is ignored").toBe(0);
+  again();unbind();expect(readHostCapacityWaitMarkersV1(directory,id).size).toBe(0);
+  expect(bindHostCapacityWaitMarkerV1({},process.pid)()).toBeUndefined();
+- expect(hostTreeOnlyWaitsV1([1,2],new Map([[1,5],[2,3]]))).toBe(3);expect(hostTreeOnlyWaitsV1([1,2],new Map([[1,5]]))).toBe(0);expect(hostTreeOnlyWaitsV1([],new Map())).toBe(0);expect(hostTreeOnlyWaitsV1(undefined,new Map())).toBe(0);
+-});
++});
++
++
++test("The tree rule lends through wrappers that only await a waiting child, refuses a tree with one working descendant and ignores markers of a pid that a later process reuses",async()=>{
++ const tree=new Map<number,readonly number[]>([[1,[10]],[10,[11]],[11,[12,13]]]);
++ expect(hostTreeWaitsV1(tree,1,new Map([[12,500],[13,300]])),"wrapper 10 and 11 wait through their waiting leaves, the earliest wait counts").toBe(300);
++ expect(hostTreeWaitsV1(tree,1,new Map([[12,500]])),"leaf 13 works").toBe(0);expect(hostTreeWaitsV1(tree,1,new Map()),"nobody waits").toBe(0);
++ expect(hostTreeWaitsV1(new Map([[1,[]]]),1,new Map([[1,5]])),"a holder without children is decided by its own episode").toBe(0);
++ expect(hostTreeWaitsV1(new Map([[1,[10]],[10,[11]]]),1,new Map([[10,7]])),"a marked process with a working child does not wait").toBe(0);
++ expect(hostTreeWaitsV1(undefined,1,new Map([[10,7]])),"an unreadable process table lends nothing").toBe(0);
++ const directory=fresh(),id=newHostCapacityIdV1();mkdirSync(join(directory,"grants"),{recursive:true});
++ const own=processStartV1(process.pid)!;expect(own.length).toBeGreaterThan(8);
++ writeFileSync(join(directory,"grants",`${id}.wait.${process.pid}`),JSON.stringify({since:5,start:"Mon Jan  1 00:00:00 1990"}));
++ expect(readHostCapacityWaitMarkersV1(directory,id).size,"a marker of another incarnation of the pid is ignored").toBe(0);
++ writeFileSync(join(directory,"grants",`${id}.wait.${process.pid}`),JSON.stringify({since:5,start:own}));
++ expect([...readHostCapacityWaitMarkersV1(directory,id)]).toEqual([[process.pid,5]]);
++ writeFileSync(join(directory,"grants",`${id}.wait.${process.pid}`),"5");expect(readHostCapacityWaitMarkersV1(directory,id).size,"an unreadable marker counts for nothing").toBe(0);
++ expect(processStartV1(2147483000)).toBeUndefined();
++});

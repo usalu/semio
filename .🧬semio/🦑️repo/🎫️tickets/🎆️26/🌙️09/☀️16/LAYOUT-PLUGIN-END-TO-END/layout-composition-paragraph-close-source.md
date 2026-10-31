@@ -1,0 +1,5 @@
+# Reached Composition Paragraph Close
+
+The existing close branch passed no token to retireRetainedWorkBuffers. It now creates an actual first-party RetainedWorkRetirement callback with the issued live turn, advancing it under a ledger mapped ONLY from the existing remaining VectorSceneGrant. No inferred/default grant or fake active token. Any genuine paragraph output returned while transferring the active child is retained in one pending header before later work. Positive child-final CPU yields; output-header clear occurs on a later cached-zero child turn, and existing control moves explicitly post sourceItems1/copy0. Existing original geometry test also reads genuine glyph get(event.glyph). No assertion/golden/stock changes or runtime.
+
+This is the concrete reached lower paragraph close/read seam only. NumericIndex and other custom composition body accounting remain explicitly open; no whole composition funded closure claim. The independent current LayoutJS2 composed-dx failure is retained and its source-read chain remains a hypothesis pending actual owning rerun.

@@ -1,11 +1,11 @@
 import {afterAll,expect,test} from "bun:test";
 import {spawn,spawnSync} from "node:child_process";
-import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync} from "node:fs";
+import {existsSync,mkdirSync,statSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
 import {setTimeout as sleep} from "node:timers/promises";
-import {liveChildPidsV1} from "../../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
-import {attachHostCapacityProcessV1,hostCapacityDirectoryV1,newHostCapacityIdV1,readHostCapacityPolicyV1,readHostCapacityStatusV1,takeHostLockV1,withHostCapacityV1,type HostCapacityOptionsV1,type HostSampleV1} from "../../🟦️.ts";
+import {enterScriptProcessWaitV1,liveChildPidsV1} from "../../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
+import {attachHostCapacityProcessV1,bindHostCapacityWaitMarkerV1,hostCapacityDirectoryV1,hostTreeWaitsV1,processChildrenTableV1,processStartV1,readHostCapacityWaitMarkersV1,newHostCapacityIdV1,readHostCapacityPolicyV1,readHostCapacityStatusV1,takeHostLockV1,withHostCapacityV1,type HostCapacityOptionsV1,type HostSampleV1} from "../../🟦️.ts";
 import decisionFixture from "../🧫️fixtures/🔣️.json";
 
 const base=readHostCapacityPolicyV1(decisionFixture.policy),policy=readHostCapacityPolicyV1({...decisionFixture.policy,load:{...decisionFixture.policy.load,overrideAfterMilliseconds:150},wait:{...decisionFixture.policy.wait,pollMilliseconds:10,progressMilliseconds:20,heartbeatMilliseconds:20,sampleMaximumAgeMilliseconds:0,lockStaleMilliseconds:2000,staleMilliseconds:60000}});
@@ -380,3 +380,74 @@ test("Law: the grant carries the time to peak and the ramp slot of its request, 
  const plain:string[]=[];
  await withHostCapacityV1(options(directory,{request:request({fixedMegabytes:100,rampMilliseconds:300000}),write:line=>plain.push(line)}),async handle=>{expect(JSON.parse(readFileSync(join(directory,"grants",`${handle.id}.json`),"utf8")).rampSlot,"an unshrunk request takes no slot").toBeUndefined();});
 },30000);
+
+
+/** 🛌️ The two-level admission convoy: a run holds its memory grant while its child sits at an inner gate (image headroom, lease queue). The child publishes its wait to the grant, the holder sees that the whole tree only waits and lends the reservation, so the blocked admissions at the door get through. */
+test("A grant whose whole process tree waits at an inner gate (the child publishes it) is lent back and resumes when the child runs again",async()=>{
+ const directory=fresh();let markers=new Map<number,number>(),skew=0;const children=[4242],tree=()=>new Map<number,readonly number[]>([[process.pid,[...children]]]);
+ await withHostCapacityV1(options(directory,{observe:async()=>100,waited:()=>0,children:()=>children,tree,markers:()=>markers,now:()=>Date.now()+skew}),async handle=>{
+  const read=()=>JSON.parse(readFileSync(join(directory,"grants",`${handle.id}.json`),"utf8"));
+  await sleep(200);expect(read().lentSinceMs,"a child that does not wait keeps the grant").toBeUndefined();
+  skew=40000;markers=new Map([[4242,Date.now()+skew-30000]]);await sleep(250);expect(typeof read().lentSinceMs,"every descendant waits: lent").toBe("number");
+  const during=await readHostCapacityStatusV1({directory,policy,control:control().value,sample:sampler(()=>({}))});expect(during.evaluation.unrealizedMegabytes).toBe(0);
+  children.push(4243);await sleep(250);expect(read().lentSinceMs,"a descendant that does not wait takes the grant back").toBeUndefined();expect(typeof read().resumedAtMs).toBe("number");
+  children.pop();markers=new Map();await sleep(250);expect(read().lentSinceMs,"the child stopped waiting").toBeUndefined();
+ });
+},30000);
+
+test("A process under a grant publishes its waits as a marker, drops it a moment after the wait ends and a dead process leaves none",async()=>{
+ const directory=fresh(),id=newHostCapacityIdV1();mkdirSync(join(directory,"grants"),{recursive:true});writeFileSync(join(directory,"grants",`${id}.json`),"{}");
+ const unbind=bindHostCapacityWaitMarkerV1({SEMIO_HOST_CAPACITY_GRANT:id,SEMIO_HOST_CAPACITY_DIRECTORY:directory},process.pid);
+ expect(readHostCapacityWaitMarkersV1(directory,id).size).toBe(0);
+ const leave=enterScriptProcessWaitV1();expect([...readHostCapacityWaitMarkersV1(directory,id).keys()]).toEqual([process.pid]);
+ leave();expect(readHostCapacityWaitMarkersV1(directory,id).has(process.pid),"kept through the gap between two polls").toBe(true);
+ await sleep(3500);expect(readHostCapacityWaitMarkersV1(directory,id).size).toBe(0);
+ const again=enterScriptProcessWaitV1();expect(readHostCapacityWaitMarkersV1(directory,id).has(process.pid)).toBe(true);expect(readHostCapacityWaitMarkersV1(directory,id,()=>false).size,"a dead process is ignored").toBe(0);
+ again();unbind();expect(readHostCapacityWaitMarkersV1(directory,id).size).toBe(0);
+ expect(bindHostCapacityWaitMarkerV1({},process.pid)()).toBeUndefined();
+});
+
+
+test("The tree rule lends through wrappers that only await a waiting child, refuses a tree with one working descendant and ignores markers of a pid that a later process reuses",async()=>{
+ const tree=new Map<number,readonly number[]>([[1,[10]],[10,[11]],[11,[12,13]]]);
+ expect(hostTreeWaitsV1(tree,1,new Map([[12,500],[13,300]])),"wrapper 10 and 11 wait through their waiting leaves, the earliest wait counts").toBe(300);
+ expect(hostTreeWaitsV1(tree,1,new Map([[12,500]])),"leaf 13 works").toBe(0);expect(hostTreeWaitsV1(tree,1,new Map()),"nobody waits").toBe(0);
+ expect(hostTreeWaitsV1(new Map([[1,[]]]),1,new Map([[1,5]])),"a holder without children is decided by its own episode").toBe(0);
+ expect(hostTreeWaitsV1(new Map([[1,[10]],[10,[11]]]),1,new Map([[10,7]])),"a marked process with a working child does not wait").toBe(0);
+ expect(hostTreeWaitsV1(undefined,1,new Map([[10,7]])),"an unreadable process table lends nothing").toBe(0);
+ const directory=fresh(),id=newHostCapacityIdV1();mkdirSync(join(directory,"grants"),{recursive:true});
+ const own=processStartV1(process.pid)!;expect(own.length).toBeGreaterThan(8);
+ writeFileSync(join(directory,"grants",`${id}.wait.${process.pid}`),JSON.stringify({since:5,start:"Mon Jan  1 00:00:00 1990"}));
+ expect(readHostCapacityWaitMarkersV1(directory,id).size,"a marker of another incarnation of the pid is ignored").toBe(0);
+ writeFileSync(join(directory,"grants",`${id}.wait.${process.pid}`),JSON.stringify({since:5,start:own}));
+ expect([...readHostCapacityWaitMarkersV1(directory,id)]).toEqual([[process.pid,5]]);
+ writeFileSync(join(directory,"grants",`${id}.wait.${process.pid}`),"5");expect(readHostCapacityWaitMarkersV1(directory,id).size,"an unreadable marker counts for nothing").toBe(0);
+ expect(processStartV1(2147483000)).toBeUndefined();
+});
+
+test("wait markers are written once per episode through temp+rename, need the grant, survive a torn sibling and never fork ps again for a known pid",async()=>{
+ const directory=fresh(),id=newHostCapacityIdV1(),grants=join(directory,"grants");mkdirSync(grants,{recursive:true});
+ const environment={SEMIO_HOST_CAPACITY_GRANT:id,SEMIO_HOST_CAPACITY_DIRECTORY:directory},unbind=bindHostCapacityWaitMarkerV1(environment,process.pid);
+ let leave=enterScriptProcessWaitV1();expect(readdirSync(grants).filter(name=>name.includes(".wait.")),"no marker without a live grant").toEqual([]);leave();
+ writeFileSync(join(grants,`${id}.json`),"{}");
+ leave=enterScriptProcessWaitV1();const marker=join(grants,`${id}.wait.${process.pid}`),first=statSync(marker,{bigint:true});
+ const started=performance.now();for(let poll=0;poll<200;poll++){const again=enterScriptProcessWaitV1();again();}
+ expect(statSync(marker,{bigint:true}).ino,"one marker file for the whole episode").toBe(first.ino);expect(statSync(marker,{bigint:true}).mtimeNs).toBe(first.mtimeNs);
+ expect(performance.now()-started,"200 polls fork nothing").toBeLessThan(500);expect(readdirSync(grants).filter(name=>name.endsWith(".tmp"))).toEqual([]);
+ writeFileSync(join(grants,`${id}.wait.1`),"");writeFileSync(join(grants,`${id}.wait.2`),"{");
+ expect([...readHostCapacityWaitMarkersV1(directory,id).keys()],"torn siblings do not hide the live marker").toEqual([process.pid]);
+ leave();unbind();
+});
+
+test("the holder of a grant removes every wait marker of its id when it ends",async()=>{
+ const directory=fresh();mkdirSync(join(directory,"grants"),{recursive:true});
+ let seen:string[]=[];
+ await withHostCapacityV1(options(directory),async handle=>{const grants=join(directory,"grants"),id=handle.id;writeFileSync(join(grants,`${id}.wait.4242`),"{}");seen=readdirSync(grants).filter(name=>name.includes(".wait."));});
+ expect(seen.length).toBe(1);expect(readdirSync(join(directory,"grants")).filter(name=>name.includes(".wait."))).toEqual([]);
+});
+
+test("the process table lists a spawned child under this process on every platform without busybox-only ps options",async()=>{
+ const child=spawn(process.execPath,["-e","setTimeout(()=>{},3000)"],{stdio:"ignore"});
+ try{await sleep(300);const table=processChildrenTableV1();expect(table).toBeDefined();expect(table!.get(process.pid)).toContain(child.pid!);expect(table!.get(process.ppid)).toContain(process.pid);}
+ finally{child.kill();}
+},20000);

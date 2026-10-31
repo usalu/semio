@@ -1,0 +1,100 @@
+{
+  "sourceOnly": true,
+  "sourceReady": false,
+  "runtimeAttempts": 0,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🧪️testing/♻️close/🦀️.rs",
+      "sha256": "7403830a75c44c673bce040b1a942540c637445079b6b0fc300d8a7c6df351ba",
+      "bytes": 589
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🧪️testing/♻️close/🧫️fixtures/🔣️.json",
+      "sha256": "64fb955eb8ead1aafbf38d13ba50a0549000c14cb968a3bc2e6a4dba4bae047d",
+      "bytes": 304
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🧪️testing/♻️close/🧬️schema/🔣️.json",
+      "sha256": "f3c40c9b6dad02f81358148c746706349cb2fe2986cf962d5edf1877f2ead484",
+      "bytes": 772
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🧪️testing/🦀️.rs",
+      "sha256": "2471159d28771b885fca8e734caba2aa5c9e2518e0cbd770b2cbef8367aedb12",
+      "bytes": 11735
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs",
+      "sha256": "4c6a9bc19f8553363c66f49cbfe3996a7b8bd67b2480ab3516799624a0f59d41",
+      "bytes": 45900
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-prepared-engine-unit/🦀️.rs",
+      "sha256": "1cb442c7c1b3f074d7e9580580c6c9a22a0e7ad907e082d0389bae5edca456f5",
+      "bytes": 27182
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🦀️.rs",
+      "sha256": "f0a413a779380be7ca0858929b664b155e8836387124ece6299e1a76d5b0456e",
+      "bytes": 21155
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🎟️prepared/🦀️.rs",
+      "sha256": "c0a13e0785c0f83b005924405d7e2788f453184bc3dbaf110f8a5a808f76a160",
+      "bytes": 16330
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧯️raw-allocation-close-oracle/🦀️.rs",
+      "sha256": "e9ac5831124f93ea4403e2e5a5c294286a815945ff5d4e2c273b2aed12ac795f",
+      "bytes": 5197
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧭️host/🧪️tests/🔬️board-host/🎬️icon-clip-gestures-and-placement-naming/🦀️.rs",
+      "sha256": "d4bc4c1306d31b37c25d490cba03a9dd5f13463f1e19ff97cff8cb76638a3089",
+      "bytes": 25732
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🧪️tests/📤️gpu-export/🦀️.rs",
+      "sha256": "85e8b11e730b4e006b9c2d5117092f692e8a8032f0dec4aa7b63ecb2f7d4078a",
+      "bytes": 6293
+    }
+  ],
+  "remainingRemovedApiConsumers": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🧪️tests/♻️physical-job-close/🦀️.rs",
+      "line": 192,
+      "source": "cancel.cancel_now();let _=session.begin_close();let mut self_funded=semio_framework_job::SelfFundedCloseCaller::new();"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️guest-cold-relay/🧰️relay-session-helpers-and-waits/🦀️.rs",
+      "line": 87,
+      "source": "let _ = semio_framework_job::close_with_self_funded_context(test_relay_drive_policy(), |cx| semio_framework_job_worker::pump_worker_job_retirements(1, cx));"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️guest-cold-relay/♻️relay-lifecycle-fixtures-and-test-relay/🦀️.rs",
+      "line": 90,
+      "source": "if matches!(semio_framework_job::close_with_self_funded_context(test_relay_drive_policy(), |cx| maximum_rejected_job.close_step(cx)).expect(\"original fixture close turn\"), semio_framework_job::InteractiveJobCloseStep::Complete{..}) {"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️guest-cold-relay/♻️relay-lifecycle-fixtures-and-test-relay/🦀️.rs",
+      "line": 126,
+      "source": "let _ = semio_framework_job::close_with_self_funded_context(test_relay_drive_policy(), |cx| rejected.close_step(cx));"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️guest-cold-relay/♻️relay-lifecycle-fixtures-and-test-relay/🦀️.rs",
+      "line": 136,
+      "source": "let _ = semio_framework_job::close_with_self_funded_context(grant, |cx| session.close_step(cx)).expect(\"original fixture close turn\");"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🗃️model/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 345,
+      "source": "while !matches!(semio_framework_job::close_with_self_funded_context(world_original_fixture_grant(), |cx| InteractiveJob::close_step(&mut job, cx)).expect(\"original fixture close turn\"), semio_framework_job::InteractiveJobCloseStep::Complete{..}) {}"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎛️host/🧪️tests/🧪️unit-3/🦀️.rs",
+      "line": 555,
+      "source": "while !matches!(semio_framework_job::close_with_self_funded_context(world_original_fixture_grant(), |cx| PreparedRenderJob::close_step(&mut job, cx)).expect(\"original fixture close turn\"),semio_framework_job::InteractiveJobCloseStep::Complete{..}) {}"
+    }
+  ],
+  "notAHostAdmissionClaim": true
+}

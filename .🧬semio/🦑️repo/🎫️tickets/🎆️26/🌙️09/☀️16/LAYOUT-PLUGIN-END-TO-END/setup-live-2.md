@@ -1,0 +1,7 @@
+# Canonical Setup Attempt 2
+
+Root explicitly authorized one direct canonical repo --service=off tools setup all attempt with SEMIO_BUILD_MODE=prototype. Actual workspace cwd was /Users/ueli/Documents/semio. Input command/environment is retained at setup-live-2-command.json. SEMIO_TEST_ARTIFACT_DIR was ticket-generated/setup-live-2; TMPDIR, TMP and TEMP were its tmp child. Only those own directories were precreated through repo metadata execution. No provider source was edited while this Original ran.
+
+Actual session37265 terminated EXIT1. It reached source.served, captured the actual build implementation, entered repository:command and dependencies:maintenance-parent-observation, then refused with Genuine dependency funding parent is busy from withFundingParentV1 at the protected maintenance admission boundary. The combined log and authenticated process stack are retained at 🗑️generated/setup-live-2.log; terminal summary and exact log hash are at 🗑️generated/setup-live-2-receipt.json.
+
+No dependency producer, installer or publication phase was observed before this refusal. Actual rematerialization is not established. Earlier source semantic checks remain valid; this result does not establish exclusive runtime admission. No retry, parallel setup, peer cancellation, manual cache edit or publication repair was attempted. Root retains the decision on fresh supported lease observation and any later canonical invocation.

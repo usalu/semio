@@ -1,0 +1,138 @@
+{
+  "target": "native_work",
+  "lawCount": 24,
+  "physicalFilesPreserved": true,
+  "newPublicProductionHooks": false,
+  "roster": [
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🎟️work/🧪️tests/🦀️.rs",
+      "tests": 3,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🦀️.rs",
+      "newTarget": "native_work",
+      "before": "8927c742c1bc8c69f631c23c4ca6a640d478d8aef51a06bde68c81561eb85b2c",
+      "after": "947a4cd7a9c0592acad36e14207082b27c84a9a060c9b6cbc2c6bf18313f1fe9",
+      "privateStateUsed": false
+    },
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/🎟️work/🧪️tests/🦀️.rs",
+      "tests": 1,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/🦀️.rs",
+      "newTarget": "native_work",
+      "before": "fbc7edf4838a623c8a985427120b631cc7a8842a6317d4edb91fb37c11499a2b",
+      "after": "1a31b181caa62aab0a93e69d11fc233309f14140a33c4492301614f27e359b1a",
+      "privateStateUsed": false
+    },
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/📦️storage/🎟️work/🧪️tests/🦀️.rs",
+      "tests": 1,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/📦️storage/🦀️.rs",
+      "newTarget": "native_work",
+      "before": "88a30f3601a8c127f689e9bad9962856f70591e7679933969984db2ca7f45db9",
+      "after": "aa55a4da2b0dc42779903590f6bca685d5aedcf1a2a5af04ff135bf6608ce047",
+      "privateStateUsed": false
+    },
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🎟️work/🧪️tests/🦀️.rs",
+      "tests": 4,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🦀️.rs",
+      "newTarget": "native_work",
+      "before": "86995865c63e92df2961f96265aca18b428475c74a07a875c9f278f7dee1b56f",
+      "after": "313f498c8ff279db95e5f6c451e9aa1849be02935e0514bdb5a0ca0cc67ec0db",
+      "privateStateUsed": false
+    },
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🎟️work/🧪️tests/🦀️.rs",
+      "tests": 1,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🦀️.rs",
+      "newTarget": "native_work",
+      "before": "bff9f62c7dcba1b3de5a8382c781b0eba1ade10c14683ea41456c5b0534759bf",
+      "after": "bff9f62c7dcba1b3de5a8382c781b0eba1ade10c14683ea41456c5b0534759bf",
+      "privateStateUsed": false
+    },
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/🧪️tests/🦀️.rs",
+      "tests": 1,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs",
+      "newTarget": "native_work",
+      "before": "77935c0ff451649300860ff283f72d943315bbc4ad2a269553208fb73a23223b",
+      "after": "0fc1561a49814117753b0cba42d938a7dc7cce0353441db3c1aa47060bf69ff7",
+      "privateStateUsed": false
+    },
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/📤️take/🧪️tests/🦀️.rs",
+      "tests": 2,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs",
+      "newTarget": "native_work",
+      "before": "82886401aa4f29975f8c090bcc2a1416b43c0bf77afc1433350532736913732b",
+      "after": "82886401aa4f29975f8c090bcc2a1416b43c0bf77afc1433350532736913732b",
+      "privateStateUsed": false
+    },
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🎟️work/🧪️tests/🦀️.rs",
+      "tests": 1,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🦀️.rs",
+      "newTarget": "native_work",
+      "before": "9aecc6fdbb9664a1ce0a7534a44b68d3f90a2ac2284e95372f00151502aa0a05",
+      "after": "19d0eeff01c9150bda56dd827b8d8a3415474ce94642a94f44aca104976b8b4b",
+      "privateStateUsed": false
+    },
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🦀️.rs",
+      "tests": 1,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🦀️.rs",
+      "newTarget": "native_work",
+      "before": "2c224b422e6ae96b322f2125752976c24f254f0ee71d29ab90aaf0885b208165",
+      "after": "162e63d33665442d122fb57b73966f6956684a8f2dc3ce3e246fbffc952783c0",
+      "privateStateUsed": false
+    },
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/🎟️work/🧪️tests/🦀️.rs",
+      "tests": 1,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/🦀️.rs",
+      "newTarget": "native_work",
+      "before": "72599318dc861d4043b4746c6bf7fefb35eaa02e58ae9b425170227550f9622c",
+      "after": "372dbfe63e2695ed7c5a6db7d997f03adc1103668219dea95007e37a2401c5c1",
+      "privateStateUsed": false
+    },
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🎟️work/🧪️tests/🦀️.rs",
+      "tests": 1,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🦀️.rs",
+      "newTarget": "native_work",
+      "before": "04d12d5b08f37f57c9ef1fa3cb1fdd71732aa11f4fcddd04fea05ebd85bac7db",
+      "after": "a9e84dda386bb7b88c090aed5f2e692229ccb01da6316aabd2631d020a638420",
+      "privateStateUsed": false
+    },
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🎮️receiving/🦀️.rs",
+      "tests": 1,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🦀️.rs",
+      "newTarget": "native_work",
+      "before": "92c143b68dd865849b35193cf0b46ae460fcaa6f82547d2897a23ee6919c7299",
+      "after": "433325fdd7e2a57517b8a50cf6a6ee6b2f0ebbdbaacf6d1f1587118423a7ac1c",
+      "privateStateUsed": false
+    },
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🦀️.rs",
+      "tests": 5,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs",
+      "newTarget": "native_fields",
+      "before": "7978f8203ff34839c43401c2fa466b409274ba84657bd81e99579ffa3c7042a3",
+      "after": "9adef19bf66e6ff15d573cf2482f828c619d95df1c24e7a2bd067cdab5f03863",
+      "privateProductionStateUsed": false,
+      "localTestReceiverPrivateState": true
+    },
+    {
+      "lawFile": "🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧪️tests/🦀️.rs",
+      "tests": 1,
+      "oldOwnerMount": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs",
+      "newTarget": "native_fields",
+      "after": "f54c69c6fe6322d793ca0c2e39a48fd125a97ebf91b1fd63b3692a3badea7fe9",
+      "privateProductionStateUsed": false
+    }
+  ],
+  "targets": [
+    "native_work",
+    "native_fields"
+  ]
+}

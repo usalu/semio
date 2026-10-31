@@ -12,7 +12,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
     /// 📬️ Borrows this viewer's original typed completion retirement birth.
     fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<ViewerApp<Self>>)->Option<usize>{semio_framework_plugin_decl_app::completion_retirement::derived_completion_birth_bytes(value)}
     /// 🎟️ Retains the viewer completion on every unsupported or unfunded cleanup admission.
-    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<ViewerApp<Self>>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{semio_framework_plugin_decl_app::completion_retirement::derived_admit_completion_retirement(value,grant)}
+    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<ViewerApp<Self>>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{semio_framework_plugin_decl_app::completion_retirement::derived_admit_completion_retirement(value,grant)}
     /// 🧮️ Declares the physical authority frame for this viewer's decoded editor-authored mutation batch.
     fn owned_mutation_batch_birth_bytes() -> Option<usize> { None }
 

@@ -463,6 +463,7 @@
         "required": [
           "rssMegabytes",
           "jobs",
+          "baselineMegabytes",
           "megabytes"
         ],
         "properties": {
@@ -472,6 +473,10 @@
           },
           "jobs": {
             "type": "integer",
+            "minimum": 0
+          },
+          "baselineMegabytes": {
+            "type": "number",
             "minimum": 0
           },
           "megabytes": {

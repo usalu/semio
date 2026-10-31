@@ -1,0 +1,60 @@
+{
+  "files": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83d\udccb\ufe0flist/\ud83e\udd80\ufe0f.rs",
+      "before": "3ecdd10d0b6583f214b936ec69b87f776429e6a67bc600b825b13e58a2f503a0",
+      "after": "ff2132018b7f221be5d636195217417af8a4538e1dceb54e5f6db57233bb13a7"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83d\udd04\ufe0fmap/\ud83e\udd80\ufe0f.rs",
+      "before": "750bdba588b5ab07854a9cf100002a776eac3543c2476e8c99edb36bbe77af88",
+      "after": "266181ee782de1bae0dfb42bf7eb531565a3aafd2e2f6d4ac4ceac55ed05b733"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83c\udf33\ufe0fvalue/\ud83e\udd80\ufe0f.rs",
+      "before": "750848b73da14d11cb176df84cb0ffa4eea9ae42f7f934198958d86d841c4054",
+      "after": "e89cfea2763c9bd85d4c95cf793e803bad9230f8d763fc9fa074ba16b9c61802"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83c\udf33\ufe0fvalue/\ud83d\udc65\ufe0ftuple/\ud83e\udd80\ufe0f.rs",
+      "before": "a7224ae6dca109c98c31254b51c1cf31f75a82d5d99317d30fb2c53099d5c7c2",
+      "after": "0065abe16bbdab30d3657b9c4ebec110ddf678114fb4935c1ee63b71b207b5a9"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83c\udf33\ufe0fvalue/\ud83e\uddf1\ufe0fbulk/\ud83e\udd80\ufe0f.rs",
+      "before": "3520c0dcec668404fe05d09bfd851c83232df6fd13db95961e579bf146ed3edd",
+      "after": "aacfb01b4eaf2efef528cfa10529dfa072016215beb8171d54238b40802381eb"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83d\udd17\ufe0fsealed-shared-receiver/\ud83e\udd80\ufe0f.rs",
+      "before": "f0ac7a5098f313c2cff00c8439ff807abae1c46153a12d92808bfb060d02e75a",
+      "after": "9987009345c24d7f91198b2b6534783b8aea8e9b030b951d98da66b314cd5077"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83e\uddfa\ufe0fset/\ud83e\udd80\ufe0f.rs",
+      "before": "93775e25de9846db76368361015c0f9e2d2fc50ad3bdbdc3510947272654df23",
+      "after": "90e2a62bf618fa52d3ac2605b5724db6d74df2e6ec7ca5072d8fe09d6e17a90d"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83d\uddc2\ufe0fmap/\ud83e\udd80\ufe0f.rs",
+      "before": "19c6373d1acf0813fd27523f91185ebb274899c9bbdb318fa225160e8bc0ee77",
+      "after": "ba741beba6e57cf1a4e642eb6d5841ab1c2849e171fcf046a2be070c520b18a5"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83e\udde9\ufe0frecord/\ud83e\udd80\ufe0f.rs",
+      "before": "4725ae7bbe9e21d34e4d20d025103de63924c15bda06a4d9bddb70a3af897fca",
+      "after": "49b224ab8eca02b296f216af052c7391761b7064c7609e9e311e22e37ac7d34b"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83e\udde9\ufe0frecord/\ud83e\uddf3\ufe0freceiver/\ud83e\udd80\ufe0f.rs",
+      "before": "103729b391a65cce9cfab9595967cceb85c17635e0d83e1a818e912872d63585",
+      "after": "ce4b27de39dead2cc0f21e19691c7d1293e7d148c315970fa8abd3f060fc3fc0"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83e\udd80\ufe0f.rs",
+      "before": "0e6a3b5cf498330dc3cf550479beda75d57afdd9255a86ba40fe004413476c78",
+      "after": "e8135b82952b14fe14060f6c99fa112e288c15f8b4645ee5eaa01e225525bf0a"
+    }
+  ],
+  "status": "Pure concrete header initializers authored; parent typed backing, derive and actual callers still migrating. No obsolete begin or grant compatibility route retained."
+}

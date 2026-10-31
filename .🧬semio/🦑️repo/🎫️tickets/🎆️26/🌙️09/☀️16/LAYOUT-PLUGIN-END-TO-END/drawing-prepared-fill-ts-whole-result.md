@@ -1,0 +1,7 @@
+# Whole PreparedFill first actual gate
+
+Normal direct chunk 8b8025 exited 1: fourteen pass, one fail, 16,735 assertions. Every original editing, sample, source-copy, independent Sharp/Immer/Three comparison passed. The original retirement positive-progress assertion exposed a genuine parent close frontier: a child completes on a zero-work cached final query, but the parent immediately returns pending0 despite having a funded header clear available. The fix must fall through only when that child is actually complete and actual work is zero, preserving positive-work yielding and denial0.
+
+Strict session 20390 exited 2 with 20 diagnostics. One owning editFill indexed-tuple read needs a checked value. The other errors establish still-mandatory integration: old Drawing image emitter uses numeric PNG and raw Uint8Array output; canonical 2d barrel still reexports removed Flatten conveniences; PathBoolean still uses numeric Flatten/raw indexed contours/old retirement. These are actual open callers, not a reason to restore compatibility APIs. The broad SVG strict scope is retained as an explicit failed integration requirement; it must become green after caller migration.
+
+All seventy-six pre/testPost/strictPost/current inputs match. Exact logs/bytes/digests are in generated/drawing-prepared-fill-ts-whole/receipt.json. Scoped PreparedFill production plus original owning suite will be refreshed after the narrow genuine close and indexed-value fixes; no wide SVG/full Layout proof follows.

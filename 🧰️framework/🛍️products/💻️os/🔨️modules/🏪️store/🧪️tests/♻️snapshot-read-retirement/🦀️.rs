@@ -5,7 +5,7 @@ use semio_framework_value::testing::physical_test_close_grant;
 /// 🪙️ One funded admission of the next returned root, handed back whole as the retirement pump would receive it.
 fn take_one_returned(registry: &SnapshotReadRegistryHandle) -> Option<Arc<u64>> {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..Default::default() };
-    registry.try_admit_one_returned::<u64, Arc<u64>>(grant, |root, _| Ok((root, Default::default()))).unwrap().0
+    registry.try_admit_one_returned::<u64, Arc<u64>>(grant, |root, _| semio_framework_value::RetainedWorkOutcome { result: Ok((root, Default::default())), work: 1 }).result.unwrap().0
 }
 
 #[test]
@@ -26,13 +26,13 @@ fn snapshot_read_retirement_skips_empty_slots_and_wraps_without_starvation() {
             drop(leases[index.as_u64().unwrap() as usize].take());
         }
         let expected: Vec<Option<u64>> = serde_json::from_value(row["visits"].clone()).unwrap();
-        let actual: Vec<_> = expected.iter().map(|_| registry.try_admit_one_returned::<u64,_>(physical_test_close_grant(),|original,_|Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()}))).map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).unwrap().map(|root| *root)).collect();
+        let actual: Vec<_> = expected.iter().map(|_| registry.try_admit_one_returned::<u64,_>(physical_test_close_grant(),|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}).result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).unwrap().map(|root| *root)).collect();
         drop(leases);
         for _ in 0..SNAPSHOT_READ_LEASE_CAPACITY + issued {
             if !registry.has_returned() {
                 break;
             }
-            drop(registry.try_admit_one_returned::<u64,_>(physical_test_close_grant(),|original,_|Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()}))).map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).unwrap());
+            drop(registry.try_admit_one_returned::<u64,_>(physical_test_close_grant(),|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}).result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).unwrap());
         }
         assert!(registry.terminal_is_empty(), "{}", row["name"]);
         assert_eq!(actual, expected, "{}", row["name"]);

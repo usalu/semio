@@ -15,10 +15,12 @@ fn admitted_document_mutations_make_bounded_progress_and_retire() {
     assert_eq!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).expect("document admission").work_items, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     let owners = store::OneItemOwners::detached(mutation, std::sync::Arc::new(OwnedValueRetirementFactory::<Fem2dMutation>::default()), std::sync::Arc::new(SharedValueRetirementFactory::<Fem2dSnapshot>::default()));
     let mut work = Fem2dArtifactPreparation { owners, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false };
+    let mut allow = |_| true;
+    let mut receiving = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536, &mut allow);
     let policy = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 65536, maximum_capacity_bytes: 1048576, maximum_release_bytes: 1048576, maximum_depth: 64 };
-    assert!(matches!(work.advance(store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..policy }), Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked)));
+    assert!(matches!(work.advance(0, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..policy }, &mut receiving), Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked)));
     work.cancel();
-    assert!(matches!(work.advance(policy), Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked)));
+    assert!(matches!(work.advance(0, policy, &mut receiving), Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked)));
     work.begin_close();
     for grant in [store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..policy }, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_capacity_bytes: 0, ..policy }, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_depth: 0, ..policy }] {
         let result = work.close_step(grant);

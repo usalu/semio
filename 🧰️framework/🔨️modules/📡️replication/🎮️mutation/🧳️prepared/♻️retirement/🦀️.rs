@@ -16,7 +16,7 @@ pub fn demands<P,M>(prepared:&ArtifactReplayPrepared<P,M>,factory:Factory<'_,P,M
  Ok(Default::default())
 }
 fn admit_option<T:RetireOwned>(original:&mut Option<T>,slot:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
- match semio_framework_value::retirement::admit_owned_retirement(original.take().expect("quoted original prepared field"),grant){Ok((owner,progress))=>{*slot=Some(owner);Ok(progress)},Err((error,owner))=>{*original=Some(owner);Err(error)}}
+ match semio_framework_value::retirement::admit_owned_retirement(original.take().expect("quoted original prepared field"),grant).result{Ok((owner,progress))=>{*slot=Some(owner);Ok(progress)},Err((error,owner))=>{*original=Some(owner);Err(error)}}
 }
 pub fn close<P,M>(prepared:&mut ArtifactReplayPrepared<P,M>,slot:&mut Option<Box<dyn ErasedSnapshotRetirement>>,factory:Factory<'_,P,M>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
  let idle=RetainedCloneProgress::default();if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(idle));}let demand=demands(prepared,factory)?;if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(idle));}
@@ -24,7 +24,7 @@ pub fn close<P,M>(prepared:&mut ArtifactReplayPrepared<P,M>,slot:&mut Option<Box
  if !matches!(&prepared.inverse,Ok(inverse)if inverse.terminal_is_empty()){
   return match std::mem::replace(&mut prepared.inverse,Ok(Default::default())){
    Ok(original)=>match issuer(factory)?.mutations(original,grant){Ok((owner,progress))=>{*slot=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{prepared.inverse=Ok(original);Err(error)}},
-   Err(original)=>match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{*slot=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{prepared.inverse=Err(original);Err(error)}}
+   Err(original)=>match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{*slot=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{prepared.inverse=Err(original);Err(error)}}
   };
  }
  if prepared.messages.capacity()!=0{return match admit_artifact_retirement(std::mem::take(&mut prepared.messages),grant,|messages|crate::MutationMessageLedgerRetirement::new(String::new(),messages)){Ok((owner,progress))=>{*slot=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{prepared.messages=original;Err(error)}};}

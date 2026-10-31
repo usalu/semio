@@ -1,5 +1,5 @@
 use crate::PlaybookSpec;
-use semio_framework_plugin::app::TreeWindowKit;
+use semio_framework_plugin::app::{TreeWindowKit, WindowKit};
 use crate::viewer::playbook::modes::view::windows::steps::*;
 use crate::playbook::{PlaybookBlock, PlaybookStep};
 
@@ -67,7 +67,7 @@ async fn render_falls_back_to_the_step_id_when_the_title_is_empty() {
 
 //#region 🪟️WindowLaws
 
-/// 🪟️ A container's window identity is its PATH — the enclosing windowed containers' keys, outermost
+/// 🌬️ A container's window identity is its PATH — the enclosing windowed containers' keys, outermost
 /// first, then its own key — joined by `TREE_WINDOW_PATH_SEPARATOR`. Every node of a `TreeWindowKit`
 /// body sits under the kit's one root section, so a host request names that section first.
 fn window_path(keys: &[&str]) -> String {
@@ -80,24 +80,24 @@ fn window_path(keys: &[&str]) -> String {
 }
 use semio_framework_plugin::{TreeWindowRequest, TreeWindows, ViewModel};
 
-/// 🪟 The viewport the host reports for these laws. Deliberately small: a first paint is priced in
+/// 👁️ The viewport the host reports for these laws. Deliberately small: a first paint is priced in
 /// real `UiValue` argument-arena credit, shared process-wide, and a law that materialised a full
 /// 48-row viewport starved the sibling panel tests running beside it.
 const MEASURED_VIEWPORT_ROWS: u32 = 4;
 
-/// 🪟️ A recipe with far more blocks in one step than the 32 siblings this window used to refuse outright.
+/// 🧱️ A recipe with far more blocks in one step than the 32 siblings this window used to refuse outright.
 fn oversized_spec(blocks: usize) -> crate::PlaybookSpec {
     let step = PlaybookStep { id: "s1".into(), title: "Intro".into(), description: None, blocks: (0..blocks).map(|index| sample_block(&format!("b{index}"), &format!("Field {index}"), "text")).collect() };
     spec_with_steps(Some("Recipe"), vec![step])
 }
 
-/// 🪟️ The window body exactly as the host reads it, for the host-known windows in `requests`.
+/// 🧍️ The window body exactly as the host reads it, for the host-known windows in `requests`.
 fn window_body(spec: &crate::PlaybookSpec, requests: Vec<TreeWindowRequest>) -> String {
     let view = ViewModel { tree_windows: requests, tree_viewport_rows: Some(MEASURED_VIEWPORT_ROWS), ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     projected_body(render(spec, &TreeWindows::for_body(&view, PLAYBOOK_VIEW_BODY_STEPS)).expect("steps tree"))
 }
 
-/// 🪟️ Law (a): a 300-block step renders — the step stamps its full extent and no `+N` appears.
+/// ⚖️ Law (a): a 300-block step renders — the step stamps its full extent and no `+N` appears.
 #[test]
 fn oversized_step_stamps_totals_and_never_a_continuation_row() {
     let json = window_body(&oversized_spec(300), Vec::new());
@@ -107,7 +107,7 @@ fn oversized_step_stamps_totals_and_never_a_continuation_row() {
     assert!(json.matches("s1/b").count() <= MEASURED_VIEWPORT_ROWS as usize, "first paint materialises the measured viewport and stops: {json}");
 }
 
-/// 🪟️ Law (b): a step the host closed stamps its total and materialises nothing.
+/// 👣️ Law (b): a step the host closed stamps its total and materialises nothing.
 #[test]
 fn closed_step_stamps_total_and_materialises_no_blocks() {
     let json = window_body(&oversized_spec(300), vec![TreeWindowRequest { body_key: PLAYBOOK_VIEW_BODY_STEPS.into(), node_key: window_path(&["s1"]), open: Some(false), offset: 0, rows: 0 }]);
@@ -115,7 +115,7 @@ fn closed_step_stamps_total_and_materialises_no_blocks() {
     assert!(!json.contains("s1/b"), "a closed step materialises no blocks: {json}");
 }
 
-/// 🪟️ Law (c): a host window materialises exactly `[offset, offset + rows)`, keyed by the raw block id.
+/// 🏠️ Law (c): a host window materialises exactly `[offset, offset + rows)`, keyed by the raw block id.
 #[test]
 fn host_window_materialises_exactly_its_slice() {
     let json = window_body(&oversized_spec(300), vec![TreeWindowRequest { body_key: PLAYBOOK_VIEW_BODY_STEPS.into(), node_key: window_path(&["s1"]), open: Some(true), offset: 100, rows: 10 }]);
@@ -127,7 +127,7 @@ fn host_window_materialises_exactly_its_slice() {
     assert!(!json.contains("\"s1/b110\""), "the block after the window stays out: {json}");
 }
 
-/// 🪟️ Law (d) for a read-only `TreeWindowKit` surface: no interaction domain, no pick granularity.
+/// 🏞️ Law (d) for a read-only `TreeWindowKit` surface: no interaction domain, no pick granularity.
 #[test]
 fn steps_tree_binds_no_interaction_domain() {
     let json = window_body(&oversized_spec(4), Vec::new());

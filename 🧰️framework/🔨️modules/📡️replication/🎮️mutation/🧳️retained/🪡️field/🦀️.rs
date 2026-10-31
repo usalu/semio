@@ -27,7 +27,7 @@ impl<T: RetainedClone> RetainedFieldPreparation<T> {
     pub fn demand(&self, source: RetainedCloneRef<'_, T>, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.closing || self.consumed { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "retained field cannot quote after transfer or closure")); }
         if self.ready { return Ok(Default::default()); }
-        if self.clone_complete { return Ok(RetirementDemand { copy_bytes: std::mem::size_of::<T>().saturating_mul(2), depth: 1, ..Default::default() }); }
+        if self.clone_complete { let take = self.cursor.take_demand()?; return Ok(RetirementDemand { copy_bytes: take.copy_bytes.max(std::mem::size_of::<T>().saturating_mul(2)), depth: take.depth.max(1), ..take }); }
         self.cursor.advance_demands(source, body)
     }
 
@@ -37,11 +37,11 @@ impl<T: RetainedClone> RetainedFieldPreparation<T> {
         if !super::retained_mutation_demand_fits(demand, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if self.ready { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if self.clone_complete {
-            *self.value = Some(self.cursor.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "retained field completion omitted its original owner"))?);
+            *self.value = Some(self.cursor.take(grant).result?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "retained field completion omitted its original owner"))?.0);
             self.ready = true;
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
-        let step = self.cursor.advance(source, body, grant)?;
+        let step = self.cursor.advance(source, body, grant).result?;
         admit_retained_clone_progress(grant, step.progress(), "retained authored field")?;
         if matches!(step, RetainedCloneStep::Complete(_)) {
             self.clone_complete = true;
@@ -91,9 +91,9 @@ impl<T: RetainedClone> RetainedFieldPreparation<T> {
         if !self.closing { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "retained field closure was not started")); }
         let demand = self.close_demand(grant.maximum_copy_bytes)?;
         if !super::retained_mutation_demand_fits(demand, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.retirement.is_empty() { return self.retirement.step_granted(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if let Some(step) = self.retirement.begin_granted(&mut self.value, grant)? { return Ok(step); }
-        let step = self.cursor.close_step(grant)?;
+        if !self.retirement.is_empty() { return self.retirement.step_granted(grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if let Some(step) = self.retirement.begin_granted(&mut self.value, grant).result? { return Ok(step); }
+        let step = self.cursor.close_step(grant).result?;
         admit_retained_clone_close(grant, step, self.cursor.terminal_is_empty(), "retained field source closure")
     }
 

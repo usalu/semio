@@ -1,3 +1,7 @@
+## Current Canonical Net Correction
+
+The current TypingState owns net: Vec<M>. OriginalTypingCommit now transfers that exact Vec header directly together with its actual TransactionRef; the older keyed-entry reversal and allocation stages described in historical sections below have been removed. Binding, decoder, sealed resident identity, native metadata custody, policy and cancellation rules are unchanged. The native pointer law now observes the canonical original net. The eight independent reference outputs still pass; current Rust execution remains pending the joint EDIT/fold snapshot.
+
 # Original Typing Commit Continuation
 
 The source packet is authored. No typing native test or mounted runtime execution has completed for this packet. The independent SQLite/Ajv/JSONPatch reference actually passed eight language-neutral policy scenarios with nativeCompared:false. The actual generic native caller/decoder/heap/cancellation harness is source-authored and requires its own instance-typed-ops --lib gate; compiling Layout dependencies does not run dependency cfgtests.

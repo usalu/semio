@@ -38,3 +38,4 @@ semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"]
 serde_json = { workspace = true }
 tiny-skia = { workspace = true }
 ttf-parser = { workspace = true }
+semio-framework-job = { workspace = true, features = ["testkit"] }

@@ -138,7 +138,7 @@ fn one_item_publication_source_denies_generic_or_unbounded_shortcuts() {
 /// 🧹️ Takes one returned owner through the grant-admitting probe, handing back the exact registered `Arc`.
 fn take_one_returned<T: Send + Sync + 'static>(registry: &semio_framework_value_snapshot_read::SnapshotReadRegistryHandle) -> Result<Option<Arc<T>>, SnapshotReadLeaseRefusal> {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 };
-    registry.try_admit_one_returned::<T, Arc<T>>(grant, |owner, _| Ok((owner, RetainedCloneProgress::default()))).map(|(owner, _)| owner)
+    registry.try_admit_one_returned::<T, Arc<T>>(grant, |owner, _| semio_framework_value::RetainedWorkOutcome { result: Ok((owner, RetainedCloneProgress::default())), work: 1 }).result.map(|(owner, _)| owner)
 }
 
 
@@ -194,7 +194,7 @@ fn dropped_snapshot_read_remains_observable_until_one_slot_per_step_cleanup_take
     assert!(registry.contains(index, generation));
     let mut retired = None;
     for _ in 0..SNAPSHOT_READ_LEASE_CAPACITY {
-        if let Some(owner) = registry.try_admit_one_returned::<String,_>(physical_test_close_grant(),|original,_|Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()}))).map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed cleanup probe") {
+        if let Some(owner) = registry.try_admit_one_returned::<String,_>(physical_test_close_grant(),|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}).result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed cleanup probe") {
             retired = Some(owner);
             break;
         }

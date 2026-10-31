@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "rawOwnedArrayAccepted",
+    "rowBytes",
+    "invalidCpu",
+    "provenance"
+  ],
+  "properties": {
+    "rawOwnedArrayAccepted": {
+      "const": false
+    },
+    "rowBytes": {
+      "const": 8
+    },
+    "invalidCpu": {
+      "const": 0
+    },
+    "provenance": {
+      "const": {
+        "cases": [
+          "buffer",
+          "pop",
+          "archive",
+          "buffers",
+          "children",
+          "matcher",
+          "nullChild"
+        ],
+        "untrustedReads": 0,
+        "cpu": 0
+      }
+    }
+  }
+}

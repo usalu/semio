@@ -34,4 +34,5 @@ semio-s-artifact-fem-2d-model = { workspace = true }
 semio-s-fem-app-surface = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-fem-2d-model = { workspace = true, features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }

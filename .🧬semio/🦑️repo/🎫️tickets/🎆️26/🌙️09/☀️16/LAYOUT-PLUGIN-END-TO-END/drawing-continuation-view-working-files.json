@@ -1,0 +1,60 @@
+{
+  "state": "authored-uncompiled-owning-context2-source-refusal",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/📦️capsule/🦀️.rs",
+      "bytes": 7074,
+      "sha256": "45144d010531b0979d457e02471b517f333c9c8f01309e95c189969ca9a60014",
+      "absoluteUtf16Units": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🦀️.rs",
+      "bytes": 825,
+      "sha256": "244d59f8b05d958eb848d75ba6c0f1f69376b481a234b7f5fbae29c611e85cab",
+      "absoluteUtf16Units": 91
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs",
+      "bytes": 56903,
+      "sha256": "201c3d224bf7043f56c9baf9a105b19a450371a2b5ae8dafd660734d8cd7afed",
+      "absoluteUtf16Units": 75
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 3345,
+      "sha256": "236b73a10b38200451a913532dff33fb0c1ca8c30429ca1b31b7d8910d4341d7",
+      "absoluteUtf16Units": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/🧪️tests/🦀️.rs",
+      "bytes": 5106,
+      "sha256": "fef7922ee14a9ef16b0cf050e17dea56f6f62b299eb9cb9dc607624c698a8531",
+      "absoluteUtf16Units": 103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️origin/🔔️acknowledge/🧪️tests/🦀️.rs",
+      "bytes": 3964,
+      "sha256": "67c6123735623bb8ecac3af786cdfcfa24d2c28fecec19aa5e6753338c11dbf8",
+      "absoluteUtf16Units": 125
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/👁️view/case.schema.json",
+      "bytes": 1497,
+      "sha256": "18fe59478959cc785f2e8bd83dcad191737a47277800b3f3bf60302aca5a9222",
+      "absoluteUtf16Units": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/👁️view/case.json",
+      "bytes": 809,
+      "sha256": "51ac99518f35684951541d8ae0e757401ad37cb352105236f8d96fc0789d9519",
+      "absoluteUtf16Units": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/👁️view/🧪️tests/🦀️.rs",
+      "bytes": 4282,
+      "sha256": "30acff74aeebb21455414cf91f14f12ec93216663143dcc58c753c80ccfbcf42",
+      "absoluteUtf16Units": 108
+    }
+  ],
+  "scope": "Genuine immutable original continuation view, closed2-case/3-stage Context law authored first; actual Source owning2 refused before compiler. Canonical testing-caller imports updated for2 prior public laws. No heap/CPU/Source renewal in borrow; unexecuted."
+}

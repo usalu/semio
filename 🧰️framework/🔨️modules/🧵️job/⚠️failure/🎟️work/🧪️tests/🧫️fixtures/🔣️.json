@@ -1,0 +1,89 @@
+{
+  "stock": {
+    "maximumItems": 65536,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 128
+  },
+  "operation": 701,
+  "foreignOperation": 702,
+  "generation": 3,
+  "deadlineUs": 1000000,
+  "fuel": 65536,
+  "maximumCloseTurns": 4096,
+  "cases": [
+    {
+      "name": "blocked",
+      "message": "Original 源 \"line\"\n",
+      "execute": false,
+      "domain": false,
+      "receiptRefusal": false,
+      "contextRefusal": false,
+      "beforeRefusal": false
+    },
+    {
+      "name": "success",
+      "message": "Original 源 \"line\"\n",
+      "execute": true,
+      "domain": false,
+      "receiptRefusal": false,
+      "contextRefusal": false,
+      "beforeRefusal": false
+    },
+    {
+      "name": "domain",
+      "message": "Original 源 \"line\"\n",
+      "execute": true,
+      "domain": true,
+      "receiptRefusal": false,
+      "contextRefusal": false,
+      "beforeRefusal": false
+    },
+    {
+      "name": "receipt",
+      "message": "Original 源 \"line\"\n",
+      "execute": true,
+      "domain": false,
+      "receiptRefusal": true,
+      "contextRefusal": false,
+      "beforeRefusal": false
+    },
+    {
+      "name": "context",
+      "message": "Original 源 \"line\"\n",
+      "execute": true,
+      "domain": false,
+      "receiptRefusal": false,
+      "contextRefusal": true,
+      "beforeRefusal": false
+    },
+    {
+      "name": "twoRefusals",
+      "message": "Original 源 \"line\"\n",
+      "execute": true,
+      "domain": false,
+      "receiptRefusal": true,
+      "contextRefusal": true,
+      "beforeRefusal": false
+    },
+    {
+      "name": "allCauses",
+      "message": "Original 源 \"line\"\n",
+      "execute": true,
+      "domain": true,
+      "receiptRefusal": true,
+      "contextRefusal": true,
+      "beforeRefusal": false
+    },
+    {
+      "name": "beforeWork",
+      "message": "Original 源 \"line\"\n",
+      "execute": false,
+      "domain": false,
+      "receiptRefusal": false,
+      "contextRefusal": false,
+      "beforeRefusal": true
+    }
+  ]
+}

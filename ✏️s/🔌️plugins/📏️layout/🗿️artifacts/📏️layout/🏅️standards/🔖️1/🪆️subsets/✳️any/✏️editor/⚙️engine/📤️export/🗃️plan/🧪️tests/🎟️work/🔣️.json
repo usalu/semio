@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "authority",
+    "stockSource",
+    "rules",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "authority": {
+      "const": "same-explicit-ledger-private-issued-accounting-loan"
+    },
+    "stockSource": {
+      "const": "existing-domain-neutral-pages-fixture"
+    },
+    "rules": {
+      "const": {
+        "noDefaultOrNumericBridge": true,
+        "allOriginalFixtureStockAndAssertionsPreserved": true,
+        "unissuedBeforePropertiesAndFaultCapture": true,
+        "actualCpuBeforeEveryError": true,
+        "sameLedgerHoldSurvivesFreshGenuineLoan": true,
+        "privateActualRowsNotExposedAsMutableIterable": true,
+        "payloadCloseAndRowClearSeparateTurns": true,
+        "fixedFaultHeaderClearCopyZero": true,
+        "deniedCachedZero": true,
+        "appendRelativeDepthIncludesOwnLedgerEnter": true
+      }
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "unissued-and-expired-entry",
+          "propertyReads": 0
+        },
+        {
+          "name": "actual-admission-append-and-closed-cached-cpu"
+        },
+        {
+          "name": "same-ledger-held-slot-fresh-loan"
+        },
+        {
+          "name": "current-positive-failing-admission"
+        },
+        {
+          "name": "existing-full-order-cancel-child-receipt-matrix"
+        }
+      ]
+    }
+  }
+}

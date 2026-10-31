@@ -1,0 +1,26 @@
+{
+  "beforeBuilderSha256": "5766edcb830f2baba5f204246cf442132670ea9ae6652ec004df05f612cec73b",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🦀️.rs",
+      "sha256": "79a8a616db23bf2507801bdc6c9db8c7718320002ccbfa08be80ab879e972171"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🦀️.rs",
+      "sha256": "7a5d4b11c9c2880aa3f0cb489b9a36ea29fb3ef9552753530961143c7e44fe83"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🎟️work/📐️.json",
+      "sha256": "f1cd2b6357d8f68e2283aab6748a8195dad27d2efdab82240110c940262c1b60"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🎟️work/🔣️.json",
+      "sha256": "46be40af119616d90c5fe619402da21fb310608aaef451d302f8af170ce4c470"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "36af12f61b2de4792a0ccb691c58257dbd0421535b4a3575ba20fc01d0bea17f"
+    }
+  ],
+  "status": "Source authored, no compile or runtime"
+}

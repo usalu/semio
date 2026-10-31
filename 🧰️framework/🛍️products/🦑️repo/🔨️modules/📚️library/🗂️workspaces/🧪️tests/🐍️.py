@@ -62,7 +62,7 @@ try:
         open(f, "w", encoding="utf8").write(t)
     cands = {}
     for dp, dn, fn in os.walk(root):
-        dn[:] = sorted(d for d in dn if not d.startswith(".") and d not in SKIP)
+        dn[:] = sorted(d for d in dn if not d.startswith(".") and d not in SKIP and not re.fullmatch(r"target(?:-[a-z0-9]+)*", d))
         for d in dn:
             m = os.path.join(dp, d, "package.json")
             if os.path.isfile(m):

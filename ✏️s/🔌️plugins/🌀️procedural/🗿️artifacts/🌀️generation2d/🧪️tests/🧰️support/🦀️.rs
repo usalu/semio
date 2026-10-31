@@ -6,5 +6,3 @@ extern crate semio_framework_os_kernel as store;
 pub mod store_fixture;
 #[path = "🔬️retirement-driver/🦀️.rs"]
 pub mod retirement_driver;
-#[path = "🔬️publication-authority/🦀️.rs"]
-pub mod publication_authority;

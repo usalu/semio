@@ -18,11 +18,11 @@ test("actual original input admission satisfies every required gate",()=>{
 });
 for(const row of fixture.cases)test(row.name,()=>{
  const pattern=(needle:string)=>new RegExp([...needle.replace(/\s+/g,"")].map(character=>character.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("\\s*"));
- const match=pattern(row.owner).exec(source);
- expect(match).not.toBeNull();
- const open=source.indexOf("{",match!.index),block=toolJobRustBlock(source,open);
- expect(block).toBeDefined();
  const needle=pattern(row.before);
+ const owners=[...source.matchAll(new RegExp(pattern(row.owner).source,"g"))].map(match=>{const open=source.indexOf("{",match.index!);return {open,block:toolJobRustBlock(source,open)}}).filter(owner=>owner.block&&needle.test(owner.block.body));
+ expect(owners).toHaveLength(1);
+ const {open,block}=owners[0]!;
+ expect(block).toBeDefined();
  expect(needle.test(block!.body)).toBe(true);
  const matches=[...block!.body.matchAll(new RegExp(needle.source,"g"))];
  const target=row.occurrence==="last"?matches.at(-1)!:matches[0]!;

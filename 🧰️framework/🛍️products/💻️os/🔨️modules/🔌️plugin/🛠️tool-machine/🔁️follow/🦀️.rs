@@ -6,7 +6,8 @@ use semio_framework_value::{RetainedOwnedProjection,SharedUtf8,ValueRefusalKind,
 use semio_framework_value::retained_clone::RetainedCloneClose;
 use semio_framework_value::retained_clone::original_slot::RetainedOriginalSlotKey;
 use semio_framework_tool_machine::{OriginalToolLedgerSource,ScrubState,GestureState,TypingState};
-use semio_framework_plugin_window_config::{OriginalWindowPreviewEpoch,WindowConfigOwnerRegistry};
+use semio_framework_plugin_window_config::WindowConfigOwnerRegistry;
+use semio_framework_plugin_window_config_original::OriginalWindowPreviewEpoch;
 use semio_framework_plugin_tool_run_operations::{OriginalToolOverlayFold,OriginalToolLedgerWalk,paid,receive,close_paid};
 use std::mem::size_of;
 type Machines<A>=ToolMachineRuntime<<A as ArtifactApp>::Snapshot,<A as ArtifactApp>::Mutation,<A as ArtifactApp>::Config,<A as ArtifactApp>::ConfigMutation>;
@@ -59,7 +60,7 @@ impl<A:ArtifactApp> OriginalToolMachineFollow<A>{
 }
 impl<A:ArtifactApp> OriginalToolMachineFollow<A>{
  fn return_demand()->RetirementDemand{header::<(bool,usize,bool)>()}
- /// 📏️ Every mounted maintenance turn selects one real native source event.
+ /// 👆️ Every mounted maintenance turn selects one real native source event.
  pub fn demands(&self,document:&Document<A>,config:&Config<A>,windows:&WindowConfigOwnerRegistry,machines:&Machines<A>)->Result<RetirementDemand,ValueError>{if self.closing||self.rejected_window.is_some()||self.published||!self.current(machines,document,config){return self.close_demands(document,config,windows,machines)}match self.phase{
   0=>Ok(if self.windows.is_none(){OriginalWindowPreviewEpoch::admission_demands()}else{Self::cursor_demand()}),
   1=>{if self.lane!=0{return self.leaf_demands(document,config,windows,machines)}if self.presses.done(){return Ok(Self::cursor_demand())}if !self.presses.ready(){return self.presses.demands(&machines.presses,4096)}let source=self.presses.borrow(&machines.presses)?;let Some((_,leaf))=source.get().entries.get(self.index)else{return Ok(Self::return_demand())};Ok(match leaf{PressLeaf::Member(_)=>Self::projection_demand::<A::Mutation>(),PressLeaf::Config(_)=>Self::projection_demand::<A::ConfigMutation>(),PressLeaf::WindowConfig(_)=>Self::projection_demand::<WindowConfigMutation>(),PressLeaf::Child(_)=>Self::cursor_demand()})},
@@ -71,7 +72,7 @@ impl<A:ArtifactApp> OriginalToolMachineFollow<A>{
   7=>Ok(self.publication_demands()),_=>Err(invalid("original tool follow has no declared source event"))}}
  fn projection_close_demands<T:?Sized+Sync+'static>(input:&RetainedOwnedProjection<T>)->Result<RetirementDemand,ValueError>{if input.terminal_is_empty(){Ok(header::<Option<RetainedOwnedProjection<T>>>())}else{input.close_demand(4096)}}
  fn close_projection<T:?Sized+Sync+'static>(input:&mut Option<RetainedOwnedProjection<T>>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let original=input.as_mut().unwrap();let d=Self::projection_close_demands(original)?;if original.terminal_is_empty(){close_paid(cx,d,|_|{*input=None;Ok(p(d))})?;}else{semio_framework_job::close_original_retained_step(cx,d,|g|original.close_step(g))?;}Ok(())}
- /// 📏️ Real semantic consumers close before their parent ledger reads and original caller loan.
+ /// 🚪️ Real semantic consumers close before their parent ledger reads and original caller loan.
  pub fn close_demands(&self,document:&Document<A>,config:&Config<A>,windows:&WindowConfigOwnerRegistry,machines:&Machines<A>)->Result<RetirementDemand,ValueError>{
   if !self.closing{return Ok(header::<bool>())}
   if !self.document.terminal_is_empty(){return self.document.close_demands(document,4096)}if self.document_candidate.is_some(){return self.document.external_alias_close_demands(&self.document_candidate,4096)}if self.document_displaced.is_some(){return self.document.external_alias_close_demands(&self.document_displaced,4096)}
@@ -101,7 +102,7 @@ impl<A:ArtifactApp> OriginalToolMachineFollow<A>{
  }
  /// 🧺️ Neither original source custody nor unpublished/displaced aliases remain.
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.binding.is_none()&&self.document.terminal_is_empty()&&self.config.terminal_is_empty()&&self.presses.terminal_is_empty()&&self.gestures.terminal_is_empty()&&self.typing.terminal_is_empty()&&self.windows.is_none()&&self.document_input.is_none()&&self.config_input.is_none()&&self.window_input.is_none()&&self.document_candidate.is_none()&&self.config_candidate.is_none()&&self.document_displaced.is_none()&&self.config_displaced.is_none()&&self.rejected_window.is_none()&&self.rejected_key.is_none()&&self.rejected_state.is_none()&&self.rejected_close.is_none()&&self.address_close.is_empty()}
- /// 📏️ The final boxed header releases only after every original child is terminal.
+ /// 📦️ The final boxed header releases only after every original child is terminal.
  pub fn shell_close_demands(&self)->RetirementDemand{RetirementDemand{release_bytes:size_of::<Self>(),..header::<Option<Box<Self>>>()}}
 }
 impl<A:ArtifactApp> Drop for OriginalToolMachineFollow<A>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original tool follower retains native source custody")}}

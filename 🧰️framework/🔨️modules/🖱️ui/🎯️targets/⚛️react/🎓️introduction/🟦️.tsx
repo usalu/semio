@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "@semio-tech/ui/modules/class-name-composition";
 import { useShellScopeOptional, useIsActiveShellRoot, NULL_SHELL_ROOT_REF } from "@semio-tech/ui/elements/ShellScope";
 import { useUiTerminology, resolveUiLocalizedText } from "@semio-tech/ui/modules/ui-terminology";
-import { detectShellLocale, uiI18n } from "@semio-tech/ui/i18n";
+import { requireShellLocale, uiI18n } from "@semio-tech/ui/i18n";
 import { elementIdSelector } from "@semio-tech/ui/elements/ElementId";
 import { useSurfaceActive } from "@semio-tech/ui/elements/Surface";
 import { availableViewportHeightPx } from "@semio-tech/ui/device";
@@ -104,7 +104,7 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
 export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, completedInteractionIndices, onStepIndexChange, onDismiss }) => {
   const introductionShellScope = useShellScopeOptional();
   const { terminology } = useUiTerminology();
-  const locale = detectShellLocale(introductionShellScope?.i18n.resolvedLanguage ?? uiI18n.resolvedLanguage);
+  const locale = requireShellLocale(introductionShellScope?.i18n.resolvedLanguage ?? uiI18n.resolvedLanguage);
   const step: IntroductionStepDefinition | undefined = introduction.steps[stepIndex];
   const introduceSelector = step?.introduce ? elementIdSelector(step.introduce) : null;
   const introduceRect = useIntroductionAnchorRect(introduceSelector);
@@ -343,7 +343,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
                         data-slot="introduction-interaction-label"
                         className="inline-flex items-center"
                       >
-                        {interaction.label}
+                        {resolveUiLocalizedText(interaction.label, terminology, locale)}
                       </span>
                     </li>
                   );

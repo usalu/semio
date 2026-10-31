@@ -49,7 +49,7 @@ where
 /// 🧱️ A retained decode page is a GRANULE: it is released whole or not at all, so a turn
     /// that cannot pay a full page buys nothing. The empty record husk still completes under
     /// any grant — its last page has already been paid for.
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
@@ -119,7 +119,7 @@ where
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         Ok(RetainedCloneStep::Complete(empty))
-    }
+    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
 
     fn terminal_is_empty(&self) -> bool {
         self.record.is_none() && self.fields.is_none() && self.field_returned && self.field_registry.ticket_reclaimed(self.field_ticket)
@@ -173,7 +173,7 @@ where
     P: Send,
     Mutation: Send,
 {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if grant.maximum_items == 0 {
             return Ok(RetainedCloneStep::Progress(empty));
@@ -207,7 +207,7 @@ where
         }
         self.terminal = true;
         Ok(RetainedCloneStep::Complete(empty))
-    }
+    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
 
     fn terminal_is_empty(&self) -> bool {
         self.terminal && self.record.is_none() && self.fields.is_none()

@@ -45,3 +45,8 @@ repo --tool=bazel tools exec bun -- .🧬semio/🦑️repo/🎫️tickets/🎆�
 ~~~
 
 No --light on the actual browser run. Do not duplicate current activation/native work. Expected URL is http://127.0.0.1:6079/?plugin=layout; HTTP delivery is insufficient. Preserve the continuous server session for owned cancellation. Require complete:true plus all12required step witnesses before claiming the UI goal.
+
+
+## Current WGPU Launch Correction
+
+The earlier React6079 Next Owned Doors text above is historical and is superseded by browser-current-launch-packet.md: current goal activation/serve are activate-layout-wgpu-prototype and serve-layout-wgpu-prototype on6179, followed by the real retained Bun/Playwright journey. No launch has occurred. Preserve all original browser12-step witnesses plus current same-node rendered X251 contrast>=4.5 requirement; source/jsdom checks are not product acceptance. Actual NativeIO/Context/Host compilation is still a prerequisite.

@@ -23,7 +23,7 @@ pub fn contract() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/📤️gpu-export/🔣️.json")).unwrap()
 }
 
-pub fn packet(fixture: &serde_json::Value) -> PreparedRenderPacket {
+pub fn packet(caller:&mut OriginalJobFixtureCaller,fixture: &serde_json::Value) -> PreparedRenderPacket {
     let mut draw = DrawList::default();
     for row in fixture["rectangles"].as_array().unwrap() {
         let bounds = std::array::from_fn(|i| row["bounds"][i].as_f64().unwrap() as f32);
@@ -45,7 +45,7 @@ pub fn packet(fixture: &serde_json::Value) -> PreparedRenderPacket {
     assert_eq!(drive_preparation_until_terminal(&mut job), Some(JobOutcomeKind::Complete));
     let result = job.take_packet();
     for _ in 0..4096 {
-        if close_job_step(&mut job) {
+        if close_job_step(&mut job,caller) {
             break;
         }
     }
@@ -66,7 +66,7 @@ pub fn close_rejected(caller: &mut OriginalJobFixtureCaller, rejected: &mut Icon
 }
 
 pub fn begin(caller: &mut OriginalJobFixtureCaller, source: &GpuContext, fixture: &serde_json::Value) -> IconGpuPngExport {
-    match IconGpuPngExport::new(source, fixture["width"].as_u64().unwrap() as u32, fixture["height"].as_u64().unwrap() as u32, packet(fixture)) {
+    match IconGpuPngExport::new(source, fixture["width"].as_u64().unwrap() as u32, fixture["height"].as_u64().unwrap() as u32, packet(caller,fixture)) {
         Ok(job) => job,
         Err(mut rejected) => {
             close_rejected(caller, &mut rejected);
@@ -126,7 +126,7 @@ fn icon_gpu_export_cancellation_retires_every_phase_without_publication() {
         finish(&mut caller, &mut job);
         assert!(job.take_png().is_none());
     }
-    let mut rejected = match IconGpuPngExport::new(&source, 0, 1, packet(&fixture)) {
+    let mut rejected = match IconGpuPngExport::new(&source, 0, 1, packet(&mut caller,&fixture)) {
         Ok(_) => panic!("zero-width export admitted"),
         Err(rejected) => rejected,
     };

@@ -1,0 +1,130 @@
+{
+  "state": "real-runtime-owner-extraction-authored-uncompiled",
+  "package": "semio-framework-value-read",
+  "manifest": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/📦️packages/🦀️rust/Cargo.toml",
+  "owningCommandScope": "test --all-targets --features=testkit; then actual docs",
+  "fourPhysicalBodyHashesUnchanged": {
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🦀️.rs": "6ad9d744a8ac8afafaef448a33d91d6ce1a610937de7fe8a792e0ab55f02419c",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️authority/🦀️.rs": "ab769bc53ba32e1a1cc9b032c9fe037457a1e12f8166a4bc64e8b88660386da5",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️lease/🦀️.rs": "d70589e71b36ee92a29afc9d22adf09b0baf6e135408c9294a326236b4af65a9",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🧬️clone/🦀️.rs": "a4e8eae5485d5f58a5fdf7960f925bd0f3551ac91d471f1872601f1ee2a4f5c0"
+  },
+  "firstPartyManifests": 17,
+  "noValueFacadeOrJobBackedge": true,
+  "sourceInputs": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-read-owner-inputs.json",
+  "sourceInputsSha256": "0c3135f468ee537a9323de3411b1609f81ecc20cd03efc0aef9fedad52d1df46",
+  "owningLawNames": {
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🧪️tests/🦀️.rs": [
+      "typed_read_registry_retains_every_original_sparse_wrap_and_starvation_vector",
+      "typed_read_registry_ctor_return_source_and_cancel_conserve_actual_heap_with_full_grants",
+      "erased_read_authority_retains_typed_roots_and_every_alias_until_full_physical_closure",
+      "erased_read_admission_preserves_original_pointer_and_cancelled_full_frame_receipts",
+      "erased_read_authority_close_order_preserves_original_root_and_full_physical_receipts",
+      "erased_read_source_retains_original_id_commit_authority_and_root_after_read_return"
+    ],
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🎟️work/🧪️tests/🦀️.rs": [
+      "real_read_alias_child_handoff_and_empty_header_have_distinct_quantum_one_work",
+      "canonical_borrowed_source_null_retains_the_same_read_and_direct_attempt_work"
+    ]
+  },
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🦀️.rs",
+      "sha256": "6ad9d744a8ac8afafaef448a33d91d6ce1a610937de7fe8a792e0ab55f02419c",
+      "bytes": 20937,
+      "utf16PathUnits": 75
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️authority/🦀️.rs",
+      "sha256": "ab769bc53ba32e1a1cc9b032c9fe037457a1e12f8166a4bc64e8b88660386da5",
+      "bytes": 8123,
+      "utf16PathUnits": 88
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️lease/🦀️.rs",
+      "sha256": "d70589e71b36ee92a29afc9d22adf09b0baf6e135408c9294a326236b4af65a9",
+      "bytes": 7990,
+      "utf16PathUnits": 84
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🧬️clone/🦀️.rs",
+      "sha256": "a4e8eae5485d5f58a5fdf7960f925bd0f3551ac91d471f1872601f1ee2a4f5c0",
+      "bytes": 4906,
+      "utf16PathUnits": 84
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "ad31ba5a9afd8e774d3c587f56fada24195effd4ecc7b6f4ca573a1d574e6d20",
+      "bytes": 1390,
+      "utf16PathUnits": 99
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "68c0180aa244213fce414777eff083d8c1085742fd54a37f041b73f335f37ddd",
+      "bytes": 740,
+      "utf16PathUnits": 95
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "3027ef980a44a2513b7817fcd1bf7e1420e83edd8215333887da9d27729b61b8",
+      "bytes": 102,
+      "utf16PathUnits": 104
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "e319c62d1e0d7995476f33de1167fffc477298063c227a5c264b53da0a38d3d3",
+      "bytes": 3249,
+      "utf16PathUnits": 91
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "f18d43034201508a5334b77c5fd9c77eafbfa5aafe7e346783cc01777dbdec30",
+      "bytes": 3028,
+      "utf16PathUnits": 87
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/Cargo.toml",
+      "sha256": "8ac1f8b83ee41dd66a7d59ffcbe48ab074c5dc3a914000aa48df86deb4578b5a",
+      "bytes": 125933,
+      "utf16PathUnits": 51
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/📋️build-owners.json",
+      "sha256": "5c84753badada9eb3192ee59230827f1baa06a5b250327f4d164b3057973b6ce",
+      "bytes": 1675261,
+      "utf16PathUnits": 48
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🧪️tests/🦀️.rs",
+      "sha256": "0cd0b5c4ac2fd499d312ecef9e3cca801041270a480e514195bcf9f78796242f",
+      "bytes": 24877,
+      "utf16PathUnits": 84
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "4bc1ea336ecf4d1e9f9c961ceb4d6c9434b711cf37a10f6d5dafd695c91ff01b",
+      "bytes": 1299,
+      "utf16PathUnits": 98
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "e774e4cf131a86b17386f6a4fae241d92c4d22945221382bffc1624e4a3e71c8",
+      "bytes": 6050,
+      "utf16PathUnits": 92
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🎟️work/case.json",
+      "sha256": "488a279e3cb0cf8263816c41558f69f3161b1c21de4b44d3633279c92b5470a1",
+      "bytes": 685,
+      "utf16PathUnits": 86
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🎟️work/case.schema.json",
+      "sha256": "fa9d40a2e9d617666f1ce71d352555869535f16f6dfa829d39ffa5859aaac01f",
+      "bytes": 1613,
+      "utf16PathUnits": 93
+    }
+  ],
+  "notFitCertificate": true,
+  "runtimeAttempts": 0
+}

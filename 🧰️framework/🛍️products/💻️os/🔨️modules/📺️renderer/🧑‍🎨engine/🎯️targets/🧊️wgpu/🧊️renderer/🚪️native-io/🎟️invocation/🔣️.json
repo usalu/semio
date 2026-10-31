@@ -1,1 +1,84 @@
-{"version":1,"pages":[2,1,0],"pageBytes":16384,"source":71,"foreignSource":72,"steps":[{"event":"admit","loans":1,"released":0},{"event":"acknowledge","loans":1,"released":0},{"event":"supply","loans":4,"released":0},{"event":"closeProducer","loans":4,"released":0},{"event":"returnPages","loans":4,"released":0},{"event":"closePages","loans":1,"released":49152},{"event":"returnInvocation","loans":0,"released":49152}],"denials":["items","copy","depth","foreignSource"],"streamedFileBytes":268435456,"liveOperationBytes":4194304}
+{
+  "version": 1,
+  "pages": [
+    2,
+    1,
+    0
+  ],
+  "pageBytes": 16384,
+  "source": 71,
+  "foreignSource": 72,
+  "steps": [
+    {
+      "event": "admit",
+      "loans": 1,
+      "released": 0
+    },
+    {
+      "event": "acknowledge",
+      "loans": 1,
+      "released": 0
+    },
+    {
+      "event": "supply",
+      "loans": 4,
+      "released": 0
+    },
+    {
+      "event": "closeProducer",
+      "loans": 4,
+      "released": 0
+    },
+    {
+      "event": "returnPages",
+      "loans": 4,
+      "released": 0
+    },
+    {
+      "event": "closePages",
+      "loans": 1,
+      "released": 49152
+    },
+    {
+      "event": "returnInvocation",
+      "loans": 0,
+      "released": 49152
+    }
+  ],
+  "denials": [
+    "items",
+    "copy",
+    "depth",
+    "foreignSource"
+  ],
+  "streamedFileBytes": 268435456,
+  "liveOperationBytes": 4194304,
+  "supplierOutput": {
+    "cachedAuthenticatesCurrentSource": true,
+    "callerOwnsBeforeReceiptFailure": true,
+    "separatePaidReservationClear": true,
+    "cachedLowerWork": 0,
+    "reservationClearWork": 1,
+    "noTemporaryOutput": true
+  },
+  "originalReturn": {
+    "coldCarrierWork": 0,
+    "callerOwnedBeforeAdmission": true,
+    "realOriginRequired": true,
+    "claimBeforeBody": true,
+    "captureBeforeQualification": true,
+    "receiveBeforeSemanticSettlement": true,
+    "completeCausesBorrowed": true,
+    "logicalHeaderCopyBytes": 0,
+    "noOwnedCallbackReturn": true,
+    "maximumAdmissionTurns": 32,
+    "copyDenialPhase": "actual-read-buffer-initialization",
+    "frameBirthAndReleaseConserved": true,
+    "steps": [
+      "Pending",
+      "Complete",
+      "Cancelled",
+      "Continuation"
+    ]
+  }
+}

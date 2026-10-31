@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/value/persistent/work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "values",
+    "elementBytes",
+    "maximumHolds",
+    "materializationValues",
+    "text",
+    "original"
+  ],
+  "properties": {
+    "values": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 17
+    },
+    "elementBytes": {
+      "const": 8
+    },
+    "maximumHolds": {
+      "const": 64
+    },
+    "materializationValues": {
+      "type": "integer",
+      "minimum": 4097
+    },
+    "text": {
+      "type": "string"
+    },
+    "original": {
+      "$ref": "#/$defs/grant"
+    }
+  },
+  "$defs": {
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "retirementDemand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "retirementStates": {
+      "enum": [
+        "payload",
+        "backing",
+        "empty"
+      ]
+    }
+  }
+}

@@ -4,7 +4,7 @@ extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -14,6 +14,13 @@ extern crate semio_framework_os_kernel as store;
 pub struct Generation2dTransient {
     #[dsl(block)]
     pub generation_preview_text: Option<String>,
+}
+
+impl semio_framework_value_snapshot_projection::SnapshotProjection for Generation2dTransient {
+    type Output = Self;
+    type Projection = semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
+    fn projection_birth_demand() -> semio_framework_value::RetirementDemand { Self::Projection::birth_demand() }
+    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_value::ValueError> { Self::Projection::begin(grant) }
 }
 
 impl pack::snapshot::ArtifactDsl for Generation2dTransient {
@@ -69,19 +76,15 @@ mod tests;
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
 
-/// 🩹 Owned-field diff of [`Generation2dTransient`]: exactly the fields a leaf sets.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+/// 🩹 Owned-field diff of [`Generation2dTransient`]: exactly the fields a leaf sets; the inner `None` clears the nullable preview text. Transient state is ephemeral local-only, so the patch never crosses a wire where nested options collapse.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Generation2dTransientPatch {
-    pub generation_preview_text: Option<Generation2dPreviewTextChange>,
+    pub generation_preview_text: Option<Option<String>>,
 }
 
-/// 🔺️ One change of the nullable `generation_preview_text`: the inner `None` clears it.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct Generation2dPreviewTextChange {
-    pub text: Option<String>,
-}
+protocol::retained_row_patch!(pub retained_fields for Generation2dTransientPatch => Generation2dTransient { generation_preview_text: Option<String> });
+protocol::retained_patch_diff!(Generation2dTransientPatch => Generation2dTransient);
 
 impl protocol::MutationDiff<Generation2dTransient> for Generation2dTransientPatch {}
 
@@ -92,10 +95,7 @@ impl protocol::ColdMutationDiff<Generation2dTransient> for Generation2dTransient
 
     fn apply(&self, unpublished: &mut Generation2dTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         let base = &*unpublished;
-        *unpublished = Generation2dTransient {
-            generation_preview_text: self.generation_preview_text.clone().map_or_else(|| base.generation_preview_text.clone(), |change| change.text),
-            ..base.clone()
-        };
+        *unpublished = Generation2dTransient { generation_preview_text: self.generation_preview_text.clone().unwrap_or_else(|| base.generation_preview_text.clone()), ..base.clone() };
         Ok(())
     }
 }
@@ -108,8 +108,6 @@ impl protocol::DiffAlgebra<Generation2dTransient> for Generation2dTransientPatch
 
 impl protocol::ColdDiffAlgebra<Generation2dTransient> for Generation2dTransientPatch {
     fn inverse(&self, base: &Generation2dTransient) -> Self {
-        Self {
-            generation_preview_text: self.generation_preview_text.as_ref().map(|_| Generation2dPreviewTextChange { text: base.generation_preview_text.clone() }),
-        }
+        Self { generation_preview_text: self.generation_preview_text.as_ref().map(|_| base.generation_preview_text.clone()) }
     }
 }

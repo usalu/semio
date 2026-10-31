@@ -1,0 +1,33 @@
+{
+  "counts": [
+    0,
+    1,
+    17,
+    33
+  ],
+  "cancelPrefixes": [
+    0,
+    1,
+    2,
+    4,
+    8
+  ],
+  "stock": {
+    "items": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "fuel": 100000,
+    "maximumTurns": 100000
+  },
+  "rules": {
+    "trueNullRetainsExactRows": true,
+    "paidTableBirthBeforeCarry": true,
+    "fixedHeaderCopyBytes": 0,
+    "independentVectorOracle": true,
+    "allPositiveDenialAxes": true,
+    "sameFiniteBank": true,
+    "completedFinishDeclarationReadonly": true
+  }
+}

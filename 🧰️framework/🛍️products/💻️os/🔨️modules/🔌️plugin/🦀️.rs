@@ -109,6 +109,8 @@ pub use semio_framework_plugin_decl_emission::{OriginalHostConfigurationDeclarat
 pub mod app {
     //! 🧩️ The crate's public app vocabulary: declarative app builder, plugin traits and runtime types, composed from the facet modules that own them.
     pub use semio_framework_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
+    pub use semio_framework_plugin_decl_surface::{OriginalArtifactEditorBirth,OriginalArtifactViewerBirth};
+    pub use semio_framework_plugin_decl_views::{NoConfigGenesisOwner,NoDraftGenesisOwner};
     pub use crate::{MountedOwnerPhaseV1, MountedOwnerTurnV1};
     pub use super::child_emit_preparation::{ChildEmitPreparation,ChildEmitPreparationStep,OwnedChildEmit};
     pub use semio_framework_plugin_ownership::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
@@ -133,7 +135,7 @@ pub mod app {
     /// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6 — `MediaWireFormat::
     /// Binary` now carries a plain format kind id string.
     pub use semio_framework::MediaWireFormat;
-    /// 🎞️ The `Media`/`MediaPayload`/`MediaFingerprint`/`MediaError` value vocabulary backing
+    /// 🌀️ The `Media`/`MediaPayload`/`MediaFingerprint`/`MediaError` value vocabulary backing
     /// `ArtifactApp::{media_ports, export_media, import_media, media_fingerprint}` — re-exported so
     /// implementers never need a direct `semio-framework-core` dependency just to satisfy this trait.
     pub use semio_framework::{Media, MediaError, MediaFingerprint, MediaPayload};
@@ -210,7 +212,7 @@ pub mod app {
     pub use super::app_testing::*;
 }
 
-/// 🧩️ Cross-crate closure vocabulary required by `dyn_enum_close!` for `PluginApp`.
+/// 🔢️ Cross-crate closure vocabulary required by `dyn_enum_close!` for `PluginApp`.
 pub mod plugin_app_close_prelude {
     pub use crate::app::*;
     pub use crate::app::{tree_item, PeerMark};
@@ -309,6 +311,7 @@ pub use app::{
     ArtifactAnalyzer,
     ArtifactApp,
     ArtifactBoundedFirstStepProof,
+    ArtifactOriginalCommandProducerFactory,
     ArtifactBuilder,
     SnapshotBuilder,
     ArtifactCapability,
@@ -330,6 +333,10 @@ pub use app::{
     ArtifactDeserializer,
     ArtifactDocumentPayload,
     OriginalArtifactDocumentReceiving,
+    OriginalArtifactEditorBirth,
+    OriginalArtifactViewerBirth,
+    NoConfigGenesisOwner,
+    NoDraftGenesisOwner,
     ArtifactDocumentStoreDisposer,
     ArtifactDownloadOutput,
     ArtifactEditor,
@@ -384,6 +391,10 @@ pub use app::{
     ArtifactSnapshotCloseLease,
     ArtifactStoreInitializationAuthority,
     ArtifactStoreInitializationJob,
+    DocumentStoreLivePublication,
+    DocumentStorePublicationToken,
+    cold_replay_document_store_owners,
+    cold_replay_document_store_owners_source_demands,
     ArtifactToolCompletion,
     ArtifactToolCompletionValue,
     ArtifactToolCompletionRejection,
@@ -582,7 +593,7 @@ macro_rules! register_plugin {
     };
 }
 
-/// 🧬️ Declares uniform artifact lifecycle types from schema and IO hooks. UNIFIED-COMPOSABLE-
+/// 🔤️ Declares uniform artifact lifecycle types from schema and IO hooks. UNIFIED-COMPOSABLE-
 /// ARTIFACT-SYSTEM (C1, Task 5): accepts an optional trailing `children: $ty` field naming a real
 /// `ArtifactChildren` impl (`$ty::Snapshot` must equal `<$construction as ArtifactBuilder>::Snapshot`,
 /// enforced by `DerivedArtifactSpec::Children`'s own bound) — when present, `$composer`'s `reads()`
@@ -668,7 +679,7 @@ macro_rules! derive_artifact_facets {
     (@children_ty $snapshot:ty, $children:ty) => { $children };
 }
 
-/// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1, Task 5) — `ArtifactChildren`/`DerivedArtifactSpec::Children`
+/// ✅️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1, Task 5) — `ArtifactChildren`/`DerivedArtifactSpec::Children`
 /// tests. Placed here (rather than beside `🧬️DerivedArtifactFacets` near the top of the file) so
 /// `derive_artifact_facets!` is already in scope textually — `macro_rules!` visibility is
 /// definition-order-sensitive within a crate for a bare (non-`$crate`-qualified) invocation.
@@ -683,7 +694,7 @@ pub enum SubsetKind {
     Derived,
 }
 
-/// 🪆️ Declares one subset's lifecycle facets, runtime registration, and inline conformance tests.
+/// 🙂️ Declares one subset's lifecycle facets, runtime registration, and inline conformance tests.
 #[macro_export]
 macro_rules! subset {
     (

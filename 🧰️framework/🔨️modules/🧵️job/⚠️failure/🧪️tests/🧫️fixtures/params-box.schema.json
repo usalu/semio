@@ -1,0 +1,73 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grant",
+    "maximumTurns",
+    "cases",
+    "originalBoxRetained",
+    "ownedHeaderCopies",
+    "fallibleCursorBirth",
+    "scopeCases"
+  ],
+  "properties": {
+    "grant": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 262144,
+        "maximumReleaseBytes": 262144,
+        "maximumDepth": 128
+      }
+    },
+    "maximumTurns": {
+      "const": 128
+    },
+    "cases": {
+      "const": [
+        [],
+        [
+          [
+            "selection",
+            "face:71"
+          ]
+        ],
+        [
+          [
+            "unicode",
+            "源🌊"
+          ],
+          [
+            "operation",
+            "cut"
+          ]
+        ]
+      ]
+    },
+    "originalBoxRetained": {
+      "const": true
+    },
+    "ownedHeaderCopies": {
+      "const": 0
+    },
+    "fallibleCursorBirth": {
+      "const": true
+    },
+    "scopeCases": {
+      "const": [
+        {},
+        {
+          "appId": "semio",
+          "module": "layout"
+        },
+        {
+          "pluginId": "draw",
+          "appId": "layout",
+          "instanceId": "源🌊",
+          "module": "render",
+          "bodyKey": "shape:71"
+        }
+      ]
+    }
+  }
+}

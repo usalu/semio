@@ -1,0 +1,50 @@
+{
+  "stock": {
+    "items": 1048576,
+    "copy": 67108864,
+    "capacity": 16777216,
+    "release": 33554432,
+    "depth": 256
+  },
+  "maxTurns": 100000,
+  "axes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "width": 64,
+  "stops": [
+    {
+      "offset": 1,
+      "color": [
+        1,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "offset": 0,
+      "color": [
+        0,
+        0,
+        1,
+        1
+      ]
+    }
+  ],
+  "expectedStart": [
+    0,
+    0,
+    1,
+    1
+  ],
+  "expectedEnd": [
+    1,
+    0,
+    0,
+    1
+  ]
+}

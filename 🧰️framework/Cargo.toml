@@ -55,25 +55,32 @@ members = [
     "🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/✨️derive/🚪️io/📝️text/📸️snapshot/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🌳️intrinsic/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🌳️tree/🟰️equal/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/💾️resident/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/📋️registry/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/📝️text/📦️paged/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/📶️sort/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🔗️read/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🗂️ordered/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛫️encode/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/🧪️tests/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧪️testing/👥️presence-retirement/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧪️tests/🪜️companion-2/📦️packages/🦀️rust",
+    "🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust",
     "🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust",
@@ -154,6 +161,7 @@ members = [
     "🔨️modules/📡️replication/🔗️causal/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/🔗️causal/🔀️transition/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🗂️index/📦️packages/🦀️rust",
+    "🔨️modules/📡️replication/🔗️causal/🔀️transition/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🔨️modules/📡️replication/🧾️wire/📦️packages/🦀️rust",
     "🔨️modules/🔀️dispatch/📦️packages/🦀️rust",
     "🔨️modules/🔄️machine/✨️derive/📦️packages/🦀️rust",
@@ -189,6 +197,7 @@ members = [
     "🔨️modules/🖱️ui/🎨️styling/🎭️theme/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🎬️scene/✂️text-splice/🧬️native/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎬️scene/🌉️surface/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎬️scene/🎬️scenes/🌍️world3d/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust",
@@ -405,7 +414,10 @@ members = [
     "🔨️modules/🧮️math/🎯️sampling/🧺️workspace/📦️packages/🦀️rust",
     "🔨️modules/🧮️math/📶️rank/📦️packages/🦀️rust",
     "🔨️modules/🧮️math/🧮️algebra/🔲️dense/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/⚠️failure/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/👶️scope/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust",
@@ -415,7 +427,9 @@ members = [
     "🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/🔭️preview/🎟️drive/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/🕰️clock-identity-and-budget/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/🛬️receiving/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/🧪️conformance/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/🧪️tests/🔬️unit/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/📜️registration/📦️packages/🦀️rust",
@@ -517,6 +531,7 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/⚖️laws/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🌊️flow/🧩️extensions/🕸️wasm/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🌿️vcs/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🌿️vcs/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🎒️pack/⌨️cli/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🎒️pack/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust",
@@ -766,9 +781,11 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/staged-form/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🛬️lifted/👷️job/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👷️job/🧱️ownership/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪆️child/🧪️tests/🥣️companion/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📦️packages/🦀️rust",
@@ -861,6 +878,7 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🪢️tests-03-2/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🫐️tests-09/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🫑️tests-07-3/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🫒️tests-05-3/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪆️child/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪜️maintenance-ladder/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📦️packages/🦀️rust",
@@ -869,6 +887,7 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📬️mutation/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗂️registry/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧬️preparation/🔁️replace/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧿️original/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🪪️identity/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
@@ -881,6 +900,7 @@ exclude = [
     "🛍️products/💻️os/🔨️modules/🗣️dsl/🧹️fixture-sweep/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🚪️io/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust",
+    "🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🍎️companion/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/📦️packages/🦀️rust",
@@ -999,6 +1019,7 @@ exclude = [
     "🛍️products/🦑️repo/🔨️modules/📊️metrics/📦️packages/🦀️rust",
     "🛍️products/🦑️repo/🔨️modules/📐️model/📦️packages/🦀️rust",
     "🛍️products/🦑️repo/🔨️modules/📐️model/🪪️entity/📦️packages/🦀️rust",
+    "🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🦀️rust/📦️packages/🦀️rust",
     "🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔮️oracles/📦️package-boundary-classification/📦️packages/🦀️rust",
     "🛍️products/🦑️repo/🔨️modules/📜️statutes/📦️packages/🦀️rust",
     "🛍️products/🦑️repo/🔨️modules/📝️todos/📦️packages/🦀️rust",
@@ -1163,6 +1184,21 @@ semio-framework-value-original-slot = { path = "🔨️modules/🌱️value/🧬
     [workspace.dependencies.semio-framework-job-worker]
     path = "🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust"
 
+    [workspace.dependencies.semio-framework-job-receiving]
+    path = "🔨️modules/🧵️job/🛬️receiving/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-failure]
+    path = "🔨️modules/🧵️job/⚠️failure/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-context]
+    path = "🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-testing-caller]
+    path = "🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-clock]
+    path = "🔨️modules/🧵️job/🕰️clock-identity-and-budget/📦️packages/🦀️rust"
+
     [workspace.dependencies.semio-framework-job]
     path = "🔨️modules/🧵️job/📦️packages/🦀️rust"
 
@@ -1221,6 +1257,12 @@ semio-framework-value-original-slot = { path = "🔨️modules/🌱️value/🧬
 
     [workspace.dependencies.semio-framework-value-native-owned]
     path = "🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-value-native-default]
+    path = "🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-value-native-storage]
+    path = "🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-value-persistent]
     path = "🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust"

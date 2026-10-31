@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "text",
+    "direction",
+    "quanta",
+    "deniedRepeats",
+    "cancelPhases",
+    "rules"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "text": {
+      "const": "a ([אב]) 12 ⁧ב⁩"
+    },
+    "direction": {
+      "const": "auto"
+    },
+    "quanta": {
+      "const": [
+        1,
+        7
+      ]
+    },
+    "deniedRepeats": {
+      "const": 3
+    },
+    "cancelPhases": {
+      "const": [
+        "cellWrite",
+        "isolatePop",
+        "statusPop",
+        "pairSwapSecond",
+        "reverseSecond",
+        "pairArchive",
+        "bracketArchive"
+      ]
+    },
+    "rules": {
+      "const": {
+        "sameCatalogOriginalStock": true,
+        "actualInputPagesBorrowed": true,
+        "closedOutputPages": true,
+        "sourceProbeSemanticOnce": true,
+        "paidPreparationSemanticZero": true,
+        "eachRowWriteOrPopActualCpu": true,
+        "noMutableIndexedRecords": true,
+        "pendingFixedControlOnly": true,
+        "noArrayResultFacade": true,
+        "exactFrozenDemandDenial": true,
+        "cachedZero": true,
+        "reference": "bidi-js-visible-levels-order-and-sql-capacity-conservation"
+      }
+    }
+  }
+}

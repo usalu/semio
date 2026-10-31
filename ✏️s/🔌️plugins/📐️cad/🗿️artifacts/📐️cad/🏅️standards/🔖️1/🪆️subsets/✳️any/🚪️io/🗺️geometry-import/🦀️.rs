@@ -135,7 +135,7 @@ pub fn cad_genesis_child_pack(snapshot: &CadSnapshot, slot: &str, child_id: &str
 /// the immutable genesis scene its stable child id names ([`cad_bundled_pane_scene`]) — the raw geometry the model has no
 /// field for, and the `Arc` whose identity keys the pane's tessellation cache.
 #[derive(Clone, Debug, Default)]
-pub(crate) struct CadComposedPane {
+pub struct CadComposedPane {
     pub objects: Vec<semio_s_artifact_cad_cad_model::geometry::CadObject>,
     pub(crate) owned_geometry: Option<semio_s_artifact_cad_cad_model::geometry::CadGeometry>,
     pub genesis: Option<std::sync::Arc<CadWorkingScene>>,
@@ -146,14 +146,14 @@ impl CadComposedPane {
         self.owned_geometry.as_ref().or_else(|| self.genesis.as_deref().and_then(|scene| cad_scene_pane_geometry(scene, pane)))
     }
 }
-/// 🪆️ The four panes every reader works on (design §20.15): each pane's composed child read through the child view only.
+/// 👶️ The four panes every reader works on (design §20.15): each pane's composed child read through the child view only.
 /// The child is the pane's one source of truth, so an edit, an undo, a remote change or a reload is seen the moment its
 /// child store has it; a pane whose child is not composed yet reads the genesis content its stable id names, and a pane
 /// without a handle has no objects.
 #[derive(Clone, Debug, Default)]
 pub struct CadComposedPanes([CadComposedPane; 4]);
 impl CadComposedPanes {
-    /// 🪆️ Composes `snapshot`'s pane handles with their live child content.
+    /// 🧲️ Composes `snapshot`'s pane handles with their live child content.
     pub fn compose(snapshot: &CadSnapshot, children: &semio_framework_plugin::ChildContentView) -> Self {
         use semio_s_artifact_cad_cad_model::geometry::objects_from_model_snapshot;
         Self(CadPaneId::all().map(|pane| {

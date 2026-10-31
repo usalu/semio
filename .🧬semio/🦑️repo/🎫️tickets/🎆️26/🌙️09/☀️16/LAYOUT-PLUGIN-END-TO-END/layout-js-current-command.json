@@ -1,0 +1,26 @@
+{
+  "state": "prepared-diagnostic-unsealed-peer-authorship-ongoing",
+  "argv": [
+    "repo",
+    "--service=off",
+    "run",
+    "@semio-tech/layout-js:test",
+    "--output=stream"
+  ],
+  "cwd": "/Users/ueli/Documents/semio",
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-js-current",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-js-current/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-js-current/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-js-current/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-js-current/tmp"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-js-current/owning.log",
+  "ownerManifest": {
+    "path": "✏️s/🔌️plugins/📏️layout/📦️packages/🟦️typescript/📋️project.json",
+    "sha256": "0f5088e2d52eb62299563ab91a4fd83cca299a6c7550dfdf60bbd4d20c61cb4d"
+  },
+  "scope": "Canonical entire LayoutJS test owner current diagnostic; Scene body/other peers editing permitted, no exact full closure seal, no browser or Native claim",
+  "actualOutcome": null
+}

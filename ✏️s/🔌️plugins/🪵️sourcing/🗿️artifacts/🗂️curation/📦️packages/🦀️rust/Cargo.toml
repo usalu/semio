@@ -76,3 +76,7 @@ semio-framework-test-original-snapshot-owners = { path = "../../../../../../../�
 [[test]]
 name = "original_host_configuration"
 path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🏛️host-configuration/🦀️.rs"
+
+[[test]]
+name = "aussuchen_pane_smoke"
+path = "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🪧️pane-smoke/🦀️.rs"

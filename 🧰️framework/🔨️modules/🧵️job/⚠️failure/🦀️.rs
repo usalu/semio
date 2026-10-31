@@ -1,22 +1,29 @@
 //! 🧯️ Original turn failures retain semantic and receipt causes as separate complete owners.
-use super::{StepContext,ValueError};
+use semio_framework_value_retained_clone::{ValueError,RetainedCloneProgress};
+#[path="🎟️context/🦀️.rs"]
+mod context;
+pub use context::OriginalFailureContext;
 use semio_framework_diagnostic::Fault;
 #[path="🛬️receiving/🦀️.rs"]
 mod receiving;
 pub use receiving::OriginalReceivingPrimary;
 #[path="📦️domain/🦀️.rs"]
 mod domain;
-pub use domain::{OriginalClosureFailure,OriginalDomainFailure,OriginalDomainPrimary,OriginalDomainProjection,OriginalDomainView,admit_original_domain_failure,original_domain_failure_demand};
+pub use domain::{OriginalClosureFailure,OriginalDomainFailure,OriginalDomainPrimary,OriginalDomainReservation,OriginalDomainProjection,OriginalDomainView,admit_original_domain_failure,original_domain_failure_demand};
 #[path="🫴️projection/🦀️.rs"]
 mod projection;
 pub use projection::{project_original_turn_failure,key_original_turn_failure,project_original_value_error,key_original_value_error,project_original_fault,key_original_fault};
+#[path="🎟️work/🦀️.rs"]
+mod work;
+pub use work::OriginalWorkFailure;
 
 /// 🧳️ The complete native refusal or application diagnostic keeps its original ownership.
-#[derive(Debug,semio_framework_value::RetireOwned)]
+#[derive(Debug,semio_framework_value_derive::RetireOwned)]
+#[value(crate="::semio_framework_value_retained_clone")]
 pub enum OriginalTurnPrimary{Value(ValueError),Fault(Fault),Domain(OriginalDomainPrimary),Receiving(OriginalReceivingPrimary)}
 impl OriginalTurnPrimary{
  /// 📊️ Borrows the actual producer receipt independently of its diagnostic representation.
- pub fn retained_progress(&self)->super::RetainedCloneProgress{match self{Self::Value(error)=>error.retained_progress(),Self::Fault(fault)=>fault.retained_progress(),Self::Domain(original)=>original.retained_progress(),Self::Receiving(original)=>original.retained_progress()}}
+ pub fn retained_progress(&self)->RetainedCloneProgress{match self{Self::Value(error)=>error.retained_progress(),Self::Fault(fault)=>fault.retained_progress(),Self::Domain(original)=>original.retained_progress(),Self::Receiving(original)=>original.retained_progress()}}
  /// 🗨️ Borrows the original semantic text without cloning or formatting.
  pub fn message(&self)->&str{match self{Self::Value(error)=>&error.message,Self::Fault(fault)=>&fault.message,Self::Domain(original)=>original.message(),Self::Receiving(original)=>original.message()}}
 }
@@ -24,14 +31,15 @@ impl From<ValueError> for OriginalTurnPrimary{fn from(primary:ValueError)->Self{
 impl From<Fault> for OriginalTurnPrimary{fn from(primary:Fault)->Self{Self::Fault(primary)}}
 
 /// 🪢️ Original semantic, receipt and context refusals move together without cloning or prose conversion.
-#[derive(Debug,semio_framework_value::RetireOwned)]
+#[derive(Debug,semio_framework_value_derive::RetireOwned)]
+#[value(crate="::semio_framework_value_retained_clone")]
 #[value(send_only)]
-pub struct OriginalTurnFailure{pub effects:super::RetainedCloneProgress,pub primary:OriginalTurnPrimary,pub receipt_refusal:Option<ValueError>,pub context_refusal:Option<ValueError>}
+pub struct OriginalTurnFailure{pub effects:RetainedCloneProgress,pub primary:OriginalTurnPrimary,pub receipt_refusal:Option<ValueError>,pub context_refusal:Option<ValueError>}
 impl OriginalTurnFailure{
  /// ⏳️ Borrows the complete enclosing effect span independently of its last semantic cause.
- pub fn retained_progress(&self)->super::RetainedCloneProgress{self.effects}
+ pub fn retained_progress(&self)->RetainedCloneProgress{self.effects}
  /// 🧾️ Records the actual failed child effects while keeping its primary and any receipt refusal.
- pub fn debit_original(primary:impl Into<OriginalTurnPrimary>,cx:&mut StepContext<'_>)->Self{let primary=primary.into();Self{effects:primary.retained_progress(),receipt_refusal:cx.consume_retained(primary.retained_progress()).err(),context_refusal:None,primary}}
+ pub fn debit_original(primary:impl Into<OriginalTurnPrimary>,cx:&mut impl OriginalFailureContext)->Self{let primary=primary.into();Self{effects:primary.retained_progress(),receipt_refusal:cx.consume_retained(primary.retained_progress()).err(),context_refusal:None,primary}}
  /// 🫴️ Lends only the original native refusal when that is the retained primary.
  pub fn primary_value(&self)->Option<&ValueError>{match &self.primary{OriginalTurnPrimary::Value(error)=>Some(error),_=>None}}
  /// 🫱️ Lends the complete original diagnostic without weakening its owned fields.

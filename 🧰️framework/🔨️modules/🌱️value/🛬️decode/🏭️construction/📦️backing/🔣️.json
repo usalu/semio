@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "count",
+    "text",
+    "deniedWork",
+    "nullWork",
+    "birthWork",
+    "copiedBytes",
+    "nullOwnedBytes",
+    "stock",
+    "requireActualWorkRecipient",
+    "unscopedWork",
+    "observedBirthWork"
+  ],
+  "properties": {
+    "count": {
+      "const": 2
+    },
+    "text": {
+      "const": "Native UTF8🧱"
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "nullWork": {
+      "const": 1
+    },
+    "birthWork": {
+      "const": 1
+    },
+    "copiedBytes": {
+      "const": 0
+    },
+    "nullOwnedBytes": {
+      "const": 0
+    },
+    "stock": {
+      "const": {
+        "items": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 64,
+        "fuel": 100000,
+        "maximumTurns": 100000
+      }
+    },
+    "requireActualWorkRecipient": {
+      "const": true
+    },
+    "unscopedWork": {
+      "const": 0
+    },
+    "observedBirthWork": {
+      "const": 3
+    }
+  }
+}

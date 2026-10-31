@@ -84,7 +84,7 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
             if self.child_value.is_some() {
                 return if child.terminal_is_empty() { Ok(crate::RetirementDemand { copy_bytes: size_of::<T>().checked_add(size_of::<T::Cursor>()).ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit, "paged list adoption extent overflow"))?, depth: 1, ..Default::default() }) } else { super::nested_retained_clone_close_demands::<T>(child, body) };
             }
-            if child.output_ready() { return Ok(crate::RetirementDemand { copy_bytes: size_of::<T>(), depth: 1, ..Default::default() }); }
+            if child.output_ready() { return super::nested_retained_clone_take_demands(child); }
             let mut demand=super::nested_retained_clone_demands::<T>(child, source.project(self.index + 1, |values| values.get(self.index).expect("validated paged list source ordinal")), body)?;demand.depth=demand.depth.max(source.get().next_get_depth_demand(self.index).map_err(crate::ValueError::from)?);return Ok(demand);
         }
         Ok(crate::RetirementDemand { copy_bytes: if self.index == length { size_of::<PagedList<T, N>>() } else { size_of::<T::Cursor>() }, depth: 1, ..Default::default() })
@@ -92,14 +92,14 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
 
 
 
-    fn advance(&mut self, source: RetainedCloneRef<'_, PagedList<T, N>>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn advance(&mut self, source: RetainedCloneRef<'_, PagedList<T, N>>, body: usize, grant: RetainedCloneGrant) ->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
         let demand = self.advance_demands(source, body)?;
         if self.output_ready() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !super::retained_clone_grant_admits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress) = source.bind(&mut self.source, grant)? { return Ok(RetainedCloneStep::Progress(progress)); }
+        if let Some(progress) = {let turn=source.bind(&mut self.source, grant);work+=turn.work;turn.result}? { return Ok(RetainedCloneStep::Progress(progress)); }
         let length = source.get().len();
         if self.values.capacity() < length {
-            let progress = self.values.reserve_capacity_one(length, grant.maximum_capacity_bytes).map_err(|error| crate::ValueError::from(error.refusal()))?;
+            let progress=match self.values.reserve_capacity_one(length,grant.maximum_capacity_bytes){Ok(p)=>{work+=p.work;p},Err(error)=>{work+=error.work;return Err(crate::ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{copied_items:usize::from(error.allocated_bytes!=0),retained_capacity_bytes:error.allocated_bytes,..Default::default()}))}};
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant, RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: progress.allocated_bytes, ..Default::default() }, "paged list capacity")?));
         }
         let index = self.index;
@@ -108,39 +108,34 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
             if state.child_value.is_some() {
                 if !child.terminal_is_empty() {
                     let nested = super::nested_retained_clone_grant(grant)?;
-                    let step = child.close_step(nested)?;
+                    let step = {let turn=child.close_step(nested);work+=turn.work;turn.result}?;
                     return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(nested, step, child.terminal_is_empty(), "paged list child scaffold")?.progress()));
                 }
-                let progress = state.values.adopt_reserved(&mut state.child_value)?;
+                let progress=match state.values.adopt_reserved(&mut state.child_value){Ok(p)=>{work+=p.work;p},Err(error)=>{work+=1;return Err(error.into())}};
                 if !progress.progressed { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "paged list lost its reserved adoption slot")); }
                 state.child = None;state.child_closing=false;
                 state.index += 1;
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
             }
             if child.output_ready() {
-                state.child_value = Some(child.take().ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "paged list ready child omitted owner"))?);
+                let nested=super::nested_retained_clone_grant(grant)?;let turn=child.take(nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(RetainedCloneStep::Progress(Default::default()))};state.child_value=Some(value);
                 child.begin_close();state.child_closing=true;
-                return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
+                return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,progress,"paged list child take")?));
             }
             let nested = super::nested_retained_clone_grant(grant)?;
-            let step = child.advance(source.project(index + 1, |values| values.get(index).expect("validated paged list source ordinal")),body, nested)?;
+            let step = {let turn=child.advance(source.project(index + 1, |values| values.get(index).expect("validated paged list source ordinal")),body, nested);work+=turn.work;turn.result}?;
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested, step.progress(), "paged list child")?));
         }
         if index == length {
-            state.output = Some(std::mem::take(&mut state.values));
+            work+=1;state.output = Some(std::mem::take(&mut state.values));
             state.phase = 1;
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
-        state.child = Some(T::retained_clone_cursor());
+        work+=1;state.child = Some(T::retained_clone_cursor());
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
-    }
-    fn take(&mut self) -> Option<PagedList<T, N>> {
-        if self.phase != 1 {
-            return None;
-        }
-        self.phase = 2;
-        self.output.take()
-    }
+    })();crate::RetainedWorkOutcome{result,work}}
+    fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
+    fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(PagedList<T, N>,RetainedCloneProgress)>>{if !self.output_ready(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=crate::retained_clone::take_retained_clone_output(&mut self.output,grant);if matches!(&turn.result,Ok(Some(_))){self.phase = 2;}turn}
 
     fn begin_close(&mut self) -> bool {
         if self.closing {
@@ -152,25 +147,25 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
 
     
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) ->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "paged list must begin close before granted retirement")); }
+        if !self.closing { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "paged list must begin close before granted retirement")); }
         if !super::retained_clone_grant_admits(grant,super::retained_clone_close_demands::<PagedList<T,N>>(self,grant.maximum_copy_bytes)?) {return Ok(RetainedCloneStep::Progress(Default::default()));}
         let state = &mut *self.state;
         if let Some(child) = state.child.as_mut() {
-            if !state.child_closing {child.begin_close();state.child_closing=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));}
-            if !child.terminal_is_empty() { let step = child.close_step(super::nested_retained_clone_grant(grant)?)?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, child.terminal_is_empty(), "retained child close")?.progress())); }
-            state.child = None;state.child_closing=false;
+            if !state.child_closing {child.begin_close();state.child_closing=true;work+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));}
+            if !child.terminal_is_empty() { let step = {let turn=child.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, child.terminal_is_empty(), "retained child close")?.progress())); }
+            state.child = None;state.child_closing=false;work+=1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes:size_of::<T::Cursor>(), ..Default::default() }));
         }
-        if !state.close.is_empty() { return state.close.step_granted(grant); }
-        if let Some(step) = state.close.begin_granted(&mut state.child_value, grant)? { return Ok(step); }
-        if let Some(step) = state.close.begin_granted(&mut state.output, grant)? { return Ok(step); }
+        if !state.close.is_empty() { return {let turn=state.close.step_granted(grant);work+=turn.work;turn.result}; }
+        if let Some(step) = {let turn=state.close.begin_granted(&mut state.child_value, grant);work+=turn.work;turn.result}? { return Ok(step); }
+        if let Some(step) = {let turn=state.close.begin_granted(&mut state.output, grant);work+=turn.work;turn.result}? { return Ok(step); }
         if !state.values.terminal_is_empty() {
-            if let Some(step) = state.close.begin_default_granted(&mut state.values, grant)? { return Ok(step); }
+            if let Some(step) = {let turn=state.close.begin_empty_granted(&mut state.values, grant);work+=turn.work;turn.result}? { return Ok(step); }
         }
-        close_retained_binding(&mut state.source, grant)
-    }
+        {let turn=close_retained_binding(&mut state.source, grant);work+=turn.work;turn.result}
+    })();crate::RetainedWorkOutcome{result,work}}
 
     fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.depth)}
     fn next_close_copy_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}

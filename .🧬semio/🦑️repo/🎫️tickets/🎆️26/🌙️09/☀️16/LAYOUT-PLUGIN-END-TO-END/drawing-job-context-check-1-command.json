@@ -1,0 +1,31 @@
+{
+  "state": "prepared-not-launched-await-sort-terminal",
+  "cwd": "/Users/ueli/Documents/semio",
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "check",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/🧰️framework/Cargo.toml",
+    "-p",
+    "semio-framework-job-context",
+    "--lib"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-context-check-1",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-context-check-1/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-context-check-1/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-context-check-1/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-context-check-1/tmp"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-context-check-1/native.log",
+  "sourcePacket": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-job-context-check-1-inputs.json",
+  "scope": "Production-only compilation diagnostic; no tests, no Source-fit certificate or owning-law acceptance.",
+  "sourcePacketSha256": "e3bd6864e076b12e67e23168d025ef85d72baced812a4e84d1b7de19c809cd28",
+  "metadataSha256": "2cd6b8a0a68c94577310ce568e1fe23a8f6d6d1a03f9d2516eb1fc75736b22a1"
+}

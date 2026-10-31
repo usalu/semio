@@ -1,0 +1,29 @@
+{
+  "schema": "value.named-index.projection.actual/v1",
+  "stock": {
+    "items": 4096,
+    "copy": 16777216,
+    "capacity": 16777216,
+    "release": 16777216,
+    "depth": 128
+  },
+  "keys": [
+    "gamma",
+    "alpha",
+    "beta"
+  ],
+  "projectionCuts": [
+    0,
+    1,
+    2
+  ],
+  "maximumTurns": 10000,
+  "laws": {
+    "partialOutputSlot": true,
+    "deniedZero": true,
+    "sameBankThroughClose": true,
+    "stdOrdering": true,
+    "serdeOracle": true,
+    "exactHeap": true
+  }
+}

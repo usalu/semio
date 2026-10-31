@@ -1,0 +1,5 @@
+# Ordered Synchronous Controlled Route Removal
+
+Removed both OrderedMap/Set FromValue controlled decode/default/retire overrides and the private native decode/insert/retire/default helpers. Preserved ordinary cold from_value and the separate encode route. This removes the two obsolete Outcome compiler callsites without discarding actual work into Result. The staged NativeMap/Set schemas and genuine owning laws were authored first; Set normal production is still migrating, so no replacement pass is claimed.
+
+The bounded Source-only census is drawing-ordered-sync-caller-roster.json: 36675 Rust files in framework and plugins, 9 same-line direct candidates and 101 control locations in files also using Ordered types. The generic/derive type-dispatch review remains open. Inherited Unsupported is not treated as replacement behavior; every actual controlled caller must be hand-migrated to genuine staged NativeReceive/NativeDefault before readiness. Exact removed method/file hashes are in drawing-ordered-sync-removal-working-files.json. No runtime was launched.

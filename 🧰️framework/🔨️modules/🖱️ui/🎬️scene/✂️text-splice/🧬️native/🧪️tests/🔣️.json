@@ -1,0 +1,7 @@
+{
+  "schema": "semio.text-splice.native.v1",
+  "context": 32,
+  "generative": { "seed": 941177, "cases": 128, "maximumScalars": 24, "alphabet": ["a", "b", "😀", "é", "́"] },
+  "cancelCuts": [0, 1, 64, 512, 2048, 4096, 8192],
+  "undergrantAxes": ["items", "copyBytes", "capacityBytes", "depth"]
+}

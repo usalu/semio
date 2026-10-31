@@ -1,6 +1,7 @@
 use super::*;
+use semio_s_fem_payload_turns::{NumericalBytesPublication, numerical_begin_page, numerical_commit_page, numerical_post, numerical_writer_demand};
 use semio_framework_job::StepBudget;
-use semio_s_fem_test_support::{OriginalNumericalFixture, TEST_GRANT};
+use semio_s_fem_test_support::{OriginalNumericalFixture, TEST_GRANT, close_grant, observe_original_numerical_allocations};
 
 #[test]
 fn numerical_restore_funds_each_original_contributor_frontier_separately() {
@@ -77,24 +78,20 @@ fn test_funded_restore<T>(step: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
     step(&mut context)
 }
 
-fn original_writer(original: &mut OriginalNumericalFixture) -> RetainedJobPayloadWriter {
-    let mut writer = None;
-    original.turn(TEST_GRANT, 1, u64::MAX, |cx| { writer = RetainedJobPayloadWriter::new_funded(JobPayloadStream::CheckpointState, cx)?; Ok(()) }).expect("original writer birth");
-    writer.expect("original writer admitted")
+fn original_writer(original: &mut OriginalNumericalFixture) -> Option<Box<RetainedPayloadBuilder>> {
+    original.open_writer(JobPayloadStream::CheckpointState)
 }
 
-fn original_finish(original: &mut OriginalNumericalFixture, writer: RetainedJobPayloadWriter) -> RetainedJobPayload {
-    let (mut slot, mut output) = (Some(writer), None);
-    assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| RetainedJobPayloadWriter::finish_funded(&mut slot, &mut output, cx).map_err(Into::into)).expect("original writer handoff"));
-    output.expect("committed pages hand off one payload")
+fn original_finish(original: &mut OriginalNumericalFixture, writer: Option<Box<RetainedPayloadBuilder>>) -> RetainedJobPayload {
+    original.finish_writer(writer)
 }
 
-fn original_begin(original: &mut OriginalNumericalFixture, writer: &mut RetainedJobPayloadWriter) {
-    assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| writer.begin_staged_page_funded(cx).map_err(Into::into)).expect("original staged page birth"));
+fn original_begin(original: &mut OriginalNumericalFixture, writer: &mut Option<Box<RetainedPayloadBuilder>>) {
+    original.until_done(|cx| numerical_begin_page(writer.as_deref_mut().unwrap(), cx));
 }
 
-fn original_commit(original: &mut OriginalNumericalFixture, writer: &mut RetainedJobPayloadWriter) {
-    assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| writer.commit_staged_page_funded(cx, 0).map_err(Into::into)).expect("original staged page commit"));
+fn original_commit(original: &mut OriginalNumericalFixture, writer: &mut Option<Box<RetainedPayloadBuilder>>) {
+    original.until_done(|cx| numerical_commit_page(writer.as_deref_mut().unwrap(), cx));
 }
 
 fn original_step<T>(original: &mut OriginalNumericalFixture, step: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
@@ -256,25 +253,24 @@ fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
         let values: Vec<f64> = (0..count).map(|index| index as f64 * 0.25 - 100.0).collect();
         let operation = test_operation(480 + count as u64);
         let mut original = OriginalNumericalFixture::new(operation);
-        let mut writer = Some(original_writer(&mut original));
+        let mut writer = original_writer(&mut original);
         let mut cursor = NumericalPageCursor::new();
         let mut complete = false;
         let mut fault = None;
         for _ in 0..count * 3 + 32 {
-            let writer = writer.as_mut().unwrap();
-            let result = if writer.staged_page_len().is_none() {
-                original_begin(&mut original, writer);
+            let result = if writer.as_deref().unwrap().staged_page_len().is_none() {
+                original_begin(&mut original, &mut writer);
                 Ok(false)
             } else {
-                match original_step(&mut original, |context| advance_numerical_page_header(writer, b"FEMPGT1\0", 41, cursor, context)) {
+                match original_step(&mut original, |context| advance_numerical_page_header(writer.as_deref_mut().unwrap(), b"FEMPGT1\0", 41, cursor, context)) {
                     Ok(true) => Ok(false),
-                    Ok(false) => original_step(&mut original, |context| advance_f64_owner(writer, &values, &mut cursor, context)),
+                    Ok(false) => original_step(&mut original, |context| advance_f64_owner(writer.as_deref_mut().unwrap(), &values, &mut cursor, context)),
                     Err(error) => Err(error),
                 }
             };
             match result {
                 Ok(true) => {
-                    original_commit(&mut original, writer);
+                    original_commit(&mut original, &mut writer);
                     complete = true;
                     break;
                 }
@@ -288,7 +284,7 @@ fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
         if complete {
             {
                 {
-                    let mut payload = original_finish(&mut original, writer.take().unwrap());
+                    let mut payload = original_finish(&mut original, writer.take());
                     for index in 0..payload.page_count() {
                         let bytes = payload.page(index).unwrap();
                         let owner = u64::from_le_bytes(bytes[16..24].try_into().unwrap());
@@ -304,10 +300,8 @@ fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
                 }
             }
         }
-        if let Some(writer) = writer.as_mut() {
-            original.close_writer(writer);
-            assert!(writer.terminal_is_empty());
-        }
+        original.close_writer(&mut writer);
+        assert!(writer.is_none());
         original.finish();
         eprintln!("numerical page {} complete={complete}, fault={fault:?}, cursor={cursor:?}, pages={pages:?}, released={released}", row["id"]);
         observations.push((row["id"].clone(), complete, pages, row["pages"].clone(), decoded, values, released));
@@ -324,7 +318,7 @@ fn numerical_page_scalar_owner_continues_before_writing_past_exact_backing() {
 fn numerical_page_all_owner_entries_preserve_cursor_until_their_width_fits() {
     use semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
 
-    fn advance(original: &mut OriginalNumericalFixture, kind: &str, writer: &mut RetainedJobPayloadWriter, cursor: &mut NumericalPageCursor, matrix: &MatD, integers: &PagedList<u32, 1>, scalars: &PagedList<f64, 1>) -> Result<bool, ValueError> {
+    fn advance(original: &mut OriginalNumericalFixture, kind: &str, writer: &mut RetainedPayloadBuilder, cursor: &mut NumericalPageCursor, matrix: &MatD, integers: &PagedList<u32, 1>, scalars: &PagedList<f64, 1>) -> Result<bool, ValueError> {
         match kind {
             "length" => original_step(original, |context| advance_owner_length(writer, 2, cursor, context)),
             "u32" => original_step(original, |context| advance_u32_owner(writer, &[7], cursor, context)),
@@ -357,16 +351,17 @@ fn numerical_page_all_owner_entries_preserve_cursor_until_their_width_fits() {
         let mut original = OriginalNumericalFixture::new(operation);
         let mut writer = original_writer(&mut original);
         original_begin(&mut original, &mut writer);
-        writer.write_staged(&[0; JOB_PAYLOAD_PAGE_BYTES][..JOB_PAYLOAD_PAGE_BYTES - remaining]).unwrap();
+        let filler = vec![0u8; JOB_PAYLOAD_PAGE_BYTES - remaining];
+        if !filler.is_empty() { original.until_done(|cx| { let turn = writer.as_deref_mut().unwrap().write_staged_source_funded(cx, filler.as_slice()); numerical_post(cx, turn) }); }
         let mut cursor = NumericalPageCursor { field: 0, owner: usize::from(kind != "length" && kind != "matrix-shape"), item: 0 };
         let before = cursor;
-        let mut fault = advance(&mut original, kind, &mut writer, &mut cursor, &matrix, &integers, &scalars).err();
-        let committed = writer.staged_page_len().is_none();
+        let mut fault = advance(&mut original, kind, writer.as_deref_mut().unwrap(), &mut cursor, &matrix, &integers, &scalars).err();
+        let committed = writer.as_deref().unwrap().staged_page_len().is_none();
         let held = !committed || cursor == before;
         if committed && fault.is_none() {
             original_begin(&mut original, &mut writer);
-            original_step(&mut original, |context| advance_numerical_page_header(&mut writer, b"FEMPGT1\0", 42, cursor, context)).unwrap();
-            fault = advance(&mut original, kind, &mut writer, &mut cursor, &matrix, &integers, &scalars).err();
+            original_step(&mut original, |context| advance_numerical_page_header(writer.as_deref_mut().unwrap(), b"FEMPGT1\0", 42, cursor, context)).unwrap();
+            fault = advance(&mut original, kind, writer.as_deref_mut().unwrap(), &mut cursor, &matrix, &integers, &scalars).err();
         }
         original_commit(&mut original, &mut writer);
         let mut payload = original_finish(&mut original, writer);
@@ -441,4 +436,85 @@ fn csc_sym_get_and_to_csr_full_match_dense() {
 
 fn test_operation(id: u64) -> Operation {
     Operation::new(semio_framework_job::OperationId(id), semio_framework_job::RevisionId(7), semio_framework_job::Generation(3), 11)
+}
+
+fn publication_bytes() -> Vec<u8> {
+    (0..2 * JOB_PAYLOAD_PAGE_BYTES + 321).map(|index| (index * 31 % 251) as u8).collect()
+}
+
+fn publish_turn(original: &mut OriginalNumericalFixture, publication: &mut NumericalBytesPublication, lent: &mut Option<RetainedJobPayload>, grant: RetainedCloneGrant) -> bool {
+    original.turn(grant, 1, u64::MAX, |cx| publication.advance(lent, cx).map_err(Into::into)).expect("same original publication turn")
+}
+
+fn payload_content(payload: &RetainedJobPayload) -> Vec<u8> {
+    (0..payload.page_count()).flat_map(|index| payload.page(index).unwrap().to_vec()).collect()
+}
+
+/// 📦️ A prepared byte string publishes as one payload whose pages concatenate back to the exact bytes.
+#[test]
+fn bytes_publication_publishes_every_byte_across_pages() {
+    let bytes = publication_bytes();
+    let mut original = OriginalNumericalFixture::new(test_operation(7_001));
+    let mut publication = NumericalBytesPublication::new(JobPayloadStream::CommitOutput, bytes.clone());
+    let mut lent = None;
+    let mut turns = 0;
+    while !publish_turn(&mut original, &mut publication, &mut lent, TEST_GRANT) {
+        turns += 1;
+        assert!(turns < 10_000, "publication never finished");
+    }
+    let mut payload = lent.take().expect("the finished publication lends its payload");
+    assert!(payload.page_count() >= 3);
+    assert_eq!(payload_content(&payload), bytes);
+    assert!(publication.close_demand().is_none(), "a finished publication leaves no builder behind");
+    original.close_payload(&mut payload);
+    original.finish();
+}
+
+/// ✂️ A cancelled publication retires its half-built builder through funded close turns, releasing every page, ledger and the box.
+#[test]
+fn bytes_publication_cancelled_mid_publication_closes_with_funded_turns() {
+    let mut original = OriginalNumericalFixture::new(test_operation(7_002));
+    let mut publication = NumericalBytesPublication::new(JobPayloadStream::CommitOutput, publication_bytes());
+    let mut lent = None;
+    for _ in 0..40 {
+        assert!(!publish_turn(&mut original, &mut publication, &mut lent, TEST_GRANT));
+    }
+    assert!(lent.is_none() && publication.close_demand().is_some(), "cancelled mid-publication with an owned half-built builder");
+    let mut released = 0;
+    for _ in 0..10_000 {
+        let Some(demand) = publication.close_demand() else { break };
+        let demand = demand.expect("a half-built builder quotes its close demand");
+        let step = original.turn(close_grant(demand), 1, u64::MAX, |cx| { let grant = cx.retained_grant(); Ok(publication.close_step(grant)) }).expect("same original close turn");
+        released += step.expect("a half-built builder closes").expect("funded close turn").progress().released_bytes;
+    }
+    assert!(publication.close_demand().is_none(), "close ends with the box released");
+    assert!(released > 0);
+    original.finish();
+}
+
+/// 🚫️ A refused push (unfunded turn) changes nothing and costs nothing; the same publication resumes and finishes exactly.
+#[test]
+fn bytes_publication_resumes_after_a_refused_push() {
+    let bytes = publication_bytes();
+    let mut original = OriginalNumericalFixture::new(test_operation(7_003));
+    let mut publication = NumericalBytesPublication::new(JobPayloadStream::CommitOutput, bytes.clone());
+    let mut lent = None;
+    for _ in 0..8 {
+        assert!(!publish_turn(&mut original, &mut publication, &mut lent, TEST_GRANT));
+    }
+    let refused = RetainedCloneGrant { maximum_items: 0, ..TEST_GRANT };
+    for _ in 0..4 {
+        let (done, heap) = observe_original_numerical_allocations(|| publish_turn(&mut original, &mut publication, &mut lent, refused));
+        assert!(!done);
+        assert_eq!((heap.0, heap.1), (0, 0), "a refused push neither allocates nor releases");
+    }
+    let mut turns = 0;
+    while !publish_turn(&mut original, &mut publication, &mut lent, TEST_GRANT) {
+        turns += 1;
+        assert!(turns < 10_000, "publication never resumed");
+    }
+    let mut payload = lent.take().expect("the resumed publication lends its payload");
+    assert_eq!(payload_content(&payload), bytes);
+    original.close_payload(&mut payload);
+    original.finish();
 }

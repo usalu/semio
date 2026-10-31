@@ -1,0 +1,3 @@
+# Paged Append Normal Work
+
+Two genuine owning laws and closed language-neutral cases precede the normal body migration. Empty/Unicode/chunk-boundary text uses body1/17/1024, all positive-axis denial, real one-request allocation null/retry, same finite100k item/fuel32MiB/depth64 bank through output+cursor cleanup, and independent Serde text equality. A same-address UTF8 source mutation after one copied byte must be rejected before publication, then cached0; no invalid String can be formed from partial raw bytes. Existing close laws/cases remain unchanged. New API carries explicit original body with quote/advance and full actual work on every outcome. No runtime.

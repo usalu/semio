@@ -1,0 +1,7 @@
+# Native Storage Owning Result 1
+
+Actual canonical unfiltered `native-storage --all-targets`, outer34221, exited0. Source admitted all7 selected units. All4 owning laws passed, no failures/ignored/filtered tests: raw retained allocation/null/denial/cancel, actual caller String slots, fixed owned prefix rows, and4097 zero-sized rows with8194 independently counted work.
+
+The76034-byte actual log SHA256 is9361c6b1bcdb36b0b633c13d6723c47ea4a84d96a7a159ec6fed3d9fb1598ce7. All123 conservative inputs matched at prelaunch;122 matched afterward. Framework Cargo.lock alone changed. Exact in-memory reconstruction removes only the single Retirement test dependency entry in the already-existing NativeStorage package block and reproduces the whole prelaunch hash16c3fd458f61085084ae13fa145e3af427d7c697db611ba41fcd6bd1d8b3e695. No lock was edited, and no123-byte seal is claimed. The initial broader reconstruction hypothesis failed and remains recorded separately.
+
+Root independently reviewed the terminal log and released the hold. Root's subsequent contract review requires owned prefix push copied bytes0 and actual allocator-null kind AllocationFailed; those schema/law/body changes will supersede this captured proof and require the affected owner gate again. Existing input values, finite banks, cases and cancellation laws remain. This result establishes neither Default nor NativeOwned owning readiness.

@@ -1,0 +1,36 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🦀️.rs",
+      "bytes": 27871,
+      "sha256": "8272d1abb0e369b6a0a1002f86417810f450d0e3aad389efa2040cbde319df30"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🧪️tests/close-work.json",
+      "bytes": 459,
+      "sha256": "bcbed1b746b8a80f1faeaacc2b653fbd4abff9ac8b12bf1784493af2551c6772"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🧪️tests/close-work.rs",
+      "bytes": 5348,
+      "sha256": "0b2a12f26fe37934e529acc3aa5021fde6e64e0eba13a805a8378bd5247cf017"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🧪️tests/close-work.schema.json",
+      "bytes": 1222,
+      "sha256": "d61e3d9a69f4b71b674559f41228f73b7ed43925b818259153f4cf3d2d5d0bfc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/📝️paged/🦀️.rs",
+      "bytes": 19848,
+      "sha256": "aa3b68a188430d0f707aa77bcc23817797894025ca6db968f019bcf956712cb7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🧪️tests/📋️paged/🦀️.rs",
+      "bytes": 9862,
+      "sha256": "7d09bfdbdf8c6f3f1fe29f57082cd247aab98f9ab0467f857ef5f270e2dea1cb"
+    }
+  ],
+  "state": "actual-owning2-passed9-with-unheld-inputs",
+  "scope": "Root close-work implementation, new2 laws+neutral data, original7 caller Outcome migration"
+}

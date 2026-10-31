@@ -185,16 +185,19 @@ pub async fn capture_fixture_window_config<O: semio_framework_plugin_window_conf
 pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiver: u32, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<TypedOperationFixtureReceipt, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let mut turns=0;let maximum_turns=OriginalFixtureCaller::maximum_turns();
     let mut receipt = TypedOperationFixtureReceipt { ownership_receipts: Vec::new(), lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, completions: 0, completion_operations: Vec::new(), revisions: Vec::new(), resume_outcomes: Vec::new(), composed: Vec::new() };
+    crate::artifact_app_laws::ensure_fixture_cancellation_issuer(app,cx)?;
     retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
     while app.has_pending_typed_operations() || !app.maintenance_terminal_is_empty() {
         if cx.should_yield()||turns>=maximum_turns{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement exhausted its caller opportunity").into())}turns+=1;
-        let grant = mounted_policy.maintenance;
-        let demand = app.maintenance_retirement_demands(grant.maximum_copy_bytes)?;
-        let maintenance = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
-            let step = app.maintenance_step(same,grant)?;
-            Ok((step, app.maintenance_terminal_is_empty()))
-        })?;
-        if let Some(progress) = maintenance.progress() { receipt.ownership_receipts.push(TypedOperationFixtureOwnershipReceipt::Maintenance { grant, progress }); }
+        if !app.has_runnable_typed_operations() {
+            let grant = mounted_policy.maintenance;
+            let demand = app.maintenance_retirement_demands(grant.maximum_copy_bytes)?;
+            let maintenance = semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,grant| {
+                let step = app.maintenance_step(same,grant)?;
+                Ok((step, app.maintenance_terminal_is_empty()))
+            })?;
+            if let Some(progress) = maintenance.progress() { receipt.ownership_receipts.push(TypedOperationFixtureOwnershipReceipt::Maintenance { grant, progress }); }
+        }
         app.advance_typed_operation_publication(identity,cx).await?;
         retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
         while let Some(mut page) = crate::artifact_app_laws::take_fixture_result_page(app,receiver,mounted_policy.preparation).expect("original fixture page presentation") {

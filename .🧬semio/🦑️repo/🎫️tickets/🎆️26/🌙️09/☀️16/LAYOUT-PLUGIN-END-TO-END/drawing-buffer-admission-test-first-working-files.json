@@ -1,0 +1,35 @@
+{
+  "state": "closed-matrix-and-eight-actual-owning-laws-authored-before-body",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.json",
+      "bytes": 1251,
+      "sha256": "f31a9ecb1412279ea32f429a0f9e380f126da1832a257f9ca561a2d6f961d9a0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.schema.json",
+      "bytes": 2044,
+      "sha256": "3c7cc2450d6c1bf9dc488e6182cbbf366d2a1b0e7e9c068373593f2a2bde133a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-fixture.ts",
+      "bytes": 2861,
+      "sha256": "f5589d1a4b258cb8af516e4deea28d3108d5a16e0351ad2fc58984038a590f73"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-behavior.test.ts",
+      "bytes": 1285,
+      "sha256": "49d40a8b39b7d2c0046dd1cf38d55d07c856f219696218d21934eb90ec851419"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.test.ts",
+      "bytes": 8579,
+      "sha256": "58b36695065945e020bdc1afe402a78d65bf1b391c66607fe8f8479d12e6f01a"
+    }
+  ],
+  "runtimeExecuted": false,
+  "directLoanOnly": true,
+  "noEpochReceiptOrEntryInference": true,
+  "noFakeOriginalClaim": true,
+  "mandatoryMutatorLivenessAndOriginalHoldDepthCases": true
+}

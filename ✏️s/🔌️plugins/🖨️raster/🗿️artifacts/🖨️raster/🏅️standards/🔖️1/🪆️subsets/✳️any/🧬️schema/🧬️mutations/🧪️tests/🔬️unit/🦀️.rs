@@ -106,7 +106,7 @@ async fn every_variant_round_trips_via_inverse() {
     semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(base);
 }
 
-/// ⚖️ Every applied variant's concrete inverse sums to exactly the negative of its forward diff on the populated document.
+/// 📱️ Every applied variant's concrete inverse sums to exactly the negative of its forward diff on the populated document.
 #[semio_framework_async_macros::async_test]
 async fn every_applied_variant_inverse_sums_to_the_negative_diff() {
     let base = populated_base();
@@ -165,7 +165,7 @@ async fn resize_layer_is_a_graceful_no_op_on_a_group() {
 #[semio_framework_async_macros::async_test]
 async fn store_applies_layer_create() {
     let mut store = RasterStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster", empty_raster_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
+    store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners().expect("the Raster owner catalog funds")).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![RasterMutation::CreateLayer(semio_s_artifact_raster_raster_mutations_layers::create_layer::mutation::CreateLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot").layers.len(), 1);
     store::os_store::test_support::close_plain_test_store(&mut store);
@@ -249,7 +249,7 @@ async fn raster_op_text_round_trips_every_variant() {
 //#endregion 🔖️OpText
 
 //#region 🧪️MutationLaws
-/// ⚖️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`,
+/// 🔗️ Shared law helpers from `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧪️test/🦀️kit.rs`,
 /// exercised against three structurally distinct kinds: `create-layer` (id-keyed collection
 /// insert), `change-layer-opacity` (typical `f32` scalar), and `reorder-layers` (tree
 /// reposition).
@@ -288,7 +288,7 @@ async fn reorder_layers_satisfies_the_inverse_and_absorb_laws() {
 //#endregion 🧪️MutationLaws
 
 //#region 🧪️OutcomeLaws
-/// ⚖️ `📋️contract-freeze.md` §C2 laws, per verb family: `assert_missing_target_is_error`/
+/// 🆓️ `📋️contract-freeze.md` §C2 laws, per verb family: `assert_missing_target_is_error`/
 /// `assert_fatal_never_applies` below, `assert_outcome_policy_matrix` cases further down (delete,
 /// rename, create).
 #[semio_framework_async_macros::async_test]
@@ -368,7 +368,7 @@ fn retire_projection_closes_every_owned_map_in_a_displaced_projection() {
     <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_projection(projection);
 }
 
-/// 🧊️ The same law one level up: a cold diff nobody will apply again owns the layers its `added` insertions carry,
+/// 🔀️ The same law one level up: a cold diff nobody will apply again owns the layers its `added` insertions carry,
 /// each of which can hide a populated map.
 #[test]
 fn retire_cold_closes_every_owned_map_in_a_displaced_diff() {
@@ -376,7 +376,7 @@ fn retire_cold_closes_every_owned_map_in_a_displaced_diff() {
     <semio_s_artifact_raster_raster_diff::RasterDiff as protocol::MutationDiff<RasterSnapshot>>::retire_cold(sparse);
 }
 
-/// 🧊️ And one level below: the store cold-retires decoded arrivals, replay clones and rebased
+/// 🏪️ And one level below: the store cold-retires decoded arrivals, replay clones and rebased
 /// inverses through `Mutation::retire_cold`, and `create-layer` is the one leaf carrying a subtree.
 #[test]
 fn retire_cold_closes_the_layer_a_create_layer_operation_owns() {
@@ -430,7 +430,7 @@ fn json_export_serializes_a_populated_document() {
 }
 //#endregion 🧪️WholeDocumentJsonRoutes
 
-/// ⚖️ Ordered-collection law on a MIDDLE row: deleting or moving the middle layer inverts to its original index.
+/// ➖️ Ordered-collection law on a MIDDLE row: deleting or moving the middle layer inverts to its original index.
 #[semio_framework_async_macros::async_test]
 async fn deleting_or_moving_a_middle_layer_inverts_at_its_original_index() {
     let mut base = empty_raster_snapshot();

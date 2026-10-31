@@ -1,0 +1,893 @@
+{
+  "state": "prepared-review-only",
+  "authority": false,
+  "launchAuthorized": false,
+  "attemptsExecuted": 0,
+  "expectedOwningLaws": 49,
+  "actualOutcomes": null,
+  "inputs": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "bytes": 2754,
+      "sha256": "ec2f94432a7d7045c18ea27758f676a3952b922360e2090e3c883073519119b4",
+      "absoluteUtf16Units": 138
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-ingress.json",
+      "bytes": 379,
+      "sha256": "01f2c0402ed7f5a60a403e4f0c9be6f7a4c5c723fbd54cb2bf7a1ff99831a816",
+      "absoluteUtf16Units": 125
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-ingress.schema.json",
+      "bytes": 1119,
+      "sha256": "cd4d61b97df3b9cfb4010df20d832512741ee0f6ab15ecf21e7a8dcb94884f1e",
+      "absoluteUtf16Units": 132
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-ingress.test.ts",
+      "bytes": 3551,
+      "sha256": "bcb6ec25a90b7d2c11a658211ea42e3736c5f05bdea0cb6e49db93b1190767fa",
+      "absoluteUtf16Units": 128
+    },
+    {
+      "path": "bun.lock",
+      "bytes": 603865,
+      "sha256": "b27bdace86f04889c66e59f5227d0bdef7568b22c550798705d3c911d1c88faf",
+      "absoluteUtf16Units": 36
+    },
+    {
+      "path": "package.json",
+      "bytes": 21673,
+      "sha256": "9605466756ffe292a2e5c425e8beec9cda9b60967cadccc33fef9d20c617f98b",
+      "absoluteUtf16Units": 40
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/📐️.json",
+      "bytes": 133,
+      "sha256": "907c7d0be5600cad70f60d660f1359e9ff63fde5df0fe43db0d73de2a7076608",
+      "absoluteUtf16Units": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🔣️.json",
+      "bytes": 501,
+      "sha256": "b5d88d91058ff064d89ede12a45397de468b2f9f55391b921f089ed2243326a6",
+      "absoluteUtf16Units": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts",
+      "bytes": 1677,
+      "sha256": "98e33379591bea207abb9c53360fd6e92d7b07ad76db3b8ec574f4eac47d25b5",
+      "absoluteUtf16Units": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/effects.test.ts",
+      "bytes": 2107,
+      "sha256": "70825ebd2c09c0ec7b2c3f9a9e21b62e23c5f0f5d93ef2e36064b5002e294e64",
+      "absoluteUtf16Units": 122
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/work.test.ts",
+      "bytes": 3795,
+      "sha256": "9250e85c4f39a04da0069cdb4b09d88443e432a283ce51ac4f5a59556167c876",
+      "absoluteUtf16Units": 119
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/📐️.json",
+      "bytes": 353,
+      "sha256": "10e84e097705dfdb51b97eaa8e073d68f6d5c8305ec7b5b515b03a80bb604358",
+      "absoluteUtf16Units": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/🔣️.json",
+      "bytes": 624,
+      "sha256": "db7d6716b4bc183d88a69b12b7fa10054d26c22c798e673c946a5e524796d6e2",
+      "absoluteUtf16Units": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/🧪️tests/retire.test.ts",
+      "bytes": 4090,
+      "sha256": "5cba78f666d2c4e01c7fe5e92fa26efe553569edead889d48aeeafbc1f30c366",
+      "absoluteUtf16Units": 127
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-behavior.test.ts",
+      "bytes": 1285,
+      "sha256": "49d40a8b39b7d2c0046dd1cf38d55d07c856f219696218d21934eb90ec851419",
+      "absoluteUtf16Units": 135
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-fixture.ts",
+      "bytes": 2861,
+      "sha256": "f5589d1a4b258cb8af516e4deea28d3108d5a16e0351ad2fc58984038a590f73",
+      "absoluteUtf16Units": 129
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.json",
+      "bytes": 260,
+      "sha256": "d029a747c15246fe0a9f6e4843679ece0d4f9800b0aa8b69deb1f54d31a53265",
+      "absoluteUtf16Units": 134
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.schema.json",
+      "bytes": 784,
+      "sha256": "4ce202cb11f6b1755832e2575a8e0013be0bbd0c22ea084c12c9b0c4dcdea14a",
+      "absoluteUtf16Units": 141
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.test.ts",
+      "bytes": 1160,
+      "sha256": "4f015a9477184e519eace8324295fa0a9f3815a219ec4b618cb7a15539eeeee7",
+      "absoluteUtf16Units": 137
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.json",
+      "bytes": 1502,
+      "sha256": "56297a76afa67c030dddb03ca61d86a3d0987c533811f2ed92c1501eb1268845",
+      "absoluteUtf16Units": 123
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.schema.json",
+      "bytes": 2347,
+      "sha256": "e2fc2b6912ae13bc55f6e83e5dc3f026532321303c4d3146a3b661e374e9ee90",
+      "absoluteUtf16Units": 130
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.test.ts",
+      "bytes": 9566,
+      "sha256": "5c015facd1c9c4127c99efe6cd1c61c7e4e35ee930c0f413613aa3e7e6a4ba41",
+      "absoluteUtf16Units": 126
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/contiguous.json",
+      "bytes": 541,
+      "sha256": "83d643d536f8736493cab1ba8b97546fe80396ffeac81c61aa5a0a91225ff4ce",
+      "absoluteUtf16Units": 124
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/contiguous.schema.json",
+      "bytes": 1180,
+      "sha256": "5adaa113d92067254b83715e827f4bc3bf18cfa76d7b34deb0aaff5c1f1a1bf6",
+      "absoluteUtf16Units": 131
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/contiguous.test.ts",
+      "bytes": 3702,
+      "sha256": "6cdc157beca66c192d99526b0c3f304b25c4ff468282c0f2dcb27dfc68fd7961",
+      "absoluteUtf16Units": 127
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/fixture.ts",
+      "bytes": 4372,
+      "sha256": "093a4ee7a39a3af605573c9b4e6d9b672e851185a3939e62cc08d46e92612d55",
+      "absoluteUtf16Units": 119
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🟦️.ts",
+      "bytes": 11723,
+      "sha256": "9c531a58aa4a6de5eb91938d298c2a0960e07bc3f0f99f4a97610a9a4c268ffb",
+      "absoluteUtf16Units": 115
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 1889,
+      "sha256": "1639035fe0ad6327cce64e88d2fc7881dee9dca2a49c14f7e657b48c5207fc21",
+      "absoluteUtf16Units": 129
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧬️schema/🔣️.json",
+      "bytes": 3040,
+      "sha256": "ae5aa4bc19f6637fd77f4b11fd0e9e3a852630245a3be75b91e28e4d91cfa56c",
+      "absoluteUtf16Units": 118
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/📐️.json",
+      "bytes": 2381,
+      "sha256": "f10c01891b9a6a61ff6ba9d6ee4a7b6576c564936ca16eadc53158e143bbc518",
+      "absoluteUtf16Units": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🔣️.json",
+      "bytes": 1618,
+      "sha256": "c940961a6a9b584d1f2f3b9988b9e01581cc28df6bd45766189e195398250a33",
+      "absoluteUtf16Units": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "bytes": 3282,
+      "sha256": "480a86a9e9ddb878ec4736c41e72cf376a48a7cb35a94b42446894ccd5377f69",
+      "absoluteUtf16Units": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+      "bytes": 6217,
+      "sha256": "d531933024eb3627a1873797b84262cb3cb2c38de3c13642866198c104d35647",
+      "absoluteUtf16Units": 115
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "bytes": 25510,
+      "sha256": "6041275db1facb4ef2b68af32c727bfa22d8a3d28b3a0997b4a9efb652638858",
+      "absoluteUtf16Units": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/absolute.test.ts",
+      "bytes": 5802,
+      "sha256": "9023dfcc15d370caf31b378d4cc400da701419ab0247939c9986ef3297cb0f42",
+      "absoluteUtf16Units": 125
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/🔣️.json",
+      "bytes": 140,
+      "sha256": "e9190c184209ccf4bfc5e644b1aa67228bf1769f2e1c457b1c90d2bd75526aa7",
+      "absoluteUtf16Units": 117
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🟦️.ts",
+      "bytes": 7369,
+      "sha256": "dcad51ad1e85e0507307dbe4a81cb3f4944c33610755ff36e2b6a303993b9a86",
+      "absoluteUtf16Units": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 578,
+      "sha256": "bd0d51af47303fd799ff64a63395142dc659f4c4cd59494d782a102b9eb6353c",
+      "absoluteUtf16Units": 120
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️reservation/🟦️.ts",
+      "bytes": 494,
+      "sha256": "b4fe4e4b23e91906b3edfa365dcd8cbf285dab23f9f95207a7d42a9ffa769984",
+      "absoluteUtf16Units": 115
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/📐️.json",
+      "bytes": 461,
+      "sha256": "83517067e64b93293fe2404e3c212b7787d3a74c5e4639f3655afdcf2240b7f8",
+      "absoluteUtf16Units": 110
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🔣️.json",
+      "bytes": 865,
+      "sha256": "5efd5cfa53a46331a48c1eabbdfd8190b251de0a01c22340d21b697ace99bd4b",
+      "absoluteUtf16Units": 110
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/fixture.ts",
+      "bytes": 2175,
+      "sha256": "210b1a5549c681add520133bd9d226b9d23f8299b36a3cf111368d83db6047f8",
+      "absoluteUtf16Units": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/outcomes.json",
+      "bytes": 597,
+      "sha256": "209a3395d95ca6ce14ff4650da175272a69350f994332aa33ca396c46e58bc14",
+      "absoluteUtf16Units": 124
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/outcomes.schema.json",
+      "bytes": 1154,
+      "sha256": "ecf2b14de9fcb3ce1858c2c8fc3adc82ae5b06d167d59067a6bdbf491eb403d2",
+      "absoluteUtf16Units": 131
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🟦️.ts",
+      "bytes": 8519,
+      "sha256": "b4cecc0c5852bf245db1f0fc98138ed4aa1eb49ab3413821d10bb61451988ed0",
+      "absoluteUtf16Units": 117
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/📚️pages/🟦️.ts",
+      "bytes": 4591,
+      "sha256": "033f098be59c11c8bc38d4ed9090cd0838348ca4f4ac63fb9c9b23b02822bd36",
+      "absoluteUtf16Units": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🟦️.ts",
+      "bytes": 18026,
+      "sha256": "5f0084ce50c7a5cefd620d1af9da127a62b61501c642d2850c3bddfd98b4577b",
+      "absoluteUtf16Units": 100
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts",
+      "bytes": 26554,
+      "sha256": "e265ef0a5a80c742cb72ef36d2e551472dc1ec6e8d199e4258c41d12a61852a8",
+      "absoluteUtf16Units": 78
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts",
+      "bytes": 11998,
+      "sha256": "d3967b1d1dc270c5d64641dfd69f4c654921eccafd32a544d2a3582d999f07d1",
+      "absoluteUtf16Units": 84
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/📐️.json",
+      "bytes": 2115,
+      "sha256": "2f09db171e8d934f747c28cd2d106c43b7a24152dbd423a1cb466026e05bec06",
+      "absoluteUtf16Units": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🔣️.json",
+      "bytes": 1359,
+      "sha256": "af5f6c896a8ddcc278b5ab5454e15876ae2f81196d7fc9039efc730783fd4d71",
+      "absoluteUtf16Units": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts",
+      "bytes": 7411,
+      "sha256": "c32f02290fc89a9f0e93bdba0818e1454679e0cedb74a5822d4f2f6620296b23",
+      "absoluteUtf16Units": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.d.ts",
+      "bytes": 1549,
+      "sha256": "0da4d443c29ad9c58ee44dae4fe02ea580c0368fb763274f475d6803d165eff3",
+      "absoluteUtf16Units": 76
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js",
+      "bytes": 2426,
+      "sha256": "88cc37857ed7ebebdc426aff1812d52bcfd4caf3cccc41924e72a89e77173372",
+      "absoluteUtf16Units": 74
+    }
+  ],
+  "literalEdges": [
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🟦️.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/work.test.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/work.test.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/effects.test.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/effects.test.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/absolute.test.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/absolute.test.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/🧪️tests/retire.test.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/🧪️tests/retire.test.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🟦️.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/contiguous.test.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/contiguous.test.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.test.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.test.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.test.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.test.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-behavior.test.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-behavior.test.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "./drawing-buffer-ingress.test.ts",
+      "to": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-ingress.test.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🟦️.ts",
+      "specifier": "../📐️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/📐️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🟦️.ts",
+      "specifier": "../🔣️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🟦️.ts",
+      "specifier": "./outcomes.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/outcomes.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🟦️.ts",
+      "specifier": "./outcomes.schema.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/outcomes.schema.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🟦️.ts",
+      "specifier": "./fixture.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/fixture.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/fixture.ts",
+      "specifier": "../../../../../📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/fixture.ts",
+      "specifier": "../../../../../../🧵️job/⏱️budget/🟨️.js",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/fixture.ts",
+      "specifier": "./outcomes.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/outcomes.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "specifier": "./⏱️turn/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "specifier": "./📦️bytes/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "specifier": "../⏱️turn/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🟦️.ts",
+      "specifier": "../../../📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🟦️.ts",
+      "specifier": "./📚️pages/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/📚️pages/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🟦️.ts",
+      "specifier": "./🎟️reservation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️reservation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🟦️.ts",
+      "specifier": "./🎟️reservation/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️reservation/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts",
+      "specifier": "./🔣️.json",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts",
+      "specifier": "./📐️.json",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/📐️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts",
+      "specifier": "../../../../🧵️job/⏱️budget/🟨️.js",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts",
+      "specifier": "../../✍️editing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts",
+      "specifier": "../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+      "specifier": "../🔣️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+      "specifier": "../📐️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/📐️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-ingress.test.ts",
+      "specifier": "./drawing-buffer-ingress.json",
+      "to": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-ingress.json"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-ingress.test.ts",
+      "specifier": "./drawing-buffer-ingress.schema.json",
+      "to": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-ingress.schema.json"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-ingress.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-ingress.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-behavior.test.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-behavior.test.ts",
+      "specifier": "./admission.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-behavior.test.ts",
+      "specifier": "./admission.schema.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.schema.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-behavior.test.ts",
+      "specifier": "./admission-fixture.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-fixture.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-fixture.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-fixture.ts",
+      "specifier": "../../../../../../🧵️job/⏱️budget/🟨️.js",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-fixture.ts",
+      "specifier": "./admission.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.test.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.test.ts",
+      "specifier": "./admission-fixture.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-fixture.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.test.ts",
+      "specifier": "./admission-provenance.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.test.ts",
+      "specifier": "./admission-provenance.schema.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.schema.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.test.ts",
+      "specifier": "./admission-behavior.test.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-behavior.test.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.test.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.test.ts",
+      "specifier": "./admission.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.test.ts",
+      "specifier": "./admission-fixture.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-fixture.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/contiguous.test.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/contiguous.test.ts",
+      "specifier": "./fixture.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/fixture.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/contiguous.test.ts",
+      "specifier": "./contiguous.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/contiguous.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/contiguous.test.ts",
+      "specifier": "./contiguous.schema.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/contiguous.schema.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/fixture.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/fixture.ts",
+      "specifier": "../../../../../../🧵️job/⏱️budget/🟨️.js",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/fixture.ts",
+      "specifier": "./🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🟦️.ts",
+      "specifier": "./🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🟦️.ts",
+      "specifier": "../🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🟦️.ts",
+      "specifier": "./fixture.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/fixture.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/🧪️tests/retire.test.ts",
+      "specifier": "../📐️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/📐️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/🧪️tests/retire.test.ts",
+      "specifier": "../🔣️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/🧪️tests/retire.test.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/🧪️tests/retire.test.ts",
+      "specifier": "../../📚️pages/🧪️tests/fixture.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/fixture.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/absolute.test.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/absolute.test.ts",
+      "specifier": "../../⏱️turn/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/absolute.test.ts",
+      "specifier": "./🔣️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/absolute.test.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/effects.test.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/effects.test.ts",
+      "specifier": "../📐️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/📐️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/effects.test.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/work.test.ts",
+      "specifier": "../📐️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/📐️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/work.test.ts",
+      "specifier": "../🔣️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/work.test.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🟦️.ts",
+      "specifier": "../../../../../🧵️job/⏱️budget/🟨️.js",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🟦️.ts",
+      "specifier": "./🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🟦️.ts",
+      "specifier": "../📚️pages/🧪️tests/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🧫️fixtures/🔣️.json"
+    }
+  ],
+  "externalTestToolSpecifiers": [
+    "ajv",
+    "ajv/dist/2020",
+    "ajv/dist/2020.js",
+    "bun:sqlite",
+    "bun:test",
+    "node:assert/strict",
+    "sharp"
+  ],
+  "commands": [
+    {
+      "kind": "test",
+      "cwd": "/Users/ueli/Documents/semio",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "bun",
+        "--",
+        "test",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-buffer-admission-current/test",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-buffer-admission-current/test/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-buffer-admission-current/test/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-buffer-admission-current/test/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-buffer-admission-current/test/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-buffer-admission-current/test/test.log"
+    },
+    {
+      "kind": "strict",
+      "cwd": "/Users/ueli/Documents/semio",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "bun",
+        "--",
+        "/Users/ueli/Documents/semio/node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--strict",
+        "--noUncheckedIndexedAccess",
+        "--skipLibCheck",
+        "--resolveJsonModule",
+        "--esModuleInterop",
+        "--target",
+        "ESNext",
+        "--module",
+        "preserve",
+        "--moduleResolution",
+        "bundler",
+        "--allowImportingTsExtensions",
+        "--types",
+        "bun",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/work.test.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/effects.test.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/absolute.test.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/🧪️tests/retire.test.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/contiguous.test.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.test.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.test.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-behavior.test.ts",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-ingress.test.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🟦️.ts",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-buffer-admission-current/strict",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-buffer-admission-current/strict/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-buffer-admission-current/strict/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-buffer-admission-current/strict/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-buffer-admission-current/strict/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-buffer-admission-current/strict/strict.log"
+    }
+  ],
+  "strictRoots": [
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/work.test.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🧪️tests/effects.test.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/absolute.test.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/🧪️tests/retire.test.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/contiguous.test.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission.test.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.test.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-behavior.test.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-ingress.test.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🟦️.ts",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-buffer-admission-current.test.ts"
+  ],
+  "scope": "All affected Core/turn/absolute/helpers/page/admission/provenance laws, original primitive function registrations with SQLite ordering, unchanged intrinsic baseline, Byte/PNG and numeric owning laws. Direct genuine admission/row CPU; wider Font/Drawing not proved.",
+  "freeze": "Exact listed firstparty inputs/importer/package/lock through actual terminal and postcheck; no blanket source freeze."
+}

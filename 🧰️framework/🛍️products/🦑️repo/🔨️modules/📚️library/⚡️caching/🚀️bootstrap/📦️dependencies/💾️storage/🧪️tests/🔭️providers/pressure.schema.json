@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pressure",
+    "isolation",
+    "birth"
+  ],
+  "properties": {
+    "pressure": {
+      "const": {
+        "members": 32,
+        "dependencies": 230,
+        "lastMemberDependencies": 222,
+        "providerManifestEdges": 1024,
+        "expectedEdges": 7352,
+        "version": "1.2.3",
+        "range": "^1.0.0",
+        "providerPlacement": "member-aliases-to-shared-hoisted-owner"
+      }
+    },
+    "isolation": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "mutation",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mutation": {
+            "enum": [
+              "none",
+              "range",
+              "cycle",
+              "negative-created",
+              "manifest",
+              "relink",
+              "link-replaced"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "birth": {
+      "const": {
+        "owner": "dependency-provider-pressure",
+        "maximumElapsedMilliseconds": 120000,
+        "capabilities": {
+          "artifacts": true
+        }
+      }
+    }
+  }
+}

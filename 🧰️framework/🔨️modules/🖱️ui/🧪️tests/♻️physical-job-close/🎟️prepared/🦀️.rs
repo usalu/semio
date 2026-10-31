@@ -8,6 +8,7 @@ use semio_framework_test_fixtures::fixture_text;
 #[test]
 fn prepared_original_owner_closes_through_the_actual_job_full_grant_contract() {
     let _guard = prepared_process_guard();
+    let mut close_caller=super::close_source::caller(1,3);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["prepared"];
     for copy in fixture["copyGrants"].as_array().unwrap() {
@@ -24,8 +25,8 @@ fn prepared_original_owner_closes_through_the_actual_job_full_grant_contract() {
                 maximum_release_bytes: job.next_close_release_byte_demand().unwrap(),
                 maximum_depth: job.next_close_depth_demand().unwrap(),
             };
-            let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-            let (step, births, frees) = measured(|| self_funded.turn(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"));
+            
+            let (step, births, frees) = measured(|| close_caller.turn(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"));
             let progress = match step {
                 Close::Pending { progress } | Close::Complete { progress } => progress,
                 Close::Blocked => panic!("requested prepared close was blocked"),
@@ -39,11 +40,14 @@ fn prepared_original_owner_closes_through_the_actual_job_full_grant_contract() {
         let (_, births, frees) = measured(|| drop(job));
         assert_eq!((births, frees), (0, 0));
     }
+
+    close_caller.retire(super::close_source::STOCK);
 }
 
 #[test]
 fn prepared_original_atlas_owner_preserves_denials_and_reports_every_physical_release() {
     let _guard = prepared_process_guard();
+    let mut close_caller=super::close_source::caller(1,3);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["prepared"];
     let atlas = &law["atlas"];
@@ -66,8 +70,8 @@ fn prepared_original_atlas_owner_preserves_denials_and_reports_every_physical_re
         assert_eq!(release, atlas["pageBytes"].as_u64().unwrap() as usize);
         for (items, released, depth) in [(0, release, 1), (1, release - 1, 1), (1, release, 0)] {
             let grant = RetainedCloneGrant { maximum_items: items, maximum_copy_bytes: copy, maximum_capacity_bytes: 0, maximum_release_bytes: released, maximum_depth: depth };
-            let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-            let (outcome, births, frees) = measured(|| self_funded.turn(grant, |cx| InteractiveJob::close_step(&mut job, cx)));
+            
+            let (outcome, births, frees) = measured(|| close_caller.turn(grant, |cx| InteractiveJob::close_step(&mut job, cx)));
             assert!(matches!(outcome, Ok(Close::Pending { progress }) if progress == Default::default()) || matches!(&outcome, Err(failure) if failure.primary_value().is_some_and(|error| error.kind == semio_framework_value::ValueRefusalKind::DepthLimit)));
             assert_eq!((births, frees), (0, 0));
             let PreparedRenderUpload::GlyphAtlasPages { pixels } = job.input.as_ref().unwrap().uploads.get(0).unwrap() else { panic!("original atlas owner changed") };
@@ -78,8 +82,8 @@ fn prepared_original_atlas_owner_preserves_denials_and_reports_every_physical_re
         let mut complete = false;
         for _ in 0..law["maximumTurns"].as_u64().unwrap() {
             let grant = atlas_fixture_authority().retirement;
-            let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-            let (step, births, frees) = measured(|| self_funded.turn(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"));
+            
+            let (step, births, frees) = measured(|| close_caller.turn(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"));
             let progress = match step { Close::Pending { progress } | Close::Complete { progress } => progress, step => panic!("funded atlas close failed: {step:?}") };
             assert!(progress.fits(grant));
             assert_eq!((progress.retained_capacity_bytes, progress.released_bytes), (births, frees));
@@ -92,6 +96,8 @@ fn prepared_original_atlas_owner_preserves_denials_and_reports_every_physical_re
         let (_, births, frees) = measured(|| drop(job));
         assert_eq!((births, frees), (0, 0));
     }
+
+    close_caller.retire(super::close_source::STOCK);
 }
 
 #[test]
@@ -160,6 +166,7 @@ fn prepared_close_gate_preserves_the_original_refusal_receipt() {
 fn prepared_outcome_loans_preserve_original_custody_and_paid_descriptor_acknowledgement() {
     use semio_framework_job::{JobOutcomeBorrow, JobOutcomeView, StepBudget, StepContext, OperationId, Generation, root_cancel_token};
     let _guard = prepared_process_guard();
+    let mut close_caller=super::close_source::caller(1,3);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json")).unwrap();
     let law = &fixture["preparedOutcome"];
     let original = ui_contract::UI_WORKER_RETIREMENT_POLICY;
@@ -206,8 +213,8 @@ fn prepared_outcome_loans_preserve_original_custody_and_paid_descriptor_acknowle
         let mut closed = false;
         for _ in 0..fixture["prepared"]["maximumTurns"].as_u64().unwrap() {
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: original.maximum_copy_bytes, maximum_capacity_bytes: job.next_close_capacity_byte_demand(original.maximum_copy_bytes).unwrap(), maximum_release_bytes: job.next_close_release_byte_demand().unwrap(), maximum_depth: job.next_close_depth_demand().unwrap() };
-            let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-            let (step, births, frees) = measured(|| self_funded.turn(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"));
+            
+            let (step, births, frees) = measured(|| close_caller.turn(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"));
             let progress = match step { Close::Pending { progress } | Close::Complete { progress } => progress, step => panic!("prepared funded semantic close failed: {step:?}") };
             assert!(progress.fits(grant));
             assert_eq!((progress.retained_capacity_bytes, progress.released_bytes), (births, frees));
@@ -220,4 +227,6 @@ fn prepared_outcome_loans_preserve_original_custody_and_paid_descriptor_acknowle
     let (state, output) = complete_absence.unwrap();
     let actual = serde_json::json!({ "deniedReceipt": fixture["preparedOutcome"]["expected"]["deniedReceipt"], "completeStateAbsent": state, "completeOutputAbsent": output, "faultLoanIdentity": fault_identity, "acknowledgementItems": 1 });
     assert_eq!(actual, law["expected"]);
+
+    close_caller.retire(super::close_source::STOCK);
 }

@@ -1,0 +1,787 @@
+{
+  "rustFilesScanned": 36675,
+  "boundedRoots": [
+    "🧰️framework",
+    "✏️s"
+  ],
+  "directSameLine": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🚦️native/🦀️.rs",
+      "line": 6,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🚦️native/🦀️.rs",
+      "line": 6,
+      "symbols": [
+        "guard_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🗺️ordered-map-field/🦀️.rs",
+      "line": 37,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🗂️ordered/🦀️.rs",
+      "line": 69,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🛬️decoding/🦀️.rs",
+      "line": 19,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🛬️decoding/🦀️.rs",
+      "line": 20,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🛬️decoding/🦀️.rs",
+      "line": 33,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🛬️decoding/🦀️.rs",
+      "line": 34,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🛬️decoding/🦀️.rs",
+      "line": 35,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    }
+  ],
+  "candidateControlFiles": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🚦️native/🦀️.rs",
+      "line": 8,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🚦️native/🦀️.rs",
+      "line": 20,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🚦️native/🦀️.rs",
+      "line": 24,
+      "symbols": [
+        "guard_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🚦️native/🦀️.rs",
+      "line": 27,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🚦️native/🦀️.rs",
+      "line": 32,
+      "symbols": [
+        "default_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🚦️native/🦀️.rs",
+      "line": 33,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🚦️native/🦀️.rs",
+      "line": 6,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🚦️native/🦀️.rs",
+      "line": 6,
+      "symbols": [
+        "guard_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🧪️tests/🦀️.rs",
+      "line": 31,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🗺️ordered-map-field/🦀️.rs",
+      "line": 37,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🪆️refusal/🚪️public/🦀️.rs",
+      "line": 28,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🧪️tests/🪆️refusal/🚪️public/🦀️.rs",
+      "line": 50,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 80,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 82,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 101,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 112,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 114,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 135,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 156,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 191,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 210,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 232,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 255,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 269,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 281,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 290,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 293,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 301,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 303,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 309,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 315,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 343,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 344,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 362,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 386,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 404,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 428,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 434,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 435,
+      "symbols": [
+        "from_value_controlled",
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 448,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 462,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 468,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 469,
+      "symbols": [
+        "from_value_controlled",
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 483,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 507,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 510,
+      "symbols": [
+        "from_value_controlled",
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 528,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 529,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 567,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 595,
+      "symbols": [
+        "from_value_controlled",
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs",
+      "line": 599,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🗂️ordered/🦀️.rs",
+      "line": 20,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🗂️ordered/🦀️.rs",
+      "line": 26,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🗂️ordered/🦀️.rs",
+      "line": 30,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🗂️ordered/🦀️.rs",
+      "line": 36,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🗂️ordered/🦀️.rs",
+      "line": 37,
+      "symbols": [
+        "from_value_controlled",
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🗂️ordered/🦀️.rs",
+      "line": 54,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🗂️ordered/🦀️.rs",
+      "line": 64,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🗂️ordered/🦀️.rs",
+      "line": 69,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🛬️decoding/🦀️.rs",
+      "line": 14,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🛬️decoding/🦀️.rs",
+      "line": 19,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🛬️decoding/🦀️.rs",
+      "line": 20,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🛬️decoding/🦀️.rs",
+      "line": 33,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🛬️decoding/🦀️.rs",
+      "line": 34,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🚦️native/🛬️decoding/🦀️.rs",
+      "line": 35,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 192,
+      "symbols": [
+        "guard_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 206,
+      "symbols": [
+        "guard_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 216,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 223,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 239,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 257,
+      "symbols": [
+        "guard_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 263,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 295,
+      "symbols": [
+        "guard_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 298,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 311,
+      "symbols": [
+        "guard_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs",
+      "line": 314,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🧱️document-model/🦀️.rs",
+      "line": 331,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🧱️document-model/🦀️.rs",
+      "line": 333,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🧱️document-model/🦀️.rs",
+      "line": 337,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 134,
+      "symbols": [
+        "guard_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 183,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 190,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 197,
+      "symbols": [
+        "default_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 200,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 271,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 272,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 274,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 359,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 361,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 362,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 363,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 364,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/📚️dictionary/🦀️.rs",
+      "line": 365,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+      "line": 171,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+      "line": 232,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs",
+      "line": 411,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🫀️foundation/🧬️generation/🪶️sqlite/🚦️native/🌱️value/🦀️.rs",
+      "line": 10,
+      "symbols": [
+        "retire_decoded"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🫀️foundation/🧬️generation/🪶️sqlite/🚦️native/🌱️value/🦀️.rs",
+      "line": 14,
+      "symbols": [
+        "from_value_controlled"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🫀️foundation/🧬️generation/🪶️sqlite/🚦️native/🧱️document/🦀️.rs",
+      "line": 26,
+      "symbols": [
+        "guard_decoded"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🫀️foundation/🧬️generation/🪶️sqlite/🚦️native/🧱️document/🦀️.rs",
+      "line": 34,
+      "symbols": [
+        "guard_decoded"
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🌀️procedural/🫀️foundation/🧬️generation/🪶️sqlite/🚦️native/🧱️document/🦀️.rs",
+      "line": 94,
+      "symbols": [
+        "retire_decoded"
+      ]
+    }
+  ],
+  "limitation": "Textual census identifies direct calls and files combining Ordered types and controlled calls. Generic/derive dispatch still requires ownership/type review; no completeness claim for dynamically selected types."
+}

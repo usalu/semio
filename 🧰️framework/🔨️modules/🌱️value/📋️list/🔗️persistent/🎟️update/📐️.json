@@ -1,0 +1,36 @@
+{
+  "inputCount": 17,
+  "rank": 8,
+  "value": 99,
+  "operations": [
+    "set",
+    "insert",
+    "remove"
+  ],
+  "cancelPrefixes": [
+    0,
+    1,
+    2,
+    4,
+    8,
+    16,
+    32
+  ],
+  "stock": {
+    "items": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "fuel": 100000,
+    "maximumTurns": 100000
+  },
+  "rules": {
+    "trueAtomicAliasWork": true,
+    "realNullRestoresScratch": true,
+    "fixedHeaderCopyBytes": 0,
+    "parentPublicationSeparate": true,
+    "independentVectorOracle": true,
+    "sameFiniteBank": true
+  }
+}

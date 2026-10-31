@@ -35,7 +35,7 @@ async fn window_options_are_local_to_the_window_instance_not_shared_across_split
 
     let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     let measures_after = app.window_measures(&view).await;
-    assert_eq!(find_measure_toggle(measures_after.get(main::WINDOW_KIND_ID).expect("base measures"), &toggle_id), Some(true), "the base window instance's grid must stay visible");
+    assert_eq!(find_measure_toggle(measures_after.get(WINDOW_KIND_ID).expect("base measures"), &toggle_id), Some(true), "the base window instance's grid must stay visible");
     assert_eq!(find_measure_toggle(measures_after.get(second_window).expect("second measures"), &toggle_id), Some(false), "only the targeted window instance's grid toggles off");
     let base_render = render_window(&mut app, semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID).await;
     let second_render = render_window(&mut app, second_window).await;
@@ -52,7 +52,7 @@ async fn window_options_are_local_to_the_window_instance_not_shared_across_split
     for pack in packs {
         reopened.load_window_config_pack(pack).await.expect("reload exact window pack");
     }
-    assert_eq!(render_window(&mut reopened, main::WINDOW_KIND_ID).await, base_render);
+    assert_eq!(render_window(&mut reopened, WINDOW_KIND_ID).await, base_render);
     assert_eq!(render_window(&mut reopened, second_window).await, second_render);
     assert!(close_witness(&mut reopened).expect("reopened app close"));
     assert!(close_witness(&mut app).expect("source app close"));
@@ -153,7 +153,7 @@ async fn settings_panel_steppers_carry_their_value_and_the_trigger_they_dispatch
         assert_eq!(bindings.len(), 1, "{field} declares exactly the one trigger it handles: {bindings:?}");
         assert_eq!(bindings[0].get("trigger").and_then(Value::as_str), Some("change"), "{field} handles absolute values, so it binds Change and NOT Delta: {bindings:?}");
         assert_eq!(bindings[0].pointer("/action/name").and_then(Value::as_str), Some(action), "{field} dispatches {action}: {bindings:?}");
-        assert_eq!(bindings[0].pointer("/args/windowId").and_then(Value::as_str), Some(main::WINDOW_KIND_ID), "{field} is scoped at the window the panel was rendered for, so the value it publishes reaches THAT window's rail: {bindings:?}");
+        assert_eq!(bindings[0].pointer("/args/windowId").and_then(Value::as_str), Some(WINDOW_KIND_ID), "{field} is scoped at the window the panel was rendered for, so the value it publishes reaches THAT window's rail: {bindings:?}");
     }
 }
 
@@ -315,7 +315,7 @@ async fn one_window_config_mutation_publishes_exactly_one_generation_and_quiesce
     assert!(!app.has_pending_typed_operations(), "one window-config gesture must leave no typed operation pending");
     let after = app.window_config_generation(&view).await.expect("window config generation").expect("puzzle3d registers one window config owner");
     assert_eq!(after, before + 1, "one window-config mutation publishes exactly one store generation, never zero and never a spin");
-    assert_eq!(camera_of(&render_window(&mut app, main::WINDOW_KIND_ID).await).pointer("/position/0").and_then(Value::as_f64), Some(7.0), "the published window config is what the window renders");
+    assert_eq!(camera_of(&render_window(&mut app, WINDOW_KIND_ID).await).pointer("/position/0").and_then(Value::as_f64), Some(7.0), "the published window config is what the window renders");
 }
 
 /// 🛰️📷️ Wave B50: `setCamera` must move the pose the REFRESH route publishes, not only the one the

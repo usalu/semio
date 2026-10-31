@@ -1,0 +1,5 @@
+# Publication Root Actual Work
+
+The closed language-neutral work fixture, schema, and third typed owning law were authored before the publication work-port bodies. The original two laws and original fixture remain. The new law compares physical allocation receipts and parses the independent neutral data with serde_json, includes grant denials and terminal caching, and debits one finite CPU/copy/capacity bank for the close segment. Stage and ControlledRetirement constructor precede that segment and remain explicitly outside this new law's funding claim. No runtime or semantic RED has been observed.
+
+The implementation removes the arbitrary decision-to-authority constructor callback: decision carries its FactoryRetirement supertrait and the existing Arc is upcast directly. Child work is forwarded before result handling; only known fixed ownership controls report their actual single operation. Normal stage/settlement allocation and broader source-funding qualification remain separate outstanding obligations.

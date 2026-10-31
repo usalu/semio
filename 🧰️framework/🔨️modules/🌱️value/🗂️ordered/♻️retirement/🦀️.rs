@@ -5,6 +5,7 @@ use crate::{ValueError, retained_clone::{RetainedCloneGrant,RetainedCloneProgres
 use std::mem::ManuallyDrop;
 
 trait RootOwner<V>:Send {
+    fn last_turn_work(&self)->u64;
     fn step(&mut self,grant:RetainedCloneGrant)->RetirementStep<V>;
     fn is_empty(&self)->bool;
     fn copy_demand(&self)->usize;
@@ -15,6 +16,7 @@ trait RootOwner<V>:Send {
 }
 
 impl<V:RetireOwned+Sync> RootOwner<V> for Retirement<V> {
+    fn last_turn_work(&self)->u64{Retirement::last_turn_work(self)}
     fn step(&mut self,grant:RetainedCloneGrant)->RetirementStep<V>{self.advance(grant)}
     fn is_empty(&self)->bool{self.terminal_is_empty()}
     fn copy_demand(&self)->usize{self.next_copy_byte_demand()}
@@ -25,6 +27,7 @@ impl<V:RetireOwned+Sync> RootOwner<V> for Retirement<V> {
 }
 
 impl<V:RetireOwned+Sync> RootOwner<V> for UpdateCursor<V> {
+    fn last_turn_work(&self)->u64{self.last_close_work()}
     fn step(&mut self,grant:RetainedCloneGrant)->RetirementStep<V>{self.close_step(grant)}
     fn is_empty(&self)->bool{self.terminal_is_empty()}
     fn copy_demand(&self)->usize{self.next_close_copy_byte_demand()}
@@ -34,6 +37,7 @@ impl<V:RetireOwned+Sync> RootOwner<V> for UpdateCursor<V> {
     fn restore_value(&mut self,value:V){assert!(self.state.retirement.payload.is_none(),"ordered update pending payload custody is exclusive");*self.state.retirement.payload=Some(value);}
 }
 impl<V:RetireOwned+Sync> RootOwner<V> for LookupCursor<V> {
+    fn last_turn_work(&self)->u64{self.last_close_work()}
     fn step(&mut self,grant:RetainedCloneGrant)->RetirementStep<V>{self.close_step(grant)}
     fn is_empty(&self)->bool{self.terminal_is_empty()}
     fn copy_demand(&self)->usize{self.next_close_copy_byte_demand()}
@@ -43,14 +47,15 @@ impl<V:RetireOwned+Sync> RootOwner<V> for LookupCursor<V> {
     fn restore_value(&mut self,value:V){assert!(self.state.retirement.payload.is_none(),"ordered lookup pending payload custody is exclusive");*self.state.retirement.payload=Some(value);}
 }
 
-struct SharedRoot<V> {owner:SharedOwner<V>,value:ManuallyDrop<Option<V>>}
+struct SharedRoot<V> {last_work:u64,owner:SharedOwner<V>,value:ManuallyDrop<Option<V>>}
 impl<V:RetireOwned+Sync> RootOwner<V> for SharedRoot<V> {
+    fn last_turn_work(&self)->u64{self.last_work}
     fn step(&mut self,grant:RetainedCloneGrant)->RetirementStep<V>{
-        if self.is_empty(){return RetirementStep::Complete;}
+        self.last_work=0;if self.is_empty(){return RetirementStep::Complete;}
         if grant.maximum_items==0{return RetirementStep::Blocked;}
         if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"shared payload requires admitted depth"));}
-        if let Some(value)=self.value.take(){return RetirementStep::OwnedValue(value);}
-        match self.owner.release_step(grant){
+        if let Some(value)=self.value.take(){self.last_work=1;return RetirementStep::OwnedValue(value);}
+        let turn=self.owner.release_step(grant);self.last_work=turn.work;match turn.result{
             Err(error)=>RetirementStep::Failure(error),
             Ok(step) if step.progress.copied_items==0=>RetirementStep::Blocked,
             Ok(step)=>{*self.value=step.value;RetirementStep::Progress {released_items:1,released_bytes:step.progress.released_bytes}}
@@ -73,26 +78,29 @@ impl<V:RetireOwned+Sync,R:RootOwner<V>> TypedOwner<V,R> {
 }
 impl<V:RetireOwned+Sync,R:RootOwner<V>> RetirementCursor for TypedOwner<V,R> {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(owner)=self.payload.as_ref(){let mut d=owner.next_demand(body)?;d.depth=d.depth.checked_add(self.root.retained_depth()).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered nested retirement depth overflow"))?;Ok(d)}else{Ok(crate::RetirementDemand{copy_bytes:self.root.copy_demand(),release_bytes:self.root.release_demand()?,depth:self.root.depth_demand(),..Default::default()})}}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->TypedStep {
-        if self.terminal_is_empty(){return TypedStep::Complete;}
-        if grant.maximum_items==0{return TypedStep::BudgetExhausted;}
-        match self.next_depth_demand(){Err(error)=>return TypedStep::Failure(error),Ok(depth) if depth>grant.maximum_depth=>return TypedStep::Failure(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered typed retirement exceeds admitted depth")),_=>{}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->TypedStep{
+        if self.terminal_is_empty(){return TypedStep::Complete(0)}
+        if grant.maximum_items==0{return TypedStep::BudgetExhausted}
+        match self.next_depth_demand(){Err(error)=>return TypedStep::Failure(error,0),Ok(depth)if depth>grant.maximum_depth=>return TypedStep::Failure(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"ordered typed retirement exceeds admitted depth"),0),_=>{}}
         let retained_depth=self.root.retained_depth();
         if let Some(payload)=self.payload.as_mut(){
-            if payload.terminal_is_empty(){self.payload.take();return TypedStep::Advanced;}
-            let child_grant=RetainedCloneGrant {maximum_depth:grant.maximum_depth-retained_depth,..grant};
-            return match payload.step(child_grant).and_then(|step|admit_retained_clone_close(child_grant,step,payload.terminal_is_empty(),"ordered typed payload retirement")){
-                Err(error)=>TypedStep::Failure(error),
-                Ok(step)=>TypedStep::Progress(step.progress()),
-            };
+            if payload.terminal_is_empty(){self.payload.take();return TypedStep::Advanced}
+            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-retained_depth,..grant};
+            let result=payload.step(child);let work=payload.last_turn_work();
+            let result=result.and_then(|step|admit_retained_clone_close(child,step,payload.terminal_is_empty(),"ordered typed payload retirement"));
+            return match result{Err(error)=>TypedStep::Failure(error,work),Ok(step)=>TypedStep::Progress(step.progress(),work)}
         }
-        match self.root.step(grant){
+        let step=self.root.step(grant);let work=self.root.last_turn_work();
+        match step{
             RetirementStep::Blocked=>TypedStep::BudgetExhausted,
-            RetirementStep::Failure(error)=>TypedStep::Failure(error),
-            RetirementStep::Progress {released_items,released_bytes}=>TypedStep::Progress(RetainedCloneProgress {copied_items:released_items,released_bytes,..RetainedCloneProgress::default()}),
-            RetirementStep::ProcessedBytes(bytes)=>TypedStep::ProcessedBytes(bytes),
-            RetirementStep::OwnedValue(value)=>match ControlledRetirement::new(value){Ok(owner)=>{*self.payload=Some(owner);TypedStep::Advanced},Err((error,value))=>{self.root.restore_value(value);TypedStep::Failure(error)}},
-            RetirementStep::Complete=>TypedStep::Complete,
+            RetirementStep::Failure(error)=>TypedStep::Failure(error,work),
+            RetirementStep::Progress{released_items,released_bytes}=>TypedStep::Progress(RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()},work),
+            RetirementStep::ProcessedBytes(_)=>TypedStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},work),
+            RetirementStep::OwnedValue(value)=>match ControlledRetirement::new(value){
+                Ok(owner)=>{*self.payload=Some(owner);TypedStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},work)},
+                Err((error,value))=>{self.root.restore_value(value);TypedStep::Failure(error,work)}
+            },
+            RetirementStep::Complete=>TypedStep::Complete(work)
         }
     }
     fn terminal_is_empty(&self)->bool{self.root.is_empty()&&self.payload.is_none()}
@@ -112,7 +120,7 @@ impl<V:RetireOwned+Sync> RetireOwned for OrderedMap<V> {
     fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
 }
 impl<V:RetireOwned+Sync> RetireOwned for SharedOwner<V> {
-    fn retirement(self)->Box<dyn RetirementCursor>{Box::new(TypedOwner::<V,SharedRoot<V>>::new(SharedRoot {owner:self,value:ManuallyDrop::new(None)}))}
+    fn retirement(self)->Box<dyn RetirementCursor>{Box::new(TypedOwner::<V,SharedRoot<V>>::new(SharedRoot {last_work:0,owner:self,value:ManuallyDrop::new(None)}))}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<TypedOwner<V,SharedRoot<V>>>())}
     fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
 }
@@ -136,3 +144,7 @@ impl<V:RetireOwned+Sync> RetireOwned for LookupCursor<V> {
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<TypedOwner<V,LookupCursor<V>>>())}
     fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
 }
+
+#[cfg(test)]
+#[path="../🎟️work/♻️retirement/🧪️tests/🦀️.rs"]
+mod actual_work_tests;

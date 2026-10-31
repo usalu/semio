@@ -1,0 +1,469 @@
+{
+  "state": "prepared-v2-only-two-erased-matcher-annotations",
+  "authority": false,
+  "launchAuthorized": false,
+  "attemptsExecuted": 0,
+  "expectedOwningLaws": 9,
+  "expectedAdmissionLaws": 8,
+  "expectedNormalizationLaws": 1,
+  "actualOutcomes": null,
+  "inputs": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-font-owners.test.ts",
+      "bytes": 394,
+      "sha256": "f103ad825e6561f7f1b4d465d290e9267e9edd896568abb6dd6ea054282ceca3",
+      "absoluteUtf16Units": 125
+    },
+    {
+      "path": "bun.lock",
+      "bytes": 603865,
+      "sha256": "b27bdace86f04889c66e59f5227d0bdef7568b22c550798705d3c911d1c88faf",
+      "absoluteUtf16Units": 36
+    },
+    {
+      "path": "package.json",
+      "bytes": 21673,
+      "sha256": "9605466756ffe292a2e5c425e8beec9cda9b60967cadccc33fef9d20c617f98b",
+      "absoluteUtf16Units": 40
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts",
+      "bytes": 3940,
+      "sha256": "684e5253f258bbfdf2322578f7a40df8570e099979b563748b32463414c8d3b1",
+      "absoluteUtf16Units": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.json",
+      "bytes": 687,
+      "sha256": "6bfc747722a011d58329e7540c17e307da8a2166e13e0c67577a8b66eff1a3d2",
+      "absoluteUtf16Units": 116
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.schema.json",
+      "bytes": 1258,
+      "sha256": "b98ae57150e4efcc2f8fff560f520bdc2ec887c37dd53636734a68b6cccd288e",
+      "absoluteUtf16Units": 123
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.test.ts",
+      "bytes": 4095,
+      "sha256": "4b6aa65e01f4f8f06e12151a2fdb22bfea0f7eddd26c2377d87c637648096fa0",
+      "absoluteUtf16Units": 119
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "bytes": 15229,
+      "sha256": "21b836be23f484fe688471eb8b40f4290a782c0b29d082983623be0e75150ccc",
+      "absoluteUtf16Units": 118
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/📐️.json",
+      "bytes": 4457,
+      "sha256": "97d94c2917a628ea050555c4627dedccfcbe5d570f2bd50b0f43f775c06f17b8",
+      "absoluteUtf16Units": 110
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/🔣️.json",
+      "bytes": 3139,
+      "sha256": "67e186d2e994dc2063dbe48d722cd4c254d81412f26655b95b79d7c7580fd45a",
+      "absoluteUtf16Units": 110
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "bytes": 11166,
+      "sha256": "a000755b683e47740432776e259082bfab4c2fff6a49e1aee9d8ed69e2817384",
+      "absoluteUtf16Units": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 191,
+      "sha256": "d82d29860640b802386ddcb8d4a446e7381a74de8ba9aa3ee3ab69cf253bb3b7",
+      "absoluteUtf16Units": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+      "bytes": 10832,
+      "sha256": "f4b44001f0dfb0a5097a0f720d01f4fc54ab76843ed39c00b65c3efbc57bacbd",
+      "absoluteUtf16Units": 79
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+      "bytes": 14842,
+      "sha256": "89f898f73615b208210dc61fa516a459aa605f17dea8234dc64368f9d7b76e68",
+      "absoluteUtf16Units": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "bytes": 10875,
+      "sha256": "0a1c8055bf432fa5a6492a17fa0f1cf4efad92adf9513882ccad7db45a0f27f5",
+      "absoluteUtf16Units": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "bytes": 5381,
+      "sha256": "cc441d2e6d13028e32a0193a7012b743c3a359e8f1ca111fa3b4f9d613c701c1",
+      "absoluteUtf16Units": 110
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "bytes": 9631,
+      "sha256": "1b5b22ad92cba0afef1ed3dcf16ed235d414b175f2206519fac090dd68f3b209",
+      "absoluteUtf16Units": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts",
+      "bytes": 1306,
+      "sha256": "df52c0b627c95d224b6ba376fd0bc1a6ffff46dacbf5f2f0008106302dd05deb",
+      "absoluteUtf16Units": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "bytes": 3173,
+      "sha256": "67738d73708d16529b3d3c622e529ce53c5298755b34bf5fff088d6117cffe8c",
+      "absoluteUtf16Units": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "bytes": 15622,
+      "sha256": "b007808e5d97c62bbd877f44eac94df906ce8e8e7521a87819b4b1ce1f6b28ea",
+      "absoluteUtf16Units": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.d.ts",
+      "bytes": 1549,
+      "sha256": "0da4d443c29ad9c58ee44dae4fe02ea580c0368fb763274f475d6803d165eff3",
+      "absoluteUtf16Units": 76
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js",
+      "bytes": 2426,
+      "sha256": "88cc37857ed7ebebdc426aff1812d52bcfd4caf3cccc41924e72a89e77173372",
+      "absoluteUtf16Units": 74
+    }
+  ],
+  "literalEdges": [
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.test.ts",
+      "specifier": "./normalize.json",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.test.ts",
+      "specifier": "./normalize.schema.json",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.schema.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.test.ts",
+      "specifier": "../../../🧵️shape/🌐️unicode/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.test.ts",
+      "specifier": "../../../🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.test.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.test.ts",
+      "specifier": "../../../../../../🧵️job/⏱️budget/🟨️.js",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "specifier": "./⏱️turn/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "specifier": "./📦️bytes/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "specifier": "../../../🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "specifier": "../../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "../../🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "../../📇️catalog/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "../🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "./🧪️tests/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+      "specifier": "./🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+      "specifier": "../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "specifier": "./🔣️.json",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "specifier": "./📐️.json",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/📐️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "specifier": "../../../🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "specifier": "../../../🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "specifier": "../../../🧵️shape/🌐️unicode/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "specifier": "../../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "specifier": "../../../../../../🧵️job/⏱️budget/🟨️.js",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+      "specifier": "../../../🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+      "specifier": "../../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "specifier": "../../../🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "specifier": "../../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-font-owners.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-font-owners.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.test.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.test.ts"
+    }
+  ],
+  "externalTestToolSpecifiers": [
+    "ajv",
+    "bun:sqlite",
+    "bun:test",
+    "opentype.js"
+  ],
+  "commands": [
+    {
+      "kind": "test",
+      "cwd": "/Users/ueli/Documents/semio",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "bun",
+        "--",
+        "test",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-font-owners.test.ts"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-font-owners-2/test",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-font-owners-2/test/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-font-owners-2/test/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-font-owners-2/test/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-font-owners-2/test/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-font-owners-2/test/test.log"
+    },
+    {
+      "kind": "strict",
+      "cwd": "/Users/ueli/Documents/semio",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "bun",
+        "--",
+        "/Users/ueli/Documents/semio/node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--strict",
+        "--noUncheckedIndexedAccess",
+        "--skipLibCheck",
+        "--resolveJsonModule",
+        "--esModuleInterop",
+        "--target",
+        "ESNext",
+        "--module",
+        "preserve",
+        "--moduleResolution",
+        "bundler",
+        "--allowImportingTsExtensions",
+        "--types",
+        "bun",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.test.ts"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-font-owners-2/strict",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-font-owners-2/strict/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-font-owners-2/strict/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-font-owners-2/strict/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-font-owners-2/strict/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-font-owners-2/strict/strict.log"
+    }
+  ],
+  "strictRoots": [
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.test.ts"
+  ],
+  "scope": "Actual original admission8 plus normalization1/three ICU cases and strict8; no shipped-font IO or unfinished Run/Scene caller proof",
+  "freeze": "Exact listed firstparty inputs, importer, package.json and bun.lock through actual terminal and postcheck; no blanket source freeze."
+}

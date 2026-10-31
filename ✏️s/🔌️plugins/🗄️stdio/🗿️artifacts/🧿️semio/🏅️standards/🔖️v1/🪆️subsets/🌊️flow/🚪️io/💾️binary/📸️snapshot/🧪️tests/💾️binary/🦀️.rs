@@ -48,13 +48,13 @@ fn close(value: &mut dyn ErasedSnapshotRetirement) -> usize { close_with_grants(
 fn close_with_grants(value: &mut dyn ErasedSnapshotRetirement, grants: &[usize]) -> usize {
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
     let policy = retirement_policy();
-    if value.terminal_is_empty() { assert!(matches!(value.close_step(RetainedCloneGrant::default()).unwrap(), RetainedCloneStep::Complete(_))); return 0; }
-    assert_eq!(value.close_step(RetainedCloneGrant::default()).unwrap().progress(), RetainedCloneProgress::default());
+    if value.terminal_is_empty() { assert!(matches!(value.close_step(RetainedCloneGrant::default()).result.unwrap(), RetainedCloneStep::Complete(_))); return 0; }
+    assert_eq!(value.close_step(RetainedCloneGrant::default()).result.unwrap().progress(), RetainedCloneProgress::default());
     let mut born = 0;
     let mut freed = 0;
     for turn in 0..100_000 {
         let grant = RetainedCloneGrant { maximum_items: grants[turn % grants.len()], ..policy };
-        let (step, physical) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| value.close_step(grant).unwrap());
+        let (step, physical) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| value.close_step(grant).result.unwrap());
         let progress = step.progress();
         assert!(progress.fits(grant));
         assert_eq!(physical.requested_bytes, progress.retained_capacity_bytes);
@@ -73,7 +73,7 @@ fn close_owned<T: semio_framework_value::retirement::RetireOwned>(value: T) -> u
     let mut born = 0;
     let mut freed = 0;
     loop {
-        let (step, physical) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| if pending.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut pending, &mut active, grant).unwrap() } else { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut active, grant).unwrap() });
+        let (step, physical) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| if pending.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut pending, &mut active, grant).result.unwrap() } else { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut active, grant).result.unwrap() });
         assert!(step.progress().fits(grant));
         assert_eq!(physical.requested_bytes, step.progress().retained_capacity_bytes);
         assert_eq!(physical.released_bytes, step.progress().released_bytes);

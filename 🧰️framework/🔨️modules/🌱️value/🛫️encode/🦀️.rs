@@ -25,7 +25,7 @@ pub struct NativeEncodeContinuation { receiving:bool, maximum_bytes:usize, owned
 struct EncodeContinuationRetirement(Option<NativeEncodeContinuation>);
 impl crate::retirement::RetirementCursor for EncodeContinuationRetirement{
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{depth:usize::from(self.0.is_some()),..Default::default()})}
- fn close_step(&mut self,grant:crate::RetainedCloneGrant)->crate::retirement::RetirementStep{if self.0.is_none(){return crate::retirement::RetirementStep::Complete}if grant.maximum_items==0{return crate::retirement::RetirementStep::BudgetExhausted}if grant.maximum_depth==0{return crate::retirement::RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"encoding continuation requires original source depth"))}self.0.take();crate::retirement::RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,..Default::default()})}
+ fn close_step(&mut self,grant:crate::RetainedCloneGrant)->crate::retirement::RetirementStep{if self.0.is_none(){return crate::retirement::RetirementStep::Complete(0)}if grant.maximum_items==0{return crate::retirement::RetirementStep::BudgetExhausted}if grant.maximum_depth==0{return crate::retirement::RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"encoding continuation requires original source depth"),0)}self.0.take();crate::retirement::RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,..Default::default()},1)}
  fn terminal_is_empty(&self)->bool{self.0.is_none()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(self.0.is_some()))}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
@@ -55,14 +55,20 @@ impl<'a> NativeEncodeControl<'a> {
     /// 👓️ Reports the original return slot without moving its pending physical owner.
     pub fn has_retirement_owner(&self)->bool{self.retirement.as_ref().is_some_and(|recipient|recipient.has_owner())}
     /// ♻️ Drains one original return turn after forwarding its exact physical capacity demand.
-    pub fn close_retirement_recipient(&mut self,grant:crate::retained_clone::RetainedCloneGrant)->Result<crate::retained_clone::RetainedCloneStep,ValueError>{
-        let recipient=self.retirement.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"encoder has no original retirement recipient"))?;
-        if recipient.terminal_is_empty(){return Ok(crate::retained_clone::RetainedCloneStep::Complete(Default::default()))}
-        if grant.maximum_items==0{return Ok(crate::retained_clone::RetainedCloneStep::Progress(Default::default()))}
-        if recipient.next_depth_demand()?>grant.maximum_depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"encoder retirement exceeds original depth grant"))}
-        let copy=recipient.next_copy_byte_demand()?;let capacity=recipient.next_capacity_byte_demand(grant.maximum_copy_bytes)?;let release=recipient.next_release_byte_demand()?;
-        if copy>grant.maximum_copy_bytes||capacity>grant.maximum_capacity_bytes||release>grant.maximum_release_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"encoder retirement exceeds original physical grant"))}
-        self.checkpoint()?;self.charge(capacity)?;self.retirement.as_mut().unwrap().close_step(grant)
+    pub fn close_retirement_recipient(&mut self,grant:crate::RetainedCloneGrant)->crate::RetainedWorkOutcome{
+        let preflight=(||{
+            let recipient=self.retirement.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"encoder has no original retirement recipient"))?;
+            if recipient.terminal_is_empty()||grant.maximum_items==0{return Ok(false)}
+            let d=recipient.next_demand(grant.maximum_copy_bytes)?;
+            if d.depth>grant.maximum_depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"encoder retirement exceeds original depth grant"))}
+            if !crate::retained_clone::retained_clone_grant_admits(grant,d){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"encoder retirement exceeds original physical grant"))}
+            self.checkpoint()?;self.charge(d.capacity_bytes)?;Ok(true)
+        })();
+        match preflight{
+            Err(error)=>crate::RetainedWorkOutcome{result:Err(error),work:0},
+            Ok(true)=>self.retirement.as_mut().unwrap().close_step(grant),
+            Ok(false)=>crate::RetainedWorkOutcome{result:Ok(if self.retirement.as_ref().is_some_and(|r|r.terminal_is_empty()){crate::RetainedCloneStep::Complete(Default::default())}else{crate::RetainedCloneStep::Progress(Default::default())}),work:0}
+        }
     }
 
     /// 🆕️ Installs one explicit caller recipient before any retained encoder ownership is created.

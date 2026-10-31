@@ -1,0 +1,22 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🦀️.rs",
+    "bytes": 21920,
+    "sha256": "d0075a1a081a7f4e4f6e5ed4f9bcf36946ec50bcfe22277f3bfc487b3598d5e2"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/♻️close/🧪️tests/🦀️.rs",
+    "bytes": 3068,
+    "sha256": "6c70c6e181786049d6105d233b737c97686cbda2b71414969838da34510956a1"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/♻️close/🪢️loan/🧪️tests/🦀️.rs",
+    "bytes": 2448,
+    "sha256": "d284c2405dbfab650fbf338cf02eb2725cf54bff11a1a1aea2daf5d09bc0d238"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/Cargo.toml",
+    "bytes": 3002,
+    "sha256": "01ba20d2df6c31af4e46fc9aef1a99f666b73718855c189171a15c64fbf501ea"
+  }
+]

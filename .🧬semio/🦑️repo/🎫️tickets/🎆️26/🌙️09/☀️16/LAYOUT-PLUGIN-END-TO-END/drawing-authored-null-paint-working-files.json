@@ -1,0 +1,57 @@
+{
+  "state": "schema-first-canonical-source-authored-unexecuted",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+      "beforeSha256": "3f4f32fefe771a4c2a7eecc21d8942844cd4c650837cc42e25bb39b1037e9493",
+      "sha256": "c255e5a2265c09577de49c2355619d4886b67e5c4e960a936a6a65392f4b2e94",
+      "bytes": 30360,
+      "inverseWholeFile": "3f4f32fefe771a4c2a7eecc21d8942844cd4c650837cc42e25bb39b1037e9493"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
+      "beforeSha256": "2b60025b2c2e55d0283328528ec2dcb82216df1bf9599c27836f4486b60d54ea",
+      "sha256": "5ca4122d378cb817033c522a43b934f08927b8f3f5f3d002bd81cf5d14e12aeb",
+      "bytes": 15575,
+      "inverseWholeFile": "2b60025b2c2e55d0283328528ec2dcb82216df1bf9599c27836f4486b60d54ea"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "beforeSha256": "2fff565872f26aaaad411a2e56956f3a512cdd5b1725f32742f5a00a63b0d62d",
+      "sha256": "d9ce297f89f6ef10f1923e7cf9fefc5661b44e837431e833a43359b405cad8b1",
+      "bytes": 21833,
+      "inverseWholeFile": "2fff565872f26aaaad411a2e56956f3a512cdd5b1725f32742f5a00a63b0d62d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🟦️.ts",
+      "beforeSha256": "da71e45a163efc6ac2dac0c25d3cf8cc0db1c0bb7b6b56fdced38df8b2d3e8c9",
+      "sha256": "3f069f9f40d2421ae24eaec6a015338e0aa9ce002b27db37f3010c6f5e8e11a3",
+      "bytes": 34667,
+      "inverseWholeFile": "da71e45a163efc6ac2dac0c25d3cf8cc0db1c0bb7b6b56fdced38df8b2d3e8c9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️attributes/🧪️tests/📐️.json",
+      "bytes": 2619,
+      "sha256": "e64dbe7fe3c9f8439e303dec7b3b88c9ebcfec84bd6507d51a6321599d5ad29b",
+      "status": "created",
+      "scope": "Schema-first twelve-case nullable/hostile parser contract and actual owning law, before schema/parser correction; unexecuted."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️attributes/🧪️tests/🔣️.json",
+      "bytes": 3515,
+      "sha256": "eb1d363ae08ad93c22953a945df2640a2c78e194904cf1ac8a79eabc70f59399",
+      "status": "created",
+      "scope": "Schema-first twelve-case nullable/hostile parser contract and actual owning law, before schema/parser correction; unexecuted."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️attributes/🧪️tests/paint.test.ts",
+      "bytes": 3291,
+      "sha256": "15427b42b6bcbc200199c7517e0cdb636e96cc917acaf467b19a96c021a26c8f",
+      "status": "created",
+      "scope": "Schema-first twelve-case nullable/hostile parser contract and actual owning law, before schema/parser correction; unexecuted."
+    }
+  ],
+  "testFirst": "drawing-authored-null-paint-test-first.json",
+  "scope": "Canonical nonduplicated artifact FillStyle and nullable attributes; Diff references artifact, no cycle; explicit null retained and hostile object validation preserved; one erased DrawingPathSegment import. Existing bilingual metadata and all numeric/style limits preserved exactly by inverse.",
+  "attribution": "Only exact canonical type/parser/null schema movement and new test contract/law; existing peers' root model/UI code is not blanket attributed."
+}

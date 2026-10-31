@@ -28,10 +28,13 @@ impl EnergyJobAuthority {
         }
         if !self.input_identity.terminal_is_empty() { return Ok(self.input_identity.close_demand()); }
         if let Some(build) = self.wire_build.as_ref() {
-            return build.writer.retirement_demands();
+            return build.builder.as_ref().map_or(Ok(RetirementDemand::default()), |builder| energy_builder_demand(builder));
         }
         if let Some(writer) = self.output_writer.as_ref() {
-            return writer.retirement_demands();
+            return energy_builder_demand(writer);
+        }
+        if let Some(retiring) = self.builder_retiring.as_ref() {
+            return energy_builder_demand(retiring);
         }
         if let Some(payload) = self.output_payload.as_ref() {
             return payload.retirement_demands();
@@ -63,23 +66,22 @@ impl EnergyJobAuthority {
             return self.input_identity.close_step(grant).map(|progress|InteractiveJobCloseStep::Pending{progress});
         }
         if let Some(build) = self.wire_build.as_mut() {
-            build.writer.begin_close();
-            let (step, done) = energy_turn(energy_guarded(grant, build.writer.retirement_demands(), || build.writer.close_step(grant)))?;
+            let (step, done) = energy_turn(energy_builder_close(&mut build.builder, grant))?;
             if done {
                 self.wire_build = None;
             }
             return Ok(step);
         }
-        if let Some(writer) = self.output_writer.as_mut() {
-            writer.begin_close();
-            let (step, done) = energy_turn(energy_guarded(grant, writer.retirement_demands(), || writer.close_step(grant)))?;
-            if done {
-                self.output_writer = None;
-            }
+        if self.output_writer.is_some() {
+            let (step, _) = energy_turn(energy_builder_close(&mut self.output_writer, grant))?;
+            return Ok(step);
+        }
+        if self.builder_retiring.is_some() {
+            let (step, _) = energy_turn(energy_builder_close(&mut self.builder_retiring, grant))?;
             return Ok(step);
         }
         if let Some(payload) = self.output_payload.as_mut() {
-            let (step, done) = energy_turn(energy_guarded(grant, payload.retirement_demands(), || payload.close_step(grant)))?;
+            let (step, done) = energy_turn(energy_guarded(grant, payload.retirement_demands(), || payload.close_step(grant).result))?;
             if done {
                 self.output_payload = None;
             }
@@ -128,12 +130,12 @@ impl EnergyJobAuthority {
             return Ok(energy_one());
         }
         if !self.precompute_close.is_empty() {
-            return self.precompute_close.step_granted(grant).map(|step| InteractiveJobCloseStep::Pending { progress: step.progress() });
+            return self.precompute_close.step_granted(grant).result.map(|step| InteractiveJobCloseStep::Pending { progress: step.progress() });
         }
-        if let Some(step) = self.precompute_close.begin_granted(&mut self.precompute, grant)? {
+        if let Some(step) = self.precompute_close.begin_granted(&mut self.precompute, grant).result? {
             return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
         }
-        if let Some(step) = self.precompute_close.begin_granted(&mut self.pre, grant)? {
+        if let Some(step) = self.precompute_close.begin_granted(&mut self.pre, grant).result? {
             return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
         }
         if !energy_grant_covers(grant, ENERGY_RUNG_DEMAND) {
@@ -275,8 +277,8 @@ impl EnergyJobAuthority {
 }
 
 
-impl InteractiveJob for EnergyJob {
-    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
+impl EnergyJob {
+    pub(crate) fn step_owned<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         let authority = &mut **self;
         let run = match authority.pending_outcome.take() {
             Some(run) => run,
@@ -299,6 +301,12 @@ impl InteractiveJob for EnergyJob {
         Ok(admitted)
     }
 
+}
+
+impl InteractiveJob for EnergyJob {
+    fn step<'a>(&'a mut self, context: &mut StepContext<'_>, _return_claim: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> {
+        InteractiveJobStep::from_callback(self.step_owned(context))
+    }
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         match descriptor.kind() {
             JobOutcomeKind::Yield => descriptor.yielded(),
@@ -321,7 +329,7 @@ impl InteractiveJob for EnergyJob {
         self.begin_close();
         if self.authority.is_none(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
         let demand=self.original_close_demands()?;
-        let step=semio_framework_job::close_original_retained_step(context,demand,|grant|{
+        let step=crate::retirement::energy_retained_step(context,demand,|grant|{
             if self.authority.as_deref().is_some_and(authority_is_terminal_empty){
                 drop(self.authority.take());
                 release_energy_abandonment_slot(self.abandonment_slot);
@@ -490,6 +498,7 @@ fn authority_inputs_are_retired(authority: &EnergyJobAuthority) -> bool {
         && authority.commit_pages_mounted == 0
         && authority.commit_items_encoded == 0
         && authority.wire_build.is_none()
+        && authority.builder_retiring.is_none()
         && authority.wire_ready.is_none()
         && authority.restore_input.is_none()
         && authority.commit_output.is_none()

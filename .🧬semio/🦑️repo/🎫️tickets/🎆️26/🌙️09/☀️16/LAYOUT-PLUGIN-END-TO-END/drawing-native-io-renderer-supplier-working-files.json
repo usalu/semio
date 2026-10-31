@@ -1,0 +1,21 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️invocation/🦀️.rs",
+      "bytes": 11541,
+      "sha256": "465d0661b0b7639547f795388db483f4550c3e85f3bc798a89baf54967d4c735"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️invocation/🔣️.json",
+      "bytes": 1096,
+      "sha256": "6d6dfd28b2a7a670a1d7309f3f847c0f56d9d2b3641cbe64e6223364665f0928"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️invocation/🧬️schema/🔣️.json",
+      "bytes": 1938,
+      "sha256": "7ecc0f26e7ba40cd7e19ada0d36106e4a80ff4375900278b515ace71dc359285"
+    }
+  ],
+  "state": "authored-uncompiled",
+  "scope": "Actual parent supplier output only; return-origin and originalRenderer fixture remain open"
+}

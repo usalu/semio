@@ -1,0 +1,27 @@
+[
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udcec\ufe0foutcome/\ud83d\udc77\ufe0fworker/\ud83e\udd80\ufe0f.rs",
+    "sha256": "89b90adc19b556548bb25b95223f3f27ff9f0db2b9fe63e3d93f72ea38b273f9",
+    "bytes": 10276
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udc77\ufe0fworker/\ud83c\udf9f\ufe0fauthority/\ud83e\udd80\ufe0f.rs",
+    "sha256": "63d0d263ec9dbd163ed2346d2f1e249344816c49658829135f86846f06201a6a",
+    "bytes": 55231
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udcec\ufe0foutcome/\ud83d\udc77\ufe0fworker/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "sha256": "0b8dd1f8e0a585af84172d5b9ff1756aaadb815ba784159c1c04f18ffdecf97b",
+    "bytes": 7616
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udcec\ufe0foutcome/\ud83d\udc77\ufe0fworker/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/return.json",
+    "sha256": "1f42d25be2a3acb99a236829ba708387b63b56520aad6d0e6dc23c730f5cdc3c",
+    "bytes": 265
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udcec\ufe0foutcome/\ud83d\udc77\ufe0fworker/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/return.schema.json",
+    "sha256": "6bf62571ae29b713d3fd92406814102b9bff3a2ccfe5c8f4e762d86b3a0ca394",
+    "bytes": 704
+  }
+]

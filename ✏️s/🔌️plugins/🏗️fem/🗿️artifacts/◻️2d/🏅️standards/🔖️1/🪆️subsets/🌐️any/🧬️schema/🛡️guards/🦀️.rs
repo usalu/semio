@@ -1,17 +1,10 @@
 //! 🛡️ Shared cold semantic mutation validations.
 
 use crate::standards::v1::subsets::any::schema::diff::Fem2dDiff;
-use crate::standards::v1::subsets::any::schema::structure::element_id;
-use crate::standards::v1::subsets::any::schema::structure::load_id;
+use crate::standards::v1::subsets::any::schema::structure::{element_id, load_id, FemAnalysisSettings, FemCombination, FemElement, FemLoad, FemRegion, FemSection};
 use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
-use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
-use crate::standards::v1::subsets::any::schema::structure::FemCombination;
-use crate::standards::v1::subsets::any::schema::structure::FemElement;
-use crate::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_fem_material::planar::FemMaterialValue;
 use semio_s_fem_node::planar::FemNodeValue;
-use crate::standards::v1::subsets::any::schema::structure::FemRegion;
-use crate::standards::v1::subsets::any::schema::structure::FemSection;
 
 type Rejection = protocol::MutationOutcome<Fem2dDiff>;
 

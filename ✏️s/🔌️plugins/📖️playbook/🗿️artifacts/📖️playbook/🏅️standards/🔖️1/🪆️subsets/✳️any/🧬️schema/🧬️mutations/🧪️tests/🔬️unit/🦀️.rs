@@ -1,7 +1,7 @@
 use crate::PlaybookSnapshot;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_mutation_inverse_sum_law};
-use protocol::MutationKind;
+use protocol::{ColdMutation as _, MutationKind};
 use protocol::SemanticMutation;
 
 fn titled(title: Option<&str>) -> PlaybookSnapshot {

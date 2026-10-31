@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/font/catalog/staged-custody",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "family",
+    "additionalSettlementTurns",
+    "maxTurns",
+    "stock",
+    "limits",
+    "expectedMissingReleasedBytes"
+  ],
+  "properties": {
+    "family": {
+      "const": "Share Tech Mono"
+    },
+    "additionalSettlementTurns": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "maxTurns": {
+      "const": 262144
+    },
+    "stock": {
+      "const": {
+        "maximumItems": 4194304,
+        "maximumCopyBytes": 268435456,
+        "maximumCapacityBytes": 33554432,
+        "maximumReleaseBytes": 67108864,
+        "maximumDepth": 256
+      }
+    },
+    "limits": {
+      "const": {
+        "maxFontBytes": 67108864,
+        "maxTables": 128,
+        "maxGlyphs": 65536,
+        "maxPoints": 262144,
+        "maxContours": 65536,
+        "maxComponents": 262144,
+        "maxDepth": 32,
+        "maxSegments": 65536,
+        "maxWork": 1000000
+      }
+    },
+    "expectedMissingReleasedBytes": {
+      "const": 0
+    }
+  }
+}

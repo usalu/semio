@@ -1,0 +1,24 @@
+{
+  "state": "schema-and-six-owning-laws-before-Text-body",
+  "expectedCombined": 18,
+  "bodyAtSeal": "old numeric/raw DocumentText still present, no new body/runtime",
+  "originalScene6PlusReplacement6Retained": true,
+  "originalGlyph14FixtureUnchanged": true,
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/🔣️.json",
+      "bytes": 2687,
+      "sha256": "9784d07a599652e4c60448a90c2e3c528ec2231462767576614708883dec38c3"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "bytes": 9585,
+      "sha256": "a9aa6c36f466b7093aa22b816fa4fb2d4ff62cf898a1d319da5844e14bdc94aa"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/📐️.json",
+      "bytes": 1994,
+      "sha256": "813778089841643b227f4e8749787dcc71d70c0a3c540e0c1ff70cece1343c22"
+    }
+  ]
+}

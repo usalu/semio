@@ -31,11 +31,11 @@ pub fn close_abandoned_mailbox_step() -> bool {
 }
 
 
-pub fn close_job_step(job: &mut PreparedRenderJob) -> bool {
+pub fn close_job_step(job: &mut PreparedRenderJob,caller:&mut semio_framework_job::OriginalJobFixtureCaller) -> bool {
     use semio_framework_job::{InteractiveJobCloseStep as Close, RetainedCloneGrant};
     InteractiveJob::begin_close(job);
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: InteractiveJob::next_close_copy_byte_demand(job).unwrap(), maximum_capacity_bytes: InteractiveJob::next_close_capacity_byte_demand(job, 1).unwrap(), maximum_release_bytes: InteractiveJob::next_close_release_byte_demand(job).unwrap(), maximum_depth: InteractiveJob::next_close_depth_demand(job).unwrap() };
-    match semio_framework_job::close_with_self_funded_context(grant, |cx| InteractiveJob::close_step(job, cx)).expect("original fixture close turn") {
+    match caller.turn(grant, |cx| InteractiveJob::close_step(job, cx)).expect("original fixture close turn") {
         Close::Complete { progress } => { assert!(progress.fits(grant)); assert!(job.terminal_is_empty()); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
@@ -216,3 +216,6 @@ pub fn packet(revision: u64, generation: u64) -> PreparedRenderPacket {
 pub fn render_mailbox_is_empty() -> bool {
     PREPARED_RENDER_MAILBOX.iter().all(|slot| slot.packet.load(std::sync::atomic::Ordering::Acquire).is_null())
 }
+
+#[path="../../../../../🧵️job/🧪️testing/♻️close/🦀️.rs"]
+pub mod close_source;

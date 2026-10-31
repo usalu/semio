@@ -14,27 +14,8 @@ pub(crate)fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotCon
 fn interpolation(tag:u8)->Result<AnimInterpolation,ValueError>{Ok(match tag{0=>AnimInterpolation::Linear,1=>AnimInterpolation::Step,2=>AnimInterpolation::CubicSpline,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native interpolation"))})}
 fn f64(reader:&mut store::ByteReader<'_>)->Result<f64,ValueError>{reader.read_f64_le().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))}
 
-/// 🔷️ Selects each binary animation sample variant in its retained slot before copying its weights.
-fn value_binary_into(output:&mut AnimValue,reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,entities:&mut usize)->Result<(),ValueError>{
- match reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?{
- 0=>{native::entities(entities,1,limits)?;*output=AnimValue::Scalar{value:f64(reader)?};},1=>{native::entities(entities,1,limits)?;*output=AnimValue::Vec3{value:SemioPoint3{x:f64(reader)?,y:f64(reader)?,z:f64(reader)?}};},2=>{native::entities(entities,1,limits)?;*output=AnimValue::Quat{value:SemioQuaternion{x:f64(reader)?,y:f64(reader)?,z:f64(reader)?,w:f64(reader)?}};},
- 3=>{let count=native::length(reader)?;native::entities(entities,count,limits)?;*output=AnimValue::Weights{values:Vec::new()};let AnimValue::Weights{values}=&mut *output else{unreachable!()};*values=control.allocate_vec::<f64>(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{values.push(f64(reader)?);control.step()?;}Ok::<_,ValueError>(())})?;},_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native animation value"))}
- Ok(())
-}
 /// 🧩️ Fills the retained animation root from borrowed binary octets, inserting every timeline, channel and keyframe before its fields.
-pub fn binary_into(output:&mut SemioAnimationSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
- crate::io::sqlite::snapshot::admit_binary(body,control,limits)?;
- let mut entities=0;native::entities(&mut entities,1,limits)?;let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Semio animation native format"))}native::reader_text_into(&mut output.schema,&mut reader,control)?;
- native::binary_list_into(&mut output.timelines,&mut reader,control,limits,&mut entities,Default::default,|timeline,reader,control,entities|{
-  match reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?{0=>{},1=>{timeline.name=Some(String::new());native::reader_text_into(timeline.name.as_mut().unwrap(),reader,control)?;},_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native timeline name presence"))}
-  native::binary_list_into(&mut timeline.channels,reader,control,limits,entities,Default::default,|channel,reader,control,entities|{
-   native::reader_text_into(&mut channel.target.node,reader,control)?;match reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?{0=>channel.target.property=AnimTargetProperty::Translation,1=>channel.target.property=AnimTargetProperty::Rotation,2=>channel.target.property=AnimTargetProperty::Scale,3=>channel.target.property=AnimTargetProperty::Weights,4=>{channel.target.property=AnimTargetProperty::Custom{name:String::new()};let AnimTargetProperty::Custom{name}=&mut channel.target.property else{unreachable!()};native::reader_text_into(name,reader,control)?;},_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native target property"))}
-   channel.interpolation=interpolation(reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?)?;
-   native::binary_list_into(&mut channel.keyframes,reader,control,limits,entities,Default::default,|keyframe,reader,control,entities|{keyframe.t=f64(reader)?;value_binary_into(&mut keyframe.value,reader,control,limits,entities)})
-  })
- })?;
- if reader.remaining()!=0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio animation native trailing bytes"))}Ok(())
-}
+pub fn binary_into(output:&mut SemioAnimationSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::record_binary_into(output,body,control,limits)}
 
 /// 💠️ Selects each text animation sample variant in its retained slot before copying its weights.
 fn value_text_into(output:&mut AnimValue,value:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,entities:&mut usize)->Result<(),ValueError>{

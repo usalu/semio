@@ -1,0 +1,25 @@
+--- a/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🧪️tests/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🕸️wasm-build/🧪️tests/🟦️.ts
+@@ -24,3 +24,22 @@
+  const expected=owner.expected??Buffer.from(await crypto.subtle.digest("SHA-256",Buffer.from(fixture.wasmHex,"hex"))).toString("hex");expect(JSON.parse(result.stdout)).toBe(expected);
+ });
+ 
++
++/** ⏱️ The deadline of a long wasm build is the renewable progress window of the native-child class, not a fixed wall clock: a 25-50 min build on a loaded host that keeps compiling must not die on `Original resource loan deadline exhausted`. */
++test("the wasm build derives its deadline from the native-child progress policy, renewed by child progress and bounded by the declared budget",async()=>{
++ const{progressDeadlinePolicyV1}=await import("../../../⏱️budget/🟦️.ts"),source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8");
++ expect(source).toContain("renewableCompilerAdmissionControlV1(opts.control, progressDeadlinePolicyV1(\"native-child\"");expect(source).not.toMatch(/requestedCompilerAdmissionControlV1\(opts\.control, policy\.budgetMs\)/u);
++ const policy=progressDeadlinePolicyV1("native-child",0,{},{maximumMilliseconds:fixture.policy.budgetMs>0?fixture.policy.budgetMs:21600000});
++ expect(policy.idleMilliseconds).toBeGreaterThan(60*60000-1);expect(policy.maximumMilliseconds).toBeLessThanOrEqual(fixture.policy.budgetMs>0?fixture.policy.budgetMs:21600000);expect(policy.maximumMilliseconds).toBeGreaterThan(60*60000);
++});
++
++/** 🔒️ The wasm build takes its leases in ascending class rank: configuration view (toolchain 1), then the cargo build lease (cargo-coordination 2), then the compiler writer (image 7) around the compile only, and the artifact capture (artifact 6) AFTER the writer is released; the old order held the build lease before the view and the writer while it captured, which the lease-order rule reports and which can deadlock against an exclusive writer. */
++test("the wasm build acquires configuration view, build lease, writer and artifact capture in an order the lease-order policy accepts",async()=>{
++ const order=await import("../../../🔒️leases/🧭️order/🟦️.ts"),policy=order.leaseOrderPolicyV1(),rank=(resource:string)=>order.classifyLeaseResourceV1(policy,resource).rank;
++ const view=rank("cargo:configuration-view:7"),build=rank('["cargo-target-recipe-v1","/x/u/l/p1/b/t/f"]'),writer=rank("repo:compiler-writer:/x/fixed/m"),capture=rank("artifact-capture:/x/browser/prototype/wasm-packages/abc");
++ expect([view,build,writer,capture]).toEqual([1,2,7,6]);expect(view<build&&build<writer&&capture<writer).toBe(true);
++ const source=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),at=(needle:string)=>{const index=source.indexOf(needle);expect(index,needle).toBeGreaterThan(0);return index;};
++ const inputs=at("await withCargoCompilerInputsV1("),lease=at("leased=await acquireCargoBuildLeaseV1("),writerEntry=at("await actual.withWriter(async()=>{"),consume=at("await consumeProducedWasmPackageV1(produced.files");
++ expect(inputs<lease&&lease<writerEntry&&writerEntry<consume).toBe(true);
++ expect(source.slice(writerEntry,consume)).not.toContain("consumeProducedWasmPackageV1(");
++});

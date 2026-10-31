@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "workspace": "/workspace",
+  "root": "/store",
+  "receipt": {
+    "version": 4,
+    "purpose": "current-dependency-source-owner-ready",
+    "scope": ".",
+    "generation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "ownerRelationSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "groupSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "recipeSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "members": [],
+    "bindings": [
+      {
+        "sourceDirectory": "/workspace/node_modules",
+        "targetDirectory": "/store/j/aaaaaaaaaaaaaaaaaaaa/node_modules"
+      }
+    ],
+    "ownerReferences": [],
+    "singletons": []
+  },
+  "accepted": [
+    "obsolete-recipe",
+    "current-recipe",
+    "removed-owner",
+    "windows"
+  ],
+  "rejected": [
+    "foreign-workspace",
+    "foreign-store",
+    "extra",
+    "proxy",
+    "accessor",
+    "noncanonical",
+    "wrong-generation",
+    "binding-outside",
+    "reference-self"
+  ],
+  "receiptSha256": "ae4f1448aaaace5f625cd104bee231a5e046e1506944ba2ee9674007fde9a1c6"
+}

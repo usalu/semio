@@ -5,6 +5,7 @@
 
 #![allow(dead_code)]
 
+use semio_s_artifact_procedural_3d_geometry_compute::testing::step_with_fuel;
 use semio_s_artifact_procedural_3d_model::catalogue::Catalogue;
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
 use semio_s_artifact_procedural_3d_model::catalogue::Port;
@@ -236,7 +237,7 @@ pub fn inputs_of(kind: &Kind, case: &Value) -> WidgetInputs {
 pub fn drive(mut job: Box<dyn WidgetJob>, fuel: usize) -> WidgetEvaluation {
     let mut last = 0.0f32;
     for _ in 0..1_000_000 {
-        match job.step(fuel) {
+        match step_with_fuel(&mut *job, fuel) {
             WidgetStep::Working { progress } => {
                 assert!((0.0..=1.0).contains(&progress), "progress {progress} outside 0..=1");
                 assert!(progress + 1e-6 >= last, "progress went back from {last} to {progress}");
@@ -256,7 +257,7 @@ pub fn evaluate(kind: &Kind, inputs: WidgetInputs, entries: &[ComputeEntry], fue
 //#endregion 🔖️Drive
 
 //#region 🔖️Compare
-/// 🔢️ Absolute below magnitude one, relative above.
+/// 🌀️ Absolute below magnitude one, relative above.
 pub fn close(actual: f64, expected: f64, tolerance: f64) -> bool {
     actual.is_finite() && (actual - expected).abs() <= tolerance * expected.abs().max(1.0)
 }
@@ -348,7 +349,7 @@ pub fn run_fixture(catalogue: &'static Catalogue, text: &str, entries: &[Compute
     cases.len()
 }
 
-/// 📚️ The kinds of a fixture, to assert it covers every kind of a category.
+/// 🏷️ The kinds of a fixture, to assert it covers every kind of a category.
 pub fn fixture_kinds(text: &str) -> Vec<String> {
     let (_, cases) = cases(text);
     let mut kinds: Vec<String> = cases.iter().map(|case| case["kind"].as_str().expect("case kind").to_string()).collect();
@@ -357,7 +358,7 @@ pub fn fixture_kinds(text: &str) -> Vec<String> {
     kinds
 }
 
-/// 📚️ Asserts that the compute table of a category lists exactly the catalogue kinds of that category, and that the fixture states at least one case per kind and one fault case per kind that can fault.
+/// ‼️ Asserts that the compute table of a category lists exactly the catalogue kinds of that category, and that the fixture states at least one case per kind and one fault case per kind that can fault.
 pub fn assert_category(catalogue: &Catalogue, category: &str, entries: &[ComputeEntry], text: &str) {
     let mut registered: Vec<&str> = entries.iter().map(|entry| entry.id).collect();
     registered.sort();

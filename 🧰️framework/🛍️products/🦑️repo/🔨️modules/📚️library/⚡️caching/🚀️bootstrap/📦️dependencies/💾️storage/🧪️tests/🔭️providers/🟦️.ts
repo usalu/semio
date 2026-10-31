@@ -1,8 +1,10 @@
+import"./pressure.test.ts";
 import{withBuildTestInvocationV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
 import {join} from "node:path";
-import {mkdirSync,mkdtempSync,rmSync,symlinkSync,unlinkSync,writeFileSync} from "node:fs";
+import {createRequire} from "node:module";
+import {mkdirSync,mkdtempSync,readFileSync,rmSync,symlinkSync,unlinkSync,writeFileSync} from "node:fs";
 import * as issued from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import * as leases from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {readJavascriptDependencySourceOwnerExecutionV1} from "../../🟦️.ts";
@@ -13,7 +15,7 @@ test("declared provider walk refuses every change after the first observation of
  const validate=new Ajv({strict:true}).compile(corpus.schema),artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original provider walk artifact root required");
  await withBuildTestInvocationV1(async original=>{
   const control=issued.createIssuedResourceControlV1(original,"dependencies:provider-walk",0),run=async(mutation:string,position:number,total:number)=>{
-   const root=mkdtempSync(join(artifacts,"pw-")),workspace=join(root,"s"),cache=join(root,"n"),a="a".repeat(64),b="b".repeat(64),ga=join(cache,"j",a.slice(0,20)),gb=join(cache,"j",b.slice(0,20)),pa=join(ga,"w/0"),pb=join(gb,"w/0"),provider=join(ga,"node_modules/.bun/dep"),copy=join(gb,"node_modules/.bun/dep");
+   const root=mkdtempSync(join(artifacts,"pw-")),workspace=join(root,"s"),cache=join(root,"n"),a="a".repeat(64),b="b".repeat(64),ga=join(cache,"j",a.slice(0,20)),gb=join(cache,"j",b.slice(0,20)),pa=join(ga,"w/0"),pb=join(gb,"w/0"),provider=join(ga,"node_modules/dep"),copy=join(gb,"node_modules/dep");
    try{
     for(const path of[join(workspace,"p"),join(workspace,"b"),join(pa,"node_modules"),join(pb,"node_modules"),provider,copy])mkdirSync(path,{recursive:true});
     const document={name:"shared-p",version:"1.0.0",dependencies:{dep:"^1.0.0"}};writeFileSync(join(workspace,"p","package.json"),JSON.stringify(document));
@@ -49,3 +51,32 @@ test("declared provider walk refuses every change after the first observation of
   expect(failures).toEqual([]);
  });
 },120000);
+
+/** 🌱️ A hoisted scope keeps every provider at the scope-root owner: a member with an empty own node_modules resolves there, and an unowned ancestor node_modules (vite cache, dangling link) is never consulted. */
+test("hoisted source resolution reads the scope root owner and never an unowned ancestor",async()=>{
+ const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original provider walk artifact root required");const row=corpus.hoisted;
+ await withBuildTestInvocationV1(async original=>{
+  const control=issued.createIssuedResourceControlV1(original,"dependencies:hoisted-walk",0),root=mkdtempSync(join(artifacts,"hw-")),workspace=join(root,"s"),cache=join(root,"n"),a="a".repeat(64),ga=join(cache,"j",a.slice(0,20)),slot=join(ga,"w/0"),provider=join(ga,"node_modules/dep"),member=join(workspace,row.member),stray=join(workspace,"mid/node_modules");
+  try{
+   for(const path of[member,join(slot,"node_modules"),provider,stray])mkdirSync(path,{recursive:true});
+   const document={name:"hoisted-p",version:"1.0.0",dependencies:{dep:"^1.0.0"}};writeFileSync(join(member,"package.json"),JSON.stringify(document));writeFileSync(join(workspace,"package.json"),JSON.stringify({name:"scope",version:"1.0.0"}));writeFileSync(join(slot,"package.json"),JSON.stringify(document));writeFileSync(join(provider,"package.json"),JSON.stringify({name:"dep",version:row.providerVersion}));
+   mkdirSync(join(stray,".vite"),{recursive:true});symlinkSync(join(root,"retired","dep"),join(stray,"dep"),"dir");
+   symlinkSync(join(slot,"node_modules"),join(member,"node_modules"),"dir");symlinkSync(join(ga,"node_modules"),join(workspace,"node_modules"),"dir");
+   const context=Object.freeze({root:cache,invocation:original,control,check:()=>leases.checkResourceLeaseControl(control),recheck:async()=>{leases.checkResourceLeaseControl(control);}}),input={version:1,requested:["."],owners:{version:1,scopes:[{manifest:"package.json",packages:[row.member]}]},generations:[{scope:".",generation:a}]};
+   const result=await readJavascriptDependencySourceOwnerExecutionV1(workspace,context as never,control,input),edges=result.relations.flatMap(relation=>relation.edges.map(edge=>({name:edge.name,kind:edge.kind,range:edge.range,version:String(edge.provider?.version)})));
+   expect(edges).toEqual([row.expectedEdge]);
+   rmSync(stray,{recursive:true,force:true});
+   expect(JSON.parse(readFileSync(createRequire(join(member,"package.json")).resolve("dep/package.json"),"utf8")).version).toBe(row.expectedEdge.version);
+  }finally{rmSync(root,{recursive:true,force:true});}
+ });
+},120000);
+
+/** 🧭️ The hoisted resolution contract is enforced in code, and the runtime digest that feeds the ready fingerprint binds all three fields (independent sha256 over the schema file). */
+test("source owner protocol enforces hoisted contract and binds it into the runtime digest",async()=>{
+ const read=await import("../../📥️read-context/🟦️.ts"),{createHash}=await import("node:crypto"),schema=(await import("../../🧱️schemas/🟦️.ts")).javascriptInstallSchemaV1 as any,protocol=schema.$defs.SourceOwnerExecutionProtocol.const;
+ expect(()=>read.requireJavascriptDependencySourceOwnerHoistedProtocolV1(protocol)).not.toThrow();
+ for(const old of[{sourceResolution:"prospective-unique-owner-bindings"},{unownedFallback:"refuse-before-follow"},{ambientFallback:"require-missing-to-filesystem-root"}])expect(()=>read.requireJavascriptDependencySourceOwnerHoistedProtocolV1({...protocol,...old})).toThrow("Hoisted scope-root owner resolution protocol required");
+ const digest=(value:typeof protocol)=>createHash("sha256").update(JSON.stringify([value.profile,value.sourceResolution,value.unownedFallback,value.ambientFallback,schema.$defs.ManagerProtocol.const.runtime,process.versions.node,process.platform,process.arch,schema.$defs.SourceOwnerExportsProtocol.const,schema.$defs.ProducerRecipeProtocol.const])).digest("hex");
+ expect(read.javascriptDependencySourceOwnerRuntimeV1()).toBe(digest(protocol));
+ expect(digest({...protocol,sourceResolution:"prospective-unique-owner-bindings",unownedFallback:"refuse-before-follow",ambientFallback:"require-missing-to-filesystem-root"})).not.toBe(digest(protocol));
+});

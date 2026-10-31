@@ -96,7 +96,8 @@ impl<T: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.demands(copy).map(|demand| demand.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.demands(0).map(|demand| demand.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { self.demands(0).map(|demand| demand.depth) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
+        let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(denied()); }
         let demand = self.demands(grant.maximum_copy_bytes)?;
@@ -121,6 +122,9 @@ impl<T: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement
         self.source_bytes = 0;
         self.terminal = true;
         Ok(released(demand.release_bytes, true))
+    })();
+        let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()));
+        semio_framework_value::RetainedWorkOutcome { result, work }
     }
     fn terminal_is_empty(&self) -> bool { self.terminal && self.source_bytes == 0 && self.source.len() == 0 && self.pending.is_none() && self.active.is_none() }
 }
@@ -166,11 +170,15 @@ impl<T:semio_framework_value::retirement::RetireOwned,const N:usize> ErasedSnaps
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.demands(copy).map(|demand|demand.capacity_bytes)}
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.demands(0).map(|demand|demand.release_bytes)}
     fn next_depth_demand(&self)->Result<usize,ValueError>{self.demands(0).map(|demand|demand.depth)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
+        let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if self.terminal{return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0{return Ok(denied())}
         let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original paged source close depth refused"))}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(denied())}
         if let Some(active)=self.active.as_mut(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=active.step(child)?;let terminal=active.terminal_is_empty();semio_framework_value::retained_clone::admit_retained_clone_close(child,step,terminal,"original paged source child")?;if terminal{drop(self.active.take());self.terminal=true;}return Ok(if self.terminal{RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
         let source=self.source.take().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original paged source retirement lost its backing"))?;match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(active)=>{self.active=Some(active);Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))},Err((error,source))=>{*self.source=Some(source);Err(error)}}
+    })();
+        let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()));
+        semio_framework_value::RetainedWorkOutcome { result, work }
     }
     fn terminal_is_empty(&self)->bool{self.terminal&&self.source.is_none()&&self.active.is_none()}
 }

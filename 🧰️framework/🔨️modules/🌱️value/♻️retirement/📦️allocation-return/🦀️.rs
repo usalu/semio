@@ -1,4 +1,5 @@
 //! 🎟️ A parent retains genuine returned flat allocations until their complete physical release grant.
+#![feature(allocator_api)]
 use semio_framework_value_control_contract::{ValueError,ValueRefusalKind};
 use std::{alloc::Layout,mem::ManuallyDrop,ptr::NonNull};
 
@@ -79,3 +80,7 @@ fn refusal(kind:ValueRefusalKind,message:&'static str)->ValueError{ValueError::n
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+#[path="🔗️shared/🦀️.rs"]
+mod shared;
+pub use shared::{admit_shared_allocation,shared_allocation_bytes,SharedAllocation};

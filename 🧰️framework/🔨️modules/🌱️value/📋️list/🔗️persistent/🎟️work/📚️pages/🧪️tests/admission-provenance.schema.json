@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Genuine Accounting Loan Provenance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "rejectedBeforeEffects",
+    "untrustedMethodsRead",
+    "retainedCapacityBytes",
+    "cpu",
+    "unit"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "const": [
+        "unissued-noop-lookalike",
+        "copied-live-loan"
+      ]
+    },
+    "rejectedBeforeEffects": {
+      "const": true
+    },
+    "untrustedMethodsRead": {
+      "const": false
+    },
+    "retainedCapacityBytes": {
+      "const": 0
+    },
+    "cpu": {
+      "const": 0
+    },
+    "unit": {
+      "const": "accounting-token-provenance-not-byte-permission"
+    }
+  }
+}

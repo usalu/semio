@@ -1,7 +1,6 @@
     /// 🔐️ Two-turn presence and root retirement: the two-turn presence preparation, the local root retirement with its factory and the mounted close and registry helpers.
 
     use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use semio_framework_os_store_testing_doubles::store;
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
 #[derive(semio_framework_value::FactoryPayloadRetirement)]

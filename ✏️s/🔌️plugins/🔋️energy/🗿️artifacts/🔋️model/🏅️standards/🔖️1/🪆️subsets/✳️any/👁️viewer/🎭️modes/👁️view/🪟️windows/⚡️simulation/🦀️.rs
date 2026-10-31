@@ -43,8 +43,7 @@ fn leaf(id: impl Into<String>, label: String) -> TreeNodeView {
 }
 
 /// 👁️ Pure read of the model: the run period a simulation in the editor would cover.
-pub fn render(model: &crate::model::Model) -> BuiltNode {
-    let run_period = &model.run_period;
+pub fn render(run_period: &crate::snapshot::state::RunPeriod) -> BuiltNode {
     let roots = vec![
         TreeNodeView {
             id: "energy-viewer-result-status".into(),

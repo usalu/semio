@@ -33,8 +33,14 @@ const registryReadersV1=new AsyncLocalStorage<RegistryReadScopeV1>(),maximumRegi
 const registrySelectionV1=(row:ReadySelection):string=>cargoRegistryReadSelectionV1({manifest:resolve(row.manifest),cwd:resolve(row.cwd),offline:row.args.includes("--offline")});
 /** 🔒️ An offline read only observes what an online declaration already covers; the converse stays refused. */
 const registryCoveredV1=(scope:RegistryReadScopeV1,row:ReadySelection):boolean=>scope.selections.has(registrySelectionV1(row))||row.args.includes("--offline")&&scope.selections.has(cargoRegistryReadSelectionV1({manifest:resolve(row.manifest),cwd:resolve(row.cwd),offline:false}));
+/** 🔍️ Names the first reason a nested registry read is refused by the reader that spans it, so a refusal is attributable without a debugger. */
+function registryRefusalV1(scope:RegistryReadScopeV1,options:ReadyOptions):string|undefined{
+ if(!scope.live)return "the spanning reader ended";if(!scope.accepting)return "the spanning reader stopped accepting reads";if(scope.pending.size>=maximumRegistryPendingV1)return "pending reads reached "+maximumRegistryPendingV1;
+ if(scope.options.storage!==options.storage)return "another storage reservation";if(scope.options.home!==options.home)return "another Cargo home";
+ const row=options.requests.find(value=>!registryCoveredV1(scope,value));return row?"undeclared selection "+registrySelectionV1(row)+" (declared "+[...scope.selections].join(", ")+")":undefined;
+}
 function registryReadOperationV1<T>(scope:RegistryReadScopeV1,options:ReadyOptions,body:()=>Promise<T>):Promise<T>{
- const control=options.control;requireIssuedResourceControlRefinementV1(scope.options.control,control);if(!scope.live||!scope.accepting||scope.pending.size>=maximumRegistryPendingV1||scope.options.storage!==options.storage||scope.options.home!==options.home||options.requests.some(row=>!registryCoveredV1(scope,row))){scope.refusal??=withIssuedResourceOperationV1(control,async()=>{throw Error("Exact live declared Cargo registry reader required");});return scope.refusal;}
+ const control=options.control;requireIssuedResourceControlRefinementV1(scope.options.control,control);const refusal=registryRefusalV1(scope,options);if(refusal){scope.refusal??=withIssuedResourceOperationV1(control,async()=>{throw Error("Exact live declared Cargo registry reader required: "+refusal);});return scope.refusal;}
  const task=withIssuedResourceOperationV1(control,async()=>{checkResourceLeaseControl(control);await options.storage.recheck();checkResourceLeaseControl(control);const result=await body();checkResourceLeaseControl(control);await options.storage.recheck();return result;});scope.pending.add(task);void task.then(()=>scope.pending.delete(task),error=>{scope.pending.delete(task);if(!scope.failed){scope.failed=true;scope.failure=error;}});return task;
 }
 async function withRegistryReadScopeV1<T>(options:ReadyOptions,body:()=>Promise<T>):Promise<T>{

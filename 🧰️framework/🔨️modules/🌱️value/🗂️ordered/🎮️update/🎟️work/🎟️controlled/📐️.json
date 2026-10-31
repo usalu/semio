@@ -1,0 +1,12 @@
+{
+  "operation": "insert",
+  "input": [
+    [
+      "controlled",
+      7
+    ]
+  ],
+  "valueMovesBeforeCompletion": true,
+  "output": 7,
+  "copyBytesForControl": 0
+}

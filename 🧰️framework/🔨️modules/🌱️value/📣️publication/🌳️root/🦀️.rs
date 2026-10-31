@@ -3,10 +3,9 @@ use crate::{FactoryAuthority,RetirementDemand,RetainedCloneGrant,RetainedClonePr
 use crate::retained_clone::original_slot::{RetainedOriginalSlot,RetainedOriginalSlotKey};
 use std::{sync::Arc,mem::{ManuallyDrop,size_of},ops::{Deref,DerefMut}};
 /// 🪟️ The defining publisher owns the decision and its genuine retirement authority.
-pub trait RetainedPublicationDecision:Send+Sync{
+pub trait RetainedPublicationDecision:crate::FactoryRetirement{
  fn committed(&self)->bool;
  fn pending(&self)->bool;
- fn into_retirement(self:Arc<Self>)->FactoryAuthority;
 }
 struct Candidate<T>{root:Option<T>,decision:Option<Arc<dyn RetainedPublicationDecision>>}
 /// 🧳️ Staged roots retain original data and decision aliases until funded settlement returns every displaced owner.
@@ -36,20 +35,20 @@ impl<T> RetainedPublicationRoot<T>{
  }
  /// 🤝️ The committed candidate replaces the root; an aborted candidate returns unchanged for original retirement.
  pub fn settle(&mut self,displaced:&mut Option<T>,decision_retirement:&mut Option<FactoryAuthority>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-  if displaced.is_some()||decision_retirement.is_some(){return Err(invalid("retained publication settlement requires empty original recipient slots"))}let Some(candidate)=self.candidate.as_ref()else{return Ok(Default::default())};let decision=candidate.decision.as_ref().unwrap();if decision.pending(){return Ok(Default::default())}let d=self.settlement_demands();if !permits(d,grant){return Ok(Default::default())}let mut candidate=self.candidate.take().unwrap();if candidate.decision.as_ref().unwrap().committed(){let(previous,_)=self.original.as_mut().unwrap().replace(&mut candidate.root,grant)?.ok_or_else(||invalid("publication root settlement must admit original slot exchange"))?;*displaced=Some(previous);}else{*displaced=candidate.root.take();}*decision_retirement=Some(candidate.decision.take().unwrap().into_retirement());drop(candidate);Ok(progress(d))
+  if displaced.is_some()||decision_retirement.is_some(){return Err(invalid("retained publication settlement requires empty original recipient slots"))}let Some(candidate)=self.candidate.as_ref()else{return Ok(Default::default())};let decision=candidate.decision.as_ref().unwrap();if decision.pending(){return Ok(Default::default())}let d=self.settlement_demands();if !permits(d,grant){return Ok(Default::default())}let mut candidate=self.candidate.take().unwrap();if candidate.decision.as_ref().unwrap().committed(){let(previous,_)=self.original.as_mut().unwrap().replace(&mut candidate.root,grant)?.ok_or_else(||invalid("publication root settlement must admit original slot exchange"))?;*displaced=Some(previous);}else{*displaced=candidate.root.take();}*decision_retirement=Some(FactoryAuthority::new(candidate.decision.take().unwrap()));drop(candidate);Ok(progress(d))
  }
  /// 🪪️ Identifies the actual original root slot independently of its staged publication candidate.
  pub fn original_slot_key(&self)->Result<RetainedOriginalSlotKey,ValueError>{if self.candidate.is_some(){return Err(invalid("staged publication root cannot issue another original source"))}Ok(self.original.as_ref().ok_or_else(||invalid("original publication root is retiring"))?.key())}
  /// 📏️ Quotes the source birth of the original root using its existing retained slot protocol.
  pub fn original_read_demands(&self,key:RetainedOriginalSlotKey)->Result<RetirementDemand,ValueError>where T:Send+Sync+'static{self.original.as_ref().ok_or_else(||invalid("original publication root is retiring"))?.demands(key)}
  /// 🎟️ Lends the actual owned root through its supplied defining issuer before any projection is available.
- pub fn advance_original_read(&mut self,key:RetainedOriginalSlotKey,factory:&Arc<dyn crate::ArtifactOwnedValueRetirementFactory<T>>,grant:RetainedCloneGrant)->Result<crate::RetainedCloneStep,ValueError>where T:Send+Sync+'static{if self.candidate.is_some(){return Err(invalid("staged publication root cannot issue another original source"))}self.original.as_mut().ok_or_else(||invalid("original publication root is retiring"))?.advance_read(key,factory,grant)}
+ pub fn advance_original_read(&mut self,key:RetainedOriginalSlotKey,factory:&Arc<dyn crate::ArtifactOwnedValueRetirementFactory<T>>,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome where T:Send+Sync+'static{if self.candidate.is_some(){return crate::RetainedWorkOutcome{result:Err(invalid("staged publication root cannot issue another original source")),work:0}}match self.original.as_mut(){Some(original)=>original.advance_read(key,factory,grant),None=>crate::RetainedWorkOutcome{result:Err(invalid("original publication root is retiring")),work:0}}}
  /// 👁️ Projects only the exact admitted original slot and its current issuance.
  pub fn borrow_original(&self,key:RetainedOriginalSlotKey)->Result<crate::RetainedCloneRef<'_,T>,ValueError>{self.original.as_ref().ok_or_else(||invalid("original publication root is retiring"))?.borrow(key)}
  /// 📏️ Quotes original return and captured source cleanup before root mutation or publication.
  pub fn original_return_demands(&self,key:RetainedOriginalSlotKey,body:usize)->Result<RetirementDemand,ValueError>{self.original.as_ref().ok_or_else(||invalid("original publication root is retiring"))?.return_demands(key,body)}
  /// 🤝️ Returns the same original root and exact defining issuer after all retained projections close.
- pub fn return_original_read(&mut self,key:RetainedOriginalSlotKey,factory:&mut Option<Arc<dyn crate::ArtifactOwnedValueRetirementFactory<T>>>,grant:RetainedCloneGrant)->Result<crate::RetainedCloneStep,ValueError>{self.original.as_mut().ok_or_else(||invalid("original publication root is retiring"))?.return_read(key,factory,grant)}
+ pub fn return_original_read(&mut self,key:RetainedOriginalSlotKey,factory:&mut Option<Arc<dyn crate::ArtifactOwnedValueRetirementFactory<T>>>,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{match self.original.as_mut(){Some(original)=>original.return_read(key,factory,grant),None=>crate::RetainedWorkOutcome{result:Err(invalid("original publication root is retiring")),work:0}}}
  /// 📦️ Hands off the final root only after every staged candidate has settled.
  pub fn into_original(self)->Result<T,Self>{if self.candidate.is_some()||self.original.as_ref().is_some_and(RetainedOriginalSlot::has_read){return Err(self)}let mut owner=ManuallyDrop::new(self);Ok(owner.original.take().unwrap().try_into_original().ok().unwrap())}
 }

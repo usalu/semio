@@ -195,5 +195,12 @@
       ],
       "matches": false
     }
-  ]
+  ],
+  "workLaw": {
+    "deniedWork": 0,
+    "attemptWork": 1,
+    "failedItems": 0,
+    "successItems": 1,
+    "value": 7
+  }
 }

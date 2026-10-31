@@ -1,8 +1,8 @@
 //! 📤️ Canonical faults stream from their original typed owner into separately funded publication pages.
 use semio_framework_diagnostic::{Fault,FaultWireCursor};
-use semio_framework_job::{Generation, OperationId, StepContext, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView};
+use semio_framework_job::{Generation, OperationId, StepContext, OriginalTurnFailure, receive_original_retained_work, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView};
 use semio_framework_job_payload::{JobPayloadStream, RetainedJobPayload, RetainedPayloadBuilder};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand};
+use semio_framework_value::{RetainedWorkOutcome,ValueError,ValueRefusalKind,RetirementDemand};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use std::mem::MaybeUninit;
 
@@ -31,17 +31,17 @@ impl RetainedFaultPublication{
   Ok(RetirementDemand{depth:2,..Default::default()})
  }
  /// ✍️ Preserves the same typed source while actual bytes cross one original window and page at a time.
- pub fn advance_from_fault<'a>(&'a mut self,fault:&Fault,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{
-  let demand=self.advance_demands(fault,cx)?;if self.delivered||!Self::permits(cx.retained_grant(),demand){return Ok(None)}
-  if self.binding.is_none(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.binding=Some(Self::original(fault,cx));return Ok(None)}
-  if !self.builder.is_initialized(){self.builder.advance_initialization(cx)?;return Ok(None)}
+ pub fn advance_from_fault<'a>(&'a mut self,fault:&Fault,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{
+  cx.original_source_parent()?.validate_borrowed_context(cx)?;let demand=self.advance_demands(fault,cx)?;if cx.should_yield()||self.delivered||!Self::permits(cx.retained_grant(),demand){return Ok(None)}
+  if self.binding.is_none(){self.binding=Some(Self::original(fault,cx));receive_original_retained_work(cx,RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})?;return Ok(None)}
+  if !self.builder.is_initialized(){let turn=self.builder.advance_initialization(cx);receive_original_retained_work(cx,turn)?;return Ok(None)}
   let buffered=self.wire.buffered_bytes(&self.buffer)?.len();
   if buffered==self.buffer.len()||self.wire.is_complete()&&buffered>0{
-   if self.flush_cursor<buffered{self.builder.append_original(cx,self.wire.buffered_bytes(&self.buffer)?,&mut self.flush_cursor)?;return Ok(None)}
-   let step=self.wire.drain_buffer(&self.buffer,RetainedCloneGrant{maximum_depth:cx.retained_grant().maximum_depth-1,..cx.retained_grant()})?;cx.consume_retained(step.progress())?;if step.progress().copied_items>0{self.flush_cursor=0}return Ok(None)
+   if self.flush_cursor<buffered{let turn=self.builder.append_original(cx,self.wire.buffered_bytes(&self.buffer)?,&mut self.flush_cursor);receive_original_retained_work(cx,turn)?;return Ok(None)}
+   let turn=self.wire.drain_buffer(&self.buffer,RetainedCloneGrant{maximum_depth:cx.retained_grant().maximum_depth-1,..cx.retained_grant()});let step=receive_original_retained_work(cx,turn)?;if step.progress().copied_items>0{self.flush_cursor=0}return Ok(None)
   }
-  if !self.wire.is_complete(){let step=self.wire.advance_one(fault,&mut self.buffer,RetainedCloneGrant{maximum_depth:cx.retained_grant().maximum_depth-1,..cx.retained_grant()})?;cx.consume_retained(step.progress())?;return Ok(None)}
-  if self.builder.published().is_none(){self.builder.seal(cx)?;return Ok(None)}
+  if !self.wire.is_complete(){let turn=self.wire.advance_one(fault,&mut self.buffer,RetainedCloneGrant{maximum_depth:cx.retained_grant().maximum_depth-1,..cx.retained_grant()});receive_original_retained_work(cx,turn)?;return Ok(None)}
+  if self.builder.published().is_none(){let turn=self.builder.seal(cx);receive_original_retained_work(cx,turn)?;return Ok(None)}
   let original=JobOutcomeBorrow::admit_fault(cx,self.builder.published().ok_or_else(Self::invalid)?)?;if original.is_some(){self.delivered=true}Ok(original)
  }
  /// 🤝️ Resolves only the same original sealed fault header against its exclusive descriptor.
@@ -54,14 +54,14 @@ impl RetainedFaultPublication{
   Ok(RetirementDemand{depth:1,..Default::default()})
  }
  /// ♻️ Ends encoding metadata and physical pages before removing the original source binding.
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
-  let demand=self.retirement_demands()?;if !Self::permits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if !self.closing{self.closing=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+  if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+  let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if !Self::permits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  if !self.closing{self.closing=true;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
   let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-  if !self.wire.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(self.wire.close_step(child)?.progress()))}
-  if !self.builder.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(self.builder.close_step_granted(child)?.progress()))}
-  self.binding=None;self.flush_cursor=0;self.delivered=false;self.closing=false;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))
+  if !self.wire.terminal_is_empty(){let turn=self.wire.close_step(child);return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}
+  if !self.builder.terminal_is_empty(){let turn=self.builder.close_step_granted(child);return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}
+  self.binding=None;self.flush_cursor=0;self.delivered=false;self.closing=false;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
  }
 }
 impl Default for RetainedFaultPublication{fn default()->Self{Self::new()}}

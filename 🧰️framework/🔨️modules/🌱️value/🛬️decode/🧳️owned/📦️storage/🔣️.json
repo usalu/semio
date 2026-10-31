@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value",
+    "bytes",
+    "deniedWork",
+    "reserveWork",
+    "initializeWork",
+    "releaseWork",
+    "nullWork",
+    "cachedWork",
+    "stock",
+    "pureInitializers",
+    "initializeCopyBytes",
+    "takeIntoWork",
+    "liveReleaseWork",
+    "opaqueConstructors",
+    "moveText",
+    "occupiedOutputWork",
+    "nullKind"
+  ],
+  "properties": {
+    "value": {
+      "const": [
+        17,
+        23
+      ]
+    },
+    "bytes": {
+      "const": 16
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "reserveWork": {
+      "const": 1
+    },
+    "initializeWork": {
+      "const": 1
+    },
+    "releaseWork": {
+      "const": 1
+    },
+    "nullWork": {
+      "const": 1
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "stock": {
+      "const": {
+        "items": 10000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 64,
+        "fuel": 10000,
+        "maximumTurns": 10000
+      }
+    },
+    "pureInitializers": {
+      "const": [
+        "u64",
+        "String",
+        "Option",
+        "Vec",
+        "array",
+        "derived",
+        "tuple"
+      ]
+    },
+    "initializeCopyBytes": {
+      "const": 0
+    },
+    "takeIntoWork": {
+      "const": 1
+    },
+    "liveReleaseWork": {
+      "const": 0
+    },
+    "opaqueConstructors": {
+      "const": false
+    },
+    "moveText": {
+      "const": "original🧳"
+    },
+    "occupiedOutputWork": {
+      "const": 0
+    },
+    "nullKind": {
+      "const": "AllocationFailed"
+    }
+  }
+}

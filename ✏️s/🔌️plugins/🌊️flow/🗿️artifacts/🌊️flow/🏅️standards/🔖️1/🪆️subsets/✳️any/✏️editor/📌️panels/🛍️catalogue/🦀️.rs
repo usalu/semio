@@ -2,11 +2,9 @@
 
 use crate::editor::flow::commands::run_extension_action::FLOW_AUTOMATIONS;
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
-use crate::editor::flow::host::with_host_from_snapshot;
+use crate::editor::flow::host::catalogue_sections;
 use crate::editor::flow::terminology::{flow_extension_action_title_label, flow_extension_label, FlowPlayLabels};
 use crate::editor::flow::editor_vocabulary::{flow_action, ui_value_bool, ui_value_map, ui_value_text};
-use crate::FlowSnapshot;
-use flow::FlowEvalSession;
 use semio_framework_ui_contract::Label;
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::tree_item_with_action_draggable;
@@ -62,9 +60,8 @@ pub fn definition() -> PanelTabDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, session: &FlowEvalSession, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let raw = with_host_from_snapshot(snapshot, config, session, |host| host.catalogue_json()).map_err(|error| PluginAssemblyError::new("ui.catalogue", error.to_string()))?;
-    let catalogue: Value = serde_json::from_str(&raw).map_err(|error| PluginAssemblyError::new("ui.catalogue", error.to_string()))?;
+pub fn render(config: &FlowMainWindowConfig, labels: &FlowPlayLabels, windows: &TreeWindows<'_>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let catalogue = catalogue_sections(&config.catalogue_sections_json);
     let sections = catalogue.as_array().ok_or_else(|| PluginAssemblyError::new("ui.catalogue", "flow catalogue root must be an array"))?;
     if sections.is_empty() {
         return Err(PluginAssemblyError::new("ui.catalogue", "flow catalogue must contain at least one section"));

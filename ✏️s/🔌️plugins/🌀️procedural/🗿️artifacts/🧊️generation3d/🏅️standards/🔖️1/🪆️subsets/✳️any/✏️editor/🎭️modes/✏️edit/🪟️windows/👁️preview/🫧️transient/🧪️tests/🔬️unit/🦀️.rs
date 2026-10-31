@@ -12,10 +12,10 @@ fn retire(cursor: Box<dyn semio_framework_value::retirement::RetirementCursor>, 
         match top.close_step(grant) {
             semio_framework_value::retirement::RetirementStep::Child(child) => stack.push(child),
             semio_framework_value::retirement::RetirementStep::Advanced => {},
-            semio_framework_value::retirement::RetirementStep::Failure(error) => panic!("preview retirement refused: {error}"),
+            semio_framework_value::retirement::RetirementStep::Failure(error, _) => panic!("preview retirement refused: {error}"),
             semio_framework_value::retirement::RetirementStep::ProcessedBytes(processed_bytes) => assert!(processed_bytes <= 1),
             semio_framework_value::retirement::RetirementStep::Bytes(released_bytes) => assert!(released_bytes <= release),
-            semio_framework_value::retirement::RetirementStep::Complete => {
+            semio_framework_value::retirement::RetirementStep::Complete(_) => {
                 assert!(top.terminal_is_empty());
                 stack.pop();
             }

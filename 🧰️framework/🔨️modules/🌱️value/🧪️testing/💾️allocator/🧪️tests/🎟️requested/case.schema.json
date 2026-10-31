@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "const": [
+        {
+          "bytes": 1,
+          "refuse": false,
+          "expectedBirth": 1,
+          "expectedValue": [
+            7
+          ]
+        },
+        {
+          "bytes": 1,
+          "refuse": true,
+          "expectedBirth": 0,
+          "expectedValue": null
+        },
+        {
+          "bytes": 17,
+          "refuse": false,
+          "expectedBirth": 17,
+          "expectedValue": [
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7
+          ]
+        },
+        {
+          "bytes": 17,
+          "refuse": true,
+          "expectedBirth": 0,
+          "expectedValue": null
+        },
+        {
+          "bytes": 37,
+          "refuse": false,
+          "expectedBirth": 37,
+          "expectedValue": [
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7,
+            7
+          ]
+        },
+        {
+          "bytes": 37,
+          "refuse": true,
+          "expectedBirth": 0,
+          "expectedValue": null
+        }
+      ]
+    }
+  }
+}

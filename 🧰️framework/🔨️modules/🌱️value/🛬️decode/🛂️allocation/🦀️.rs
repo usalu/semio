@@ -48,7 +48,7 @@ impl<'a> NativeForwardedDecodeControl<'a>{
 }
 impl<'a> NativeForwardedDecodeContinuation<'a>{
  /// 🪢️ Binds the original caller port directly without creating replacement progress authority.
- pub fn new(maximum_bytes:usize,allocate:&'a mut NativeDecodeAllocationPort<'a>)->Self{Self{receipt:Some(NativeDecodeContinuation{ledger:super::next_ledger(),receiving:false,maximum_bytes,owned_bytes:0,completed:0,total:0,stage:0}),allocate,retirement:None}}
+ pub fn new(maximum_bytes:usize,allocate:&'a mut NativeDecodeAllocationPort<'a>)->Self{Self{receipt:Some(NativeDecodeContinuation{actual_work:0,ledger:super::next_ledger(),receiving:false,maximum_bytes,owned_bytes:0,completed:0,total:0,stage:0}),allocate,retirement:None}}
  /// 🫴️ Installs the original caller return slot before retained decoder ownership exists.
  pub fn install_retirement_recipient(&mut self,recipient:&'a mut NativeDecodeRetirementRecipient)->Result<(),ValueError>{if self.retirement.is_some()||!crate::ErasedSnapshotRetirement::terminal_is_empty(recipient){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"forwarded decoder requires one empty original retirement slot"))}self.retirement=Some(recipient);Ok(())}
  /// 🔁️ Reborrows original ports and retirement slot for one synchronous receiving hop.

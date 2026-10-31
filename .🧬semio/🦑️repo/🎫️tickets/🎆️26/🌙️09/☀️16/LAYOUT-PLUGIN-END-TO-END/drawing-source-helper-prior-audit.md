@@ -1,0 +1,5 @@
+# Shared Fixture Helper Recovery Audit
+
+Root independently read both HEAD and index through supported read-only repo Git; both are the 3,816-byte baseline. Prior Core owning7/6/public-baseline conservative captures instead record 3,890 bytes SHA256 bcdc7bf3ff23502f5df51bcaf292d3ae43ce29bbd145f05dbed3d85e54a1b707. The prior 74-byte working delta was not found in the bounded retained logs/input scripts audit. Restoring HEAD cannot be called exact pre-overwrite restoration.
+
+The accidental law-Bank overwrite was moved to a separate private law-bank module. The current genuine fixture owner is a defining staged implementation preserving known FixtureSource/Deref/FixtureSourceBirth interfaces and the entire original selected-close law. Its work/idle guards remain, and actual physical/CPU work is now carried through birth and close under an explicit existing neutral profile; that profile is not mislabeled identical to the previous demand-derived grants. The helper package and actual consumers must be tested. This reviewed semantic migration supersedes the baseline; no unknown historical bytes or peer attribution are fabricated.

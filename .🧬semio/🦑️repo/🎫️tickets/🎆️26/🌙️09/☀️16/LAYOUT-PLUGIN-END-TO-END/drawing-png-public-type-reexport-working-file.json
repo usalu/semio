@@ -1,0 +1,10 @@
+{
+  "reason": "Reached actual SVG PNG dependency has the same public type exported twice; retain one explicit canonical export",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/📷️png/✍️encode/🟦️.ts",
+      "beforeSha256": "304653829e96c75ddd3f86cbbb79d162ee5f3252dbd6612bf51bee6721f1fa61",
+      "sha256": "07357718c31d7f2e38671c498b489ef0c8b613a7244ee680219c34c2c17d3bc9"
+    }
+  ]
+}

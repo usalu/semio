@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "role",
+    "turns"
+  ],
+  "properties": {
+    "role": {
+      "const": "publication"
+    },
+    "turns": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case",
+          "work",
+          "items",
+          "copyBytes"
+        ],
+        "properties": {
+          "case": {
+            "enum": [
+              "denied",
+              "clear",
+              "cached"
+            ]
+          },
+          "work": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "copyBytes": {
+            "const": 0
+          }
+        }
+      }
+    }
+  }
+}

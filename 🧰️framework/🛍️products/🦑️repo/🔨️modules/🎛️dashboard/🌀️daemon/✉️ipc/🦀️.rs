@@ -24,8 +24,7 @@ pub const TASK_LANGUAGE_ENVIRONMENT: &str = "SEMIO_LANGUAGE";
 
 /// 🌐️ The environment entry that makes a task speak `language` (`en`, `de`), for `SpawnGroup::from_launch`.
 pub fn task_language(language: &str) -> (String, String) { (TASK_LANGUAGE_ENVIRONMENT.to_string(), language.to_string()) }
-#[path = "../../../📚️library/🏗️build/🕸️graph/🦀️rust/🦀️.rs"]
-pub mod build_authority;
+pub use dashboard_build_graph as build_authority;
 
 /// 🏗️ Reads the client's last selected build tool with native environment-name semantics.
 pub fn build_tool_environment(environment: &[(String, String)]) -> Option<&str> {

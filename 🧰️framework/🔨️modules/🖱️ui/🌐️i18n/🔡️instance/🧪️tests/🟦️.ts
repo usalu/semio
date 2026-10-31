@@ -8,6 +8,7 @@ import schema from "./🧬️schema/🔣️.json";
 
 type Step = Readonly<Record<string, unknown>> & { readonly call: string };
 type Row = (typeof corpus.instances)[number];
+type Options = Readonly<{ language?: string; fallbackLanguage?: string }>;
 
 interface Subject {
   t(key: string, options?: UiI18nCallOptions): unknown;
@@ -27,7 +28,7 @@ const owned = (row: Row): Subject => {
 
 const oracle = (row: Row): Subject => {
   const instance: i18n = i18next.createInstance();
-  void instance.init({ resources: {}, fallbackLng: row.options.fallbackLanguage, supportedLngs: [...row.options.supportedLanguages], nonExplicitSupportedLngs: true, lng: row.options.language, showSupportNotice: false, returnObjects: true, initImmediate: false, interpolation: { escapeValue: false } });
+  void instance.init({ resources: {}, fallbackLng: (row.options as Options).fallbackLanguage ?? false, supportedLngs: [...row.options.supportedLanguages], nonExplicitSupportedLngs: true, lng: (row.options as Options).language, showSupportNotice: false, returnObjects: true, initImmediate: false, interpolation: { escapeValue: false } });
   for (const [language, tree] of Object.entries(row.bundles)) instance.addResourceBundle(language, "translation", tree, true, true);
   return { t: (key, options) => instance.t(key as never, options as never), exists: (key, options) => instance.exists(key, options as never), fixed: (language, key) => instance.getFixedT(language)(key as never), language: () => instance.language, resolvedLanguage: () => instance.resolvedLanguage, changeLanguage: (language) => instance.changeLanguage(language), addBundle: (language, tree) => void instance.addResourceBundle(language, "translation", tree, true, true) };
 };
@@ -38,8 +39,8 @@ async function run(subject: Subject, steps: readonly Step[]): Promise<unknown[]>
     if (step.call === "t") seen.push(subject.t(step.key as string, step.options as UiI18nCallOptions | undefined));
     else if (step.call === "exists") seen.push(subject.exists(step.key as string, step.options as UiI18nCallOptions | undefined));
     else if (step.call === "fixed") seen.push(subject.fixed(step.language as string, step.key as string));
-    else if (step.call === "language") seen.push(subject.language());
-    else if (step.call === "resolvedLanguage") seen.push(subject.resolvedLanguage());
+    else if (step.call === "language") seen.push(subject.language() ?? null);
+    else if (step.call === "resolvedLanguage") seen.push(subject.resolvedLanguage() ?? null);
     else if (step.call === "changeLanguage") await subject.changeLanguage(step.language as string);
     else if (step.call === "addBundle") subject.addBundle(step.language as string, step.tree as UiI18nTree);
     else throw new Error(`unknown step ${step.call}`);

@@ -1,0 +1,411 @@
+{
+  "sourcePackets": [
+    {
+      "packet": "drawing-run-readonly-spans-working-file.json",
+      "sha256": "ea70f3c2dd75ada68eb0f38929d575064584b9ceb978d9f019c29ee519a500e3"
+    },
+    {
+      "packet": "drawing-font-paragraph-test-first.json",
+      "sha256": "dbf66f487f094d8b767950eface4290e0c187e3102ed06fbb1f580d64f5ebd9f"
+    },
+    {
+      "packet": "drawing-font-paragraph-producer-working-file.json",
+      "sha256": "684e6ec8a2a9472ee8a976e0f77a3684fd22ab4243a82c12d43203d6aeff031d"
+    },
+    {
+      "packet": "drawing-font-paragraph-close-working-file.json",
+      "sha256": "04e006cc2ab2026c1a84972bb078003196f5831e1ad15b2cd23b08fbedddfb44"
+    },
+    {
+      "packet": "drawing-font-paragraph-caller-working-files.json",
+      "sha256": "420edd355b368195cee8acefef9695573025524b690addba8da44aef235d94a7"
+    }
+  ],
+  "command": "drawing-font-paragraph-command.json",
+  "commandSha256": "face3c4a58ed3c65a92917de130235c0b0631d47110a4a56887aa8387a5685db",
+  "receipt": "🗑️generated/drawing-ts-font-paragraph/launch-receipt.json",
+  "receiptSha256": "5250a2f8f31b83a23a694c40196bb806e0a2e8b4f2260ed8b795d1657afd422c",
+  "currentInputs": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-font-paragraph.test.ts",
+      "bytes": 895,
+      "sha256": "866445a0a605996c2973761edf50fc4fe763066a4ec4264c9348344557b53290"
+    },
+    {
+      "path": "bun.lock",
+      "bytes": 603865,
+      "sha256": "b27bdace86f04889c66e59f5227d0bdef7568b22c550798705d3c911d1c88faf"
+    },
+    {
+      "path": "package.json",
+      "bytes": 21673,
+      "sha256": "9605466756ffe292a2e5c425e8beec9cda9b60967cadccc33fef9d20c617f98b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts",
+      "bytes": 3591,
+      "sha256": "f3761d394a0b4c94ec77d870124d9c794afa9c2c706d50a699456360f61b38f1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts",
+      "bytes": 4724,
+      "sha256": "d5804e1d21c567322861b32238216e8c113a1af0711379f6004e1e0b8e8d3c1f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 938,
+      "sha256": "d0dd2c88e9e2c580a77e0c2680ce84bf5b369399db87a0733231a540e56c658d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "bytes": 11158,
+      "sha256": "3caf3c9e4afc65e7a78f3614125ae0360ea44ec3e7e903569f05ca21c06129d4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🧪️tests/🎟️custody/📐️.json",
+      "bytes": 590,
+      "sha256": "12b5ff4c77462e867e21e66fb14d11a83c8f69020e39c34c13d1b961a56b3d62"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 191,
+      "sha256": "d82d29860640b802386ddcb8d4a446e7381a74de8ba9aa3ee3ab69cf253bb3b7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+      "bytes": 11148,
+      "sha256": "60465aadec328569f5a06023b1f02b2bd328e91786586e756c2d2c86f6cb0345"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts",
+      "bytes": 13533,
+      "sha256": "5a05448ef413e62f6a930046168fd0e8bfe9e67ab354f48a776cfe5258f2d6e7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧪️testing/🟦️.ts",
+      "bytes": 432,
+      "sha256": "54f663f2b11b687a7069586d783440a83e0222be15ec962370152cb4cedd7c47"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🟦️.ts",
+      "bytes": 16952,
+      "sha256": "49c71203355625951ab9bfa27c5d32ce43b5eda98c0c212e64bc099f2538571b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🟦️.ts",
+      "bytes": 29216,
+      "sha256": "990957bf1fc6ff4cdef434f4cc3df69973cfd980cf8e1734d27534e403b3735d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🧪️tests/🎟️work/paragraph.test.ts",
+      "bytes": 12121,
+      "sha256": "1847bb656b3963584f8029b555e6fec8e1632065d98a2f5da7e4d7ec64f25d5b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🧪️tests/🎟️work/📐️.json",
+      "bytes": 1192,
+      "sha256": "c5869386aa7841f50e61ade08d213cc0271b47d19cf26dcb90a29fb3e0f53af5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🧪️tests/🎟️work/🔣️.json",
+      "bytes": 1839,
+      "sha256": "b1d3d122dd20b5434b9561581fed8230faf9dcdf65a7d060407582d3b9aa8057"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🧪️tests/🟦️.ts",
+      "bytes": 5752,
+      "sha256": "c3ba6117a9e1ba40b0c53cf83c28f48c1cebede12081644a4adf1eb7e0ac60e0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 15968,
+      "sha256": "031c8a1531cdf6c379fd6ac749689334c1a616103b1a06a6a71f1277312c309f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🧪️tests/🧵️flow/cases.json",
+      "bytes": 1968,
+      "sha256": "280a01d9430dfc83754f28cd853878ad7313747cf66cd2eadd3fc5c4c3efc5c8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🧪️tests/🧵️flow/🟦️.ts",
+      "bytes": 5883,
+      "sha256": "1fd4e63210da62c44db8cc0573dafd0ef15e89a0ebd8e725dbb0e8b027c9d332"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "bytes": 32753,
+      "sha256": "8e465f0c0ef28481bdb59e464565a61235d71bfa4631b21d5186498a76c954bc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🎟️work/run.test.ts",
+      "bytes": 11279,
+      "sha256": "a34b38a9678f8598267e1426e9bf8a472361568741b92933a813a363e6fb8e84"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🎟️work/📐️.json",
+      "bytes": 1196,
+      "sha256": "a3124fe132558c505b9ac894769310f90aeb7da01d0bbcf9fc2848de764dc1a0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🎟️work/🔣️.json",
+      "bytes": 1997,
+      "sha256": "05e1ff45e7a6742af5317ddfbbadb5a6e499cc3c34090ecb1d76faa6d6bc7167"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🟦️.ts",
+      "bytes": 37590,
+      "sha256": "29b445ec63e84863e559ade03b3ab5be0c295ded41cc3df2b38eb2aebe322e61"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🎟️work/bidi.test.ts",
+      "bytes": 9210,
+      "sha256": "95715104c0f6d911c3a4986f824ce349e0b12a081b5f63991af16b40474aa650"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🎟️work/📐️.json",
+      "bytes": 781,
+      "sha256": "3fb5c5fa71aedfa35c1e021f2b5464ae275b3de7e044e098378a1e61c94217e6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🎟️work/🔣️.json",
+      "bytes": 1315,
+      "sha256": "5b24c5f22110e27edd9b79acae42c68a652aa01b9db76536ea885a38292dd875"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🟦️.ts",
+      "bytes": 5383,
+      "sha256": "88c4ad8518ac361787d8314b366c1b8438dd8dc7981b9a2ea68ee93f2b517fc4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 1679,
+      "sha256": "bafcb74176594e538ce42d2ef85d1c8534425b08715d8e00425d69c0abb4ce7a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧬️schema/🔣️.json",
+      "bytes": 1027,
+      "sha256": "7c1aaa85e0edbcf38800c88e343838ccf7d2ec8e761a14fd221bf306ec978067"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/📦️data/🔢️line-break.bin",
+      "bytes": 44604,
+      "sha256": "5e193916bfd43d8b810bfc44cd715b7673471e54a6fe39d03e3a7853da807e53"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+      "bytes": 15549,
+      "sha256": "540bd58a49cf8a7c69cd68d6994bbdfcf50a6490861389e9931c8982aa0b1c8e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/🏷️properties/🔢️properties.bin",
+      "bytes": 136336,
+      "sha256": "bb79ce7f56de95fbdadb65711dec4230d3b5ad022d844aaed1d285452f4dd8d3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/🔁️mappings/🔢️mappings.bin",
+      "bytes": 146056,
+      "sha256": "65a6eede3f6eb1a24ed358b03ff33375df7b3412442e1f7edc7d65b3fa27a599"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "bytes": 10875,
+      "sha256": "0a1c8055bf432fa5a6492a17fa0f1cf4efad92adf9513882ccad7db45a0f27f5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧪️tests/🎟️work/original.ts",
+      "bytes": 406,
+      "sha256": "ff0c64cba92852b4b598d1ecc7f27c08915be5f8463daaa2b3cdd92b86b3a14f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "bytes": 5446,
+      "sha256": "a704398e7497129e2fa633524a19d18e04cef0ee668fa113109360392aa3058b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "bytes": 10737,
+      "sha256": "8197644094b1f78702b5d6f3a71c396b498bc85610e329f4b5ca85a3d7771754"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🏷️class/🟦️.ts",
+      "bytes": 1593,
+      "sha256": "84f84d3100a383b2eff34263e25dc8b8407391f5f108ee6b46a9a4ff4ce99467"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "bytes": 6885,
+      "sha256": "f39c8dd265579993c0137659b97e469a172ba507e5cdd8ad4e0aef50c41e1e9b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+      "bytes": 7368,
+      "sha256": "62bc63235f28357f95be84cd5c6fe1759a78049a1870e36437c759b88c03b78c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts",
+      "bytes": 5872,
+      "sha256": "f064d6212b2fb264bc6134aa6d9e24999dc84f92d9b05d709fbd99e1bb205aa4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts",
+      "bytes": 5663,
+      "sha256": "50ffe4f80b8971853ce85d566018dacbd5064965e3fc7f1741b88d5bd436bdd1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts",
+      "bytes": 10306,
+      "sha256": "31596f229188f00fa4488ca4fe70f9fc5499ed95f6fd4f9334a485dab74927fa"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts",
+      "bytes": 11370,
+      "sha256": "d2b77ad5f384173eae6e86b8d05bc688a38285c381c9c50fa4ec953f0df3afbb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🟦️.ts",
+      "bytes": 9134,
+      "sha256": "fc421cdd7c0c1d7f295f86e6739d327768425f14a2ac23ba8b7ae231c296fec3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "bytes": 24889,
+      "sha256": "5a25329288d4ce7e66568e42a05c3b1d7605c4b00f6b02c138a546b9fe36e139"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "bytes": 14509,
+      "sha256": "db06a7272c06d98d53bcd0ebdac42b308b20f6d88e8040f422b0d1aec3f23582"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts",
+      "bytes": 6010,
+      "sha256": "1dc7040ce71a165a02c41ccc495f50bad7302efb6f7a2aea16e7d33db1333f38"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts",
+      "bytes": 1677,
+      "sha256": "98e33379591bea207abb9c53360fd6e92d7b07ad76db3b8ec574f4eac47d25b5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "bytes": 3282,
+      "sha256": "480a86a9e9ddb878ec4736c41e72cf376a48a7cb35a94b42446894ccd5377f69"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "bytes": 25510,
+      "sha256": "6041275db1facb4ef2b68af32c727bfa22d8a3d28b3a0997b4a9efb652638858"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🔤️outline.ttf",
+      "bytes": 19540,
+      "sha256": "31ff08942c8f4ff98276c050f039a2685d91d923867ea6c776c6a291a086fc13"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🔤️outline.ttf",
+      "bytes": 23652,
+      "sha256": "afbacbae52dbd6a6250f9ffd1e690227564c744508d703d36df14c322816b657"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/🔤️outline.ttf",
+      "bytes": 178048,
+      "sha256": "b107e95dcd571bd40408cf5906f91780171abd9edf4328af54888e95a28549d1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/🔤️outline.ttf",
+      "bytes": 80404,
+      "sha256": "0bb1b805256ac06bfe079eed3624fd3ffe2117e854c8ab5cafa87baa3778b3ec"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/🔤️outline.ttf",
+      "bytes": 79792,
+      "sha256": "4eaa8acc313c6fc34aa9a0b6a2ff24ebb8a910568d2c1b3f4fed2aeead58ba15"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🔤️outline.ttf",
+      "bytes": 30548,
+      "sha256": "dfe0fc53375e8bb7f6fbaa639087f905d7aebf07108816d92524e9b3d81b2a50"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🔤️outline.ttf",
+      "bytes": 83404,
+      "sha256": "207ecd3bb593edda35f515399f8d2aad0021d72525ba0a5ac212001f318cc4e5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/🔤️outline.ttf",
+      "bytes": 136852,
+      "sha256": "b972f7d349cd89ac6c6fee0b0eaed39c1656aa51d74e932cac89abd21f00fff9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🔤️outline.ttf",
+      "bytes": 8536,
+      "sha256": "ebbfea501df1f01063a103c99ac6c76a6a239ee45856a57c6730d8c4456803e4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/🔤️outline.ttf",
+      "bytes": 150208,
+      "sha256": "ff5d9966357cff7cf59bae37208e2c7fb473bd538add5e11676be691eba87f42"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/🔤️outline.ttf",
+      "bytes": 146732,
+      "sha256": "fa6c50b00fb39b2f984a53fbf03f2ae5c2624045d1738614e80c1e68c59267a7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/🔤️outline.ttf",
+      "bytes": 86008,
+      "sha256": "654c549ae1488f355924e53b9bfd150d672df6b0c053b21b8dd17a2f8a2c6718"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🔤️outline.ttf",
+      "bytes": 5444,
+      "sha256": "5b6d1483840ee81afd7220816e6cca4713692f85626273d1a827f8b878f32a35"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/🔤️outline.ttf",
+      "bytes": 21676,
+      "sha256": "c3f93f54f005c520b506e85129799b511e31cfc1fb799302bc73d83b2a89df47"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf",
+      "bytes": 26772,
+      "sha256": "6e9112853217f39bc753c94ab0f16fd7dc57fa56003cfb981b0bb7b0c514487f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🔣️symbols/📖️regular/🔤️outline.ttf",
+      "bytes": 9392,
+      "sha256": "ed2f13d29d6e6b0decda8cfac96f5dbc4a4aa6063b299e40a58164df42fe1807"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🧮️math/📖️regular/🔤️outline.ttf",
+      "bytes": 14168,
+      "sha256": "8337aa8a0122e0a0bcb042c09f74b5b11113ee7687a5a769f6a6179fee9e5fa0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/➕️latin-ext/📖️regular/🔤️outline.ttf",
+      "bytes": 18864,
+      "sha256": "b0a9674f92bd9b92efa49c4ce219bb666f0db0497552213bdfd2f12480190095"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf",
+      "bytes": 27608,
+      "sha256": "33c29e564b169dbbc1a90be9f050fcde7fb204232bc4f3c52bf4b844e31dbba6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🪆️cyrillic/📖️regular/🔤️outline.ttf",
+      "bytes": 16892,
+      "sha256": "7b05247968525a08ff341afbae7a8c7d4447a2224c13e3ff584a1b4631fe1b7b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.d.ts",
+      "bytes": 1549,
+      "sha256": "0da4d443c29ad9c58ee44dae4fe02ea580c0368fb763274f475d6803d165eff3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js",
+      "bytes": 2426,
+      "sha256": "88cc37857ed7ebebdc426aff1812d52bcfd4caf3cccc41924e72a89e77173372"
+    }
+  ],
+  "claims": "Scoped17 owning + strict11 actual; awaiting Root independent final review."
+}

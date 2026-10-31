@@ -1,0 +1,22 @@
+{
+  "state": "closed-schema-and-four-new-laws-before-production",
+  "actualPriorRed": "layout-js-current-2-caller-classification.md",
+  "originalFixtureAndMatrixUnchanged": true,
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🗃️plan/🧪️tests/🎟️work/🔣️.json",
+      "bytes": 1424,
+      "sha256": "0ef98432f1b3cae200e8be76ffcce7440125b433f46dd66679e2e5428f6e86d2"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🗃️plan/🧪️tests/🎟️work/📐️.json",
+      "bytes": 963,
+      "sha256": "5a6e203e96f6a48deefd5f3d52168ff4297a07bedd95e5342dbbc7ce87824c8b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🗃️plan/🧪️tests/🎟️work/plan.test.ts",
+      "bytes": 6473,
+      "sha256": "92b23cc813515cf9f024cd8ca21365ca7b725c21675d25081eac9f55c8764cbf"
+    }
+  ]
+}

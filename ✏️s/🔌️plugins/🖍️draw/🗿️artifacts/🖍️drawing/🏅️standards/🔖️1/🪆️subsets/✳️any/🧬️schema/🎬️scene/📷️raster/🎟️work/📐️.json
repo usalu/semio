@@ -1,0 +1,20 @@
+{
+  "maxNodes": 1024,
+  "maxScopes": 32,
+  "headerCopyBytes": 0,
+  "axes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "stock": {
+    "items": 4194304,
+    "copy": 268435456,
+    "capacity": 33554432,
+    "release": 67108864,
+    "depth": 256
+  },
+  "maxTurns": 2000000
+}

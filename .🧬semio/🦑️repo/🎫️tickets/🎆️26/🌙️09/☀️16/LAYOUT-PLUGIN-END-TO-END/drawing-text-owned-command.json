@@ -1,0 +1,2302 @@
+{
+  "state": "prepared-review-only-unexecuted",
+  "authority": false,
+  "launchAuthorized": false,
+  "attemptsExecuted": 0,
+  "expectedOwningLaws": 18,
+  "expectedBreakdown": {
+    "originalSceneOwner": 6,
+    "sameBodyContentReplacement": 6,
+    "genuineDrawingText": 6
+  },
+  "inputs": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-text-owned.test.ts",
+      "bytes": 301,
+      "sha256": "bb4672175c4acef85dd59f14bedd1a21663819038ec6775240089d3105bb3630",
+      "absoluteUtf16Units": 124
+    },
+    {
+      "path": "bun.lock",
+      "bytes": 603865,
+      "sha256": "b27bdace86f04889c66e59f5227d0bdef7568b22c550798705d3c911d1c88faf",
+      "absoluteUtf16Units": 36
+    },
+    {
+      "path": "package.json",
+      "bytes": 21673,
+      "sha256": "9605466756ffe292a2e5c425e8beec9cda9b60967cadccc33fef9d20c617f98b",
+      "absoluteUtf16Units": 40
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🟦️.ts",
+      "bytes": 5114,
+      "sha256": "e788a721747fa56e0697cf69e52c21229bcac80ba792958ccda04175b78d2c9d",
+      "absoluteUtf16Units": 146
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🖌️paint-model/🟦️.ts",
+      "bytes": 433,
+      "sha256": "eb54903eb01db97ebea5ccb363ac2b359dd54d16939250d2160c510cbb598fbf",
+      "absoluteUtf16Units": 149
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🟦️.ts",
+      "bytes": 20876,
+      "sha256": "5c0644d00607ab7ef9d7aed5e9e61da1918d39eda9ad713b41300ebbb98b086d",
+      "absoluteUtf16Units": 145
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "bytes": 16939,
+      "sha256": "907e9143e016a3ddeda2bfa1aa64d49e577539c4a90ba540e0413c2035e5fbd8",
+      "absoluteUtf16Units": 143
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "bytes": 10504,
+      "sha256": "bb452f0fbc9aef7f08520d13dfdeece5e9e43be47ff6e2acbe5f868be4324ad2",
+      "absoluteUtf16Units": 167
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/📐️.json",
+      "bytes": 2462,
+      "sha256": "3ec84c301f051347ec0b81ed666665212b15d53b4f2da6d11c65e278068b48a3",
+      "absoluteUtf16Units": 163
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/🔣️.json",
+      "bytes": 3203,
+      "sha256": "00c0420a25a8cd2ebad102dd6027b95d0a8a9138ea76fce6a3221dc127f08699",
+      "absoluteUtf16Units": 163
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🟦️.ts",
+      "bytes": 155,
+      "sha256": "3259dd70231380c4a641a72ae5db475889520ab452e71e9ac5a224144c7bd44e",
+      "absoluteUtf16Units": 169
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+      "bytes": 8569,
+      "sha256": "8842fb650cc079a55acb76629593d617eb7e0f8ac4af367e0d61d47fb69abdb9",
+      "absoluteUtf16Units": 191
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/📐️.json",
+      "bytes": 2034,
+      "sha256": "a75f50409203c4b594f98a9781a27b626c69f8b5597bc4a64ad4ffa5a47dfe2b",
+      "absoluteUtf16Units": 180
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/🔣️.json",
+      "bytes": 3754,
+      "sha256": "436732039583b5ecde4646aaa6d11e67a0e49a92a56dd8d01af23991ae600140",
+      "absoluteUtf16Units": 180
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts",
+      "bytes": 28531,
+      "sha256": "1c7421cfac62144534ca1a888ed7ae7713d4ddd97e6b3ee9265a6c219a1292ef",
+      "absoluteUtf16Units": 158
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+      "bytes": 19076,
+      "sha256": "afee7dca46de39ecda626d5efc8bfb5570e8878bf58a5b5e4d2e55f031844299",
+      "absoluteUtf16Units": 174
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/📐️.json",
+      "bytes": 6066,
+      "sha256": "f2ccfef63115521e270f44e321e9e76875b7e313ed5f9c79e04cdc4c7acafde2",
+      "absoluteUtf16Units": 169
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/🔣️.json",
+      "bytes": 7633,
+      "sha256": "d3b5e01c69c69d7a067afd98622d9c5b7edf80346a9f1dd2065839a9036d104e",
+      "absoluteUtf16Units": 169
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🟦️.ts",
+      "bytes": 2103,
+      "sha256": "43556054be8dd57186355ba26db2ef7a4051859036c6dcb58bbcffddf8221789",
+      "absoluteUtf16Units": 149
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+      "bytes": 1250,
+      "sha256": "7d43782db0f68ad1f0c25bb21595c458dc8cea23c531a356b462b7b44154009e",
+      "absoluteUtf16Units": 145
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️text/🔤️family/🟦️.ts",
+      "bytes": 965,
+      "sha256": "e41426e62a9230900574a3fbad6ebe20ca24f946fc6fa294a92c9fe0de6150c2",
+      "absoluteUtf16Units": 144
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🖊️stroke/🟦️.ts",
+      "bytes": 622,
+      "sha256": "44250359c3ceab1e968c249585c0ef897ef398ec3c513606d43f73da37c03444",
+      "absoluteUtf16Units": 136
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts",
+      "bytes": 13717,
+      "sha256": "a0f07a4f5f11c3a3e4cc70bebe500d97b7166a9bc1d52d70fafe24f7fb68c7f2",
+      "absoluteUtf16Units": 148
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🟦️.ts",
+      "bytes": 6313,
+      "sha256": "1684e3a2afe8543167f2192ce8df122dcfb266c090488438f91a03910d6b61e7",
+      "absoluteUtf16Units": 138
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/package.json",
+      "bytes": 28577,
+      "sha256": "001fc270ab675350c61e38683bb797561760ea1556b02f11c2665fb896705f85",
+      "absoluteUtf16Units": 79
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "bytes": 409,
+      "sha256": "ca5ee87b20dcb323a62e17fb63aa22c3c6de6657f4300537239721240dd5d371",
+      "absoluteUtf16Units": 105
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/🟦️.ts",
+      "bytes": 224,
+      "sha256": "dfcfb38ed6985e7ceeb979438e52674cbe9f3f11cb51c335e5f5b4567eacae52",
+      "absoluteUtf16Units": 94
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "bytes": 217,
+      "sha256": "f76e065a2df04cbfeddd524359791f4c08b2471a44afd1d3e72c58c4f93b6e65",
+      "absoluteUtf16Units": 101
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "bytes": 376,
+      "sha256": "0eb4c40a680b69af942d6b77eead07b7ab40b12328aacf4eef2b525b0ecdbb45",
+      "absoluteUtf16Units": 114
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+      "bytes": 289,
+      "sha256": "7b17fd41927a2960795da832b15c70a782b312772c3c68942cbb6b9400626d18",
+      "absoluteUtf16Units": 97
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🛤️path/🖊️stroke/🟦️.ts",
+      "bytes": 296,
+      "sha256": "cc28e26d6f966cdff3466fc858e16cdc484a7407549f7703da09df246d845342",
+      "absoluteUtf16Units": 96
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🟦️.ts",
+      "bytes": 415,
+      "sha256": "c2b108179712c7412511c79661767362c55e6d2ae0dcc07a298424f86e335024",
+      "absoluteUtf16Units": 78
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🧹️retire/🟦️.ts",
+      "bytes": 298,
+      "sha256": "c3c6be8ed7aac77b1a0084308656289393ce68a8607f6fa4a6db8c3be36c7fb3",
+      "absoluteUtf16Units": 88
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/✍️editing/🟦️.ts",
+      "bytes": 518,
+      "sha256": "dcfc763c5354d2d70612f114d4e85edeb3dc9923ed263daea9a2d8ba242e2f4e",
+      "absoluteUtf16Units": 93
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "bytes": 225,
+      "sha256": "c22f5fc8321fe43ca52f1c3444408cc70260b8aa5f7403c4bc75dccae80c43a8",
+      "absoluteUtf16Units": 104
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/🖊️coverage/🟦️.ts",
+      "bytes": 287,
+      "sha256": "f4bb7db7e47564bf98c41e7247cedf65aa04f1eabe89a39af3a48f2bdc82fc43",
+      "absoluteUtf16Units": 95
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/🧩️compositing/🟦️.ts",
+      "bytes": 341,
+      "sha256": "9faae3a987cc52f98cfa228adbc53b6271add8077d0ed42330da7888bbb5c03b",
+      "absoluteUtf16Units": 98
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts",
+      "bytes": 3591,
+      "sha256": "f3761d394a0b4c94ec77d870124d9c794afa9c2c706d50a699456360f61b38f1",
+      "absoluteUtf16Units": 83
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "bytes": 11242,
+      "sha256": "681ec7aee296db9213b7e4e42e68e732c1269030fac068207613101db5e1b3d4",
+      "absoluteUtf16Units": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🧪️tests/🎟️custody/📐️.json",
+      "bytes": 590,
+      "sha256": "12b5ff4c77462e867e21e66fb14d11a83c8f69020e39c34c13d1b961a56b3d62",
+      "absoluteUtf16Units": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 191,
+      "sha256": "d82d29860640b802386ddcb8d4a446e7381a74de8ba9aa3ee3ab69cf253bb3b7",
+      "absoluteUtf16Units": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+      "bytes": 11230,
+      "sha256": "ef91dedb1c17f9712244a3a20fb6ab7624765bc288143034be3b6ec110753cf5",
+      "absoluteUtf16Units": 79
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts",
+      "bytes": 13617,
+      "sha256": "a1fb58ba0257858b6b565c818d8ca91915637e418cd11445718bf6669eb7f351",
+      "absoluteUtf16Units": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🟦️.ts",
+      "bytes": 17044,
+      "sha256": "3c08402a7019739b8bfd4ff783be393c7bf08e310043b690fdba06fde6f16ba8",
+      "absoluteUtf16Units": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "bytes": 32961,
+      "sha256": "9af5c3f9090fc98eae7818a502b4cdd18f1f02376752e250bf871408b26be3ab",
+      "absoluteUtf16Units": 86
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🟦️.ts",
+      "bytes": 37674,
+      "sha256": "8cf9e0bd29295ed51a76f02db1f1025d62f8030d6f896ac74ca470c7a38535c5",
+      "absoluteUtf16Units": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/📦️data/🔢️line-break.bin",
+      "bytes": 44604,
+      "sha256": "5e193916bfd43d8b810bfc44cd715b7673471e54a6fe39d03e3a7853da807e53",
+      "absoluteUtf16Units": 131
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/🏷️properties/🔢️properties.bin",
+      "bytes": 136336,
+      "sha256": "bb79ce7f56de95fbdadb65711dec4230d3b5ad022d844aaed1d285452f4dd8d3",
+      "absoluteUtf16Units": 132
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/🔁️mappings/🔢️mappings.bin",
+      "bytes": 146056,
+      "sha256": "65a6eede3f6eb1a24ed358b03ff33375df7b3412442e1f7edc7d65b3fa27a599",
+      "absoluteUtf16Units": 128
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "bytes": 10959,
+      "sha256": "5ee6811f7c752d250f376005b0547bf9407f29657551c9bd0ab668130e0ee7da",
+      "absoluteUtf16Units": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "bytes": 5530,
+      "sha256": "7f101cfe22389ae9613a08c9c2430edc628598ff62631e20998ba8efe72eebb4",
+      "absoluteUtf16Units": 110
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "bytes": 10821,
+      "sha256": "2f048fd471e9292c628ee447ead7cc5f79d6b86d27bd6c4e0e243effe97f3db7",
+      "absoluteUtf16Units": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🏷️class/🟦️.ts",
+      "bytes": 1593,
+      "sha256": "84f84d3100a383b2eff34263e25dc8b8407391f5f108ee6b46a9a4ff4ce99467",
+      "absoluteUtf16Units": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "bytes": 6969,
+      "sha256": "366d44354057d3f3d5d2295c0cc78d0dfd9a2677314095f00e821fa62700bb65",
+      "absoluteUtf16Units": 96
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+      "bytes": 7452,
+      "sha256": "2f0a364e9f17c16d18934a7cf72165656fe1cb3555182920230701861c2d4489",
+      "absoluteUtf16Units": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts",
+      "bytes": 5956,
+      "sha256": "30f613bf96e48a5504498fdd5193d07cca9b080b3acc2e8ebaa84da270ed3934",
+      "absoluteUtf16Units": 96
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts",
+      "bytes": 5747,
+      "sha256": "ec66c086d637f17b70b4d0809e7a0fb9e8a8741730c55ff73d6a65b4be10b091",
+      "absoluteUtf16Units": 100
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts",
+      "bytes": 10390,
+      "sha256": "b9924d5f915f3c0087389e9379eaaa6baf103693b3f2fdd93671e80e351c4336",
+      "absoluteUtf16Units": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts",
+      "bytes": 11454,
+      "sha256": "c86033b15f6e1961a3f2d4bfcb2a1443a67b7c089a52e07648106fbf53c73ed0",
+      "absoluteUtf16Units": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🟦️.ts",
+      "bytes": 9134,
+      "sha256": "fc421cdd7c0c1d7f295f86e6739d327768425f14a2ac23ba8b7ae231c296fec3",
+      "absoluteUtf16Units": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "bytes": 25005,
+      "sha256": "5539022852eaaf1aeff2e2bddd649718f23d21810364edde1a8f1ddcec9e0597",
+      "absoluteUtf16Units": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "bytes": 14601,
+      "sha256": "859f7c0d5ee3c0eb9ade323402fa7e5fa765a6c23d3104b3b0358870132f2f3e",
+      "absoluteUtf16Units": 98
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts",
+      "bytes": 6094,
+      "sha256": "e05b74c19b7e65c507c33fe8c94149dfc3ed8e229e328445cf8b8b66e78bc874",
+      "absoluteUtf16Units": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🟦️.ts",
+      "bytes": 887,
+      "sha256": "17852760393b821e7614288d7c3f1e73f6988712d615b42ee8cc6ca32c4e122c",
+      "absoluteUtf16Units": 71
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/package.json",
+      "bytes": 1819,
+      "sha256": "8ad8197ec24e4fca5c6a6ac46de4ceceba2054472ef271a65c087f16d9fa97cf",
+      "absoluteUtf16Units": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "bytes": 442,
+      "sha256": "ce27b273bd2a3946e1454e9d392e0a73a6444a4a64f837cc192475c8db476c1a",
+      "absoluteUtf16Units": 116
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/🟦️.ts",
+      "bytes": 228,
+      "sha256": "88b935fc2b46a1ecfc626eef340030e5f25e2b5c68245fd744733f89cdf8e2f5",
+      "absoluteUtf16Units": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "bytes": 231,
+      "sha256": "dec6070095d9e6183cfffcee545b1b57c0f9bb82f7d7406df78bb6b4bb985794",
+      "absoluteUtf16Units": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "bytes": 429,
+      "sha256": "a71bfa082acbc8490bc0a927565501b697871b805b5f8c3794ec588810085581",
+      "absoluteUtf16Units": 125
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🛤️path/📏️flatten/🟦️.ts",
+      "bytes": 302,
+      "sha256": "cbf673a3f3e67114764e83a877e0a44c9549bbfd377cf6f92a9df79a082dd2ee",
+      "absoluteUtf16Units": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🛤️path/🖊️stroke/🟦️.ts",
+      "bytes": 309,
+      "sha256": "8153102de03553b0e39242c84e802bed6a8a20205323f255e80cf8e10a54766d",
+      "absoluteUtf16Units": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🟦️.ts",
+      "bytes": 1353,
+      "sha256": "f9d1b5d73d261e2b76fc1ae0d63f06a8528ada1ec45b61e13bd02124ca77f67b",
+      "absoluteUtf16Units": 89
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🧹️retire/🟦️.ts",
+      "bytes": 291,
+      "sha256": "68e532d0d22990ed94e01a110a1c73bc8a8b1bd39c045c41cca5e702ac73f3f3",
+      "absoluteUtf16Units": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🟦️.ts",
+      "bytes": 10938,
+      "sha256": "4773557e4b923378a73b4b38531b4d9855caa93704f3323fc753062046c699a5",
+      "absoluteUtf16Units": 84
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🟦️.ts",
+      "bytes": 26655,
+      "sha256": "46402f5d17a1b9d636bbdfff8e341f6db042ed812bf2db84d19ff92c3c6c84f2",
+      "absoluteUtf16Units": 75
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🟦️.ts",
+      "bytes": 14688,
+      "sha256": "1ef10461199754bc0ff369654b1434fa713d54157f90ba4d7dc8c7a1425f9015",
+      "absoluteUtf16Units": 72
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+      "bytes": 10213,
+      "sha256": "bfb1d17da6e7a473fe3bee7cbd7c9c13f48259199af3a5571a44253a89b69442",
+      "absoluteUtf16Units": 82
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🟦️.ts",
+      "bytes": 16262,
+      "sha256": "853086b2323dd6ceed7160c85e62eb3d8f0b938a3111e6f26ffe6771cce460cb",
+      "absoluteUtf16Units": 81
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+      "bytes": 12639,
+      "sha256": "5ffe64df319f0c0802846ac5d1106f2c9b98cfac80a61f9a4b73ce07a379d023",
+      "absoluteUtf16Units": 63
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧪️tests/🧪️semio-tech-framework-2d-js/🟦️.ts",
+      "bytes": 1571,
+      "sha256": "a71f5cdee25793e1664d422eb0ac474882b392305e24022f41c27873e126fdc1",
+      "absoluteUtf16Units": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts",
+      "bytes": 873,
+      "sha256": "2b772d76c48da6528c80fba6b9255e0400167e748068038c32f95e1a7ce50bc7",
+      "absoluteUtf16Units": 73
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts",
+      "bytes": 1677,
+      "sha256": "98e33379591bea207abb9c53360fd6e92d7b07ad76db3b8ec574f4eac47d25b5",
+      "absoluteUtf16Units": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "bytes": 4766,
+      "sha256": "868556db6df93a13c327fb7d6d7ea403a687657b6f94b5205a8430b79400c6d7",
+      "absoluteUtf16Units": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "bytes": 3282,
+      "sha256": "480a86a9e9ddb878ec4736c41e72cf376a48a7cb35a94b42446894ccd5377f69",
+      "absoluteUtf16Units": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "bytes": 25510,
+      "sha256": "6041275db1facb4ef2b68af32c727bfa22d8a3d28b3a0997b4a9efb652638858",
+      "absoluteUtf16Units": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts",
+      "bytes": 26554,
+      "sha256": "e265ef0a5a80c742cb72ef36d2e551472dc1ec6e8d199e4258c41d12a61852a8",
+      "absoluteUtf16Units": 78
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "bytes": 10394,
+      "sha256": "24f568a6facf0ed49af101e7ef58bca3a62a690179a5ab397eafca2c6e6f8789",
+      "absoluteUtf16Units": 89
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/package.json",
+      "bytes": 862,
+      "sha256": "0167130fc482c7939a365c72b23eb3dc010878dfb0178de9bad3df5ec4947432",
+      "absoluteUtf16Units": 100
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts",
+      "bytes": 380,
+      "sha256": "1895a81a4392a2c17a870e7f727a981e01d5a64d5de806844c0ed7dd0ad60037",
+      "absoluteUtf16Units": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🎨️sampling/↗️affine/🟦️.ts",
+      "bytes": 224,
+      "sha256": "b505632e16ace9ad28febe84fcda357f1dc831be7c8a1c65b9ca0b3422f475fb",
+      "absoluteUtf16Units": 115
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🖊️coverage/🟦️.ts",
+      "bytes": 272,
+      "sha256": "f53e3d372ec7450ed25109c36e332afcebced47d41a3adfde22144166a278074",
+      "absoluteUtf16Units": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🧩️compositing/🟦️.ts",
+      "bytes": 326,
+      "sha256": "0785f8a1ca65415a9775d958be6d838e0281e41e011a5d98198e7cbd0438320a",
+      "absoluteUtf16Units": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts",
+      "bytes": 12655,
+      "sha256": "3c19f3a72b1875d644df7ecf68c73a36906d942084b3c566796ea24499b25f30",
+      "absoluteUtf16Units": 80
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts",
+      "bytes": 13232,
+      "sha256": "de326e7b58dc47bc9310f2bcbd73196292f235baeb7b1beb5343cf4677b74ca6",
+      "absoluteUtf16Units": 83
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🔤️outline.ttf",
+      "bytes": 19540,
+      "sha256": "31ff08942c8f4ff98276c050f039a2685d91d923867ea6c776c6a291a086fc13",
+      "absoluteUtf16Units": 123
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🔤️outline.ttf",
+      "bytes": 23652,
+      "sha256": "afbacbae52dbd6a6250f9ffd1e690227564c744508d703d36df14c322816b657",
+      "absoluteUtf16Units": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/🔤️outline.ttf",
+      "bytes": 178048,
+      "sha256": "b107e95dcd571bd40408cf5906f91780171abd9edf4328af54888e95a28549d1",
+      "absoluteUtf16Units": 120
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/🔤️outline.ttf",
+      "bytes": 80404,
+      "sha256": "0bb1b805256ac06bfe079eed3624fd3ffe2117e854c8ab5cafa87baa3778b3ec",
+      "absoluteUtf16Units": 118
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/🔤️outline.ttf",
+      "bytes": 79792,
+      "sha256": "4eaa8acc313c6fc34aa9a0b6a2ff24ebb8a910568d2c1b3f4fed2aeead58ba15",
+      "absoluteUtf16Units": 124
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🔤️outline.ttf",
+      "bytes": 30548,
+      "sha256": "dfe0fc53375e8bb7f6fbaa639087f905d7aebf07108816d92524e9b3d81b2a50",
+      "absoluteUtf16Units": 126
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🔤️outline.ttf",
+      "bytes": 83404,
+      "sha256": "207ecd3bb593edda35f515399f8d2aad0021d72525ba0a5ac212001f318cc4e5",
+      "absoluteUtf16Units": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/🔤️outline.ttf",
+      "bytes": 136852,
+      "sha256": "b972f7d349cd89ac6c6fee0b0eaed39c1656aa51d74e932cac89abd21f00fff9",
+      "absoluteUtf16Units": 119
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🔤️outline.ttf",
+      "bytes": 8536,
+      "sha256": "ebbfea501df1f01063a103c99ac6c76a6a239ee45856a57c6730d8c4456803e4",
+      "absoluteUtf16Units": 119
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/🔤️outline.ttf",
+      "bytes": 150208,
+      "sha256": "ff5d9966357cff7cf59bae37208e2c7fb473bd538add5e11676be691eba87f42",
+      "absoluteUtf16Units": 120
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/🔤️outline.ttf",
+      "bytes": 146732,
+      "sha256": "fa6c50b00fb39b2f984a53fbf03f2ae5c2624045d1738614e80c1e68c59267a7",
+      "absoluteUtf16Units": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/🔤️outline.ttf",
+      "bytes": 86008,
+      "sha256": "654c549ae1488f355924e53b9bfd150d672df6b0c053b21b8dd17a2f8a2c6718",
+      "absoluteUtf16Units": 120
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🔤️outline.ttf",
+      "bytes": 5444,
+      "sha256": "5b6d1483840ee81afd7220816e6cca4713692f85626273d1a827f8b878f32a35",
+      "absoluteUtf16Units": 124
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/🔤️outline.ttf",
+      "bytes": 21676,
+      "sha256": "c3f93f54f005c520b506e85129799b511e31cfc1fb799302bc73d83b2a89df47",
+      "absoluteUtf16Units": 116
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf",
+      "bytes": 26772,
+      "sha256": "6e9112853217f39bc753c94ab0f16fd7dc57fa56003cfb981b0bb7b0c514487f",
+      "absoluteUtf16Units": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🔣️symbols/📖️regular/🔤️outline.ttf",
+      "bytes": 9392,
+      "sha256": "ed2f13d29d6e6b0decda8cfac96f5dbc4a4aa6063b299e40a58164df42fe1807",
+      "absoluteUtf16Units": 115
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🧮️math/📖️regular/🔤️outline.ttf",
+      "bytes": 14168,
+      "sha256": "8337aa8a0122e0a0bcb042c09f74b5b11113ee7687a5a769f6a6179fee9e5fa0",
+      "absoluteUtf16Units": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/➕️latin-ext/📖️regular/🔤️outline.ttf",
+      "bytes": 18864,
+      "sha256": "b0a9674f92bd9b92efa49c4ce219bb666f0db0497552213bdfd2f12480190095",
+      "absoluteUtf16Units": 122
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf",
+      "bytes": 27608,
+      "sha256": "33c29e564b169dbbc1a90be9f050fcde7fb204232bc4f3c52bf4b844e31dbba6",
+      "absoluteUtf16Units": 119
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🪆️cyrillic/📖️regular/🔤️outline.ttf",
+      "bytes": 16892,
+      "sha256": "7b05247968525a08ff341afbae7a8c7d4447a2224c13e3ff584a1b4631fe1b7b",
+      "absoluteUtf16Units": 122
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.d.ts",
+      "bytes": 1549,
+      "sha256": "0da4d443c29ad9c58ee44dae4fe02ea580c0368fb763274f475d6803d165eff3",
+      "absoluteUtf16Units": 76
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js",
+      "bytes": 2426,
+      "sha256": "88cc37857ed7ebebdc426aff1812d52bcfd4caf3cccc41924e72a89e77173372",
+      "absoluteUtf16Units": 74
+    }
+  ],
+  "literalEdges": [
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-text-owned.test.ts",
+      "specifier": "../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "specifier": "../../../🧹️retire/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "specifier": "../../../🗺️plan-model/🎟️owned/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "specifier": "../../../🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "specifier": "../../../🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "specifier": "@semio-tech/framework/2d/text/font/run",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "specifier": "@semio-tech/framework/2d/text/font/catalog",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "specifier": "@semio-tech/framework/2d/text/font/shape/unicode",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "specifier": "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "specifier": "./📐️.json",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/📐️.json"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "specifier": "./🔣️.json",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "specifier": "./⏱️turn/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "specifier": "./📦️bytes/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "specifier": "../⏱️turn/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/text/font/shape/unicode",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/text/font/shape/unicode",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "../../../../../../📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "../../../../../../📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "../../📇️catalog/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "URL:./📦️data/🏷️properties/🔢️properties.bin",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/🏷️properties/🔢️properties.bin"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "specifier": "URL:./📦️data/🔁️mappings/🔢️mappings.bin",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️data/🔁️mappings/🔢️mappings.bin"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "./🧪️tests/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/🚀️anta/🧮️math/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🧮️math/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/🚀️anta/🔣️symbols/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🔣️symbols/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/🧱️kelly-slab/➕️latin-ext/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/➕️latin-ext/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/🧱️kelly-slab/🪆️cyrillic/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🪆️cyrillic/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "URL:../../../../🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🔤️outline.ttf",
+      "to": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+      "specifier": "../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+      "specifier": "../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/text/font/catalog",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/📇️catalog/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/text/font/catalog",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/📇️catalog/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "../../../../../📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "specifier": "../../../../../📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/text/font/run",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/🧵️run/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../../../../../📝️text/🔤️font/🧵️run/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../🧵️outline/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../🧵️shape/🌐️unicode/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../🧵️shape/🌐️unicode/↔️bidi/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../🧵️shape/📇️face/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../🧵️shape/🧵️layout/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../🧵️shape/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../🧵️shape/🏷️class/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🏷️class/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../🧵️shape/📍️mark/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../🤝️kerning/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../../../📐️drawing-contract/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "specifier": "../🧵️shape/🧩️context/🪄️apply/🏪️workspace/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🟦️.ts",
+      "specifier": "../../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🟦️.ts",
+      "specifier": "../../../📇️face/🧵️scalar/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🟦️.ts",
+      "specifier": "../../../📇️face/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "specifier": "../🧩️context/🪄️apply/🏪️workspace/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "specifier": "../🌐️unicode/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "specifier": "../🌐️unicode/🧵️normalize/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "specifier": "../🌐️unicode/🧵️cluster/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "specifier": "./🧵️scalar/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+      "specifier": "../../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+      "specifier": "../../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+      "specifier": "../../🌐️unicode/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+      "specifier": "../../🌐️unicode/🧵️normalize/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "specifier": "../../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "specifier": "../../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts",
+      "specifier": "../../🤝️kerning/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🏷️class/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🏷️class/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🏷️class/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🏷️class/🟦️.ts",
+      "specifier": "../../🤝️kerning/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "specifier": "../🧩️context/🪄️apply/🏪️workspace/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "specifier": "../🏷️class/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🏷️class/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "specifier": "../🔗️ligature/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "specifier": "../🪄️substitute/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "specifier": "../🧩️context/🪄️apply/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "specifier": "../📇️face/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "specifier": "../../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "specifier": "../../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "specifier": "../../📇️face/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "specifier": "../../🏷️class/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🏷️class/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "specifier": "../../🔗️ligature/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "specifier": "../../🪄️substitute/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "specifier": "./🏪️workspace/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts",
+      "specifier": "../../🤝️kerning/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts",
+      "specifier": "../../🤝️kerning/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts",
+      "specifier": "../../🤝️kerning/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts",
+      "specifier": "../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🟦️.ts",
+      "specifier": "../../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🟦️.ts",
+      "specifier": "../🧵️normalize/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🟦️.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🟦️.ts",
+      "specifier": "../../../📐️drawing-contract/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+      "specifier": "../🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+      "specifier": "../../../../🧹️retire/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+      "specifier": "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+      "specifier": "../../🧪️tests/owned.test.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+      "specifier": "./📐️.json",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/📐️.json"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+      "specifier": "./🔣️.json",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/🔣️.json"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+      "specifier": "../🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+      "specifier": "../../../🧹️retire/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+      "specifier": "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+      "specifier": "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js",
+      "to": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+      "specifier": "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🧪️tests/🎟️custody/📐️.json",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🧪️tests/🎟️custody/📐️.json"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+      "specifier": "./📐️.json",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/📐️.json"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+      "specifier": "./🔣️.json",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/🔣️.json"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+      "specifier": "../🗺️plan-model/🎟️owned/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+      "specifier": "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts",
+      "specifier": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts",
+      "specifier": "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts",
+      "specifier": "../../📷️raster/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts",
+      "specifier": "@semio-tech/framework/2d",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+      "specifier": "./📝️text/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+      "specifier": "./📝️text/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+      "specifier": "./🛤️path/📏️flatten/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+      "specifier": "./🛤️path/🖊️stroke/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+      "specifier": "./🔍️trace/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+      "specifier": "./🔀️booleans/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+      "specifier": "./🔀️booleans/🛤️paths/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+      "specifier": "./📐️drawing-contract/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+      "specifier": "./📐️drawing-contract/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+      "specifier": "./🧪️tests/🧪️semio-tech-framework-2d-js/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🧪️tests/🧪️semio-tech-framework-2d-js/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🧪️tests/🧪️semio-tech-framework-2d-js/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🟦️.ts",
+      "specifier": "../../📐️drawing-contract/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🟦️.ts",
+      "specifier": "../../🛤️path/📏️flatten/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🟦️.ts",
+      "specifier": "../../🧹️retire/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+      "specifier": "../../🧹️retire/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+      "specifier": "../../📐️drawing-contract/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🟦️.ts",
+      "specifier": "../📐️drawing-contract/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🟦️.ts",
+      "specifier": "../🧹️retire/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🟦️.ts",
+      "specifier": "../🧹️retire/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🟦️.ts",
+      "specifier": "../📐️drawing-contract/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🟦️.ts",
+      "specifier": "../../📐️drawing-contract/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🟦️.ts",
+      "specifier": "../../🧹️retire/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🟦️.ts",
+      "specifier": "../../🧮️geometry/📷️raster/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🟦️.ts",
+      "specifier": "@semio-tech/framework/2d/retire",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🟦️.ts",
+      "specifier": "@semio-tech/framework/pixels/editing",
+      "to": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🟦️.ts",
+      "specifier": "@semio-tech/framework/pixels/compositing",
+      "to": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/🧩️compositing/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🟦️.ts",
+      "specifier": "@semio-tech/framework/pixels/compositing",
+      "to": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/🧩️compositing/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🟦️.ts",
+      "specifier": "@semio-tech/framework/pixels/editing",
+      "to": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🟦️.ts",
+      "specifier": "../../🧮️geometry/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🟦️.ts",
+      "specifier": "@semio-tech/framework/pixels/sampling/affine",
+      "to": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "specifier": "@semio-tech/framework-pixels-ts/sampling/affine",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🎨️sampling/↗️affine/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🎨️sampling/↗️affine/🟦️.ts",
+      "specifier": "../../../../🎨️sampling/↗️affine/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "specifier": "../../✍️editing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "specifier": "../../🖊️coverage/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/retire",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🧹️retire/🟦️.ts",
+      "specifier": "../../../🧹️retire/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🧹️retire/🟦️.ts",
+      "specifier": "../../../🧹️retire/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts",
+      "specifier": "../✍️editing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/retire",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🟦️.ts",
+      "specifier": "@semio-tech/framework/2d",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/✍️editing/🟦️.ts",
+      "specifier": "@semio-tech/framework-pixels-ts/editing",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/✍️editing/🟦️.ts",
+      "specifier": "@semio-tech/framework-pixels-ts/editing",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/✍️editing/🟦️.ts",
+      "specifier": "@semio-tech/framework-pixels-ts/editing",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/✍️editing/🟦️.ts",
+      "specifier": "@semio-tech/framework-pixels-ts/editing",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts",
+      "specifier": "../../../✍️editing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts",
+      "specifier": "../../../✍️editing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/🧩️compositing/🟦️.ts",
+      "specifier": "@semio-tech/framework-pixels-ts/compositing",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🧩️compositing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/🧩️compositing/🟦️.ts",
+      "specifier": "@semio-tech/framework-pixels-ts/compositing",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🧩️compositing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🧩️compositing/🟦️.ts",
+      "specifier": "../../../🧩️compositing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🧩️compositing/🟦️.ts",
+      "specifier": "../../../🧩️compositing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/retire",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🟦️.ts",
+      "specifier": "../✍️editing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🧹️retire/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/retire",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🧹️retire/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/retire",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts",
+      "specifier": "@semio-tech/framework/2d/path/flatten",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🛤️path/📏️flatten/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts",
+      "specifier": "@semio-tech/framework/2d/path/stroke",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🛤️path/🖊️stroke/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts",
+      "specifier": "@semio-tech/framework/2d/retire",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts",
+      "specifier": "@semio-tech/framework/pixels/coverage",
+      "to": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/🖊️coverage/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts",
+      "specifier": "@semio-tech/framework/pixels/editing",
+      "to": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts",
+      "specifier": "@semio-tech/framework/2d",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts",
+      "specifier": "../../🎨️fill/🎨️sampling/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts",
+      "specifier": "../../🎨️fill/🖌️paint-model/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🖌️paint-model/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts",
+      "specifier": "../../🖊️stroke/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🖊️stroke/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🟦️.ts",
+      "specifier": "../🖌️paint-model/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🖌️paint-model/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🟦️.ts",
+      "specifier": "@semio-tech/framework/2d/retire",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/🖊️coverage/🟦️.ts",
+      "specifier": "@semio-tech/framework-pixels-ts/coverage",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🖊️coverage/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/🖊️coverage/🟦️.ts",
+      "specifier": "@semio-tech/framework-pixels-ts/coverage",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🖊️coverage/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🖊️coverage/🟦️.ts",
+      "specifier": "../../../🖊️coverage/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🖊️coverage/🟦️.ts",
+      "specifier": "../../../🖊️coverage/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🛤️path/🖊️stroke/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/path/stroke",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🛤️path/🖊️stroke/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🛤️path/🖊️stroke/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/path/stroke",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🛤️path/🖊️stroke/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🛤️path/🖊️stroke/🟦️.ts",
+      "specifier": "../../../../🛤️path/🖊️stroke/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🛤️path/🖊️stroke/🟦️.ts",
+      "specifier": "../../../../🛤️path/🖊️stroke/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/path/flatten",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🛤️path/📏️flatten/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/path/flatten",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🛤️path/📏️flatten/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🛤️path/📏️flatten/🟦️.ts",
+      "specifier": "../../../../🛤️path/📏️flatten/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🛤️path/📏️flatten/🟦️.ts",
+      "specifier": "../../../../🛤️path/📏️flatten/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🟦️.ts",
+      "specifier": "../../📝️text/🔤️family/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️text/🔤️family/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🟦️.ts",
+      "specifier": "../📷️raster/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🟦️.ts",
+      "specifier": "../../🧮️geometry/📷️raster/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🟦️.ts",
+      "specifier": "../../🎨️fill/🖌️paint-model/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🖌️paint-model/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🟦️.ts",
+      "specifier": "@semio-tech/framework/2d",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "specifier": "../../📝️text/🔤️family/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📝️text/🔤️family/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "specifier": "../🗺️plan-model/🎟️owned/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "specifier": "../🧹️retire/🟦️.ts",
+      "to": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "specifier": "@semio-tech/framework/2d/text/font/catalog",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "specifier": "@semio-tech/framework/2d/text/font/shape/unicode",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "specifier": "@semio-tech/framework/2d/text/font/run",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "specifier": "@semio-tech/framework/2d/text/font",
+      "to": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "specifier": "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "specifier": "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/text/font",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/🟦️.ts",
+      "specifier": "../../../../📝️text/🔤️font/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts"
+    }
+  ],
+  "externalTestToolSpecifiers": [
+    "ajv",
+    "bun:sqlite",
+    "bun:test",
+    "opentype.js"
+  ],
+  "unresolved": [],
+  "strictRoots": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-text-owned.test.ts"
+  ],
+  "commands": [
+    {
+      "kind": "test",
+      "cwd": "/Users/ueli/Documents/semio",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "bun",
+        "--",
+        "test",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-text-owned.test.ts"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-owned/test",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-owned/test/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-owned/test/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-owned/test/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-owned/test/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-owned/test/test.log"
+    },
+    {
+      "kind": "strict",
+      "cwd": "/Users/ueli/Documents/semio",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "bun",
+        "--",
+        "/Users/ueli/Documents/semio/node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--strict",
+        "--noUncheckedIndexedAccess",
+        "--skipLibCheck",
+        "--resolveJsonModule",
+        "--esModuleInterop",
+        "--target",
+        "ESNext",
+        "--module",
+        "preserve",
+        "--moduleResolution",
+        "bundler",
+        "--allowImportingTsExtensions",
+        "--types",
+        "bun",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+        "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-text-owned.test.ts"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-owned/strict",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-owned/strict/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-owned/strict/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-owned/strict/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-owned/strict/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-owned/strict/strict.log"
+    }
+  ],
+  "scope": "New actual Scene12+DrawingText6 with actual shipped Catalog/Run/Unicode, private same-body owner transfer/paint identity, staged producer/output close and finite current CPU/semantic work. No default/derived byte authority. All original Scene12/cases/stocks retained. Original fourteen Drawing glyph rows/full16 callers and vector/raster/SVG/PDF/Sharp/pick remain mandatory UNPROVED. Exact private same-body paint transfer preserves ORIGINAL glyph14 identity assertion; external replacements still copy. Mid-cap real Run completion permits only custody settlement, not new replacement algorithm birth; all credits/cases unchanged.",
+  "sourceFollowups": [
+    "drawing-text-owned-paint-transfer.md",
+    "drawing-text-owned-integration-plan.md"
+  ]
+}

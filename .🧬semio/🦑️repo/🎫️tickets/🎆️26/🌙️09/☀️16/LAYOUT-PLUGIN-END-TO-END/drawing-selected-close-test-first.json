@@ -1,0 +1,17 @@
+[
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83c\udf31\ufe0fdynamic/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "sha256": "24fcadd4c082581f41d2595804a4a8fb3052b1537ea0dfa835e94cbdd96813f3",
+    "bytes": 14961
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83c\udf31\ufe0fdynamic/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/selected.json",
+    "sha256": "6e607d89c71630dce123377b2491d96c75bba80b2ae8aa05427bcb08c34372e8",
+    "bytes": 175
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83c\udf31\ufe0fdynamic/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/selected.schema.json",
+    "sha256": "298baaecd09c346bbb5e24923ab208e6210159a4fe785fd601ec4e64a607dd78",
+    "bytes": 420
+  }
+]

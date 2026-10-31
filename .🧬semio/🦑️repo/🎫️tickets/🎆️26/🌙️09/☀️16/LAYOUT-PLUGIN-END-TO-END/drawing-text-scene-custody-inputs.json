@@ -1,0 +1,32 @@
+{
+  "state": "read-only-current-source-plan",
+  "inputs": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "bytes": 9781,
+      "sha256": "a91931c8794d786366bb73b4b35694a779231e195c8d8d91c68b0d73d5237828"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+      "bytes": 3836,
+      "sha256": "376aa68320d60232f7366e14fb028c49eb6b0e359a0980c3bc72cd6532cb2d0c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🟦️.ts",
+      "bytes": 2103,
+      "sha256": "43556054be8dd57186355ba26db2ef7a4051859036c6dcb58bbcffddf8221789"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/📋️copy/🟦️.ts",
+      "bytes": 4970,
+      "sha256": "15f8d9900d1ba317ce5fc8f7a5d3a96b86d56df78fe34fcc2e53e17407a2c948"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🟦️.ts",
+      "bytes": 6121,
+      "sha256": "e85c7ab207a195dabd613a9ed7b5a75ee6acd0e87986af378a67de1afe566daf"
+    }
+  ],
+  "runtime": "none",
+  "sourceBody": "unchanged"
+}

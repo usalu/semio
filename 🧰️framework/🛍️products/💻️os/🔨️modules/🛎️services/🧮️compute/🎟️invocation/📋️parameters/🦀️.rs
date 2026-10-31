@@ -15,16 +15,20 @@ impl ComputeJobParamsPreparation{
  fn validate(&self,cx:&StepContext<'_>)->Result<(),ValueError>{if self.operation!=cx.operation()||self.generation!=cx.generation()||self.parent!=cx.original_source_parent()?.source_identity()?||!std::ptr::fn_addr_eq(self.clock,cx.clock_source()){return Err(refusal("original compute parameter supplier changed"))}Ok(())}
  pub fn advance(&mut self,params:&mut Option<BatchJobParams>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;if self.closing{return Ok(false)}if self.published{return Ok(params.is_some())}if params.is_some(){return Err(refusal("original compute parameters already have an owned destination").into())}if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
-  if self.cancel.is_none(){let Some(cancel)=cx.admit_original_cancel_alias()?else{return Ok(false)};*self.cancel=Some(cancel);cx.consume_fuel(1);return Ok(false)}
-  let grant=cx.retained_grant();let copied=size_of::<Option<BatchJobParams>>();if grant.maximum_items==0||grant.maximum_copy_bytes<copied||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()})?;cx.consume_fuel(1);*params=Some(BatchJobParams{operation:self.operation,generation:self.generation,cancel:self.cancel.take().unwrap(),config:self.config,now_us:self.clock});self.published=true;Ok(true)
+  if self.cancel.is_none(){cx.admit_original_cancel_alias(&mut self.cancel)?;return Ok(false)}
+  let grant=cx.retained_grant();let copied=0;if grant.maximum_items==0||grant.maximum_copy_bytes<copied||grant.maximum_depth==0{return Ok(false)}*params=Some(BatchJobParams{operation:self.operation,generation:self.generation,cancel:self.cancel.take().unwrap(),config:self.config,now_us:self.clock});self.published=true;post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(true)
  }
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  self.validate(cx)?;self.closing=true;let grant=cx.retained_grant();if self.terminal_is_empty(){return Ok(true)}if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
-  if self.retirement.is_none(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);*self.retirement=Some(CancelTokenRetirement::from_token(self.cancel.take().unwrap()));return Ok(false)}
-  let owner=self.retirement.as_mut().unwrap();if owner.terminal_is_empty(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);drop(self.retirement.take());return Ok(self.terminal_is_empty())}
-  let step=owner.return_alias_step(cx.original_cancel_token(),grant).map_err(|error|match error{CancelTokenRetirementError::Refused(error)=>OriginalTurnFailure::debit_original(error,cx),CancelTokenRetirementError::Blocked(_)=>refusal("original compute cancellation alias is still borrowed").into()})?;cx.consume_retained(step.progress())?;cx.consume_fuel(1);Ok(false)
+  self.validate(cx)?;if self.terminal_is_empty(){return Ok(true)}let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+  if !self.closing{self.closing=true;post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(false)}
+  if self.retirement.is_none(){*self.retirement=Some(CancelTokenRetirement::from_token(self.cancel.take().unwrap()));post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(false)}
+  let owner=self.retirement.as_mut().unwrap();if owner.terminal_is_empty(){drop(self.retirement.take());post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(self.terminal_is_empty())}
+  let turn=owner.return_alias_step(cx.original_cancel_token(),grant);let result=match turn.result{Ok(step)=>Ok(step),Err(CancelTokenRetirementError::Refused(error))=>Err(error),Err(CancelTokenRetirementError::Blocked(_))=>Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))};semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})?;Ok(false)
  }
+
  pub fn terminal_is_empty(&self)->bool{self.cancel.is_none()&&self.retirement.is_none()}
 }
 impl Drop for ComputeJobParamsPreparation{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"compute parameter preparation abandoned its original cancellation alias")}}
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
+
+fn post(cx:&mut StepContext<'_>,progress:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(semio_framework_value::RetainedCloneStep::Progress(progress)),work:1})?;Ok(())}

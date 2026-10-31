@@ -1,0 +1,15 @@
+{
+  "state": "schema-first-unmounted-production-held",
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/case.json",
+      "sha256": "94a2aae6925b4e20ce60e696f93cb7649ec544db6dcac30e3bc037229b26b864",
+      "bytes": 931
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/case.schema.json",
+      "sha256": "5b3cd4947668fd0380f94e49b84ad6619f5d1cac44acf16f400fd06d4066b514",
+      "bytes": 2026
+    }
+  ]
+}

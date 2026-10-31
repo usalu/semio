@@ -1,11 +1,6 @@
 //! 🧬️ Fem2d snapshot schema — artifact-lane fields only.
 
-use crate::standards::v1::subsets::any::schema::structure::FemCombination;
-use crate::standards::v1::subsets::any::schema::structure::FemElement;
-use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use crate::standards::v1::subsets::any::schema::structure::FemRegion;
-use crate::standards::v1::subsets::any::schema::structure::FemSection;
-use crate::standards::v1::subsets::any::schema::structure::FemSupport;
+use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoadCase, FemRegion, FemSection, FemSupport};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::ToValue;
 
@@ -18,6 +13,10 @@ pub use native::Fem2dReceiving;
 #[path="projection.rs"]mod projection;
 #[path="write-pack.rs"]mod write_pack;
 #[path="identity-index.rs"]mod identity_index;
+#[cfg(feature = "testkit")]
+#[path="retiring.rs"]mod retiring;
+#[cfg(feature = "testkit")]
+pub use retiring::Fem2dSnapshotRetiring;
 pub use identity_index::{FemIdentityIndex,FemIdentityKind,FemIdentitySource};
 //#region 🔖️Snapshot
 /// 📸️ Persisted fem2d document snapshot (persistent fields of the artifact).

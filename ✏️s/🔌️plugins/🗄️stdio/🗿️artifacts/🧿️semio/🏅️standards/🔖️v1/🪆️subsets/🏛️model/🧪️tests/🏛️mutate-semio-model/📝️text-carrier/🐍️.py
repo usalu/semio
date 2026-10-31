@@ -1,31 +1,20 @@
-"""📝️ `stdio.semio.model` text carrier: the envelope constants, the grammar vocabularies with their ordinals and the DSL reader and printer, written from the committed grammar alone."""
+"""📝️ `stdio.semio.model` text carrier: the envelope constants, the grammar vocabularies and the DSL reader and printer, written from the committed grammar alone."""
 
 from __future__ import annotations
 
 
 # region 🔖️Carrier
-BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 ENVELOPE_ID = "stdio.semio.model"
 DSL_PREAMBLE = "semio %s.dsl v1" % ENVELOPE_ID
-PACK_TOKEN = "%s.pack v1" % ENVELOPE_ID
-PACK_FORMAT = 1
 
-#: 🏛️ `spatial-kind = "S" | "B" | "T" | "P"`, in the grammar's own order — which is also the pack's
-#: ordinal (`S` → 0 and `T` → 2 are pinned by the committed example).
-SPATIAL_ORDER = ("site", "building", "storey", "space")
+#: 🏛️ `spatial-kind = "S" | "B" | "T" | "P"`.
 SPATIAL_LETTER = {"site": "S", "building": "B", "storey": "T", "space": "P"}
 
 #: 🧱️ `element-class = "WA" | "SL" | "CO" | "BE" | "DO" | "WI" | "RO" | "ST" | "FU" | "OT" "[" hex "]"`.
-ELEMENT_ORDER = ("wall", "slab", "column", "beam", "door", "window", "roof", "stair", "furniture", "other")
 ELEMENT_LETTERS = {"wall": "WA", "slab": "SL", "column": "CO", "beam": "BE", "door": "DO", "window": "WI", "roof": "RO", "stair": "ST", "furniture": "FU", "other": "OT"}
 
 #: 🔗️ `relation-kind = "AG" | "CI" | "CN" | "FV" | "VE" | "OT" "[" hex "]"`.
-RELATION_ORDER = ("aggregates", "containedIn", "connectsTo", "fillsVoid", "voidsElement", "other")
 RELATION_LETTERS = {"aggregates": "AG", "containedIn": "CI", "connectsTo": "CN", "fillsVoid": "FV", "voidsElement": "VE", "other": "OT"}
-
-#: 📐️ `geometry-ref = "N" | "B" "[" hex "]" | "M" "[" hex "]"` and `pset-value = "T" | "N" | "B"`.
-GEOMETRY_ORDER = ("none", "brep", "mesh")
-PSET_ORDER = ("text", "number", "boolean")
 
 
 def hex_of(text: str) -> str:
@@ -34,7 +23,7 @@ def hex_of(text: str) -> str:
 
 
 def text_of(hexed: str) -> str:
-    """🔡️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
+    """🪄️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
     if len(hexed) % 2 != 0:
         raise AssertionError("hex run %r has an odd digit count" % hexed)
     return bytes.fromhex(hexed).decode("utf-8")
@@ -249,7 +238,7 @@ def read_property_set(reader: Reader) -> dict:
 
 
 def read_element(reader: Reader) -> dict:
-    """🧱️ `element = "[" hex "," element-class "," transform "," geometry-ref "," opt-str "," "[" pset-list? "]" "]"`."""
+    """🔹️ `element = "[" hex "," element-class "," transform "," geometry-ref "," opt-str "," "[" pset-list? "]" "]"`."""
     reader.take("[")
     element = {"id": reader.hex()}
     reader.take(",")

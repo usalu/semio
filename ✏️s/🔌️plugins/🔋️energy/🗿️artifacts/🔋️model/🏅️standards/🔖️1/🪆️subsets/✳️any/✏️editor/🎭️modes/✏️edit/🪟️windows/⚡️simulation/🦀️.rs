@@ -133,8 +133,7 @@ fn leaf(id: impl Into<String>, label: String) -> TreeNodeView {
 
 /// 🎛️ The editable run settings, rendered as addressable leaves so a keyboard user can read the current
 /// values before invoking `set-simulation-settings`/`set-run-period` on them.
-fn settings_nodes(settings: &EnergyModelConfig, model: &crate::model::Model, weather: Option<&store::ArtifactLink>, locale: Locale) -> TreeNodeView {
-    let run_period = &model.run_period;
+fn settings_nodes(settings: &EnergyModelConfig, run_period: &crate::snapshot::state::RunPeriod, weather: Option<&store::ArtifactLink>, locale: Locale) -> TreeNodeView {
     TreeNodeView {
         id: "energy-settings".into(),
         label: format!("{} · {SET_SETTINGS_ACTION_ID} · {SET_RESULT_FIELD_ACTION_ID} · set-run-period", say(locale, "Run settings (editable)", "Laufeinstellungen (bearbeitbar)")),
@@ -152,7 +151,7 @@ fn settings_nodes(settings: &EnergyModelConfig, model: &crate::model::Model, wea
     }
 }
 
-/// 🎨️ The localized name of the field the 3d model window currently colours by.
+/// 🏡️ The localized name of the field the 3d model window currently colours by.
 fn result_field_text(field: ResultField, locale: Locale) -> &'static str {
     match field {
         ResultField::ConductionLoss => say(locale, "Conduction loss", "Transmissionsverlust"),
@@ -195,10 +194,10 @@ fn keyboard_node(locale: Locale) -> TreeNodeView {
     }
 }
 
-/// ⚡️ The whole window. With no run the settings are still shown and editable, so a user can configure
+/// 🪟️ The whole window. With no run the settings are still shown and editable, so a user can configure
 /// the run before starting it.
-pub fn render(run: Option<ToolRunView<'_>>, settings: &EnergyModelConfig, model: &crate::model::Model, weather: Option<&store::ArtifactLink>, locale: Locale) -> BuiltNode {
-    let roots = vec![run_nodes(run, locale), settings_nodes(settings, model, weather, locale), keyboard_node(locale)];
+pub fn render(run: Option<ToolRunView<'_>>, settings: &EnergyModelConfig, run_period: &crate::snapshot::state::RunPeriod, weather: Option<&store::ArtifactLink>, locale: Locale) -> BuiltNode {
+    let roots = vec![run_nodes(run, locale), settings_nodes(settings, run_period, weather, locale), keyboard_node(locale)];
     let mut tree = TreeWindowKit::render(&TreeView { roots }).unwrap_or_else(|_| semio_framework_plugin::built_text_node(semio_framework_ui_locale::Label::data("Energy simulation UI unavailable")).expect("static label is valid"));
     if let Ok((select,clear))=weather_controls(weather,locale){
         tree.children.try_push(select).expect("weather selector fits the authored simulation tree");

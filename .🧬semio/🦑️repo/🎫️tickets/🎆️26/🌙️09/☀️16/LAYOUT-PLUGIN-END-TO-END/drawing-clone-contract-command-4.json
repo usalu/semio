@@ -1,0 +1,328 @@
+{
+  "state": "fourth unfiltered standard clone owning invocation after explicit Root/dependency-agent test provider/caller migrations",
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/🧰️framework/Cargo.toml",
+    "-p",
+    "semio-framework-value-retained-clone",
+    "--lib"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/clone-contract4",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/clone-contract4/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/clone-contract4/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/clone-contract4/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/clone-contract4/tmp"
+  },
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🟦️.ts",
+      "sha256": "b70d0952151275d518c1ab05fed2e55ca4d5e60961d86b0dd21b51a29b47bdbc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🟦️.ts",
+      "sha256": "1882a1385e9e74196ba903685405f637798989aa3961b89efc3f601f72486363"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🦀️.rs",
+      "sha256": "fd794981ed18c5bc8e52c20bda03268048a5b4018cbbb3a9ea91bc5db1699dff"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "d0d3f543b9c5729d25f362d4f4945f53fbd9c689085ae491e2faf66a28ddb47a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🧫️owner/🦀️.rs",
+      "sha256": "161f36743ab66ac4b702b0353e5fc8d2c56a02eae033422f42979c44102c251a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧬️schema/🔣️.json",
+      "sha256": "6a3000efc30c5f57d0c83d6519dcf5d78865d508b6cfdcc0dc1c3a607f3a73fa"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🦀️.rs",
+      "sha256": "80c31d9c2587f27dead61564e6a307992db1aab68058bbbbde80353a4b284919"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🧪️tests/🦀️.rs",
+      "sha256": "728fc8c5ab2c2166b17dfa449af43e4e394501e0919db8693e633638e1709a1b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🦀️.rs",
+      "sha256": "ac647691b5fcca72ab920fd1c428d06ff1263da538e0be78df511b970c8752c5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "d05ea3f272e35d3c25e431e9dc4d96e65441deb4b5f7a867037ec10449cda435"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "b348b56dca90b8e4003a4f1864198750d4a78fcc43254db8001321663fdc2846"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "5f598d1086b6e8cd47a13f933d3afa65f035bdb8e7b6bdabe3a2a2b089fd745b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "389c6d5541ca2789905115d2f6a2c7d22ef694c6876faeda153a755bae8b160e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "48d39d600a3cc7847fa2979b01daf5741174c686d1a3f5fbdb89af530da404e4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "ab7b73e271f353bd7a30f4780e65b08df977cee0ae38f9177df9cf23e5d5f285"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "a14c50de734887d1d8d8cb3b7b2a82d43e0eb5d87bdb247a07bbadc2957b1a0d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🟦️.ts",
+      "sha256": "833f5f6d213bdeb7e37fa77735f2990d1e317c0f675cc5486dfcea8f6f36afab"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🦀️.rs",
+      "sha256": "1bb3c4661590d1231ebf27d08d35fe04154d96f6efeae2d7128f546549345cf6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "0cfc2d57fea808b2dcdf84f875c33941f00e23bee97ac6175d5c3c293851e45d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "0d9af2172567f7283377cb734c8366933ad38e4e00939f21c1a74cbf0d4c8199"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/🦀️.rs",
+      "sha256": "bcdc7bf3ff23502f5df51bcaf292d3ae43ce29bbd145f05dbed3d85e54a1b707"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🎟️header/🦀️.rs",
+      "sha256": "dcda611a2ea7e3b7eb41fc5653af71d263236008b96ff73854e805cee0072a27"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🏭️factory/🦀️.rs",
+      "sha256": "880bf9374c3dad5f0924e62e010621841222f3f1f86292a79682f7d1c6a791db"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/📌️retain/🟦️.ts",
+      "sha256": "9e79bbab80b6b4082dae410cc29d5baea44622dd9cb336730a50ec3edbee46da"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/📌️retain/🦀️.rs",
+      "sha256": "882e3026ac8fccf62431dc6f5b88c23db4f09d91d26367db9804b21a5ad74ac1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/📌️retain/🧫️fixtures/🔣️.json",
+      "sha256": "a8f595a534c9341764e9c5b301bf52bc7eac6b694be8ec48e6ea144cf3cd7e4b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/📌️retain/🧬️schema/🔣️.json",
+      "sha256": "7095d471ab549e4b7bc4835c6537bcf336172a50732edcfb21c6f85cfc3315a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🟦️.ts",
+      "sha256": "18a37b60aba151a6f7cd527fcc0c1b880834df52a0e40be7ce9d96eb6a8d3235"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🥒️.feature",
+      "sha256": "60d70bfebac108ba91b815b5b303f867175bb1c9b6d7c444e2d2bac9ad64e4c7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🦀️.rs",
+      "sha256": "3fb76c22a2a7efc450ebb7103e67ef9a3f3f947909bf99a757a5ee9249066875"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️query/🦀️.rs",
+      "sha256": "d08645c1e7ed25335811eeb48927bc1b99d8495b2cc71a45ec2aa19940521422"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "e20b3359b9198521f3464e4984f5e6c439c7541a9e7ac4e68c807d8e4f065e9e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🎟️header.json",
+      "sha256": "202cfa370319ed6e27620539566434c3f8396fd346405c759cd9b990d7f70a3d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🎟️owned-birth/🔣️.json",
+      "sha256": "6f19973d91e4d5ac77751a7b6e6e804e210e9799d961de16bcf461893b1a0c80"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🔐️custody.json",
+      "sha256": "7eb9f84e0e0f4caac9f9a6f4377c55ab258b239ea43b6003c2c28140337bd18d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "290c8840375aeb6e8faef1c2b98b781f4891c90ceca8028f06bdd5f1b57abcc9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🎟️header.json",
+      "sha256": "ca4f4247a2ab73a913b3b8f152430ce9f63212c336aa34cf92bdc496586c7826"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🎟️owned-birth/🔣️.json",
+      "sha256": "89d227d8fc3de53eb30199baa6cbd06a09237ce807ac90edda06d205696aeb2a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🎟️terminal-ticket.json",
+      "sha256": "5b0545636be5be8a71b227f4c171a8a384e8cdff19ced9fb6fd33dcef9252b1c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🔣️.json",
+      "sha256": "520e2056e0fda1f00146343ee08138637ff27803f1e957612c4f307bc7502f47"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🦀️.rs",
+      "sha256": "5873f4b039ed1315e52d64425cb938eb810ce7406ea8f483911db2f4c784a130"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🎁️option-cursor/🦀️.rs",
+      "sha256": "696206c1214c859d86e39b7c3fdbbc67f1057e3349e069073969088c7acf33a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "6448293252d69096a20113699b12fa66a08101a9dc38a3ca65818117e1dea46a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs",
+      "sha256": "179ca91eee36e6d5f2ddd5d3c5f4fd2fb7ef0cc1cf7e6be955c968828a46f025"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs",
+      "sha256": "44dd505c53ee9d9e986adc8286b5881a417085fa2a4f545a84330b8407a5291a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "d4dd2d31ed48d0e7ccf122670aa607ddf7ff7cd1b1f2e88dd80ab4750dbc2734"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "54ee243c5dbd6f7ff8f56a36bcea3c1faf722ac228de09ae7697d1b708c81abd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "2ca299d3d5858015bc4616f7368b962fb51b33254114b588bf06eaacd846a94f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔗️alias/🦀️.rs",
+      "sha256": "43f24e4b79a61e651d0401046f5f12551624f71b2f44f5b9feaf071743042710"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔢️scalar-cursor/🟦️.ts",
+      "sha256": "ec86aa99ac0331b93de41d04dd48a0692ec6df6b8d3d0b2602dcd31a1125859f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔢️scalar-cursor/🦀️.rs",
+      "sha256": "55607541746636fd41e77c44304eb75fdb883f6455412125ac197748a3d45418"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🟦️.ts",
+      "sha256": "c0dba7594cde88721afb93375323cd5201f6b9d951c559f04f2138dbee0b06b3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🦀️.rs",
+      "sha256": "406fca4b404f59f7bb1e02bed6bd154de601557cdecc401d81e9576de7a3b1f0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🧪️tests/🟦️.ts",
+      "sha256": "a46cebf5227e89b35d0ec4178c8aebe1961bcd9c890770ae4a12463a12ccf21f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🧪️tests/🥒️.feature",
+      "sha256": "9136dbcf6a5feedbc026912256fa03218287f9acf12a9e0deb048bd152434105"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🧪️tests/🦀️.rs",
+      "sha256": "45fe7b25e544cb06aecbb1ea21b80222c813fc1cc3ea6fdceb0ce27b352c6b6f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "81ec43903e40a3e22cb96976359bdfcaa1d96990f6a6815ff1724ea65410c0c4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🧬️schema/🔣️.json",
+      "sha256": "c520e7d45a668c1d1833974c119e8f447bc1df6f43202da151136a5ac5263a7c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🗃️box-cursor/🦀️.rs",
+      "sha256": "3e78e207978ced45ab77b00b5a8c3d49f0b01168ede8e56f31d0fb653e4128f9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts",
+      "sha256": "f95f594023d47fb96d34fdeca253a26e35f75ab1872ab9a30b3fe65f0fb7780a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs",
+      "sha256": "73636ee099734d3381541556e3b805093f6c782159d5265ebd6a09ba166fe934"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🎯️dispatch/🟦️.ts",
+      "sha256": "0d73d41b5e401a5b38f01c30660c5da818c8abc9bfab6be1ad0c7222e25ac4a8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🎯️dispatch/🦀️.rs",
+      "sha256": "a5f12e0f5548f06a0a5fcd2a95ce7c9d0b1eb059333fbcb43f98be170bdd635e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🎯️dispatch/🧫️fixtures/🔣️.json",
+      "sha256": "e8f074b44407a8b874e5bdae1d9f292b64698d5717c0c0b729cb763559050328"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🎯️dispatch/🧬️schema/🔣️.json",
+      "sha256": "6478c5acba5c66001ce3d07a3659d287473d20bf787109f11c960d11e62a854f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🦀️.rs",
+      "sha256": "3b0769478c2b8bd9b6c44c5ede11ce2707b66b7d9f85fca9eb71acfe87f1638b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧬️schema/🔣️.json",
+      "sha256": "de5a3754e318649cae014680bd88e47b562047932e3db327614fa0ce8d36b61b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs",
+      "sha256": "eeb36d48ce24b1a91ce684845bd548f7ef869d5987e9e0f734281cd26d37711e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧱️tuple-cursors/🦀️.rs",
+      "sha256": "b2d8df12e5a15768c570b728b707765d0b552be5d1d3b9a8b9da486b79636925"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🌐️lifecycle/🦀️.rs",
+      "sha256": "1f861df8ed724d11f69e14fb37b87e29c6d9ec44e3f74561f8f4f839c7fd7b8f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🟦️.ts",
+      "sha256": "f0612f5707acdd68589537887f9c80d8871f98cd338276b80d0620a8dfc75ddd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🥒️.feature",
+      "sha256": "cea9142474d89b219b29dca48ad1feee7c2501a1a42c63d4ca17cc6705ed00e3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🦀️.rs",
+      "sha256": "c712fcd410034e8e6dd012f9d1338a8aea7a67737ea0ce09e2e60c4d62e2cbaa"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "3b5352572bff0edf6107dae617f500fd7fc979ab95cc7a2acd3342fb4a4bc112"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧬️schema/🔣️.json",
+      "sha256": "958609e3df4a0d470aa7dfff16a933cfbe0eb6bf6886b796bb6b1a47fa0fa85b"
+    }
+  ],
+  "scope": "Whole standard RetainedClone owning lib gate; no Value/Native/Drawing acceptance."
+}

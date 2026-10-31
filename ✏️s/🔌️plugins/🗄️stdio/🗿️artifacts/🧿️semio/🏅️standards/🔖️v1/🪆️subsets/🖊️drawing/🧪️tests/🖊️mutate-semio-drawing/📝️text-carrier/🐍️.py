@@ -8,20 +8,11 @@ import struct
 
 
 # region 🔖️Carrier
-BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 DSL_PREAMBLE = "semio stdio.semio.drawing.dsl v1"
-PACK_TOKEN = "stdio.semio.drawing.pack v1"
-PACK_FORMAT = 1
 
-#: 🖍️ `node = "P"… | "T"… | "G"… | "I"…`, in the enum order the pack tag byte indexes — the committed
-#: sketch's group root carries `0x02` and its image child `0x03`.
-NODE_ORDER = ("path", "text", "group", "image")
 NODE_LETTER = {"path": "P", "text": "T", "group": "G", "image": "I"}
 LETTER_NODE = {letter: kind for kind, letter in NODE_LETTER.items()}
 
-#: ✏️ `segment = "M"… | "L"… | "C"… | "Q"… | "A"… | "Z"`, likewise — the sketch's one path exhibits
-#: all six in that order and its pack tags them `0x00`…`0x05`.
-SEGMENT_ORDER = ("moveTo", "lineTo", "cubicTo", "quadTo", "arcTo", "close")
 SEGMENT_LETTER = {"moveTo": "M", "lineTo": "L", "cubicTo": "C", "quadTo": "Q", "arcTo": "A", "close": "Z"}
 LETTER_SEGMENT = {letter: kind for kind, letter in SEGMENT_LETTER.items()}
 
@@ -35,7 +26,7 @@ def hex_of_text(text: str) -> str:
 
 
 def text_of_hex(hexed: str) -> str:
-    """🔡️ The grammar's `hex` macro in the reading direction, for a string leaf."""
+    """🪄️ The grammar's `hex` macro in the reading direction, for a string leaf."""
     return bytes.fromhex(hexed).decode("utf-8")
 
 
@@ -46,7 +37,7 @@ def to_f32(value: float) -> float:
 
 
 def print_f32(value: float) -> str:
-    """🔢️ One single-precision leaf, printed the way the reference printer prints it: the shortest
+    """🍃️ One single-precision leaf, printed the way the reference printer prints it: the shortest
     decimal that reads back as the same `f32`, which is NOT the shortest decimal that reads back as
     the same double — `0.35` against `0.3499999940395355`."""
     for precision in range(1, 10):
@@ -57,7 +48,7 @@ def print_f32(value: float) -> str:
 
 
 def print_number(value: float) -> str:
-    """🔢️ One numeric leaf, printed the way the reference printer prints it: plain `{}` `Display`,
+    """🖨️ One numeric leaf, printed the way the reference printer prints it: plain `{}` `Display`,
     which is the shortest decimal that reads back as the same value, with no exponent and no
     trailing `.0`."""
     if value == int(value) and abs(value) < 1e16:
@@ -94,26 +85,26 @@ def split_top_level(text: str) -> list:
 
 
 def strip_brackets(text: str, what: str) -> str:
-    """📜️ Unwraps one `[...]` group, refusing anything the grammar does not admit there."""
+    """🚪️ Unwraps one `[...]` group, refusing anything the grammar does not admit there."""
     if len(text) < 2 or text[0] != "[" or text[-1] != "]":
         raise AssertionError("%s must be a bracketed group, found %r" % (what, text[:60]))
     return text[1:-1]
 
 
 def items_of(text: str, what: str) -> list:
-    """📜️ The members of a bracketed list, or nothing at all for `[]`."""
+    """🧑️ The members of a bracketed list, or nothing at all for `[]`."""
     return split_top_level(strip_brackets(text, what))
 
 
 def parse_bool(text: str, what: str) -> bool:
-    """📜️ `bool = "0" | "1"`."""
+    """🔀️ `bool = "0" | "1"`."""
     if text not in ("0", "1"):
         raise AssertionError("%s is not a well-formed bool: %r" % (what, text[:20]))
     return text == "1"
 
 
 def print_bool(value: bool) -> str:
-    """📜️ `bool` in the writing direction."""
+    """🌀️ `bool` in the writing direction."""
     return "1" if value else "0"
 
 
@@ -124,29 +115,29 @@ def parse_point2(text: str) -> dict:
 
 
 def print_point2(point: dict) -> str:
-    """📐️ `point2` in the writing direction."""
+    """🌁️ `point2` in the writing direction."""
     return "[%s,%s]" % (print_number(point["x"]), print_number(point["y"]))
 
 
 def parse_point3(text: str) -> dict:
-    """📐️ `point3 = "[" number "," number "," number "]"`."""
+    """🌂️ `point3 = "[" number "," number "," number "]"`."""
     parts = items_of(text, "a point3")
     return {"x": float(parts[0]), "y": float(parts[1]), "z": float(parts[2])}
 
 
 def print_point3(point: dict) -> str:
-    """📐️ `point3` in the writing direction."""
+    """🌃️ `point3` in the writing direction."""
     return "[%s,%s,%s]" % (print_number(point["x"]), print_number(point["y"]), print_number(point["z"]))
 
 
 def parse_quaternion(text: str) -> dict:
-    """📐️ `quaternion = "[" number "," number "," number "," number "]"`."""
+    """🌄️ `quaternion = "[" number "," number "," number "," number "]"`."""
     parts = items_of(text, "a quaternion")
     return {"x": float(parts[0]), "y": float(parts[1]), "z": float(parts[2]), "w": float(parts[3])}
 
 
 def print_quaternion(value: dict) -> str:
-    """📐️ `quaternion` in the writing direction."""
+    """🌅️ `quaternion` in the writing direction."""
     return "[%s,%s,%s,%s]" % (print_number(value["x"]), print_number(value["y"]), print_number(value["z"]), print_number(value["w"]))
 
 
@@ -157,12 +148,12 @@ def parse_rgba(text: str) -> dict:
 
 
 def print_rgba(colour: dict) -> str:
-    """🎨️ `rgba` in the writing direction."""
+    """🌆️ `rgba` in the writing direction."""
     return "[%s,%s,%s,%s]" % (print_f32(colour["r"]), print_f32(colour["g"]), print_f32(colour["b"]), print_f32(colour["a"]))
 
 
 def parse_option(text: str, what: str, read):
-    """📜️ The three `option-` productions share one shape: `[0]`, or `[1,<payload>]`."""
+    """🔘️ The three `option-` productions share one shape: `[0]`, or `[1,<payload>]`."""
     parts = items_of(text, what)
     if parts == ["0"]:
         return None
@@ -172,18 +163,18 @@ def parse_option(text: str, what: str, read):
 
 
 def print_option(value, write) -> str:
-    """📜️ An `option-` production in the writing direction."""
+    """🌇️ An `option-` production in the writing direction."""
     return "[0]" if value is None else "[1,%s]" % write(value)
 
 
 def parse_transform(text: str) -> dict:
-    """📐️ `transform = "[" point3 "," quaternion "," point3 "]"`."""
+    """🌈️ `transform = "[" point3 "," quaternion "," point3 "]"`."""
     parts = items_of(text, "a transform")
     return {"translation": parse_point3(parts[0]), "rotation": parse_quaternion(parts[1]), "scale": parse_point3(parts[2])}
 
 
 def print_transform(transform: dict) -> str:
-    """📐️ `transform` in the writing direction."""
+    """🌉️ `transform` in the writing direction."""
     return "[%s,%s,%s]" % (print_point3(transform["translation"]), print_quaternion(transform["rotation"]), print_point3(transform["scale"]))
 
 
@@ -220,7 +211,7 @@ def parse_segment(text: str) -> dict:
 
 
 def print_segment(segment: dict) -> str:
-    """✏️ One `segment` in the writing direction."""
+    """🌊️ One `segment` in the writing direction."""
     kind = segment["kind"]
     if kind == "close":
         return "Z"
@@ -267,7 +258,7 @@ def parse_node(text: str) -> dict:
 
 
 def print_node(node: dict) -> str:
-    """🖍️ One `node` in the writing direction."""
+    """🔵️ One `node` in the writing direction."""
     kind = node["kind"]
     if kind == "path":
         return "P[[%s],%s]" % (",".join(print_segment(segment) for segment in node["segments"]), print_option(node.get("style"), hex_of_text))
@@ -285,7 +276,7 @@ def print_node(node: dict) -> str:
 
 # region 🔖️Dsl
 def strip_preamble(text: str) -> str:
-    """📜️ Splits the mandatory text envelope preamble off and checks it names this artifact."""
+    """✂️ Splits the mandatory text envelope preamble off and checks it names this artifact."""
     line, _, body = text.partition("\n")
     if line != DSL_PREAMBLE:
         raise AssertionError("the text envelope preamble is %r, expected %r" % (line, DSL_PREAMBLE))
@@ -293,7 +284,7 @@ def strip_preamble(text: str) -> str:
 
 
 def read_field(body: str, name: str) -> tuple:
-    """📜️ Reads one `name=value` line off the front of the body, in the grammar's fixed order."""
+    """📛️ Reads one `name=value` line off the front of the body, in the grammar's fixed order."""
     line, _, rest = body.partition("\n")
     prefix = name + "="
     if not line.startswith(prefix):
@@ -302,7 +293,7 @@ def read_field(body: str, name: str) -> tuple:
 
 
 def parse_style(text: str) -> dict:
-    """🎨️ `style = "[" hex "," option-rgba "," option-rgba "," option-number "," option-number "]"`."""
+    """🌋️ `style = "[" hex "," option-rgba "," option-rgba "," option-number "," option-number "]"`."""
     parts = items_of(text, "a style")
     style = {"name": text_of_hex(parts[0])}
     fill = parse_option(parts[1], "fill", parse_rgba)
@@ -321,7 +312,7 @@ def parse_style(text: str) -> dict:
 
 
 def print_style(style: dict) -> str:
-    """🎨️ `style` in the writing direction."""
+    """🌌️ `style` in the writing direction."""
     return "[%s,%s,%s,%s,%s]" % (
         hex_of_text(style["name"]),
         print_option(style.get("fill"), print_rgba),
@@ -338,12 +329,12 @@ def parse_layer(text: str) -> dict:
 
 
 def print_layer(layer: dict) -> str:
-    """🗂️ `layer` in the writing direction."""
+    """🥞️ `layer` in the writing direction."""
     return "[%s,%s,%s,%s]" % (hex_of_text(layer["id"]), hex_of_text(layer["name"]), print_bool(layer["visible"]), print_node(layer["root"]))
 
 
 def parse_dsl(text: str) -> dict:
-    """📜️ `document = artifact-mark schema-line canvas-line styles-line layers-line`."""
+    """📄️ `document = artifact-mark schema-line canvas-line styles-line layers-line`."""
     body = strip_preamble(text)
     schema_hex, body = read_field(body, "schema")
     canvas, body = read_field(body, "canvas")
@@ -362,7 +353,7 @@ def parse_dsl(text: str) -> dict:
 
 
 def print_dsl(document: dict) -> str:
-    """📜️ The committed DSL grammar in the writing direction, line for line in its declared order."""
+    """🌍️ The committed DSL grammar in the writing direction, line for line in its declared order."""
     canvas = document["canvas"]
     return "\n".join(
         [

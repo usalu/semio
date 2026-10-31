@@ -10,7 +10,7 @@ fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_fr
 fn now()->Option<u64>{Some(1)}
 struct Job{closing:bool}
 impl InteractiveJob for Job{
- fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from)}
+ fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{InteractiveJobStep::from_callback(JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from))}
  fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original admission fixture has no payload outcome"))}}
  fn begin_close(&mut self){self.closing=true;}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}

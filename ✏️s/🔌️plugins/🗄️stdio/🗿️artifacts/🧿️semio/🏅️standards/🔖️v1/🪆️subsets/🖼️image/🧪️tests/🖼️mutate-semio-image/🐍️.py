@@ -22,13 +22,12 @@ answer two different halves of the question:
     (`document = artifact-mark schema-line width-line height-line colorspace-line bit-depth-line
     icc-line frames-line metadata-line`, `colorspace = r|a|g|y|i`, `option-hex`, hex-encoded
     scalars);
-  - the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio`
-    together with its Kaitai mirror `…/💾️binary/🥋️.ksy`, which — unusually for this family
-    — describes the trailing chain completely: *"icc (presence u8 + optional length-prefixed
-    bytes), frames (varint count + per-frame delay_ms u32 LE + varint-length-prefixed rgba8 bytes),
-    metadata (varint count + per-entry varint-length-prefixed key/value UTF-8)"*. Nothing had to be
-    reverse-engineered from bytes here, and `pack_bytes` re-encoding the committed swatch file byte
-    for byte is what proves the reading right;
+  - the pack body is the derived record document of the shared record-document codec
+    (`🧿️semio/🚪️io/💾️binary/🎒️record-document/🐍️.py`), driven by this subset's committed record spec
+    `…/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json`: the SPK container, the fixed-Huffman deflate, the BLAKE3
+    content hash and the schema-hashed record body are specified by `🧰️framework/🔨️modules/🎒️pack` and
+    re-implemented there, not here. The committed `🎒️.pack.semio` files were written by the Rust record
+    pack, so `parse_pack`/`pack_bytes` reproducing them is a cross-language byte agreement;
   - the thirteen verbs, their argument lists and their JSON wire form are the committed grammar
     `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, the committed JSON schema
     `…/🧬️mutations/🔣️.json` and the committed per-kind specification vectors under
@@ -42,7 +41,10 @@ tune away.
 from __future__ import annotations
 
 # region 🔖️Imports
+import importlib.util
 import json
+import os
+import sys
 
 from semio_repo_test import Adapter, Context, Outcome, digest
 
@@ -50,16 +52,8 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 
 
 # region 🔖️Carrier
-BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 DSL_PREAMBLE = "semio s.stdio.semio.image.dsl v1"
-PACK_TOKEN = "s.stdio.semio.image.pack v1"
-PACK_FORMAT = 1
 
-#: 🌈️ `colorspace = "r" | "a" | "g" | "y" | "i"` from the DSL grammar, in the ordinal order the
-#: Kaitai mirror spells out for the pack frame: *"0=Rgb 1=Rgba 2=Grayscale 3=GrayscaleAlpha
-#: 4=Indexed"*. The committed swatch carries `colorspace=a` in its DSL and `0x01` in its pack, which
-#: pins the two spellings against each other.
-COLORSPACE_ORDER = ("rgb", "rgba", "grayscale", "grayscaleAlpha", "indexed")
 COLORSPACE_LETTER = {"rgb": "r", "rgba": "a", "grayscale": "g", "grayscaleAlpha": "y", "indexed": "i"}
 LETTER_COLORSPACE = {letter: name for name, letter in COLORSPACE_LETTER.items()}
 
@@ -73,7 +67,7 @@ def hex_of_text(text: str) -> str:
 
 
 def text_of_hex(hexed: str) -> str:
-    """🔡️ The grammar's `hex` macro in the reading direction, for a string leaf."""
+    """🪄️ The grammar's `hex` macro in the reading direction, for a string leaf."""
     return bytes.fromhex(hexed).decode("utf-8")
 
 
@@ -90,7 +84,7 @@ def strip_preamble(text: str) -> str:
 
 # region 🔖️Dsl
 def read_field(body: str, name: str) -> tuple:
-    """📜️ Reads one `name=value` line off the front of the body, in the grammar's fixed order."""
+    """📛️ Reads one `name=value` line off the front of the body, in the grammar's fixed order."""
     line, _, rest = body.partition("\n")
     prefix = name + "="
     if not line.startswith(prefix):
@@ -99,7 +93,7 @@ def read_field(body: str, name: str) -> tuple:
 
 
 def split_top_level(text: str) -> list:
-    """📜️ Splits a bracket list body on the commas that sit at bracket depth zero."""
+    """✂️ Splits a bracket list body on the commas that sit at bracket depth zero."""
     parts = []
     depth = 0
     current = []
@@ -120,14 +114,14 @@ def split_top_level(text: str) -> list:
 
 
 def strip_brackets(text: str, what: str) -> str:
-    """📜️ Unwraps one `[...]` group, refusing anything the grammar does not admit there."""
+    """🚪️ Unwraps one `[...]` group, refusing anything the grammar does not admit there."""
     if len(text) < 2 or text[0] != "[" or text[-1] != "]":
         raise AssertionError("%s must be a bracketed group, found %r" % (what, text[:40]))
     return text[1:-1]
 
 
 def parse_option_hex(text: str, what: str):
-    """📜️ `option-hex = "[" "0" "]" | "[" "1" "," hex "]"` — absent, or present with a payload."""
+    """🔘️ `option-hex = "[" "0" "]" | "[" "1" "," hex "]"` — absent, or present with a payload."""
     inner = strip_brackets(text, what)
     parts = split_top_level(inner)
     if parts == ["0"]:
@@ -138,12 +132,12 @@ def parse_option_hex(text: str, what: str):
 
 
 def print_option_hex(value) -> str:
-    """📜️ `option-hex` in the writing direction."""
+    """🌀️ `option-hex` in the writing direction."""
     return "[0]" if value is None else "[1,%s]" % bytes(value).hex()
 
 
 def parse_dsl(text: str) -> dict:
-    """📜️ The committed DSL grammar, read into the snapshot's own structural shape."""
+    """🔟️ The committed DSL grammar, read into the snapshot's own structural shape."""
     body = strip_preamble(text)
     schema_hex, body = read_field(body, "schema")
     width, body = read_field(body, "width")
@@ -170,7 +164,7 @@ def parse_dsl(text: str) -> dict:
 
 
 def parse_frame(text: str) -> dict:
-    """📜️ `frame = "[" INT "," hex "]"` — the delay in milliseconds and the RGBA8 plane."""
+    """🐢️ `frame = "[" INT "," hex "]"` — the delay in milliseconds and the RGBA8 plane."""
     parts = split_top_level(strip_brackets(text, "frame"))
     if len(parts) != 2:
         raise AssertionError("a frame must carry a delay and a plane, found %r" % text[:40])
@@ -178,7 +172,7 @@ def parse_frame(text: str) -> dict:
 
 
 def parse_metadata_entry(text: str) -> dict:
-    """📜️ `entry = "[" hex "," hex "]"` — one key/value pair, both hex-encoded UTF-8."""
+    """🗝️ `entry = "[" hex "," hex "]"` — one key/value pair, both hex-encoded UTF-8."""
     parts = split_top_level(strip_brackets(text, "metadata entry"))
     if len(parts) != 2:
         raise AssertionError("a metadata entry must carry a key and a value, found %r" % text[:40])
@@ -186,7 +180,7 @@ def parse_metadata_entry(text: str) -> dict:
 
 
 def print_dsl(document: dict) -> str:
-    """📜️ The committed DSL grammar in the writing direction, line for line in its declared order."""
+    """🌁️ The committed DSL grammar in the writing direction, line for line in its declared order."""
     frames = ",".join("[%d,%s]" % (frame["delayMs"], bytes(frame["rgba8"]).hex()) for frame in document["frames"])
     metadata = ",".join("[%s,%s]" % (hex_of_text(entry["key"]), hex_of_text(entry["value"])) for entry in document["metadata"])
     return "\n".join(
@@ -208,122 +202,33 @@ def print_dsl(document: dict) -> str:
 
 
 # region 🔖️Pack
-def read_varint(data: bytes, at: int) -> tuple:
-    """🔢️ LEB128, the `varint` the protocol's `schema_len` and every count/length below uses."""
-    value = 0
-    shift = 0
-    while True:
-        byte = data[at]
-        at += 1
-        value |= (byte & 0x7F) << shift
-        if byte & 0x80 == 0:
-            return value, at
-        shift += 7
+_HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def write_varint(value: int) -> bytes:
-    """🔢️ LEB128 in the writing direction."""
-    out = bytearray()
-    while True:
-        byte = value & 0x7F
-        value >>= 7
-        if value:
-            out.append(byte | 0x80)
-            continue
-        out.append(byte)
-        return bytes(out)
+def _load_shared(alias, *parts):
+    """🧬️ Loads a shared module from the `stdio.semio` artifact root, six folders above this case, and registers it under an importable name."""
+    if alias in sys.modules:
+        return sys.modules[alias]
+    path = os.path.join(_HERE, *[os.pardir] * 6, *parts)
+    spec = importlib.util.spec_from_file_location(alias, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[alias] = module
+    spec.loader.exec_module(module)
+    return module
 
 
-def read_blob(data: bytes, at: int) -> tuple:
-    """🔢️ A varint-length-prefixed byte run — the protocol's `write_str_lp` wire."""
-    length, at = read_varint(data, at)
-    return data[at : at + length], at + length
-
-
-def write_blob(payload: bytes) -> bytes:
-    """🔢️ A varint-length-prefixed byte run in the writing direction."""
-    return write_varint(len(payload)) + payload
+record_document = _load_shared("record_document", "🚪️io", "💾️binary", "🎒️record-document", "🐍️.py")
+RECORD_SPEC = record_document.load_record_spec(os.path.join(_HERE, os.pardir, os.pardir, "🧬️schema", "📸️snapshot", "🗺️record-spec", "🔣️.json"))
 
 
 def parse_pack(data: bytes) -> dict:
-    """🎒️ The committed binary envelope and the pack frame the Kaitai mirror describes."""
-    if data[:8] != BINARY_MAGIC:
-        raise AssertionError("the binary envelope magic is %r, expected %r" % (data[:8], BINARY_MAGIC))
-    token_length = int.from_bytes(data[8:12], "little")
-    token = data[12 : 12 + token_length].decode("utf-8")
-    if token != PACK_TOKEN:
-        raise AssertionError("the binary envelope token is %r, expected %r" % (token, PACK_TOKEN))
-    at = 12 + token_length
-    if data[at] != PACK_FORMAT:
-        raise AssertionError("the pack format byte is %d, expected %d" % (data[at], PACK_FORMAT))
-    at += 1
-    schema, at = read_blob(data, at)
-    width = int.from_bytes(data[at : at + 4], "little")
-    height = int.from_bytes(data[at + 4 : at + 8], "little")
-    colorspace = data[at + 8]
-    bit_depth = data[at + 9]
-    at += 10
-    if colorspace >= len(COLORSPACE_ORDER):
-        raise AssertionError("the pack colorspace ordinal %d is outside the declared enumeration" % colorspace)
-    present = data[at]
-    at += 1
-    icc = None
-    if present == 1:
-        blob, at = read_blob(data, at)
-        icc = list(blob)
-    elif present != 0:
-        raise AssertionError("the icc presence byte is %d, expected 0 or 1" % present)
-    count, at = read_varint(data, at)
-    frames = []
-    for _ in range(count):
-        delay = int.from_bytes(data[at : at + 4], "little")
-        at += 4
-        plane, at = read_blob(data, at)
-        frames.append({"delayMs": delay, "rgba8": list(plane)})
-    count, at = read_varint(data, at)
-    metadata = []
-    for _ in range(count):
-        key, at = read_blob(data, at)
-        value, at = read_blob(data, at)
-        metadata.append({"key": key.decode("utf-8"), "value": value.decode("utf-8")})
-    if at != len(data):
-        raise AssertionError("the pack frame ends %d bytes before its envelope does" % (len(data) - at))
-    return {
-        "schema": schema.decode("utf-8"),
-        "width": width,
-        "height": height,
-        "colorspace": COLORSPACE_ORDER[colorspace],
-        "bitDepth": bit_depth,
-        "frames": frames,
-        "icc": icc,
-        "metadata": metadata,
-    }
+    """📦️ A `.pack.semio` file as the JSON snapshot its record document carries."""
+    return record_document.decode_pack(RECORD_SPEC, data)
 
 
 def pack_bytes(document: dict) -> bytes:
-    """🎒️ The pack frame in the writing direction, inside the shared binary envelope."""
-    body = bytearray()
-    body.append(PACK_FORMAT)
-    body += write_blob(document["schema"].encode("utf-8"))
-    body += int(document["width"]).to_bytes(4, "little")
-    body += int(document["height"]).to_bytes(4, "little")
-    body.append(COLORSPACE_ORDER.index(document["colorspace"]))
-    body.append(int(document["bitDepth"]))
-    if document["icc"] is None:
-        body.append(0)
-    else:
-        body.append(1)
-        body += write_blob(bytes(document["icc"]))
-    body += write_varint(len(document["frames"]))
-    for frame in document["frames"]:
-        body += int(frame["delayMs"]).to_bytes(4, "little")
-        body += write_blob(bytes(frame["rgba8"]))
-    body += write_varint(len(document["metadata"]))
-    for entry in document["metadata"]:
-        body += write_blob(entry["key"].encode("utf-8"))
-        body += write_blob(entry["value"].encode("utf-8"))
-    token = PACK_TOKEN.encode("utf-8")
-    return BINARY_MAGIC + len(token).to_bytes(4, "little") + token + bytes(body)
+    """🔍️ The writing direction of `parse_pack`, envelope included."""
+    return record_document.encode_pack(RECORD_SPEC, document)
 
 
 # endregion 🔖️Pack
@@ -365,7 +270,7 @@ def frame_at(document: dict, index: int, verb: str) -> dict:
 
 
 def value_of(document: dict, key: str):
-    """🏷️ The value a metadata key currently carries, or `None` when the document has no such key."""
+    """📄️ The value a metadata key currently carries, or `None` when the document has no such key."""
     for entry in document["metadata"]:
         if entry["key"] == key:
             return entry["value"]
@@ -521,7 +426,7 @@ def pillow_report(document: dict) -> dict:
 
 # region 🔖️Scenario input
 def doc_string(ctx: Context) -> str:
-    """📜️ The scenario's own doc string. The Python `Context` exposes the raw plan, not a helper."""
+    """📚️ The scenario's own doc string. The Python `Context` exposes the raw plan, not a helper."""
     for step in ctx.scenario.get("steps", []):
         if step.get("docString"):
             return step["docString"]
@@ -534,7 +439,7 @@ def step_uris(ctx: Context, prefix: str) -> list:
 
 
 def snapshot_json(ctx: Context, uri: str):
-    """🧫️ A declared fixture read as JSON."""
+    """🪑️ A declared fixture read as JSON."""
     return json.loads(ctx.input_bytes(uri).decode("utf-8"))
 
 
@@ -546,7 +451,7 @@ def payload(ctx: Context) -> dict:
 
 
 def artifact(ctx: Context) -> dict:
-    """🎞️ The real committed artifact, parsed through this implementation's own DSL reader."""
+    """🌂️ The real committed artifact, parsed through this implementation's own DSL reader."""
     return parse_dsl(ctx.input_bytes(ARTIFACT_DSL).decode("utf-8"))
 
 
@@ -570,7 +475,7 @@ def projection_of(document: dict) -> dict:
 
 # region 🔖️Handlers
 def mutate(ctx: Context) -> Outcome:
-    """🎯️ One verb applied to the real derived artifact by this implementation alone, with the
+    """📱️ One verb applied to the real derived artifact by this implementation alone, with the
     resulting planes handed to Pillow so the third party — and not this file — states what they are."""
     document = artifact(ctx)
     mutation = payload(ctx)
@@ -579,7 +484,7 @@ def mutate(ctx: Context) -> Outcome:
 
 
 def inverse(ctx: Context) -> Outcome:
-    """↩️ The metamorphic inverse law on the real artifact: the verb followed by its OWN computed
+    """⚖️ The metamorphic inverse law on the real artifact: the verb followed by its OWN computed
     inverse must restore the artifact exactly, frame order and every sample included."""
     document = artifact(ctx)
     mutation = payload(ctx)
@@ -592,7 +497,7 @@ def inverse(ctx: Context) -> Outcome:
 
 
 def spec_vector(ctx: Context) -> Outcome:
-    """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector — a THIRD
+    """➡️ The same verb on its committed handcrafted `(before, mutation, after)` vector — a THIRD
     statement of what the verb means, independent of both implementations."""
     uris = ctx.step_input_uris()
     before = snapshot_json(ctx, uris[0])

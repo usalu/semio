@@ -1,0 +1,3 @@
+# History Shared Text Custody
+
+Schema and neutral fault-custody fixture precede production edits. The new registered metadata law requires the full typed Native construction carrier, preserves all three owned cause pointers and JSON output, and retires the entire error through one explicit finite physical/work bank. The actual Renderer3 compiler already fails at all four old SharedUtf8 Result patterns. The producer will borrow the same original NativeDecodeControl, store the real owner or restore the exact String, preserve error progress including zero, and retain all native cause fields. Existing Result-only whole History traversal work interfaces remain a separate open obligation; this change does not certify SourceHost.

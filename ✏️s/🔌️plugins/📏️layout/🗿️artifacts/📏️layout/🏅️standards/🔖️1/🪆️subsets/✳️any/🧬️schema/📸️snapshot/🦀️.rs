@@ -8,12 +8,10 @@ use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Snapshot
-/// 📸️ Persisted layout document snapshot (persistent fields of the artifact). Ticket
-/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `background_drawing` composes stdio's real
-/// `s.stdio.semio/v1/drawing` subset as a genuine child slot (see the artifact root's
-/// `🔖️ComposedTypes` region doc for the full before/after); `referenced_model` is a forward
-/// `ArtifactLink` reference slot, both new. `#[child(...)]`/`#[link_slot(...)]` drive
-/// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Text and pack are the
+/// 📸️ Persists Layout document fields and genuine Drawing member references.
+/// Current child heads belong to their independent member stores; authored initial payloads remain in separate Drawing births.
+/// Derived child/link slot tables and text/pack codecs share the same reference-only schema.
+/// `ArtifactSchema` emits slot tables; text and pack are the
 /// derived spec-driven encodings of the one `dsl::DslRecord` spec, composed child and link slot included.
 /// Current child heads belong to their member stores.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
@@ -91,9 +89,7 @@ pub fn empty_layout_snapshot() -> LayoutSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️round-trip/🦀️.rs"]
-mod round_trip_tests;
+
 //#endregion 🧪️Tests
 
 

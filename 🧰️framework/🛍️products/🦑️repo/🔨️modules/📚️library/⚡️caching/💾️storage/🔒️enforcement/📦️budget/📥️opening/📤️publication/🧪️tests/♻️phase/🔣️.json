@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "pre-stage-owner",
+      "steps": [
+        "measure",
+        "recheck"
+      ],
+      "events": [
+        "artifact-measure",
+        "artifact-read"
+      ],
+      "refused": false
+    },
+    {
+      "id": "completed-receipt-repeated",
+      "steps": [
+        "complete",
+        "measure",
+        "recheck",
+        "measure",
+        "recheck"
+      ],
+      "events": [
+        "inputs-measure",
+        "inputs-read",
+        "inputs-measure",
+        "inputs-read"
+      ],
+      "refused": false
+    },
+    {
+      "id": "completed-once",
+      "steps": [
+        "complete",
+        "complete"
+      ],
+      "events": [],
+      "refused": true
+    },
+    {
+      "id": "consumed-mutation-refused",
+      "steps": [
+        "complete",
+        "mutate"
+      ],
+      "events": [],
+      "refused": true
+    },
+    {
+      "id": "completed-control-mismatch",
+      "steps": [
+        "complete",
+        "wrong-control"
+      ],
+      "events": [],
+      "refused": true
+    }
+  ]
+}

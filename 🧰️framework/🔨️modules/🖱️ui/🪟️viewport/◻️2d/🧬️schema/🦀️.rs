@@ -51,19 +51,12 @@ impl<'de> serde::Deserialize<'de> for Viewport2d {
 }
 
 /// 🧲️ Missing native navigation is the identity view.
-impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for Viewport2d {
-    fn native_default_demand() -> semio_framework_value::RetirementDemand {
-        semio_framework_value_native_owned::native_decoding::owned::tree::fixed(2 * std::mem::size_of::<Self>())
-    }
-
-    fn native_default(grant: semio_framework_value::RetainedCloneGrant) -> Result<(Self, semio_framework_value::RetainedCloneProgress), ValueError> {
-        let demand = <Self as semio_framework_value_native_owned::native_decoding::owned::NativeDefault>::native_default_demand();
-        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
-            return Err(semio_framework_value_native_owned::native_decoding::owned::tree::invalid());
-        }
-        Ok((Self { x: 0.0, y: 0.0, zoom: 1.0 }, semio_framework_value_native_owned::native_decoding::owned::tree::receipt(demand)))
-    }
+impl semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue for Viewport2d{
+ fn default_demand()->semio_framework_value::RetirementDemand{semio_framework_value_native_owned::native_decoding::owned::tree::fixed(3*std::mem::size_of::<f64>())}
+ fn admit_default(output:&mut Option<Self>,g:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{if output.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default())),work:0}}let d=<Self as semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue>::default_demand();if !semio_framework_value::retained_clone::retained_clone_grant_admits(g,d){return semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())),work:0}}*output=Some(Self{x:0.0,y:0.0,zoom:1.0});semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value_native_owned::native_decoding::owned::tree::receipt(d))),work:1}}
 }
+impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for Viewport2d{type Cursor=semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValueCursor<Self>;fn default_cursor()->Self::Cursor{semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValueCursor::new()}}
+
 
 impl Viewport2d {
     pub fn validate(&self) -> Result<(), ValueError> {

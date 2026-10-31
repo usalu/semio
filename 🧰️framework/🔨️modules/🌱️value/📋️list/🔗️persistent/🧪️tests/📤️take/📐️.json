@@ -1,0 +1,26 @@
+{
+  "producers": [
+    "builder",
+    "set",
+    "splice"
+  ],
+  "base": [
+    0
+  ],
+  "authored": 9,
+  "expected": {
+    "builder": [],
+    "set": [
+      9
+    ],
+    "splice": [
+      9,
+      0
+    ]
+  },
+  "deniedWork": 0,
+  "handoffWork": 1,
+  "cachedWork": 0,
+  "copyBytes": 0,
+  "wallet": "../\ud83c\udf9f\ufe0fwallet/\ud83d\udcd0\ufe0f.json"
+}

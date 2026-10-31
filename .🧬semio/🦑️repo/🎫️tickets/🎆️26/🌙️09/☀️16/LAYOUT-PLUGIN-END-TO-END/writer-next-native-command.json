@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "state": "TERMINAL Writer4 pre-runtime ENOSPC; next-action HOLD",
+  "executed": true,
+  "cwd": "/Users/ueli/Documents/semio",
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/writer-native-4",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/writer-native-4/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/writer-native-4/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/writer-native-4/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/writer-native-4/tmp"
+  },
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.toml",
+    "-p",
+    "semio-s-artifact-writer-writer-typing-fold",
+    "-p",
+    "semio-s-artifact-writer-writer-tests-2",
+    "--lib",
+    "original_",
+    "--",
+    "--nocapture"
+  ],
+  "shellCommand": "SEMIO_BUILD_MODE='prototype' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/writer-native-4' TMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/writer-native-4/tmp' TMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/writer-native-4/tmp' TEMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/writer-native-4/tmp' TEMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/writer-native-4/tmp' 'repo' '--service=off' 'cargo' '--store=shared' '--configuration=prototype' '--' 'test' '--manifest-path' '/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/Cargo.toml' '-p' 'semio-s-artifact-writer-writer-typing-fold' '-p' 'semio-s-artifact-writer-writer-tests-2' '--lib' 'original_' '--' '--nocapture' > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/writer-original-native-4.log' 2>&1",
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/writer-original-native-4.log",
+  "manifestSha256": "6ae73249cf8e183f78d9683d1a17132abebd26b5d6985a1a55ab7707c020a5b8",
+  "intendedRuntimeSelection": {
+    "semio-s-artifact-writer-writer-typing-fold": [
+      "original_writer_fold_matches_neutral_inputs_without_moving_or_cloning_original_nets",
+      "original_writer_fold_cancel_keeps_borrowed_inputs_until_all_partial_native_owners_close"
+    ],
+    "semio-s-artifact-writer-writer-tests-2": [
+      "writer_editor_forwards_its_canonical_original_typing_factory"
+    ]
+  },
+  "selectionEvidence": "writer-native-selection.md and writer-native-doors.md; no new semantic inventory launched",
+  "priorAttempt": {
+    "session": 14137,
+    "exitCode": 1,
+    "runtimeRecords": 0,
+    "boundary": "managed compiler ENOSPC; built-in recovery then original child phase deadline exhausted",
+    "log": "🗑️generated/writer-original-native-3.log",
+    "capacityNow": "unproven; no current readiness inference"
+  },
+  "releasePrerequisites": [
+    "Source owner confirms canonical Cargo early route independent of unresolved JavaScript recipe7 publication",
+    "root explicitly releases exactly this one native request"
+  ],
+  "protocol": [
+    "retain one actual returned session to authoritative terminal",
+    "no native/preview/setup/publication/retirement parallel request in this lane",
+    "no provider/source edits during live producer",
+    "no capacity/deadline override or peer interruption",
+    "after actual runtime success validate ten provider records with writer-fold-oracle.ts and hostile checks",
+    "hold next native after terminal"
+  ],
+  "authorization": "root explicit release; setup-busy-admission.md proves Cargo early route independent of JavaScript dependency publication",
+  "session": 18275,
+  "firstPhase": {
+    "schedulerSourceAdmission": "1/1 admitted",
+    "workspaceSelection": "reached",
+    "imageHeadroom": {
+      "expectedWriteGiB": 7.2,
+      "freeGiB": 7.3,
+      "runningExpectedGiB": 11.0,
+      "runningCommands": 3,
+      "aheadReservedGiB": 0.0,
+      "floorGiB": 1.4
+    },
+    "automaticRetirement": "owner selected12.3GiB idle lanes/sessions/cold units; actual release not yet proved",
+    "writerMainCompilation": "not yet witnessed",
+    "runtime": "not yet witnessed"
+  },
+  "currentPhase": "pre-runtime managed compiler storage failure",
+  "terminal": {
+    "session": 18275,
+    "state": "terminal",
+    "exitCode": 1,
+    "innerStatus": 101,
+    "signal": null,
+    "log": "🗑️generated/writer-original-native-4.log",
+    "phase": "pre-runtime managed compiler storage failure",
+    "firstFailedPackage": "semio-s-artifact-stdio-semio-mesh-snapshot",
+    "firstCause": "No space left on device (os error28)",
+    "automaticRecovery": {
+      "freeGiB": 0.0,
+      "capacityGiB": 47.8,
+      "cleanedLanes": 0,
+      "cleanedIncrementalSets": 0,
+      "cleanedIncrementalSessions": 0,
+      "cleanedBuildUnits": 0,
+      "cleanedObjects": 0,
+      "automaticRetries": 1,
+      "retryFailedPackage": "semio-framework-pack",
+      "finalDiagnostic": "compiler image still full; other running lanes hold the space"
+    },
+    "runtime": {
+      "runningBoundaries": 0,
+      "testResults": 0,
+      "writerRecords": 0,
+      "oracleExecuted": false
+    },
+    "next": "HOLD; no new native/setup/preview/retirement or source edits without root direction"
+  }
+}

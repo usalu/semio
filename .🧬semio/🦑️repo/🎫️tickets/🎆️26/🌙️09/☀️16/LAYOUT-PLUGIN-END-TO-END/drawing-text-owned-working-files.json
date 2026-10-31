@@ -1,0 +1,26 @@
+{
+  "state": "source-authored-unexecuted-not-all-caller-ready",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "bytes": 16939,
+      "sha256": "907e9143e016a3ddeda2bfa1aa64d49e577539c4a90ba540e0413c2035e5fbd8",
+      "beforeSha256": "a91931c8794d786366bb73b4b35694a779231e195c8d8d91c68b0d73d5237828"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts",
+      "bytes": 28531,
+      "sha256": "1c7421cfac62144534ca1a888ed7ae7713d4ddd97e6b3ee9265a6c219a1292ef"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts",
+      "status": "removed",
+      "beforeSha256": "d5804e1d21c567322861b32238216e8c113a1af0711379f6004e1e0b8e8d3c1f",
+      "movedTo": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "attribution": "Our authored canonical domain-neutral producer relocation; exact historical removed entry already present in drawing-neutral-producer-working-files.json. No old Font alias/facade restored."
+    }
+  ],
+  "testFirst": "drawing-text-owned-test-first.json",
+  "remaining": "Exact affected owning18+strict packet; all16 original callers/full14 glyph integration remain mandatory.",
+  "attributionFollowup": "Explicit historical removed path retained for current inventory; this metadata addition is not a Source or runtime change."
+}

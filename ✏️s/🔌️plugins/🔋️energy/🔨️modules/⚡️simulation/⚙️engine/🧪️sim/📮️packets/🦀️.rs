@@ -183,11 +183,11 @@ impl EnergyJobAuthority {
         if self.numerical_census.pages == 0 || self.numerical_census.observed_items == 0 {
             return Err(EnergyWireRejection::Pages);
         }
-        if self.wire_build.is_some() || self.wire_ready.is_some() || self.commit_reservation.is_some() {
+        if self.wire_build.is_some() || self.wire_ready.is_some() || self.commit_reservation.is_some() || self.builder_retiring.is_some() {
             return Err(EnergyWireRejection::Saturated);
         }
         if kind == EnergyWireKind::Checkpoint && self.input_identity.digest().is_none() { return Err(EnergyWireRejection::Identity); }
-        self.wire_build = Some(EnergyWireBuild { kind, identity: self.wire_identity(sequence), writer: semio_framework_job_payload::RetainedJobPayloadWriter::new(stream), field: 0 });
+        self.wire_build = Some(EnergyWireBuild { kind, identity: self.wire_identity(sequence), stream, builder: None, field: 0 });
         Ok(())
     }
 
@@ -239,30 +239,56 @@ impl EnergyJobAuthority {
     pub fn step_wire_build(&mut self, context: &mut StepContext<'_>) -> Result<bool, EnergyWireRejection> {
         if context.should_yield() { return Ok(false); }
         let (kind, field) = self.wire_build.as_ref().map(|build| (build.kind, build.field)).ok_or(EnergyWireRejection::Backing)?;
-        let Some((fragment, length)) = self.wire_fragment(kind, field) else {
+        let fragment = self.wire_fragment(kind, field);
+        let build = self.wire_build.as_mut().ok_or(EnergyWireRejection::Backing)?;
+        let backing = |_: ()| EnergyWireRejection::Backing;
+        if build.builder.is_none() {
+            let turn = semio_framework_job_payload::RetainedPayloadBuilder::admit_boxed(build.stream, &mut build.builder, &*context);
+            energy_post(context, turn).map_err(backing)?;
+            return Ok(false);
+        }
+        let builder = build.builder.as_mut().ok_or(EnergyWireRejection::Backing)?;
+        if !builder.is_initialized() {
+            let turn = builder.advance_initialization(&*context);
+            energy_post(context, turn).map_err(backing)?;
+            return Ok(false);
+        }
+        let Some((fragment, length)) = fragment else {
             context.consume_fuel(1);
-            let build = self.wire_build.as_mut().expect("wire build remains mounted");
-            if build.writer.staged_page_len().is_some() {
-                build.writer.commit_staged_page().map_err(|_| EnergyWireRejection::Backing)?;
+            if builder.staged_page_len().is_some() {
+                let turn = builder.commit_staged_page_funded(context);
+                energy_post(context, turn).map_err(backing)?;
                 return Ok(false);
             }
-            let build = self.wire_build.take().expect("wire build remains mounted");
-            let payload = build.writer.finish().map_err(|_| EnergyWireRejection::Backing)?;
+            if builder.published().is_none() {
+                let turn = builder.seal(&*context);
+                energy_post(context, turn).map_err(backing)?;
+                return Ok(false);
+            }
+            let mut payload = None;
+            let turn = builder.take_finished(&mut payload, context.retained_grant());
+            energy_post(context, turn).map_err(backing)?;
+            let Some(payload) = payload else { return Ok(false) };
+            let build = self.wire_build.take().ok_or(EnergyWireRejection::Backing)?;
+            self.builder_retiring = build.builder;
             self.wire_ready = Some(EnergyWirePacket { kind: build.kind, identity: build.identity, payload, preview: None, reservation: None });
             return Ok(true);
         };
-        let build = self.wire_build.as_mut().expect("wire build remains mounted");
-        if build.writer.staged_page_len().is_none() {
-            build.writer.begin_staged_page_funded(context).map_err(|_| EnergyWireRejection::Backing)?;
+        if builder.staged_page_len().is_none() {
+            let turn = builder.begin_staged_page_funded(context);
+            energy_post(context, turn).map_err(backing)?;
             return Ok(false);
         }
         context.consume_fuel(1);
-        if build.writer.staged_page_remaining() < length {
-            build.writer.commit_staged_page().map_err(|_| EnergyWireRejection::Backing)?;
+        if builder.staged_page_remaining() < length {
+            let turn = builder.commit_staged_page_funded(context);
+            energy_post(context, turn).map_err(backing)?;
             return Ok(false);
         }
-        build.writer.write_staged(&fragment[..length]).map_err(|_| EnergyWireRejection::Backing)?;
-        build.field = build.field.checked_add(1).ok_or(EnergyWireRejection::Items)?;
+        let turn = builder.write_staged_source_funded(context, &fragment[..length]);
+        if energy_post(context, turn).map_err(backing)? {
+            build.field = build.field.checked_add(1).ok_or(EnergyWireRejection::Items)?;
+        }
         Ok(false)
     }
 
@@ -278,6 +304,14 @@ impl EnergyJobAuthority {
     }
 
     pub(super) fn drive_wire_publication(&mut self, context: &mut StepContext<'_>) -> Option<EnergyRun> {
+        if self.builder_retiring.is_some() {
+            context.consume_fuel(1);
+            let step = energy_builder_close(&mut self.builder_retiring, context.retained_grant());
+            return match energy_spend(context, step) {
+                Ok(_) => Some(EnergyRun::Yield),
+                Err(_) => Some(Self::fault()),
+            };
+        }
         if let Some(retiring) = self.publication.retiring_preview.as_mut() {
             context.consume_fuel(1);
             let step = retiring.close_step(context.retained_grant());

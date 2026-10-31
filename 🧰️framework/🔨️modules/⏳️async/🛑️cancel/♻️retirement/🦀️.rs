@@ -2,7 +2,7 @@
 use super::{CancelToken,CancelNode};
 use std::{mem::{ManuallyDrop,size_of},sync::Arc,task::Waker};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,RetirementStep};
-use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,RetirementTurnError,ValueError,ValueRefusalKind,advance_retirement_turn,shared_retirement_allocation_bytes};
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,RetainedWorkOutcome,ValueError,ValueRefusalKind,shared_retirement_allocation_bytes};
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum CancelTokenRetirementBlocked{SharedAlias,WeakAlias,RegisteredWaiter,WaiterContention}
 #[derive(Debug)]
@@ -23,30 +23,36 @@ impl CancelTokenRetirement{
         Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()})
     }
     /// ↩️ Returns this original token alias while its matching borrowed strong root stays live through the paid turn.
-    pub fn return_alias_step(&mut self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<RetainedCloneStep,CancelTokenRetirementError>{
-        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
-        let Some(original)=self.current.as_ref().filter(|original|Arc::ptr_eq(&original.0,&witness.0))else{return Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed cancellation root does not witness this original alias")));};
-        if self.node.is_some(){return Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"cancellation node custody cannot be returned as a root alias")));}
-        let demand=RetirementDemand{copy_bytes:0,depth:1,..Default::default()};
-        let _=original;
-        advance_retirement_turn(demand,grant,|_|{drop(self.current.take());let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};Ok::<_,CancelTokenRetirementError>((RetainedCloneStep::Complete(progress),true))}).map_err(|error|match error{RetirementTurnError::Owner(error)=>error,RetirementTurnError::Receipt(error)=>CancelTokenRetirementError::Refused(error)})
+    pub fn return_alias_step(&mut self,witness:&CancelToken,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,CancelTokenRetirementError>{
+        if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
+        let demand=RetirementDemand{depth:1,..Default::default()};
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
+        let matches=self.current.as_ref().is_some_and(|original|Arc::ptr_eq(&original.0,&witness.0));
+        if !matches{return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"borrowed cancellation root does not witness this original alias"))),work:1};}
+        if self.node.is_some(){return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(ValueError::literal(ValueRefusalKind::InvariantViolated,"cancellation node custody cannot be returned as a root alias"))),work:1};}
+        drop(self.current.take());
+        RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
     }
     /// 🎟️ Releases one actual original frontier and retains every blocked original alias and ancestor.
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,CancelTokenRetirementError>{
-        let demand=self.retirement_demands().map_err(CancelTokenRetirementError::Refused)?;
-        advance_retirement_turn(demand,grant,|_|{
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,CancelTokenRetirementError>{
+        if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
+        let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(CancelTokenRetirementError::Refused(error)),work:0}};
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
+        let mut work=0;
+        let result=(||{
             if let Some(current)=self.current.as_ref(){
-                {let waiters=current.0.waiters.try_lock().ok_or(CancelTokenRetirementError::Blocked(CancelTokenRetirementBlocked::WaiterContention))?;if !waiters.is_empty(){return Err(CancelTokenRetirementError::Blocked(CancelTokenRetirementBlocked::RegisteredWaiter));}}
+                let observed=current.0.waiters.try_lock();work=1;
+                {let waiters=observed.ok_or(CancelTokenRetirementError::Blocked(CancelTokenRetirementBlocked::WaiterContention))?;if !waiters.is_empty(){return Err(CancelTokenRetirementError::Blocked(CancelTokenRetirementBlocked::RegisteredWaiter));}}
                 if Arc::weak_count(&current.0)>0{return Err(CancelTokenRetirementError::Blocked(CancelTokenRetirementBlocked::WeakAlias));}
                 if Arc::strong_count(&current.0)>1{return Err(CancelTokenRetirementError::Blocked(CancelTokenRetirementBlocked::SharedAlias));}
-                let CancelToken(original)=self.current.take().unwrap();match Arc::try_unwrap(original){Ok(node)=>{*self.node=Some(node);return Ok((RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}),false));},Err(original)=>{*self.current=Some(CancelToken(original));return Err(CancelTokenRetirementError::Blocked(CancelTokenRetirementBlocked::SharedAlias));}}
+                let Some(CancelToken(original))=self.current.take()else{return Ok(RetainedCloneStep::Complete(Default::default()))};return match Arc::try_unwrap(original){Ok(node)=>{*self.node=Some(node);Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))},Err(original)=>{*self.current=Some(CancelToken(original));Err(CancelTokenRetirementError::Blocked(CancelTokenRetirementBlocked::SharedAlias))}};
             }
-            let Some(node)=self.node.as_mut()else{return Ok((RetainedCloneStep::Complete(Default::default()),true));};
-            let waiters=node.waiters.get_mut();
-            if !waiters.is_empty(){return Err(CancelTokenRetirementError::Blocked(CancelTokenRetirementBlocked::RegisteredWaiter));}
-            if waiters.capacity()>0{drop(std::mem::take(waiters));return Ok((RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}),false));}
-            let mut node=self.node.take().unwrap();*self.current=node.parent.take();drop(node);let terminal=self.terminal_is_empty();let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};Ok((if terminal{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)},terminal))
-        }).map_err(|error|match error{RetirementTurnError::Owner(error)=>error,RetirementTurnError::Receipt(error)=>CancelTokenRetirementError::Refused(error)})
+            let Some(node)=self.node.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};let waiters=node.waiters.get_mut();
+            if !waiters.is_empty(){work=1;return Err(CancelTokenRetirementError::Blocked(CancelTokenRetirementBlocked::RegisteredWaiter));}
+            if waiters.capacity()>0{drop(std::mem::take(waiters));work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}));}
+            let Some(mut node)=self.node.take()else{return Ok(RetainedCloneStep::Complete(Default::default()))};*self.current=node.parent.take();drop(node);work=1;let progress=RetainedCloneProgress{copied_items:1,..Default::default()};Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+        })();
+        RetainedWorkOutcome{result,work}
     }
 }
 impl Drop for CancelTokenRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"cancellation retirement abandoned its original node");}}
@@ -62,10 +68,11 @@ impl RetirementCursor for Cursor{
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.0.retirement_demands()}
 
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
-        match self.0.close_step(grant){
-            Ok(step)=>{let progress=step.progress();if progress!=RetainedCloneProgress::default(){RetirementStep::Progress(progress)}else if self.0.terminal_is_empty(){RetirementStep::Complete}else{RetirementStep::BudgetExhausted}}
-            Err(CancelTokenRetirementError::Blocked(blocked))=>RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,match blocked{CancelTokenRetirementBlocked::SharedAlias=>"original cancellation node retains a shared alias",CancelTokenRetirementBlocked::WeakAlias=>"original cancellation node retains a weak alias",CancelTokenRetirementBlocked::RegisteredWaiter=>"original cancellation node retains a registered wake owner",CancelTokenRetirementBlocked::WaiterContention=>"original cancellation waiter guard is occupied"})),
-            Err(CancelTokenRetirementError::Refused(error))=>RetirementStep::Failure(error),
+        let turn=self.0.close_step(grant);
+        match turn.result{
+            Ok(step)=>{let progress=step.progress();if progress!=RetainedCloneProgress::default()||turn.work!=0{RetirementStep::Progress(progress,turn.work)}else if self.0.terminal_is_empty(){RetirementStep::Complete(turn.work)}else{RetirementStep::BudgetExhausted}}
+            Err(CancelTokenRetirementError::Blocked(blocked))=>RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,match blocked{CancelTokenRetirementBlocked::SharedAlias=>"original cancellation node retains a shared alias",CancelTokenRetirementBlocked::WeakAlias=>"original cancellation node retains a weak alias",CancelTokenRetirementBlocked::RegisteredWaiter=>"original cancellation node retains a registered wake owner",CancelTokenRetirementBlocked::WaiterContention=>"original cancellation waiter guard is occupied"}),turn.work),
+            Err(CancelTokenRetirementError::Refused(error))=>RetirementStep::Failure(error,turn.work),
         }
     }
     fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
@@ -75,3 +82,7 @@ impl RetirementCursor for Cursor{
     fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
     fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
 }
+
+#[cfg(test)]
+#[path="🎟️work/🧪️tests/🦀️.rs"]
+mod actual_work_tests;

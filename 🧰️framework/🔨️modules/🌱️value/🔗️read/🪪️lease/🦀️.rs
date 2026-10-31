@@ -1,6 +1,6 @@
 //! 🪪️ Erased read custody preserves the original typed lease and its independently funded frame.
 use super::{ReadLease,ReadLeaseId};
-use crate::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
+use crate::{RetainedWorkOutcome,ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 use std::{any::Any,mem::ManuallyDrop};
 
 trait LeaseView:ErasedSnapshotRetirement {
@@ -20,7 +20,7 @@ impl<T:RetireOwned+Sync> LeaseView for ReadLease<T> {
 pub struct ErasedReadLease {lease:ManuallyDrop<Option<Box<dyn LeaseView>>>}
 impl ErasedReadLease {
     pub fn terminal_is_empty(&self)->bool {self.lease.is_none()}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {ErasedSnapshotRetirement::close_step(self,grant)}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome {ErasedSnapshotRetirement::close_step(self,grant)}
     pub fn next_depth_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.depth)}
     pub const fn constructor_capacity_bytes<T:RetireOwned+Sync>()->usize {size_of::<ReadLease<T>>()}
     pub fn admit<T:RetireOwned+Sync>(lease:ReadLease<T>,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,ReadLease<T>)> {
@@ -36,9 +36,9 @@ impl ErasedReadLease {
     fn typed<T:RetireOwned+Sync>(&self)->Result<&ReadLease<T>,ValueError> {self.lease.as_ref().and_then(|lease|lease.as_any().downcast_ref()).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"erased read has a different concrete root type or is closed"))}
     pub fn source_capacity_bytes<T:RetireOwned+Sync>(&self)->Result<usize,ValueError> {self.typed::<T>()?;Ok(RetainedCloneSource::<T>::borrowed_constructor_capacity_bytes::<super::OriginalErasedReadSource<T>>())}
     pub fn source_copy_bytes<T:RetireOwned+Sync>(&self)->usize{RetainedCloneSource::<T>::borrowed_constructor_copy_bytes::<super::OriginalErasedReadSource<T>>()}
-    pub fn admit_source<T:RetireOwned+Sync>(self,grant:RetainedCloneGrant)->Result<(RetainedCloneSource<T,super::OriginalErasedReadSource<T>>,RetainedCloneProgress),(ValueError,Self)>{
-        if self.get::<T>().is_none(){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"original erased read source has a different type or is closed"),self));}
-        RetainedCloneSource::admit_borrowed(super::OriginalErasedReadSource::new(self),|read:&super::OriginalErasedReadSource<T>|read.get(),grant).map_err(|(error,mut read)|(error,read.take_refused()))
+    pub fn source_admission<T:RetireOwned+Sync>(self)->Result<crate::retained_clone::RetainedCloneSourceAdmission<T,super::OriginalErasedReadSource<T>>,(ValueError,Self)>{
+        if self.get::<T>().is_none(){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"original erased read source has a different type or is closed"),self))}
+        Ok(RetainedCloneSource::admission_borrowed(super::OriginalErasedReadSource::new(self),|read:&super::OriginalErasedReadSource<T>|read.get()))
     }
     pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {
         let Some(lease)=self.lease.as_ref()else{return Ok(Default::default());};
@@ -47,18 +47,16 @@ impl ErasedReadLease {
     }
 }
 impl ErasedSnapshotRetirement for ErasedReadLease {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        let Some(lease)=self.lease.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};
-        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome {
+        let Some(lease)=self.lease.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
+        if grant.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
         if lease.terminal_is_empty(){
-            if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"erased read frame release requires admitted depth"));}
-            let bytes=size_of_val(lease.as_ref());
-            if grant.maximum_release_bytes<bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}
-            drop(self.lease.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..Default::default()}));
+            if grant.maximum_depth==0{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"erased read frame release requires admitted depth")),work:0}}
+            let bytes=size_of_val(lease.as_ref());if grant.maximum_release_bytes<bytes{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+            drop(self.lease.take());return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})),work:1}
         }
-        let step=lease.close_step(grant)?;
-        let step=crate::retained_clone::admit_retained_clone_close(grant,step,lease.terminal_is_empty(),"erased read lease")?;
-        Ok(RetainedCloneStep::Progress(step.progress()))
+        let turn=lease.close_step(grant);let result=turn.result.and_then(|step|crate::retained_clone::admit_retained_clone_close(grant,step,lease.terminal_is_empty(),"erased read lease")).map(|step|RetainedCloneStep::Progress(step.progress()));
+        RetainedWorkOutcome{result,work:turn.work}
     }
     fn terminal_is_empty(&self)->bool {self.lease.is_none()}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.copy_bytes)}
@@ -69,7 +67,7 @@ impl ErasedSnapshotRetirement for ErasedReadLease {
 }
 impl RetirementCursor for ErasedReadLease {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.demands(body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {match ErasedSnapshotRetirement::close_step(self,grant){Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {let turn=ErasedSnapshotRetirement::close_step(self,grant);match turn.result{Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
     fn terminal_is_empty(&self)->bool {ErasedSnapshotRetirement::terminal_is_empty(self)}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
     fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.next_capacity_byte_demand(copy).ok()}

@@ -148,7 +148,7 @@ pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: &Arc<OsBackboneP
         id: owners.id,
         name,
         vcs: owners.vcs,
-        transitions: owners.transitions,
+        transitions: drain_transitions(owners.transitions),
         edit_messages,
         conflicts: owners.conflicts,
         backbone: owners.backbone,

@@ -38,7 +38,7 @@ pub struct GenerationFields {
 
 /// 🔌️ What an artifact tells the shared codec about its own snapshot: the envelope, the pack discriminator, the record grammar and how the snapshot splits into host and play state.
 pub trait GenerationNative {
-    type Snapshot;
+    type Snapshot: semio_framework_value::retirement::RetireOwned;
     const ENVELOPE_ID: &'static str;
     const PACK_PREFIX: Option<&'static [u8]>;
     fn spec_producer() -> RecordSpecProducer;

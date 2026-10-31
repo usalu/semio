@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "omitted",
+      "attributes": {
+        "fillRule": "nonzero"
+      },
+      "valid": true
+    },
+    {
+      "name": "explicit-no-paint",
+      "attributes": {
+        "fillRule": "nonzero",
+        "fill": null,
+        "stroke": null
+      },
+      "valid": true
+    },
+    {
+      "name": "solid-no-stroke",
+      "attributes": {
+        "fillRule": "nonzero",
+        "fill": {
+          "kind": "solid",
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        "stroke": null
+      },
+      "valid": true
+    },
+    {
+      "name": "no-fill-with-stroke",
+      "attributes": {
+        "fillRule": "nonzero",
+        "fill": null,
+        "stroke": {
+          "color": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "width": 1,
+          "cap": "butt",
+          "join": "miter"
+        }
+      },
+      "valid": true
+    },
+    {
+      "name": "fill-number",
+      "attributes": {
+        "fillRule": "nonzero",
+        "fill": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "fill-string",
+      "attributes": {
+        "fillRule": "nonzero",
+        "fill": "none"
+      },
+      "valid": false
+    },
+    {
+      "name": "fill-array",
+      "attributes": {
+        "fillRule": "nonzero",
+        "fill": []
+      },
+      "valid": false
+    },
+    {
+      "name": "fill-malformed",
+      "attributes": {
+        "fillRule": "nonzero",
+        "fill": {
+          "kind": "solid",
+          "color": []
+        }
+      },
+      "valid": false
+    },
+    {
+      "name": "stroke-number",
+      "attributes": {
+        "fillRule": "nonzero",
+        "stroke": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "stroke-string",
+      "attributes": {
+        "fillRule": "nonzero",
+        "stroke": "none"
+      },
+      "valid": false
+    },
+    {
+      "name": "stroke-array",
+      "attributes": {
+        "fillRule": "nonzero",
+        "stroke": []
+      },
+      "valid": false
+    },
+    {
+      "name": "stroke-malformed",
+      "attributes": {
+        "fillRule": "nonzero",
+        "stroke": {
+          "color": [],
+          "width": 1,
+          "cap": "butt",
+          "join": "miter"
+        }
+      },
+      "valid": false
+    }
+  ],
+  "originalNullSource": "boolean parent reference preserves independent result movement",
+  "rules": {
+    "preserveOmittedVsExplicitNull": true,
+    "nullIsNoPaint": true,
+    "nonnullObjectValidationUnchanged": true,
+    "noFixtureCoercion": true,
+    "artifactAndDiffUseSameFillValue": true
+  }
+}

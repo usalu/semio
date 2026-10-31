@@ -1,0 +1,7 @@
+{
+  "before": "6ac3bccc48790e170e9826062f804e4288862f9697312d1f89fdbebd56fd923b",
+  "after": "bc79dd6c32e087d5fd05cce241b116926acf07a4ccf7266652a1d043bfbbcb3a",
+  "exactInsertion": "assertRetainedWorkTurn(turn); first in helper",
+  "wholeBeforeReconstructed": true,
+  "runtimeExecuted": false
+}

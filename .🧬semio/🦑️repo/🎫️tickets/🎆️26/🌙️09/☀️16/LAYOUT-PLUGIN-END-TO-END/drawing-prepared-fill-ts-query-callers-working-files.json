@@ -1,0 +1,15 @@
+{
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🟦️.ts",
+      "beforeSha256": "722baa84487a97bc190d7bd54a5197532ed8effed1895bc951124ed1da7e1d6a",
+      "sha256": "759e2917d845180cd3d43e2e4932aa2e39c038d3bc71ed27367d3fb400283ce5"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🟦️.ts",
+      "beforeSha256": "dffd02466ba806ee3e2a8b9b690351d74180323c1f37a7e7833b8289f3c25b81",
+      "sha256": "71fa9f529e9f540efa7a6e142298bb09cc80d90451eecec6d0af893a1a3a22b6"
+    }
+  ],
+  "semantics": "Actual one-shot query callers use bounded original-stop query functions, no retained copied GradientRamp/PreparedFill temporary. Raster production still requires funded advance."
+}

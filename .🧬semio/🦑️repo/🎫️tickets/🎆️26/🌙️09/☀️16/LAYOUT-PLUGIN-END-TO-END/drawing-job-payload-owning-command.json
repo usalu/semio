@@ -1,0 +1,37 @@
+{
+  "state": "prepared-diagnostic-unsealed-peer-Native-Core-edits-allowed",
+  "cwd": "/Users/ueli/Documents/semio",
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/🧰️framework/Cargo.toml",
+    "-p",
+    "semio-framework-job-payload",
+    "--lib",
+    "--",
+    "--nocapture"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-payload-owning",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-payload-owning/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-payload-owning/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-payload-owning/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-payload-owning/tmp"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-job-payload-owning/native.log",
+  "sourcePacket": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-job-payload-owning-inputs.json",
+  "features": [],
+  "filter": null,
+  "scope": "Unfiltered owning JobPayload lib including existing devJob/native closure, current diagnostic only; no SourceReady or current closure seal while peers author Native/Core",
+  "actualOutcome": null,
+  "sourcePacketSha256": "38b442253227c93c401b7bc622533b0c7eb7e6bfbe2b7ed5c4bf5ac9b7909d8e",
+  "inputs": 828,
+  "metadataSha256": "cdafb0ded1a26344aca9573b9e075d46afb2aac0b67a870b0cb471ee83d7d16a"
+}

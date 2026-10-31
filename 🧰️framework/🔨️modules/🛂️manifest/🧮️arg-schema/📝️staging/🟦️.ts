@@ -91,7 +91,8 @@ export function applyStagedFormEvent(args:StagedArgs,response:StagedFormResponse
 export class StagedFormQuery {
  private controller:AbortController|undefined;
  private current:StagedFormToken|undefined;
- constructor(private readonly produce:StagedFormProducer){}
+ private readonly produce:StagedFormProducer;
+ constructor(produce:StagedFormProducer){this.produce=produce;}
  cancel():void{this.controller?.abort();this.controller=undefined;this.current=undefined;}
  async request(request:StagedFormRequest,progress?:(completed:number)=>void):Promise<StagedFormResponse|undefined>{this.cancel();const field=Object.getOwnPropertyDescriptor(request,'token');if(!field||!('value' in field)||!stagedFormToken(field.value))throw new Error('staging.token');const controller=new AbortController(),token={...field.value};this.controller=controller;this.current=token;try{const response=await this.produce(request,{signal:controller.signal,progress});if(controller.signal.aborted||this.current!==token||!sameStagedFormToken(response.token,token))return undefined;return response;}catch(error){if(controller.signal.aborted)return undefined;throw error;}}
 }

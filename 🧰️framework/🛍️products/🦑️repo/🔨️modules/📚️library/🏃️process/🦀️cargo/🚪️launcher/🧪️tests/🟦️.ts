@@ -9,7 +9,7 @@ import {spawnSync} from "node:child_process";
 import {existsSync,lstatSync,mkdtempSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {isAbsolute,join,relative} from "node:path";
 import ts from "typescript";
-import {readRepositoryCargoLaunchV1,withRepositoryCargoIsolatedStoreV1,REPOSITORY_CARGO_LAUNCH_POLICY_V1} from "../🟦️.ts";
+import {readRepositoryCargoLaunchV1,withRepositoryCargoIsolatedStoreV1,commandWriteBytesV1,REPOSITORY_CARGO_LAUNCH_POLICY_V1} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🔣️.json" with {type:"json"};
 import {withBuildTestInvocationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
@@ -78,4 +78,15 @@ test("isolated Cargo stores are removed on every owner settlement and swept only
 test("isolated store refuses an invented reservation before any filesystem effect",async()=>{
  const control={signal:new AbortController().signal,remainingMilliseconds:()=>1000,publish:async()=>{},yieldContinuation:async()=>{}},base=join(process.env.SEMIO_TEST_ARTIFACT_DIR??repository.root,"invented-isolated");
  await expect(withRepositoryCargoIsolatedStoreV1({storage:{} as never,base,control},async()=>{})).rejects.toThrow();expect(existsSync(base)).toBe(false);expect(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")).toContain("isolatedDirectory");
+});
+
+test("a command learns the larger of its lane growth and the image free-space fall, never a negative number",()=>{
+ const rows=[[5,100,90],[5,100,60],[-7,100,130],[0,null,null],[9,null,50],[3,100,100]] as const,run=Bun.spawnSync(["python3","-I","-c","import json,sys\nprint(json.dumps([max(0,g,(b-a) if b is not None and a is not None else 0) for g,b,a in json.loads(sys.argv[1])]))",JSON.stringify(rows)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);
+ expect(rows.map(([grown,before,after])=>commandWriteBytesV1(grown,before,after))).toEqual(JSON.parse(run.stdout.toString()));
+});
+
+test("the image free-space fall is learned only for an exclusive command: concurrent writers never inflate a lane's sample",()=>{
+ expect(commandWriteBytesV1(10,1000,400)).toBe(600);expect(commandWriteBytesV1(10,1000,400,true)).toBe(600);
+ expect(commandWriteBytesV1(10,1000,400,false)).toBe(10);expect(commandWriteBytesV1(900,1000,400,false)).toBe(900);expect(commandWriteBytesV1(10,null,400,true)).toBe(10);expect(commandWriteBytesV1(-5,400,1000,true)).toBe(0);
 });

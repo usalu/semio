@@ -1,0 +1,5 @@
+# Persistent Builder Normal Source
+
+Adopt/finish/advance now expose genuine full work outcomes. Original row/root headers move at physical copy0. Leaf/branch allocations forward SealedShared actual success/null work and preserve the exact original rows/roots on refusal. The actual owned page is retained before a separate later metadata publication turn. Empty level tables allocate fallibly at Layout::new<Roots<T>> under an exact grant, retaining carry custody on null; the following carry store is separately paid. Scans, finish and final root publication remain distinct bounded controls. No grant is inferred from element count and original expected cardinality/rank bounds remain unchanged.
+
+The schema and genuine finite-bank allocator/null/denial/cancel/output/paid-close law preceded body edits. No runtime ran. NativePersistent producer already targets these full outcomes but still needs direct integration review; existing Persistent companion test APIs and generic clone/splice normal callers remain to migrate. Root project/clone and retirement sections were preserved via exact method-range edits. No package SourceReady claim.

@@ -1,0 +1,3 @@
+# Graph Original Tree Receiving Laws
+
+Before Graph producer replacement, closed neutral ordered/long-common-prefix/duplicate rows and a genuine PropertyBag owning law are authored. They preserve actual original Source, one finite stock through success/error/cancel and paid close, all positive-axis denials, heap equality and independent BTreeMap/Serde key order. Existing whole Graph test suite remains mandatory. One existing first-party testing allocator is added as dev-only dependency; no new runtime dependency. No runtime or sync launched. The generic bounded tree body is authored but uncompiled; this concrete Graph integration is still pending.

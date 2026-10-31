@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "operation": 7543,
+  "generation": 3,
+  "stock": {
+    "items": 4096,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 64,
+    "fuel": 16384,
+    "deadlineUs": 1000000
+  },
+  "deniedWork": 0,
+  "nullWork": 1,
+  "successWork": 1,
+  "nullItems": 0,
+  "successItems": 1,
+  "finalEmptyDropHeap": [
+    0,
+    0
+  ],
+  "metadataWork": {
+    "initializationTurns": 1,
+    "sealWork": 1,
+    "cachedWork": 0,
+    "deniedWork": 0,
+    "copyBytes": 0,
+    "maximumPages": 256,
+    "maximumInitializationTurns": 257,
+    "livePages": 0
+  },
+  "pageWork": {
+    "extent": 4096,
+    "text": "original payload π 🌿",
+    "stages": [
+      "ledgerAlias",
+      "reservation",
+      "allocation",
+      "publication",
+      "copy"
+    ],
+    "actualWork": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "nullWork": 1,
+    "nullItems": 0,
+    "deniedWork": 0,
+    "deniedItems": 0,
+    "zeroCopyMetadata": true,
+    "maximumTurns": 512
+  },
+  "sourceFailureWork": {
+    "sourceBytes": [
+      65,
+      66
+    ],
+    "errorWrittenBytes": 1,
+    "errorCopyBytes": 1,
+    "errorWork": 1,
+    "errorItems": 1,
+    "published": false
+  },
+  "reservationTransaction": {
+    "counters": 5,
+    "maximumRollback": 4,
+    "work": 1
+  },
+  "boxedWork": {
+    "deniedWork": 0,
+    "nullWork": 1,
+    "successWork": 1,
+    "copyBytes": 0,
+    "callerOwnsBeforeFold": true
+  },
+  "incomingWork": {
+    "extent": 16384,
+    "acceptWork": 1,
+    "blockedWork": 0,
+    "deniedWork": 0,
+    "copyBytes": 0,
+    "closeWork": 1,
+    "simultaneousBackings": 2,
+    "releaseBytes": 32768
+  }
+}

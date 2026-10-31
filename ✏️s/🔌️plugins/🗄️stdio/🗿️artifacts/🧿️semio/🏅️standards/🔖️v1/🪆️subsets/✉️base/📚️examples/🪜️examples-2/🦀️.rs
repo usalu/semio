@@ -1,7 +1,6 @@
 //! 🪜️ The stdio semio family's shared examples: one demo source per subset domain, each a real printed snapshot (part 2).
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 #[path = "."]
 pub mod examples {

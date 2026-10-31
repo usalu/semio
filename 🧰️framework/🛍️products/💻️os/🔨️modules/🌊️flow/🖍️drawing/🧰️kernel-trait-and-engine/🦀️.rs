@@ -45,7 +45,6 @@ pub trait DrawingKernel {
     // #endregion Booleans
 
     // #region Trace
-    fn trace_bitmap(&mut self, width: u32, height: u32, mask_or_luma: &[u8], threshold: f64, simplify_epsilon: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
     // #endregion Trace
 
     // #region Text

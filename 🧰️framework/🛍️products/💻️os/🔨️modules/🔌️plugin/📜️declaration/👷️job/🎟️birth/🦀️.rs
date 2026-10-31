@@ -33,8 +33,8 @@ impl ArtifactReservedToolJob {
         if receiving.is_some(){if source.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original reserved birth receiver already owns a different input").into())}return Ok(true)}
         let demand=Self::original_boxed_birth_demands();let grant=cx.retained_grant();
         if source.is_none()||cx.should_yield()||grant.maximum_items==0||!semio_framework_plugin_ownership::bounded_ownership::plugin_grant_funds(demand,grant){return Ok(false)}
-        let state=ArtifactReservedToolJobState{inner:ManuallyDrop::new(source.take()),operation:None};
-        *receiving=Some(Self{state:ManuallyDrop::new(Some(std::sync::Arc::new(semio_framework_value::retirement::controlled::RetainedOwnerGate::new(state))))});
+        let state=ArtifactReservedToolJobState{inner:ManuallyDrop::new(source.take()),operation:None,lent:false};
+        *receiving=Some(Self{state:ManuallyDrop::new(Some(std::sync::Arc::new(semio_framework_value::retirement::controlled::RetainedOwnerGate::new(state)))),held:ManuallyDrop::new(None)});
         cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
 
@@ -58,8 +58,8 @@ impl ArtifactReservedToolJob {
         let layout=std::alloc::Layout::new::<J>();
         let pointer=if layout.size()==0{std::ptr::NonNull::<J>::dangling()}else{std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<J>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original reserved concrete frame allocation refused"))?};
         let body:Box<dyn ArtifactReservedJob+Send>=unsafe{pointer.as_ptr().write(source.take().unwrap());Box::from_raw(pointer.as_ptr())};
-        let state=ArtifactReservedToolJobState{inner:ManuallyDrop::new(Some(body)),operation:None};
-        *receiving=Some(Self{state:ManuallyDrop::new(Some(std::sync::Arc::new(semio_framework_value::retirement::controlled::RetainedOwnerGate::new(state))))});
+        let state=ArtifactReservedToolJobState{inner:ManuallyDrop::new(Some(body)),operation:None,lent:false};
+        *receiving=Some(Self{state:ManuallyDrop::new(Some(std::sync::Arc::new(semio_framework_value::retirement::controlled::RetainedOwnerGate::new(state)))),held:ManuallyDrop::new(None)});
         cx.consume_retained(RetainedCloneProgress{copied_items:2,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()})?;cx.consume_fuel(2);Ok(true)
     }
 }

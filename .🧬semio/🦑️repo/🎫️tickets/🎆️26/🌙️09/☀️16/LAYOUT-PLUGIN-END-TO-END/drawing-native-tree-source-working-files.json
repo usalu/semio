@@ -1,0 +1,95 @@
+{
+  "state": "source-authored-uncompiled-not-source-ready",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📖️source/🧪️tests/🦀️.rs",
+      "bytes": 8911,
+      "sha256": "e83b1ac456952809bdf0314bb9c912bc317fe7c6e9e7dfe9938917c28996ca67",
+      "utf16PathUnits": 114
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs",
+      "bytes": 38743,
+      "sha256": "c73da539363ede4ae10321107df77ddf842eaef974283c7e0e959d51d8fd5505",
+      "utf16PathUnits": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🎟️work/📐️.json",
+      "bytes": 1608,
+      "sha256": "b4f6a3915dc5094bdd0486ecc19eaf1e0bf079dab57ee04bd7feaebb34615a19",
+      "utf16PathUnits": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🎟️work/🔣️.json",
+      "bytes": 2384,
+      "sha256": "8f61bfd34eb57d321b87092526279506ab3bac8a75037180086bb39c2d3daaf9",
+      "utf16PathUnits": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 7787,
+      "sha256": "8927c742c1bc8c69f631c23c4ca6a640d478d8aef51a06bde68c81561eb85b2c",
+      "utf16PathUnits": 120
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🦀️.rs",
+      "bytes": 17576,
+      "sha256": "1ee21a0b3084369464a9b70a40735b05f6963550e24c3088884e7f66809309fb",
+      "utf16PathUnits": 103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/tests.rs",
+      "bytes": 8865,
+      "sha256": "e2b942d33ed1e40c9d4f63ba3d3da85ae458663dd75c21c8553c88b22a240d85",
+      "utf16PathUnits": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1369,
+      "sha256": "71059ad395f7749ef4259a17737aedb3b31dcccffc2828536f15b7120e0563e7",
+      "utf16PathUnits": 103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🛬️receive/🎟️work/📐️.json",
+      "bytes": 1960,
+      "sha256": "82c8cd0d3d4683240b82373989500414f6471dfea069c0a81a3250f68dd0b3f7",
+      "utf16PathUnits": 100
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🛬️receive/🎟️work/🔣️.json",
+      "bytes": 2523,
+      "sha256": "e07ff32cbd38d167c5014787bc13d233f6880e8dabf59b6e9de20d7d7adcff44",
+      "utf16PathUnits": 100
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🛬️receive/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 5696,
+      "sha256": "7f7095d5b7af3a554cf16757676d91bbbd565772b6e82b50bef99105d06d561e",
+      "utf16PathUnits": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🛬️receive/🦀️.rs",
+      "bytes": 4678,
+      "sha256": "a882bb3b1042b979fc80f297faa054286d357c7b69c0c342929894f62aaf992b",
+      "utf16PathUnits": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧪️tests/🌐️axis-value/🦀️.rs",
+      "bytes": 11586,
+      "sha256": "8a0d291344d76bd3569e4d64d5dfa97986d36c63959ed222327aaf26067cbdae",
+      "utf16PathUnits": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛬️receive/🦀️.rs",
+      "bytes": 5718,
+      "sha256": "845760536a94d5f0a12c61c42d363f8ef030facfcc64c3042ff859c169942977",
+      "utf16PathUnits": 86
+    }
+  ],
+  "blockers": [
+    "NativeDefault staged cursor and missing-field derive migration",
+    "NativeReceive derive/enum producer full outcomes",
+    "all existing NativeOwned direct owning tests and controlled Ordered callers",
+    "Graph whole owning gate and reached existing controlled/cold producer seams"
+  ]
+}

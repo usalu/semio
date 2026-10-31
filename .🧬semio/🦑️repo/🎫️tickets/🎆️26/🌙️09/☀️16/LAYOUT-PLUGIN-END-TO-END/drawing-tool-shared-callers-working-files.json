@@ -1,0 +1,15 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/🦀️.rs",
+      "bytes": 18246,
+      "sha256": "5d2e73bfbec5ce68981b38d2c189f43fed589635b02a3a946f4b613ae7c47b35"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛠️tool-machine/🫧️scrub/🧵️original/🦀️.rs",
+      "bytes": 31486,
+      "sha256": "61636f39d4aefbd9c775cc29c10dbb9baa6fa05d558610553332fa9b4f969afc"
+    }
+  ],
+  "scope": "Only actual SharedUtf8 birth and adjacent typing lease consume full child outcomes; other pre-existing Tool controls remain broader acceptance."
+}

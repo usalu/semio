@@ -345,7 +345,7 @@ pub fn owe_moved_targets(sessions: &mut PreviewEvalSessions<'_>, link: &PreviewE
 /// finalize a complete run as soon as it is seen (the next poll then starts the fresh one), and wake a
 /// live run so it sees a changed roster. An aborted run stays down until a gesture or a moved document
 /// owes its windows again.
-pub fn preview_eval_run_effects(mut sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], current: &BTreeMap<PreviewEvalTarget, u64>, run: Option<&ToolRunView>, servable: bool) -> Vec<Effect> {
+pub fn preview_eval_run_effects(mut sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], current: &BTreeMap<PreviewEvalTarget, u64>, run: Option<semio_framework_plugin::ToolRunPollView<'_>>, servable: bool) -> Vec<Effect> {
     for target in [PreviewEvalTarget::Document, PreviewEvalTarget::Generation] {
         let identifiers = windows.iter().filter(|(_, _, window_target)| *window_target == target).map(|(window_id, _, _)| *window_id).collect::<Vec<_>>();
         let mut cursor = 0;

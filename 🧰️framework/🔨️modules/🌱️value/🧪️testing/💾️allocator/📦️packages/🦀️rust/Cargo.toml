@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
+semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 
 [dev-dependencies]

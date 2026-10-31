@@ -3,6 +3,9 @@
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
+#[global_allocator]
+static HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
 #[path="."]
 mod add_electrical_load_center_pv {
     #[allow(unused_imports)]

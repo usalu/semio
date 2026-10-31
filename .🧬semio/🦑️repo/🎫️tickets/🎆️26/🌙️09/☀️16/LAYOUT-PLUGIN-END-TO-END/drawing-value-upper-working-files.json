@@ -1,0 +1,59 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️shared-utf8/🧬️clone/🦀️.rs",
+      "bytes": 7239,
+      "sha256": "698193893115ea9929cc025e08ebdb5a37cccf5b8c8d1661249ec3640b77a6d8",
+      "absoluteUtf16Units": 91
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️text/🚶️utf8/🦀️.rs",
+      "bytes": 7803,
+      "sha256": "ed59b780cf3a8103d7c919f758dfef8039422cafa3fcc16a23cd5916cf19457a",
+      "absoluteUtf16Units": 83
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📣️publication/🌳️root/🦀️.rs",
+      "bytes": 11310,
+      "sha256": "69406a01c6661fa04f31fa4f33cec90a5af6d4922a42a050c33ae965e88d066c",
+      "absoluteUtf16Units": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📣️publication/🌳️root/♻️retirement/🦀️.rs",
+      "bytes": 4746,
+      "sha256": "cc843ef4658bc67acaf13ad56109d85503845307913de9db8bca63b71acc1792",
+      "absoluteUtf16Units": 103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📣️publication/🌳️root/🧪️tests/🦀️.rs",
+      "bytes": 9295,
+      "sha256": "4b041d306101874813e8b8a400343e39637656b786e4db1216d7a1f5bfaefa2f",
+      "absoluteUtf16Units": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📣️publication/🌳️root/🧪️tests/work.json",
+      "bytes": 265,
+      "sha256": "eabc6bc08c405d5842c12bfacceefc499487f6e2ab45aec6de439cf9d7c3ba42",
+      "absoluteUtf16Units": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📣️publication/🌳️root/🧪️tests/work.schema.json",
+      "bytes": 824,
+      "sha256": "f0ff2e8b5ba5791260921e907de2ce4b2ec4b00fe76988c3511e2297b5686dfb",
+      "absoluteUtf16Units": 109
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🪟️group-visibility/🦀️.rs",
+      "bytes": 6725,
+      "sha256": "6f220fdc0f382bcfbd357644b62534169b5d95d415aa7b72b323eb695deb72a6",
+      "absoluteUtf16Units": 103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🦀️.rs",
+      "bytes": 4827,
+      "sha256": "dd660913a54f7f3ea56874390a281e8f0bdf1535b4f242a3b57875b03cb88d3f"
+    }
+  ],
+  "state": "authored-uncompiled",
+  "scope": "Root exact Context2 SharedUtf8, Utf8Buffer close, PublicationRoot plus actual visibility implementor"
+}

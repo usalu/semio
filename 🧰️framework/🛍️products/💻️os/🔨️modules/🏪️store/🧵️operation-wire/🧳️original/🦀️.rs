@@ -75,7 +75,7 @@ impl<M:Sync> ArtifactOriginalOperationBytes<M>{
             1=>{let step=self.cursor.close(child).map_err(|error|error.reason)?;if step.complete{self.phase=2}progress(step)},
             2 if self.paged=>{self.phase=3;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}},
             2=>{let step=self.output.prepare_contiguous(child)?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=3}step.progress()},
-            3 if self.original.as_ref().is_some_and(|owner|!owner.terminal_is_empty())=>self.original.as_mut().unwrap().close_step(child)?.progress(),
+            3 if self.original.as_ref().is_some_and(|owner|!owner.terminal_is_empty())=>self.original.as_mut().unwrap().close_step(child).result?.progress(),
             3=>{self.original.take();self.phase=4;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<RetainedOwnedProjection<M>>>(),..Default::default()}},
             4=>{self.phase=5;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}},
             _=>return Err(invalid()),
@@ -106,8 +106,8 @@ impl<M:Sync> ArtifactOriginalOperationBytes<M>{
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if !self.closing{return Err(invalid())}let d=self.close_demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
         if !self.cursor.closed{return self.cursor.close(grant).map(|step|RetainedCloneStep::Progress(progress(step))).map_err(|error|error.reason)}
-        if !self.output.terminal_is_empty(){return self.output.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}
-        if let Some(original)=self.original.as_mut(){if !original.terminal_is_empty(){return original.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}self.original.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+        if !self.output.terminal_is_empty(){return self.output.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()))}
+        if let Some(original)=self.original.as_mut(){if !original.terminal_is_empty(){return original.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()))}self.original.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
 

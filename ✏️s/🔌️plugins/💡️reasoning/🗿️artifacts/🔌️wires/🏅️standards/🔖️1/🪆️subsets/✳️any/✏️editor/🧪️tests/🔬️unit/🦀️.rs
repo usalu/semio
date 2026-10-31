@@ -56,7 +56,7 @@ use semio_framework_plugin::HierarchyProvider;
     pub struct OwnedWiresApp(pub WiresApp, pub semio_framework_plugin::artifact_app_laws::OriginalFixtureScope);
 
     impl OwnedWiresApp {
-        /// 🔚 Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
+        /// 🚪️ Walks the bounded close protocol; idempotent (a terminal-empty app returns at once).
         pub fn close(&mut self) {
             semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
         }
@@ -83,7 +83,7 @@ use semio_framework_plugin::HierarchyProvider;
         }
     }
     
-    /// 🧪️ Framework test context gap (SDK GAP, see this ticket's `📓️w0-f-report.md` handoff #3):
+    /// 🎞️ Framework test context gap (SDK GAP, see this ticket's `📓️w0-f-report.md` handoff #3):
     /// `assert_declared_actions_bridge_to_commands`/`new_app_with_registry` still take `fn() -> App`,
     /// unchanged for this ticket, while `create_wires_app` now returns `AppDefinition` — this tiny
     /// local wrapper bridges the two shapes with an empty `examples` list (dropped per `create_wires_app`'s
@@ -95,14 +95,14 @@ use semio_framework_plugin::HierarchyProvider;
     semio_framework_plugin::composed_reload_law!("reasoning", ReasoningWiresPlayApp, wires_manifest_for_tests, "../..");
     semio_framework_plugin::composed_child_history_law!("reasoning", ReasoningWiresPlayApp, wires_manifest_for_tests, [("addNode", r#"{"kind":"identity"}"#)]);
 
-    /// 🧪️ An app wired to the real manifest registry — required to resolve the "graph" interaction
+    /// 📱️ An app wired to the real manifest registry — required to resolve the "graph" interaction
     /// domain's declaration when dispatching a framework-injected verb like `interactionSelect`.
     pub async fn app_with_registry() -> OwnedWiresApp {
         let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         OwnedWiresApp(new_app_with_registry_and_members::<EditorApp<ReasoningWiresPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(wires_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await, scope)
     }
     
-    /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
+    /// 📤️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
     pub async fn metabolism_app() -> OwnedWiresApp {
         let mut app = new_app().await;
         let document = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
@@ -130,7 +130,7 @@ use semio_framework_plugin::HierarchyProvider;
         semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation")
     }
 
-    /// 🧪️ Reads the actual declared board member through its current Store lease.
+    /// 🧑️ Reads the actual declared board member through its current Store lease.
     pub fn board(app: &WiresApp) -> semio_framework_value::DslValue {
         use store::SpaceMember;
         let snapshot = app.snapshot().expect("current Wires parent");
@@ -182,7 +182,7 @@ use semio_framework_plugin::HierarchyProvider;
         result
     }
 
-    /// 🎛️ Dispatches one typed command and hands back BOTH the invocation result and the receipt of
+    /// 🚀️ Dispatches one typed command and hands back BOTH the invocation result and the receipt of
     /// the ONE settle that publishes it. A law reading `receipt.effects` must use this rather than
     /// `dispatch(..)` followed by `settle(..)`: `dispatch` already drains the operation, so a second
     /// settle finds `has_pending_typed_operations() == false` and answers an EMPTY receipt — no lanes,
@@ -247,7 +247,7 @@ async fn every_command_round_trips_through_text_and_binary() {
     }
 }
 
-/// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — pinned
+/// 🎫️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — pinned
 /// per-row from the `app_commands!` table's `"id" as "wire-key"` declarations rather than derived
 /// `setActiveExample` → `active-example`, and all three `canvasPointer*` rows drop the `canvas-`
 /// prefix). This is what a missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the
@@ -272,7 +272,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     }
 }
 
-/// ⚖️ The wire bytes/text pinned from the pre-merge 7-crate baseline (see the ticket's
+/// 🧊️ The wire bytes/text pinned from the pre-merge 7-crate baseline (see the ticket's
 /// `🧪️wire-baseline-before.txt`) — a regression here is a real format break, not a fixture mismatch.
 /// `setSelection`/`documentSelect` dissolved into the framework's own "graph" interaction domain
 /// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) and no longer exist as `WiresCommand`
@@ -323,7 +323,7 @@ async fn graph_interaction_domain_is_declared_flat_and_scoped_to_the_canvas_wind
     assert!(canvas_window.interactions.iter().any(|interaction_ref| interaction_ref.as_str() == WIRES_INTERACTION_GRAPH), "canvas window must reference the graph interaction domain");
 }
 
-/// 🕹️ `wires_select_action_args` shapes the exact JSON the framework's `interactionSelect` action
+/// 👆️ `wires_select_action_args` shapes the exact JSON the framework's `interactionSelect` action
 /// expects: `domainId`/`targets` (a JSON-stringified `Vec<InteractionTarget>`)/`merge`/`method`.
 #[semio_framework_async_macros::async_test]
 async fn wires_select_action_args_shapes_interaction_select_payload() {
@@ -381,7 +381,7 @@ async fn undo_redo_round_trip_through_the_wrapper() {
     .await;
 }
 
-/// 🔁️ LAW (design §20.15): a board edit is a child-lane leaf, so it reaches a peer on the content child's MEMBER lane (never as a
+/// 👶️ LAW (design §20.15): a board edit is a child-lane leaf, so it reaches a peer on the content child's MEMBER lane (never as a
 /// parent `Mutations` batch); a peer folding that lane gets the edit, and the same lane redelivered folds nothing twice.
 #[semio_framework_async_macros::async_test]
 async fn a_redelivered_member_lane_is_idempotent() {
@@ -419,7 +419,7 @@ async fn a_redelivered_member_lane_is_idempotent() {
     crate::editor::wires::unit_tests::context::close(receiver);
 }
 
-/// 🧪️ The definitional merge proof: A adds a node while B relates two others — disjoint edits
+/// 🧩️ The definitional merge proof: A adds a node while B relates two others — disjoint edits
 /// on one backbone that must both survive on both instances (impossible under whole-document LWW).
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
@@ -496,7 +496,7 @@ fn debug_child_seed_settles() {
             if !app.has_pending_typed_operations() {
                 break;
             }
-            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("[DEBUG] advance");
+            app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("advance");
             while app.take_typed_operation_ui_progress().is_some() {}
             if turn == 1000 || turn == 3999 {
                 let page = app.take_typed_operation_result_page(receiver);

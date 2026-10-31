@@ -59,6 +59,9 @@ impl RetireOwned for HistoryInputDrafts {
     fn retirement_birth_bytes(&self)->Option<usize> {sequence_birth_bytes(&[deferred_birth_bytes_for(&self.index),deferred_birth_bytes_for(&self.rows)])}
     fn controlled_retirement_supported()->bool {true}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
+#[cfg(feature = "testkit")]
+impl HistoryInputDrafts {
+    /// 🪝️ The paged replacement rows, for the companion crate.
+    pub fn rows(&self) -> &PagedList<Option<InputReplacement>, { usize::MAX }> { &self.rows }
+}

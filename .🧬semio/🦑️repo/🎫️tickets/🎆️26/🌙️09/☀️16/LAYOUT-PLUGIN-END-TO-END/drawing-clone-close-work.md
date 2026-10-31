@@ -1,0 +1,5 @@
+# Retained Clone Close Work
+
+Before migrating the cursor defining close contract, the existing genuine original scalar owning law now declares a closed CPU fixture, checks zero for every real denied turn and cached completion, and debits all granted cursor/source close work from one finite CPU bank. Existing value, cancellation, five-currency, exact pointer and allocator assertions remain. Source constructors and normal advance are unchanged in this tranche. Canonical close outcomes must preserve every invoked child work count before inspecting its Result. No owning test result has run.
+
+A concrete Native receiving collision requires normal clone advance to preserve nested paid closure. The existing genuine scalar law now also declares denied binding/payload/cached CPU expectations before normal defining changes: denied0, real alias bind1, actual scalar payload copy1. Its single finite bank includes both advance and close. Normal cursor APIs will return full outcomes rather than erase child work.

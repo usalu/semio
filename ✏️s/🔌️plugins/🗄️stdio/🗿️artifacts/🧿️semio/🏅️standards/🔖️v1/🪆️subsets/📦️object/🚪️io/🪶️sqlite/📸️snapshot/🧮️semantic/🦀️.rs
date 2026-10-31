@@ -23,19 +23,10 @@ fn hex(value:&str,expected:Option<&str>,control:&mut NativeDecodeControl<'_>)->R
  let size=native::hex_text_extent(value,control)?;
  if let Some(expected)=expected{if size!=expected.len(){return Err(invalid())}for(pair,byte)in value.as_bytes().chunks_exact(2).zip(expected.bytes()){let digit=|v:u8|match v{b'0'..=b'9'=>v-b'0',b'a'..=b'f'=>v-b'a'+10,b'A'..=b'F'=>v-b'A'+10,_=>unreachable!()};if(digit(pair[0])<<4)|digit(pair[1])!=byte{return Err(invalid())}}}Ok(size)
 }
-fn binary_child(reader:&mut store::ByteReader<'_>,subset:&str,census:&mut Census,control:&mut NativeDecodeControl<'_>)->Result<()>{
- match reader.read_u8().map_err(|_|invalid())?{0=>Ok(()),1=>{let id=text(reader,control)?.len();let artifact=text(reader,control)?.len();let kind=text(reader,control)?;let standard=text(reader,control)?;let actual_subset=text(reader,control)?;if kind!="s.stdio.semio"||standard!="v1"||actual_subset!=subset{return Err(invalid())}census.row(add(24,id)?)?;census.row(add(add(add(add(8,artifact)?,kind.len())?,standard.len())?,actual_subset.len())?)},_=>Err(invalid())}
-}
 fn text_child(value:&str,subset:&str,census:&mut Census,control:&mut NativeDecodeControl<'_>)->Result<()>{
  if value=="[]"{return Ok(())}let[id,target]=native::record(value,control)?;let[artifact,kind,standard,actual_subset]=native::record(target,control)?;
  let id=hex(id,None,control)?;let artifact=hex(artifact,None,control)?;let kind=hex(kind,Some("s.stdio.semio"),control)?;let standard=hex(standard,Some("v1"),control)?;let subset=hex(actual_subset,Some(subset),control)?;
  census.row(add(24,id)?)?;census.row(add(add(add(add(8,artifact)?,kind)?,standard)?,subset)?)
-}
-/// 🧊️ Counts the original ten raw binary64 words and three optional child pairs.
-pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
- layout(limits)?;control.scoped_stage(|control|{let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}let schema=text(&mut reader,control)?;if schema!="stdio.semio.object"{return Err(invalid())}let mut bytes=add(8,schema.len())?;control.begin_stage(13)?;
- for _ in 0..10{let word=reader.read_bytes(8).map_err(|_|invalid())?;let word=f64::from_le_bytes(word.try_into().map_err(|_|invalid())?);bytes=add(bytes,float_bytes(word))?;control.step()?;}
- let mut census=Census{limits,rows:0,bytes:0};census.row(bytes)?;for subset in["brep","mesh","value"]{binary_child(&mut reader,subset,&mut census,control)?;control.step()?;}if reader.remaining()!=0{return Err(invalid())}control.checkpoint()})
 }
 /// 📝️ Preserves exact float words, omitted optional children and independent local identities.
 pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{

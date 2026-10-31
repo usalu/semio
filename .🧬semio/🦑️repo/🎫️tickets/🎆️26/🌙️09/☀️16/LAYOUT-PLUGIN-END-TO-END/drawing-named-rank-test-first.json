@@ -1,0 +1,18 @@
+{
+  "state": "schema-and-law-before-ranked-definer",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🧪️tests/actual.json",
+      "sha256": "65af2ba56fad8ca7322b3d5f909f804408b1576c657c52445012c979083a7489"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🧪️tests/actual.schema.json",
+      "sha256": "607c71517e877bc1841050a3f505956ef652fdc115c6deec6cc403e214f8d0c7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🧪️tests/actual.rs",
+      "sha256": "e5966cbe4d0afdfc3a4b6c393edef215bc7a90fd7b23872de5b41ff72a4267f4"
+    }
+  ],
+  "runtime": "unexecuted"
+}

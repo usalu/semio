@@ -6,19 +6,23 @@ pub type RasterDocumentStoreOwners = store::os_store::document_store_owners::Doc
 
 pub type RasterOwnersAdmission = Result<(RasterDocumentStoreOwners, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<RasterSnapshot, RasterMutation>>;
 
+pub type RasterColdIssuer = store::ColdMutationApplyFactory<RasterSnapshot, RasterMutation>;
+
+const RASTER_PREPARATION_CHILDREN: semio_framework_value::retained_clone::RetainedCloneBirthDemand = semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: 0, depth: 0 };
+
+/// 🧊️ Installs the shared cold issuer as both publication and replay authority, so history-bearing documents replay through the framework-default initializer.
 pub fn raster_document_store_owners_admission(grant: RetainedCloneGrant) -> RasterOwnersAdmission {
-    RasterDocumentStoreOwners::admit_source_constructor(grant, || (RasterSnapshotRetirementFactory, RasterSnapshotRetirementFactory, RasterMutationRetirementFactory, store::ArtifactStoreCursorDisposer::<RasterSnapshot, RasterMutation>::new()))
+    RasterDocumentStoreOwners::admit_source_constructor_with_shared_semantic_preparation(grant, RASTER_PREPARATION_CHILDREN, 0, || (RasterSnapshotRetirementFactory, RasterSnapshotRetirementFactory, RasterMutationRetirementFactory, store::ArtifactStoreCursorDisposer::<RasterSnapshot, RasterMutation>::new(), RasterColdIssuer::default()))
 }
 
-/// 📏️ Quotes the source Arcs and disposer the Raster owner catalog admits before any factory ticket is born.
+/// 📏️ Quotes the source Arcs, disposer and shared cold issuer the Raster owner catalog admits before any factory ticket is born.
 pub fn raster_document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, ValueError> {
-    let capacity_bytes = RasterDocumentStoreOwners::source_birth_bytes::<RasterSnapshotRetirementFactory, RasterSnapshotRetirementFactory, RasterMutationRetirementFactory, store::ArtifactStoreCursorDisposer<RasterSnapshot, RasterMutation>>()?;
-    Ok(semio_framework_value::RetirementDemand { capacity_bytes, depth: 1, ..Default::default() })
+    RasterDocumentStoreOwners::shared_semantic_source_demands::<RasterSnapshotRetirementFactory, RasterSnapshotRetirementFactory, RasterMutationRetirementFactory, store::ArtifactStoreCursorDisposer<RasterSnapshot, RasterMutation>, RasterColdIssuer>(RASTER_PREPARATION_CHILDREN, 0)
 }
 
-pub fn raster_document_store_owners() -> RasterDocumentStoreOwners {
-    let capacity_bytes = RasterDocumentStoreOwners::source_birth_bytes::<RasterSnapshotRetirementFactory, RasterSnapshotRetirementFactory, RasterMutationRetirementFactory, store::ArtifactStoreCursorDisposer<RasterSnapshot, RasterMutation>>().expect("Raster owner catalog source layout");
-    store::os_store::document_store_owners::fund_document_store_owners(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: 1 }, raster_document_store_owners_admission).expect("funded Raster owner catalog")
+pub fn raster_document_store_owners() -> Result<RasterDocumentStoreOwners, ValueError> {
+    let demand = raster_document_store_owners_source_demands()?;
+    store::os_store::document_store_owners::fund_document_store_owners(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: demand.capacity_bytes, depth: demand.depth.max(1) }, raster_document_store_owners_admission)
 }
 
 pub(super) fn invariant(message: &str) -> ValueError {

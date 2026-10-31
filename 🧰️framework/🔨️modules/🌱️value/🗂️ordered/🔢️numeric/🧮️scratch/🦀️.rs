@@ -5,6 +5,9 @@ use std::cmp::Ordering;
 #[path="🧵️insert/🦀️.rs"]
 mod retained_insert;
 pub use retained_insert::NumericInsertCursor;
+#[path="🎟️work/🦀️.rs"]
+mod work_insert;
+pub use work_insert::{NumericWorkInsertCursor,NumericWorkRemoveCursor};
 #[path="🧺️set/🦀️.rs"]
 mod set;
 pub use set::{NumericSet,NumericSetIter};

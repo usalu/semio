@@ -15,15 +15,7 @@ pub(crate)fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotCon
 }
 fn kind(tag:u8)->Result<SemioTableCellKind,ValueError>{Ok(match tag{0=>SemioTableCellKind::Null,1=>SemioTableCellKind::Bool,2=>SemioTableCellKind::Int,3=>SemioTableCellKind::Float,4=>SemioTableCellKind::Str,5=>SemioTableCellKind::Bytes,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native column kind"))})}
 /// 🧩️ Fills the retained table root from borrowed binary octets, inserting every column, row and cell before its fields.
-pub fn binary_into(output:&mut SemioTableSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
- crate::io::sqlite::snapshot::admit_binary(body,control,limits)?; let mut entities=0;native::entities(&mut entities,1,limits)?;let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Semio table native format"))}native::reader_text_into(&mut output.schema,&mut reader,control)?;
- native::binary_list_into(&mut output.columns,&mut reader,control,limits,&mut entities,Default::default,|column,reader,control,_|{native::reader_text_into(&mut column.name,reader,control)?;column.kind=kind(reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?)?;Ok(())})?;
- native::binary_list_into(&mut output.rows,&mut reader,control,limits,&mut entities,Default::default,|row,reader,control,entities|{
-  let count=native::length(reader)?;native::entities(entities,count,limits)?;if count>limits.max_rows.saturating_sub(*entities){return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio table native cells exceed remaining row limit"))}row.cells=control.allocate_vec::<SemioValue>(count)?;
-  control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{row.cells.push(SemioValue::Null);values::value_binary_into(row.cells.last_mut().unwrap(),reader,control,limits,entities)?;control.step()?;}Ok::<_,ValueError>(())})
- })?;
- if reader.remaining()!=0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio table native trailing bytes"))}Ok(())
-}
+pub fn binary_into(output:&mut SemioTableSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::record_binary_into(output,body,control,limits)}
 /// 📝️ Fills the retained table root from the borrowed document body, inserting every column, row and cell before its fields.
 pub fn document_into(output:&mut SemioTableSnapshot,body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
  crate::io::sqlite::snapshot::admit_document(body,control,limits)?; let mut entities=0;native::entities(&mut entities,1,limits)?;let fields=native::fields(body,["schema","columns","rows"],control)?;native::hex_text_into(&mut output.schema,fields[0].ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio table native schema missing"))?,control)?;

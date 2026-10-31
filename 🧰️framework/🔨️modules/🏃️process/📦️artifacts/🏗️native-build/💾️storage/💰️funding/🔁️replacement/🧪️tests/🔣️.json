@@ -1,0 +1,721 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "reserve-retains-old-funding",
+      "ops": [
+        "reserve"
+      ],
+      "accept": [
+        true
+      ],
+      "used": 38653657088,
+      "oldPresent": true,
+      "currentPresent": false
+    },
+    {
+      "id": "crash-after-reserve",
+      "ops": [
+        "reserve"
+      ],
+      "accept": [
+        true
+      ],
+      "used": 38653657088,
+      "oldPresent": true,
+      "currentPresent": false
+    },
+    {
+      "id": "atomic-settlement",
+      "ops": [
+        "reserve",
+        "settle"
+      ],
+      "accept": [
+        true,
+        true
+      ],
+      "used": 38653657088,
+      "oldPresent": false,
+      "currentPresent": true
+    },
+    {
+      "id": "abort-retains-old-funding",
+      "ops": [
+        "reserve",
+        "abort"
+      ],
+      "accept": [
+        true,
+        true
+      ],
+      "used": 8588886016,
+      "oldPresent": true,
+      "currentPresent": false
+    },
+    {
+      "id": "double-settlement",
+      "ops": [
+        "reserve",
+        "settle",
+        "settle"
+      ],
+      "accept": [
+        true,
+        true,
+        false
+      ],
+      "used": 38653657088,
+      "oldPresent": false,
+      "currentPresent": true
+    },
+    {
+      "id": "double-abort",
+      "ops": [
+        "reserve",
+        "abort",
+        "abort"
+      ],
+      "accept": [
+        true,
+        true,
+        false
+      ],
+      "used": 8588886016,
+      "oldPresent": true,
+      "currentPresent": false
+    },
+    {
+      "id": "stale-reservation",
+      "ops": [
+        "reserve-stale"
+      ],
+      "accept": [
+        false
+      ],
+      "used": 8588886016,
+      "oldPresent": true,
+      "currentPresent": false
+    },
+    {
+      "id": "foreign-predecessor",
+      "ops": [
+        "reserve-foreign"
+      ],
+      "accept": [
+        false
+      ],
+      "used": 8588886016,
+      "oldPresent": true,
+      "currentPresent": false
+    },
+    {
+      "id": "wrong-delta",
+      "ops": [
+        "reserve-delta"
+      ],
+      "accept": [
+        false
+      ],
+      "used": 8588886016,
+      "oldPresent": true,
+      "currentPresent": false
+    },
+    {
+      "id": "capacity-exhausted",
+      "ops": [
+        "reserve-capacity"
+      ],
+      "accept": [
+        false
+      ],
+      "used": 8588886016,
+      "oldPresent": true,
+      "currentPresent": false
+    },
+    {
+      "id": "stale-settlement",
+      "ops": [
+        "reserve",
+        "settle-stale"
+      ],
+      "accept": [
+        true,
+        false
+      ],
+      "used": 38653657088,
+      "oldPresent": true,
+      "currentPresent": false
+    },
+    {
+      "id": "foreign-reservation",
+      "ops": [
+        "reserve",
+        "settle-foreign"
+      ],
+      "accept": [
+        true,
+        false
+      ],
+      "used": 38653657088,
+      "oldPresent": true,
+      "currentPresent": false
+    },
+    {
+      "id": "ordinary-commit-cannot-spend-replacement",
+      "ops": [
+        "reserve",
+        "ordinary-commit"
+      ],
+      "accept": [
+        true,
+        false
+      ],
+      "used": 38653657088,
+      "oldPresent": true,
+      "currentPresent": false
+    },
+    {
+      "id": "shrink-only-rebudget-preserved",
+      "ops": [
+        "shrink"
+      ],
+      "accept": [
+        true
+      ],
+      "used": 4294443008,
+      "oldPresent": true,
+      "currentPresent": false
+    },
+    {
+      "id": "rebudget-cannot-grow",
+      "ops": [
+        "grow"
+      ],
+      "accept": [
+        false
+      ],
+      "used": 8588886016,
+      "oldPresent": true,
+      "currentPresent": false
+    }
+  ],
+  "claims": [
+    {
+      "id": "actual",
+      "proof": "actual",
+      "claim": "actual",
+      "accept": true
+    },
+    {
+      "id": "copied-proof",
+      "proof": "copied",
+      "claim": "actual",
+      "accept": false
+    },
+    {
+      "id": "foreign-proof",
+      "proof": "foreign",
+      "claim": "actual",
+      "accept": false
+    },
+    {
+      "id": "copied-claim",
+      "proof": "actual",
+      "claim": "copied",
+      "accept": false
+    },
+    {
+      "id": "foreign-claim",
+      "proof": "actual",
+      "claim": "foreign",
+      "accept": false
+    },
+    {
+      "id": "stale-claim",
+      "proof": "actual",
+      "claim": "stale",
+      "accept": false
+    },
+    {
+      "id": "double-settlement",
+      "proof": "actual",
+      "claim": "settled",
+      "accept": false
+    }
+  ],
+  "publication": [
+    {
+      "id": "old-envelope-cannot-finance-current",
+      "filesystemBytes": 8588886016,
+      "maximumPhysicalBytes": 8589934592,
+      "size": 8588886016,
+      "allocatedBytes": 8588886016,
+      "observedFilesystemBytes": 8588886016,
+      "accept": false
+    },
+    {
+      "id": "published-envelope-retains-real-eight-usable",
+      "filesystemBytes": 38653657088,
+      "maximumPhysicalBytes": 38654705664,
+      "size": 8588886016,
+      "allocatedBytes": 8588886016,
+      "observedFilesystemBytes": 8588886016,
+      "accept": true
+    },
+    {
+      "id": "unpublished-enforcement-ceiling",
+      "filesystemBytes": 38653657088,
+      "maximumPhysicalBytes": 8589934592,
+      "size": 8588886016,
+      "allocatedBytes": 8588886016,
+      "observedFilesystemBytes": 8588886016,
+      "accept": false
+    },
+    {
+      "id": "usable-exceeds-published-envelope",
+      "filesystemBytes": 38653657088,
+      "maximumPhysicalBytes": 38654705664,
+      "size": 8588886016,
+      "allocatedBytes": 8588886016,
+      "observedFilesystemBytes": 38653657089,
+      "accept": false
+    },
+    {
+      "id": "physical-exceeds-ceiling",
+      "filesystemBytes": 38653657088,
+      "maximumPhysicalBytes": 38654705664,
+      "size": 38654705665,
+      "allocatedBytes": 8588886016,
+      "observedFilesystemBytes": 8588886016,
+      "accept": false
+    }
+  ],
+  "providers": [
+    {
+      "id": "darwin-mounted-image",
+      "backend": "mounted-volume",
+      "platform": "darwin",
+      "anchorFilesystemBytes": null,
+      "anchorMaximumPhysicalBytes": null,
+      "state": "attached",
+      "accept": true
+    },
+    {
+      "id": "linux-directory-anchor-current",
+      "backend": "directory-partition",
+      "platform": "linux",
+      "anchorFilesystemBytes": 38653657088,
+      "anchorMaximumPhysicalBytes": 38654705664,
+      "state": "attached",
+      "accept": true
+    },
+    {
+      "id": "windows-directory-anchor-current",
+      "backend": "directory-partition",
+      "platform": "win32",
+      "anchorFilesystemBytes": 38653657088,
+      "anchorMaximumPhysicalBytes": 38654705664,
+      "state": "attached",
+      "accept": true
+    },
+    {
+      "id": "directory-old-anchor-current-receipt",
+      "backend": "directory-partition",
+      "platform": "linux",
+      "anchorFilesystemBytes": 8588886016,
+      "anchorMaximumPhysicalBytes": 8589934592,
+      "state": "attached",
+      "accept": false
+    },
+    {
+      "id": "directory-inactive-refuses",
+      "backend": "directory-partition",
+      "platform": "win32",
+      "anchorFilesystemBytes": 38653657088,
+      "anchorMaximumPhysicalBytes": 38654705664,
+      "state": "inactive",
+      "accept": false
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "settled-exact",
+      "phase": "settled",
+      "bytes": 38653657088,
+      "oldPresent": false,
+      "accept": true
+    },
+    {
+      "id": "settled-undercharge",
+      "phase": "settled",
+      "bytes": 1,
+      "oldPresent": false,
+      "accept": false
+    },
+    {
+      "id": "settled-overcharge",
+      "phase": "settled",
+      "bytes": 38653657089,
+      "oldPresent": false,
+      "accept": false
+    },
+    {
+      "id": "settled-duplicate-predecessor",
+      "phase": "settled",
+      "bytes": 38653657088,
+      "oldPresent": true,
+      "accept": false
+    },
+    {
+      "id": "reserved-exact",
+      "phase": "reserved",
+      "bytes": 30064771072,
+      "oldPresent": true,
+      "accept": true
+    },
+    {
+      "id": "reserved-missing-predecessor",
+      "phase": "reserved",
+      "bytes": 30064771072,
+      "oldPresent": false,
+      "accept": false
+    }
+  ],
+  "dataKeys": [
+    {
+      "id": "request-__proto__",
+      "target": "request",
+      "key": "__proto__",
+      "accept": false
+    },
+    {
+      "id": "request-constructor",
+      "target": "request",
+      "key": "constructor",
+      "accept": false
+    },
+    {
+      "id": "request-prototype",
+      "target": "request",
+      "key": "prototype",
+      "accept": false
+    },
+    {
+      "id": "predecessor-__proto__",
+      "target": "predecessor",
+      "key": "__proto__",
+      "accept": false
+    },
+    {
+      "id": "predecessor-constructor",
+      "target": "predecessor",
+      "key": "constructor",
+      "accept": false
+    },
+    {
+      "id": "predecessor-prototype",
+      "target": "predecessor",
+      "key": "prototype",
+      "accept": false
+    },
+    {
+      "id": "policy-__proto__",
+      "target": "policy",
+      "key": "__proto__",
+      "accept": false
+    },
+    {
+      "id": "policy-constructor",
+      "target": "policy",
+      "key": "constructor",
+      "accept": false
+    },
+    {
+      "id": "policy-prototype",
+      "target": "policy",
+      "key": "prototype",
+      "accept": false
+    },
+    {
+      "id": "allocation-__proto__",
+      "target": "allocation",
+      "key": "__proto__",
+      "accept": false
+    },
+    {
+      "id": "allocation-constructor",
+      "target": "allocation",
+      "key": "constructor",
+      "accept": false
+    },
+    {
+      "id": "allocation-prototype",
+      "target": "allocation",
+      "key": "prototype",
+      "accept": false
+    }
+  ],
+  "usage": [
+    {
+      "id": "below-actual-old-funding",
+      "bytes": 8588886015,
+      "maximumBytes": 8588886016,
+      "accept": true
+    },
+    {
+      "id": "equal-actual-old-funding",
+      "bytes": 8588886016,
+      "maximumBytes": 8588886016,
+      "accept": true
+    },
+    {
+      "id": "over-actual-old-funding",
+      "bytes": 8588886017,
+      "maximumBytes": 8588886016,
+      "accept": false
+    },
+    {
+      "id": "configured-new-envelope-cannot-finance-staging",
+      "bytes": 9663676416,
+      "maximumBytes": 8588886016,
+      "accept": false
+    },
+    {
+      "id": "new-published-settled-funding",
+      "bytes": 9663676416,
+      "maximumBytes": 38653657088,
+      "accept": true
+    }
+  ],
+  "metadataRole": [
+    {
+      "id": "current-metadata-absent",
+      "change": "absent",
+      "accept": true
+    },
+    {
+      "id": "current-metadata-empty",
+      "change": "empty",
+      "accept": true
+    },
+    {
+      "id": "current-metadata-prefix",
+      "change": "prefix",
+      "accept": true
+    },
+    {
+      "id": "current-metadata-complete",
+      "change": "complete",
+      "accept": true
+    },
+    {
+      "id": "foreign-root",
+      "change": "foreign-root",
+      "accept": false
+    },
+    {
+      "id": "foreign-prior",
+      "change": "foreign-prior",
+      "accept": false
+    },
+    {
+      "id": "foreign-context",
+      "change": "foreign-context",
+      "accept": false
+    },
+    {
+      "id": "foreign-role",
+      "change": "foreign-role",
+      "accept": false
+    },
+    {
+      "id": "hardlink",
+      "change": "hardlink",
+      "accept": false
+    },
+    {
+      "id": "mode",
+      "change": "mode",
+      "accept": false
+    },
+    {
+      "id": "foreign-bytes",
+      "change": "foreign-bytes",
+      "accept": false
+    },
+    {
+      "id": "alias",
+      "change": "alias",
+      "accept": false
+    },
+    {
+      "id": "extra-roster",
+      "change": "extra-roster",
+      "accept": false
+    },
+    {
+      "id": "fresh-current-windows-security",
+      "change": "windows-security",
+      "accept": true
+    },
+    {
+      "id": "fresh-current-windows-attributes",
+      "change": "windows-attributes",
+      "accept": true
+    },
+    {
+      "id": "windows-parent",
+      "change": "windows-parent",
+      "accept": false
+    },
+    {
+      "id": "partial-prepared-after-stage-retirement-is-current-no-effect-restart",
+      "change": "absent",
+      "recordState": "partial-prepared",
+      "accept": true
+    }
+  ],
+  "metadataDraft": [
+    {
+      "id": "empty-fixed-intent-current-role",
+      "cut": "empty",
+      "change": "none",
+      "accept": true
+    },
+    {
+      "id": "partial-current-identity",
+      "cut": "identity",
+      "change": "none",
+      "accept": true
+    },
+    {
+      "id": "partial-planned-stage-data",
+      "cut": "stage-name",
+      "change": "none",
+      "accept": true
+    },
+    {
+      "id": "partial-planned-retained-data",
+      "cut": "retained-name",
+      "change": "none",
+      "accept": true
+    },
+    {
+      "id": "complete-baseline-uses-baseline-owner",
+      "cut": "complete",
+      "change": "none",
+      "accept": false
+    },
+    {
+      "id": "foreign-current-field",
+      "cut": "identity",
+      "change": "foreign",
+      "accept": false
+    },
+    {
+      "id": "unexpected-newline",
+      "cut": "stage-name",
+      "change": "newline",
+      "accept": false
+    },
+    {
+      "id": "partial-utf8-codepoint-in-current-roster",
+      "cut": "utf8",
+      "change": "none",
+      "accept": true
+    }
+  ],
+  "initialization": [
+    {
+      "id": "mounted-empty",
+      "backend": "mounted-volume",
+      "change": "none",
+      "accept": true
+    },
+    {
+      "id": "directory-empty",
+      "backend": "directory-partition",
+      "change": "none",
+      "accept": true
+    },
+    {
+      "id": "canonical-services",
+      "backend": "mounted-volume",
+      "change": "services",
+      "accept": true
+    },
+    {
+      "id": "foreign-services",
+      "backend": "directory-partition",
+      "change": "services",
+      "accept": false
+    },
+    {
+      "id": "payload-refused",
+      "backend": "mounted-volume",
+      "change": "payload",
+      "accept": false
+    },
+    {
+      "id": "marker-refused",
+      "backend": "mounted-volume",
+      "change": "marker",
+      "accept": false
+    },
+    {
+      "id": "journal-refused",
+      "backend": "mounted-volume",
+      "change": "journal",
+      "accept": false
+    },
+    {
+      "id": "envelope-refused",
+      "backend": "mounted-volume",
+      "change": "envelope",
+      "accept": false
+    },
+    {
+      "id": "publication-refused",
+      "backend": "mounted-volume",
+      "change": "publication",
+      "accept": false
+    },
+    {
+      "id": "funding-refused",
+      "backend": "mounted-volume",
+      "change": "funding",
+      "accept": false
+    },
+    {
+      "id": "alias-refused",
+      "backend": "mounted-volume",
+      "change": "alias",
+      "accept": false
+    },
+    {
+      "id": "device-refused",
+      "backend": "mounted-volume",
+      "change": "device",
+      "accept": false
+    },
+    {
+      "id": "flag-refused",
+      "backend": "mounted-volume",
+      "change": "flag",
+      "accept": false
+    },
+    {
+      "id": "opened-empty-initial-journal",
+      "backend": "mounted-volume",
+      "change": "empty-journal",
+      "accept": true
+    },
+    {
+      "id": "directory-opened-empty-initial-journal",
+      "backend": "directory-partition",
+      "change": "empty-journal",
+      "accept": true
+    }
+  ]
+}

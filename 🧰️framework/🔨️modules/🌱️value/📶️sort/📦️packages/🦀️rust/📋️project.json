@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/value-sort-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

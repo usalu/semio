@@ -1,0 +1,75 @@
+{
+  "command": "drawing-controller-current-command-2.json",
+  "commandSha256": "fd876f5cdfafacf90d3c741e883ce5bbce460873d989de84e8c87e6e722ac239",
+  "receipt": "🗑️generated/drawing-controller-current-2/launch-receipt.json",
+  "receiptSha256": "40bf1671c8139fcb57cdd38262619bd655833de99b1de27649abf9bbbcbcd999",
+  "currentInputs": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-controller-current-2.test.ts",
+      "bytes": 327,
+      "sha256": "62fe731595d3c2069b2072a95bdd6bd9e75e5fb1f6233bf348da7ddfb343cc72"
+    },
+    {
+      "path": "bun.lock",
+      "bytes": 603865,
+      "sha256": "b27bdace86f04889c66e59f5227d0bdef7568b22c550798705d3c911d1c88faf"
+    },
+    {
+      "path": "package.json",
+      "bytes": 21673,
+      "sha256": "9605466756ffe292a2e5c425e8beec9cda9b60967cadccc33fef9d20c617f98b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎟️work/🟦️.ts",
+      "bytes": 14678,
+      "sha256": "8605e81d2c9fb7bc0ad0347dcd6c2a2201d3d895240407d74854e946bcd7e88c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/controller.json",
+      "bytes": 9456,
+      "sha256": "e05036828cf3686ec8508454b0bdf4876d2d9bbce7d20389eba5bbff26f84bfa"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/controller.schema.json",
+      "bytes": 12265,
+      "sha256": "67c48fd8fbd8776600c451df61500481a14cffef222b69f3a68e44c28cab7a3b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/controller.test.ts",
+      "bytes": 17789,
+      "sha256": "886c4fefa7c49353114c7fb081cd176ea71e3c9013e026eddae0428634a786a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts",
+      "bytes": 1677,
+      "sha256": "98e33379591bea207abb9c53360fd6e92d7b07ad76db3b8ec574f4eac47d25b5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "bytes": 3282,
+      "sha256": "480a86a9e9ddb878ec4736c41e72cf376a48a7cb35a94b42446894ccd5377f69"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "bytes": 25510,
+      "sha256": "6041275db1facb4ef2b68af32c727bfa22d8a3d28b3a0997b4a9efb652638858"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.d.ts",
+      "bytes": 1549,
+      "sha256": "0da4d443c29ad9c58ee44dae4fe02ea580c0368fb763274f475d6803d165eff3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js",
+      "bytes": 2426,
+      "sha256": "88cc37857ed7ebebdc426aff1812d52bcfd4caf3cccc41924e72a89e77173372"
+    }
+  ],
+  "sourcePackets": [
+    "drawing-controller-current-owner-working-files.json",
+    "drawing-controller-entry-test-first.json",
+    "drawing-controller-entry-fix-reversal.json",
+    "drawing-controller-finite-stock-2-reversal.json"
+  ],
+  "scope": "Current actual fourteen controller owning laws plus strict3, separate Drawing14/Scene ownership remains mandatory."
+}

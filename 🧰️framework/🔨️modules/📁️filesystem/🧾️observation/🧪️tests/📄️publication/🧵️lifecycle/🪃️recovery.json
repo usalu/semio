@@ -1,0 +1,942 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "posix-create-prepared",
+      "platform": "posix",
+      "prior": false,
+      "events": [],
+      "patches": [],
+      "expected": "prepared"
+    },
+    {
+      "id": "posix-create-completed",
+      "platform": "posix",
+      "prior": false,
+      "events": [
+        "PUBLISH"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/target",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "20",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "200",
+              "ctimeNs": "201"
+            },
+            "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/stage",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/names",
+          "value": [
+            "meta.json",
+            "unrelated"
+          ]
+        }
+      ],
+      "expected": "completed"
+    },
+    {
+      "id": "posix-replace-prepared",
+      "platform": "posix",
+      "prior": true,
+      "events": [],
+      "patches": [],
+      "expected": "prepared"
+    },
+    {
+      "id": "posix-replace-published-with-retained",
+      "platform": "posix",
+      "prior": true,
+      "events": [
+        "PUBLISH"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/target",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "20",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "200",
+              "ctimeNs": "201"
+            },
+            "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/stage",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "10",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "100",
+              "ctimeNs": "101"
+            },
+            "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "10",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "100",
+              "ctimeNs": "101"
+            },
+            "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/names",
+          "value": [
+            ".abcdef12",
+            "meta.json",
+            "unrelated"
+          ]
+        }
+      ],
+      "expected": "published-with-retained"
+    },
+    {
+      "id": "posix-replace-completed",
+      "platform": "posix",
+      "prior": true,
+      "events": [
+        "PUBLISH",
+        "RETIRE"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/target",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "20",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "200",
+              "ctimeNs": "201"
+            },
+            "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/stage",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "10",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "100",
+              "ctimeNs": "101"
+            },
+            "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "10",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "100",
+              "ctimeNs": "101"
+            },
+            "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/names",
+          "value": [
+            ".abcdef12",
+            "meta.json",
+            "unrelated"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/stage",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/names",
+          "value": [
+            "meta.json",
+            "unrelated"
+          ]
+        }
+      ],
+      "expected": "completed"
+    },
+    {
+      "id": "windows-create-prepared",
+      "platform": "windows",
+      "prior": false,
+      "events": [],
+      "patches": [],
+      "expected": "prepared"
+    },
+    {
+      "id": "windows-create-completed",
+      "platform": "windows",
+      "prior": false,
+      "events": [
+        "PUBLISH"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/target",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "20",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "200",
+              "ctimeNs": "201"
+            },
+            "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/stage",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/names",
+          "value": [
+            "meta.json",
+            "unrelated"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/windows",
+          "value": {
+            "parent": {
+              "volumeSerial": "1",
+              "fileId": "00000000000000000000000000000001",
+              "attributes": 16,
+              "security": "1111111111111111111111111111111111111111111111111111111111111111",
+              "streams": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "target": {
+              "volumeSerial": "1",
+              "fileId": "00000000000000000000000000000014",
+              "attributes": 32,
+              "security": "1111111111111111111111111111111111111111111111111111111111111111",
+              "streams": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "stage": null,
+            "retained": null
+          }
+        }
+      ],
+      "expected": "completed"
+    },
+    {
+      "id": "windows-replace-prepared",
+      "platform": "windows",
+      "prior": true,
+      "events": [],
+      "patches": [],
+      "expected": "prepared"
+    },
+    {
+      "id": "windows-replace-old-displaced",
+      "platform": "windows",
+      "prior": true,
+      "events": [
+        "DISPLACE"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/target",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "10",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "100",
+              "ctimeNs": "101"
+            },
+            "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/names",
+          "value": [
+            ".123456ab",
+            ".abcdef12",
+            "unrelated"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/windows",
+          "value": {
+            "parent": {
+              "volumeSerial": "1",
+              "fileId": "00000000000000000000000000000001",
+              "attributes": 16,
+              "security": "1111111111111111111111111111111111111111111111111111111111111111",
+              "streams": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "target": null,
+            "stage": {
+              "volumeSerial": "1",
+              "fileId": "00000000000000000000000000000014",
+              "attributes": 32,
+              "security": "1111111111111111111111111111111111111111111111111111111111111111",
+              "streams": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "retained": {
+              "volumeSerial": "1",
+              "fileId": "0000000000000000000000000000000a",
+              "attributes": 32,
+              "security": "1111111111111111111111111111111111111111111111111111111111111111",
+              "streams": "2222222222222222222222222222222222222222222222222222222222222222"
+            }
+          }
+        }
+      ],
+      "expected": "old-displaced"
+    },
+    {
+      "id": "windows-replace-published-with-retained",
+      "platform": "windows",
+      "prior": true,
+      "events": [
+        "PUBLISH"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/target",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "20",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "200",
+              "ctimeNs": "201"
+            },
+            "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/stage",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "10",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "100",
+              "ctimeNs": "101"
+            },
+            "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/names",
+          "value": [
+            ".123456ab",
+            "meta.json",
+            "unrelated"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/windows",
+          "value": {
+            "parent": {
+              "volumeSerial": "1",
+              "fileId": "00000000000000000000000000000001",
+              "attributes": 16,
+              "security": "1111111111111111111111111111111111111111111111111111111111111111",
+              "streams": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "target": {
+              "volumeSerial": "1",
+              "fileId": "00000000000000000000000000000014",
+              "attributes": 32,
+              "security": "1111111111111111111111111111111111111111111111111111111111111111",
+              "streams": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "stage": null,
+            "retained": {
+              "volumeSerial": "1",
+              "fileId": "0000000000000000000000000000000a",
+              "attributes": 32,
+              "security": "1111111111111111111111111111111111111111111111111111111111111111",
+              "streams": "2222222222222222222222222222222222222222222222222222222222222222"
+            }
+          }
+        }
+      ],
+      "expected": "published-with-retained"
+    },
+    {
+      "id": "windows-replace-completed",
+      "platform": "windows",
+      "prior": true,
+      "events": [
+        "PUBLISH",
+        "RETIRE"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/target",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "20",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "200",
+              "ctimeNs": "201"
+            },
+            "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/stage",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "10",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "100",
+              "ctimeNs": "101"
+            },
+            "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/names",
+          "value": [
+            ".123456ab",
+            "meta.json",
+            "unrelated"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/stage",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/names",
+          "value": [
+            "meta.json",
+            "unrelated"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/windows",
+          "value": {
+            "parent": {
+              "volumeSerial": "1",
+              "fileId": "00000000000000000000000000000001",
+              "attributes": 16,
+              "security": "1111111111111111111111111111111111111111111111111111111111111111",
+              "streams": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "target": {
+              "volumeSerial": "1",
+              "fileId": "00000000000000000000000000000014",
+              "attributes": 32,
+              "security": "1111111111111111111111111111111111111111111111111111111111111111",
+              "streams": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "stage": null,
+            "retained": null
+          }
+        }
+      ],
+      "expected": "completed"
+    },
+    {
+      "id": "posix-refuse-root",
+      "platform": "posix",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/parent/ino",
+          "value": "999"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "posix-refuse-roster",
+      "platform": "posix",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "add",
+          "path": "/names/-",
+          "value": "unknown"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "posix-refuse-stage-inode",
+      "platform": "posix",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/stage/identity/ino",
+          "value": "999"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "posix-refuse-stage-hash",
+      "platform": "posix",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/stage/sha256",
+          "value": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "posix-refuse-stage-alias",
+      "platform": "posix",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/stage/identity/nlink",
+          "value": "2"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "posix-refuse-prior-inode",
+      "platform": "posix",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/target/identity/ino",
+          "value": "999"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "windows-refuse-root",
+      "platform": "windows",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/parent/ino",
+          "value": "999"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "windows-refuse-roster",
+      "platform": "windows",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "add",
+          "path": "/names/-",
+          "value": "unknown"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "windows-refuse-stage-inode",
+      "platform": "windows",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/stage/identity/ino",
+          "value": "999"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "windows-refuse-stage-hash",
+      "platform": "windows",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/stage/sha256",
+          "value": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "windows-refuse-stage-alias",
+      "platform": "windows",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/stage/identity/nlink",
+          "value": "2"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "windows-refuse-prior-inode",
+      "platform": "windows",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/target/identity/ino",
+          "value": "999"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "windows-refuse-fileId",
+      "platform": "windows",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/windows/stage/fileId",
+          "value": "ffffffffffffffffffffffffffffffff"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "windows-refuse-attributes",
+      "platform": "windows",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/windows/stage/attributes",
+          "value": 128
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "windows-refuse-security",
+      "platform": "windows",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/windows/stage/security",
+          "value": "3333333333333333333333333333333333333333333333333333333333333333"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "windows-refuse-streams",
+      "platform": "windows",
+      "prior": true,
+      "events": [
+        "FAULT"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/windows/stage/streams",
+          "value": "3333333333333333333333333333333333333333333333333333333333333333"
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "posix-fresh-parent-stamp",
+      "platform": "posix",
+      "prior": true,
+      "events": [],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/parent/mtimeNs",
+          "value": "60"
+        },
+        {
+          "op": "replace",
+          "path": "/parent/ctimeNs",
+          "value": "60"
+        }
+      ],
+      "expected": "prepared"
+    },
+    {
+      "id": "windows-fresh-parent-stamp",
+      "platform": "windows",
+      "prior": true,
+      "events": [],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/parent/mtimeNs",
+          "value": "60"
+        },
+        {
+          "op": "replace",
+          "path": "/parent/ctimeNs",
+          "value": "60"
+        }
+      ],
+      "expected": "prepared"
+    },
+    {
+      "id": "posix-completed-directory-link-count-transition",
+      "platform": "posix",
+      "prior": true,
+      "events": [
+        "PUBLISH",
+        "RETIRE"
+      ],
+      "patches": [
+        {
+          "op": "replace",
+          "path": "/target",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "20",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "200",
+              "ctimeNs": "201"
+            },
+            "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/stage",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "10",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "100",
+              "ctimeNs": "101"
+            },
+            "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": {
+            "identity": {
+              "dev": "1",
+              "ino": "10",
+              "mode": "33152",
+              "size": "3",
+              "nlink": "1",
+              "mtimeNs": "100",
+              "ctimeNs": "101"
+            },
+            "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/names",
+          "value": [
+            ".abcdef12",
+            "meta.json",
+            "unrelated"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/stage",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/retained",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/names",
+          "value": [
+            "meta.json",
+            "unrelated"
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/parent/nlink",
+          "value": "3"
+        }
+      ],
+      "expected": "completed"
+    }
+  ]
+}

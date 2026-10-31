@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-value-native-default"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Funded native default ownership with explicit retained work outcomes."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-native-default"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value_native_default"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-native-decoding = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-ordered = { path = "../../../../../🗂️ordered/📦️packages/🦀️rust" }
+semio-framework-value-paged-list = { path = "../../../../../📋️list/📦️packages/🦀️rust" }
+semio-framework-value-native-storage = { path = "../../../📦️storage/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

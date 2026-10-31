@@ -75,7 +75,7 @@ impl MeshModelingJob {
     pub fn retirement_birth_bytes(&self)->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<Work>()}
     pub fn into_retirement(self,grant:RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(semio_framework_value::ValueError,Self)> {
         let Self {work,progress,cancelled,retired}=self;
-        semio_framework_value::retirement::admit_owned_retirement(work,grant).map_err(|(error,work)|(error,Self {work,progress,cancelled,retired}))
+        semio_framework_value::retirement::admit_owned_retirement(work,grant).result.map_err(|(error,work)|(error,Self {work,progress,cancelled,retired}))
     }
 
     pub fn cancel(&mut self) {

@@ -258,7 +258,7 @@ pub async fn app() -> Puzzle3dApp {
     let instance_id = next_fixture_instance_id();
     app.bind_instance_id(instance_id).await;
     artifact_app_laws::settle_store_constructor(&mut app, artifact_app_laws::fixture_mounted_policy());
-    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: main::WINDOW_KIND_ID.into(), window_kind_id: main::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = ViewModel { window_instances: vec![ViewWindowInstance { id: WINDOW_KIND_ID.into(), window_kind_id: WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     Puzzle3dApp { raw: Some(Box::new(app)), scope, instance_id, view, maintenance: Box::new(MaintenanceStageGrants::default()) }
 }
 

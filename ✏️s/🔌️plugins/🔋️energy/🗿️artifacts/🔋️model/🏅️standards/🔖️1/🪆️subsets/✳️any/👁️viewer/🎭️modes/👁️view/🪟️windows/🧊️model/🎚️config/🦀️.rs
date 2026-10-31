@@ -135,7 +135,7 @@ mod tests;
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
 
-impl store::os_store::codec_registry::native_snapshot::OriginalArtifactPackReceiving for EnergyModelWindowConfig{
+impl store::os_store::codec_registry::native_snapshot::OriginalArtifactPackReceiving for EnergyModelViewerWindowConfig{
     type Receiving=store::os_store::codec_registry::native_snapshot::OriginalSnapshotRecordReceiving<Self>;
     fn original_pack_birth_demand()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self::Receiving>(),depth:1,..Default::default()}}
     fn admit_original_pack(source:&[u8],limits:protocol::PackLimits,native:&semio_framework_value::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Self::Receiving,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{Self::Receiving::admit(source,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),limits,native,grant)}

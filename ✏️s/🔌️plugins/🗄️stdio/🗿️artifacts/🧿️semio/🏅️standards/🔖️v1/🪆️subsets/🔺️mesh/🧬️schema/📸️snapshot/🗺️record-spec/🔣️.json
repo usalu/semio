@@ -1,0 +1,431 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "stdio.semio.mesh",
+ "schemaHash": "3396696d8838b29dd2e4b2e8debd40f4c8ba11ac789787197493a86b787b0757",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "meshes",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 1
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "materials",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 2
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "textures",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 3
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "primitives",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 4
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "base-color",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 5
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "metallic",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "roughness",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "base-color-texture",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 5,
+    "key": "metallic-roughness-texture",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 6,
+    "key": "normal-texture",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 7,
+    "key": "occlusion-texture",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 8,
+    "key": "emissive-texture",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "mime",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "bytes",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "uint"
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "topology",
+    "optional": false,
+    "shape": {
+     "kind": "enum",
+     "variants": [
+      [
+       0,
+       "points"
+      ],
+      [
+       1,
+       "lines"
+      ],
+      [
+       2,
+       "line-strip"
+      ],
+      [
+       3,
+       "triangles"
+      ],
+      [
+       4,
+       "triangle-strip"
+      ],
+      [
+       5,
+       "triangle-fan"
+      ]
+     ]
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "positions",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 6
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "normals",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 6
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "uvs",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 7
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 5,
+    "key": "colors",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 5
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 6,
+    "key": "indices",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "uint"
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 7,
+    "key": "material-id",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "r",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "g",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "b",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "a",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "x",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "y",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "z",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "u",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "v",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ]
+ ],
+ "annotations": {
+  "float32": [
+   [
+    2,
+    2
+   ],
+   [
+    2,
+    3
+   ],
+   [
+    5,
+    0
+   ],
+   [
+    5,
+    1
+   ],
+   [
+    5,
+    2
+   ],
+   [
+    5,
+    3
+   ]
+  ]
+ }
+}

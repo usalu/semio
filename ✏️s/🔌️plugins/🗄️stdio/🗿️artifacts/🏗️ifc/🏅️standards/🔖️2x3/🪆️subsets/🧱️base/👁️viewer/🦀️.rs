@@ -4,7 +4,7 @@
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
 //! or draft mutation. MUST NOT reference the sibling editor module.
 
-use crate::standards::v2x3::subsets::base::io::inspector;
+use semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::inspector;
 use semio_s_artifact_stdio_ifc_2x3_base_mutations::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation;
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use crate::viewer::ifc2x3_any::modes::view;

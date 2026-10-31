@@ -1,0 +1,10 @@
+{
+  "outerExitCode": 1,
+  "nativeExitCode": 101,
+  "compilerErrors": 4,
+  "testsExecuted": 0,
+  "changedInputs": [
+    "🧰️framework/Cargo.lock"
+  ],
+  "logSha256": "4dc2809f2adb1ec60f720731ef565fcb7b04980cfd578d95dd72da9d44520c9b"
+}

@@ -1,7 +1,6 @@
 //! 🧩️ Typed runtime assembly published from artifact-owned composition contributions.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
@@ -13,7 +12,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ The present owner-authored runtime app contributions.
     pub enum StdioBimApps: PluginApp {
         Ifc2x3AnyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_ifc_2x3_base::editor::ifc2x3_any::Ifc2x3AnyEditor>>),
-        Ifc2x3AnyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_ifc_2x3_base::viewer::ifc2x3_any::Ifc2x3AnyViewer>>),
+        Ifc2x3AnyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_ifc_2x3_viewer::viewer::ifc2x3_any::Ifc2x3AnyViewer>>),
         Ifc2x3CobieEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_ifc_2x3_cobie::editor::ifc2x3_cobie::Ifc2x3CobieEditor>>),
         Ifc2x3CobieViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_ifc_2x3_cobie::viewer::ifc2x3_cobie::Ifc2x3CobieViewer>>),
         Ifc2x3Cv20Editor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_ifc_2x3_cv20::editor::ifc2x3_cv20::Ifc2x3Cv20Editor>>),
@@ -33,7 +32,7 @@ pub fn plugin() -> Result<Plugin<StdioBimApps>, PluginAssemblyError> {
     builder = builder.host_artifact(semio_s_artifact_stdio_ifc_catalog::declaration(semio_s_artifact_stdio_ifc::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_bcf::declaration(semio_s_artifact_stdio_bcf::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.editor::<semio_s_artifact_stdio_ifc_2x3_base::editor::ifc2x3_any::Ifc2x3AnyEditor>(semio_s_artifact_stdio_ifc_2x3_base::editor::ifc2x3_any::create_ifc2x3_any_editor());
-    builder = builder.viewer::<semio_s_artifact_stdio_ifc_2x3_base::viewer::ifc2x3_any::Ifc2x3AnyViewer>(semio_s_artifact_stdio_ifc_2x3_base::viewer::ifc2x3_any::create_ifc2x3_any_viewer());
+    builder = builder.viewer::<semio_s_artifact_stdio_ifc_2x3_viewer::viewer::ifc2x3_any::Ifc2x3AnyViewer>(semio_s_artifact_stdio_ifc_2x3_viewer::viewer::ifc2x3_any::create_ifc2x3_any_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_ifc_2x3_cobie::editor::ifc2x3_cobie::Ifc2x3CobieEditor>(semio_s_artifact_stdio_ifc_2x3_cobie::editor::ifc2x3_cobie::create_ifc2x3_cobie_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_ifc_2x3_cobie::viewer::ifc2x3_cobie::Ifc2x3CobieViewer>(semio_s_artifact_stdio_ifc_2x3_cobie::viewer::ifc2x3_cobie::create_ifc2x3_cobie_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_ifc_2x3_cv20::editor::ifc2x3_cv20::Ifc2x3Cv20Editor>(semio_s_artifact_stdio_ifc_2x3_cv20::editor::ifc2x3_cv20::create_ifc2x3_cv20_editor());

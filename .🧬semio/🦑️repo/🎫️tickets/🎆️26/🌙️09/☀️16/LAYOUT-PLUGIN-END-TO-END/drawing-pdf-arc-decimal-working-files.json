@@ -1,0 +1,31 @@
+{
+  "state": "schema-tests-before-body-authored",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🔢️number/📐️.json",
+      "sha256": "d1d22ea11ed4c430f4075a9cc7f1bce3841877665cfbb58ab746d78e43b163c9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🔢️number/🔣️.json",
+      "sha256": "5da43ec712d3094f16b8dc4038f340d12bc85f450c68afbc771f2d26bd6ca2f9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🔢️number/number.test.ts",
+      "sha256": "a0d86b599e31249e9fda2ea6d24ec820eafd8bbf39ad05cdaebb93fa9f874280"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🔢️number/🟦️.ts",
+      "sha256": "835b52fd348051bdac5c06eb792048d50f799e51a9c4ffe1dba52d2965f4a04f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🟦️.ts",
+      "sha256": "ebbc746e14dc10f031e901514ebdf67ad3267fc4cd37d229f1c9ad24c54ad01e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🧪️tests/owned.test.ts",
+      "sha256": "5be55b4306813a82efbd78e65233990cced0929a79e2ccb59946983352bb5aec"
+    }
+  ],
+  "productionBeforeSha256": "b829add119916e28bbcfaa89ad1de219d28f86fd8ec8d4bcb1b7241c3d9f9660",
+  "semantics": "Exact decimal expansion of binary64 toString exponent, no rounding. Actual independent Sharp uses same512x256 central samples as original Poppler interface. Original8 data/tolerance/stock untouched. All emitted continuous-valued path, transform, color, gradient, bounds and stroke operands use this same exact decimal formatter."
+}

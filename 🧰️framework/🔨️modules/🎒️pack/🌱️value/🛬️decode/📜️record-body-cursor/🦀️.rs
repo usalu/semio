@@ -474,6 +474,7 @@ impl RetainedRecordBodyCursor {
         }
     }
 
+    /// 🧾️ Charges each funded phase transition exactly one item and none when the grant has no items, so a close turn is never zero-progress yet never fabricates progress without funding.
     pub fn close_step(
         &mut self,
         maximum_items: usize,
@@ -529,7 +530,7 @@ impl RetainedRecordBodyCursor {
                             return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
                         }
                         self.close_phase = RetainedRecordBodyClosePhase::ValuePhysical;
-                        return Ok(RetainedPackCloseStep::Pending { released_items: 0, released_bytes: 0 });
+                        return Ok(RetainedPackCloseStep::Pending { released_items: 1, released_bytes: 0 });
                     }
                 },
                 RetainedRecordBodyClosePhase::ValuePhysical => {

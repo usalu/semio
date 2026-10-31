@@ -23,11 +23,11 @@ pub trait RetireOwned: Send + 'static {
     /// 🏡️ Quotes a native cursor that drains this same initialized shared allocation in place.
     fn shared_original_birth_bytes(&self)->Option<usize> where Self:Sized+Sync{None}
     /// 🏠️ Admits one exact shared original without extracting its complete inline value; refusal retains the original slot.
-    fn shared_original_retirement(_original:&mut Option<arc_custody::original::SharedOriginal<Self>>,_grant:RetainedCloneGrant)->Result<Option<(Box<dyn RetirementCursor>,crate::retained_clone::RetainedCloneProgress)>,crate::ValueError> where Self:Sized+Sync{Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"owner has no in-place shared original retirement"))}
+    fn shared_original_retirement(_original:&mut Option<arc_custody::original::SharedOriginal<Self>>,_grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(Box<dyn RetirementCursor>,crate::retained_clone::RetainedCloneProgress)>> where Self:Sized+Sync{crate::RetainedWorkOutcome{result:Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"owner has no in-place shared original retirement")),work:0}}
     /// 📦️ Quotes field-wise retirement on this exact unique Box allocation when explicitly authored.
     fn boxed_original_demands(&self)->Result<Option<crate::RetirementDemand>,crate::ValueError> where Self:Sized{Ok(None)}
     /// 🎟️ Transfers unique original allocation custody only after its actual cursor birth is funded.
-    fn boxed_original_retirement(_original:&mut Option<original_box::BoxOriginal<Self>>,_grant:RetainedCloneGrant)->Result<Option<(Box<dyn RetirementCursor>,crate::retained_clone::RetainedCloneProgress)>,crate::ValueError> where Self:Sized{Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"owner has no in-place original Box retirement"))}
+    fn boxed_original_retirement(_original:&mut Option<original_box::BoxOriginal<Self>>,_grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(Box<dyn RetirementCursor>,crate::retained_clone::RetainedCloneProgress)>> where Self:Sized{crate::RetainedWorkOutcome{result:Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"owner has no in-place original Box retirement")),work:0}}
     /// 🔐️ Whether this owner retires through a controlled cursor whose births and releases are priced up front. Required, never defaulted: an owner that forgot to declare it was refused by every factory that demands controlled retirement, and the refusal only surfaced after a fixture deadline.
     fn controlled_retirement_supported() -> bool;
     /// 🪢️ Composite owners propagate this borrowed type path; authored terminal owners retain their defining capability verdict.
@@ -42,15 +42,20 @@ pub fn composite_copy_bytes<T>(components: &[usize]) -> usize {
 }
 
 pub enum RetirementStep {
-    Progress(crate::retained_clone::RetainedCloneProgress),
+    Progress(crate::retained_clone::RetainedCloneProgress,u64),
     Child(Box<dyn RetirementCursor>),
-    ChildProgress(Box<dyn RetirementCursor>,crate::retained_clone::RetainedCloneProgress),
+    ChildProgress(Box<dyn RetirementCursor>,crate::retained_clone::RetainedCloneProgress,u64),
     Bytes(usize),
     ProcessedBytes(usize),
     Advanced,
-    Failure(crate::ValueError),
-    Complete,
+    Failure(crate::ValueError,u64),
+    Complete(u64),
     BudgetExhausted,
+}
+
+impl RetirementStep {
+    /// ⏱️ Reads explicit child work or the intrinsic bounded action, never a physical currency.
+    pub fn work(&self)->u64{match self{Self::Progress(_,work)|Self::ChildProgress(_,_,work)|Self::Failure(_,work)|Self::Complete(work)=>*work,Self::BudgetExhausted=>0,Self::Child(_)|Self::Bytes(_)|Self::ProcessedBytes(_)|Self::Advanced=>1}}
 }
 
 /// 🧳️ Transfers exclusive retirement custody across threads; shared access belongs to an explicit owner gate.
@@ -100,8 +105,8 @@ impl<T: Copy + Send + 'static> RetirementCursor for Leaf<T> {
 
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return RetirementStep::BudgetExhausted; }
-        self.value.take();
-        RetirementStep::Complete
+        let work=u64::from(self.value.take().is_some());
+        RetirementStep::Complete(work)
     }
     fn terminal_is_empty(&self) -> bool {
         self.value.is_none()
@@ -170,8 +175,8 @@ impl RetirementCursor for Bytes {
             drop(std::mem::take(&mut *self.0));
             return RetirementStep::Bytes(bytes);
         }
-        self.1=true;
-        RetirementStep::Complete
+        let work=u64::from(!self.1);self.1=true;
+        RetirementStep::Complete(work)
     }
     fn terminal_is_empty(&self) -> bool { self.1 }
     fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(0)}
@@ -228,7 +233,7 @@ impl<T: RetireOwned> RetirementCursor for Collection<T> {
         }
         let Some(birth) = self.next_birth_bytes(grant.maximum_copy_bytes) else { return RetirementStep::BudgetExhausted; };
         if grant.maximum_capacity_bytes < birth { return RetirementStep::BudgetExhausted; }
-        self.0.pop().map_or(RetirementStep::Complete, |value| RetirementStep::Child(value.retirement()))
+        self.0.pop().map_or(RetirementStep::Complete(0), |value| RetirementStep::Child(value.retirement()))
     }
     fn terminal_is_empty(&self) -> bool {
         self.0.is_empty() && (self.0.capacity()==0 || size_of::<T>()==0)
@@ -269,7 +274,7 @@ impl<T: RetireOwned> RetirementCursor for DequeCollection<T> {
     fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
-        self.0.pop_front().map_or(RetirementStep::Complete, |value| RetirementStep::Child(value.retirement()))
+        self.0.pop_front().map_or(RetirementStep::Complete(0), |value| RetirementStep::Child(value.retirement()))
     }
     fn terminal_is_empty(&self) -> bool { self.0.is_empty() }
     fn next_birth_bytes(&self, _: usize) -> Option<usize> {
@@ -295,7 +300,7 @@ struct VectorIterator<T:RetireOwned>(ManuallyDrop<std::vec::IntoIter<T>>);
 impl<T:RetireOwned> RetirementCursor for VectorIterator<T> {
     fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original consumed iterator does not expose its backing release"))}
 
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.0.len()==0 {return RetirementStep::Complete;}RetirementStep::Child(self.0.next_back().unwrap().retirement())}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.0.len()==0 {return RetirementStep::Complete(0);}RetirementStep::Child(self.0.next_back().unwrap().retirement())}
     fn terminal_is_empty(&self)->bool {self.0.len()==0}
 }
 impl<T:RetireOwned> Drop for VectorIterator<T> {fn drop(&mut self) {assert!(std::thread::panicking() || self.0.len()==0,"owned iterator retired before terminal-empty");unsafe {ManuallyDrop::drop(&mut self.0)}}}
@@ -320,7 +325,7 @@ impl<T: RetireOwned> RetirementCursor for UnorderedSet<T> {
     fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{capacity_bytes:self.head.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original hashed child lacks a birth quote"))?,depth:usize::from(self.head.is_some()),..Default::default()})}
 
     fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let head=self.head.take();*self.head=self.rest.next();head.map_or(RetirementStep::Complete,|value|RetirementStep::Child(value.retirement()))}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let head=self.head.take();*self.head=self.rest.next();head.map_or(RetirementStep::Complete(0),|value|RetirementStep::Child(value.retirement()))}
     fn terminal_is_empty(&self)->bool {self.head.is_none()}
     fn next_birth_bytes(&self,_:usize)->Option<usize> {self.head.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes)}
     fn terminal_release_bytes(&self)->Option<usize> {Some(size_of::<Self>()+self.table_bytes)}
@@ -343,7 +348,7 @@ impl<K: RetireOwned,V: RetireOwned> RetirementCursor for UnorderedMap<K,V> {
     fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{capacity_bytes:self.head.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original hashed entry lacks a birth quote"))?,depth:usize::from(self.head.is_some()),..Default::default()})}
 
     fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let head=self.head.take();*self.head=self.rest.next();head.map_or(RetirementStep::Complete,|entry|RetirementStep::Child(entry.retirement()))}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let head=self.head.take();*self.head=self.rest.next();head.map_or(RetirementStep::Complete(0),|entry|RetirementStep::Child(entry.retirement()))}
     fn terminal_is_empty(&self)->bool {self.head.is_none()}
     fn next_birth_bytes(&self,_:usize)->Option<usize> {self.head.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes)}
     fn terminal_release_bytes(&self)->Option<usize> {Some(size_of::<Self>()+self.table_bytes)}
@@ -363,7 +368,7 @@ impl<T: RetireOwned + Ord> RetirementCursor for OrderedSet<T> {
     fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{capacity_bytes:self.0.first().map_or(Some(0),RetireOwned::retirement_birth_bytes).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original ordered child lacks a birth quote"))?,depth:usize::from(!self.0.is_empty()),..Default::default()})}
 
     fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}self.0.pop_first().map_or(RetirementStep::Complete,|value|RetirementStep::Child(value.retirement()))}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}self.0.pop_first().map_or(RetirementStep::Complete(0),|value|RetirementStep::Child(value.retirement()))}
     fn terminal_is_empty(&self)->bool {self.0.is_empty()}
     fn next_birth_bytes(&self,_:usize)->Option<usize> {self.0.first().map_or(Some(0),RetireOwned::retirement_birth_bytes)}
     fn terminal_release_bytes(&self)->Option<usize> {Some(size_of::<Self>())}
@@ -396,7 +401,7 @@ impl<K: RetireOwned + Ord, V: RetireOwned> RetirementCursor for OrderedMap<K, V>
     fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
-        self.0.pop_first().map_or(RetirementStep::Complete, |entry| RetirementStep::Child(entry.retirement()))
+        self.0.pop_first().map_or(RetirementStep::Complete(0), |entry| RetirementStep::Child(entry.retirement()))
     }
     fn terminal_is_empty(&self) -> bool {
         self.0.is_empty()
@@ -432,11 +437,11 @@ impl<T:RetireOwned> RetirementCursor for Optional<T>{
     fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{capacity_bytes:self.next_birth_bytes(body).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original optional child lacks a birth quote"))?,depth:self.next_depth_demand()?,..Default::default()})}
 
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
- if grant.maximum_items==0{return RetirementStep::BudgetExhausted}if self.original.is_none(){return RetirementStep::Complete}
-  let Some(birth)=self.next_birth_bytes(grant.maximum_copy_bytes)else{return RetirementStep::Failure(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"optional original lacks controlled child birth"))};if grant.maximum_capacity_bytes<birth{return RetirementStep::BudgetExhausted}
-  if grant.maximum_depth<self.next_depth_demand().unwrap_or(usize::MAX){return RetirementStep::Failure(crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"optional original child exceeds admitted depth"))}
+ if grant.maximum_items==0{return RetirementStep::BudgetExhausted}if self.original.is_none(){return RetirementStep::Complete(0)}
+  let Some(birth)=self.next_birth_bytes(grant.maximum_copy_bytes)else{return RetirementStep::Failure(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"optional original lacks controlled child birth"),0)};if grant.maximum_capacity_bytes<birth{return RetirementStep::BudgetExhausted}
+  if grant.maximum_depth<self.next_depth_demand().unwrap_or(usize::MAX){return RetirementStep::Failure(crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"optional original child exceeds admitted depth"),0)}
   let progress=crate::retained_clone::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:birth,..Default::default()};
-  match self.original.take().unwrap(){Some(value)=>RetirementStep::ChildProgress(value.retirement(),progress),None=>RetirementStep::Progress(progress)}
+  match self.original.take().unwrap(){Some(value)=>RetirementStep::ChildProgress(value.retirement(),progress,1),None=>RetirementStep::Progress(progress,1)}
  }
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(0)}
@@ -478,7 +483,7 @@ impl<T: RetireOwned, const N: usize> RetirementCursor for FixedArray<T, N> {
     fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
-        self.items.iter_mut().rev().find_map(Option::take).map_or(RetirementStep::Complete, |value| RetirementStep::Child(value.retirement()))
+        self.items.iter_mut().rev().find_map(Option::take).map_or(RetirementStep::Complete(0), |value| RetirementStep::Child(value.retirement()))
     }
     fn terminal_is_empty(&self) -> bool { self.items.iter().all(Option::is_none) }
     fn next_birth_bytes(&self, _: usize) -> Option<usize> { self.items.iter().rev().flatten().next().map_or(Some(0), RetireOwned::retirement_birth_bytes) }
@@ -503,7 +508,7 @@ impl<T: RetireOwned, const N: usize> RetirementCursor for PlainArray<T, N> {
     fn next_close_byte_demand(&self) -> Option<usize> { Some(0) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
-        if self.remaining == 0 { return RetirementStep::Complete; }
+        if self.remaining == 0 { return RetirementStep::Complete(0); }
         let width = size_of::<T>();
         if width == 0 {
             self.remaining = 0;
@@ -556,7 +561,7 @@ impl RetirementCursor for Sequence {
 
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
-        self.0.pop().map_or(RetirementStep::Complete, RetirementStep::Child)
+        self.0.pop().map_or(RetirementStep::Complete(0), RetirementStep::Child)
     }
     fn terminal_is_empty(&self) -> bool {
         self.0.is_empty()
@@ -580,10 +585,10 @@ impl<T:RetireOwned> RetirementCursor for Deferred<T>{
     fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{capacity_bytes:self.original.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original deferred child lacks a birth quote"))?,depth:if self.original.is_some(){2}else{0},..Default::default()})}
 
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
-  if grant.maximum_items==0{return RetirementStep::BudgetExhausted}if self.original.is_none(){return RetirementStep::Complete}
-  let Some(birth)=self.next_birth_bytes(grant.maximum_copy_bytes)else{return RetirementStep::Failure(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"deferred original lacks controlled child birth"))};if grant.maximum_capacity_bytes<birth{return RetirementStep::BudgetExhausted}
-  if grant.maximum_depth<2{return RetirementStep::Failure(crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"deferred original child exceeds admitted depth"))}
-  let value=self.original.take().unwrap();RetirementStep::ChildProgress(value.retirement(),crate::retained_clone::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:birth,..Default::default()})
+  if grant.maximum_items==0{return RetirementStep::BudgetExhausted}if self.original.is_none(){return RetirementStep::Complete(0)}
+  let Some(birth)=self.next_birth_bytes(grant.maximum_copy_bytes)else{return RetirementStep::Failure(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"deferred original lacks controlled child birth"),0)};if grant.maximum_capacity_bytes<birth{return RetirementStep::BudgetExhausted}
+  if grant.maximum_depth<2{return RetirementStep::Failure(crate::ValueError::literal(crate::ValueRefusalKind::DepthLimit,"deferred original child exceeds admitted depth"),0)}
+  let value=self.original.take().unwrap();RetirementStep::ChildProgress(value.retirement(),crate::retained_clone::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:birth,..Default::default()},1)
  }
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(0)}
@@ -599,8 +604,8 @@ pub fn deferred<T:RetireOwned>(value:T)->Box<dyn RetirementCursor>{Box::new(Defe
 pub const fn owned_retirement_birth_bytes<T: RetireOwned>() -> usize { controlled::controlled_retirement_birth_bytes::<T>() }
 
 /// ↩️ Returns the original owner when its erased frame has not been admitted.
-pub fn admit_owned_retirement<T: RetireOwned>(value: T, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, crate::retained_clone::RetainedCloneProgress), (crate::ValueError, T)> {
-    controlled::admit_typed_controlled_retirement(value, grant).map(|(owner, progress)| (owner as Box<dyn ErasedSnapshotRetirement>, progress))
+pub fn admit_owned_retirement<T:RetireOwned>(value:T,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,crate::retained_clone::RetainedCloneProgress),(crate::ValueError,T)>{
+ let turn=controlled::admit_typed_controlled_retirement(value,grant);crate::RetainedWorkOutcome{result:turn.result.map(|(owner,progress)|(owner as Box<dyn ErasedSnapshotRetirement>,progress)),work:turn.work}
 }
 
 /// 🖱️ Keeps the exact original in its caller slot until its installed issuer admits the whole frame.
@@ -611,10 +616,11 @@ impl RetirementCursor for ErasedCursor {
     fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.0.next_demand(body)}
 
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
-        match self.0.close_step(grant) {
-            Err(error)=>RetirementStep::Failure(error),
-            Ok(crate::retained_clone::RetainedCloneStep::Complete(progress)) if progress==crate::retained_clone::RetainedCloneProgress::default()=>RetirementStep::Complete,
-            Ok(crate::retained_clone::RetainedCloneStep::Progress(progress)|crate::retained_clone::RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress),
+        let turn=self.0.close_step(grant);
+        match turn.result {
+            Err(error)=>RetirementStep::Failure(error,turn.work),
+            Ok(crate::retained_clone::RetainedCloneStep::Complete(progress)) if progress==crate::retained_clone::RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),
+            Ok(crate::retained_clone::RetainedCloneStep::Progress(progress)|crate::retained_clone::RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work),
         }
     }
     fn terminal_is_empty(&self)->bool {self.0.terminal_is_empty()}
@@ -671,7 +677,7 @@ impl<T: RetireOwned, const N: usize> RetirementCursor for PagedListRetirement<T,
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         let maximum_bytes = if self.owner.is_empty() { grant.maximum_release_bytes } else { grant.maximum_copy_bytes };
         if self.released {
-            return RetirementStep::Complete;
+            return RetirementStep::Complete(0);
         }
         let width = size_of::<T>();
         if width != 0 && !std::mem::needs_drop::<T>() && !self.owner.is_empty() {
@@ -689,7 +695,7 @@ impl<T: RetireOwned, const N: usize> RetirementCursor for PagedListRetirement<T,
         if self.owner.terminal_is_empty() {
             unsafe { ManuallyDrop::drop(&mut self.owner) };
             self.released = true;
-            return RetirementStep::Complete;
+            return RetirementStep::Complete(1);
         }
         let Ok(required) = self.owner.next_release_allocation_bytes() else { return RetirementStep::BudgetExhausted; };
         if required > maximum_bytes {
@@ -752,7 +758,7 @@ impl RetireOwned for std::sync::atomic::AtomicU64{
 }
 impl RetirementCursor for OwnedAtomicU64Retirement{
  fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{depth:usize::from(self.0.is_some()),..Default::default()})}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.0.is_none(){return RetirementStep::Complete}if grant.maximum_items==0||grant.maximum_depth==0{return RetirementStep::BudgetExhausted}self.0=None;RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,..Default::default()})}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.0.is_none(){return RetirementStep::Complete(0)}if grant.maximum_items==0||grant.maximum_depth==0{return RetirementStep::BudgetExhausted}self.0=None;RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,..Default::default()},1)}
  fn terminal_is_empty(&self)->bool{self.0.is_none()}
  fn terminal_release_bytes(&self)->Option<usize>{self.0.is_none().then_some(size_of::<Self>())}
 }

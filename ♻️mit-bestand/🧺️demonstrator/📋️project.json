@@ -221,7 +221,8 @@
             "{projectRoot}/🧪️tests/🧪️demonstratorcompileclosure/🟦️.ts",
             "{projectRoot}/🧪️tests/🧪️demonstratorpanebootvariants/🟦️.ts",
             "{projectRoot}/🧪️tests/🧪️demonstratorexamples/🟦️.ts",
-            "{projectRoot}/🧪️tests/🧪️demonstratorunionreceipt/🟦️.ts"
+            "{projectRoot}/🧪️tests/🧪️demonstratorunionreceipt/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorlocale/🟦️.ts"
           ],
           "closure": {
             "resources": [
@@ -240,7 +241,19 @@
         "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🟦️.ts",
         "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🗺️tiles/🧬️schema/🔣️.json",
         "{projectRoot}/🔨️modules/🧪️e2e/🟦️.ts",
-        "{workspaceRoot}/🏢️semio-tech/🎡️play/🔨️modules/🧪️e2e/🟦️.ts"
+        "{workspaceRoot}/🏢️semio-tech/🎡️play/🔨️modules/🧪️e2e/🟦️.ts",
+        "{workspaceRoot}/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/**/*.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/**/*.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/**/*.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🪵️sourcing/**/*.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/**/*.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/**/*.rs",
+        "{workspaceRoot}/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/**/*.rs",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🎪️demonstrator/🧩️component/🔣️.json",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🔋️energy/🧩️component/🔣️.json",
+        "{workspaceRoot}/🌎️hub/🧩️compositions/🏗️fem/🧩️component/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️framework-notices/🔣️.json"
       ]
     },
     "activate-prototype": {
@@ -480,7 +493,8 @@
             "{projectRoot}/🧪️tests/🧪️demonstratorcompileclosure/🟦️.ts",
             "{projectRoot}/🧪️tests/🧪️demonstratorpanebootvariants/🟦️.ts",
             "{projectRoot}/🧪️tests/🧪️demonstratorexamples/🟦️.ts",
-            "{projectRoot}/🧪️tests/🧪️demonstratorunionreceipt/🟦️.ts"
+            "{projectRoot}/🧪️tests/🧪️demonstratorunionreceipt/🟦️.ts",
+            "{projectRoot}/🧪️tests/🧪️demonstratorlocale/🟦️.ts"
           ],
           "closure": {
             "resources": [

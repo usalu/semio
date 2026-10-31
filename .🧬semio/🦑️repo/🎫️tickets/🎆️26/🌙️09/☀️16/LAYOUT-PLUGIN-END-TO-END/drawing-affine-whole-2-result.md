@@ -1,0 +1,3 @@
+# Whole Affine second actual result
+
+Owning session 89738 exited 0: thirty-five pass, zero fail, 262,679 assertions. All original twenty-seven tests plus three funded laws and five reused bank laws passed, including exact CPU quantum1. Strict session 8650 exited 2 with one erased Bun matcher generic typing diagnostic at the original async identity assertion; production has no diagnostics. All twenty-eight inputs match pre, both terminal postchecks and current. Logs and full digests are in generated/drawing-affine-whole-2/receipt.json. Next successor changes only the generic annotation of that identity matcher; no output, geometry, policy or stock changes.

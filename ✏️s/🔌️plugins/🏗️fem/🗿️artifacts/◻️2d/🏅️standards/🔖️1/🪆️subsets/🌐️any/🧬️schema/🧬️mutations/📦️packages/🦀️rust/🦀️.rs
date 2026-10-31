@@ -10,6 +10,9 @@ extern crate semio_framework_os_kernel as vcs;
 #[path = "../../🌉️apply/🦀️.rs"]
 pub mod central_apply;
 
+#[path = "../../⚖️cold-laws/🦀️.rs"]
+pub mod cold_laws;
+
 #[path = "."]
 pub mod standards {
     #[path = "."]

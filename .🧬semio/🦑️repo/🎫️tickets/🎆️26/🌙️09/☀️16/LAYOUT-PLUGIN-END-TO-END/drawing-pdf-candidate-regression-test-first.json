@@ -1,0 +1,22 @@
+{
+  "status": "closed neutral path geometry and actual-module admission regression/observer; no production change and no execution",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/📐️.json",
+      "sha256": "a90c5dc95ebe092c73b3de7a5591254a69d01fa9bded12c64a501975464f2849"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🔣️.json",
+      "sha256": "cbe7a6ab3cecaa6ee8fb92b81a3ff8d03967ba43d3f0f60b5b52fb34593b439d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🧪️tests/owned.test.ts",
+      "sha256": "3e95b4e93b21427532f86c6afc7086bd577c53ddc01dfc56f968752f14711929"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🧪️tests/admission.test.ts",
+      "sha256": "b8c25f2ae40d6fd2534b17dcb954c3b7a9f263fcbff1a4d2c6b6fde2ddf44006"
+    }
+  ],
+  "retainedFailure": "27701 actual43/20, one production staging refusal; 56868 test-only diagnostics; no fixture/oracle/stock adjustment"
+}

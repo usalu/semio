@@ -1,0 +1,10 @@
+{
+  "strictExit": 0,
+  "strictSession": 83219,
+  "strictLogBytes": 1256,
+  "strictLogSha256": "4f4cb7a29232c6a6c8b139b5b75d8837287cd42d8cd796703b51d01cdb771877",
+  "allInputsMatching": 15,
+  "drift": [],
+  "sourceHoldReleased": true,
+  "scope": "exact9 page/intrinsic laws plus strict3; no wider Font/Drawing/controller or host allocator acceptance"
+}

@@ -18,7 +18,7 @@ fn optical_fields_match_neutral_intent_and_preserve_independent_peer_edits(){
   let after=protocol::apply_diff_cold(outcome.diff(),&base).unwrap();let expected:crate::model::GlazingMaterial=semio_framework_pack_json::from_json_str(&semio_framework_pack_json::to_json_string(&row["after"]),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(after.model.glazing_materials[0],expected);
   if let Some(undo)=inverse.first(){let mut peer=after;peer.model.glazing_materials[0].conductivity_w_m_k=fixture["peer"]["value"].as_f64().unwrap();let undone=protocol::apply_diff_cold(undo.diff(&peer).diff(),&peer).unwrap();let mut wanted=base.model.glazing_materials[0].clone();wanted.conductivity_w_m_k=fixture["peer"]["value"].as_f64().unwrap();assert_eq!(undone.model.glazing_materials[0],wanted);let wire=undo.to_value();let expected=semio_framework_pack_json::from_json_str::<EnergyModelMutation>(&semio_framework_pack_json::to_json_string(&row["inverse"][0]),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();assert_eq!(wire,expected.to_value());}
  }
- eprintln!("[DEBUG] energy optical40 neutralvectors fields5 centralatomicapplier baseinverse independentpeerpreserved");
+ 
 }
 
 /// 📡️ The declared optical tags and text terminals reach the shared canonical codecs.
@@ -31,7 +31,7 @@ fn optical_wire_cases_match_the_neutral_protocol_and_round_trip(){
   let bytes=operation.encode_op().unwrap();let prefix:Vec<u8>=row["binaryPrefix"].as_array().unwrap().iter().map(|v|v.as_u64().unwrap()as u8).collect();assert_eq!(&bytes[..prefix.len()],prefix.as_slice());assert_eq!(EnergyModelMutation::decode_op(&bytes).unwrap(),operation);
   let mut trailing=bytes;trailing.push(0);assert!(EnergyModelMutation::decode_op(&trailing).is_err());assert!(EnergyModelMutation::parse_op(&format!("{} unknown-field=1",row["text"].as_str().unwrap())).is_err());
  }
- eprintln!("[DEBUG] energy optical wire cases5 normative tags300to304 shared text/binary canonical roundtrips");
+ 
 }
 
 #[test]
@@ -58,5 +58,5 @@ fn pv_authored_thermal_mutations_preserve_original_rows_inverse_and_refusal() {
         let invalid:EnergyModelMutation=crate::pv_system_mutations::create_pv_system(1,EntityId(999),5000.0,25.0,30.0,180.0,0.2,0.96,-0.004,0.0,6.84,mounting);assert!(invalid.inverse(&base).unwrap().is_empty());assert_eq!(protocol::apply_diff_cold(invalid.diff(&base).diff(),&base).unwrap(),base);
         let deleted:EnergyModelMutation=crate::pv_system_mutations::delete_pv_system(original.id);let inverse=deleted.inverse(&current).unwrap();let mut restored=protocol::apply_diff_cold(deleted.diff(&current).diff(),&current).unwrap();for undo in inverse {restored=protocol::apply_diff_cold(undo.diff(&restored).diff(),&restored).unwrap();}assert_eq!(restored,current);
     }
-    println!("[DEBUG] original PV thermal intents preserve all13 neutral authored coefficient/mounting cases, sparse inverse, no-op, delete/recreate and physical refusal");
+    
 }

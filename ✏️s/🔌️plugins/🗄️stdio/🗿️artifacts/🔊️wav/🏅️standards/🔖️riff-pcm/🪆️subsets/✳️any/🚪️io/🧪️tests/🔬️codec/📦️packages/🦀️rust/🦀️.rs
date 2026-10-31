@@ -1,7 +1,6 @@
 //! 🔬️ codec-tests of `semio-s-artifact-stdio-wav` — a path-preserving carve of the artifact root mounts.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 #[cfg(test)]
 pub use semio_s_artifact_stdio_contract::apply_mutation;

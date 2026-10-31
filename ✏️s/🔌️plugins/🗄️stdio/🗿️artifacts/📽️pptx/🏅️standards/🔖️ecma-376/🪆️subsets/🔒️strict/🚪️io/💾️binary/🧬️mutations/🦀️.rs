@@ -1,5 +1,5 @@
 //! 💾️ Tagged native value encoding for conformance mutations.
-use semio_s_artifact_stdio_pptx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::mutations::PptxStrictMutation;
+use super::PptxStrictMutation;
 const PROTOCOL: &str = include_str!("📡️.protocol.semio");
 impl protocol::OpBinary for PptxStrictMutation {
     fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { dsl::tagged_value_binary::encode_op(PROTOCOL, dsl::tagged_value_binary::VariantTag::Key, self) }

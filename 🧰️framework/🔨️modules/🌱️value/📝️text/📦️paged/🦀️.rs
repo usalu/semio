@@ -61,22 +61,22 @@ impl<const N:usize> PagedText<N>{
 }
 impl<const N:usize> ErasedSnapshotRetirement for PagedText<N>{
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{copy_bytes:usize::from(!self.bytes.is_empty()),release_bytes:if !self.bytes.is_empty(){0}else{self.bytes.next_release_allocation_bytes().map_err(error)?},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
         if grant.maximum_depth<1{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"paged text retirement requires admitted depth"));}
         if !self.bytes.is_empty(){
-            let count=grant.maximum_copy_bytes.min(self.bytes.len());
+            let count=grant.maximum_copy_bytes.min(grant.maximum_items).min(self.bytes.len()).min(4096);
             if count==0{return Ok(RetainedCloneStep::Progress(empty));}
             self.closing=true;
-            for _ in 0..count{self.bytes.pop().unwrap();}
+            for _ in 0..count{work+=1;self.bytes.pop().unwrap();}
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:count,..empty}));
         }
-        let step=self.bytes.release_empty_page(grant.maximum_release_bytes).map_err(error)?;
+        let step=self.bytes.release_empty_page(grant.maximum_release_bytes).map_err(error)?;work+=step.work;
         if step.progressed{self.closing=true;}
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(step.progressed),released_bytes:step.released_allocation_bytes,..empty}))
-    }
+    })();crate::RetainedWorkOutcome{result,work}}
     fn terminal_is_empty(&self)->bool{self.bytes.terminal_is_empty()}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(usize::from(!self.bytes.is_empty()))}
     fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
@@ -86,7 +86,7 @@ impl<const N:usize> ErasedSnapshotRetirement for PagedText<N>{
 struct PagedTextRetirement<const N:usize>{owner:PagedText<N>}
 impl<const N:usize> crate::retirement::RetirementCursor for PagedTextRetirement<N>{
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{ErasedSnapshotRetirement::next_demand(&self.owner,body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->crate::retirement::RetirementStep{match self.owner.close_step(grant){Err(error)=>crate::retirement::RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>crate::retirement::RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>crate::retirement::RetirementStep::Progress(progress)}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->crate::retirement::RetirementStep{let turn=self.owner.close_step(grant);let work=turn.work;match turn.result{Err(error)=>crate::retirement::RetirementStep::Failure(error,work),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>crate::retirement::RetirementStep::Complete(work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>crate::retirement::RetirementStep::Progress(progress,work)}}
     fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
     fn next_depth_demand(&self)->Result<usize,ValueError>{self.owner.next_depth_demand()}
@@ -248,3 +248,7 @@ impl<const N:usize> TextOutput<'_,'_,N>{
         if let Err(error)=self.control.checkpoint(){self.refused=true;return Err(error)}self.exact_bytes=Some(bytes);Ok(())
     }
 }
+
+#[cfg(test)]
+#[path="🧪️tests/close-work.rs"]
+mod close_work_tests;

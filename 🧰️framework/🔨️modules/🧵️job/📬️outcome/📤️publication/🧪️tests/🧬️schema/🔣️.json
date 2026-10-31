@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "originalGrant",
+    "sourceBytes",
+    "kinds",
+    "sourceIdentity",
+    "metadataCopyBytes",
+    "copyCurrency",
+    "wholePayloadTransfer",
+    "borrowBeforePhysicalClose",
+    "retireBeforeReplacement",
+    "phases",
+    "originalStock",
+    "originalFuel",
+    "maximumSourceTurns",
+    "maximumCloseTurns"
+  ],
+  "properties": {
+    "contract": {
+      "const": "framework.job.original-source-publication"
+    },
+    "originalGrant": {
+      "const": [
+        1,
+        17,
+        8192,
+        65536,
+        9
+      ]
+    },
+    "sourceBytes": {
+      "const": [
+        0,
+        3,
+        20,
+        321,
+        8193
+      ]
+    },
+    "kinds": {
+      "const": [
+        "preview",
+        "checkpoint",
+        "fault"
+      ]
+    },
+    "sourceIdentity": {
+      "const": [
+        "address",
+        "extent"
+      ]
+    },
+    "metadataCopyBytes": {
+      "const": 0
+    },
+    "copyCurrency": {
+      "const": "actual-source-octets"
+    },
+    "wholePayloadTransfer": {
+      "const": false
+    },
+    "borrowBeforePhysicalClose": {
+      "const": true
+    },
+    "retireBeforeReplacement": {
+      "const": true
+    },
+    "phases": {
+      "const": [
+        "bind-original-source",
+        "select-stream",
+        "initialize-original-bindings",
+        "retain-original-ledger-alias",
+        "reserve-original-page",
+        "allocate-original-page",
+        "publish-original-page",
+        "copy-original-source",
+        "seal-original",
+        "borrow-original",
+        "acknowledge-original-descriptor",
+        "close-original-pages",
+        "remove-original-publication"
+      ]
+    },
+    "originalStock": {
+      "const": [
+        12000,
+        65536,
+        65536,
+        65536,
+        9
+      ]
+    },
+    "originalFuel": {
+      "const": 12000
+    },
+    "maximumSourceTurns": {
+      "const": 2000
+    },
+    "maximumCloseTurns": {
+      "const": 10000
+    }
+  }
+}

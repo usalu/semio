@@ -26,7 +26,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if entry.provisional.is_empty(){let d=RetirementDemand{copy_bytes:size_of::<ToolRunFinalizePhase>(),depth:1,..Default::default()};if cx.retained_work_can_enter(d){finalize.phase=ToolRunFinalizePhase::Closing;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);}return Ok(())}
             if !self.stores.store.parts_ref().log.operation_wire.as_ref().is_some_and(|wire|wire.original_message_admission.is_some()){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original ToolRun publication requires its installed native causal encoder").into())}
             if entry.actor.as_str()!=self.stores.store.local_actor_id().0.as_str(){return self.reject_tool_run_publication(run,generation).map_err(Into::into)}
-            if finalize.ingress.actor.is_none(){if let Some(p)=finalize.ingress.admit_actor(&entry.actor,grant)?{cx.consume_retained(p)?;cx.consume_fuel(p.copied_items as u64);}return Ok(())}
+            if !finalize.ingress.actor_ready(){let turn=finalize.ingress.admit_actor(&entry.actor,grant);semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(())}
             if finalize.ingress.transaction.is_none(){let clock=semio_framework_tool_machine::authoring_clock(run);if let Some(p)=finalize.ingress.admit_transaction(&entry.actor,&clock,self.app.instance_id().await,&entry.tool_id,grant)?{cx.consume_retained(p)?;cx.consume_fuel(p.copied_items as u64);}return Ok(())}
             let mut group=[0;32];let group=entry.identity.id.group_id_into(&mut group);
             let admitted=self.stores.store.admit_apply_batch(cx.operation(),entry.base_generation,self.stores.store.content_revision(),&mut finalize.ingress.actor,&mut entry.provisional,HistoryLane::Document,self.stores.artifact_one_item_factory.as_ref(),&mut finalize.ingress.transaction,None,Some(group),true,grant);
@@ -64,7 +64,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// 🎨️ The finalize SUCCEEDED, so the provisional ops are released — but the run's payload is
     /// its result, not provisional work, and its declared windows keep rendering it once the run
     /// is `Finalized`. See `ToolRunLedger::release_provisional`.
-    pub(super) fn close_tool_run_finalize_owner(&mut self,grant:RetainedCloneGrant)->Result<bool,Fault>{
+    pub(super) fn close_tool_run_finalize_owner(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let grant=cx.retained_grant();
         if self.tool_runs.has_original_receipt(){return Ok(false);}
         let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
         let Some(finalize)=entry.finalize.as_mut()else{return Ok(true)};
@@ -78,16 +79,17 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let mut demand=publication.retirement_demands(grant.maximum_copy_bytes).map_err(FaultFrom::into_fault)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original ToolRun final publication depth overflow").into_fault())?;
             if !tool_grant_funds(grant,demand){return Ok(false);}
             publication.begin_close();
-            let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=match publication.close_step(child){Ok(step)=>step,Err(error)=>{self.tool_runs.retain_original_receipt(grant,error.retained_progress())?;return Err(error.into_fault());}};
-            let step=match admit_retained_clone_close(child,step,publication.terminal_is_empty(),"tool final publication"){Ok(step)=>step,Err(error)=>{self.tool_runs.retain_original_receipt(grant,error.retained_progress())?;return Err(error.into_fault());}};
+            let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=match publication.close_step(child){Ok(step)=>step,Err(error)=>{self.tool_runs.retain_original_receipt(grant,error.retained_progress())?;return Err(error.into());}};
+            let step=match admit_retained_clone_close(child,step,publication.terminal_is_empty(),"tool final publication"){Ok(step)=>step,Err(error)=>{self.tool_runs.retain_original_receipt(grant,error.retained_progress())?;return Err(error.into());}};
             self.tool_runs.retain_original_receipt(grant,step.progress())?;return Ok(false);
         }
-        if !finalize.ingress.terminal_is_empty(){let step=match finalize.ingress.close_step(grant){Ok(step)=>step,Err(error)=>{self.tool_runs.retain_original_receipt(grant,error.retained_progress())?;return Err(error.into_fault());}};self.tool_runs.retain_original_receipt(grant,step.progress())?;return Ok(false);}
+        if !finalize.ingress.terminal_is_empty(){let d=finalize.ingress.close_demands(grant.maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,d,|g|finalize.ingress.close_step(g))?;return Ok(false);}
         Ok(true)
     }
 
-    pub(super) fn close_tool_run_publication(&mut self,grant:RetainedCloneGrant) -> Result<(), Fault> {
-        if !self.close_tool_run_finalize_owner(grant)?{return Ok(());}
+    pub(super) fn close_tool_run_publication(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        let grant=cx.retained_grant();
+        if !self.close_tool_run_finalize_owner(cx)?{return Ok(());}
         let copy=size_of::<Option<ToolRunFinalize<A>>>();if !tool_grant_funds(grant,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()}){return Ok(());}
         let entry=selected_entry_mut!(self.tool_runs).expect("finalizing original slot");let(run,generation)=(entry.slot.run,entry.slot.generation);let rejected=entry.finalize.as_ref().is_some_and(|finalize|finalize.rejected);drop(entry.finalize.take());self.tool_runs.retain_original_receipt(grant,RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;
         if rejected{self.apply_tool_run_driver_event(ToolRunEvent::StoreRejected{run,generation});self.mark_tool_run_ui_dirty();return Ok(());}

@@ -1,0 +1,11 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+      "beforeSha256": "d357f86f63912500864d6c565811d7ca1f6f822bf1c1d2e6cd5617cabcceea95",
+      "sha256": "a6f18aaf045b8151b5b9cf7fad6c14e08bd4804df0bc07576403b22b1afef195",
+      "inverseVerified": true
+    }
+  ],
+  "delta": "Only erased matcher generic includes exact optional observation type; runtime identity assertion unchanged."
+}

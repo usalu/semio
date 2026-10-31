@@ -1,0 +1,9 @@
+# Genuine Accounting Loan Provenance
+
+The current exported RetainedWorkTurn is a structural interface. Calling actualWork alone validates the real issued closure when a real loan is supplied, but it also accepts a no-op structural lookalike. Such a lookalike can omit actual accounting while a newly mandatory mutator still changes real backing. This is a concrete provenance gap in the proposed genuine-witness contract, not an Original or byte permission claim.
+
+The defining turn owner should keep a private active-issued WeakSet. Actual Counter.beginTurn adds its exact frozen loan; endTurn deletes it after current-identity validation. A first-party exported assertRetainedWorkTurn checks membership before reading any object method, then checks genuine current generation. Expired, copied, proxy or unissued objects refuse; the same real object alias remains valid. The registry is private issuance evidence, not caller-injected state or a way to mint budget. It has at most current active entries and creates no VM/GC accounting claim.
+
+Three separate schema/data/law files under page tests cover an unissued object with hostile method getters and a copied live loan. They were authored before any authenticator implementation, preserve the reviewed baseline twelve bytes/inputs, and remain unexecuted. They require refusal before body/receipt mutation or untrusted method access, with paid cleanup from the same finite bank.
+
+Cursor owns the defining turn module and agrees provenance is necessary. No Counter/Core/Byte mutation occurs while the one existing-API direct-admission baseline awaits Root review and actual execution. After terminal/release the narrow owner hunk, root import/reexport and real mutator/consumer/helper migrations must be coordinated. No optional old API or fake Original is introduced.

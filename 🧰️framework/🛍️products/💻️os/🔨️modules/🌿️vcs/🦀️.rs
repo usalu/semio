@@ -55,16 +55,6 @@ pub use vcs_errors::*;
 mod diff_and_mutation;
 pub use diff_and_mutation::*;
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-
-#[cfg(test)]
-#[path = "🧪️tests/🧪️fault-params/🦀️.rs"]
-mod fault_params_tests;
-//#endregion 🧪️Tests
-
 /// 🚪️ Version-control representation boundaries.
 #[path="🚪️io"]
 pub mod io {

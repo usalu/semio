@@ -22,7 +22,7 @@ impl RetireOwned for ArtifactStoreOneItemLiveAuthority {
 }
 impl RetirementCursor for PublicationAuthorityFieldsRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.next_demand(body) }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.step(grant){Err(error)=>RetirementStep::Failure(error,0),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(0),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,1)}}
     fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.0.next_copy_byte_demand()}
     fn allows_admitted_narrow_work(&self)->bool{true}

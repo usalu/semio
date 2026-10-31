@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "family": "Anta",
+  "failure": "Required font table missing",
+  "semantic": 4,
+  "stock": [
+    512,
+    131072,
+    131072,
+    131072,
+    64
+  ],
+  "fuel": 512,
+  "rules": {
+    "actualSourceRegistry": true,
+    "actualPrivateChild": true,
+    "sameLedger": true,
+    "realFinalErrorCpu": true,
+    "noDoubleChildSemantic": true,
+    "constructorSelectionDoesNotAllocateExpectedList": true,
+    "inputSourcesRemainBorrowed": true
+  }
+}

@@ -25,14 +25,14 @@ pub struct BackboneDocument<P, Op> {
     pub name: String,
     pub vcs: ArtifactVcs<protocol::os_vcs::io::binary::genesis::AdmittedArtifactGenesis<P>, Op>,
     /// 🔀️ The document's history transitions; with `vcs.edits` the complete event log
-    /// every position (applied/redo/checkpoint/alternative) is folded from.
+    /// every position (applied/redo/checkpoint/alternative) is folded from. Plain rows: the exact ledger owner exists only inside an envelope shell that is retired.
     pub transitions: Vec<protocol::MutationEnvelope>,
     pub edit_messages: Vec<protocol::EditMessages>,
     pub conflicts: Vec<protocol::Conflict>,
     pub backbone: Option<ArtifactBackboneRef>,
 }
 
-/// 🧬️ `ToValue` twin of the dropped `Serialize` derive — camelCase object shape mirrors the
+/// 💧️ `ToValue` twin of the dropped `Serialize` derive — camelCase object shape mirrors the
 /// old `#[serde(rename_all = "camelCase")]`; `backbone` is omitted when `None`, matching the
 /// old `skip_serializing_if`.
 impl<P: ToValue, Op: ToValue> ToValue for BackboneDocument<P, Op> {
@@ -53,7 +53,7 @@ impl<P: ToValue, Op: ToValue> ToValue for BackboneDocument<P, Op> {
     }
 }
 
-/// 🧬️ `FromValue` twin — missing `backbone` decodes to `None`, missing `editMessages`/
+/// ❔️ `FromValue` twin — missing `backbone` decodes to `None`, missing `editMessages`/
 /// `conflicts` decode to empty (matching the old `Deserialize`'s implicit `Vec::default()`
 /// for an absent, non-`Option` field with no `#[serde(default)]` — those two were never
 /// actually optional on the wire in practice, but this preserves exact prior leniency).
@@ -93,6 +93,19 @@ impl<P: FromValue + protocol::os_store::ArtifactPack, Op: FromValue> FromValue f
             conflicts: conflicts.unwrap_or_default(),
             backbone,
         })
+    }
+}
+
+impl<P, Op> BackboneDocument<P, Op> {
+    /// ♻️ Retires the document's history ledgers entry by entry so none is dropped full.
+    pub fn retire(self) {
+        fn drain<T>(mut ledger: ::semio_framework_os_kernel::os_vcs::ArtifactHistoryLedger<T>) {
+            while ledger.pop().is_some() {}
+        }
+        drain(self.vcs.edits);
+        drain(self.vcs.changes);
+        drain(self.vcs.checkpoints);
+        drain(self.vcs.alternatives);
     }
 }
 
@@ -139,14 +152,15 @@ where
     }
 }
 
-/// 🌉️ Builds the authoritative `ArtifactEnvelope` a `BackboneDocument` wraps, dropping only
+/// 🏗️ Builds the authoritative `ArtifactEnvelope` a `BackboneDocument` wraps, dropping only
 /// the app-level `name` and preserving its complete event log.
-fn backbone_envelope_of<P, Op>(document: &BackboneDocument<P, Op>) -> ArtifactEnvelope<P, Op>
+fn backbone_envelope_of<P, Op>(document: &BackboneDocument<P, Op>) -> Result<ArtifactEnvelope<P, Op>, VcsError>
 where
     P: Clone,
     Op: Clone,
 {
-    ArtifactEnvelope::from_owners(store::os_store::store_schema::ArtifactEnvelopeOwners {
+    let transitions = transitions_ledger(document.transitions.clone())?;
+    Ok(ArtifactEnvelope::from_owners(store::os_store::store_schema::ArtifactEnvelopeOwners {
         schema: document.schema.clone(),
         id: document.id.clone(),
         vcs: document.vcs.clone(),
@@ -160,14 +174,15 @@ where
         viewer_checkpoint_id: None,
         edit_messages: store::os_store::ledger::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages.clone()),
         conflicts: document.conflicts.clone(),
-        transitions: document.transitions.clone(),
+        transitions,
         history_shape: protocol::HistoryShape::Document,
         open_transaction: None,
-    })
+    }))
 }
 
 /// 🧺️ Moves every backbone owner into the canonical envelope shell.
-pub(super) fn take_backbone_envelope<P, Op>(document: BackboneDocument<P, Op>) -> (String, ArtifactEnvelope<P, Op>) {
+pub(super) fn take_backbone_envelope<P, Op>(document: BackboneDocument<P, Op>) -> Result<(String, ArtifactEnvelope<P, Op>), VcsError> {
+    let transitions = transitions_ledger(document.transitions)?;
     let envelope = ArtifactEnvelope::from_owners(store::os_store::store_schema::ArtifactEnvelopeOwners {
         schema: document.schema,
         id: document.id,
@@ -182,14 +197,27 @@ pub(super) fn take_backbone_envelope<P, Op>(document: BackboneDocument<P, Op>) -
         viewer_checkpoint_id: None,
         edit_messages: store::os_store::ledger::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages),
         conflicts: document.conflicts,
-        transitions: document.transitions,
+        transitions,
         history_shape: protocol::HistoryShape::Document,
         open_transaction: None,
     });
-    (document.name, envelope)
+    Ok((document.name, envelope))
 }
 
-/// 🧺️ Retires a copied backbone envelope through its exact bounded owner catalogue.
+/// 📜️ Seats plain transition rows into the exact ledger owner of an envelope shell.
+pub fn transitions_ledger(rows: Vec<protocol::MutationEnvelope>) -> Result<::semio_framework_os_kernel::os_vcs::ArtifactHistoryLedger<protocol::MutationEnvelope>, VcsError> {
+    ::semio_framework_os_kernel::os_vcs::ArtifactHistoryLedger::try_from_preflighted(rows).map_err(|_| VcsError::ValidationFailed("backbone transitions exceed the history ledger page capacity".into()))
+}
+
+/// 📤️ Drains an envelope's transition ledger into plain rows in log order so no ledger is dropped full.
+pub fn drain_transitions(mut ledger: ::semio_framework_os_kernel::os_vcs::ArtifactHistoryLedger<protocol::MutationEnvelope>) -> Vec<protocol::MutationEnvelope> {
+    let mut rows = Vec::with_capacity(ledger.len());
+    while let Some(row) = ledger.pop() { rows.push(row); }
+    rows.reverse();
+    rows
+}
+
+/// 🛌️ Retires a copied backbone envelope through its exact bounded owner catalogue.
 pub(super) fn close_backbone_envelope<P, Op>(envelope: ArtifactEnvelope<P, Op>) -> Result<(), VcsError>
 where
     P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
@@ -215,13 +243,13 @@ where
     }
 }
 
-/// 🧺️ Lends a copied authoritative envelope, then retires every exact nested owner.
+/// 👑️ Lends a copied authoritative envelope, then retires every exact nested owner.
 fn with_backbone_envelope<P, Op, R>(document: &BackboneDocument<P, Op>, read: impl FnOnce(&ArtifactEnvelope<P, Op>) -> Result<R, VcsError>) -> Result<R, VcsError>
 where
     P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
-    let envelope = backbone_envelope_of(document);
+    let envelope = backbone_envelope_of(document)?;
     let result = read(&envelope);
     close_backbone_envelope(envelope)?;
     result
@@ -244,7 +272,7 @@ where
     with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_pack(envelope)))
 }
 
-/// 📤️ DSL-text counterpart of `export_backbone_pack`.
+/// 📝️ DSL-text counterpart of `export_backbone_pack`.
 pub fn export_backbone_dsl<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::os_store::text_format::ArtifactTextFiles, VcsError>
 where
     P: Clone + ToValue + FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static + pack::snapshot::ArtifactDsl,
@@ -287,7 +315,7 @@ where
     let mut edit_messages = Vec::with_capacity(owners.edit_messages.len());
     while let Some(entry) = owners.edit_messages.pop() { edit_messages.push(entry); }
     edit_messages.reverse();
-    Ok(BackboneDocument { schema: owners.schema, id: owners.id, name, vcs: owners.vcs, transitions: owners.transitions, edit_messages, conflicts: owners.conflicts, backbone: owners.backbone })
+    Ok(BackboneDocument { schema: owners.schema, id: owners.id, name, vcs: owners.vcs, transitions: drain_transitions(owners.transitions), edit_messages, conflicts: owners.conflicts, backbone: owners.backbone })
 }
 //#endregion 🔖️BackboneDocument
 // #endregion host

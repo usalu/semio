@@ -3,36 +3,33 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "bindingCount",
-    "bindingsPerTurn",
-    "bindingTurns",
+    "maximumPages",
+    "livePages",
     "headerTurns",
     "turns",
-    "slotFields",
+    "maximumTurns",
+    "storage",
     "headerFields",
     "policy"
   ],
   "properties": {
-    "bindingCount": {
+    "maximumPages": {
       "const": 256
     },
-    "bindingsPerTurn": {
-      "const": 1
-    },
-    "bindingTurns": {
-      "const": 256
+    "livePages": {
+      "const": 0
     },
     "headerTurns": {
       "const": 1
     },
     "turns": {
+      "const": 1
+    },
+    "maximumTurns": {
       "const": 257
     },
-    "slotFields": {
-      "const": [
-        "binding",
-        "initialized"
-      ]
+    "storage": {
+      "const": "dense-live-prefix"
     },
     "headerFields": {
       "const": [

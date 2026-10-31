@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "stock": {
+    "maximumItems": 20000,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 128
+  },
+  "maximumCpu": 20000,
+  "maximumTurns": 65536,
+  "quantum": 1,
+  "nullFrontiers": [
+    "frame",
+    "node"
+  ],
+  "deniedAxes": [
+    "items",
+    "capacity",
+    "depth"
+  ],
+  "expected": {
+    "deniedWork": 0,
+    "nullWork": 1,
+    "nullAllocations": 1,
+    "handoffWork": 1,
+    "ownershipCopyBytes": 0,
+    "terminalDropBytes": 0,
+    "foreignWork": 0
+  },
+  "phases": [
+    "source",
+    "authority",
+    "slot",
+    "frame",
+    "node",
+    "handoff",
+    "admissionClose",
+    "output",
+    "empty",
+    "returning"
+  ],
+  "nullResume": [
+    "cancel",
+    "retry"
+  ],
+  "foreignContext": "same-operation-generation-distinct-real-source"
+}

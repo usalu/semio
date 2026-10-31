@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source",
+    "operation",
+    "generation",
+    "deadlineUs",
+    "fuel",
+    "maxObservedTurns",
+    "stock",
+    "cases",
+    "exportBlocked",
+    "originalBlocked"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "const": "text stays explicit"
+    },
+    "operation": {
+      "const": 71
+    },
+    "generation": {
+      "const": 5
+    },
+    "deadlineUs": {
+      "const": 1000000
+    },
+    "fuel": {
+      "const": 4194304
+    },
+    "maxObservedTurns": {
+      "const": 262144
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "const": 4194304
+        },
+        "copy": {
+          "const": 268435456
+        },
+        "capacity": {
+          "const": 33554432
+        },
+        "release": {
+          "const": 67108864
+        },
+        "depth": {
+          "const": 256
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "const": {
+            "id": "native-paid-outline",
+            "content": null,
+            "result": "complete"
+          }
+        },
+        {
+          "const": {
+            "id": "native-boundary-neutral-error",
+            "content": "\u0000",
+            "result": "error",
+            "finalError": {
+              "message": "Unicode boundary-neutral source is not default ignorable",
+              "minimumCpu": 1,
+              "heapEqualsReceipt": true,
+              "minimumCopiedItems": 1
+            }
+          }
+        }
+      ],
+      "items": false
+    },
+    "exportBlocked": {
+      "const": {
+        "axis": "capacity",
+        "expectedComplete": false,
+        "expectedReceipt": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "expectedFuel": 0
+      }
+    },
+    "originalBlocked": {
+      "const": [
+        {
+          "fuel": 0,
+          "deadlineUs": 1000000,
+          "expectedWork": 0,
+          "expectedReceipt": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "expectedFuel": 0
+        },
+        {
+          "fuel": 4194304,
+          "deadlineUs": 0,
+          "expectedWork": 0,
+          "expectedReceipt": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "expectedFuel": 0
+        }
+      ]
+    }
+  }
+}

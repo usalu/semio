@@ -20,3 +20,5 @@ async fn normative_ifc2x3_catalog_preserves_its_own_domains() {
     assert_eq!(ifc2x3_attribute_declarations("IfcWall").unwrap().len(), 8);
     assert!(!ifc2x3_is_subtype("IfcSpatialZone", "IfcRoot"));
 }
+#[test]
+fn embedded_resource_equals_the_neutral_json(){shared::pack_law::assert_catalog_matches_json(ifc2x3_catalog(),&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"),"/../../🔣️.json")).unwrap());}

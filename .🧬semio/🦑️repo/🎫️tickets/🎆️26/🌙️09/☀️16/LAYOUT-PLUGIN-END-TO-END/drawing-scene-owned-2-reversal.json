@@ -1,0 +1,6 @@
+{
+  "beforeTestSha256": "79d84604dd673239e1dedcf22749262b66da3c6ede765438b3b9749d2111f390",
+  "afterTestSha256": "3092f13c3ef883338eb6e78c5804a60fb6e56abc3b9057c50a3cdb78649f459b",
+  "wholeInverseMatches": true,
+  "change": "Move same release0 discovery call before unchanged original3underfill probes and existingfullresume; producer/schema/stock/cases/assertions unchanged."
+}

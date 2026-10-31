@@ -139,6 +139,8 @@
           }
         },
         "binding": {
+          "oneOf": [
+            {
           "type": "object",
           "additionalProperties": false,
           "required": [
@@ -161,6 +163,17 @@
               "maxLength": 128
             }
           }
+        },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "fromPrefix"],
+              "properties": {
+                "kind": { "const": "held-prefix" },
+                "fromPrefix": { "type": "string", "minLength": 1, "maxLength": 128 }
+              }
+            }
+          ]
         }
       }
     },
@@ -359,6 +372,19 @@
               "type": "integer",
               "minimum": 1000,
               "maximum": 3600000
+            },
+            "writerPreferenceByPrefix": {
+              "type": "array",
+              "description": "A longer writer preference for the resources that start with a prefix: the exclusive maintenance of a fixed image (growth, reset) must be able to drain its shared holders although the fleet starts new shared requests all the time.",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["prefix"],
+                "properties": {
+                  "prefix": { "type": "string", "minLength": 1 },
+                  "milliseconds": { "type": "integer", "minimum": 1000, "maximum": 3600000, "description": "Absent: the writer keeps its preference until it is granted." }
+                }
+              }
             }
           }
         },

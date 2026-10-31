@@ -7,7 +7,7 @@ import { join, relative, resolve } from "node:path";
 import { expect, it } from "vitest";
 import budgetSchema from "../../../🏗️builder/⏱️budget/🧬️schema/🔣️.json" with { type: "json" };
 import budgetFixture from "../../../🏗️builder/⏱️budget/🧫️fixtures/🔣️.json" with { type: "json" };
-import processBudget from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🧬️schema/🔣️json/🟦️.ts" with { type: "json" };
+import processBudget from "../../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🧬️schema/🔣️json/🟦️.ts";
 import { courseBudgetRequestMs } from "../../../🏗️builder/⏱️budget/🟦️.ts";
 import { repoRoot, site } from "../🧰️deploy-fixtures/🟦️.ts";
 

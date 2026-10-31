@@ -2,8 +2,8 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import Ajv from "ajv/dist/2020.js";
 import {createHash} from "node:crypto";
-import law from "./transfer.json";
-import schema from "./transfer.schema.json";
+import law from "./transfer.json" with {type:'json'};
+import schema from "./transfer.schema.json" with {type:'json'};
 test("original transport custody moves once or retains its source",()=>{
  expect(new Ajv({strict:true}).validate(schema,law)).toBe(true);
  const bytes=Buffer.from(Array.from({length:law.bytes},(_,i)=>law.pattern[i%law.pattern.length]));

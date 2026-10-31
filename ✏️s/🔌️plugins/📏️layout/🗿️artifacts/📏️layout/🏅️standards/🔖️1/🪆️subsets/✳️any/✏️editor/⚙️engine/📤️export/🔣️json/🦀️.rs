@@ -17,8 +17,6 @@ use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, StepContext};
 use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion};
 use semio_framework_plugin::{ArtifactReservedJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType};
-use semio_framework_io_ports::{VectorNode, VectorPoint2, VectorPoint3, VectorQuaternion, VectorRgba, VectorScene, VectorSegment, VectorTransform};
-use std::sync::Arc;
 use crate::dictionary::DictionaryJsonCursor;
 
 #[path = "🧾️limits-and-string-sources/🦀️.rs"]

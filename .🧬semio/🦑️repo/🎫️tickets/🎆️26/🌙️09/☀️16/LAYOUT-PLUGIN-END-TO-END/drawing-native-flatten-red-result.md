@@ -1,0 +1,7 @@
+# Actual Native Flatten Owning Red
+
+Actual Root33329 terminal outerEXIT1 / Cargo101 after the real unfiltered owning suite ran:7passed,1failed,0ignored,0filtered,0.02s. Both the actual five-axis allocator/backing law and new independent TinySkia geometry/output law passed; old contour/cancel/custody/retirement cases also ran. The actual failing assertion is the old budget-refusal law line53, after a hard-coded100 scheduling calls. It did not observe the expected real Invalid budget cause in that old bound. No assertion/body/limit has been changed after this observed result yet.
+
+Captured postcheck matches460/462 inputs, including all310 selected Rust and25 manifests; only root/framework Cargo.lock drift. Metadata hash matches. Log601049bytes SHAc7dd100b3b623b7874feda603ae68b4e481a3a6fcec5c802b89acecc11bc4e40. Exact full terminal/registrations/drift hashes remain under generated/drawing-native-flatten/terminal.json. No all462 byte seal is claimed.
+
+Source review shows real paid per-contour Vec admission can yield independently of a4096 algorithm quantum, so the old100 callback observation is a candidate stale scheduling assumption. The existing neutral lifetime already declares1048576 maximum turns and unchanged finite stock; no new cap/profile/deadline/stock increase is authorized. Rust must diagnose both retained budget cases and preserve their exact failure/oracle before any narrow scheduling migration/reseal. Core lower inputs remain held to isolate this red; no automatic duplicate/retry was launched. Full wider acceptance is unfinished.

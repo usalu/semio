@@ -1,0 +1,89 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-job-context"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Genuine original caller context, source authority, prepaid continuation and retained protocol custody."
+
+[package.metadata.semio]
+role = "framework"
+id = "job-context"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_job_context"
+path = "🦀️.rs"
+
+[features]
+testkit = ["semio-framework-async/testkit"]
+
+[dependencies]
+semio-framework-job-failure = { workspace = true }
+semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/📦️packages/🦀️rust" }
+semio-framework-job-receiving = { workspace = true }
+semio-framework-job-clock = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-job-payload = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-value-retained-clone = { path = "../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { workspace = true }
+semio-framework-value-shared-issuance = { path = "../../../../🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-job-testing-caller = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-framework-async = { workspace = true, features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+
+
+[[test]]
+name = "original-native-receiving-context"
+required-features = ["testkit"]
+path = "../../../🛬️receiving/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-payload-authority-work"
+required-features = ["testkit"]
+path = "../../../📬️outcome/📦️builder/🎟️work/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-empty-outcome-work"
+path = "../../../♻️retirement/📄️payload/🎟️work/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-receiver-acknowledgement"
+required-features = ["testkit"]
+path = "../../../📬️outcome/⏸️continuation/🎟️origin/🔔️acknowledge/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-source-return-place"
+required-features = ["testkit"]
+path = "../../📦️return/🎟️place/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-continuation-view"
+required-features = ["testkit"]
+path = "../../../📬️outcome/⏸️continuation/👁️view/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-source-close-work"
+required-features = ["testkit"]
+path = "../../🎟️source/♻️close/🧪️tests/owning.rs"
+
+[[test]]
+name = "original-return-and-retirement-contracts"
+required-features = ["testkit"]
+path = "../../🧪️contracts/owning.rs"

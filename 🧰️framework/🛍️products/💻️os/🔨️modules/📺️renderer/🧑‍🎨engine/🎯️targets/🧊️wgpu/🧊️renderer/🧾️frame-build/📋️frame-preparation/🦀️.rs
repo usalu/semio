@@ -17,6 +17,7 @@ pub struct AppFramePreparation {
     pub job_rejected: Option<semio_framework_ui_prepared::PreparedRenderJobRejected>,
     pub input_candidate: Option<semio_framework_os_renderer_wgpu_shell_input::PresentedInputCandidateWitness>,
     pub session: Option<semio_framework_job_worker::BatchJobSession<semio_framework_ui_prepared::PreparedRenderJob>>,
+    pub admission: semio_framework_job_worker::WorkerJobSessionAdmission<semio_framework_ui_prepared::PreparedRenderJob,semio_framework_job_worker::BatchJobSession<semio_framework_ui_prepared::PreparedRenderJob>>,
     pub engine_packets: Option<FrameEnginePackets>,
     pub generation: semio_framework_trace::Generation,
     pub cursor: SemioCursor,
@@ -50,28 +51,26 @@ impl AppFramePreparation {
         self.session.as_ref().and_then(semio_framework_job_worker::BatchJobSession::callback_verdict)
     }
 
-    pub fn drive_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<FramePreparationStep, semio_framework_value::ValueError> {
+    pub fn drive_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<FramePreparationStep, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_job::{JobOutcomeView};
 use semio_framework_job_worker::{WorkerJobPoll};
         use semio_framework_value::{ValueError,ValueRefusalKind};
         let refuse=|message|ValueError::literal(ValueRefusalKind::InvariantViolated,message);
-        if self.refused_receipt.is_some() { return Err(refuse("original prepared worker receipt remains refused")); }
-        if self.job_rejected.is_some() { return Err(refuse("original prepared render admission remains rejected")); }
+        if self.refused_receipt.is_some() { return Err(refuse("original prepared worker receipt remains refused").into()); }
+        if self.job_rejected.is_some() { return Err(refuse("original prepared render admission remains rejected").into()); }
         if self.job.is_some() && self.params.is_none() {
             let Some(cancel)=cx.admit_original_cancel_alias()? else { return Ok(FramePreparationStep::Pending); };
             self.params=Some(semio_framework_job_worker_authority::BatchJobParams { operation:cx.operation(),generation:cx.generation(),cancel,config:semio_framework_job_worker_authority::BatchDriveConfig { retained:self.retained,site:"os_renderer.prepare.worker",stage:semio_framework_job::InteractiveStage::BackgroundStep,fuel_per_step:1,step_budget_us:1000 },now_us:cx.clock_source() });
             return Ok(FramePreparationStep::Pending);
         }
-        if self.job.is_some() {
-            if let Some((session,_already_received))=semio_framework_job_worker::BatchJobSession::try_admit_owned(&mut self.job,&mut self.params,cx)? { self.session=Some(session); }
+        if self.job.is_some() || !self.admission.terminal_is_empty() {
+            if let Some(session)=self.admission.advance(&mut self.job,&mut self.params,cx)? { self.session=Some(session); }
             return Ok(FramePreparationStep::Pending);
         }
         let session=self.session.as_mut().ok_or_else(||refuse("original prepared render session is absent"))?;
         if let Some(outcome)=self.outcome_pending {
             if !self.outcome_acknowledged {
-                let step=session.acknowledge_outcome(cx.retained_grant());
-                cx.consume_retained(step.progress())?;
-                self.outcome_acknowledged=matches!(step,semio_framework_value::RetainedCloneStep::Complete(_));
+                self.outcome_acknowledged=session.acknowledge_outcome(cx)?;
                 return Ok(FramePreparationStep::Pending);
             }
             if outcome==FramePreparationStep::Pending {
@@ -83,16 +82,15 @@ use semio_framework_job_worker::{WorkerJobPoll};
             return Ok(outcome);
         }
         if !self.worker_semantic_pending {
-            if !matches!(session.step(cx.retained_grant()),Ok(WorkerJobPoll::Outcome|WorkerJobPoll::Terminal)) || !session.checkout_outcome() { return Ok(FramePreparationStep::Pending); }
+            let before=cx.retained_progress();let expected=cx.retained_grant();
+            if !matches!(session.step_on_original_caller(cx)?,WorkerJobPoll::Outcome|WorkerJobPoll::Terminal) || !session.checkout_outcome() { return Ok(FramePreparationStep::Pending); }
             if let Some((issued,progress))=session.take_checked_out_retained_step_receipt() {
-                let remaining=cx.retained_grant();
-                let expected=RetainedCloneGrant { maximum_items:remaining.maximum_items.min(self.retained.maximum_items),maximum_copy_bytes:remaining.maximum_copy_bytes.min(self.retained.maximum_copy_bytes),maximum_capacity_bytes:remaining.maximum_capacity_bytes.min(self.retained.maximum_capacity_bytes),maximum_release_bytes:remaining.maximum_release_bytes.min(self.retained.maximum_release_bytes),maximum_depth:remaining.maximum_depth.min(self.retained.maximum_depth) };
                 self.worker_semantic_pending=true;
-                let received=cx.consume_retained(progress);
-                if issued!=expected || !progress.fits(issued) || received.is_err() { self.refused_receipt=Some((issued,progress));return Err(received.err().unwrap_or_else(||refuse("original prepared worker tuple differs from issued authority"))); }
+                let posted=before.checked_add(progress).is_ok_and(|total|total==cx.retained_progress());
+                if issued!=expected || !progress.fits(issued) || !posted { self.refused_receipt=Some((issued,progress));return Err(refuse("original prepared worker tuple differs from its already posted original caller receipt").into()); }
                 return Ok(FramePreparationStep::Pending);
             }
-            return Err(refuse("original prepared worker omitted its checked-out physical receipt"));
+            return Err(refuse("original prepared worker omitted its checked-out physical receipt").into());
         }
         self.outcome_pending=Some(match session.checked_out_outcome()? {
             None|Some(JobOutcomeView::Yield { .. })=>FramePreparationStep::Pending,
@@ -137,6 +135,7 @@ use semio_framework_job_worker::{WorkerJobPoll};
         if cx.should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         if self.input_candidate.is_some() { return Ok(InteractiveJobCloseStep::Blocked); }
         if self.job_rejected.is_some() { return frame_receive_close(frame_unpriced_child(),cx); }
+        if !self.admission.terminal_is_empty() { return frame_received_child(self.admission.close_step(cx), grant, self.admission.terminal_is_empty()); }
         if self.params.is_some() {
             if let Some(step)=frame_inline_gate(grant,0).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
             let params=self.params.take().expect("original prepared params selected before paid transfer");
@@ -217,7 +216,7 @@ use semio_framework_job_worker::{WorkerJobPoll};
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.params.is_none() && self.params_cancel_retirement.is_none() && !self.worker_semantic_pending && self.outcome_pending.is_none() && !self.outcome_acknowledged && self.refused_receipt.is_none() && self.job.is_none() && self.job_rejected.is_none() && self.session.is_none() && self.engine_packets.is_none() && self.input_candidate.is_none() && self.cursor_wake.is_none() && {
+        self.params.is_none() && self.admission.terminal_is_empty() && self.params_cancel_retirement.is_none() && !self.worker_semantic_pending && self.outcome_pending.is_none() && !self.outcome_acknowledged && self.refused_receipt.is_none() && self.job.is_none() && self.job_rejected.is_none() && self.session.is_none() && self.engine_packets.is_none() && self.input_candidate.is_none() && self.cursor_wake.is_none() && {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 self.job_progress.is_none()

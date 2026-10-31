@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "facts": {
+    "version": 1,
+    "directory": {
+      "dev": 1,
+      "ino": 2,
+      "mode": 16832,
+      "kind": "directory"
+    },
+    "backing": {
+      "dev": 1,
+      "ino": 3,
+      "mode": 33152,
+      "kind": "file",
+      "nlink": 1,
+      "size": 33554432,
+      "allocatedBytes": 33554432
+    },
+    "root": {
+      "dev": 2,
+      "ino": 4,
+      "mode": 16832,
+      "kind": "directory"
+    },
+    "receiptSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "maximumPhysicalBytes": 67108864
+  },
+  "expected": {
+    "version": 1,
+    "purpose": "mounted-parent-maintenance",
+    "wait": false,
+    "receiptSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "directory": {
+      "dev": 1,
+      "ino": 2,
+      "mode": 16832
+    },
+    "backing": {
+      "dev": 1,
+      "ino": 3,
+      "size": 33554432,
+      "allocatedBytes": 33554432
+    },
+    "root": {
+      "dev": 2,
+      "ino": 4,
+      "mode": 16832
+    }
+  },
+  "cases": [
+    {
+      "mode": "valid",
+      "accepted": true
+    },
+    {
+      "mode": "equal-ceiling",
+      "accepted": true
+    },
+    {
+      "mode": "over-ceiling",
+      "accepted": false
+    },
+    {
+      "mode": "directory-link",
+      "accepted": false
+    },
+    {
+      "mode": "backing-link",
+      "accepted": false
+    },
+    {
+      "mode": "root-link",
+      "accepted": false
+    },
+    {
+      "mode": "hardlink",
+      "accepted": false
+    },
+    {
+      "mode": "empty-backing",
+      "accepted": false
+    },
+    {
+      "mode": "unsafe-inode",
+      "accepted": false
+    },
+    {
+      "mode": "bad-receipt",
+      "accepted": false
+    },
+    {
+      "mode": "extra",
+      "accepted": false
+    }
+  ],
+  "backings": [
+    {
+      "names": [
+        "fixed.dmg"
+      ],
+      "expected": "fixed.dmg"
+    },
+    {
+      "names": [
+        "fixed.dir"
+      ],
+      "expected": "fixed.dir"
+    },
+    {
+      "names": [],
+      "expected": null
+    },
+    {
+      "names": [
+        "fixed.dir",
+        "fixed.dmg"
+      ],
+      "expected": null
+    },
+    {
+      "names": [
+        "unknown"
+      ],
+      "expected": null
+    },
+    {
+      "names": [
+        "fixed.dir",
+        "fixed.dir"
+      ],
+      "expected": null
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+# DSL Receiving and the IO Work Port
+
+The owned DSL port uses mandatory `OwnedFieldReceiving::step(...) -> RetainedWorkOutcome<RetainedCloneProgress, OriginalReceivingPrimary>`, and `take_into` / `close_step` return `RetainedWorkOutcome<RetainedCloneProgress, ValueError>`. Native primary, quote refusal, allocation refusal and physical progress move unchanged. No receipt or callback-entry CPU inference is accepted.
+
+The borrowed DSL entry at `framework/modules/dsl/schema/receiving` still composes the actual `NativeSnapshotDecodeOwner` owned by IO Control. Its required accounting port is a genuine full-outcome receiver: accept an actual child outcome containing physical progress and independent work, retain each on either result, and propagate the original error. The owner needs a defining actual-work accessor or full-outcome producer result at its public receiving boundary; a Result-only callback cannot reconstruct child work.
+
+Concrete caller points are `receiving::work`, owned `declared_record`, and the borrowed `DslReceivingField` implementations for String, DslValue, Vec, Option, arrays and Box. `declared_record` must read `DeclaredRecordShape::last_turn_work()` immediately after each actual shape step, before matching its Result, and post that work plus its physical progress on both success and failure. Shape denial and cached shape refusal expose zero. A shape probe exposes one even when it discovers invalid input.
+
+The current IO owner has `record_progress` but no independent work port. Root owns that defining seam; this lane will forward its authentic outcome rather than add a default work unit. Owned DSL declarations are being moved to real phased child/header storage. The remaining borrowed sync loops and opaque receive callbacks are not claimed as a bounded owning closure.

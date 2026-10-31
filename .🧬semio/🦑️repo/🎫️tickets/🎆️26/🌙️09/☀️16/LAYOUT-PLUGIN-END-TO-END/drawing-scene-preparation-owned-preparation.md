@@ -1,0 +1,7 @@
+# Defining Preparation Owning Gate Preparation
+
+Prepared only; no attempt. Command drawing-scene-preparation-owned-command.json captures151 current physical inputs and357 resolved literal edges, with zero unresolved. Actual registration imports originalScene18 and new genuine authored preparation6 once each (expected24, not an actual result). Strict9 includes defining authored owner, common Scene owner/close/Text and all four actual law modules plus importer. All five dedicated artifact/temp paths, normal managed Bun and separate strict output are retained.
+
+Original seventeen preparation fixture rows at quanta1/7/4096 are exercised through the real public canonical parser and finite existing bank, with original expected JSON viaSQLite and independent Matrix3 affine values. Original Scene18 must rerun because its common private node/resource definer changed. Both original baseline attempts remain immutable, first prealgorithm Binary64 decode and second genuine work1 vsSQL0. No stock/fuel/profile/cap increase, raw ownership adoption or numeric bridge is included.
+
+This is a bounded defining-owner closure. Higher16 vector/trace/Boolean/raster/export callers still need real owning migration, and original fourteen glyph-scene raster/SVG/PDF/Sharp/pick/fullLayout/browser acceptance remain open. The older canonical preparation entry now reexports the genuine class; this gate imports the defining owned entry so unrelated unfinished higher callers are not mislabeled accepted. Root must review before one test/strict pair.

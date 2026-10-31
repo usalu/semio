@@ -17,6 +17,7 @@ path = "../../🦀️.rs"
 
 [features]
 testkit = []
+funded-turns = []
 
 [dependencies]
 semio-framework-3d = { workspace = true }

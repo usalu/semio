@@ -47,8 +47,6 @@ fn node_reference(nodes:&[(&str,i64)],id:&str,out:&mut RowWriter<'_,'_>)->Result
 pub(crate)fn admit_values(snapshot:&SemioGraphSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;projection::admit(snapshot,phase,control)}
 /// 🏛️ Admits every authored table and companion column before native ownership.
 pub(crate)fn admit_layout(limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
-/// 📦️ Counts the original Graph binary grammar before typed construction.
-pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
 /// 📝️ Counts the original Graph document grammar before typed construction.
 pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
 

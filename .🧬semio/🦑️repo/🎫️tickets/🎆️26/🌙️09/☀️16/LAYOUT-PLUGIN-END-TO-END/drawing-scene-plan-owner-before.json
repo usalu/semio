@@ -1,0 +1,47 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🦀️.rs",
+    "bytes": 84457,
+    "sha256": "a0b3397770bddcd039ae4ee2c7d252be8402b043f8d1456973d9fc28215d748d"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🦀️.rs",
+    "bytes": 29607,
+    "sha256": "83d63d4cc2c42bc6a781f478612af1c90a09cc99ba3a44e3b19ebd5a61a934c4"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🦀️.rs",
+    "bytes": 11278,
+    "sha256": "60c4b3bc427d25c769405bdbebc74213ea31ffd3da909163d4564cc362495459"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📦️packages/🦀️rust/Cargo.toml",
+    "bytes": 2909,
+    "sha256": "a3116ca059ef4a2e7ccbbf38738690ad2147df517fd014005834b4c2d1868ffc"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/Cargo.toml",
+    "bytes": 16740,
+    "sha256": "a0598ddb98b10da07fb0f74f14d756e1da67ecf31dea9cafccf47d8047cc0650"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/⚠️failure/🦀️.rs",
+    "bytes": 5287,
+    "sha256": "baed883a1d7f641f4a429f819da5f7e1cbd6d4cd14b04db686b741c9ffbc5fb2"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/⚠️failure/🧪️tests/🦀️.rs",
+    "bytes": 4697,
+    "sha256": "d8051de76c178846d468299650095a19bf93179de081add629c9f5f64647c294"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/⚠️failure/🧪️tests/🧫️fixtures/🔣️.json",
+    "bytes": 5679,
+    "sha256": "426c90741db8d0c33063eba0ae8621082a3d983b9c31ff671392d3b79d4330ff"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/⚠️failure/🧬️schema/🔣️.json",
+    "bytes": 2521,
+    "sha256": "d514b0abbd7cfc6bb9f6cc2a922cc05e39c37f20ffad4b0c6506767cccb2ab5e"
+  }
+]

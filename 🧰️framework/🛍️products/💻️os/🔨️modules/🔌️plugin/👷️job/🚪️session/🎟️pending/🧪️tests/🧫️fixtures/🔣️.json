@@ -53,5 +53,15 @@
       "close",
       "delivery"
     ]
+  },
+  "admissionControls": {
+    "cancelAlias": "retained-before-post",
+    "parameters": "separate-paid-handoff",
+    "session": "retained-staged-owner",
+    "output": "caller-owned-before-post",
+    "pendingFlag": "separate-paid-acknowledgement",
+    "metadataCopyBytes": 0,
+    "deniedAdmissionAxis": "items",
+    "parentHeaderReleaseWork": 1
   }
 }

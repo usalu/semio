@@ -1,0 +1,5 @@
+# SVG Product First Independent Review
+
+Root independently read actual owning and strict logs, verified full hashes, all202 current observations and identical pre/testPost/strictPost arrays. Owning49 passes with6,051,692 assertions; strict exits2 with18 concrete diagnostics. No all-strict or whole-product pass is claimed.
+
+Root releases202 for the reviewed bounded corrections: six contextual first-party node/path array typings without casts, nine checked missing-content guards preserving existing refusal branches, explicit canonical PNG output type public reexport, and single physical canonical DrawingSvgNode type ownership extraction with all imports updated. Full source inverses and original inputs/stock/style/geometry/thresholds are required. This is interface ownership, not a numeric bridge, duplicate schema or compatibility facade. The old real image/data-URI producer remains a named mandatory migration and is not accepted by this scoped successor. Fresh49+strict16 pair must follow. Raster/PDF/pick/higher callers, native/Host and actual browser remain required.

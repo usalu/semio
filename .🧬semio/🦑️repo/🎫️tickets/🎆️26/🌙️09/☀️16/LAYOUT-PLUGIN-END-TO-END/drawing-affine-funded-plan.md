@@ -1,0 +1,3 @@
+# Funded Affine owner
+
+The original twenty-one vectors and clipping/bilinear arithmetic remain unchanged. New closed TypeScript cases and genuine owning laws precede the body. Actual RGBA backing uses the verified OwnedPixelImage. The original area clipper uses one real 448-byte backing with fixed views, paid pair writes and resumable per-vertex clipping; bounded scalar sums and control headers do not invent copy bytes. Coverage, typed scratch, rows, output and retirement share the caller's finite bank. Semantic source/cell decisions remain separate from allocator/publication CPU. No numeric/default-credit async facade remains. Original unfiltered affine laws and product consumers will be hand-migrated and checked separately; this packet establishes no execution proof.

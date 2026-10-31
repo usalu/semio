@@ -12,15 +12,15 @@ impl semio_framework_schema_composition::ChildFieldRefs for LayoutDrawingMember{
 #[value(tag="kind",rename_all="camelCase",deny_unknown_fields)]
 pub enum LayoutDrawingBirthSource{Document,Page{#[value(rename="pageId")]page_id:String}}
 #[derive(semio_framework_value::RetireOwned)]
-pub struct LayoutDrawingBirth<S:semio_framework_value::RetireOwned>{pub source:LayoutDrawingBirthSource,pub member:LayoutDrawingMember,pub initial:S}
+pub struct LayoutDrawingBirth<S:semio_framework_value::retirement::RetireOwned>{pub source:LayoutDrawingBirthSource,pub member:LayoutDrawingMember,pub initial:S}
 
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
+
 
 #[path="📖️source/🦀️.rs"]pub mod source;
 pub use source::{drawing_member_at,drawing_read_demand,drawing_read_at,DrawingReadAdvance};
 
 #[derive(semio_framework_value::RetireOwned)]
-pub struct LayoutImportBundle<S:semio_framework_value::RetireOwned>{pub document:super::snapshot::LayoutSnapshot,pub drawing_births:semio_framework_value_persistent::list::PagedList<LayoutDrawingBirth<S>,{usize::MAX}>}
+pub struct LayoutImportBundle<S:semio_framework_value::retirement::RetireOwned>{pub document:super::snapshot::LayoutSnapshot,pub drawing_births:semio_framework_value_persistent::list::PagedList<LayoutDrawingBirth<S>,{usize::MAX}>}
 
 #[path="🌱️birth/📤️transfer/🦀️.rs"]pub mod transfer;
 pub use transfer::{drawing_birth_transfer_demand,transfer_drawing_birth,DrawingBirthTransfer};

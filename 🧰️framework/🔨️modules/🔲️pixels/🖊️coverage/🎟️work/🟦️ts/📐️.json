@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "maskByteWidth": 1,
+  "scalarLogicalBytes": 8,
+  "edgeLogicalBytes": 32,
+  "eventLogicalBytes": 24,
+  "quanta": [
+    1,
+    7,
+    4096
+  ],
+  "source": "all original eighteen coverage vectors",
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "deniedEffects": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "maximumTurns": 100000,
+  "actualCpu": "issued defining leaf/child witness",
+  "semantic": "original completed sweep operations",
+  "output": "authentic owned typed bytes with explicit borrow and consuming close",
+  "input": "borrowed readonly sequences",
+  "stock": {
+    "items": 1048576,
+    "copy": 134217728,
+    "capacity": 33554432,
+    "release": 33554432,
+    "depth": 64
+  },
+  "originalIndependentScale": 128,
+  "originalMaximumDelta": 2,
+  "maximumCpu": 1048576,
+  "failingProbeCpu": 1,
+  "failingProbeSemantic": 1,
+  "cancellationSemanticCuts": [
+    0,
+    1,
+    20,
+    60
+  ],
+  "cachedFailureCpu": 0,
+  "constructorTypedArrayBirths": 0,
+  "borrowedHeaderCounting": "funded-resumable-before-body",
+  "sortScratch": "real-reused-owned-buffers",
+  "consumedProducerSettlement": false,
+  "trivialSortNoChild": true,
+  "exactEmptyParent": {
+    "input": {
+      "width": 2,
+      "height": 1,
+      "rule": "nonzero",
+      "transform": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "contours": []
+    },
+    "maximumSemanticWork": 1,
+    "completionDepthUnderfills": 3,
+    "expected": [
+      0,
+      0
+    ]
+  }
+}

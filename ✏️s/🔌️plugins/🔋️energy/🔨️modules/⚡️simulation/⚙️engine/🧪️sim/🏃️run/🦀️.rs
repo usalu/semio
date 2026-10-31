@@ -497,7 +497,7 @@ impl EnergyJobAuthority {
                 self.commit_census = Some(CommitCensusWork::default());
                 return EnergyRun::Yield;
             }
-            match self.step_commit_census() {
+            match self.step_commit_census(context) {
                 Ok(false) => return EnergyRun::Yield,
                 Ok(true) => {}
                 Err(fault) => {
@@ -506,9 +506,23 @@ impl EnergyJobAuthority {
                 }
             }
         }
-        if self.output_writer.is_none() && self.output_payload.is_none() {
-            self.output_writer = Some(semio_framework_job_payload::RetainedJobPayloadWriter::new(JobPayloadStream::CommitOutput));
-            return EnergyRun::Yield;
+        if self.output_payload.is_none() {
+            if self.output_writer.is_none() {
+                let turn = semio_framework_job_payload::RetainedPayloadBuilder::admit_boxed(JobPayloadStream::CommitOutput, &mut self.output_writer, &*context);
+                if energy_post(context, turn).is_err() {
+                    self.output_fault = Some(OutputFault::BackingRejected);
+                    return self.begin_fault();
+                }
+                return EnergyRun::Yield;
+            }
+            if self.output_writer.as_ref().is_some_and(|builder| !builder.is_initialized()) {
+                let turn = self.output_writer.as_mut().expect("output builder exists").advance_initialization(&*context);
+                if energy_post(context, turn).is_err() {
+                    self.output_fault = Some(OutputFault::BackingRejected);
+                    return self.begin_fault();
+                }
+                return EnergyRun::Yield;
+            }
         }
         match self.encode_output_step(context) {
             Ok(false) => return EnergyRun::Yield,
@@ -518,44 +532,44 @@ impl EnergyJobAuthority {
                 return self.begin_fault();
             }
         }
-        if let Some(writer) = self.output_writer.as_mut() {
-            if writer.staged_page_len().is_some() {
-                if writer.commit_staged_page().is_err() {
-                    self.output_fault = Some(OutputFault::BackingRejected);
-                    return self.begin_fault();
-                }
+        if let Some(builder) = self.output_writer.as_mut().filter(|_| self.output_payload.is_none()) {
+            let turn = if builder.staged_page_len().is_some() {
+                builder.commit_staged_page_funded(context)
+            } else if builder.published().is_none() {
+                builder.seal(&*context)
+            } else {
+                builder.take_finished(&mut self.output_payload, context.retained_grant())
+            };
+            if energy_post(context, turn).is_err() {
+                self.output_fault = Some(OutputFault::BackingRejected);
+                return self.begin_fault();
+            }
+            if self.output_payload.is_none() {
                 return EnergyRun::Yield;
             }
-            let writer = self.output_writer.take().expect("output writer exists");
-            match writer.finish() {
-                Ok(payload) => {
-                    let reservation = self.commit_reservation.as_ref().expect("commit reservation remains mounted");
-                    if payload.page_count() != reservation.pages || payload.len() != reservation.bytes || self.commit_pages_mounted != reservation.pages || self.commit_items_encoded != reservation.items {
-                        self.output_payload = Some(payload);
-                        self.output_fault = Some(OutputFault::BackingRejected);
-                        return self.begin_fault();
-                    }
-                    self.output_payload = Some(payload);
-                }
-                Err(writer) => {
-                    self.output_writer = Some(writer);
-                    return EnergyRun::Yield;
-                }
+            let payload = self.output_payload.as_ref().expect("transferred commit payload exists");
+            let reservation = self.commit_reservation.as_ref().expect("commit reservation remains mounted");
+            if payload.page_count() != reservation.pages || payload.len() != reservation.bytes || self.commit_pages_mounted != reservation.pages || self.commit_items_encoded != reservation.items {
+                self.output_fault = Some(OutputFault::BackingRejected);
+                return self.begin_fault();
             }
-            let payload = self.output_payload.take().expect("prepared commit payload exists");
-            let packet = EnergyWirePacket { kind: EnergyWireKind::Commit, identity: self.wire_identity(0), payload, preview: None, reservation: self.commit_reservation.take() };
-            match self.publication.commits.push_reserved(packet) {
-                Ok(()) => {
-                    self.commit_pages_mounted = 0;
-                    self.commit_items_encoded = 0;
-                    self.set_stage(context, EnergyJobStage::Complete);
-                }
-                Err(packet) => {
-                    self.output_payload = Some(packet.payload);
-                    self.commit_reservation = packet.reservation;
-                    return EnergyRun::Yield;
-                }
+        }
+        if self.output_payload.is_some() {
+        let payload = self.output_payload.take().expect("prepared commit payload exists");
+        let packet = EnergyWirePacket { kind: EnergyWireKind::Commit, identity: self.wire_identity(0), payload, preview: None, reservation: self.commit_reservation.take() };
+        match self.publication.commits.push_reserved(packet) {
+            Ok(()) => {
+                self.commit_pages_mounted = 0;
+                self.commit_items_encoded = 0;
+                self.set_stage(context, EnergyJobStage::Complete);
             }
+            Err(packet) => {
+                self.output_payload = Some(packet.payload);
+                self.commit_reservation = packet.reservation;
+                return EnergyRun::Yield;
+            }
+        }
+
         }
         EnergyRun::Yield
     }

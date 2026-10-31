@@ -5,7 +5,7 @@ use semio_framework_dsl_record::{BorrowedDslRecord,native_encoding::FieldProject
 #[canonical_json(owner=store)]
 #[artifact(id="test.window.genesis")]
 #[dsl(layout="lines")]
-pub(crate) struct State{pub(crate) zoom:f64}
+pub struct State{pub zoom:f64}
 impl Default for State{fn default()->Self{Self{zoom:1.25}}}
 impl pack::snapshot::ArtifactDsl for State{
  const EXTENSION:&'static str="windowgenesis";
@@ -30,19 +30,22 @@ impl store::os_store::serialization::ArtifactStoreSnapshot for State{
 }
 impl store::ConfigRecord for State{}
 #[derive(Clone,Copy,Debug,PartialEq,Default,semio_framework_value::RetireOwned,semio_framework_value::ToValue,semio_framework_value::FromValue)]
-pub(crate) struct Diff{zoom:Option<f64>}
+pub struct Diff{zoom:Option<f64>}
 impl protocol::MutationDiff<State> for Diff{}
 impl protocol::DiffAlgebra<State> for Diff{fn is_empty(&self)->bool{self.zoom.is_none()}}
+impl protocol::ColdMutationDiff<State> for Diff{fn absorb(&mut self,other:Self){self.zoom=other.zoom.or(self.zoom);}fn apply(&self,base:&mut State,_:protocol::ApplyCapability)->protocol::MutationApplyResult<()>{if let Some(zoom)=self.zoom{base.zoom=zoom;}Ok(())}}
+impl protocol::ColdDiffAlgebra<State> for Diff{fn inverse(&self,base:&State)->Self{Self{zoom:self.zoom.map(|_|base.zoom)}}}
 #[derive(Clone,Debug,PartialEq,semio_framework_value::RetireOwned,semio_framework_value::RetainedClone,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_value::CanonicalJsonTree,semio_framework_dsl_record_derive::DslEnum,semio_framework_dsl_record_derive::DslReceiving,semio_framework_value::NativeReceive)]
 #[canonical_json(owner=store)]
 #[value(tag="kind",rename_all="kebab-case")]
-pub(crate) enum Mutation{#[dsl(key="zoom")] Zoom{zoom:f64}}
+pub enum Mutation{#[dsl(key="zoom")] Zoom{zoom:f64}}
 impl protocol::Mutation<State> for Mutation{
  type Diff=Diff;
  fn may_emit_foreign_steps(&self)->bool{false}
  const DESCRIPTORS:&'static[protocol::MutationLeafDescriptor]=&[protocol::MutationLeafDescriptor{schema_version:1,owner:"test.window.genesis",semantic_kind:"set-zoom",display_name:"Set Zoom",emoji:"🔎️",aggregate_variant:"Zoom",payload_schema:"test.window.genesis.zoom",text_opcode:None,binary_tag:None,invertibility:protocol::MutationInvertibility::ExplicitMutation,diff_participation:protocol::MutationDiffParticipation::Detect,outcome_classes:&[protocol::MutationOutcomeClass::Applied],composition:protocol::MutationComposition::Atomic,required_language_surfaces:&[protocol::MutationLanguageSurface::Rust]}];
  fn descriptor(&self)->&'static protocol::MutationLeafDescriptor{&Self::DESCRIPTORS[0]}
 }
+impl protocol::ColdMutation<State> for Mutation{type ReferenceDiff=Diff;fn diff(&self,base:&State)->protocol::MutationOutcome<Diff>{let Self::Zoom{zoom}=self;protocol::MutationOutcome::new(Diff{zoom:(*zoom!=base.zoom).then_some(*zoom)})}fn inverse(&self,base:&State)->Result<Vec<Self>,ValueError>{Ok(vec![Self::Zoom{zoom:base.zoom}])}}
 impl protocol::OpBinary for Mutation{fn encode_op(&self)->Result<Vec<u8>,protocol::ProtocolError>{dsl::variants_binary::encode_op(self)}fn decode_op(bytes:&[u8])->Result<Self,protocol::ProtocolError>{dsl::variants_binary::decode_op(bytes)}}
 impl protocol::OpText for Mutation{
  fn parse_op(line:&str)->Result<Self,semio_framework_diagnostic::TextError>{let spec=<Self as semio_framework_dsl_record::DslVariants>::variants()[0].1;let record=semio_framework_dsl_record::parse(line,&(spec.ordinary)(),&semio_framework_dsl_record::ParseOptions{limits:Default::default(),mode:semio_framework_dsl_record::SourceMode::Inline})?;<Self as semio_framework_dsl_record::DslVariants>::from_named_record("zoom",&record)}
@@ -54,7 +57,7 @@ impl semio_framework_os_store_operation_wire::ArtifactOperationTargets for Mutat
  fn segment_len(&self,index:usize)->Result<usize,ValueError>{if index==0{Ok(4)}else{Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Window target ordinal is absent"))}}
  fn read_segment(&self,index:usize,offset:usize,output:&mut[u8])->Result<usize,ValueError>{if index!=0||offset>4{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Window target ordinal is absent"))}let source=&b"zoom"[offset..];let count=source.len().min(output.len());output[..count].copy_from_slice(&source[..count]);Ok(count)}
 }
-pub(crate) struct Owner;
+pub struct Owner;
 impl WindowConfigOwner for Owner{
  const WINDOW_KIND_ID:&'static str="genesis-camera";const SCHEMA:&'static str="test.window.genesis";const MAXIMUM_PUBLICATION_BYTES:usize=4096;
  type State=State;type Mutation=Mutation;type Edit=WindowConfigApplyEdit<State,Mutation>;const MAXIMUM_PREPARATION_DEPTH:usize=64;
@@ -71,3 +74,5 @@ impl WindowConfigOwner for Owner{
  fn store_disposer_birth()->Result<RetirementDemand,ValueError>{bounded_window_config_store_disposer_birth::<Self>()}
  fn build_store_disposer()->Box<dyn ArtifactOwnedDisposer<store::ConfigStore<State,Mutation>>>{bounded_window_config_store_disposer::<Self>()}
 }
+pub fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🔣️.json")).unwrap()}
+pub fn grant()->RetainedCloneGrant{let law=fixture();let g=&law["grant"];RetainedCloneGrant{maximum_items:g["items"].as_u64().unwrap()as usize,maximum_copy_bytes:g["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["depth"].as_u64().unwrap()as usize}}

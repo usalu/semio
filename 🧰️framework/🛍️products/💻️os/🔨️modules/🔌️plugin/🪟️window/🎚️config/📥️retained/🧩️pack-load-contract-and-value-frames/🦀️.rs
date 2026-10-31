@@ -67,15 +67,14 @@ pub trait ErasedWindowConfigPackLoad: Send {
 }
 
 pub struct WindowConfigPackLoad {
-    pub(in super::super) inner:ManuallyDrop<Option<Box<dyn ErasedWindowConfigPackLoad>>>,
-    pub(super) closed_progress:WindowConfigPackLoadProgress,
-    pub(super) closed_diagnostic:Option<WindowConfigPackLoadDiagnostic>,
+    pub inner:ManuallyDrop<Option<Box<dyn ErasedWindowConfigPackLoad>>>,
+    pub closed_progress:WindowConfigPackLoadProgress,
+    pub closed_diagnostic:Option<WindowConfigPackLoadDiagnostic>,
 }
 
 impl WindowConfigPackLoad {
-    #[cfg(test)]
     #[doc(hidden)]
-    pub fn candidate_actor_for_test<O:WindowConfigOwner>(&mut self)->Option<protocol::ActorId>{let typed=self.inner.as_mut()?.as_any_mut().downcast_mut::<TypedWindowConfigPackLoad<O>>()?;typed.candidate.as_ref().map(|candidate|candidate.store.local_actor_id().clone())}
+    pub fn candidate_actor_for_test<O:WindowConfigOwner>(&mut self)->Option<protocol::ActorId>{let typed=self.inner.as_mut()?.as_any_mut().downcast_mut::<super::typed_pack_load::TypedWindowConfigPackLoad<O>>()?;typed.candidate.as_ref().map(|candidate|candidate.store.local_actor_id().clone())}
     pub fn phase(&self)->WindowConfigPackLoadPhase{self.inner.as_ref().map_or(WindowConfigPackLoadPhase::Complete,|inner|inner.phase())}
     pub fn progress(&self)->WindowConfigPackLoadProgress{self.inner.as_ref().map_or(self.closed_progress,|inner|inner.progress())}
     pub fn diagnostic(&self)->Option<WindowConfigPackLoadDiagnostic>{self.inner.as_ref().map_or(self.closed_diagnostic,|inner|inner.diagnostic())}

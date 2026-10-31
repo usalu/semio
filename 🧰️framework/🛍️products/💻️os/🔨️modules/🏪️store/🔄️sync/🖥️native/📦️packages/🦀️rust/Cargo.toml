@@ -43,7 +43,7 @@ semio-framework-os-directory = { path = "../../../../../📇️directory/📦️
 semio-framework-os-directory-client = { path = "../../../../../📇️directory/🔌️client/📦️packages/🦀️rust" }
 semio-framework-os-store-blob-identity = { path = "../../../../../../../../🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 semio-framework-os-store-sync = { path = "../../../📦️packages/🦀️rust" }
@@ -56,5 +56,6 @@ tokio = { version = "1", default-features = false, features = ["net", "rt", "tim
 tokio-tungstenite = { version = "0.26", features = ["rustls-tls-webpki-roots"] }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-plugin-component-receipt = { path = "../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust" }

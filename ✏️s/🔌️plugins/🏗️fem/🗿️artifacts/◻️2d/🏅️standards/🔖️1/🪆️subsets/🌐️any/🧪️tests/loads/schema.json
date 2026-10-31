@@ -108,7 +108,7 @@
           "nodal",
           "member-udl"
         ],
-        "area": "unsupported",
+        "area": "required",
         "unknown": "invalid",
         "selfWeight": "retained",
         "emptyCases": "retained",

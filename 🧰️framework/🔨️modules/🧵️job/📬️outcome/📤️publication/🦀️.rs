@@ -1,7 +1,7 @@
 //! 📤️ Original source identity and physical pages remain inside one artifact-neutral publication.
-use semio_framework_job::{OperationId, Generation, StepContext, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, JobOutcomeKind, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+use semio_framework_job::{OperationId, Generation, StepContext, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, JobOutcomeKind, OriginalTurnFailure, receive_original_retained_work, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_job_payload::{RetainedPayloadBuilder, JobPayloadStream, RetainedJobPayload};
-use semio_framework_value::{ValueError,ValueRefusalKind};
+use semio_framework_value::{RetainedWorkOutcome,ValueError,ValueRefusalKind};
 use semio_framework_value::RetirementDemand;
 
 /// 🚦️ Describes a semantic publication without an artifact-specific serializer.
@@ -34,17 +34,17 @@ impl RetainedJobPublication{
   let binding=Self::original(kind,source,cx);if self.binding.is_some_and(|original|original!=binding)||self.closing{return Err(Self::invalid())}
   if self.delivered{return Ok(Default::default())}
   if self.binding.is_none(){return Ok(RetirementDemand{depth:1,..Default::default()})}
-  let mut demand=if self.stream!=kind.stream(){RetirementDemand{depth:1,..Default::default()}}else if !self.builder.is_initialized(){self.builder.initialization_demand()}else if self.cursor<source.len(){self.builder.append_demand(cx.retained_grant())?}else if self.builder.published().is_none(){RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}}else{RetirementDemand{depth:1,..Default::default()}};
+  let mut demand=if self.stream!=kind.stream(){RetirementDemand{depth:1,..Default::default()}}else if !self.builder.is_initialized(){self.builder.initialization_demand()}else if self.cursor<source.len(){self.builder.append_demand(cx.retained_grant())?}else if self.builder.published().is_none(){RetainedPayloadBuilder::seal_demand()}else{RetirementDemand{depth:1,..Default::default()}};
   demand.depth=demand.depth.checked_add(1).ok_or_else(Self::invalid)?;Ok(demand)
  }
  /// ✍️ Advances one paid source frontier and lends the original sealed payload on a separate turn.
- pub fn advance_from_source<'a>(&'a mut self,kind:JobPublicationKind,source:&[u8],cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{
-  let demand=self.advance_demands(kind,source,cx)?;if self.delivered||!Self::permits(cx.retained_grant(),demand){return Ok(None)}
-  if self.binding.is_none(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.binding=Some(Self::original(kind,source,cx));return Ok(None)}
-  if self.stream!=kind.stream(){let step=self.builder.select_stream(kind.stream(),cx.retained_grant())?;cx.consume_retained(step.progress())?;self.stream=kind.stream();return Ok(None)}
-  if !self.builder.is_initialized(){self.builder.advance_initialization(cx)?;return Ok(None)}
-  if self.cursor<source.len(){self.builder.append_original(cx,source,&mut self.cursor)?;return Ok(None)}
-  if self.builder.published().is_none(){self.builder.seal(cx)?;return Ok(None)}
+ pub fn advance_from_source<'a>(&'a mut self,kind:JobPublicationKind,source:&[u8],cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{
+  cx.original_source_parent()?.validate_borrowed_context(cx)?;let demand=self.advance_demands(kind,source,cx)?;if cx.is_cancelled()||cx.should_yield()||self.delivered||!Self::permits(cx.retained_grant(),demand){return Ok(None)}
+  if self.binding.is_none(){self.binding=Some(Self::original(kind,source,cx));receive_original_retained_work(cx,RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})?;return Ok(None)}
+  if self.stream!=kind.stream(){let turn=self.builder.select_stream(kind.stream(),cx.retained_grant());let result=turn.result.map(|step|{if matches!(step,RetainedCloneStep::Complete(_)){self.stream=kind.stream();}step});receive_original_retained_work(cx,RetainedWorkOutcome{result,work:turn.work})?;return Ok(None)}
+  if !self.builder.is_initialized(){let turn=self.builder.advance_initialization(cx);receive_original_retained_work(cx,turn)?;return Ok(None)}
+  if self.cursor<source.len(){let turn=self.builder.append_original(cx,source,&mut self.cursor);receive_original_retained_work(cx,turn)?;return Ok(None)}
+  if self.builder.published().is_none(){let turn=self.builder.seal(cx);receive_original_retained_work(cx,turn)?;return Ok(None)}
   let payload=self.builder.published().ok_or_else(Self::invalid)?;
   let original=match kind{JobPublicationKind::Preview=>JobOutcomeBorrow::admit_preview(cx,payload)?,JobPublicationKind::Checkpoint{applied_progress}=>JobOutcomeBorrow::admit_checkpoint(cx,payload,applied_progress)?,JobPublicationKind::Fault=>JobOutcomeBorrow::admit_fault(cx,payload)?};
   if original.is_some(){self.delivered=true}Ok(original)
@@ -62,13 +62,14 @@ impl RetainedJobPublication{
   Ok(RetirementDemand{depth:1,..Default::default()})
  }
  /// ♻️ The caller ends its descriptor loan before original pages and publication metadata close.
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
-  let demand=self.retirement_demands()?;if !Self::permits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
-  if !self.closing{self.closing=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
-  if !self.builder.terminal_is_empty(){let step=self.builder.close_step_granted(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})?;return Ok(RetainedCloneStep::Progress(step.progress()))}
-  self.binding=None;self.cursor=0;self.delivered=false;self.closing=false;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+  if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+  let demand=match self.retirement_demands(){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if !Self::permits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  if !self.closing{self.closing=true;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+  if !self.builder.terminal_is_empty(){let turn=self.builder.close_step_granted(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});return RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneStep::Progress(step.progress())),work:turn.work}}
+  self.binding=None;self.cursor=0;self.delivered=false;self.closing=false;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
  }
+
 }
 impl Default for RetainedJobPublication{fn default()->Self{Self::new()}}
 impl Drop for RetainedJobPublication{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"publication reached Drop before original physical retirement");}}

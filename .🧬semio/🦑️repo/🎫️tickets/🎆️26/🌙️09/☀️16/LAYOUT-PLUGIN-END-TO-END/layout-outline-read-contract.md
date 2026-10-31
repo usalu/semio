@@ -1,0 +1,5 @@
+# Outline Borrowed Read Contract
+
+Read-only audit while249 is held. Canonical RetainedWorkInputSequence<T> declares readonly length and at(index):T|undefined. Genuine RetainedWorkBuffer implements that protocol directly, including at; standard readonly arrays also implement at under the current ESNext target. LayoutOutlinePublication reads only glyph/segment lengths and ordinals, never mutates/retires the borrowed paragraph. Its source type should therefore explicitly require these two readonly InputSequences and retain exact object/generation identity checks. Calling at is one canonical protocol, with no Array.isArray/get fallback, materialized facade or owned-body adoption.
+
+Actual Outline9/1 failure occurs when the existing original oracle provides a borrowed array fixture, which is valid read-source data but cannot satisfy Buffer.get. Proposed interface/read correction retains every fixture, golden origin, paint/path comparison, threshold and stock. Existing numeric JSON-string-parts ownership is a separate open funding gap; this read correction does not claim that output funded. No source mutation or rerun in this audit.

@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-value-retained-work"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Retained-work authority for original paged and contiguous value storage."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-retained-work"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value_retained_work"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-paged-list = { path = "../../../../📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../../♻️retirement/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-trace = { path = "../../../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

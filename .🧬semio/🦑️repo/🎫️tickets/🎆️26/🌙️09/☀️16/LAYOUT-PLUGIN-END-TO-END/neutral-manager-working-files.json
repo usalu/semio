@@ -1,0 +1,158 @@
+{
+  "version": 1,
+  "state": "source and focused/defining-manager/oracle/current strict validation passed; effects controlled by root",
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🔣️.json",
+      "sha256": "1591ed93df09516a84caaedb59c62d9f271e5c64127f2f6ec969d80f275a9c7f",
+      "absolutePathUnits": 102
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧬️schema/🔣️.json",
+      "sha256": "863c87b9465438e9b71d414e5b51e9b85c54839b604edc6c172788bbdb47197f",
+      "absolutePathUnits": 111
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🟦️.ts",
+      "sha256": "af07aca68a35243ba95220ee2442e16142207747110a099367653ce32fc48426",
+      "absolutePathUnits": 100
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧪️tests/🗂️store/🟦️.ts",
+      "sha256": "6408a7b7c9d4a4fb59cc72280d6ae99bdef4bc6e12cd87cc4927a6628277340c",
+      "absolutePathUnits": 116
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🏛️sealed/🧪️tests/🧫️fixtures/🟦️.ts",
+      "sha256": "3e6856ae575e2a34798e293749a289f01cb3cc13de7bb1e86f2ed21eacc6147b",
+      "absolutePathUnits": 119
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🔣️.json",
+      "sha256": "77fb6b7d5c2e8c9a20daa79ad2824b9579028b2524bc88bb5340d789044f50a9",
+      "absolutePathUnits": 114
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🧬️schema/🔣️.json",
+      "sha256": "7aa48334a8af5a431bb9dcf850005d412c69a13fdf0dbc851b8fcc98ab9b83c2",
+      "absolutePathUnits": 123
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🟦️.ts",
+      "sha256": "3925d3033151f6ec99ededc34a9b4b9a2f677a129d919db75648010e26f8b1d4",
+      "absolutePathUnits": 112
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧱️project-assembly/🟨️.mjs",
+      "sha256": "cf9dd04212a4204c985c3a249a81b9fbb7305d56911d90711915c8f491f1e625",
+      "absolutePathUnits": 131
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts",
+      "sha256": "0b57310aba6547a9fa964b6e91bfab083802e6e5ca1093d37b4fdcab1f220daa",
+      "absolutePathUnits": 141
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🧪️tests/🔌️manager-files/🟦️.ts",
+      "sha256": "561f2d187fb267cafd6db402a8646ae55de9845121f597726e22bfd439f51d19",
+      "absolutePathUnits": 136
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🧪️tests/🔌️manager-files/🔣️.json",
+      "sha256": "0ed8d5d2de809c2179ac78eee4d3974121e0c453fef50246959b6006d50f2d89",
+      "absolutePathUnits": 138
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🧪️tests/🔌️manager-files/🧬️schema/🔣️.json",
+      "sha256": "e645932551c8d57bc2888a295582469548af946c8a7b647f06935244673c5f24",
+      "absolutePathUnits": 147
+    }
+  ],
+  "fullyRevertedOwnFile": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.d.cts",
+  "actualProof": {
+    "ratchetRed": {
+      "ownerSession": 41178,
+      "log": "🗑️generated/portable-manager-green.log",
+      "failure": "sealed lock literal and three precision scope-config literals outside manager interface"
+    },
+    "focused1": {
+      "session": 64114,
+      "exitCode": 1,
+      "passed": 31,
+      "skipped": 1,
+      "failed": 1,
+      "assertions": 10184,
+      "log": "🗑️generated/neutral-manager-focused.log",
+      "failure": "PRODUCTION captured-loader CJS named-export incompatibility, not fixture-only"
+    },
+    "focused2": {
+      "session": 66533,
+      "exitCode": 0,
+      "passed": 32,
+      "skipped": 1,
+      "failed": 0,
+      "assertions": 10188,
+      "log": "🗑️generated/neutral-manager-focused-2.log",
+      "limitation": "real-checkout fixture capture incorrectly wrote checkout/.memo.json; later corrected"
+    },
+    "focusedFinal": {
+      "session": 32276,
+      "exitCode": 0,
+      "passed": 32,
+      "skipped": 1,
+      "failed": 0,
+      "assertions": 10188,
+      "log": "🗑️generated/neutral-manager-focused-3.log",
+      "admission": "normal",
+      "skippedCase": "preexisting opt-in full repository route scan"
+    },
+    "earlyFrontdoor": {
+      "command": "repo --service=off --help",
+      "exitCode": 0,
+      "log": "🗑️generated/neutral-frontdoor-help-2.log"
+    },
+    "strict": {
+      "owner": "dependency_layout",
+      "session": 53118,
+      "exitCode": 0,
+      "roots": 12,
+      "admission": "normal canonical tsc",
+      "log": "🗑️generated/portable-policy-strict-memo.log"
+    },
+    "definingManagerCurrent": {
+      "owner": "dependency_layout",
+      "session": 67262,
+      "exitCode": 0,
+      "passed": 94,
+      "failed": 0,
+      "assertions": 845,
+      "admission": "normal",
+      "log": "🗑️generated/portable-manager-current.log"
+    },
+    "managerOracle": {
+      "owner": "dependency_layout",
+      "session": 34021,
+      "exitCode": 0,
+      "log": "🗑️generated/portable-oracle-final.log"
+    }
+  },
+  "consumerInspection": "Repo production .rs/.ts/.mjs/.cjs source scan found only sealed TS stampedFiles consumer and project-assembly MJS precision derivation host; no Rust direct policy-field parser. GraphMJS already imports TS precision and other TS modules; same declared source-loader bridge retained.",
+  "effects": {
+    "setup": "HOLD",
+    "nativeCargo": "HOLD",
+    "preview": "HOLD",
+    "publication": "HOLD",
+    "retirement": "HOLD"
+  },
+  "residual": "Root-authorized conditional own-output relocation completed after exact schema-walk provenance proof; checkout memo absent. Exactbackup/stat+movedrecord undergenerated, journal root-memo-66533.md. Priorpathbaselineunknown/notrestored.",
+  "rootMemoCustody": {
+    "status": "completed authorized own-generated-output move",
+    "journal": "root-memo-66533.md",
+    "sourceAbsent": true,
+    "preservedExact": "🗑️generated/root-memo-66533.exact.json",
+    "metadata": "🗑️generated/root-memo-66533.stat.json",
+    "moved": "🗑️generated/root-memo-66533.moved.json",
+    "priorBaseline": "unknown",
+    "priorStateRestored": false
+  }
+}

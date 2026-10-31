@@ -40,7 +40,7 @@ semio_framework_plugin::app_commands! {
 pub struct Gis2dPlayApp;
 
 //#region 🧵️RetainedCommands
-pub(super) const GIS2D_RETAINED_TOOL_IDS: &[&str] =
+pub const GIS2D_RETAINED_TOOL_IDS: &[&str] =
     &["setActiveExample", "patchPositions", "patchRoutes", "patchRoute", "addFeature", "moveFeature", "renameFeature", "deleteFeature", "toggleLayerVisibility", "fitWorld", "setCamera", "setRenderMode", "setVectorStyle", "setLodMode", "focusFeature", "setLayerStrokeScale", "openSource", "proposeBoundsRegion"];
 
 const GIS2D_RETAINED_PAYLOAD_SCHEMA: &str = "gis.map.tool-command.v1";
@@ -49,7 +49,7 @@ pub(super) const GIS2D_RETAINED_RAW_BYTES: usize = 8_192;
 
 pub(super) const GIS2D_RETAINED_WORK_ITEMS: usize = 64;
 
-pub(super) const GIS2D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
+pub const GIS2D_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowConfig] },
     ArtifactToolPublicationContract { tool_id: "patchPositions", lanes: &[ArtifactToolPublicationLane::Artifact] },
     ArtifactToolPublicationContract { tool_id: "patchRoutes", lanes: &[ArtifactToolPublicationLane::Artifact] },
@@ -160,12 +160,12 @@ impl ArtifactCommandWork<EditorApp<Gis2dPlayApp>> for GisMapWindowWork {
     }
 }
 
-pub(super) struct Gis2dRetainedCommandJobFactory {
-    pub(super) keys: Vec<ToolFactoryKey>,
+pub struct Gis2dRetainedCommandJobFactory {
+    pub keys: Vec<ToolFactoryKey>,
 }
 
 impl Gis2dRetainedCommandJobFactory {
-    pub(super) fn new(controller_id: &str) -> Self {
+    pub fn new(controller_id: &str) -> Self {
         Self { keys: GIS2D_RETAINED_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }

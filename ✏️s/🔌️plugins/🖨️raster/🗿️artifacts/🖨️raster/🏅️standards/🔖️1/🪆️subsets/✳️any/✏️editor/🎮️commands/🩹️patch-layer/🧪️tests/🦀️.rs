@@ -19,7 +19,7 @@ fn mask_link_changes_preserve_nested_composite_pixels_and_exact_undo() {
         let layers=serde_json::json!([{"kind":"group","id":"group","name":"Group","visible":true,"locked":false,"opacity":1.0,"blendMode":"normal","transform":{"x":3.0,"y":2.0,"a":1.0,"b":0.5,"c":0.0,"d":1.0},"mask":if owner=="group" {mask.clone()}else{serde_json::Value::Null},"children":[{"kind":"pixel","id":"paint","name":"Paint","visible":true,"locked":false,"opacity":1.0,"blendMode":"normal","transform":{"x":0.0,"y":0.0,"a":2.0,"b":0.0,"c":0.0,"d":1.0},"width":2,"height":2,"imageKey":"semio-emblem","mask":if owner=="paint" {mask.clone()}else{serde_json::Value::Null}}]}]);
         semio_s_artifact_raster_raster_model::retire_raster_layers(std::mem::replace(&mut document.layers,semio_framework_pack_json::from_json_str(&layers.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()));
         let render=|snapshot:&RasterSnapshot| {
-            let mut job=semio_s_artifact_raster_raster_io::raster_composite_job(snapshot).unwrap();while !job.advance(17).unwrap().done {}
+            let mut job=semio_s_artifact_raster_raster_io::raster_composite_job(snapshot).unwrap();while !semio_s_artifact_raster_raster_io::advance_stack(&mut job,17).unwrap().done {}
             let output=job.into_result().unwrap();(output.origin,output.image)
         };
         let before=render(&document);assert!(before.1.pixels.chunks_exact(4).any(|pixel|pixel[3]>0));

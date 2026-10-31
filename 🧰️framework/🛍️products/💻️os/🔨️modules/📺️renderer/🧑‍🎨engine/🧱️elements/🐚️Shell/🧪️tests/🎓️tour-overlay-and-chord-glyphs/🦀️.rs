@@ -182,8 +182,8 @@ fn an_interaction_step_paints_a_checklist_and_no_next_button() {
     let mut shell = armed_tour_shell();
     let mut introduction = tour_introduction();
     introduction.steps[0].interactions = vec![
-        semio_framework::onboarding::IntroductionInteraction { label: "Zoom".into(), on: semio_framework::onboarding::IntroductionInteractionKind::Action("zoomIn".into()), celebrate: None },
-        semio_framework::onboarding::IntroductionInteraction { label: "Pan".into(), on: semio_framework::onboarding::IntroductionInteractionKind::Action("panLeft".into()), celebrate: None },
+        semio_framework::onboarding::IntroductionInteraction { label: semio_framework_ui_locale::LocalizedLabel::native("Zoom", "Zoomen"), on: semio_framework::onboarding::IntroductionInteractionKind::Action("zoomIn".into()), celebrate: None },
+        semio_framework::onboarding::IntroductionInteraction { label: semio_framework_ui_locale::LocalizedLabel::native("Pan", "Verschieben"), on: semio_framework::onboarding::IntroductionInteractionKind::Action("panLeft".into()), celebrate: None },
     ];
     if let Some(session) = shell.docs.session.as_mut() {
         session.app.introduction = Some(introduction);

@@ -74,3 +74,47 @@ test("the retired groups and the remaining bytes equal the independent Python mo
  const file=join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"lru-cases-"+process.pid+".json");writeFileSync(file,JSON.stringify({cases}));
  try{const run=runToolSyncV1("python",["-I",oracle,file],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);expect(actual).toEqual(JSON.parse(run.stdout));}finally{rmSync(file,{force:true});}
 },120000);
+
+/** 🧪️ One group whose leaves each carry an age of their own (indexed by the real member recorder). */
+function agedImage(group:string,rows:readonly{name:string;bytes:number;ageMs:number}[],now:number):string{
+ const parent=process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir();mkdirSync(parent,{recursive:true});
+ const root=mkdtempSync(join(realpathSync(parent),"lru-"));roots.push(root);const base=join(root,"inference",...(group==="canonical"?[]:group.split("/")));
+ for(const row of rows){const path=join(base,row.name);mkdirSync(dirname(path),{recursive:true});writeFileSync(path,Buffer.alloc(row.bytes,1));const at=(now-row.ageMs)/1000;utimesSync(path,at,at);recordMemberLeafV1({openSync,fstatSync,readSync,writeSync,closeSync,lstatSync,readFileSync},root,path);}
+ return root;
+}
+const record=(index:number)=>"np/"+hex(index,24)+".json",pack=(index:number,which:string)=>record(index)+".records/m"+index+"-"+index+"-"+hex(index+3,16)+"."+which;
+
+test("the own group retires its least recently written units, header before packs, keeps shared observation blocks and protected units, and compacts its index",async()=>{
+ const now=Date.now(),group="selections/"+"9".repeat(64),rows=[
+  {name:record(1),bytes:100,ageMs:30*HOUR},{name:pack(1,"pack"),bytes:4000,ageMs:30*HOUR},{name:pack(1,"idx"),bytes:200,ageMs:30*HOUR},
+  {name:record(2),bytes:100,ageMs:20*HOUR},{name:pack(2,"pack"),bytes:3000,ageMs:25*HOUR},
+  {name:record(3),bytes:100,ageMs:60000},{name:pack(3,"pack"),bytes:5000,ageMs:60000},
+  {name:leaf(4,1),bytes:700,ageMs:40*HOUR},{name:leaf(5,3),bytes:300,ageMs:10*HOUR}],root=agedImage(group,rows,now);
+ const total=rows.reduce((sum,row)=>sum+row.bytes,0),before=files(root);
+ const plan=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes:6600,otherBytes:500,dryRun:true,now});
+ expect(plan).toMatchObject({usedBytes:total+500,retiredEntries:2,retiredFiles:0,protected:0,remainingBytes:6600});expect(files(root)).toEqual(before);
+ const report=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes:6600,otherBytes:500,now});
+ expect(report).toMatchObject({retiredEntries:2,retiredFiles:5,retiredBytes:7400,protected:0,cancelled:false});
+ const left=files(root).map(name=>name.slice(("inference/"+group+"/").length));
+ for(const gone of[record(1),pack(1,"pack"),pack(1,"idx"),record(2),pack(2,"pack")])expect(left.includes(gone)).toBe(false);
+ for(const kept of[record(3),pack(3,"pack"),leaf(4,1),leaf(5,3)])expect(left.includes(kept)).toBe(true);
+ const index=parseMemberIndexV1(readFileSync(join(root,"inference",...group.split("/"),"members.jsonl"),"utf8"),group);expect(index.valid).toBe(true);expect(index.rows.size).toBe(4);
+ const within=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes:1000000,now});expect(within).toMatchObject({retiredEntries:0,retiredFiles:0});
+ let calls=0;const cut=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(()=>calls++>0),{targetBytes:0,now});expect(cut.cancelled).toBe(true);
+ await expect(scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes:-1})).rejects.toThrow("exact-optional-graph-target-bytes-required");
+});
+
+test("the retired units and the remaining bytes of one group equal the independent Python model on 120 seeded groups",async()=>{
+ const now=Math.floor(Date.now()/1000)*1000,cases:unknown[]=[],actual:unknown[]=[];let seed=29;const random=(n:number)=>{seed=(seed*1103515245+12345)%2147483648;return seed%n;};
+ for(let index=0;index<120;index++){
+  const group="selections/"+hex(index+500,64),names=new Set<string>(),rows:{name:string;bytes:number;ageMs:number}[]=[];
+  for(let u=0;u<1+random(7);u++){const kind=random(4),base=index*32+u,age=random(3)?(1+random(40))*HOUR:random(4)*60000,members=kind===0?[record(base),pack(base,"pack"),pack(base,"idx")]:kind===1?[leaf(base,1)]:kind===2?[leaf(base,2),leaf(base,3)]:[record(base)];
+   for(const name of members){if(names.has(name))continue;names.add(name);rows.push({name,bytes:1+random(900),ageMs:age+random(3)*1000});}}
+  const targetBytes=random(4000),otherBytes=random(1500),root=agedImage(group,rows,now),report=await scan.retireBuildGraphOptionalEntriesLruV1(root,group,control(),{targetBytes,otherBytes,now});
+  const left=new Set(files(root).map(name=>name.slice(("inference/"+group+"/").length))),unit=(name:string)=>scan.optionalEntryOfV1(name),retired=[...new Set(rows.filter(row=>unit(row.name)!==undefined&&!left.has(row.name)).map(row=>unit(row.name)!))].sort();
+  cases.push({targetBytes,otherBytes,now,protectedMs:600000,leaves:rows.map(row=>({name:row.name,bytes:row.bytes,newest:now-row.ageMs}))});
+  actual.push({retired,remainingBytes:report.remainingBytes});rmSync(root,{recursive:true,force:true});
+ }
+ const file=join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"lru-entries-"+process.pid+".json");writeFileSync(file,JSON.stringify({cases}));
+ try{const run=runToolSyncV1("python",["-I",oracle,file,"entries"],{encoding:"utf8",maxBuffer:1<<26});expect(run.status,run.stderr).toBe(0);expect(actual).toEqual(JSON.parse(run.stdout));}finally{rmSync(file,{force:true});}
+},120000);

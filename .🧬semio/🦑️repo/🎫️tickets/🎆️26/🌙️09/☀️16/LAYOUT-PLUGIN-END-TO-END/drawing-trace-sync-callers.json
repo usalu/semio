@@ -1,0 +1,57 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🧪️tests/🔬️unit/🦀️.rs",
+    "lines": [
+      {
+        "line": 14,
+        "text": "    let segments = trace_bitmap_paths(width, height, &mask, 0.5, 0.5).expect(\"trace\");"
+      },
+      {
+        "line": 34,
+        "text": "    let segments = trace_bitmap_paths(width, height, &mask, 0.5, 0.5).expect(\"trace\");"
+      },
+      {
+        "line": 42,
+        "text": "    let segments = trace_bitmap_paths(2, 2, &mask, 0.5, 0.0).expect(\"trace\");"
+      },
+      {
+        "line": 48,
+        "text": "    let err = trace_bitmap_paths(0, 5, &[], 0.5, 0.5).unwrap_err();"
+      },
+      {
+        "line": 54,
+        "text": "    let err = trace_bitmap_paths(4, 4, &[0_u8; 2], 0.5, 0.5).unwrap_err();"
+      },
+      {
+        "line": 61,
+        "text": "    assert!(trace_bitmap_paths(4, 4, &mask, 0.5, 0.5).unwrap().is_empty());"
+      },
+      {
+        "line": 66,
+        "text": "    assert!(trace_bitmap_paths(1, 1, &[255], f64::NAN, 0.0).is_err());"
+      },
+      {
+        "line": 67,
+        "text": "    assert!(trace_bitmap_paths(1, 1, &[255], 0.5, -1.0).is_err());"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖍️drawing/🧱️kernel-impl/🦀️.rs",
+    "lines": [
+      {
+        "line": 109,
+        "text": "        let segments = semio_framework_2d::trace::trace_bitmap_paths(width, height, mask_or_luma, threshold, simplify_epsilon)?;"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🦀️.rs",
+    "lines": [
+      {
+        "line": 184,
+        "text": "    let traced = match semio_framework_2d::trace::trace_bitmap_paths(width, height, &luma, trace.params.threshold, trace.params.simplify_epsilon) {"
+      }
+    ]
+  }
+]

@@ -161,9 +161,9 @@ fn canonical_edit_large_unicode_bytes_match_serde_and_language_neutral_oracle() 
 struct FixtureMutationRetirement;
 impl ArtifactOwnedValueRetirementFactory<FixtureMutation> for FixtureMutationRetirement {
     fn retirement_birth_bytes(&self, _: &FixtureMutation) -> usize { semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<FixtureMutation>() }
-    fn retire_owned(&self, value: FixtureMutation, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, FixtureMutation)> {
+    fn retire_owned(&self, value: FixtureMutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, FixtureMutation)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, FixtureMutation)> {
         semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, grant).map(|(owner, progress)| (owner as Box<dyn ErasedSnapshotRetirement>, progress))
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]

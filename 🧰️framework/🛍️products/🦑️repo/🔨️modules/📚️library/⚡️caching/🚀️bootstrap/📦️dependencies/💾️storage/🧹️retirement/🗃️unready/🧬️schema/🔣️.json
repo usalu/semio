@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RetainedUnreadyDependencyGenerationDataV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "purpose",
+    "authority",
+    "currentReady",
+    "capsule",
+    "generation",
+    "scope",
+    "originalDirectory",
+    "recipeSha256",
+    "intentSha256",
+    "receiptSha256"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "purpose": {
+      "const": "retained-unready-dependency-generation-data"
+    },
+    "authority": {
+      "const": false
+    },
+    "currentReady": {
+      "const": false
+    },
+    "capsule": {
+      "type": "string",
+      "pattern": "^\\.p[0-9a-f]{8}$"
+    },
+    "generation": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "originalDirectory": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "recipeSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "intentSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "receiptSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

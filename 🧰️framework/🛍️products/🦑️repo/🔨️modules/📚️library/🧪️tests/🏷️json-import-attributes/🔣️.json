@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "rootDepth": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g"
+  ],
+  "scopes": [
+    "🧰️framework",
+    "♻️mit-bestand",
+    "✏️s",
+    "🌎️hub",
+    "🎓️teaching",
+    "🏢️semio-tech"
+  ],
+  "skipDirectories": [
+    "node_modules",
+    ".git",
+    ".cache",
+    "dist",
+    "target",
+    "bazel-out"
+  ],
+  "minimumImports": 1000,
+  "pattern": "\\bfrom\\s*[\"']([^\"']+)[\"']\\s*with\\s*\\{\\s*type\\s*:\\s*[\"']json[\"']\\s*\\}|\\bimport\\s*\\(\\s*[\"']([^\"']+)[\"']\\s*,\\s*\\{\\s*with\\s*:\\s*\\{\\s*type\\s*:\\s*[\"']json[\"']",
+  "fixtureStrings": [
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦑️repo-source-ownership/🟦️.ts",
+      "specifier": "./🟦️.ts"
+    }
+  ]
+}

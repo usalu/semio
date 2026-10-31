@@ -7,6 +7,7 @@ use std::task::Waker;
 pub struct WorkerJobSource<J>{original:MaybeUninit<J>,present:bool,operation:OperationId,generation:Generation}
 impl<J> WorkerJobSource<J>{
  pub fn identity(&self)->(OperationId,Generation){(self.operation,self.generation)}
+    #[cfg(test)]
     fn from_job(job:J,operation:OperationId,generation:Generation)->Self{Self{original:MaybeUninit::new(job),present:true,operation,generation}}
     fn original(&self)->Option<&J>{if self.present{Some(unsafe{self.original.assume_init_ref()})}else{None}}
     fn original_mut(&mut self)->Option<&mut J>{if self.present{Some(unsafe{self.original.assume_init_mut()})}else{None}}
@@ -15,48 +16,36 @@ impl<J> WorkerJobSource<J>{
 }
 impl<J:InteractiveJob> WorkerJobSource<J>{
  /// ♻️ Removes only a terminal source under its unchanged Original caller and posts its actual receipt.
- pub fn retire_terminal_step(&mut self,cx:&mut StepContext<'_>)->Result<RetainedCloneStep,OriginalTurnFailure>{if self.identity()!=(cx.operation(),cx.generation()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"source retirement requires its original operation identity").into())}if cx.should_yield(){return Ok(RetainedCloneStep::Progress(Default::default()))}let step=self.remove_terminal(cx.retained_grant())?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);Ok(step)}
-    fn remove_terminal(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let demand=self.terminal_removal_demands();turn(demand,grant,|_|{
-        let Some(original)=self.original()else{return Ok((RetainedCloneStep::Complete(Default::default()),true));};
-        if !original.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker job removal precedes its terminal witness"));}
-        unsafe{self.original.assume_init_drop();}self.present=false;
-        Ok((RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()}),true))
-    })}
+ pub fn retire_terminal_step(&mut self,cx:&mut StepContext<'_>)->Result<RetainedCloneStep,OriginalTurnFailure>{if self.identity()!=(cx.operation(),cx.generation()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"source retirement requires its original operation identity").into())}if cx.retirement_should_yield(){return Ok(RetainedCloneStep::Progress(Default::default()))}let turn=self.remove_terminal(cx.retained_grant());receive_original_retained_work(cx,turn)}
+ fn remove_terminal(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+  let Some(original)=self.original()else{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
+  if !original.terminal_is_empty(){return semio_framework_value::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker job removal precedes its terminal witness")),work:0}}
+  if grant.maximum_items==0||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  unsafe{self.original.assume_init_drop();}self.present=false;semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
+ }
 }
 impl<J> Drop for WorkerJobSource<J>{fn drop(&mut self){assert!(std::thread::panicking()||self.is_empty(),"worker job slot abandoned its original carrier");}}
 
 
-fn turn(demand:RetirementDemand,grant:RetainedCloneGrant,owner:impl FnOnce(RetainedCloneGrant)->Result<(RetainedCloneStep,bool),ValueError>)->Result<RetainedCloneStep,ValueError>{semio_framework_value::advance_retirement_turn(demand,grant,owner).map_err(|error|match error{semio_framework_value::RetirementTurnError::Owner(error)|semio_framework_value::RetirementTurnError::Receipt(error)=>error})}
 
+mod admission_source{pub trait Original{}impl Original for semio_framework_job::StepContext<'_>{}}
 /// 🪙️ Carries the original identity, clock and cumulative normal receipt into physical session admission.
-pub trait WorkerJobAdmissionControl {
+pub trait WorkerJobAdmissionControl: admission_source::Original {
     fn admission_identity(&self)->(OperationId,Generation);
     fn admission_grant(&self)->Result<RetainedCloneGrant,ValueError>;
     fn admission_is_open(&self)->bool;
     /// 🔓️ Cancellation keeps paid cleanup available within the original fuel and deadline.
     fn retirement_is_open(&self)->bool;
-    /// ✖️ The original cancellation token of the admitting context, when it carries one.
-    fn admission_cancel(&self)->Option<&CancelToken>{None}
+    /// ✖️ Borrows the actual admitting source cancellation without creating an alias.
+    fn admission_cancel(&self)->&CancelToken;
     fn receive_admission(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>;
-}
-/// 💼️ Borrows a caller-authored normal budget and recipient without allocating another context ledger.
-pub struct WorkerJobAdmissionContext<'recipient>{operation:OperationId,generation:Generation,budget:StepBudget,now_us:fn()->Option<u64>,recipient:&'recipient mut RetainedCloneProgress}
-impl<'recipient> WorkerJobAdmissionContext<'recipient>{
-    pub fn new(operation:OperationId,generation:Generation,budget:StepBudget,now_us:fn()->Option<u64>,recipient:&'recipient mut RetainedCloneProgress)->Result<Self,ValueError>{if !recipient.fits(budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session admission recipient exceeds its original normal authority"))}Ok(Self{operation,generation,budget,now_us,recipient})}
-}
-impl WorkerJobAdmissionControl for WorkerJobAdmissionContext<'_>{
-    fn admission_identity(&self)->(OperationId,Generation){(self.operation,self.generation)}
-    fn admission_grant(&self)->Result<RetainedCloneGrant,ValueError>{if !self.recipient.fits(self.budget.retained){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session admission recipient exceeds its original normal authority"))}Ok(RetainedCloneGrant{maximum_items:self.budget.retained.maximum_items-self.recipient.copied_items,maximum_copy_bytes:self.budget.retained.maximum_copy_bytes-self.recipient.copied_bytes,maximum_capacity_bytes:self.budget.retained.maximum_capacity_bytes-self.recipient.retained_capacity_bytes,maximum_release_bytes:self.budget.retained.maximum_release_bytes-self.recipient.released_bytes,maximum_depth:self.budget.retained.maximum_depth})}
-    fn admission_is_open(&self)->bool{self.budget.fuel>0&&(self.now_us)().is_some_and(|now|now<self.budget.deadline_us)}
-    fn retirement_is_open(&self)->bool{self.admission_is_open()}
-    fn receive_admission(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{if !progress.fits(self.admission_grant()?){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session birth receipt exceeds remaining original normal authority"))}self.recipient.copied_items+=progress.copied_items;self.recipient.copied_bytes+=progress.copied_bytes;self.recipient.retained_capacity_bytes+=progress.retained_capacity_bytes;self.recipient.released_bytes+=progress.released_bytes;Ok(())}
 }
 impl WorkerJobAdmissionControl for StepContext<'_>{
     fn admission_identity(&self)->(OperationId,Generation){(self.operation(),self.generation())}
-    fn admission_grant(&self)->Result<RetainedCloneGrant,ValueError>{if !self.retained_recipient_is_admitted(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session context recipient exceeds original normal authority"))}Ok(self.retained_grant())}
-    fn admission_is_open(&self)->bool{!self.is_cancelled()&&!self.should_yield()}
-    fn retirement_is_open(&self)->bool{!self.should_yield()}
-    fn admission_cancel(&self)->Option<&CancelToken>{Some(self.original_cancel_token())}
+    fn admission_grant(&self)->Result<RetainedCloneGrant,ValueError>{self.original_source_parent()?.validate_borrowed_context(self)?;if !self.retained_recipient_is_admitted(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"session context recipient exceeds original normal authority"))}Ok(self.retained_grant())}
+    fn admission_is_open(&self)->bool{self.original_source_parent().is_ok_and(|source|source.validate_borrowed_context(self).is_ok())&&!self.is_cancelled()&&!self.should_yield()}
+    fn retirement_is_open(&self)->bool{self.original_source_parent().is_ok_and(|source|source.validate_borrowed_context(self).is_ok())&&!self.retirement_should_yield()}
+    fn admission_cancel(&self)->&CancelToken{self.original_cancel_token()}
     fn receive_admission(&mut self,progress:RetainedCloneProgress)->Result<(),ValueError>{self.consume_retained(progress)}
 }
 
@@ -120,7 +109,6 @@ struct NativeWorkerAuthorityState<J> {
     job: WorkerJobSource<J>,
     params: Option<BatchJobParams>,
     cancel_retirement:Option<semio_framework_async::CancelTokenRetirement>,
-    preview_sequence: u64,
     step_sequence: u64,
     issued_retained:RetainedCloneGrant,
     retained_receipt_pending:bool,
@@ -130,7 +118,6 @@ struct NativeWorkerAuthorityState<J> {
     outcome: JobOutcomeDescriptorSlot,
     callback_verdict: Option<semio_framework_trace::CallbackVerdict>,
     overruns: semio_framework_trace::StepOverrunLedger,
-    quarantined_outcome: JobOutcomeDescriptorSlot,
     worker_fault:bool,
     fault_pending:bool,
     step_fault:ManuallyDrop<Option<OriginalTurnFailure>>,
@@ -145,7 +132,7 @@ struct NativeWorkerAuthorityState<J> {
 
 /// 🐝️ Names only the original authority's child-custody frontier; native session scaffolds remain above it.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub enum OriginalWorkerAuthorityPhase{QuarantinedOutcome,Outcome,OriginalFailure,AdmissionPage,BeginClose,Fault,Job,JobRelease,Parameters,Ledger,Empty}
+pub enum OriginalWorkerAuthorityPhase{Outcome,OriginalFailure,BeginClose,Payload,Job,JobRelease,Parameters,Empty}
 
 /// 🪪️ Opaque equality witness for the unchanged original native allocation.
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -154,22 +141,17 @@ pub struct OriginalWorkerAuthorityIdentity(usize);
 pub struct OriginalWorkerJobAuthority<J>{original:NativeWorkerAuthorityOwner<J>}
 impl<J> OriginalWorkerJobAuthority<J>{
  pub fn admission_demand()->RetirementDemand{NativeWorkerAuthorityState::<J>::admission_demand()}
- pub fn initialization_copy_bytes()->usize{NativeWorkerAuthorityState::<J>::initialization_copy_bytes()}
- pub fn admission_page_publication_copy_bytes()->usize{0}
- pub fn try_admit_owned(job:&mut Option<J>,params:&mut Option<BatchJobParams>,control:&mut impl WorkerJobAdmissionControl)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{NativeWorkerAuthorityOwner::try_admit_owned(job,params,control).map(|original|original.map(|(original,progress)|(Self{original},progress)))}
  /// 🧱️ Allocates the fixed native authority only inside its enclosing admitted atomic session birth.
  /// # Safety
  /// The enclosing caller must admit this exact quoted physical extent before entry and receive the complete atomic birth receipt before returning the owner.
  pub unsafe fn admit_pending_prepaid(operation:OperationId,generation:Generation,reservation:OriginalWorkerPageReservation)->Result<Self,ValueError>{let mut storage=Vec::new();storage.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original native authority storage reservation refused"))?;Ok(Self{original:NativeWorkerAuthorityOwner::write_pending_storage(storage,operation,generation,reservation)})}
- pub fn initialization_demands(&self)->RetirementDemand{self.original.initialization_demands()}
- pub fn advance_initialization(&mut self,grant:RetainedCloneGrant)->RetainedCloneProgress{self.original.advance_initialization(grant)}
  pub fn is_initialized(&self)->bool{self.original.is_initialized()}
  pub fn admission_page_identity(&self)->Option<*const MaybeUninit<u8>>{self.original.admission_page_identity()}
  pub fn source_identity(&self)->Option<(OperationId,Generation)>{self.original.source_identity()}
  pub fn native_identity(&self)->Option<OriginalWorkerAuthorityIdentity>{(!self.original.0.is_empty()).then(||OriginalWorkerAuthorityIdentity(self.original.0.as_ptr()as usize))}
  pub fn fault_payload_capacity_bytes(&self)->usize{self.original.payload.fault().map_or(0,RetainedJobPayload::allocated_capacity_bytes)}
- pub fn outcome_demands(&self)->Option<RetirementDemand>{(!self.original.outcome.is_empty()).then(||self.original.outcome.retirement_demands())}
- pub fn can_admit_prepared(&self,control:&impl WorkerJobAdmissionControl,generation:Generation)->bool{let original=&self.original;original.params.as_ref().is_some_and(|params|control.admission_identity()==(params.operation,params.generation)&&generation==params.generation&&control.admission_cancel().is_none_or(|token|token.is_same_node(&params.cancel))&&!params.cancel.is_cancelled_now())&&original.job.present&&!original.retained_receipt_pending&&original.outcome.is_empty()&&original.quarantined_outcome.is_empty()&&!original.fault_pending&&original.step_fault.is_none()&&original.panic_fault.is_none()}
+ pub fn outcome_demands(&self)->Option<RetirementDemand>{if !self.original.outcome.is_empty(){return Some(self.original.outcome.retirement_demands())}self.original.payload.outcome().map(|outcome|RetirementDemand{depth:if outcome.is_acknowledged(){1}else{2},..Default::default()})}
+ pub fn can_admit_prepared(&self,control:&impl WorkerJobAdmissionControl,generation:Generation)->bool{let original=&self.original;original.params.as_ref().is_some_and(|params|control.admission_identity()==(params.operation,params.generation)&&generation==params.generation&&control.admission_cancel().is_same_node(&params.cancel)&&!params.cancel.is_cancelled_now())&&original.job.present&&!original.retained_receipt_pending&&original.outcome.is_empty()&&original.payload.outcome().is_none()&&original.payload.continuation().is_none()&&!original.fault_pending&&original.step_fault.is_none()&&original.panic_fault.is_none()}
  pub fn sequence(&self)->u64{self.original.sequence()}
  pub fn last_step_end_us(&self)->Option<u64>{self.original.last_step_end_us()}
  pub fn callback_verdict(&self)->Option<&semio_framework_trace::CallbackVerdict>{self.original.callback_verdict()}
@@ -184,14 +166,15 @@ impl<J> OriginalWorkerJobAuthority<J>{
  pub fn original_initialization_failure(&self)->Option<&OriginalTurnFailure>{self.original.original_initialization_failure()}
  pub fn retain_initialization_failure(&mut self,error:ValueError)->ValueError{self.original.retain_initialization_failure(error)}
  pub fn outcome_descriptor(&self)->Option<&JobOutcomeDescriptor>{self.original.outcome_descriptor()}
- pub fn acknowledge_outcome(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{self.original.acknowledge_outcome(grant)}
+ pub fn continuation(&self)->Option<&OriginalJobContinuation>{if self.original.retained_receipt_pending{None}else{self.original.payload.continuation()}}
+ pub fn acknowledge_outcome(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.original.acknowledge_outcome(cx)}
  pub fn is_resumable(&self)->bool{self.original.is_resumable()}
  pub fn job(&self)->&J{self.original.job()}
  pub fn job_mut(&mut self)->Result<&mut J,ValueError>{self.original.job_mut()}
  pub fn terminal_is_empty(&self)->bool{self.original.0.is_empty()}
  pub fn close_phase(&self)->OriginalWorkerAuthorityPhase{if self.original.0.is_empty(){OriginalWorkerAuthorityPhase::Empty}else{self.original.close_phase()}}
  pub fn has_original_cancel_alias_witness(&self,witness:&CancelToken)->bool{self.original.has_original_cancel_alias_witness(witness)}
- pub fn return_original_cancel_alias_step(&mut self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,semio_framework_async::CancelTokenRetirementError>{self.original.return_original_cancel_alias_step(witness,grant)}
+ pub fn return_original_cancel_alias_step(&mut self,witness:&CancelToken,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,semio_framework_async::CancelTokenRetirementError>{self.original.return_original_cancel_alias_step(witness,grant)}
  /// 🪵️ Publishes already-admitted owned sources into this same unpublished native allocation.
  /// # Safety
  /// The enclosing atomic producer must admit the complete source move before entry.
@@ -210,9 +193,6 @@ impl<J> OriginalWorkerJobAuthority<J>{
 impl<J:InteractiveJob> OriginalWorkerJobAuthority<J>{
  pub fn outcome(&self)->Result<Option<JobOutcomeView<'_>>,ValueError>{self.original.outcome()}
  pub fn register_close_wake(&self,waker:&Waker)->bool{self.original.register_close_wake(waker)}
- pub fn drive_callback(&mut self,issued:RetainedCloneGrant)->bool{self.original.drive_callback(issued)}
- pub fn stage_callback(&mut self,requested:RetainedCloneGrant){assert!(!self.original.retained_receipt_pending&&self.original.outcome.is_empty());self.original.issued_retained=self.original.issued_grant(requested);}
- pub fn run_staged_callback(&mut self)->bool{drive_worker_job_authority(&mut self.original)}
  pub fn validate_original_caller(&self,cx:&StepContext<'_>)->Result<(),ValueError>{let original=self.original.params.as_ref().expect("admitted authority retains original parameters");if original.operation!=cx.operation()||original.generation!=cx.generation()||!original.cancel.is_same_node(cx.original_cancel_token())||!std::ptr::fn_addr_eq(original.now_us,cx.clock_source()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback requires its admitted business identity, cancellation and issuer clock"))}if self.original.retained_receipt_pending{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback receipt still belongs to its prior recipient"))}Ok(())}
  pub fn step_on_original_caller(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.original.step_on_original_caller(cx)}
  pub fn retirement_demands(&self,maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>{if self.original.0.is_empty(){return Ok(Default::default())}if self.original.child_custody_is_empty(){self.original.terminal_authority_demands()}else{self.original.retirement_demands(maximum_copy_bytes)}}
@@ -220,19 +200,15 @@ impl<J:InteractiveJob> OriginalWorkerJobAuthority<J>{
   if self.original.0.is_empty(){return Ok(WorkerJobCloseStep::Complete{progress:Default::default()})}if self.original.initializer.is_some()&&!self.original.source_initialized{return Ok(WorkerJobCloseStep::Blocked)}
   if self.original.has_original_cancel_alias_witness(cx.original_cancel_token()){
    if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
-   let before=cx.retained_progress();let result=match self.original.return_original_cancel_alias_step(cx.original_cancel_token(),cx.retained_grant()){Ok(Some(step))=>Ok(WorkerJobCloseStep::Pending{progress:step.progress()}),Ok(None)|Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(WorkerJobCloseStep::Blocked),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)};
-   return receive_original_worker_close_result(cx,before,result)
+   let turn=self.original.return_original_cancel_alias_step(cx.original_cancel_token(),cx.retained_grant());let blocked=matches!(&turn.result,Ok(None)|Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)));let result=match turn.result{Ok(Some(step))=>Ok(step),Ok(None)|Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)};let step=receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})?;
+   return Ok(if blocked{WorkerJobCloseStep::Blocked}else{WorkerJobCloseStep::Pending{progress:step.progress()}})
   }
   if !self.original.child_custody_is_empty(){return self.original.close_step(cx)}if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=cx.retained_progress();let result=self.original.close_terminal_worker_authority(cx.retained_grant());receive_original_worker_close_result(cx,before,result)
  }
 }
 
 impl<J> NativeWorkerAuthorityState<J>{
- pub fn admission_demand()->RetirementDemand{RetirementDemand{copy_bytes:b"job-session.terminal-fault".len(),capacity_bytes:size_of::<Self>()+OriginalWorkerPayload::allocation_bytes(),depth:1,..Default::default()}}
- pub fn initialization_copy_bytes()->usize{OriginalWorkerPayload::initialization_copy_bytes()}
- pub fn admission_page_publication_copy_bytes()->usize{0}
- pub fn initialization_demands(&self)->RetirementDemand{self.payload.initialization_demands()}
- pub fn advance_initialization(&mut self,grant:RetainedCloneGrant)->RetainedCloneProgress{self.payload.advance_initialization(grant)}
+ pub fn admission_demand()->RetirementDemand{RetirementDemand{capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
  pub fn is_initialized(&self)->bool{self.payload.fault().is_some()}
  pub fn admission_page_identity(&self)->Option<*const MaybeUninit<u8>>{self.payload.page_identity()}
  pub fn source_identity(&self)->Option<(OperationId,Generation)>{self.params.as_ref().map(|params|(params.operation,params.generation))}
@@ -249,18 +225,19 @@ impl<J> NativeWorkerAuthorityState<J>{
  pub fn retained_failure(&self)->Option<&OriginalTurnFailure>{(!self.retained_receipt_pending).then(||self.step_fault.as_ref()).flatten()}
  pub fn original_initialization_failure(&self)->Option<&OriginalTurnFailure>{self.step_fault.as_ref()}
  pub fn retain_initialization_failure(&mut self,error:ValueError)->ValueError{let kind=error.kind;let progress=error.retained_progress();assert!(self.step_fault.is_none());*self.step_fault=Some(error.into());ValueError::literal(kind,"native preparation retains its original failed initializer").with_retained_progress(progress)}
- pub fn outcome_descriptor(&self)->Option<&JobOutcomeDescriptor>{if self.retained_receipt_pending{None}else{self.outcome.original()}}
- pub fn acknowledge_outcome(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{if self.retained_receipt_pending{return RetainedCloneStep::Progress(Default::default())}self.outcome.close_step(grant)}
- pub fn is_resumable(&self)->bool{!self.retained_receipt_pending&&self.outcome.is_empty()}
+ pub fn outcome_descriptor(&self)->Option<&JobOutcomeDescriptor>{if self.retained_receipt_pending{None}else if self.worker_fault{self.outcome.original()}else{self.payload.outcome()}}
+ pub fn acknowledge_outcome(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  if self.retained_receipt_pending{return Ok(false)}
+  if !self.outcome.is_empty(){let demand=self.outcome.retirement_demands();close_original_retained_step(cx,demand,|grant|self.outcome.close_step(grant))?;if self.outcome.is_empty(){self.worker_fault=false}return Ok(self.outcome.is_empty())}
+  let(_,receiver)=self.payload.context_parts()?;receiver.acknowledge_outcome(cx)
+ }
+ pub fn is_resumable(&self)->bool{!self.retained_receipt_pending&&self.outcome.is_empty()&&self.payload.outcome().is_none()&&self.payload.continuation().is_none()}
  pub fn job(&self)->&J{self.job.original().expect("original authority retains its producer")}
- pub fn job_mut(&mut self)->Result<&mut J,ValueError>{if self.retained_receipt_pending||!self.outcome.is_empty()||!self.quarantined_outcome.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original semantic result requires acknowledgement before mutable job access"))}Ok(self.job.original_mut().expect("original authority retains its producer"))}
- pub fn child_custody_is_empty(&self)->bool{self.job.is_empty()&&self.params.is_none()&&self.cancel_retirement.is_none()&&!self.payload.has_unpublished_page()&&self.payload.fault_is_empty()&&!self.payload.ledger_is_present()&&self.outcome.is_empty()&&self.quarantined_outcome.is_empty()&&self.step_fault.is_none()&&self.step_fault_retirement.is_none()&&self.panic_fault.is_none()}
- pub fn close_phase(&self)->OriginalWorkerAuthorityPhase{if !self.quarantined_outcome.is_empty(){return OriginalWorkerAuthorityPhase::QuarantinedOutcome}if !self.outcome.is_empty(){return OriginalWorkerAuthorityPhase::Outcome}if self.step_fault.is_some()||self.step_fault_retirement.is_some()||self.panic_fault.is_some(){return OriginalWorkerAuthorityPhase::OriginalFailure}if self.payload.has_unpublished_page(){return OriginalWorkerAuthorityPhase::AdmissionPage}if self.close_stage==0{return OriginalWorkerAuthorityPhase::BeginClose}if !self.payload.fault_is_empty(){return OriginalWorkerAuthorityPhase::Fault}match self.close_stage{1=>OriginalWorkerAuthorityPhase::Job,2=>OriginalWorkerAuthorityPhase::JobRelease,3=>OriginalWorkerAuthorityPhase::Parameters,_ if self.payload.ledger_is_present()=>OriginalWorkerAuthorityPhase::Ledger,_=>OriginalWorkerAuthorityPhase::Empty}}
- fn terminal_authority_demands(&self)->Result<RetirementDemand,ValueError>{Ok(self.payload.ledger_demands())}
- fn original_admission_page_demands(&self)->RetirementDemand{self.payload.unpublished_demands()}
- fn close_original_admission_page(&mut self,grant:RetainedCloneGrant)->WorkerJobCloseStep{match self.payload.close_unpublished(grant){RetainedCloneStep::Complete(progress)=>WorkerJobCloseStep::Complete{progress},step=>WorkerJobCloseStep::Pending{progress:step.progress()}}}
+ pub fn job_mut(&mut self)->Result<&mut J,ValueError>{if self.retained_receipt_pending||!self.outcome.is_empty()||self.payload.outcome().is_some()||self.payload.continuation().is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original semantic result requires acknowledgement before mutable job access"))}Ok(self.job.original_mut().expect("original authority retains its producer"))}
+ pub fn child_custody_is_empty(&self)->bool{self.job.is_empty()&&self.params.is_none()&&self.cancel_retirement.is_none()&&self.payload.terminal_is_empty()&&self.outcome.is_empty()&&self.step_fault.is_none()&&self.step_fault_retirement.is_none()&&self.panic_fault.is_none()}
+ pub fn close_phase(&self)->OriginalWorkerAuthorityPhase{if !self.outcome.is_empty(){return OriginalWorkerAuthorityPhase::Outcome}if self.step_fault.is_some()||self.step_fault_retirement.is_some()||self.panic_fault.is_some(){return OriginalWorkerAuthorityPhase::OriginalFailure}if self.close_stage==0{return OriginalWorkerAuthorityPhase::BeginClose}if !self.payload.terminal_is_empty(){return OriginalWorkerAuthorityPhase::Payload}match self.close_stage{1=>OriginalWorkerAuthorityPhase::Job,2=>OriginalWorkerAuthorityPhase::JobRelease,3=>OriginalWorkerAuthorityPhase::Parameters,_=>OriginalWorkerAuthorityPhase::Empty}}
  pub fn has_original_cancel_alias_witness(&self,witness:&CancelToken)->bool{self.close_stage==3&&self.params.is_none()&&self.cancel_retirement.as_ref().is_some_and(|owner|owner.is_original_alias_witness(witness))}
- pub fn return_original_cancel_alias_step(&mut self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,semio_framework_async::CancelTokenRetirementError>{if self.close_stage!=3||self.params.is_some(){return Ok(None)}match self.cancel_retirement.as_mut(){Some(original)if !original.terminal_is_empty()=>original.return_alias_step(witness,grant).map(Some),_=>Ok(None)}}
+ pub fn return_original_cancel_alias_step(&mut self,witness:&CancelToken,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,semio_framework_async::CancelTokenRetirementError>{if self.close_stage!=3||self.params.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0}}match self.cancel_retirement.as_mut(){Some(original)if !original.terminal_is_empty()=>{let turn=original.return_alias_step(witness,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(Some),work:turn.work}},_=>semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0}}}
  /// 📝️ Installs the original owned sources after their single enclosing native admission.
  /// # Safety
  /// The caller must have admitted the complete source move and must retain exclusive unpublished native storage.
@@ -275,32 +252,43 @@ impl<J> NativeWorkerAuthorityState<J>{
   self.bind_initializer(initializer)?;if self.source_initialized||self.job.present||self.params.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native authority source is already initialized"))}if control.admission_identity()!=(self.job.operation,self.job.generation){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native authority initializer received another original identity"))}let grant=control.admission_grant()?;let demand=initializer.initialization_demand(grant.maximum_copy_bytes)?;if !control.admission_is_open()||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(WorkerJobInitializationStep{progress:Default::default(),complete:false})}
   let step=match unsafe{initializer.initialize_step(&mut self.job.original,grant)}{Ok(step)=>step,Err(error)=>{let progress=error.retained_progress();let refusal=self.retain_initialization_failure(error);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"native failed initializer")?;control.receive_admission(progress)?;return Err(refusal)}};semio_framework_value::retained_clone::admit_retained_clone_progress(grant,step.progress,"native original initializer")?;if step.complete{self.source_initialized=true;if !initializer.initialization_input_is_empty()||step.progress.copied_items==0{let refusal=self.retain_initialization_failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"native authority initializer completed with retained input").with_retained_progress(step.progress));control.receive_admission(step.progress)?;return Err(refusal)}}control.receive_admission(step.progress)?;Ok(step)
  }
- pub fn close_partial_source_step(&mut self,initializer:&mut impl WorkerJobInitializer<J>,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{self.bind_initializer(initializer)?;if self.source_initialized||self.job.present{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native partial source close requires its unfinished initializer").into())}let demand=initializer.partial_retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let target=&mut self.job.original as*mut MaybeUninit<J>;close_original_retained_step(cx,demand,|remaining|{let step=unsafe{initializer.close_partial_step(target,remaining)}?;semio_framework_value::retained_clone::admit_retained_clone_close(remaining,step,initializer.partial_terminal_is_empty(),"native partial initializer closure")?;Ok(step)})}
+ pub fn close_partial_source_step(&mut self,initializer:&mut impl WorkerJobInitializer<J>,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{self.bind_initializer(initializer)?;if self.source_initialized||self.job.present{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native partial source close requires its unfinished initializer").into())}let demand=initializer.partial_retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let target=&mut self.job.original as*mut MaybeUninit<J>;close_original_retained_step(cx,demand,|remaining|{let turn=unsafe{initializer.close_partial_step(target,remaining)}.and_then(|step|semio_framework_value::retained_clone::admit_retained_clone_close(remaining,step,initializer.partial_terminal_is_empty(),"native partial initializer closure"));let work=u64::from(turn.as_ref().is_ok_and(|step|step.progress().copied_items>0));semio_framework_value::RetainedWorkOutcome{result:turn,work}})}
  pub fn advance_staged_source(&mut self,source:&mut WorkerJobSource<J>,params:&mut Option<BatchJobParams>,copied:&mut usize,control:&mut impl WorkerJobAdmissionControl)->Result<(bool,RetainedCloneProgress),ValueError>{
   let original=params.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"staged native source requires original parameters"))?;let identity=(original.operation,original.generation);if identity!=(self.job.operation,self.job.generation)||identity!=(source.operation,source.generation)||identity!=control.admission_identity()||source.source().is_none()||self.job.present||self.params.is_some()||!self.is_initialized()||*copied>size_of::<J>(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"staged native authority requires its unchanged original source"))}let grant=control.admission_grant()?;if !control.admission_is_open()||original.cancel.is_cancelled_now()||grant.maximum_items==0||grant.maximum_depth==0{return Ok((false,Default::default()))}let remaining=size_of::<J>()-*copied;if remaining>0{if grant.maximum_copy_bytes==0{return Ok((false,Default::default()))}let bytes=remaining.min(grant.maximum_copy_bytes);let original=source.source().unwrap()as*const J;unsafe{std::ptr::copy_nonoverlapping(original.cast::<MaybeUninit<u8>>().add(*copied),self.job.original.as_mut_ptr().cast::<MaybeUninit<u8>>().add(*copied),bytes);}*copied+=bytes;let progress=RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()};control.receive_admission(progress)?;return Ok((false,progress))}self.params=params.take();source.present=false;self.job.present=true;self.source_initialized=true;self.close_stage=0;let progress=RetainedCloneProgress{copied_items:1,..Default::default()};control.receive_admission(progress)?;Ok((true,progress))
  }
 }
 
 impl<J:InteractiveJob> NativeWorkerAuthorityState<J>{
- pub fn outcome(&self)->Result<Option<JobOutcomeView<'_>>,ValueError>{if self.retained_receipt_pending{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker turn receipt awaits its receiving caller"))}let Some(original)=self.outcome.original()else{return Ok(None)};let view=if self.worker_fault{original.fault(self.payload.fault().expect("original paid terminal fault remains owned"))?}else{self.job().borrow_outcome(original)?};Ok(Some(view))}
+ pub fn outcome(&self)->Result<Option<JobOutcomeView<'_>>,ValueError>{if self.retained_receipt_pending{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker turn receipt awaits its receiving caller"))}let Some(original)=(if self.worker_fault{self.outcome.original()}else{self.payload.outcome()})else{return Ok(None)};let view=if self.worker_fault{original.fault(self.payload.fault().expect("original paid terminal fault remains owned"))?}else{self.job().borrow_outcome(original)?};Ok(Some(view))}
  pub fn register_close_wake(&self,waker:&Waker)->bool{self.job.original().is_some_and(|job|job.register_close_wake(waker))}
- pub fn drive_callback(&mut self,issued:RetainedCloneGrant)->bool{self.issued_retained=self.issued_grant(issued);drive_worker_job_authority(self)}
  pub fn retirement_demands(&self,maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>{worker_job_authority_close_demands(self,maximum_copy_bytes)}
  pub fn step_on_original_caller(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  let original=self.params.as_ref().expect("admitted authority retains original parameters");if original.operation!=cx.operation()||original.generation!=cx.generation()||!original.cancel.is_same_node(cx.original_cancel_token())||!std::ptr::fn_addr_eq(original.now_us,cx.clock_source()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback requires its admitted business identity, cancellation and issuer clock").into())}let config=original.config;if self.retained_receipt_pending{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback receipt still belongs to its prior recipient").into())}self.issued_retained=cx.retained_grant();let before=cx.retained_progress();let result=drive_step(self.job.original_mut().expect("original callback owns exact producer"),cx,config.site,config.stage,&mut self.callback_verdict).map(|outcome|outcome.map(JobOutcomeBorrow::into_descriptor));let after=cx.retained_progress();let progress=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};self.retained_step_progress=progress;let cumulative=self.retained_progress.checked_add(progress);self.step_sequence=self.step_sequence.saturating_add(1);self.last_step_end_us=cx.latest_us();self.clock=cx.clock_stride();let outcome=match result{Ok(outcome)=>outcome,Err(failure)=>{match cumulative{Ok(total)=>self.retained_progress=total,Err(error)=>{assert!(self.step_fault.is_none());*self.step_fault=Some(error.with_retained_progress(progress).into());}}self.retained_receipt_pending=false;return Err(failure)}};let terminal=outcome.as_ref().is_some_and(JobOutcomeDescriptor::is_terminal);if let Some(outcome)=outcome{self.outcome.retain(outcome).expect("exclusive original callback semantic descriptor")}self.retained_progress=match cumulative{Ok(total)=>total,Err(error)=>{self.retained_receipt_pending=false;return Err(error.with_retained_progress(progress).into())}};self.retained_receipt_pending=true;Ok(terminal)
+  let original=self.params.as_ref().expect("admitted authority retains original parameters");if original.operation!=cx.operation()||original.generation!=cx.generation()||!original.cancel.is_same_node(cx.original_cancel_token())||!std::ptr::fn_addr_eq(original.now_us,cx.clock_source()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback requires its admitted business identity, cancellation and issuer clock").into())}let config=original.config;if self.retained_receipt_pending{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback receipt still belongs to its prior recipient").into())}self.issued_retained=cx.retained_grant();let before=cx.retained_progress();let held=cx.reserved_return_progress();let result=self.drive_original_caller(cx,config.site,config.stage);let after=cx.retained_progress();let progress=original_worker_current_progress(before,after,held,cx.reserved_return_progress())?;self.retained_step_progress=progress;let cumulative=self.retained_progress.checked_add(progress);self.step_sequence=self.step_sequence.saturating_add(1);self.last_step_end_us=cx.latest_us();self.clock=cx.clock_stride();let terminal=match result{Ok(terminal)=>terminal,Err(failure)=>{match cumulative{Ok(total)=>self.retained_progress=total,Err(error)=>{assert!(self.step_fault.is_none());*self.step_fault=Some(error.with_retained_progress(progress).into());}}self.retained_receipt_pending=false;return Err(failure)}};self.retained_progress=match cumulative{Ok(total)=>total,Err(error)=>{self.retained_receipt_pending=false;return Err(error.with_retained_progress(progress).into())}};self.retained_receipt_pending=true;Ok(terminal)
+ }
+ fn publish_original_fault(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+  let detail=self.payload.fault().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker fault requires its prepared payload"))?;
+  let Some(outcome)=JobOutcomeBorrow::admit_fault(cx,detail)?else{return Ok(false)};
+  if self.outcome.retain(outcome.into_descriptor()).is_err(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker fault requires an empty outcome place").into())}
+  self.worker_fault=true;self.fault_pending=false;Ok(true)
+ }
+ fn drive_original_caller(&mut self,cx:&mut StepContext<'_>,site:&'static str,stage:InteractiveStage)->Result<bool,OriginalTurnFailure>{
+  if self.step_sequence==u64::MAX{self.fault_pending=true}
+  if self.fault_pending{return self.publish_original_fault(cx)}
+  let job=self.job.original_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback requires its exact producer"))?;
+  let terminal=self.payload.drive_original(job,cx,site,stage,&mut self.callback_verdict)?;
+  if !terminal&&self.callback_verdict.as_ref().is_some_and(|verdict|self.overruns.admit(verdict).is_terminal()){self.fault_pending=true}
+  Ok(terminal)
  }
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
   if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=cx.retained_progress();let grant=cx.retained_grant();if self.retained_receipt_pending{return Ok(WorkerJobCloseStep::Blocked)}let demand=self.retirement_demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
-  if !self.quarantined_outcome.is_empty(){let step=worker_payload_step(self.quarantined_outcome.close_step(grant));return receive_original_worker_close_effects(cx,before,step)}
-  if !self.outcome.is_empty(){let step=worker_payload_step(self.outcome.close_step(grant));return receive_original_worker_close_effects(cx,before,step)}
+  if !self.outcome.is_empty(){let step=worker_work_step(cx,self.outcome.close_step(grant))?;return receive_original_worker_close_effects(cx,before,step)}
   match self.close_original_worker_failure(grant){Ok(Some(step))=>return receive_original_worker_close_effects(cx,before,step),Ok(None)=>{},Err(error)=>{cx.consume_fuel(1);return Err(OriginalTurnFailure::debit_original(error,cx))}}
-  if self.payload.has_unpublished_page(){let step=self.close_original_admission_page(grant);return receive_original_worker_close_effects(cx,before,step)}
+  if self.close_stage!=0&&!self.payload.terminal_is_empty(){let step=match self.payload.close_step(cx)?{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},InteractiveJobCloseStep::Blocked=>WorkerJobCloseStep::Blocked};return receive_original_worker_close_effects(cx,before,step)}
   if self.close_stage==0{cx.consume_fuel(1);self.job.original_mut().expect("original authority owns closing producer").begin_close();self.close_stage=1;return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
-  if !self.payload.fault_is_empty(){let result=self.payload.close_fault(grant);return match result{Ok(step)=>receive_original_worker_close_effects(cx,before,worker_payload_step(step)),Err(error)=>{cx.consume_fuel(1);Err(OriginalTurnFailure::debit_original(error,cx))}}}
   if self.close_stage==1{let step=self.job.original_mut().expect("original authority owns closing producer").close_step(cx)?;let step=step.admit(grant,self.job().terminal_is_empty())?;let step=match step{InteractiveJobCloseStep::Pending{progress}=>WorkerJobCloseStep::Pending{progress},InteractiveJobCloseStep::Blocked=>WorkerJobCloseStep::Blocked,InteractiveJobCloseStep::Complete{progress}=>{self.close_stage=2;WorkerJobCloseStep::Pending{progress}}};return receive_original_worker_close_effects(cx,before,step)}
-  if self.close_stage==2{let progress=self.job.remove_terminal(grant)?.progress();self.close_stage=3;return receive_original_worker_close_effects(cx,before,WorkerJobCloseStep::Pending{progress})}
+  if self.close_stage==2{let step=worker_work_step(cx,self.job.remove_terminal(grant))?;if self.job.is_empty(){self.close_stage=3;}return receive_original_worker_close_effects(cx,before,step)}
   if self.close_stage==3{let result=self.close_original_worker_params(grant);if matches!(result,Ok(WorkerJobCloseStep::Complete{..})){self.close_stage=4}return receive_original_worker_close_result(cx,before,result.map(|step|match step{WorkerJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},step=>step}))}
-  if self.payload.ledger_is_present(){if !self.payload.ledger_is_empty(){return Ok(WorkerJobCloseStep::Blocked)}let step=self.payload.close_ledger(grant)?;return receive_original_worker_close_effects(cx,before,worker_payload_step(step))}assert!(self.child_custody_is_empty());Ok(WorkerJobCloseStep::Complete{progress:Default::default()})
+  assert!(self.child_custody_is_empty());Ok(WorkerJobCloseStep::Complete{progress:Default::default()})
  }
 }
 
@@ -313,8 +301,8 @@ impl<J> NativeWorkerAuthorityState<J> {
     fn close_original_worker_failure(&mut self,grant:RetainedCloneGrant)->Result<Option<WorkerJobCloseStep>,ValueError>{
         let Some(demand)=self.original_worker_failure_demands(grant.maximum_copy_bytes)?else{return Ok(None)};if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Some(WorkerJobCloseStep::Pending{progress:Default::default()}))}
         if let Some(original)=self.panic_fault.as_mut(){if let Some(text)=original.downcast_mut::<String>(){if text.capacity()>0{let released_bytes=text.capacity();drop(std::mem::take(text));return Ok(Some(WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}}))}}drop(self.panic_fault.take());return Ok(Some(WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}}))}
-        if let Some(original)=self.step_fault_retirement.as_mut(){if original.terminal_is_empty(){drop(self.step_fault_retirement.take());return Ok(Some(WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}}))}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=original.close_step(child)?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,original.terminal_is_empty(),"original worker failed callback")?;return Ok(Some(WorkerJobCloseStep::Pending{progress:step.progress()}))}
-        let original=self.step_fault.take().expect("quoted original worker fault");let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};match semio_framework_value::retirement::admit_owned_retirement(original,child){Ok((owner,progress))=>{self.step_fault_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original worker error birth")?;Ok(Some(WorkerJobCloseStep::Pending{progress}))},Err((error,original))=>{*self.step_fault=Some(original);Err(error)}}
+        if let Some(original)=self.step_fault_retirement.as_mut(){if original.terminal_is_empty(){drop(self.step_fault_retirement.take());return Ok(Some(WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}}))}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=original.close_step(child).result?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,original.terminal_is_empty(),"original worker failed callback")?;return Ok(Some(WorkerJobCloseStep::Pending{progress:step.progress()}))}
+        let original=self.step_fault.take().expect("quoted original worker fault");let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};match semio_framework_value::retirement::admit_owned_retirement(original,child).result{Ok((owner,progress))=>{self.step_fault_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original worker error birth")?;Ok(Some(WorkerJobCloseStep::Pending{progress}))},Err((error,original))=>{*self.step_fault=Some(original);Err(error)}}
     }
     fn original_params_demands(&self)->Result<RetirementDemand,ValueError>{
         if self.params.is_some(){return Ok(RetirementDemand{copy_bytes:0,depth:1,..Default::default()});}
@@ -328,7 +316,7 @@ impl<J> NativeWorkerAuthorityState<J> {
         if let Some(params)=self.params.take(){self.cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));return Ok(WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}})}
         if let Some(cancel)=self.cancel_retirement.as_mut(){
             if cancel.terminal_is_empty(){drop(self.cancel_retirement.take());return Ok(WorkerJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}})}
-            return match cancel.close_step(grant){Ok(step)=>Ok(WorkerJobCloseStep::Pending{progress:step.progress()}),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(WorkerJobCloseStep::Blocked),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)}
+            return match cancel.close_step(grant).result{Ok(step)=>Ok(WorkerJobCloseStep::Pending{progress:step.progress()}),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(WorkerJobCloseStep::Blocked),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)}
         }
         Ok(WorkerJobCloseStep::Complete{progress:Default::default()})
     }
@@ -352,46 +340,25 @@ impl WorkerJobCloseStep {
 
 fn original_worker_turn_grant(policy:RetainedCloneGrant,issued:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:policy.maximum_items.min(issued.maximum_items),maximum_copy_bytes:policy.maximum_copy_bytes.min(issued.maximum_copy_bytes),maximum_capacity_bytes:policy.maximum_capacity_bytes.min(issued.maximum_capacity_bytes),maximum_release_bytes:policy.maximum_release_bytes.min(issued.maximum_release_bytes),maximum_depth:policy.maximum_depth.min(issued.maximum_depth)}}
 
-fn publish_original_worker_fault<J>(authority:&mut NativeWorkerAuthorityState<J>)->bool{
- let params=authority.params.as_ref().expect("original fault retains its caller parameters");let before=authority.retained_step_progress;let result=JobOutcomeBorrow::admit_original_fault(params.operation,params.generation,authority.issued_retained,&mut authority.retained_step_progress,authority.payload.fault().expect("original pre-admitted fault remains owned")).map(|outcome|outcome.map(JobOutcomeBorrow::into_descriptor));
- let progress=RetainedCloneProgress{copied_items:authority.retained_step_progress.copied_items-before.copied_items,copied_bytes:authority.retained_step_progress.copied_bytes-before.copied_bytes,retained_capacity_bytes:authority.retained_step_progress.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:authority.retained_step_progress.released_bytes-before.released_bytes};authority.retained_progress=authority.retained_progress.checked_add(progress).expect("original fault cumulative receipt overflow");
- let Ok(Some(original))=result else{return false};authority.outcome.retain(original).expect("exclusive original terminal fault descriptor");authority.worker_fault=true;authority.fault_pending=false;true
-}
-
-fn drive_worker_job_authority<J:InteractiveJob>(authority:&mut NativeWorkerAuthorityState<J>)->bool{
- assert!(!authority.retained_receipt_pending,"original worker turn receipt must return before another callback");authority.retained_step_progress=Default::default();authority.retained_receipt_pending=true;if authority.fault_pending{return publish_original_worker_fault(authority)}
- let params=authority.params.as_ref().expect("submitted original job owns parameters");let config=params.config;let retained=authority.issued_retained;if retained.maximum_items==0||retained.maximum_depth==0{return false}let start_us=(params.now_us)();authority.last_step_end_us=start_us;let Some(budget)=start_us.and_then(|start_us|StepBudget::from_duration(config.fuel_per_step,start_us,config.step_budget_us,retained))else{authority.fault_pending=true;return publish_original_worker_fault(authority)};if authority.step_sequence==u64::MAX{authority.fault_pending=true}
- authority.clock.begin(start_us);let mut retained_step_progress=RetainedCloneProgress::default();let fault_pending=authority.fault_pending;
- let result=std::panic::catch_unwind(std::panic::AssertUnwindSafe(||->Result<Option<JobOutcomeDescriptor>,OriginalTurnFailure>{
-  let mut cx=authority.payload.context(params.operation,params.generation,budget,&params.cancel,params.now_us,authority.clock,&mut authority.preview_sequence,&mut retained_step_progress)?;
-  let result=if fault_pending{JobOutcomeBorrow::admit_fault(&mut cx,authority.payload.fault().expect("original paid worker fault payload")).map(|outcome|outcome.map(JobOutcomeBorrow::into_descriptor)).map_err(OriginalTurnFailure::from)}else{drive_step(authority.job.original_mut().expect("submitted authority owns job"),&mut cx,config.site,config.stage,&mut authority.callback_verdict).map(|outcome|outcome.map(JobOutcomeBorrow::into_descriptor))};
-  authority.clock=cx.clock_stride();authority.last_step_end_us=cx.latest_us();result
- }));
- authority.retained_step_progress=retained_step_progress;authority.retained_progress=authority.retained_progress.checked_add(retained_step_progress).expect("original worker retained receipt overflow");authority.step_sequence=authority.step_sequence.saturating_add(1);
- let quarantine=authority.callback_verdict.as_ref().map_or(semio_framework_trace::StepQuarantine::Admitted,|verdict|authority.overruns.admit(verdict));
- match result{
-  Ok(Ok(Some(outcome)))if !fault_pending&&quarantine.is_terminal()=>{authority.quarantined_outcome.retain(outcome).expect("exclusive original quarantine descriptor");authority.fault_pending=true;publish_original_worker_fault(authority)}
-  Ok(Ok(None))if !fault_pending&&quarantine.is_terminal()=>{authority.fault_pending=true;publish_original_worker_fault(authority)}
-  Ok(Ok(outcome))=>{authority.worker_fault=fault_pending;let terminal=outcome.as_ref().is_some_and(JobOutcomeDescriptor::is_terminal);if let Some(outcome)=outcome{authority.outcome.retain(outcome).expect("exclusive original semantic descriptor")}terminal}
-  Ok(Err(error))=>{assert!(authority.step_fault.is_none(),"one original worker fault owner");*authority.step_fault=Some(error);authority.fault_pending=true;publish_original_worker_fault(authority)}
-  Err(original)=>{assert!(authority.panic_fault.is_none(),"one original panic owner");*authority.panic_fault=Some(original);authority.fault_pending=true;publish_original_worker_fault(authority)}
- }
-}
-
 fn worker_job_authority_close_demands<J:InteractiveJob>(authority:&NativeWorkerAuthorityState<J>,maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>{
-    if !authority.quarantined_outcome.is_empty(){return Ok(authority.quarantined_outcome.retirement_demands());}
     if !authority.outcome.is_empty(){return Ok(authority.outcome.retirement_demands());}
     if let Some(demand)=authority.original_worker_failure_demands(maximum_copy_bytes)?{return Ok(demand)}
-    if authority.payload.has_unpublished_page(){return Ok(authority.original_admission_page_demands())}
     if authority.close_stage==0{return Ok(RetirementDemand{depth:1,..Default::default()});}
-    if !authority.payload.fault_is_empty(){return authority.payload.fault_demands();}
+    if !authority.payload.terminal_is_empty(){return authority.payload.retirement_demands(maximum_copy_bytes)}
     if authority.close_stage==1{let job=authority.job.original().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"closing worker lacks its original job"))?;return Ok(RetirementDemand{copy_bytes:job.next_close_copy_byte_demand()?,capacity_bytes:job.next_close_capacity_byte_demand(maximum_copy_bytes)?,release_bytes:job.next_close_release_byte_demand()?,depth:job.next_close_depth_demand()?});}
     if authority.close_stage==2{return Ok(authority.job.terminal_removal_demands());}
     if authority.close_stage==3{return authority.original_params_demands();}
-    authority.terminal_authority_demands()
+    Ok(Default::default())
+}
+
+/// 🧾️ Separates the genuine Source-held return redemption from this currently issued worker receipt.
+pub fn original_worker_current_progress(before:RetainedCloneProgress,after:RetainedCloneProgress,held_before:RetainedCloneProgress,held_after:RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{
+ let current=|a:usize,b:usize,h:usize,j:usize|b.checked_sub(a).and_then(|all|j.checked_sub(h).and_then(|held|all.checked_sub(held))).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"worker current receipt must preserve its original held return span"));
+ Ok(RetainedCloneProgress{copied_items:current(before.copied_items,after.copied_items,held_before.copied_items,held_after.copied_items)?,copied_bytes:current(before.copied_bytes,after.copied_bytes,held_before.copied_bytes,held_after.copied_bytes)?,retained_capacity_bytes:current(before.retained_capacity_bytes,after.retained_capacity_bytes,held_before.retained_capacity_bytes,held_after.retained_capacity_bytes)?,released_bytes:current(before.released_bytes,after.released_bytes,held_before.released_bytes,held_after.released_bytes)?})
 }
 
 fn worker_payload_step(step:RetainedCloneStep)->WorkerJobCloseStep{WorkerJobCloseStep::Pending{progress:step.progress()}}
+fn worker_work_step(cx:&mut StepContext<'_>,turn:semio_framework_value::RetainedWorkOutcome)->Result<WorkerJobCloseStep,OriginalTurnFailure>{receive_original_retained_work(cx,turn).map(worker_payload_step)}
 
 /// 📪️ Posts only original wrapper effects not already charged by its nested original caller.
 pub fn receive_original_worker_close_effects(cx:&mut StepContext<'_>,before:RetainedCloneProgress,step:WorkerJobCloseStep)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
@@ -413,17 +380,15 @@ impl<J> NativeWorkerAuthorityState<J>{
             std::ptr::addr_of_mut!((*target).job.operation).write(operation);std::ptr::addr_of_mut!((*target).job.generation).write(generation);
             std::ptr::addr_of_mut!((*target).params).write(None);
             std::ptr::addr_of_mut!((*target).cancel_retirement).write(None);
-            std::ptr::addr_of_mut!((*target).preview_sequence).write(0);
             std::ptr::addr_of_mut!((*target).step_sequence).write(0);
             std::ptr::addr_of_mut!((*target).issued_retained).write(RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0});
             std::ptr::addr_of_mut!((*target).retained_receipt_pending).write(false);
             std::ptr::addr_of_mut!((*target).retained_step_progress).write(RetainedCloneProgress::default());
             std::ptr::addr_of_mut!((*target).retained_progress).write(RetainedCloneProgress::default());
-            OriginalWorkerPayload::initialize_reserved_at(std::ptr::addr_of_mut!((*target).payload),operation,generation,reservation);
+            OriginalWorkerPayload::initialize_reserved_at(std::ptr::addr_of_mut!((*target).payload),reservation);
             JobOutcomeDescriptorSlot::initialize_empty(std::ptr::addr_of_mut!((*target).outcome));
             std::ptr::addr_of_mut!((*target).callback_verdict).write(None);
             std::ptr::addr_of_mut!((*target).overruns).write(overruns);
-            JobOutcomeDescriptorSlot::initialize_empty(std::ptr::addr_of_mut!((*target).quarantined_outcome));
             std::ptr::addr_of_mut!((*target).worker_fault).write(false);
             std::ptr::addr_of_mut!((*target).fault_pending).write(false);
             std::ptr::addr_of_mut!((*target).step_fault).write(ManuallyDrop::new(None));
@@ -458,32 +423,14 @@ impl<J> std::ops::DerefMut for NativeWorkerAuthorityOwner<J> {
 }
 
 impl<J> NativeWorkerAuthorityOwner<J> {
-    fn original_authority_admission_demand()->RetirementDemand{RetirementDemand{copy_bytes:b"job-session.terminal-fault".len(),capacity_bytes:size_of::<NativeWorkerAuthorityState<J>>()+OriginalWorkerPayload::allocation_bytes(),depth:1,..Default::default()}}
-    fn try_admit_owned(job:&mut Option<J>,params:&mut Option<BatchJobParams>,control:&mut impl WorkerJobAdmissionControl)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
-        let original=params.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original authority admission requires parameters"))?;
-        if job.is_none()||control.admission_identity()!=(original.operation,original.generation)||!control.admission_cancel().is_none_or(|token|token.is_same_node(&original.cancel)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original authority admission requires matching source identity"))}
-        let mut demand=Self::original_authority_admission_demand();demand.copy_bytes=demand.copy_bytes.checked_add(size_of::<J>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original authority source extent overflow"))?;let grant=control.admission_grant()?;
-        if !control.admission_is_open()||original.cancel.is_cancelled_now()||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(None)}
-        let Some(reservation)=OriginalWorkerPageReservation::try_reserve()else{return Ok(None)};
-        let mut storage=Vec::new();if storage.try_reserve_exact(1).is_err(){drop(reservation);return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original authority native storage reservation refused"))}
-        let mut owner=Self::write_storage(storage,original.operation,original.generation,reservation);owner.job.original.write(job.take().expect("admitted original authority job"));owner.job.present=true;owner.source_initialized=true;owner.params=params.take();owner.close_stage=0;let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()};control.receive_admission(progress)?;Ok(Some((owner,progress)))
-    }
     /// 🪹️ Initializes the already-paid original authority directly in its stable heap slot.
     fn write_pending_storage(mut storage:Vec<NativeWorkerAuthorityState<J>>,operation:OperationId,generation:Generation,reservation:OriginalWorkerPageReservation)->Self{unsafe{NativeWorkerAuthorityState::initialize_pending_at(storage.as_mut_ptr(),operation,generation,reservation);storage.set_len(1);}Self(storage)}
-    fn write_storage(storage:Vec<NativeWorkerAuthorityState<J>>,operation:OperationId,generation:Generation,reservation:OriginalWorkerPageReservation)->Self{let mut owner=Self::write_pending_storage(storage,operation,generation,reservation);owner.payload.initialize_page_bindings();owner}
-    fn pending_storage_initialization_demand()->RetirementDemand{Self::original_authority_admission_demand()}
-    fn admission_page_publication_copy_bytes()->usize{0}
-    fn original_admission_initialization_demands(&self)->RetirementDemand{self.payload.initialization_demands()}
-    fn advance_original_admission_initialization(&mut self,grant:RetainedCloneGrant)->RetainedCloneProgress{self.payload.advance_initialization(grant)}
-    fn original_admission_page_demands(&self)->RetirementDemand{self.payload.unpublished_demands()}
-    fn close_original_admission_page(&mut self,grant:RetainedCloneGrant)->WorkerJobCloseStep{match self.payload.close_unpublished(grant){RetainedCloneStep::Complete(progress)=>WorkerJobCloseStep::Complete{progress},step=>WorkerJobCloseStep::Pending{progress:step.progress()}}}
 
 }
 
 
 impl<J> NativeWorkerAuthorityOwner<J>{
     fn terminal_authority_demands(&self)->Result<RetirementDemand,ValueError>{
-        if self.payload.ledger_is_present(){return Ok(self.payload.ledger_demands());}
         let release_bytes=self.0.capacity().checked_mul(size_of::<NativeWorkerAuthorityState<J>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"worker authority physical backing overflow"))?;
         Ok(RetirementDemand{copy_bytes:0,release_bytes,depth:1,..Default::default()})
     }
@@ -491,8 +438,7 @@ impl<J> NativeWorkerAuthorityOwner<J>{
     fn close_terminal_worker_authority(&mut self,grant:RetainedCloneGrant)->Result<WorkerJobCloseStep,ValueError>{
         let authority=self;let demand=authority.terminal_authority_demands()?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
-        if authority.payload.ledger_is_present(){if !authority.payload.ledger_is_empty(){return Ok(WorkerJobCloseStep::Blocked)}let step=authority.payload.close_ledger(grant)?;return Ok(WorkerJobCloseStep::Pending{progress:step.progress()})}
-        assert!(authority.job.is_empty()&&authority.params.is_none()&&authority.cancel_retirement.is_none()&&!authority.payload.has_unpublished_page()&&authority.payload.fault_is_empty()&&authority.outcome.is_empty()&&authority.quarantined_outcome.is_empty()&&authority.step_fault.is_none()&&authority.step_fault_retirement.is_none()&&authority.panic_fault.is_none());
+        assert!(authority.job.is_empty()&&authority.params.is_none()&&authority.cancel_retirement.is_none()&&authority.payload.terminal_is_empty()&&authority.outcome.is_empty()&&authority.step_fault.is_none()&&authority.step_fault_retirement.is_none()&&authority.panic_fault.is_none());
         authority.0.clear();drop(std::mem::take(&mut authority.0));Ok(WorkerJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}})
     }
 
@@ -517,3 +463,11 @@ mod clock_tests;
 #[cfg(test)]
 #[path="♻️retirement/🧪️tests/🦀️.rs"]
 mod retirement_tests;
+
+#[cfg(test)]
+#[path="🚪️admission/🧪️tests/🦀️.rs"]
+mod authentic_admission_tests;
+
+#[path="🚪️admission/🦀️.rs"]
+mod authentic_admission;
+pub use authentic_admission::OriginalWorkerJobAdmission;

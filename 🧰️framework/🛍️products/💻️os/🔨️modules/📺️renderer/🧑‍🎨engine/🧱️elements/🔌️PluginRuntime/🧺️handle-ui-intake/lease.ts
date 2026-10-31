@@ -3,7 +3,7 @@ import type { OwnedUiInstance, OwnedUiInstanceSurface } from '@semio-tech/ui-con
 import type { OwnedUiReadSubscription,OwnedUiNodeReadSnapshot } from '@semio-tech/ui-contract/retained/read-lease';
 import type { ShardInstanceLifecycleLease } from '@semio-tech/framework/actor/shard-client/activation';
 import type { UiIndexGrant } from '@semio-tech/ui-contract/retained/host';
-import limits from './lease-limits.json';
+import limits from './lease-limits.json' with {type:'json'};
 
 export const OWNED_UI_SURFACE_LEASE_LIMITS=Object.freeze(limits);
 export type OwnedUiSurfaceReadSource=Pick<OwnedUiInstanceSurface,'view'|'subscribeView'|'subscribeNode'|'acknowledgeRead'|'unsubscribeNode'|'retryNotification'>;

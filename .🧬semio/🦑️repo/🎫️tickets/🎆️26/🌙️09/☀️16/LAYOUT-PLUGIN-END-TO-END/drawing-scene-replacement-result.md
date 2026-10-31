@@ -1,0 +1,7 @@
+# Same-Body Scene Replacement Actual Result
+
+Normal owning direct chunkdd4d41 completed EXIT0:12 pass,0 fail,130,468 assertions in323ms. Sequential strict5 session73110 completed EXIT0 with no diagnostics. All60 prelaunch,test-post,strict-post and final current hashes match. Test SHA256 8e5e6a35f3e6734833e50559dd0b8e74efb4d96eaefb6e8665f82c7296d5e59c; strict SHA256 0af818323c212a7ee1e7ffa3b271abf9682510bb8e40d801015c09ec502988ff. Full receipt/separate logs retained under generated/drawing-scene-replacement.
+
+Original6 actual ownership laws remain registered and pass after shared implementation extraction. Six new laws pass actual one-shot authentic same-body replacement for all7 original content kinds, exact node/asset page and neighbour identity, independent current-plan SQL domain counts,8 cancellation cuts,repeated discovered byte/depth/item denial,current positive failing admission effects/CPU/full cause,and exact-semantic-ceiling delayed physical settlement under the same bank. No source array adoption,full-plan copy,numeric compatibility close or authority renewal occurs. Schema semantic cases/laws preceded body; exact staging/counter profile clarification chronology is retained. Metadata closure corrected two new-test relative paths before runtime, not claimed as semantic RED.
+
+This scoped proof does not establish DocumentText/16 real callers, original Drawing14, whole LayoutJS,native or browser acceptance. Those remain open. No further unchanged-scope rerun is needed.

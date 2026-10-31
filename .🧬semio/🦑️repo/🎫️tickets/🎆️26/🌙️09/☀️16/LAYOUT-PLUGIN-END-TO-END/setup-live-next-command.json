@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "state": "PREPARED command in Rust lane; execution ownership released to dependency owner by root",
+  "executed": false,
+  "cwd": "/Users/ueli/Documents/semio",
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-2"
+  },
+  "argv": [
+    "repo",
+    "--service=off",
+    "tools",
+    "setup",
+    "all"
+  ],
+  "shellCommand": "SEMIO_BUILD_MODE=prototype SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-2' repo --service=off tools setup all > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-2.log' 2>&1",
+  "stdoutAndStderr": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-2.log",
+  "initialYieldMilliseconds": 1000,
+  "lifetime": "preserve one actual returned setup session to authoritative terminal; observation timeout is not a restart signal",
+  "concurrency": "no other owned native Cargo, preview, setup, publication, retirement or provider/source edits during live operation",
+  "priorAttempt": {
+    "session": 24933,
+    "exitCode": 1,
+    "published": false,
+    "boundary": "pre-witness logical metadata name validation",
+    "log": "🗑️generated/setup-live-1.log",
+    "environmentEvidence": "historic packet/log preserves canonical command but not complete historical env assignments; current prototype/artifact env is explicit current parent instruction"
+  },
+  "dispatch": {
+    "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🟦️.ts",
+    "behavior": "exact tools setup all invokes setupRepositoryDependencyPublicationV1 before ordinary withRepositoryCacheStoreV1 dependency opening"
+  },
+  "authorization": {
+    "current": "Do not launch in this lane; dependency owner owns the one released attempt",
+    "releasePrerequisite": "root explicit release after dependency manager suite, independent oracle and strict are actually green",
+    "forbidden": [
+      "fabricated Original or structural control",
+      "raw Bun installer/private entry",
+      "provider edits during live setup",
+      "manual cache/receipt/intent/lease changes",
+      "peer interruption",
+      "cap or deadline override"
+    ]
+  },
+  "liveOwner": "dependency_layout"
+}

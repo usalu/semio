@@ -1,0 +1,5 @@
+# Run Staged Close Source
+
+Fresh suffix-only changes retain and directly drain stagedChild, forwarding lastTurnWork in finally and clearing its pointer in a distinct paid control turn. A sole owned glyph outline closes actual segments before its separate ownership-flag/view clear. The genuine normalizer pointer is closed without phase heuristics. Actual GlyphSequence owners use their defining close helper for child/mapping/incoming/archive/group outputs; nullable mark lookups close only when present. Fixed pending geometry/mark/mirror headers clear in the existing final control turn.
+
+The producer prefix is byte-identical; hashes are recorded. The original owning law now includes staged child/outline cancellation cases first, with unchanged stock and independent OpenType/SQLite oracles. No tests ran. After the producer owner supplied the nullable borrowed-source protocol, a fresh suffix-only edit replaced faces/input placeholder allocation with faces/input/unicode/spans=null fixed header clears. The second before/prefix hash distinguishes this coordinated shared hunk. Bidi producer work remains open, so this is not Run SourceReady.

@@ -1,0 +1,39 @@
+{
+  "stock": {
+    "items": 100000,
+    "fuel": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64
+  },
+  "input": {
+    "children": [
+      {
+        "children": []
+      },
+      {
+        "children": [
+          {
+            "children": []
+          }
+        ]
+      }
+    ]
+  },
+  "cancelCuts": [
+    0,
+    1,
+    2,
+    8,
+    32,
+    256
+  ],
+  "ownedCopyBytes": 0,
+  "moveWork": 1,
+  "freeWork": 1,
+  "deniedWork": 0,
+  "cachedWork": 0,
+  "poisonDropCalls": 0,
+  "freshBoxAllocations": 0
+}

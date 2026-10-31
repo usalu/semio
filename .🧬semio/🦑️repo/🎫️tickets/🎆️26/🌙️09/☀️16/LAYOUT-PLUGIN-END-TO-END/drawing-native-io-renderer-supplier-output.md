@@ -1,0 +1,5 @@
+# Actual Renderer Supplier Output Custody
+
+The additive supplierOutput contract was authored before the parent supply function. The actual Renderer node now passes the caller's retained output slot directly to NativeIoJob and the canonical page registry. A positive receipt refusal leaves the original page in that same caller slot and the reservation in the node. On a later call the lower cached port validates the exact original source/context and reservation before a separate funded one-operation header removal. No per-turn output temporary, owned Option return, allocation, copy, new Source, or callback work guess is added. Existing per-page owning loop already keeps the same output slot through repeated calls; all original cases/stock remain.
+
+This source is uncompiled. The surrounding node still needs its genuine current return-origin/receiver and staged source-loan API migration, and the Renderer fixture/World host proof remains mandatory. This partial port is not a whole Renderer or page-return CPU qualification; returned-page Drop credit is still open.

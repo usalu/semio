@@ -1,0 +1,28 @@
+{
+  "state": "actual-scoped-test-and-strict-accepted-logical-slot-not-v8-heap",
+  "commandSha256": "66210abe5048e44c710306033887059538de751ed5e3866808082de95ed6fde0",
+  "currentInputs": 22,
+  "allCurrentInputsMatch": true,
+  "actualTest": {
+    "pass": 9,
+    "fail": 0,
+    "assertions": 439,
+    "milliseconds": 1355
+  },
+  "observations": [
+    {
+      "kind": "test",
+      "session": 6041,
+      "exit": 0,
+      "bytes": 12136,
+      "sha256": "1df418c71993911c6f2b9912eaa43c8f35ace96c67a87b650aa2d8d5215faef3"
+    },
+    {
+      "kind": "strict",
+      "session": 96317,
+      "exit": 0,
+      "bytes": 21120,
+      "sha256": "9244c2cbfd29657232d74d68b7bf2dc85fbc6a58c9c2290849b48bfa62f6334a"
+    }
+  ]
+}

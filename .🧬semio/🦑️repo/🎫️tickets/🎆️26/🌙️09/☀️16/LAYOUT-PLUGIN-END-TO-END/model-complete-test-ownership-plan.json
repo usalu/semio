@@ -1,0 +1,253 @@
+{
+  "state": "proposal-only-no-source-edit",
+  "normalInspection": {
+    "session": 60329,
+    "exitCode": 0,
+    "model": {
+      "files": 51,
+      "bytes": 323686,
+      "lines": 3093
+    },
+    "validation": {
+      "files": 6,
+      "bytes": 115716,
+      "lines": 51
+    },
+    "log": "🗑️generated/model-test-ownership/map.log"
+  },
+  "remainingTestSources": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/👁️graph/🔗️bindings/🧪️tests.rs",
+      "bytes": 2873,
+      "sha256": "9d4be9b2440e2ffa2772f9ce29244eab6ca166d526a08f0a6480d27e3fdbdf5a",
+      "owner": "existing-validation-companion",
+      "laws": [
+        "genuine_final_source_pair_is_original_bound_and_paid_closed"
+      ],
+      "fixtureEdges": [
+        {
+          "relative": "🧪️.json",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/👁️graph/🔗️bindings/🧪️.json",
+          "bytes": 338,
+          "sha256": "80a5f856d352d3d52bdafab56c5beefb0efeae7fb9ae5f11819b215303445573"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/🪆️references/🧪️tests/🦀️.rs",
+      "bytes": 3166,
+      "sha256": "432290203c438cf03f0ab180bc06c17d1eff566db5b477916da9eb0f8930bc29",
+      "owner": "existing-validation-companion",
+      "laws": [
+        "original_reference_metadata_and_aliases_validate_without_drawing_materialization"
+      ],
+      "fixtureEdges": [
+        {
+          "relative": "🔣️.json",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/🪆️references/🧪️tests/🔣️.json",
+          "bytes": 19184,
+          "sha256": "4751cee2a20199a49e1fb33a97f1bc79fd1dd03e26a2ef8eaa752a2ff85ee09b"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 3250,
+      "sha256": "6df608bab4a6c590cbefbbcf78a506e1d8f22cad239ae62d5de341feeca9a403",
+      "owner": "new-model-tests-companion",
+      "laws": [
+        "inference_determinism_law",
+        "inference_default_law",
+        "page_topologically_follows_its_master_and_spread"
+      ],
+      "fixtureEdges": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭topology/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 1874,
+      "sha256": "fb02129beb4b934772283e5fac901a636ade43f90bc3db6550c52e6a3bc58639",
+      "owner": "new-model-tests-companion",
+      "laws": [
+        "empty_document_has_empty_topology",
+        "a_page_dangling_its_spread_ref_still_sorts_cleanly",
+        "master_and_spread_both_precede_their_page"
+      ],
+      "fixtureEdges": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🔬️round-trip/🦀️.rs",
+      "bytes": 3331,
+      "sha256": "e54edcf72a5a0d092cdf4b941073df0214eac4a8fa7754c2304d03420fa80960",
+      "owner": "new-model-tests-companion",
+      "laws": [
+        "background_drawing_and_referenced_model_round_trip_through_text_and_binary",
+        "absent_composition_slots_round_trip_as_none"
+      ],
+      "fixtureEdges": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/👁️layer-order/🦀️.rs",
+      "bytes": 1236,
+      "sha256": "3ca462236075181a79396425be8fdfca599f3369cd9f5e3ea38f696f63d44f6f",
+      "owner": "new-model-tests-companion",
+      "laws": [
+        "resolved_frames_follow_portable_layer_order_and_keep_overrides"
+      ],
+      "fixtureEdges": [
+        {
+          "relative": "../../../🧪️tests/🧫️fixtures/👁️layer-order/🔣️.json",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/👁️layer-order/🔣️.json",
+          "bytes": 21874,
+          "sha256": "c1f36f3e15f4292513639d38484abd5bd405156ed5f3ea1d72e1b4514aabe805"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️document/🦀️.rs",
+      "bytes": 4368,
+      "sha256": "0913620b2b2d5fd5966d75ab43e8ebf5aaaabd8edb0cd731fcdbaeb02b2267d3",
+      "owner": "new-model-tests-companion",
+      "laws": [
+        "text_to_rgba_accepts_comma_channels_and_hex",
+        "resolve_page_marks_overridden_parent_frames_and_ignores_missing_parent",
+        "parse_layout_document_rejects_wrong_schema_and_invalid_json",
+        "rgba_text_round_trips"
+      ],
+      "fixtureEdges": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🧵️drawing/🦀️.rs",
+      "bytes": 5466,
+      "sha256": "e0b47f753fcaea88a53ee0cd680c8ae58b3836a2c58abe9eb4348aeda15e609c",
+      "owner": "new-model-tests-companion",
+      "laws": [
+        "portable_borrowed_scene_order_and_funded_cancellation",
+        "refused_scene_work_and_growth_leave_source_and_cursor_retryable",
+        "malformed_borrowed_scene_nodes_refuse_without_materializing_scene",
+        "replacing_numeric_ancestry_requires_copy_capacity_and_old_release_authority"
+      ],
+      "fixtureEdges": [
+        {
+          "relative": "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔌️ports/🧵️lower/🧪️tests/🧫️fixtures/🔣️.json",
+          "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🔌️ports/🧵️lower/🧪️tests/🧫️fixtures/🔣️.json",
+          "bytes": 13164,
+          "sha256": "69a80514f81135e1b3f5c62d60b9970e6e7a841640a6db6cffc4ac6420210cfc"
+        },
+        {
+          "relative": "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔌️ports/🧵️lower/🧪️tests/🧫️fixtures/🔣️.json",
+          "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🔌️ports/🧵️lower/🧪️tests/🧫️fixtures/🔣️.json",
+          "bytes": 13164,
+          "sha256": "69a80514f81135e1b3f5c62d60b9970e6e7a841640a6db6cffc4ac6420210cfc"
+        },
+        {
+          "relative": "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔌️ports/🧵️lower/🧪️tests/🧫️fixtures/🔣️.json",
+          "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🔌️ports/🧵️lower/🧪️tests/🧫️fixtures/🔣️.json",
+          "bytes": 13164,
+          "sha256": "69a80514f81135e1b3f5c62d60b9970e6e7a841640a6db6cffc4ac6420210cfc"
+        },
+        {
+          "relative": "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔌️ports/🧵️lower/🧪️tests/🧫️fixtures/🔣️.json",
+          "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🔌️ports/🧵️lower/🧪️tests/🧫️fixtures/🔣️.json",
+          "bytes": 13164,
+          "sha256": "69a80514f81135e1b3f5c62d60b9970e6e7a841640a6db6cffc4ac6420210cfc"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🌱️birth/📤️transfer/🧪️tests/🦀️.rs",
+      "bytes": 2305,
+      "sha256": "63bd2483d83ba63bf17e98d7c9fda579e1dabb4c4516838670763ec198ef9f3a",
+      "owner": "new-model-tests-companion",
+      "laws": [
+        "original_birth_moves_only_after_paid_handoff"
+      ],
+      "fixtureEdges": [
+        {
+          "relative": "🧫️fixtures/🔣️.json",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🌱️birth/📤️transfer/🧪️tests/🧫️fixtures/🔣️.json",
+          "bytes": 625,
+          "sha256": "87f8fd7bbce122e2610f0a12806b2f9ef85ced264e17d956f71426f529f3c0fa"
+        },
+        {
+          "relative": "../../🧪️tests/🧫️fixtures/🔣️.json",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🌱️birth/🧪️tests/🧫️fixtures/🔣️.json",
+          "bytes": 1546,
+          "sha256": "e1d28660dffe53600803790a21642c3ce9469daada202976474924626578d1e5"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/📖️source/🧪️tests.rs",
+      "bytes": 4394,
+      "sha256": "86eb29c462973f5b77baa22bb0c51d7e8ef36335c62b002f8be70bbc2aab956c",
+      "owner": "new-model-tests-companion",
+      "laws": [
+        "genuine_original_handle_source_dispatch_preserves_funded_absence_and_error_effects"
+      ],
+      "fixtureEdges": [
+        {
+          "relative": "🧪️.json",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/📖️source/🧪️.json",
+          "bytes": 457,
+          "sha256": "281d06e49fac6ac7242b349158738e61104dc39a20389de560ca3d2363f566ac"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🧪️tests/🦀️.rs",
+      "bytes": 1722,
+      "sha256": "fe76081a4d2423eb043f563585ea62676a5235501b10abf1fd053c0a0a512186",
+      "owner": "new-model-tests-companion",
+      "laws": [
+        "reference_only_members_keep_original_birth_payload_separate"
+      ],
+      "fixtureEdges": [
+        {
+          "relative": "../🌱️birth/🧪️tests/🧫️fixtures/🔣️.json",
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🌱️birth/🧪️tests/🧫️fixtures/🔣️.json",
+          "bytes": 1546,
+          "sha256": "e1d28660dffe53600803790a21642c3ce9469daada202976474924626578d1e5"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 5119,
+      "sha256": "8568226c651662863aed3c33c3a544c39b0acfd1c7303e69c8676b70d2c2ea0c",
+      "owner": "new-model-tests-companion",
+      "laws": [
+        "pack_round_trips_and_agrees_with_dsl",
+        "pack_round_trips_minimal_document_with_character_style",
+        "pack_round_trips_overrides_frame_flags_and_absent_print_target",
+        "pack_schema_identity_carries_the_background_drawing_child_and_model_link"
+      ],
+      "fixtureEdges": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 5352,
+      "sha256": "84d343f9a36a8bd3ba332b808ffc67eb9263ee15bdf630120ee9b94d9145cf6b",
+      "owner": "new-model-tests-companion",
+      "laws": [
+        "sample_fixture_dsl_round_trips",
+        "demo_dsl_snapshot",
+        "example_fixture_matches_engine_demo",
+        "dsl_round_trips_minimal_document_with_character_style",
+        "dsl_round_trips_overrides_frame_flags_and_absent_print_target",
+        "parse_dsl_reports_derived_grammar_errors"
+      ],
+      "fixtureEdges": []
+    }
+  ],
+  "newOwner": {
+    "package": "semio-s-artifact-layout-layout-model-tests",
+    "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🦀️.rs",
+    "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/📦️packages/🦀️rust/Cargo.toml"
+  },
+  "preserveCurrent18": true,
+  "selectedOwnerCount": 19,
+  "specialCases": [
+    "Retained-reference super::super::validate_document lexical path must resolve actual public validator through test-only module/import nesting.",
+    "Drawing source fixture has3 private invalid calls solely constructing test-provider refusals; use equivalent actual public ValueError::literal constructor, no production wrapper/API."
+  ]
+}

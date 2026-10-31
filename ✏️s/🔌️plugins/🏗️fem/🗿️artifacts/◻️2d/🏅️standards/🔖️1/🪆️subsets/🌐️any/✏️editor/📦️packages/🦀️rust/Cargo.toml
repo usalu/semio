@@ -24,7 +24,12 @@ path = "🦀️.rs"
 name = "editor_app"
 path = "../../🧪️tests/🔬️app/🦀️.rs"
 
+[[test]]
+name = "editor_app_2"
+path = "../../🧪️tests/🔬️app-2/🦀️.rs"
+
 [dependencies]
+semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-plugin-retained-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust" }
 semio-s-artifact-fem-2d-mesh-regions = { workspace = true }
@@ -46,6 +51,7 @@ semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-s-artifact-fem-2d-editor-commands = { workspace = true }
 semio-s-artifact-fem-2d-editor-interaction = { workspace = true }
 semio-s-artifact-fem-2d-editor-model-window = { workspace = true }
@@ -62,6 +68,7 @@ semio-s-fem-app-surface = { workspace = true }
 semio-s-fem-model = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-fem-2d-model = { workspace = true, features = ["testkit"] }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-ui-scene = { workspace = true }

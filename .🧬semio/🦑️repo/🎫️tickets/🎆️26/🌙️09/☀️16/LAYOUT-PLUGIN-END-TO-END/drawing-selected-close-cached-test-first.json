@@ -1,0 +1,17 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🦀️.rs",
+    "sha256": "a1ac02218ab7232c31d7ed63d1e8922c96aa866947bad64cb3358c221e4453ab",
+    "bytes": 15204
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🧫️fixtures/selected.json",
+    "sha256": "846f31871999052bb2bd919268903a637ab0d64926b7971177f4ad22b99460fd",
+    "bytes": 227
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🧫️fixtures/selected.schema.json",
+    "sha256": "6a4d5797fc7c4ea8fdad1adb2f0459d379553934f7ade5c1b908592c47c7a7fd",
+    "bytes": 491
+  }
+]

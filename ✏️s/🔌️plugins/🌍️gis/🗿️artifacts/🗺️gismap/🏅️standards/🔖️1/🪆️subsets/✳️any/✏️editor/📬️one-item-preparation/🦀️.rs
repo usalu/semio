@@ -31,7 +31,7 @@ semio_framework_value::artifact_retire_struct!(GisMapOneItemStampV1 { mutation_i
 
 /// 🏷️ The factory-owned optional stamp: its heap-bearing mutation id retires through a funded controlled owner.
 #[derive(Clone)]
-struct GisMapStampSlot(Option<GisMapOneItemStampV1>);
+pub struct GisMapStampSlot(Option<GisMapOneItemStampV1>);
 
 impl GisMapStampSlot {
     pub fn as_ref(&self) -> Option<&GisMapOneItemStampV1> {
@@ -96,12 +96,12 @@ pub fn gis_map_value_one_item_preparation_factory() -> std::sync::Arc<
     std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
 }
 
-/// 📍 Creates the exact stamped parent preparation port used by the Hub-owned fixed-three committer.
+/// 🆕️ Creates the exact stamped parent preparation port used by the Hub-owned fixed-three committer.
 pub fn gis_map_parent_stamped_one_item_preparation_factory(stamp: GisMapOneItemStampV1) -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: GisMapStampSlot(Some(stamp)) })
 }
 
-/// 🎨 Creates the exact stamped drawing preparation port used by the Hub-owned fixed-three committer.
+/// ✏️ Creates the exact stamped drawing preparation port used by the Hub-owned fixed-three committer.
 pub fn gis_map_drawing_stamped_one_item_preparation_factory(
     stamp: GisMapOneItemStampV1,
 ) -> std::sync::Arc<
@@ -113,7 +113,7 @@ pub fn gis_map_drawing_stamped_one_item_preparation_factory(
     std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: GisMapStampSlot(Some(stamp)) })
 }
 
-/// 🔢 Creates the exact stamped value preparation port used by the Hub-owned fixed-three committer.
+/// 🛞️ Creates the exact stamped value preparation port used by the Hub-owned fixed-three committer.
 pub fn gis_map_value_stamped_one_item_preparation_factory(
     stamp: GisMapOneItemStampV1,
 ) -> std::sync::Arc<
@@ -151,7 +151,7 @@ struct Gis2dOneItemPreparation<P, M> {
     factories: std::mem::ManuallyDrop<[Option<semio_framework_value::FactoryAuthority>; 2]>,
 }
 
-/// 🛡️ The authority-minted one-item edit, carrying the Hub-derived identity when a stamped committer prepares it.
+/// 🛂️ The authority-minted one-item edit, carrying the Hub-derived identity when a stamped committer prepares it.
 fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, authority: &store::os_store::one_item_publication::ArtifactStoreOneItemLiveAuthority, stamp: Option<GisMapOneItemStampV1>) -> protocol::Edit<M> {
     let mut edit = authority.next_edit(forward, inverse);
     if let Some(stamp) = stamp {
@@ -185,7 +185,7 @@ where P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
 impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M> for Gis2dOneItemPreparationFactory<P, M>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
+    M: protocol::Mutation<P> + protocol::ColdMutation<P> + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<M>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<M>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
@@ -210,6 +210,11 @@ where
     fn begin_demand(&self, _mutation: &M, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         let capacity_bytes = size_of::<Gis2dOneItemPreparation<P, M>>().checked_add(self.stamp.0.as_ref().map_or(0, |stamp| stamp.mutation_id.0.len())).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS original stamp birth extent overflow"))?;
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: 1 })
+    }
+
+    fn begin_copy_byte_demand(&self, mutation: &M, lane: store::os_store::store_schema::HistoryLane) -> Result<usize, semio_framework_value::ValueError> {
+        self.begin_demand(mutation, lane)?;
+        size_of::<store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>>().checked_add(size_of::<Gis2dOneItemPreparation<P, M>>()).and_then(|bytes| bytes.checked_add(self.stamp.0.as_ref().map_or(0, |stamp| stamp.mutation_id.0.len()))).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original preparation header quote overflow"))
     }
 
     fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
@@ -251,10 +256,12 @@ where
 impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M> for Gis2dOneItemPreparation<P, M>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + Send + 'static,
+    M: protocol::Mutation<P> + protocol::ColdMutation<P> + semio_framework_value::retirement::RetireOwned + Send + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        use protocol::ColdMutation as _;
+        use protocol::MutationDiff as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }

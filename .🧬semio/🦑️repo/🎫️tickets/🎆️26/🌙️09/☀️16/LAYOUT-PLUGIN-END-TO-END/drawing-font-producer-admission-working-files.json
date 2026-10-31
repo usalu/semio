@@ -1,0 +1,71 @@
+{
+  "state": "scoped-logical-semantic-cpu-green-not-genuine-backing",
+  "files": [
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/🔣️.json",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/📐️.json",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts"
+  ],
+  "inputs": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+      "sha256": "f4b44001f0dfb0a5097a0f720d01f4fc54ab76843ed39c00b65c3efbc57bacbd",
+      "bytes": 10832
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "sha256": "0a1c8055bf432fa5a6492a17fa0f1cf4efad92adf9513882ccad7db45a0f27f5",
+      "bytes": 10875
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+      "sha256": "89f898f73615b208210dc61fa516a459aa605f17dea8234dc64368f9d7b76e68",
+      "bytes": 14842
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "sha256": "cc441d2e6d13028e32a0193a7012b743c3a359e8f1ca111fa3b4f9d613c701c1",
+      "bytes": 5381
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts",
+      "sha256": "684e5253f258bbfdf2322578f7a40df8570e099979b563748b32463414c8d3b1",
+      "bytes": 3940
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/🔣️.json",
+      "sha256": "67e186d2e994dc2063dbe48d722cd4c254d81412f26655b95b79d7c7580fd45a",
+      "bytes": 3139
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/📐️.json",
+      "sha256": "97d94c2917a628ea050555c4627dedccfcbe5d570f2bd50b0f43f775c06f17b8",
+      "bytes": 4457
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "sha256": "21b836be23f484fe688471eb8b40f4290a782c0b29d082983623be0e75150ccc",
+      "bytes": 15229
+    }
+  ],
+  "laws": 8,
+  "notes": "Partial producer-section attribution in three existing font files. Cursor retirement sections preserved. New-row/cell payload writes remain funded; existing cell.next metadata repair has zero copy with explicit CPU. Numeric frozen inputs unchanged. Remaining font producers and Drawing/lower closure incomplete.",
+  "producers": [
+    "FontFaceAdmissionJob",
+    "UnicodeDataAdmissionJob",
+    "LineBreakDataAdmissionJob",
+    "UnicodeLineBreakJob",
+    "UnicodeGraphemeJob"
+  ],
+  "scopedProof": {
+    "testSession": 6041,
+    "strictSession": 96317,
+    "pass": 9,
+    "assertions": 439,
+    "scope": "Combined admission8+normalization1 only"
+  }
+}

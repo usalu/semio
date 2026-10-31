@@ -1,0 +1,3 @@
+# Renderer Worker Wake Inspection
+
+Current return wake sets fixed pending flags then schedules the domain worker through try_submit. The visible Box::new(renderer_source_io_worker) receives a zero-sized function item, so the Box expression alone is not evidence of a heap allocation. Queue admission/capacity and genuine supplier-caller work still require the real owner runtime tests; the old maintenance-hook proposal must not be described as a verified allocation fix. No worker wake code changed during this inspection. Directory and contiguous publication header fixes are separately authored, schema-first, and awaiting Services compiler-frontier closure for real owning execution.

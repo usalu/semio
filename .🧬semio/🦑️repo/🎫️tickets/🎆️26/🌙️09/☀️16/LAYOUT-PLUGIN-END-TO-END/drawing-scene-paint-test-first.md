@@ -1,0 +1,3 @@
+# Scene Paint Funding Tests First
+
+Root authored the closed language-neutral five-axis authority/image/finite-stock contract and actual owning native tests before changing ScenePaint production. Laws require constructor and zero/one-below-demand turns to have no heap/source/work effects, exact same-original retained receipts and separate CPU, real geometry reservation/copy, unchanged plan identity, tiny-skia independent image-transform bounds, same-original paid close, cached literal error and cancellation transfer with no hidden heap. Existing geometry/count/work/cancel tests remain mounted and will be hand-migrated without removing assertions. No compiler or native run has occurred. Test-first packet records exact paths; production change follows separately.

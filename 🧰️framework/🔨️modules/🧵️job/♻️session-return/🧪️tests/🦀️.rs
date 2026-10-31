@@ -3,7 +3,7 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 struct ScalarJob(bool);
 impl InteractiveJob for ScalarJob{
- fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from)}
+ fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{InteractiveJobStep::from_callback(JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from))}
  fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{descriptor.yielded()}
  fn begin_close(&mut self){self.0=true;}
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{if self.0{return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.0=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))})}
@@ -20,7 +20,7 @@ fn source()->(WorkerJobSession<ScalarJob>,OriginalJobFixtureCaller){
 }
 fn close_body(session:&mut WorkerJobSession<ScalarJob>,caller:&mut OriginalJobFixtureCaller){
  session.begin_close();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};
- for _ in 0..64{if session.inner.phase()==SESSION_EMPTY{return;}if session.has_original_cancel_alias_witness(caller.cancel()).unwrap_or(false){caller.turn(grant,|cx|{let step=session.return_original_cancel_alias_step(cx.original_cancel_token(),cx.retained_grant()).map_err(|error|match error{WorkerJobDemandError::Refused(error)=>OriginalTurnFailure::from(error),WorkerJobDemandError::Contention(_)=>OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original frame alias remains checked out"))})?.unwrap();cx.consume_retained(step.progress())?;cx.consume_fuel(1);Ok(step)}).unwrap();}else{caller.turn(grant,|cx|session.close_step(cx)).unwrap();}}
+ for _ in 0..64{if session.inner.phase()==SESSION_EMPTY{return;}if session.has_original_cancel_alias_witness(caller.cancel()).unwrap_or(false){caller.turn(grant,|cx|{let turn=session.return_original_cancel_alias_step(cx.original_cancel_token(),cx.retained_grant());let result=turn.result.map(|step|step.expect("same original witnessed cancellation alias")).map_err(|error|match error{WorkerJobDemandError::Refused(error)=>error,WorkerJobDemandError::Contention(_)=>ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original frame alias remains checked out")});let step=receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})?;Ok(step)}).unwrap();}else{caller.turn(grant,|cx|session.close_step(cx)).unwrap();}}
  panic!("original session body did not close");
 }
 

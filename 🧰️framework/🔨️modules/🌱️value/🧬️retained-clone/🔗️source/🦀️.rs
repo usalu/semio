@@ -9,7 +9,7 @@ unsafe impl Sync for RetainedCloneLeaseOwner{}
 struct SourcePayload<A:RetireOwned+Sync,B:RetireOwned>{source:ControlledRetirement<SealedShared<A>>,authority:ControlledRetirement<B>}
 impl<A:RetireOwned+Sync,B:RetireOwned> ErasedSnapshotRetirement for SourcePayload<A,B>{
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{if !self.source.terminal_is_empty(){self.source.next_demand(body)}else{self.authority.next_demand(body)}}
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.source.terminal_is_empty(){self.source.step(grant)}else{self.authority.step(grant)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{if !self.source.terminal_is_empty(){let result=self.source.step(grant);return crate::RetainedWorkOutcome{result,work:self.source.last_turn_work()}}let result=self.authority.step(grant);crate::RetainedWorkOutcome{result,work:self.authority.last_turn_work()}}
  fn terminal_is_empty(&self)->bool{self.source.terminal_is_empty()&&self.authority.terminal_is_empty()}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if !self.source.terminal_is_empty(){self.source.next_copy_byte_demand()}else{self.authority.next_copy_byte_demand()}}
  fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if !self.source.terminal_is_empty(){self.source.next_capacity_byte_demand(body)}else{self.authority.next_capacity_byte_demand(body)}}
@@ -21,7 +21,7 @@ struct LeaseRetirement(RetainedCloneLeaseOwner);
 impl RetirementCursor for LeaseRetirement {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.0.payload.as_ref().map_or(Ok(Default::default()),|owner|crate::factory_ticket_demands(owner,body))}
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
-        match crate::close_factory_ticket(&mut self.0.payload,grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}
+        let turn=crate::close_factory_ticket(&mut self.0.payload,grant);match turn.result{Err(error)=>RetirementStep::Failure(error,turn.work),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work)}
     }
     fn terminal_is_empty(&self)->bool {self.0.payload.is_none()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.0.payload.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
@@ -63,22 +63,6 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
  pub fn borrowed_constructor_capacity_bytes<X:RetireOwned+Sync>()->usize{constructor_capacity::<X,()>()}
  pub fn borrowed_constructor_copy_bytes<X:RetireOwned+Sync>()->usize{0}
  pub fn borrowed_constructor_demand<X:RetireOwned+Sync>()->RetainedCloneBirthDemand{RetainedCloneBirthDemand{capacity_bytes:Self::borrowed_constructor_capacity_bytes::<X>(),depth:1}}
- fn admit_with<B:RetireOwned,F>(authority:A,extra:B,project:F,owned_header:bool,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,A,B)> where F:for<'source>FnOnce(&'source A)->&'source T{
-  if !A::controlled_retirement_supported()||!B::controlled_retirement_supported(){return Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner,"source or authority has no controlled typed retirement"),authority,extra));}
-  let demand=Self::constructor_demand::<B>();
-  if let Err(error)=demand.admit(grant){return Err((error,authority,extra));}
-  let copy=Self::constructor_copy_bytes();
-  if grant.maximum_copy_bytes<copy{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"source constructor exceeds admitted alias copy"),authority,extra));}
-  let birth=match SealedShared::<RetainedCloneLeaseOwner>::prepare_birth(grant){Ok(birth)=>birth,Err(error)=>return Err((error,authority,extra))};
-  let mut issuer=SharedIssuer::owned();if owned_header{issuer.transfer_copy_bytes=|_|0;}
-  let owner=match SealedShared::admit(authority,issuer,grant){Ok((owner,_))=>owner,Err((error,authority))=>return Err((error,authority,extra))};
-  let(alias,_)=owner.try_duplicate(grant).unwrap_or_else(|error|unreachable!("admitted source alias refused: {error}"));
-  let value=NonNull::from(project(owner.get()));
-  let payload=SourcePayload{source:ControlledRetirement::new(alias).unwrap_or_else(|(error,_)|unreachable!("admitted source alias lost its retirement: {error}")),authority:ControlledRetirement::new(extra).unwrap_or_else(|(error,_)|unreachable!("admitted source authority refused: {error}"))};
-  let(lease,_)=birth.materialize(RetainedCloneLeaseOwner{id:RETAINED_CLONE_SOURCE_IDS.fetch_add(1,Ordering::Relaxed),payload:ManuallyDrop::new(Some(Box::new(payload)))},SharedIssuer::owned());
-  let address=value.as_ptr()as*const()as usize;
-  Ok((Self{owner:ManuallyDrop::new(Some(owner)),value,lease:Some(RetainedCloneBinding::new(lease,RetainedCloneProjection{parent:address,address,discriminator:0})),owner_close:ManuallyDrop::new(None)},RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))
- }
  /// 👁️ Borrows the actual live authority without duplicating its original value or issuer.
  pub fn try_authority(&self)->Result<&A,ValueError>{self.owner.as_ref().map(SealedShared::get).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained source original authority is closing or transferred"))}
  pub fn borrow(&self)->RetainedCloneRef<'_,T>{self.try_borrow().unwrap_or_else(|error|panic!("retained source is closed: {error}"))}
@@ -90,21 +74,21 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
   Ok(RetainedCloneRef{value:unsafe{self.value.as_ref()},lease,projection:binding.projection})
  }
  /// 🔐️ Retains the exact original projection only through its genuine owning source.
- pub fn retain_original(&self,grant:RetainedCloneGrant)->Result<(RetainedOwnedProjection<T>,RetainedCloneProgress),ValueError>{unsafe{RetainedOwnedProjection::from_source(self.try_borrow()?,grant)}}
- pub fn project_owned<U:?Sized+Sync,F>(&self,discriminator:usize,project:F,grant:RetainedCloneGrant)->Result<(RetainedOwnedProjection<U>,RetainedCloneProgress),ValueError> where F:for<'source>FnOnce(&'source T)->&'source U{RetainedOwnedProjection::<U>::admit_constructor(grant)?;unsafe{RetainedOwnedProjection::from_source(self.try_borrow()?.project(discriminator,project),grant)}}
+ pub fn retain_original(&self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(RetainedOwnedProjection<T>,RetainedCloneProgress)>{match self.try_borrow(){Ok(source)=>unsafe{RetainedOwnedProjection::from_source(source,grant)},Err(error)=>crate::RetainedWorkOutcome{result:Err(error),work:0}}}
+ pub fn project_owned<U:?Sized+Sync,F>(&self,discriminator:usize,project:F,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(RetainedOwnedProjection<U>,RetainedCloneProgress)> where F:for<'source>FnOnce(&'source T)->&'source U{if let Err(error)=RetainedOwnedProjection::<U>::admit_constructor(grant){return crate::RetainedWorkOutcome{result:Err(error),work:0}}match self.try_borrow(){Ok(source)=>unsafe{RetainedOwnedProjection::from_source(source.project(discriminator,project),grant)},Err(error)=>crate::RetainedWorkOutcome{result:Err(error),work:0}}}
  /// 🪪️ Borrows the retained initiating authority for paid source freshness validation.
  pub fn original_authority(&self)->Option<&A>{self.owner.as_ref().map(|owner|owner.get())}
  pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.try_lock().map_err(|_|super::close_query_busy())?.next_copy_byte_demand()}else if self.owner.is_some(){Ok(0)}else{RetainedCloneBinding::copy_demand(&self.lease)}}
  pub fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.try_lock().map_err(|_|super::close_query_busy())?.next_capacity_byte_demand(body)}else if self.owner.is_some(){Ok(0)}else{RetainedCloneBinding::capacity_demand(&self.lease,body)}}
  pub fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.try_lock().map_err(|_|super::close_query_busy())?.next_release_byte_demand()}else if self.owner.is_some(){Ok(0)}else{RetainedCloneBinding::release_demand(&self.lease)}}
- pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.try_lock().map_err(|_|super::close_query_busy())?.next_depth_demand()}else if self.owner.is_some(){Ok(1)}else{RetainedCloneBinding::depth_demand(&self.lease)}}
+ pub fn next_close_depth_demand(&self)->Result<usize,ValueError>{if let Some(owner)=self.owner_close.as_ref(){{let owner=owner.try_lock().map_err(|_|super::close_query_busy())?;if owner.terminal_is_empty(){Ok(1)}else{owner.next_depth_demand()}}}else if self.owner.is_some(){Ok(1)}else{RetainedCloneBinding::depth_demand(&self.lease)}}
  /// 🎯️ Quotes the same original header, child spill or body event selected by the caller's actual copy currency.
- pub fn next_close_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{if let Some(owner)=self.owner_close.as_ref(){owner.try_lock().map_err(|_|super::close_query_busy())?.selected_demand(body)}else if self.owner.is_some(){Ok(crate::RetirementDemand{depth:1,..Default::default()})}else{RetainedCloneBinding::close_demand(&self.lease,body)}}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
-  if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if self.owner_close.is_none(){if let Some(owner)=self.owner.take(){*self.owner_close=Some(RetainedOwnerGate::new(ControlledRetirement::new(owner).unwrap_or_else(|(error,_)|unreachable!("sealed source authority lost its retirement: {error}"))));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}}
-  if let Some(owner)=self.owner_close.as_mut(){let owner=owner.get_mut();let step=owner.step(grant)?;if owner.terminal_is_empty(){*self.owner_close=None;}return Ok(step);}
+ pub fn next_close_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{if let Some(owner)=self.owner_close.as_ref(){{let owner=owner.try_lock().map_err(|_|super::close_query_busy())?;if owner.terminal_is_empty(){Ok(crate::RetirementDemand{depth:1,..Default::default()})}else{owner.selected_demand(body)}}}else if self.owner.is_some(){Ok(crate::RetirementDemand{depth:1,..Default::default()})}else{RetainedCloneBinding::close_demand(&self.lease,body)}}
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{
+  if self.terminal_is_empty(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+  if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  if self.owner_close.is_none(){if let Some(owner)=self.owner.take(){*self.owner_close=Some(RetainedOwnerGate::new(ControlledRetirement::new(owner).unwrap_or_else(|(error,_)|unreachable!("sealed source authority lost its retirement: {error}"))));return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}}
+  if let Some(owner)=self.owner_close.as_mut(){let owner=owner.get_mut();if owner.terminal_is_empty(){*self.owner_close=None;return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}let result=owner.step(grant);return crate::RetainedWorkOutcome{result,work:owner.last_turn_work()}}
   RetainedCloneBinding::close_one(&mut self.lease,grant)
  }
  /// 📫️ Quotes one exact live alias or final original handback without mixing distinct events.
@@ -114,11 +98,16 @@ impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
  pub fn next_take_release_byte_demand(&self)->Result<usize,ValueError>{if self.lease.is_some(){RetainedCloneBinding::release_demand(&self.lease)}else{Ok(SealedShared::<A>::birth_bytes())}}
  pub fn next_take_depth_demand(&self)->Result<usize,ValueError>{if self.lease.is_some(){RetainedCloneBinding::depth_demand(&self.lease)}else{Ok(1)}}
  /// 📤️ Closes the source's own projection alias, then returns the exact original authority once no other alias remains.
- pub fn take_authority(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneSourceTake<A>,ValueError>{
-  if self.owner_close.is_some()||self.owner.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"retained source original authority is already closing or transferred"));}
-  if self.lease.is_some(){return RetainedCloneBinding::close_one(&mut self.lease,grant).map(|step|RetainedCloneSourceTake::Pending(step.progress()));}
+ pub fn take_authority(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneSourceTake<A>>{
+  if self.owner_close.is_some()||self.owner.is_none(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"retained source original authority is already closing or transferred")),work:0}}
+  if self.lease.is_some(){
+   let turn=RetainedCloneBinding::close_one(&mut self.lease,grant);
+   return crate::RetainedWorkOutcome{result:turn.result.map(|step|RetainedCloneSourceTake::Pending(step.progress())),work:turn.work}
+  }
   let owner=self.owner.take().unwrap_or_else(||unreachable!("source authority presence was checked"));
-  match owner.try_unwrap(grant){Ok((authority,progress))=>Ok(RetainedCloneSourceTake::Ready(authority,progress)),Err((error,owner))=>{*self.owner=Some(owner);Err(error)}}
+  let turn=owner.try_unwrap(grant);
+  let result=match turn.result{Ok((authority,p))=>Ok(RetainedCloneSourceTake::Ready(authority,p)),Err((error,owner))=>{*self.owner=Some(owner);Err(error)}};
+  crate::RetainedWorkOutcome{result,work:turn.work}
  }
  pub fn terminal_is_empty(&self)->bool{self.owner.is_none()&&self.owner_close.is_none()&&self.lease.is_none()}
 }
@@ -127,7 +116,7 @@ impl<T:Sync+'static,A:RetireOwned+Sync> Drop for RetainedCloneSource<T,A>{fn dro
 struct SourceRetirement<T:Sync+'static,A:RetireOwned+Sync>(ManuallyDrop<RetainedCloneSource<T,A>>);
 impl<T:Sync+'static,A:RetireOwned+Sync> RetirementCursor for SourceRetirement<T,A>{
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.0.next_close_demand(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let turn=self.0.close_step(grant);match turn.result{Err(error)=>RetirementStep::Failure(error,turn.work),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work)}}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.0.next_close_copy_byte_demand()}
  fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.0.next_close_demand(body)?.copy_bytes)}
@@ -141,13 +130,16 @@ impl<T:Sync+'static,A:RetireOwned+Sync> Drop for SourceRetirement<T,A>{fn drop(&
 impl<T:Sync+'static,A:RetireOwned+Sync> RetireOwned for RetainedCloneSource<T,A>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(SourceRetirement(ManuallyDrop::new(self)))}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<SourceRetirement<T,A>>())}fn controlled_retirement_supported()->bool{true}}
 
 impl<T:Sync+'static,A:RetireOwned+Sync> RetainedCloneSource<T,A>{
- /// 🏛️ Moves one original authority and its projection into sealed custody only after one complete constructor grant.
- pub fn admit_borrowed<F>(authority:A,project:F,grant:RetainedCloneGrant)->Result<(RetainedCloneSource<T,A>,RetainedCloneProgress),(ValueError,A)> where F:for<'source>FnOnce(&'source A)->&'source T{
-  RetainedCloneSource::<T,A>::admit_with(authority,(),project,false,grant).map_err(|(error,authority,())|(error,authority))
- }
+ /// 🎟️ Retains the exact projected authority in a caller-driven staged admission.
+ pub fn admission_borrowed(authority:A,project:for<'a>fn(&'a A)->&'a T)->RetainedCloneSourceAdmission<T,A>{RetainedCloneSourceAdmission::new(authority,(),project)}
 }
 impl<A:RetireOwned+Sync> RetainedCloneSource<A,A>{
- /// 🔏️ Moves the original owner and a distinct authority into sealed custody only after one complete constructor grant.
- pub fn admit_owned<B:RetireOwned>(owner:A,authority:B,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,A,B)>{Self::admit_with(owner,authority,identity,true,grant)}
+ /// 🧳️ Retains both original inputs before any real source allocation.
+ pub fn admission_owned<B:RetireOwned>(owner:A,authority:B)->RetainedCloneSourceAdmission<A,A,B>{RetainedCloneSourceAdmission::new(owner,authority,identity)}
 }
-
+#[path="🎟️admission/🦀️.rs"]
+mod admission;
+pub use admission::RetainedCloneSourceAdmission;
+#[path="🪪️staged/🦀️.rs"]
+mod staged;
+pub use staged::StagedSourceAdmission;

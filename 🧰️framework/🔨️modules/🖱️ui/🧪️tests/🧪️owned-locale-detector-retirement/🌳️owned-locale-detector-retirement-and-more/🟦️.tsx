@@ -16,14 +16,16 @@ export async function registerOwnedLocaleDetectorRetirementAndMoreTests(vitest: 
     it("normalizes the closed shell locale domain", () => {
       expect(detectShellLocale("de-AT")).toBe("de");
       expect(detectShellLocale("DE-de")).toBe("de");
-      expect(detectShellLocale("fr-FR")).toBe("en");
-      expect(detectShellLocale(undefined)).toBe("en");
+      expect(detectShellLocale("en_GB")).toBe("en");
+      expect(detectShellLocale("fr-FR")).toBeUndefined();
+      expect(detectShellLocale("")).toBeUndefined();
+      expect(detectShellLocale(undefined)).toBeUndefined();
     });
 
     it("initializes an explicit shell locale through the owned resolver", async () => {
       const previousStoredLocale = localStorage.getItem(UI_CHROME_LOCALE_STORAGE_KEY);
       const previousDocumentLocale = document.documentElement.lang;
-      const previousI18nLocale = detectShellLocale(uiI18n.resolvedLanguage || uiI18n.language);
+      const previousI18nLocale = detectShellLocale(uiI18n.resolvedLanguage || uiI18n.language) ?? "en";
       try {
         initUiLocaleSync("de");
         expect(localStorage.getItem(UI_CHROME_LOCALE_STORAGE_KEY)).toBe("de");

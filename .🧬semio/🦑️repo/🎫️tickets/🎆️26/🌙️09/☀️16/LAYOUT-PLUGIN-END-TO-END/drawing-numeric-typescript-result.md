@@ -1,0 +1,9 @@
+# Verified TypeScript Numeric Slice
+
+Actual normal v4 Bun **44505 EXIT0**, **7pass,0fail,633assertions,166ms**. Actual sequential canonical strict3 **96767 EXIT0**, with no diagnostics. All18 pre/test-post/strict-post/current input bytes/hashes match. This covers the actual first-party numeric owner/cursors, source test/fixture, core/counter/bytes/budget closure and package/lock snapshot. It is not full core/Font/Drawing/Layout acceptance.
+
+Bun log36645bytes SHA5b21fba1ca6ccf529be9b90192c803daaaaa390f43a52fb13d9bdf6b3f069ab9. Strict log **23300bytes** SHA **bf8089e1d07dabaf25d5bc64918c0d093de7014514e11d4184086df62eb76091**. Executed v4 command SHA42e8637ea2b46402692dd0c12620196d67e71a4c9989a0d8f53ed563f7ceb34d. Terminal receipts: generated/drawing-ts-numeric/green-2/terminal.json and strict-green/terminal.json.
+
+Actual behavioral34851 RED exposed the missing final-row release demand. Root reconstructed the entire old root hash by reversing the one-condition fix. V3 actual Bun then passed7/633, but strict95515 failed five test SDK binding types. Root reconstructed the entire old test hash by reversing exactly five canonical array-binding changes. The new v4 reran all seven real laws and strict3 without changing assertions/SQL/cases/stock/fuel/library/profile/timeouts. Old commands/logs/receipts remain preserved.
+
+The temporary numeric18 freeze is released after this verified scope. Authorized TS absolute-demand and owned-buffer/counter fixes may now proceed; affected changes require a precise proof refresh and appropriate checks, not an unchanged18-byte claim. Native primitive29 is historical after the native absolute-demand repair; new native owning repeat, full Drawing/lower/original-boundary checks and all original Layout19/setup/declaredJS/browser/finalization gates remain mandatory. No Root runtime remains live at this result.

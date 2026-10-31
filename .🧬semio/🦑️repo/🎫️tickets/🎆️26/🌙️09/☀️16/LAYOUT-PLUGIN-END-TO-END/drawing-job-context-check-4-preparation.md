@@ -1,0 +1,5 @@
+# Context Production Diagnostic 4 Preparation
+
+The existing honest bounded production metadata/input collectors and exact current same-cap command have a new planned successor after Read/Default extraction and staged Source consumers. No metadata/input capture or Cargo request has yet been made; prior check3 stopped before compiler at Value Utf8 source cap. This scope diagnoses production compilation only. Actual Context all-target/testkit plus documentation and newly mounted source-return-place/acknowledgement laws remain mandatory after the current frontier compiles.
+
+Read-only metadata/capture is now complete:47 first-party manifests,206 declared edges,831 conservative inputs/552 Rust,0 unresolved literal observations,maxpath144 UTF16,7,184,072 bytes. These are metadata/observation limits, not compiler Source limits or Source-fit acceptance. No Cargo launched; dependency private test migrations may change conservative observations, so refresh before the planned actual production diagnostic.

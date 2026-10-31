@@ -1,0 +1,106 @@
+{
+  "sourceOnly": true,
+  "runtimeAttempts": 0,
+  "sourceReady": false,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+      "sha256": "39d432bfac1b9aaaf1a4011856794e6dab0089ccb1d2c7ff9feebed05712c229",
+      "bytes": 1553
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "afb02a76456a1fa316b073e566b34a1a9f47ced86b489a7869d889e2c28c3517",
+      "bytes": 4594
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs",
+      "sha256": "45360ffb29982f666145c5b011faf435523a8c89000286f3d69e60c2d3aa6644",
+      "bytes": 52386
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "ce64dbe2d314a07cba4dbf6d40db33c7a08f64f84c910c88d7b91c45ce0768fb",
+      "bytes": 1524
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "2b0b31dc908ba57650d605a364c3faf67400207c02e275a49e7e147c4c97a58b",
+      "bytes": 129
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🕰️clock-identity-and-budget/🦀️.rs",
+      "sha256": "de2c7cc12ab11900ed6677ae99d6902a47958d2af25afeb571751b8bc3096ea0",
+      "bytes": 8127
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🕰️clock-identity-and-budget/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "d15160fd70bd4043049a1128546a4ed8165be45994dccaabbd589032985c960e",
+      "bytes": 608
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🕰️clock-identity-and-budget/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "2b0b31dc908ba57650d605a364c3faf67400207c02e275a49e7e147c4c97a58b",
+      "bytes": 129
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🪪️binding/🦀️.rs",
+      "sha256": "5fb049b273a16064f576e67387680e22043b083683e890f12a4f722537759d65",
+      "bytes": 1210
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🏭️construction/🦀️.rs",
+      "sha256": "c7d80ee837a057255fb397326cf6a5a8cc73d451572288c5ff2d846e996a5e9f",
+      "bytes": 5095
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🦀️.rs",
+      "sha256": "f18a41a05607e30753a6476f23b4881e2c032ffcafe225fe4439e4ef87f1881e",
+      "bytes": 6186
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🚦️clock-stride-and-job-protocol/▶️drive/🦀️.rs",
+      "sha256": "2506abac019d0b1cc5277d37088c855cb2a96f7b9f3a871522d1b9a9a5df7f1e",
+      "bytes": 3439
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️origin/🦀️.rs",
+      "sha256": "6788a3fbb8f69efd9616d7427d7c4dad45f8712d2615e51c3038b65927fd078c",
+      "bytes": 19662
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🎟️admission/🧪️tests/🦀️.rs",
+      "sha256": "c786e35fc965344a87e46d667c0307bf54e7052abf4b024da87680abc30eb6c4",
+      "bytes": 3460
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/👷️worker/🧪️tests/🦀️.rs",
+      "sha256": "463a8c1ae1abc8798f2ec90cc36cd75e61bc5cfa82892e3563f9f2dc98bd3132",
+      "bytes": 4722
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/📸️capture/🦀️.rs",
+      "sha256": "b53a7b68758a98105fdb69a7063a067f6682b0a687bc75aa5e98a441b3e19dd5",
+      "bytes": 11221
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/Cargo.toml",
+      "sha256": "5f789fd0f453fa1f1101d9328dc5b36c879718aab7a36fa9a704d91da1bbe181",
+      "bytes": 125561
+    }
+  ],
+  "removedMounts": [
+    {
+      "name": "StepContextOwner",
+      "reason": "Obsolete standalone ledger/context minting helper is no longer part of production. Existing law assertions require genuine FixtureCaller migration."
+    }
+  ],
+  "preservedDefiningTests": true,
+  "knownBlockers": [
+    "context cfg(test) Source closure still exceeds existing byte/file bounds; actual defining law ownership remains to be split without dropping assertions",
+    "OriginalOwnedCallerTurn.park_owned_turn still consumes obsolete Parent.admit_loan Result interface and must become retained output-slot admission",
+    "external worker authority/driver callers still require genuine source/context handoff migration",
+    "actual canonical admission/compiler/test evidence is pending",
+    "actor retained-turn/job/park has the only bounded production consumer of old consuming parked admission; retain exact issuer+pending turn together during its output-slot migration"
+  ]
+}

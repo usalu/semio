@@ -1,0 +1,609 @@
+{
+  "scope": "Source-only observation; not compiler closure or source fit; all owned-native files including old tests and current derive/graph providers",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🦀️.rs",
+      "bytes": 18065,
+      "sha256": "e4e21c7c718e8fcee5aad321c407417883bd692c7f0492e7aa17c54b9f80a7d2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧪️tests/🦀️.rs",
+      "bytes": 9312,
+      "sha256": "f54c69c6fe6322d793ca0c2e39a48fd125a97ebf91b1fd63b3692a3badea7fe9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 1871,
+      "sha256": "ac532663971c4de193ee5c1dcd8ab8bf6e2a49ee3384c68e77447f7386b12c68"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🧬️schema/🔣️.json",
+      "bytes": 640,
+      "sha256": "44815fd9fee3fca868721807edf2a6278b1c4f5d018e8118e3a5900790d8add1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔣️.json",
+      "bytes": 1310,
+      "sha256": "96694cc18d83b758a1e65eabfd67a95fcc8a83e83f28f2bcc8d0e0b35be2c002"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🦀️.rs",
+      "bytes": 23674,
+      "sha256": "396d62619e9cfef46a09c0933b229c622113554c7952815553a3033ecd8f19d1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🧪️tests/🦀️.rs",
+      "bytes": 2693,
+      "sha256": "e9aec997730632f27355ec9cb172ac9635d301bf96da942b95b53be4e5a350fe"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 1618,
+      "sha256": "9bdd95077372b8a29fce4fe5576095cab384dc076d7b25dc9e4afc77318fac78"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/📋️project.json",
+      "bytes": 644,
+      "sha256": "7001c2f1a48789f71bb72ded6659da470f5a51b91997d09cc2be6687e7f63ba9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🦀️.rs",
+      "bytes": 6743,
+      "sha256": "d089942d630f093e69eedf936a5890626bb4ae8a2a3530067f44a0abf5247cb5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🦀️.rs",
+      "bytes": 6170,
+      "sha256": "6ed7d5d4ba763cb0a751e2c3e0af52e13872c105b08210d5c44956f439c1966f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 220,
+      "sha256": "1d210da56026f53d8c28fe86d84bb8046d6104b9530c4e4ab2d9b6d359ccb740"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧬️schema/🔣️.json",
+      "bytes": 556,
+      "sha256": "c5d3bc57be33296507ed5dcf4533156d8d88b53d6ba5983635f436ebd19a8478"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📖️source/🔣️.json",
+      "bytes": 940,
+      "sha256": "93bd0749adec85ce26f7d56676fd6f4e147c15c27968277a148fc7af93c41d1c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📖️source/🧪️tests/📋️schema.json",
+      "bytes": 1718,
+      "sha256": "b84a50244cc4dcab62d1ba03df66d1d80d8a3f17b8c511e5db63afa7a3995003"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📖️source/🧪️tests/🔣️.json",
+      "bytes": 895,
+      "sha256": "47b09194c975ae9ad0fa1de6b24b2f69e748ec2492b19bccb15f263ac15cb746"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📖️source/🧪️tests/🦀️.rs",
+      "bytes": 8911,
+      "sha256": "e83b1ac456952809bdf0314bb9c912bc317fe7c6e9e7dfe9938917c28996ca67"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📖️source/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 1114,
+      "sha256": "60312a0fb8e68603a703677ece75bbbc3d69b339567cf571fef0983b84ea3b94"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📦️storage/📐️.json",
+      "bytes": 296,
+      "sha256": "e69f009b7e8578943f46ef8b5aa5b324b2362d2628adcba22f07b93f87e01eb6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📦️storage/🔣️.json",
+      "bytes": 767,
+      "sha256": "8070d64225694c0c27d07269efe8c792a9c2fe5734c9be72fc59afa094cb69c7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📦️storage/🧪️tests/🦀️.rs",
+      "bytes": 3766,
+      "sha256": "28ae7056b0435e8405bf3516edf6bd04b91d1d69995053bb7e47a1955d50c67e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🎟️work/📐️.json",
+      "bytes": 839,
+      "sha256": "f66ee6d765e5cc65f2fc3f6b0af659195481d582f450af3b969756b0148ff61f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🎟️work/🔣️.json",
+      "bytes": 1406,
+      "sha256": "90beec723cf0ed3f0083f309358284eae21a735c3dbacf1edb5acaa68dd71568"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 4285,
+      "sha256": "9aecc6fdbb9664a1ce0a7534a44b68d3f90a2ac2284e95372f00151502aa0a05"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🔢️unit/🦀️.rs",
+      "bytes": 4145,
+      "sha256": "e809b280cf6e4d947ec9718e4a693c4fb5d4b2e63af9f79980e1f9a2ab26500b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🦀️.rs",
+      "bytes": 7917,
+      "sha256": "460c711016da91cd9b66571a32ca26a248dff1a7020d9813839e9db310c14a01"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🎟️work/📐️.json",
+      "bytes": 523,
+      "sha256": "423dc7a0dff2bce6178fe9e3a25ae570567e9f70492ad246997076b2f1906090"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🎟️work/🔣️.json",
+      "bytes": 980,
+      "sha256": "b0f7d0a1647969570ec70a81bcb720652c58445209323575dab6c2067da83fa5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 4912,
+      "sha256": "bff9f62c7dcba1b3de5a8382c781b0eba1ade10c14683ea41456c5b0534759bf"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🦀️.rs",
+      "bytes": 8009,
+      "sha256": "6706ca2f2f1c73232d69c77bbb224dc776986528c3c9a6a17a44129e9319f164"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs",
+      "bytes": 38650,
+      "sha256": "478c3554075794c535b099f92031a9180e44dde75885f64806a74041604ccc4e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 1187,
+      "sha256": "f987e5e3a5c852a5bec3b99757a6c44f0b0949c0ac55a4727c81714b34a1b1f5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧬️schema/🔣️.json",
+      "bytes": 1774,
+      "sha256": "385b9492734d7a3226fc1bffa2818df3ff6c3b6593d4fbfdcfc2814dfae54597"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🎟️work/📐️.json",
+      "bytes": 1608,
+      "sha256": "b4f6a3915dc5094bdd0486ecc19eaf1e0bf079dab57ee04bd7feaebb34615a19"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🎟️work/🔣️.json",
+      "bytes": 2384,
+      "sha256": "8f61bfd34eb57d321b87092526279506ab3bac8a75037180086bb39c2d3daaf9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 7787,
+      "sha256": "8927c742c1bc8c69f631c23c4ca6a640d478d8aef51a06bde68c81561eb85b2c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🦀️.rs",
+      "bytes": 17994,
+      "sha256": "503acf0653fee2fb8860bcde41f932d9ca4667f973c275ad6b6c2bd3a582b5cd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/📐️.json",
+      "bytes": 376,
+      "sha256": "d0ee87220dbe17e41944513fe3f1093b7bbb3e7831bda06715cb3e2162e91292"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/📤️take/📐️.json",
+      "bytes": 334,
+      "sha256": "9b2e4f123a885b971357625d9c2d9a9179b4b2ab1995d9671d0c1b4a85df1a3a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/📤️take/🔣️.json",
+      "bytes": 824,
+      "sha256": "4cb1cf3a9586b3676ac7b1963fdae3d6dcc0b0ee86d131fde6b0ba771f0e1f4b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/📤️take/🧪️tests/🦀️.rs",
+      "bytes": 7035,
+      "sha256": "82886401aa4f29975f8c090bcc2a1416b43c0bf77afc1433350532736913732b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/🔣️.json",
+      "bytes": 921,
+      "sha256": "45854fe9496088ea02061536d7abbe190df02c60e44b47e7b6b38d90500d7907"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 4307,
+      "sha256": "3d94fea203071e3b5431d97285ac75a53906b489eb6761fa9d334f83d0576147"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🦀️.rs",
+      "bytes": 15420,
+      "sha256": "e022646a4457173f0b2c41f2ae61e2c02781393ec73deba69284714927bf6772"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🦀️.rs",
+      "bytes": 21160,
+      "sha256": "55b2ed7cac77ea74e7d4cdb86c2f87fb6235662c5a250885a454e8df96a6e6dd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 2185,
+      "sha256": "1f32346718c713bcb0eadf323faa735144924a15c22f569ef98af7ab27e508ec"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧬️schema/🔣️.json",
+      "bytes": 4255,
+      "sha256": "5737f0ac196e420121eb2560c697f7d5f9619f38364d565aaf42e674b754ce00"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🎟️work/📐️.json",
+      "bytes": 541,
+      "sha256": "fede1403d3d934c4c6de0241e14191f2cd13e0a7022e848e30882fbfbcaf69c7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🎟️work/🔣️.json",
+      "bytes": 1176,
+      "sha256": "5541227a119121caa3b2dad1e7b2d1733e21037a59d97cd8d2ba641797cc9245"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 6811,
+      "sha256": "86995865c63e92df2961f96265aca18b428475c74a07a875c9f278f7dee1b56f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/👯️pair/🦀️.rs",
+      "bytes": 7186,
+      "sha256": "210f0619337c4f96ca5d8e4d0b261893a6280d9f922b835ca36ae8613989b53e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/📦️slot/🦀️.rs",
+      "bytes": 4537,
+      "sha256": "6e75424289047bc803ab316cf91c0e3fe021b64d342623ae5c973ad4ea62ba07"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🔢️array/🦀️.rs",
+      "bytes": 6796,
+      "sha256": "d0cfb2afe06b2797a00e1a7fd5de47810bd1a009fd8c9823add7dabd8f45be15"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🦀️.rs",
+      "bytes": 7234,
+      "sha256": "0a3adeac3d26aa27f05b26dc0a7f4be092603a553b3a3fe2fd4183bc13d212dc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 195,
+      "sha256": "bb8b4c2b209a49db611d3f3dc26ea4754ecce2748121589174724810d3e7296e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧬️schema/🔣️.json",
+      "bytes": 462,
+      "sha256": "2855cf762db17b77a1f40c53f7fb7d37e7301dbbcef11aac6c04cafa958b7ef0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 2165,
+      "sha256": "c1404c6a783a8dfebcf17d4aed9549806ab8b2eabec23adb8991cbd073c7a2be"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 110,
+      "sha256": "9ecac9018674b791577203095cbea332cdadd2b4f24b55b0a54ecac61f65cc87"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 1428,
+      "sha256": "39030ae4aca14be36a68e6874de7f025b4dbf6f7571abcd257f28486a369cfd1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📐️.json",
+      "bytes": 504,
+      "sha256": "13ece008fa2ff10057127240b8ab20d35b40a65c89b6bf6a0e4980a369ad73a5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/🔣️.json",
+      "bytes": 1213,
+      "sha256": "ef5ba2710bdc5a52c042373493ffd7014577141f4c7f5fd93f91eeba5f00e4aa"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/🦀️.rs",
+      "bytes": 4997,
+      "sha256": "2fba0e0215324fe22239a8c2a34edec2e3eafdc1f8c4b2d25d7c405e7f0039d7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/🧪️tests/🦀️.rs",
+      "bytes": 5691,
+      "sha256": "3ef0da99e55af6941c7b909efa3e5ed82b71988edd2811d4a0ecdf6801b4c7cb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/📦️box/📐️.json",
+      "bytes": 361,
+      "sha256": "f5761bf376929fe5631f094499c970295b83ea148ddc65cce5fbcf2f03e6cdcd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/📦️box/🔣️.json",
+      "bytes": 856,
+      "sha256": "2b25a0e4f86ee9027813b03959c6e52e8da1cb94799939d1abd4387e7ca2c10e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/📦️box/🦀️.rs",
+      "bytes": 6253,
+      "sha256": "bea951fe9ec7406dc6984be2668218260f6aa72ea0cf89237a70ab168d2621a4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/📦️box/🧪️tests/🦀️.rs",
+      "bytes": 3793,
+      "sha256": "f97dfaae6b58f1390b15110500649875b6037b59593c175bd3ccd45f96e0d711"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🦀️.rs",
+      "bytes": 5580,
+      "sha256": "b79f0fc0768e4f127e09573cb3d7f9eba7edc5ce1f2ba3aa7a81ffae7c217f0f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🎟️work/📐️.json",
+      "bytes": 137,
+      "sha256": "785f84977f730d945496d70848a1b6d87336bf7acd5bbcdaa8122fca96812cd3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🎟️work/🔣️.json",
+      "bytes": 539,
+      "sha256": "4ee371bd3a3398db1511f8feef45c0117cf4833ec49a4bb9cd9be37ca398d835"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🔣️.json",
+      "bytes": 183,
+      "sha256": "c80cbb7e3d1119ed783a613238447cdbe2a81a1e78987b59d6edb13b48c0fe72"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🦀️.rs",
+      "bytes": 5716,
+      "sha256": "4f5cf9f1675fd267d243178987599e92b51bf7a0a1ac7114a0766b3eaec48864"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🦀️.rs",
+      "bytes": 10372,
+      "sha256": "6e5e6331e3c829bcce11d29fdff1e38b83e1b7bf87ffde8a6346650567fe3c83"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/🦀️.rs",
+      "bytes": 18825,
+      "sha256": "0876ab37f93e4fedba7531de224a900ebf940bad2d492564321ff2e811bb2d1d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 440,
+      "sha256": "4cbb4f86b6351104cb951417337e57be911d340c64c361735c0e766a67df5228"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/🫙️empty/🦀️.rs",
+      "bytes": 2815,
+      "sha256": "9d9c7c4ba7db424d951ccd7c60e44adff5ac6c5c7d12efea8b2f0c5ee0c01cbb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/🫙️empty/🧫️fixtures/🔣️.json",
+      "bytes": 378,
+      "sha256": "92c93664af48e58984dbc35350c9a28130192f9add2132de723475753f242185"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧬️schema/🔣️.json",
+      "bytes": 703,
+      "sha256": "32d9f461c8209709bfe967a47136f082a601ebf24e876bf4965d5b6629f2927c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/tests.rs",
+      "bytes": 8865,
+      "sha256": "e2b942d33ed1e40c9d4f63ba3d3da85ae458663dd75c21c8553c88b22a240d85"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/🎟️work/📐️.json",
+      "bytes": 589,
+      "sha256": "8a0c73b41b3550106ecd18ec8353ab8b7ba62fd6e268faed63fc479c98c93450"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/🎟️work/🔣️.json",
+      "bytes": 1085,
+      "sha256": "a7c6e262edbbd092dbe025367c9daf43ab04c09908f4c80b69fbf2586a2174be"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 4936,
+      "sha256": "72599318dc861d4043b4746c6bf7fefb35eaa02e58ae9b425170227550f9622c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/🔣️.json",
+      "bytes": 421,
+      "sha256": "ef97334d9943b80dd67b430096e70b858c64264625be52b862fa78220df5761b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/🦀️.rs",
+      "bytes": 12606,
+      "sha256": "94a62450bc725a49305df644724f201c8484f321ca2e25f00237554bf9ce4bf5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/🧬️.json",
+      "bytes": 1054,
+      "sha256": "04e4d420242928ebb9abe404b61ed552a4af87747203883991e8b49120756050"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs",
+      "bytes": 4508,
+      "sha256": "91c24b9a8c8ecec9c74c3b52a840d2b37ce3cbac84e57e02d50a8e52348b17cf"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/📦️storage/🎟️work/📐️.json",
+      "bytes": 288,
+      "sha256": "ec8cfa2ecd2361e9a874109d2746a4e9404647abe3dc0ce3a262682f6017483b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/📦️storage/🎟️work/🔣️.json",
+      "bytes": 812,
+      "sha256": "756ceec4123206ba2034f6a9934e7b9851920897102c92e21f3a84573fc0c4ba"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/📦️storage/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 3179,
+      "sha256": "88a30f3601a8c127f689e9bad9962856f70591e7679933969984db2ca7f45db9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/📦️storage/🦀️.rs",
+      "bytes": 4563,
+      "sha256": "fd00bad03454423f4bdbad1eeab6421eb68f0cf7166f65fa20cac4f284304cb6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/🎟️work/📐️.json",
+      "bytes": 1140,
+      "sha256": "6c2b8a323ae25cb3ba39a8615ecfc460c6db823525bf6b6c9f33b4b2edb9198d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/🎟️work/🔣️.json",
+      "bytes": 1668,
+      "sha256": "226dc0086bfec2b5ba34d3042dc0e8347c758c21d663bfeda334f1025d0fdff0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 5505,
+      "sha256": "fbc7edf4838a623c8a985427120b631cc7a8842a6317d4edb91fb37c11499a2b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/🦀️.rs",
+      "bytes": 11771,
+      "sha256": "e2dfde20fcaba54e02392b0838f862e327b0bd18ade1d179f87dd5759cbd93eb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🦀️.rs",
+      "bytes": 1165,
+      "sha256": "fc48758670293890111a29980fff2d2a3f7f73c3ab85de44f155b4237d07e81b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🎮️receiving/🦀️.rs",
+      "bytes": 4545,
+      "sha256": "92c143b68dd865849b35193cf0b46ae460fcaa6f82547d2897a23ee6919c7299"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🦀️.rs",
+      "bytes": 2632,
+      "sha256": "6ed5d5f2dc20327864bd483922f87dfdbd0af5d7783fdbf02136fd4eb2158aa0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 596,
+      "sha256": "99c602a3159d5ff9bb98c5a44d63668df4459b203e8e67284c2d8dfcab5b780d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧬️schema/🔣️.json",
+      "bytes": 1017,
+      "sha256": "9da02d44c037685e6a125713d4931113c06ecc1cbdfff15c0003471541f85ecf"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🦀️.rs",
+      "bytes": 17507,
+      "sha256": "7978f8203ff34839c43401c2fa466b409274ba84657bd81e99579ffa3c7042a3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 565,
+      "sha256": "cbe842a9be08def71d8dc33fee1a418a942e763745ebefe177d2f24eded96a0c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧬️schema/🔣️.json",
+      "bytes": 1851,
+      "sha256": "49bb8504ebe9717ac1f57ac9884f87fd0c349bd7c0c7074bc76bd60a5c9436e8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🦀️.rs",
+      "bytes": 8047,
+      "sha256": "a85598f85d39f156274c9a01c68416b793fc9ac937416a0ad06daf99784e5e79"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🦀️.rs",
+      "bytes": 6665,
+      "sha256": "5a1aac27174cc8b89c65adf0d81122300adc4a3095e97b05f9ac2286b9399d95"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 297,
+      "sha256": "272a7966b15ec801c587fe0542d2447dab64d48bef9326e1d8a12709f554dc69"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧬️schema/🔣️.json",
+      "bytes": 567,
+      "sha256": "570e10e48b2bdf402f1d7c43dd0a4bce7d212cb28751f5b6da1102fd831ef663"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🎟️work/📐️.json",
+      "bytes": 577,
+      "sha256": "ad945fe4f924e60ac28feeddda8deb7145858e41f565e8b38ed50d4573859920"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🎟️work/🔣️.json",
+      "bytes": 990,
+      "sha256": "7c218461832b4df5144fe3af345a6bb9a38af0f49f7198110609d33111a1a1e9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 4563,
+      "sha256": "04d12d5b08f37f57c9ef1fa3cb1fdd71732aa11f4fcddd04fea05ebd85bac7db"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🦀️.rs",
+      "bytes": 11529,
+      "sha256": "7fabd88a8591bb75780db6ac5c89970e124af7ed62cc5a7e75994df37647fbb4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🧪️tests/🦀️.rs",
+      "bytes": 5410,
+      "sha256": "c57162f7d32db791d145ffd1160e9130e5cf6a7b93d4f84e49f1956807f85735"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 164,
+      "sha256": "1ee5d8c53216dd6ba1e2296eddd361a7f19e59c7b797b5aa13854e4822a1bf3d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🧬️schema/🔣️.json",
+      "bytes": 477,
+      "sha256": "3f12a2d578dabeb0307456f6e953d0b07037fae635c18b230663ff48a5cabf35"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🪡️field/🦀️.rs",
+      "bytes": 7089,
+      "sha256": "882f40b01b8d158ec0cca6741bdb0227a717444e9999d1ad9dd0b837731c15ef"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🆔️ids/🛬️receiving/🦀️.rs",
+      "bytes": 894,
+      "sha256": "fd74806e091c735045be6331768cf86309ed766b1ef2005d4f91f3d176f2f9de"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🛬️receive/🎟️work/📐️.json",
+      "bytes": 1960,
+      "sha256": "82c8cd0d3d4683240b82373989500414f6471dfea069c0a81a3250f68dd0b3f7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🛬️receive/🎟️work/🔣️.json",
+      "bytes": 2523,
+      "sha256": "e07ff32cbd38d167c5014787bc13d233f6880e8dabf59b6e9de20d7d7adcff44"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🛬️receive/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 5696,
+      "sha256": "7f7095d5b7af3a554cf16757676d91bbbd565772b6e82b50bef99105d06d561e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🛬️receive/🦀️.rs",
+      "bytes": 5561,
+      "sha256": "ab12d1fd72bdcf17fd5241d6029696b866eaf23bc012b874e9a345615e02eb43"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🏷️label/🛬️receiving/🦀️.rs",
+      "bytes": 1073,
+      "sha256": "2d8e159d6d701329be54ea9352a6231ec435ecd21b773669d776e3dec7b95bf9"
+    }
+  ],
+  "removed": [
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔁️blocking/🦀️.rs",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧳️receiver/🦀️.rs"
+  ]
+}

@@ -1,5 +1,4 @@
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 //! 🎪 `stdio.ply` artifact — stdio reference format.
 use semio_framework_plugin::PluginBuilder;
 #[cfg(test)] use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};

@@ -24,9 +24,10 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value = { path = "../../../../📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 blake3 = "1.8.2"
 semio-framework-artifact-reference = { workspace = true }
 encoding_rs = "=0.8.35"

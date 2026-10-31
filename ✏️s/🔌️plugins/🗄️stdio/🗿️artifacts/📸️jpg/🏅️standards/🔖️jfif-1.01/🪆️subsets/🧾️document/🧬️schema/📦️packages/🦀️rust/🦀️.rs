@@ -1,7 +1,6 @@
 //! 🧬️ schema of `semio-s-artifact-stdio-jpg` — a path-preserving carve of the artifact root mounts.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 pub mod schema {
     pub use super::standards::v_jfif_1_01::subsets::document::schema::*;

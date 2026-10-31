@@ -18,7 +18,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 }
 //#endregion 🗃️Apps
 
-/// 🔌️ Builds the energy plugin. `.artifact(…)` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
+/// 🏗️ Builds the energy plugin. `.artifact(…)` (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE
 /// M1) replaces the old bare `crate::engine::register()` call made before
 /// `Plugin::builder(...)` was even constructed. `.setup()` is GONE (W1d): it survived here for exactly
 /// one call — `register_document_codec`, registering `EnergyModelSnapshot`/`EnergyModelMutation`'s

@@ -2,8 +2,11 @@
   "contract": "framework.plugin.mounted-actor-capture",
   "maximumTextBytes": 256,
   "phases": [
-    "borrowed-original",
-    "paid-capture",
+    "source",
+    "backing",
+    "text",
+    "shared",
+    "settlement",
     "publication-transfer",
     "original-cancellation"
   ],
@@ -39,29 +42,5 @@
     262144,
     64
   ],
-  "sqlVector": {
-    "textBytes": 12,
-    "headerCopyBytes": 32,
-    "arcFrameBytes": 40,
-    "receipt": [
-      1,
-      44,
-      52,
-      0
-    ],
-    "originalGrant": [
-      2,
-      128,
-      128,
-      128,
-      4
-    ],
-    "remaining": [
-      1,
-      84,
-      76,
-      128,
-      4
-    ]
-  }
+  "copyPolicy": "actual-utf8-payload-only"
 }

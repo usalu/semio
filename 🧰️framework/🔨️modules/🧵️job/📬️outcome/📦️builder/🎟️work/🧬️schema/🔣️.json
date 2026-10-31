@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operation",
+    "generation",
+    "stock",
+    "deniedWork",
+    "nullWork",
+    "successWork",
+    "nullItems",
+    "successItems",
+    "finalEmptyDropHeap",
+    "metadataWork",
+    "pageWork",
+    "sourceFailureWork",
+    "reservationTransaction",
+    "boxedWork",
+    "incomingWork"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operation": {
+      "const": 7543
+    },
+    "generation": {
+      "const": 3
+    },
+    "stock": {
+      "const": {
+        "items": 4096,
+        "copyBytes": 1048576,
+        "capacityBytes": 1048576,
+        "releaseBytes": 1048576,
+        "depth": 64,
+        "fuel": 16384,
+        "deadlineUs": 1000000
+      }
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "nullWork": {
+      "const": 1
+    },
+    "successWork": {
+      "const": 1
+    },
+    "nullItems": {
+      "const": 0
+    },
+    "successItems": {
+      "const": 1
+    },
+    "finalEmptyDropHeap": {
+      "const": [
+        0,
+        0
+      ]
+    },
+    "metadataWork": {
+      "const": {
+        "initializationTurns": 1,
+        "sealWork": 1,
+        "cachedWork": 0,
+        "deniedWork": 0,
+        "copyBytes": 0,
+        "maximumPages": 256,
+        "maximumInitializationTurns": 257,
+        "livePages": 0
+      }
+    },
+    "pageWork": {
+      "const": {
+        "extent": 4096,
+        "text": "original payload π 🌿",
+        "stages": [
+          "ledgerAlias",
+          "reservation",
+          "allocation",
+          "publication",
+          "copy"
+        ],
+        "actualWork": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "nullWork": 1,
+        "nullItems": 0,
+        "deniedWork": 0,
+        "deniedItems": 0,
+        "zeroCopyMetadata": true,
+        "maximumTurns": 512
+      }
+    },
+    "sourceFailureWork": {
+      "const": {
+        "sourceBytes": [
+          65,
+          66
+        ],
+        "errorWrittenBytes": 1,
+        "errorCopyBytes": 1,
+        "errorWork": 1,
+        "errorItems": 1,
+        "published": false
+      }
+    },
+    "reservationTransaction": {
+      "const": {
+        "counters": 5,
+        "maximumRollback": 4,
+        "work": 1
+      }
+    },
+    "boxedWork": {
+      "const": {
+        "deniedWork": 0,
+        "nullWork": 1,
+        "successWork": 1,
+        "copyBytes": 0,
+        "callerOwnsBeforeFold": true
+      }
+    },
+    "incomingWork": {
+      "const": {
+        "extent": 16384,
+        "acceptWork": 1,
+        "blockedWork": 0,
+        "deniedWork": 0,
+        "copyBytes": 0,
+        "closeWork": 1,
+        "simultaneousBackings": 2,
+        "releaseBytes": 32768
+      }
+    }
+  }
+}

@@ -53,7 +53,7 @@ fn puzzle_scene_projection_matches_language_neutral_cases_and_sqlite_oracle() {
         assert_eq!(accepted, case["accepted"].as_bool().unwrap(), "{}", case["id"]);
         let actual = projection.take_scene().map(|scene| { let result = output(&scene); drain(retire_value(scene)); result }).unwrap_or(serde_json::Value::Null);
         assert_eq!(actual, case["expected"], "{}", case["id"]);
-        drain(projection.take_retirement(unbounded_grant()).unwrap().0);
+        drain(projection.take_retirement(unbounded_grant()).result.unwrap().0);
         drain(retire_value(value));
         results.push(serde_json::json!({"id":case["id"],"accepted":accepted,"actual":actual}));
     }
@@ -77,7 +77,7 @@ fn puzzle_scene_projection_retains_partial_owners_at_every_cancellation_boundary
         let mut complete = Projection::new();
         complete.project(&value, mode, &mut control).unwrap();
         drop(control);
-        drain(complete.take_retirement(unbounded_grant()).unwrap().0);
+        drain(complete.take_retirement(unbounded_grant()).result.unwrap().0);
         for cancel_at in 1..=calls {
             let mut observed = 0;
             let mut progress = |_: NativeDecodeProgress| { observed += 1; observed < cancel_at };
@@ -85,13 +85,13 @@ fn puzzle_scene_projection_retains_partial_owners_at_every_cancellation_boundary
             let mut partial = Projection::new();
             assert_eq!(partial.project(&value, mode, &mut control).unwrap_err().kind, ValueRefusalKind::Canceled);
             assert!(partial.take_scene().is_none());
-            drain(partial.take_retirement(unbounded_grant()).unwrap().0);
+            drain(partial.take_retirement(unbounded_grant()).result.unwrap().0);
         }
         let mut progress = |_: NativeDecodeProgress| true;
         let mut control = NativeDecodeControl::new(0, &mut progress);
         let mut refused = Projection::new();
         assert_eq!(refused.project(&value, mode, &mut control).unwrap_err().kind, ValueRefusalKind::OwnershipLimit);
-        drain(refused.take_retirement(unbounded_grant()).unwrap().0);
+        drain(refused.take_retirement(unbounded_grant()).result.unwrap().0);
         drain(retire_value(value));
     }
 }

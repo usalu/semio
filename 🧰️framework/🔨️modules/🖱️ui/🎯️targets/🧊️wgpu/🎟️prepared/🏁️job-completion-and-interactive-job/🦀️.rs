@@ -184,7 +184,10 @@ impl PreparedRenderJob {
     }
 
     fn publish_fault<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        if !self.fault_payload.advance_initialization(cx)? || !self.fault_payload.seal(cx)? { return Ok(None); }
+        let turn = self.fault_payload.advance_initialization(cx);
+        if !matches!(semio_framework_job::receive_original_retained_work(cx, turn)?, semio_framework_job::RetainedCloneStep::Complete(_)) { return Ok(None); }
+        let turn = self.fault_payload.seal(cx);
+        if !matches!(semio_framework_job::receive_original_retained_work(cx, turn)?, semio_framework_job::RetainedCloneStep::Complete(_)) { return Ok(None); }
         JobOutcomeBorrow::admit_fault(cx, self.fault_payload.published().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "prepared fault owner was not sealed"))?).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
@@ -289,8 +292,8 @@ impl Drop for PreparedRenderJob {
     }
 }
 
-impl InteractiveJob for PreparedRenderJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+impl PreparedRenderJob {
+    fn step_callback<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         let grant = cx.retained_grant();
         if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
         if cx.is_cancelled() {
@@ -359,6 +362,12 @@ impl InteractiveJob for PreparedRenderJob {
         JobOutcomeBorrow::admit_yield(cx).map_err(semio_framework_job::OriginalTurnFailure::from)
     }
 
+}
+
+impl InteractiveJob for PreparedRenderJob {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_callback(cx))
+    }
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         match descriptor.kind() {
             JobOutcomeKind::Yield => descriptor.yielded(),

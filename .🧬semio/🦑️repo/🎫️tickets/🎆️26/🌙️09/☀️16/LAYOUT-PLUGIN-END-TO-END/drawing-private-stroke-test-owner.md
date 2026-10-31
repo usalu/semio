@@ -1,0 +1,11 @@
+# Defining Stroke Canonical Test Ownership
+
+Root approved moving the private stroke-union phase/inventory law into the real defining owner. The existing prepared_regions_stroke_cancel_actual_union_sources_frontiers_and_partial_output_in_every_phase law now mounts once under paint::stroke_custody_tests in the production scene crate with cfg(test). Every original assertion and every phase data row remains; only work and close calls use the same finite schema-pinned wallet. No private field or test hook was exported. The external companion no longer contains this law.
+
+The literal PaintedPathPreparation test input constructor was moved once into a shared nearby test helper, mounted from both old unit tests and the defining law. It was not copied into a ticket or reimplemented. The real neutral phase and geometry fixture paths are now resolved for the production manifest; the existing first-party fixture reader resolves against CARGO_MANIFEST_DIR, not the Rust source file. Exact file existence was checked. The new scene devdependency follows the existing companion's explicit first-party fixture-reader path convention because the Drawing workspace has no workspace dependency key for it.
+
+The actual owner is semio-s-artifact-draw-drawing-scene, manifest at the scene/📦️packages/🦀️rust/Cargo.toml path recorded in the packet, under the Drawing Cargo workspace. Required execution is the real owner's unfiltered --lib with testkit. Its dependency compilation in Layout does not execute the law. Keep the full existing nineteen Layout owners mandatory and add this actual native owner gate; exact runtime sequencing remains Root-owned and unreleased. No admission, compiler or runtime proof is claimed.
+
+The existing original stock, trace observer and paid full-owner close are used. The new production test binary has its own trace global allocator; the scene-tests companion is a separate binary. Current root/mount/devdependency/helper hashes and the original law hash are retained in drawing-private-stroke-test-working-files.json. No Source copy was retained in the ticket.
+
+A metadata inspection initially used unavailable Python tomllib and stopped before mutation; the corrected inspection used only builtin text parsing and established the actual workspace dependency shape. This was not a semantic test.

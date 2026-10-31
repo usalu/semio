@@ -1,7 +1,6 @@
 {
   "schema": "framework.value.read-ownership",
   "capacity": 1024,
-  "sourceHandbackRefusals": ["items", "copy", "depth"],
   "workBytes": [
     1,
     3,
@@ -74,5 +73,20 @@
       "capacity",
       "depth"
     ]
-  }
+  },
+  "sourceHandbackCases": [
+    {
+      "axis": "items",
+      "admitted": false
+    },
+    {
+      "axis": "depth",
+      "admitted": false
+    },
+    {
+      "axis": "copy",
+      "maximumCopyBytes": 0,
+      "admitted": true
+    }
+  ]
 }

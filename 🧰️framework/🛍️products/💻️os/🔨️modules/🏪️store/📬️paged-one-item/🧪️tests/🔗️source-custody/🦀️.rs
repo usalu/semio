@@ -23,14 +23,14 @@ thread_local! {
 struct ExactMutationIssuer;
 impl ArtifactOwnedValueRetirementFactory<DocumentMutation> for ExactMutationIssuer{
     fn retirement_birth_bytes(&self,value:&DocumentMutation)->usize{OwnedValueRetirementFactory::<DocumentMutation>::default().retirement_birth_bytes(value)}
-    fn retire_owned(&self,value:DocumentMutation,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,DocumentMutation)>{
+    fn retire_owned(&self,value:DocumentMutation,grant:RetainedCloneGrant)-> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,DocumentMutation)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,DocumentMutation)> {
         CALLS.set(CALLS.get()+1);
         assert_eq!(std::ptr::from_ref(self) as usize,ISSUER.get());
         let DocumentMutation::SetText{text,..}=&value else{panic!("original mutation changed")};
         assert_eq!(text.as_ptr() as usize,PAYLOAD.get());
         if REFUSE_ISSUER.replace(false){return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"exact original issuer refuses once"),value));}
         OwnedValueRetirementFactory::<DocumentMutation>::default().retire_owned(value,grant)
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]

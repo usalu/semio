@@ -1,0 +1,25 @@
+{
+  "state": "private stale metadata-copy helpers zero concrete callers in defining domains",
+  "removed": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🦀️.rs",
+      "definition": "fn enlarge(mut p:RetainedCloneProgress,extra:usize)->Result<RetainedCloneProgress,ValueError>{p.copied_bytes=p.copied_bytes.checked_add(extra).ok_or_else(phase_error)?;p.copied_items=p.copied_items.max(usize::from(extra>0));Ok(p)}\n"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🦀️.rs",
+      "definition": "fn retained_error(error:ValueError,extra:usize)->ValueError{let p=error.retained_progress();match enlarge(p,extra){Ok(p)=>error.with_retained_progress(p),Err(error)=>error.with_retained_progress(p)}}\n"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🦀️.rs",
+      "definition": " fn metadata()->usize{0}\n"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🦀️.rs",
+      "definition": "fn add(mut p:RetainedCloneProgress,copy:usize)->Result<RetainedCloneProgress,ValueError>{p.copied_bytes=p.copied_bytes.checked_add(copy).ok_or_else(invalid)?;Ok(p)}\n"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🦀️.rs",
+      "definition": " fn metadata()->usize{0}\n"
+    }
+  ]
+}

@@ -45,20 +45,20 @@ pub enum JobPayloadAdmissionFault {
 }
 
 /// 🚧️ Admission faults surface to value-level callers as work-limit refusals; sealed or pending sources are invariant violations.
-impl From<JobPayloadAdmissionFault> for semio_framework_value::ValueError {
+impl From<JobPayloadAdmissionFault> for crate::ValueError {
     fn from(fault: JobPayloadAdmissionFault) -> Self {
         let (kind, message) = match fault {
-            JobPayloadAdmissionFault::OpportunityExhausted => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload opportunity exhausted"),
-            JobPayloadAdmissionFault::OperationItems => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload operation item limit reached"),
-            JobPayloadAdmissionFault::OperationBytes => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload operation byte limit reached"),
-            JobPayloadAdmissionFault::ProcessBytes => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload process byte limit reached"),
-            JobPayloadAdmissionFault::StreamItems => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload stream item limit reached"),
-            JobPayloadAdmissionFault::StreamBytes => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload stream byte limit reached"),
-            JobPayloadAdmissionFault::WriterFull => (semio_framework_value::ValueRefusalKind::WorkLimit, "job payload writer is full"),
-            JobPayloadAdmissionFault::WriterSealed => (semio_framework_value::ValueRefusalKind::InvariantViolated, "job payload writer is sealed"),
-            JobPayloadAdmissionFault::RejectedSourcePending => (semio_framework_value::ValueRefusalKind::InvariantViolated, "job payload rejected source is pending"),
+            JobPayloadAdmissionFault::OpportunityExhausted => (crate::ValueRefusalKind::WorkLimit, "job payload opportunity exhausted"),
+            JobPayloadAdmissionFault::OperationItems => (crate::ValueRefusalKind::WorkLimit, "job payload operation item limit reached"),
+            JobPayloadAdmissionFault::OperationBytes => (crate::ValueRefusalKind::WorkLimit, "job payload operation byte limit reached"),
+            JobPayloadAdmissionFault::ProcessBytes => (crate::ValueRefusalKind::WorkLimit, "job payload process byte limit reached"),
+            JobPayloadAdmissionFault::StreamItems => (crate::ValueRefusalKind::WorkLimit, "job payload stream item limit reached"),
+            JobPayloadAdmissionFault::StreamBytes => (crate::ValueRefusalKind::WorkLimit, "job payload stream byte limit reached"),
+            JobPayloadAdmissionFault::WriterFull => (crate::ValueRefusalKind::WorkLimit, "job payload writer is full"),
+            JobPayloadAdmissionFault::WriterSealed => (crate::ValueRefusalKind::InvariantViolated, "job payload writer is sealed"),
+            JobPayloadAdmissionFault::RejectedSourcePending => (crate::ValueRefusalKind::InvariantViolated, "job payload rejected source is pending"),
         };
-        semio_framework_value::ValueError::literal(kind, message)
+        crate::ValueError::literal(kind, message)
     }
 }
 
@@ -73,22 +73,20 @@ impl std::fmt::Debug for JobPayloadPageSource {
 }
 
 impl JobPayloadPageSource {
-    pub fn new() -> Self {
-        Self::with_extent(JOB_PAYLOAD_PAGE_BYTES)
+    pub fn admit(extent:usize,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{
+        if extent==0||extent>JOB_PAYLOAD_PAGE_BYTES{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"job payload page extent is outside its canonical bound")),work:0}}
+        if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<extent{return crate::RetainedWorkOutcome{result:Ok(None),work:0}}
+        let layout=std::alloc::Layout::array::<MaybeUninit<u8>>(extent).expect("canonical payload extent has a valid allocation layout");
+        let pointer=unsafe{std::alloc::alloc(layout)}.cast::<MaybeUninit<u8>>();
+        if pointer.is_null(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"job payload page allocation refused")),work:1}}
+        let storage=unsafe{Box::from_raw(std::ptr::slice_from_raw_parts_mut(pointer,extent))};
+        crate::RetainedWorkOutcome{result:Ok(Some((Self{storage},RetainedCloneProgress{copied_items:1,retained_capacity_bytes:extent,..Default::default()}))),work:1}
     }
-
-    pub fn with_extent(extent: usize) -> Self { assert!(extent > 0 && extent <= JOB_PAYLOAD_PAGE_BYTES); Self { storage: Box::<[u8]>::new_uninit_slice(extent) } }
 
     pub fn allocated_capacity_bytes(&self) -> usize { self.storage.len() }
 
     pub fn backing_identity(&self) -> *const MaybeUninit<u8> {
         self.storage.as_ptr()
-    }
-}
-
-impl Default for JobPayloadPageSource {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -141,10 +139,18 @@ impl JobPayloadOperationLedger {
         Self { operation, generation, pages: AtomicUsize::new(0), bytes: AtomicUsize::new(0), stream_pages: std::array::from_fn(|_| AtomicUsize::new(0)), stream_bytes: std::array::from_fn(|_| AtomicUsize::new(0)) }
     }
 
-    pub fn reserve(&self,stream:JobPayloadStream,extent:usize)->Result<(),JobPayloadAdmissionFault>{self.reserve_original(stream,extent).map(|_|()).map_err(|(fault,_)|fault)}
-    pub fn reserve_original(&self,stream:JobPayloadStream,extent:usize)->Result<usize,(JobPayloadAdmissionFault,usize)>{
+    pub fn reserve(&self,stream:JobPayloadStream,extent:usize)->crate::RetainedWorkOutcome<(),JobPayloadAdmissionFault>{
+        let turn=self.reserve_original(stream,extent);crate::RetainedWorkOutcome{result:turn.result.map(|_|()).map_err(|(fault,_)|fault),work:turn.work}
+    }
+    pub fn reserve_original(&self,stream:JobPayloadStream,extent:usize)->crate::RetainedWorkOutcome<usize,(JobPayloadAdmissionFault,usize)>{
         let index=stream as usize;let owners=[(&self.pages,1,JOB_PAYLOAD_OPERATION_PAGES,JobPayloadAdmissionFault::OperationItems),(&self.bytes,extent,JOB_PAYLOAD_OPERATION_BYTES,JobPayloadAdmissionFault::OperationBytes),(&self.stream_pages[index],1,JOB_PAYLOAD_OPERATION_PAGES,JobPayloadAdmissionFault::StreamItems),(&self.stream_bytes[index],extent,JOB_PAYLOAD_OPERATION_BYTES,JobPayloadAdmissionFault::StreamBytes),(&JOB_PAYLOAD_PROCESS_OWNED_BYTES,extent,JOB_PAYLOAD_PROCESS_BYTES,JobPayloadAdmissionFault::ProcessBytes)];
-        for (done,(owner,amount,maximum,fault))in owners.iter().enumerate(){if owner.try_update(Ordering::AcqRel,Ordering::Acquire,|value|value.checked_add(*amount).filter(|value|*value<=*maximum)).is_err(){for (original,amount,_,_)in owners[..done].iter().rev(){original.fetch_sub(*amount,Ordering::AcqRel);}return Err((*fault,0));}}Ok(0)
+        for(done,(owner,amount,maximum,fault))in owners.iter().enumerate(){
+            if owner.try_update(Ordering::AcqRel,Ordering::Acquire,|value|value.checked_add(*amount).filter(|value|*value<=*maximum)).is_err(){
+                for(original,amount,_,_)in owners[..done].iter().rev(){original.fetch_sub(*amount,Ordering::AcqRel);}
+                return crate::RetainedWorkOutcome{result:Err((*fault,0)),work:1}
+            }
+        }
+        crate::RetainedWorkOutcome{result:Ok(0),work:1}
     }
 
     pub fn release(&self, stream: JobPayloadStream, extent: usize) {
@@ -174,8 +180,8 @@ impl JobPayloadOperationLedger {
 }
 
 pub struct JobPayloadPage {
-    pub source: JobPayloadPageSource,
-    pub length: usize,
+    pub(crate) source: JobPayloadPageSource,
+    pub(crate) length: usize,
 }
 
 impl JobPayloadPage {
@@ -185,17 +191,22 @@ impl JobPayloadPage {
 }
 
 pub struct RetainedJobPayload {
-    pub stream: JobPayloadStream,
-    pub pages: ManuallyDrop<[Option<JobPayloadPage>; JOB_PAYLOAD_OPERATION_PAGES]>,
-    pub page_count: usize,
-    pub length: usize,
-    pub ledger: ManuallyDrop<Option<Arc<JobPayloadOperationLedger>>>,
+    pub(crate) stream: JobPayloadStream,
+    pub(crate) pages: [MaybeUninit<JobPayloadPage>; JOB_PAYLOAD_OPERATION_PAGES],
+    pub(crate) page_count: usize,
+    pub(crate) length: usize,
+    pub(crate) ledger: ManuallyDrop<Option<Arc<JobPayloadOperationLedger>>>,
 }
 
 impl RetainedJobPayload {
     pub fn empty(stream: JobPayloadStream) -> Self {
-        Self { stream, pages: ManuallyDrop::new(std::array::from_fn(|_| None)), page_count: 0, length: 0, ledger: ManuallyDrop::new(None) }
+        Self { stream, pages: [const {MaybeUninit::uninit()}; JOB_PAYLOAD_OPERATION_PAGES], page_count: 0, length: 0, ledger: ManuallyDrop::new(None) }
     }
+
+    pub(crate) fn live_pages(&self)->&[JobPayloadPage]{unsafe{std::slice::from_raw_parts(self.pages.as_ptr().cast::<JobPayloadPage>(),self.page_count)}}
+    pub(crate) fn last_page_mut(&mut self)->Option<&mut JobPayloadPage>{if self.page_count==0{None}else{Some(unsafe{self.pages[self.page_count-1].assume_init_mut()})}}
+    pub(crate) fn push_page(&mut self,page:JobPayloadPage){assert!(self.page_count<JOB_PAYLOAD_OPERATION_PAGES);self.length+=page.length;self.pages[self.page_count].write(page);self.page_count+=1;}
+    pub(crate) fn pop_page(&mut self)->Option<JobPayloadPage>{if self.page_count==0{return None}self.page_count-=1;let page=unsafe{self.pages[self.page_count].assume_init_read()};self.length-=page.length;Some(page)}
 
     pub fn len(&self) -> usize {
         self.length
@@ -210,16 +221,16 @@ impl RetainedJobPayload {
     }
 
     /// 📐️ Observes admitted page backing without borrowing reservation or release authority.
-    pub fn allocated_capacity_bytes(&self)->usize{self.pages.iter().flatten().map(|page|page.source.allocated_capacity_bytes()).sum()}
+    pub fn allocated_capacity_bytes(&self)->usize{self.live_pages().iter().map(|page|page.source.allocated_capacity_bytes()).sum()}
 
     /// 🧱️ Reports one live native page extent separately from its initialized byte length.
-    pub fn page_capacity_bytes(&self,index:usize)->Option<usize>{self.pages.get(index).and_then(Option::as_ref).map(|page|page.source.allocated_capacity_bytes())}
+    pub fn page_capacity_bytes(&self,index:usize)->Option<usize>{self.live_pages().get(index).map(|page|page.source.allocated_capacity_bytes())}
 
     /// 🔗️ Compares this live payload's original ledger without lending a reference or mutation.
     pub fn payload_authority_identity(&self)->Option<OriginalPayloadSourceIdentity>{self.ledger.as_ref().map(|ledger|OriginalPayloadSourceIdentity(Arc::as_ptr(ledger)as usize))}
 
     pub fn page(&self, index: usize) -> Option<&[u8]> {
-        self.pages.get(index).and_then(Option::as_ref).map(JobPayloadPage::bytes)
+        self.live_pages().get(index).map(JobPayloadPage::bytes)
     }
 
     pub fn single_page(&self) -> Option<&[u8]> {

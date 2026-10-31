@@ -7,7 +7,7 @@ const MAXIMUM:usize=u32::MAX as usize;
 pub trait MeshScalar:Copy+RetireOwned{fn valid(self)->bool;}
 impl MeshScalar for f64{fn valid(self)->bool{self.is_finite()}}
 impl MeshScalar for u32{fn valid(self)->bool{true}}
-#[derive(RetireOwned)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct RetainedMeshPages<T:MeshScalar>{values:PagedList<[T;3],MAXIMUM>,maximum:usize,byte_limit:usize,phase:PreparationPhase,identity:Option<super::PreparationIdentity>,work:usize}
 impl<T:MeshScalar> RetainedMeshPages<T>{
  pub fn new(maximum:usize,byte_limit:usize)->Result<Self,&'static str>{if maximum>MAXIMUM{return Err("mesh-pages-invalid-limit")}Ok(Self{values:PagedList::empty(),maximum,byte_limit,phase:PreparationPhase::Projecting,identity:None,work:0})}

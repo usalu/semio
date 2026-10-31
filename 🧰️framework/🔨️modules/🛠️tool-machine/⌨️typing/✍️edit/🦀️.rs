@@ -1,8 +1,8 @@
 //! ✍️ Original typing edits move canonical net vectors at one funded resident exchange into the actual receiving slot.
 use std::mem::size_of;
-use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalTurnFailure};
+use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction};
 use semio_framework_value::{RetireOwned,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,ValueRefusalKind,SharedUtf8};
-use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value::retirement::RetireOwned as _;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value::retained_clone::original_slot::RetainedOriginalSlotKey;
 use semio_framework_tool_machine::{TypingLedger,TypingState,ToolStep,TYPING_IDLE_MS};
@@ -19,7 +19,7 @@ struct Metadata{window:String,tool:Option<String>,actor:Option<ActorId>,buffer:O
 struct PreviousMetadata{states:Vec<String>,tool:String,actor:ActorId,buffer:String}
 #[derive(RetireOwned)]
 struct Owners<M>{request:Option<OriginalTypingEditRequest<M>>,decision:Option<OriginalTypingFold<M>>,key:Option<SharedUtf8>,slot_key:Option<SharedUtf8>,net:Option<Vec<M>>,input_residue:Option<Vec<M>>,states:Vec<String>,buffers:[Vec<u8>;2],transaction:Option<TransactionRef>,old_net:Option<Vec<M>>,metadata:Option<Metadata>,previous_metadata:Option<PreviousMetadata>,empty_net:Option<Vec<M>>}
-pub struct OriginalTypingEdit<M:RetireOwned+Send+Sync+'static>{binding:Option<OriginalSourceBinding>,decoder:(u64,u64),ledger:usize,revision:u64,key:Option<RetainedOriginalSlotKey>,phase:u8,length:usize,reuse:bool,needs_fold:bool,closing:bool,received:bool,owners:ControlledRetirement<Owners<M>>}
+pub struct OriginalTypingEdit<M:semio_framework_value::retirement::RetireOwned+Send+'static>{binding:Option<OriginalSourceBinding>,decoder:(u64,u64),ledger:usize,revision:u64,key:Option<RetainedOriginalSlotKey>,phase:u8,length:usize,reuse:bool,needs_fold:bool,closing:bool,received:bool,owners:ControlledRetirement<Owners<M>>}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original typing edit changed its owned source")}
 fn movement(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn progress(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
@@ -30,8 +30,14 @@ fn text(cx:&mut StepContext<'_>,output:&mut Vec<u8>,source:&[u8])->Result<bool,O
  if output.capacity()<source.len(){let d=text_demand(output,source.len());if !funds(cx,d){return Ok(false)}output.try_reserve_exact(source.len()).map_err(|_|invalid())?;paid(cx,RetainedCloneProgress{retained_capacity_bytes:output.capacity(),..progress(d)})?;return Ok(false)}
  if output.len()<source.len(){let n=(source.len()-output.len()).min(cx.retained_grant().maximum_copy_bytes);if n==0||!funds(cx,movement(n)){return Ok(false)}let start=output.len();output.extend_from_slice(&source[start..start+n]);paid(cx,progress(movement(n)))?;return Ok(false)}Ok(true)
 }
-impl<M:RetireOwned+Send+Sync+'static> OriginalTypingEdit<M>{
- pub fn admission_demands(_ledger:&TypingLedger<M>,_request:&OriginalTypingEditRequest<M>)->RetirementDemand{RetirementDemand{capacity_bytes:size_of::<Self>(),..movement(2*size_of::<Self>()+2*size_of::<OriginalTypingEditRequest<M>>()+size_of::<bool>())}}
+/// 🛡️ SAFETY: the pointer comes from the global allocator with the exact layout of `T` and is non-null; `seat` consumes the slot, so the memory is initialised and boxed exactly once.
+struct Slot<T>(std::ptr::NonNull<T>);
+impl<T> Slot<T>{
+ fn allocate()->Option<Self>{std::ptr::NonNull::new(unsafe{std::alloc::alloc(std::alloc::Layout::new::<T>())}.cast::<T>()).map(Self)}
+ fn seat(self,value:T)->Box<T>{unsafe{self.0.as_ptr().write(value);Box::from_raw(self.0.as_ptr())}}
+}
+impl<M:semio_framework_value::retirement::RetireOwned+Send+'static> OriginalTypingEdit<M>{
+ pub fn admission_demands(ledger:&TypingLedger<M>,request:&OriginalTypingEditRequest<M>)->RetirementDemand{let extent=request.window.len().saturating_mul(ledger.original_resident_count().max(1).ilog2()as usize+1).saturating_mul(2).saturating_add(request.tool.len()).saturating_add(request.buffer.len());RetirementDemand{capacity_bytes:size_of::<Self>(),..movement((2*size_of::<Self>()+2*size_of::<OriginalTypingEditRequest<M>>()+size_of::<bool>()).saturating_add(extent))}}
  pub fn admit(ledger:&mut TypingLedger<M>,request:&mut Option<OriginalTypingEditRequest<M>>,output:&mut Option<Box<Self>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   let _=cx.original_source_parent()?;
   if output.is_some()||request.is_none(){return Err(invalid().into())}
@@ -63,7 +69,7 @@ impl<M:RetireOwned+Send+Sync+'static> OriginalTypingEdit<M>{
    0=>movement(2*size_of::<Vec<M>>()+2*size_of::<OriginalTypingFold<M>>()+3*size_of::<usize>()),
    1=>if owners.key.is_none(){let mut d=SharedUtf8::admission_demand();d.copy_bytes+=2*size_of::<String>()+size_of::<Option<SharedUtf8>>();d}else if owners.slot_key.is_none(){let mut d=SharedUtf8::lease_demand();d.copy_bytes+=size_of::<Option<SharedUtf8>>();d}else{let mut d=ledger.original_window_demands(owners.key.as_ref().unwrap().as_str())?;d.copy_bytes+=size_of::<Option<RetainedOriginalSlotKey>>()+size_of::<u64>()+size_of::<u8>();d},
    2=>if !self.reuse&&self.length!=0{if owners.states.capacity()<2{RetirementDemand{capacity_bytes:2*size_of::<String>(),..movement(2*size_of::<Vec<String>>())}}else if owners.states.len()<2{let word=if owners.states.is_empty(){b"root".as_slice()}else{b"typing".as_slice()};let d=text_demand(&owners.buffers[0],word.len());if d!=RetirementDemand::default(){d}else{movement(size_of::<String>())}}else{movement(size_of::<u8>())}}else{movement(size_of::<u8>())},
-   3=>if !self.reuse&&self.length!=0&&owners.transaction.is_none(){let request=owners.request.as_ref().unwrap();let d=text_demand(&owners.buffers[1],request.tool.len());if d!=RetirementDemand::default(){d}else{TransactionRef::original_mint_demands(&request.actor,&request.clock,&request.tool)?}}else{movement(size_of::<u8>())},
+   3=>if !self.reuse&&self.length!=0&&owners.transaction.is_none(){let request=owners.request.as_ref().ok_or_else(invalid)?;let d=text_demand(&owners.buffers[1],request.tool.len());if d!=RetirementDemand::default(){d}else{TransactionRef::original_mint_demands(&request.actor,&request.clock,&request.tool)?}}else{movement(size_of::<u8>())},
    4=>Default::default(),
    _=>return Err(invalid())
   })
@@ -74,8 +80,8 @@ impl<M:RetireOwned+Send+Sync+'static> OriginalTypingEdit<M>{
   let owners=self.owners.original_mut().ok_or_else(invalid)?;
   if self.phase==0{let request=owners.request.as_mut().unwrap();self.reuse=match owners.decision.as_ref(){Some(OriginalTypingFold::Split)|None=>false,_=>true};let net=match owners.decision.take(){Some(OriginalTypingFold::Net(net))=>net,Some(OriginalTypingFold::ReplaceIncoming)|Some(OriginalTypingFold::Split)|None=>std::mem::take(&mut request.leaves)};owners.net=Some(net);self.length=owners.net.as_ref().unwrap().len();self.phase=1;paid(cx,progress(d))?;return Ok(false)}
   if self.phase==1{
-   if owners.key.is_none(){let overhead=2*size_of::<String>()+size_of::<Option<SharedUtf8>>();let request=owners.request.as_mut().unwrap();let window=std::mem::take(&mut request.window);match SharedUtf8::admit(window,RetainedCloneGrant{maximum_copy_bytes:cx.retained_grant().maximum_copy_bytes-overhead,..cx.retained_grant()}){Ok((key,mut p))=>{owners.key=Some(key);p.copied_bytes+=overhead;paid(cx,p)?},Err((e,window))=>{request.window=window;return Err(e.into())}}return Ok(false)}
-   if owners.slot_key.is_none(){let overhead=size_of::<Option<SharedUtf8>>();let(key,mut p)=owners.key.as_ref().unwrap().admit_clone(RetainedCloneGrant{maximum_copy_bytes:cx.retained_grant().maximum_copy_bytes-overhead,..cx.retained_grant()})?;owners.slot_key=Some(key);p.copied_bytes+=overhead;paid(cx,p)?;return Ok(false)}
+   if owners.key.is_none(){let demand=SharedUtf8::admission_demand();if !cx.retained_work_can_enter(demand){return Ok(false)}let request=owners.request.as_mut().unwrap();let window=std::mem::take(&mut request.window);let turn=SharedUtf8::admit(window,cx.retained_grant());let result=match turn.result{Ok((key,p))=>{owners.key=Some(key);Ok(semio_framework_value::RetainedCloneStep::Progress(p))},Err((error,window))=>{request.window=window;Err(error)}};semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})?;return Ok(false)}
+   if owners.slot_key.is_none(){let demand=SharedUtf8::lease_demand();if !cx.retained_work_can_enter(demand){return Ok(false)}let turn=owners.key.as_ref().unwrap().admit_clone(cx.retained_grant());let result=turn.result.map(|(key,p)|{owners.slot_key=Some(key);semio_framework_value::RetainedCloneStep::Progress(p)});semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})?;return Ok(false)}
    let extra=size_of::<Option<RetainedOriginalSlotKey>>()+size_of::<u64>()+size_of::<u8>();let(key,mut p)=ledger.prepare_original_window(&mut owners.slot_key,RetainedCloneGrant{maximum_copy_bytes:cx.retained_grant().maximum_copy_bytes-extra,..cx.retained_grant()})?;if p==RetainedCloneProgress::default(){return Ok(false)}if let Some(key)=key{self.key=Some(key);self.phase=2}self.revision=ledger.source_revision();p.copied_bytes+=extra;paid(cx,p)?;return Ok(false)
   }
   if self.phase==2{
@@ -102,11 +108,11 @@ impl<M:RetireOwned+Send+Sync+'static> OriginalTypingEdit<M>{
   let Some((result,mut p))=received else{return Ok(false)};*output=Some(result);self.revision=ledger.source_revision();self.received=true;p.copied_bytes+=extra;paid(cx,p)?;Ok(true)
  }
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.owners.terminal_is_empty(){Ok(movement(size_of::<Option<OriginalSourceBinding>>()+2*size_of::<bool>()))}else{self.owners.next_demand(body)}}
- pub fn close_step(&mut self,ledger:&mut TypingLedger<M>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.terminal_is_empty(){return Ok(true)}self.validate(ledger,cx)?;if cx.retirement_should_yield(){return Ok(false)}let d=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;if self.owners.terminal_is_empty(){let g=cx.retained_grant();if g.maximum_items==0||!semio_framework_value::retained_clone::retained_clone_grant_admits(g,d){return Ok(false)}ledger.end_original_write();self.binding=None;self.closing=true;paid(cx,progress(d))?;return Ok(true)}semio_framework_job::close_original_retained_step(cx,d,|g|self.owners.step(g))?;self.closing=true;Ok(false)}
+ pub fn close_step(&mut self,ledger:&mut TypingLedger<M>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.terminal_is_empty(){return Ok(true)}self.validate(ledger,cx)?;if cx.retirement_should_yield(){return Ok(false)}let d=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;if self.owners.terminal_is_empty(){let g=cx.retained_grant();if g.maximum_items==0||!semio_framework_value::retained_clone::retained_clone_grant_admits(g,d){return Ok(false)}ledger.end_original_write();self.binding=None;self.closing=true;paid(cx,progress(d))?;return Ok(true)}semio_framework_job::close_original_retained_step(cx,d,|g|{let result=self.owners.step(g);semio_framework_value::RetainedWorkOutcome{result,work:self.owners.last_turn_work()}})?;self.closing=true;Ok(false)}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.binding.is_none()&&self.owners.terminal_is_empty()}
  pub fn shell_close_demands(&self)->RetirementDemand{RetirementDemand{release_bytes:size_of::<Self>(),..movement(size_of::<Option<Box<Self>>>())}}
 }
-impl<M:RetireOwned+Send+Sync+'static> Drop for OriginalTypingEdit<M>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original typing edit requires paid source closure")}}
+impl<M:semio_framework_value::retirement::RetireOwned+Send+'static> Drop for OriginalTypingEdit<M>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original typing edit requires paid source closure")}}
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

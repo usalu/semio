@@ -185,22 +185,10 @@ impl LayoutExportJob {
     fn close_string(value:&mut String,maximum_bytes:usize)->Option<usize>{let bytes=value.capacity();if bytes==0{return None;}if bytes>maximum_bytes{return Some(0);}drop(std::mem::take(value));Some(bytes)}
     fn close_copy_buffer<T:Copy>(value:&mut Vec<T>,maximum_bytes:usize)->Option<usize>{let bytes=value.capacity().saturating_mul(size_of::<T>());if bytes==0{return None;}if bytes>maximum_bytes{return Some(0);}drop(std::mem::take(value));Some(bytes)}
     fn close_byte_buffer(value:&mut Vec<u8>,maximum_bytes:usize)->Option<usize>{Self::close_copy_buffer(value,maximum_bytes)}
-    fn close_usize_buffer(value:&mut Vec<usize>,maximum_bytes:usize)->usize{Self::close_copy_buffer(value,maximum_bytes).unwrap_or(0)}
-    fn close_string_source(source: &mut StringSource, maximum_bytes: usize) -> usize {
-        match source {
-            StringSource::DrawNodeValue { path, .. } | StringSource::DrawNodeStyle { path, .. } | StringSource::DrawNodeMime { path, .. } => Self::close_usize_buffer(path, maximum_bytes),
-            _ => 0,
-        }
-    }
-
     fn close_typed_node_payload(node: &mut TypedJsonNode, maximum_bytes: usize) -> usize {
         match node {
             TypedJsonNode::Scalar { bytes, .. } => Self::close_byte_buffer(bytes, maximum_bytes).unwrap_or(0),
-            TypedJsonNode::String { source, .. } => Self::close_string_source(source, maximum_bytes),
             TypedJsonNode::OwnedString { value, .. } => Self::close_string(value, maximum_bytes).unwrap_or(0),
-            TypedJsonNode::DrawNode { path, .. } | TypedJsonNode::DrawChildren { path, .. } | TypedJsonNode::DrawSegments { path, .. } | TypedJsonNode::DrawSegment { path, .. } | TypedJsonNode::DrawBytes { path, .. } => {
-                Self::close_usize_buffer(path, maximum_bytes)
-            }
             _ => 0,
         }
     }

@@ -1,0 +1,3 @@
+# Neutral Producer Historical Removal
+
+Confirmed authored removal: framework/modules/2d/text/font/work/producer/TypeScript (the full emoji path is in the packet). The same generic producer moved to defining value/persistent/work/producer with canonical RetainedWorkProducer names, without a Font alias/facade. The exact removal and original SHA d5804e1d21c567322861b32238216e8c113a1af0711379f6004e1e0b8e8d3c1f were already recorded in drawing-neutral-producer-working-files.json. The current drawing-text-owned-working-files.json now explicitly repeats status removed for final attribution, so inventory may retain this historical deleted Source path. No peer hunk or unmodified test body is claimed; no Source restoration/edit or runtime occurred.

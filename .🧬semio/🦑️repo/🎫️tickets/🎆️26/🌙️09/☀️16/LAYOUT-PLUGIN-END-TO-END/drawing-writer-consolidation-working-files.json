@@ -1,0 +1,34 @@
+{
+  "state": "authored-uncompiled-caller-migration-pending",
+  "inputs": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/✍️bytes/🦀️.rs",
+      "bytes": 2075,
+      "sha256": "5d23114dbe710a25fec2e546f90fdc32c1490babb89cea254e6fd57c8e0a366b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 2302,
+      "sha256": "4eb37e7c1c64d9db1b4144cc8c876adc95fb722e2f221b05f1a16b196c156af2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧱️payload-owner/🦀️.rs",
+      "bytes": 3316,
+      "sha256": "2c4b194327ee94e828e4e99476f351d35753ebd837330ceb9ff551efaee23625"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+      "bytes": 54817,
+      "sha256": "7d72196fe3681a71f67e0e373c24b6952cbef2793d3f1dbe16755785965356b7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🦀️.rs",
+      "bytes": 20694,
+      "sha256": "f196e394438210433115b77fd5bf46ca65511577b364a81527faf1baa4725a03"
+    }
+  ],
+  "removed": [
+    "🧰️framework/🔨️modules/🧵️job/✍️payload-writer-and-grant/🦀️.rs",
+    "🧰️framework/🔨️modules/🧵️job/📬️outcome/✍️writer/⛽️staged/🦀️.rs"
+  ]
+}

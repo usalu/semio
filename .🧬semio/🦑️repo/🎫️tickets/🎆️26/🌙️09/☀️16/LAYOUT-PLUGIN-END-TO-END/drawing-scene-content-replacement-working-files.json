@@ -1,0 +1,37 @@
+{
+  "state": "source-authored-unexecuted-not-whole-SourceReady",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts",
+      "bytes": 28531,
+      "sha256": "1c7421cfac62144534ca1a888ed7ae7713d4ddd97e6b3ee9265a6c219a1292ef"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🟦️.ts",
+      "bytes": 155,
+      "sha256": "3259dd70231380c4a641a72ae5db475889520ab452e71e9ac5a224144c7bd44e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+      "bytes": 19076,
+      "sha256": "afee7dca46de39ecda626d5efc8bfb5570e8878bf58a5b5e4d2e55f031844299"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/🔣️.json",
+      "bytes": 3754,
+      "sha256": "436732039583b5ecde4646aaa6d11e67a0e49a92a56dd8d01af23991ae600140"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+      "bytes": 8569,
+      "sha256": "8842fb650cc079a55acb76629593d617eb7e0f8ac4af367e0d61d47fb69abdb9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/📐️.json",
+      "bytes": 2034,
+      "sha256": "a75f50409203c4b594f98a9781a27b626c69f8b5597bc4a64ad4ffa5a47dfe2b"
+    }
+  ],
+  "testFirst": "drawing-scene-content-replacement-test-first.json",
+  "remaining": "DocumentText/callers and actual affected12+strict scope verification; Drawing14/native/browser unchanged mandatory"
+}

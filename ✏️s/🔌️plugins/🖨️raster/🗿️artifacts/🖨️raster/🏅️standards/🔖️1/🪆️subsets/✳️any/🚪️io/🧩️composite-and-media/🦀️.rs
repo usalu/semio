@@ -87,9 +87,18 @@ impl RasterStackPreparation {
     }
     pub fn into_job(self)->Result<RasterStackJob,String> {
         if self.cancelled||self.index!=self.keys.len() {return Err("Composite preparation is incomplete or cancelled".into());}
-        RasterStackJob::new(RasterStackInput {layers:self.layers,images:self.images}).map_err(|error|error.to_string())
+        Ok(RasterStackJob::new(RasterStackInput {layers:self.layers,images:self.images.into_iter().map(|(key,image)|(key,semio_framework_pixels::retirement::RasterLease(image))).collect()}))
     }
     pub fn cancel(&mut self) {self.cancelled=true;self.layers.clear();self.images.clear();self.keys.clear();}
+}
+
+const STACK_STOCK:semio_framework_value::RetainedCloneGrant=semio_framework_value::RetainedCloneGrant {maximum_items:1<<22,maximum_copy_bytes:1<<28,maximum_capacity_bytes:1<<25,maximum_release_bytes:1<<26,maximum_depth:256};
+
+/// ⏱️ Advances one stack job under a fresh finite ledger and refuses a turn that made no progress.
+pub fn advance_stack(job:&mut RasterStackJob,budget:usize)->Result<semio_framework_pixels::editing::PixelProgress,String> {
+    let progress=job.advance(budget,&mut semio_framework_value::work::RetainedWorkLedger::new(STACK_STOCK)).map_err(|error|error.to_string())?;
+    if !progress.done&&job.last_turn_work()==0 {return Err("Composite made no progress under its ledger".into());}
+    Ok(progress)
 }
 
 /// 🧱️ Prepares exports with the same mask and layer compositor used by interactive surfaces.
@@ -102,7 +111,7 @@ pub fn raster_composite_job(document:&RasterSnapshot)->Result<RasterStackJob,Str
 /// 🖼️ Flattens visible layers through the shared compositor into the image export hub.
 pub fn raster_composite_image(document:&RasterSnapshot)->Result<SemioImageSnapshot,String> {
     let mut job=raster_composite_job(document)?;
-    while !job.advance(65536).map_err(|e|e.to_string())?.done {}
+    while !advance_stack(&mut job,65536)?.done {}
     let output=job.into_result().map_err(|e|e.to_string())?;
     if output.empty{return Err("no visible pixel layer: there is nothing to flatten into a raster composite".into());}
     let image=output.image;

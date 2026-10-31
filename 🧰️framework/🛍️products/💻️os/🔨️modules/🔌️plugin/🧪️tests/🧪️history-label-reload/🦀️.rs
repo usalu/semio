@@ -9,9 +9,7 @@
 use semio_framework_diagnostic::TextError;
 use semio_framework_diagnostic::TextSpan;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
-use semio_framework_diagnostic::TextSpan;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
-use semio_framework_diagnostic::TextError;
 use semio_framework_artifact_reference::StandardId;
 use semio_framework_plugin_window_transient::built_text_to_component_tree;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_one_item_preparation_factory;
@@ -160,7 +158,7 @@ impl ArtifactApp for LabelReloadApp {
         }
     }
 
-    fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework::Fault>>{Some(||{
         Ok(TestSnapshot::default())
     })}
 

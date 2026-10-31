@@ -1,9 +1,6 @@
 //! 🎮️ Energy model editor commands: the action ids every window and panel dispatches, `EnergyModelEditorCommand`
 //! with its action bridge and op codecs, the inspector's action definitions and the UI id helpers.
 
-#![allow(async_fn_in_trait)]
-#![allow(clippy::too_many_arguments)]
-
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_s_plugin_energy_engine_model as model;
@@ -163,7 +160,7 @@ pub enum EnergyModelEditorCommand {
     DeleteSurface { surface: u32 },
     #[dsl(key = "assign-surface-construction")]
     AssignSurfaceConstruction { surface: u32, construction: u32 },
-    /// 🧱️ One material field by name. `value` is TEXT, like every other inspector verb: a material
+    /// 🌾️ One material field by name. `value` is TEXT, like every other inspector verb: a material
     /// carries a NAME and a ROUGHNESS enum beside its seven SI scalars, and one verb has to spell all
     /// three. Numeric properties parse the text and refuse a non-finite or out-of-range reading.
     #[dsl(key = "set-material-property")]
@@ -220,7 +217,7 @@ pub enum EnergyModelEditorCommand {
     /// variant binds scalars only — and because that string IS what `World3dScene::camera_json` wants.
     #[dsl(key = "setCamera")]
     SetCamera { camera: String },
-    /// 🧱️ One construction field by name — its name, or one LIST edit of its layer stack. Appended
+    /// 🏞️ One construction field by name — its name, or one LIST edit of its layer stack. Appended
     /// LAST so no existing `OpBinary` ordinal moves.
     #[dsl(key = "set-construction-property")]
     SetConstructionProperty { construction: u32, property: String, value: String },
@@ -231,7 +228,7 @@ pub enum EnergyModelEditorCommand {
 }
 
 impl EnergyModelEditorCommand {
-    /// 🏷️ The manifest action id this variant was declared under — identical to its DSL wire key.
+    /// 🧾️ The manifest action id this variant was declared under — identical to its DSL wire key.
     pub fn action_id(&self) -> &'static str {
         match self {
             Self::SetStructureField { .. } => SET_NODE_ACTION_ID,
@@ -293,7 +290,7 @@ pub mod args_bridge {
         value.as_bool().or_else(|| value.as_str()?.parse().ok())
     }
 
-    /// 🎥️ The `{position,target,zoom,up?}` object the react `World3dHost` sends under `camera`,
+    /// 🌍️ The `{position,target,zoom,up?}` object the react `World3dHost` sends under `camera`,
     /// validated as a real pose and canonicalized back to the exact JSON string
     /// `World3dScene::camera_json` consumes. A malformed or non-finite pose answers `None`, which the
     /// bridge turns into an explicit refusal rather than a silently ignored gesture.
@@ -411,7 +408,7 @@ impl protocol::OpText for EnergyModelEditorCommand {
 }
 
 impl protocol::OpBinary for EnergyModelEditorCommand {
-    /// 🧵️ The exact manifest ids this typed command schema owns — the left-hand side of
+    /// 🪪️ The exact manifest ids this typed command schema owns — the left-hand side of
     /// `validate_tool_job_rows`' `expected = TOOL_JOB_IDS ∩ migrated` set equality. Omitting it
     /// silently falls back to the trait default `["typed-command"]`, which makes `expected` empty
     /// and rejects every proof row this editor declares.
@@ -455,17 +452,17 @@ impl protocol::OpBinary for EnergyModelEditorCommand {
 /// the same spelling `bounded_first_step_tool_proofs!` declares above.
 pub const ENERGY_MODEL_EDITOR_CONTROLLER_ID: &str = "s.energy.model@1/*#editor";
 
-/// 🏷️ Admits resolved energy text into the semantic UI contract.
+/// 🚪️ Admits resolved energy text into the semantic UI contract.
 pub fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<semio_framework_ui_contract::Label> {
     semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError::new("ui.fixed-capacity", "energy UI label admission failed"))
 }
 
-/// 🎛️ Mints one energy-editor action for a panel row or an inspector control binding.
+/// 🔽️ Mints one energy-editor action for a panel row or an inspector control binding.
 pub fn energy_model_action(action: &str, args: Option<semio_framework_ui_contract::UiValue>) -> UiAssemblyResult<(semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>)> {
     semio_framework_plugin_window_kits::ActionFactory::new(ENERGY_MODEL_EDITOR_CONTROLLER_ID).action(action, args)
 }
 
-/// 🟫️ Wire spelling of a [`SurfaceClass`] — the inverse of [`surface_class_from_id`], so the
+/// 🌀️ Wire spelling of a [`SurfaceClass`] — the inverse of [`surface_class_from_id`], so the
 /// inspector's class select offers exactly the vocabulary `create-surface`/`set-surface-property`
 /// accept.
 pub fn surface_class_id(class: SurfaceClass) -> &'static str {
@@ -481,7 +478,7 @@ pub fn surface_class_id(class: SurfaceClass) -> &'static str {
     }
 }
 
-/// 🟫️ Every surface class, in declaration order — the inspector's class select.
+/// 👆️ Every surface class, in declaration order — the inspector's class select.
 pub const SURFACE_CLASS_IDS: &[&str] = &["exteriorWall", "interiorWall", "roof", "ceiling", "floor", "interzone", "adiabatic", "ground"];
 
 /// 🚧️ Wire spelling of an [`crate::model::OutsideBoundaryKind`].
@@ -496,12 +493,12 @@ pub fn outside_boundary_kind_id(kind: crate::model::OutsideBoundaryKind) -> &'st
     }
 }
 
-/// 🚧️ Every boundary kind, in declaration order — the inspector's boundary select.
+/// 🌁️ Every boundary kind, in declaration order — the inspector's boundary select.
 pub const OUTSIDE_BOUNDARY_KIND_IDS: &[&str] = &["outdoorAir", "ground", "otherSideTemperature", "adiabatic", "interzone"];
 //#endregion 🔖️UiHelpers
 
 //#region 🆔️KindIds
-/// 💨️ Wire spelling of a [`crate::model::GasKind`] — camelCase, like every other enum this editor
+/// 🧩️ Wire spelling of a [`crate::model::GasKind`] — camelCase, like every other enum this editor
 /// carries over the action bus.
 pub fn gas_kind_id(gas: crate::model::GasKind) -> &'static str {
     use crate::model::GasKind as Kind;
@@ -513,10 +510,10 @@ pub fn gas_kind_id(gas: crate::model::GasKind) -> &'static str {
     }
 }
 
-/// 💨️ Every fill gas, in declaration order — the inspector's gas select.
+/// 🪣️ Every fill gas, in declaration order — the inspector's gas select.
 pub const GAS_KIND_IDS: &[&str] = &["air", "argon", "krypton", "xenon"];
 
-/// 🧱️ Wire spelling of a [`crate::model::SurfaceRoughness`] — camelCase, like every other enum this
+/// 🔢️ Wire spelling of a [`crate::model::SurfaceRoughness`] — camelCase, like every other enum this
 /// editor carries over the action bus.
 pub fn surface_roughness_id(roughness: crate::model::SurfaceRoughness) -> &'static str {
     use crate::model::SurfaceRoughness as Kind;
@@ -530,7 +527,7 @@ pub fn surface_roughness_id(roughness: crate::model::SurfaceRoughness) -> &'stat
     }
 }
 
-/// 🧱️ Every roughness class, in declaration order — the inspector's roughness select.
+/// 🌂️ Every roughness class, in declaration order — the inspector's roughness select.
 pub const SURFACE_ROUGHNESS_IDS: &[&str] = &["veryRough", "rough", "mediumRough", "mediumSmooth", "smooth", "verySmooth"];
 //#endregion 🆔️KindIds
 
@@ -548,7 +545,7 @@ fn inspector_action(id: &str, en: &str, de: &str, args: Vec<semio_framework::Act
     semio_framework::ActionDefinition::bounded_catalog(id, LocalizedLabel::native(en, de), semio_framework::ActionKind::Mutation).with_args(args)
 }
 
-/// 🔍️ Every verb the inspection panel can dispatch, in one place. They must be reachable while ANY
+/// 🗂️ Every verb the inspection panel can dispatch, in one place. They must be reachable while ANY
 /// window kind is active — the structure tree, the zones table, the simulation window and the 3d
 /// model window alike.
 pub fn inspector_action_definitions() -> Vec<semio_framework::ActionDefinition> {

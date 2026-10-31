@@ -12,12 +12,12 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 * the DSL body is the committed grammar
   `../../🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/📝️text/📖️.grammar.semio`
   (`document = artifact-mark schema-line runs-line`, hex-encoded scalars, `mark-kind = b|i|c|l`);
-* the pack body is the committed protocol
-  `…/📸️snapshot/💾️binary/📡️.protocol.semio` (`format u8`, then varint-length-prefixed
-  UTF-8 `schema`), whose description stops at the `runs` array by its own admission — the repeated
-  record layout below was DERIVED from the committed `🎒️.pack.semio` bytes, field order taken
-  from the grammar, and `pack_bytes` re-encodes that committed file byte for byte, which is what
-  proves the derivation right;
+* the pack body is the derived record document of the shared record-document codec
+  (`🧿️semio/🚪️io/💾️binary/🎒️record-document/🐍️.py`), driven by this subset's committed record spec
+  `…/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json`: the SPK container, the fixed-Huffman deflate, the BLAKE3
+  content hash and the schema-hashed record body are specified by `🧰️framework/🔨️modules/🎒️pack` and
+  re-implemented there, not here. The committed `🎒️.pack.semio` files were written by the Rust record
+  pack, so `parse_pack`/`pack_bytes` reproducing them is a cross-language byte agreement;
 * the seven verbs and their argument lists are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is the
   committed per-kind specification vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/`.
@@ -30,7 +30,10 @@ tune away.
 from __future__ import annotations
 
 # region 🔖️Imports
+import importlib.util
 import json
+import os
+import sys
 
 from semio_repo_test import Adapter, Context, Outcome, digest
 
@@ -38,15 +41,9 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 
 
 # region 🔖️Carrier
-BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 DSL_PREAMBLE = "semio s.stdio.semio.text.dsl v1"
-PACK_TOKEN = "s.stdio.semio.text.pack v1"
 DOCUMENT_SCHEMA = "s.stdio.semio.text"
-PACK_FORMAT = 1
 
-#: 🔤️ `mark-kind = "b" | "i" | "c" | "l"`, in the grammar's own order — which is also the ordinal
-#: the pack frame writes, as the committed example's `bold` → `0x00` and `link` → `0x03` show.
-MARK_ORDER = ("bold", "italic", "code", "link")
 MARK_LETTER = {"bold": "b", "italic": "i", "code": "c", "link": "l"}
 LETTER_MARK = {letter: kind for kind, letter in MARK_LETTER.items()}
 
@@ -68,7 +65,7 @@ def hex_of(text: str) -> str:
 
 
 def text_of(hexed: str) -> str:
-    """🔡️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
+    """🪄️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
     if len(hexed) % 2 != 0:
         raise AssertionError("hex run %r has an odd digit count" % hexed)
     return bytes.fromhex(hexed).decode("utf-8")
@@ -195,95 +192,33 @@ def print_dsl(document: dict) -> str:
 
 
 # region 🔖️Pack
-def read_varint(data: bytes, at: int) -> tuple:
-    """🔢️ Unsigned LEB128 — the `varint` the protocol description names for every length."""
-    value = 0
-    shift = 0
-    while True:
-        if at >= len(data):
-            raise AssertionError("the pack frame ends inside a varint")
-        byte = data[at]
-        at += 1
-        value |= (byte & 0x7F) << shift
-        if byte & 0x80 == 0:
-            return value, at
-        shift += 7
+_HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def write_varint(value: int) -> bytes:
-    """🔢️ The writing direction of the same encoding."""
-    out = bytearray()
-    while True:
-        byte = value & 0x7F
-        value >>= 7
-        out.append(byte | (0x80 if value else 0))
-        if not value:
-            return bytes(out)
+def _load_shared(alias, *parts):
+    """🧬️ Loads a shared module from the `stdio.semio` artifact root, six folders above this case, and registers it under an importable name."""
+    if alias in sys.modules:
+        return sys.modules[alias]
+    path = os.path.join(_HERE, *[os.pardir] * 6, *parts)
+    spec = importlib.util.spec_from_file_location(alias, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[alias] = module
+    spec.loader.exec_module(module)
+    return module
 
 
-def read_string(data: bytes, at: int) -> tuple:
-    """🧵️ A varint-length-prefixed UTF-8 string, the protocol's only scalar past the header."""
-    length, at = read_varint(data, at)
-    if at + length > len(data):
-        raise AssertionError("the pack frame ends inside a length-prefixed string")
-    return data[at : at + length].decode("utf-8"), at + length
-
-
-def write_string(text: str) -> bytes:
-    """🧵️ The writing direction of the same scalar."""
-    raw = text.encode("utf-8")
-    return write_varint(len(raw)) + raw
+record_document = _load_shared("record_document", "🚪️io", "💾️binary", "🎒️record-document", "🐍️.py")
+RECORD_SPEC = record_document.load_record_spec(os.path.join(_HERE, os.pardir, os.pardir, "🧬️schema", "📸️snapshot", "🗺️record-spec", "🔣️.json"))
 
 
 def parse_pack(data: bytes) -> dict:
-    """📦️ Binary envelope, then `format u8`, then the schema, then the repeated run records."""
-    if data[:8] != BINARY_MAGIC:
-        raise AssertionError("the pack file does not start with the semio binary magic")
-    if len(data) < 12:
-        raise AssertionError("the pack file is truncated inside its envelope")
-    token_len = int.from_bytes(data[8:12], "little")
-    token = data[12 : 12 + token_len].decode("utf-8")
-    if token != PACK_TOKEN:
-        raise AssertionError("expected the %r envelope token, got %r" % (PACK_TOKEN, token))
-    at = 12 + token_len
-    if data[at] != PACK_FORMAT:
-        raise AssertionError("unknown pack format byte %d" % data[at])
-    at += 1
-    schema, at = read_string(data, at)
-    count, at = read_varint(data, at)
-    runs = []
-    for _ in range(count):
-        language, at = read_string(data, at)
-        content, at = read_string(data, at)
-        marks_count, at = read_varint(data, at)
-        marks = []
-        for _ in range(marks_count):
-            ordinal = data[at]
-            at += 1
-            if ordinal >= len(MARK_ORDER):
-                raise AssertionError("unknown mark ordinal %d" % ordinal)
-            href, at = read_string(data, at)
-            marks.append({"kind": MARK_ORDER[ordinal], "href": href})
-        runs.append({"language": language, "content": content, "marks": marks})
-    if at != len(data):
-        raise AssertionError("%d trailing byte(s) after the last run record" % (len(data) - at))
-    return {"schema": schema, "runs": runs}
+    """📦️ A `.pack.semio` file as the JSON snapshot its record document carries."""
+    return record_document.decode_pack(RECORD_SPEC, data)
 
 
 def pack_bytes(document: dict) -> bytes:
-    """📦️ The writing direction of `parse_pack`, envelope included."""
-    body = bytearray([PACK_FORMAT])
-    body += write_string(document["schema"])
-    body += write_varint(len(document["runs"]))
-    for run in document["runs"]:
-        body += write_string(run["language"])
-        body += write_string(run["content"])
-        body += write_varint(len(run["marks"]))
-        for mark in run["marks"]:
-            body.append(MARK_ORDER.index(mark["kind"]))
-            body += write_string(mark["href"])
-    token = PACK_TOKEN.encode("utf-8")
-    return BINARY_MAGIC + len(token).to_bytes(4, "little") + token + bytes(body)
+    """🔍️ The writing direction of `parse_pack`, envelope included."""
+    return record_document.encode_pack(RECORD_SPEC, document)
 
 
 # endregion 🔖️Pack
@@ -306,7 +241,7 @@ TAG_OF_KIND = {
 
 
 def tagged(mutation: dict) -> tuple:
-    """🔎️ Splits `{"InsertRun": {…}}` into its verb and its arguments."""
+    """✂️ Splits `{"InsertRun": {…}}` into its verb and its arguments."""
     if len(mutation) != 1:
         raise AssertionError("a mutation is exactly one externally tagged verb, got %r" % sorted(mutation))
     tag = next(iter(mutation))
@@ -322,7 +257,7 @@ def run_at(document: dict, index: int, verb: str) -> dict:
 
 
 def apply_mutation(document: dict, mutation: dict) -> dict:
-    """🧬️ Applies one verb, returning a NEW document. An unaddressable index is a refusal, never a
+    """📱️ Applies one verb, returning a NEW document. An unaddressable index is a refusal, never a
     silent no-op — a quietly skipped mutation would report as a pass."""
     result = json.loads(json.dumps(document))
     tag, args = tagged(mutation)
@@ -388,7 +323,7 @@ def inverse_mutation(document: dict, mutation: dict) -> dict:
 
 # region 🔖️Scenario input
 def doc_string(ctx: Context) -> str:
-    """📜️ The scenario's own committed vector — the feature owns the parameters, not the adapter."""
+    """➡️ The scenario's own committed vector — the feature owns the parameters, not the adapter."""
     for step in ctx.scenario["steps"]:
         if step.get("docString"):
             return step["docString"]
@@ -417,7 +352,7 @@ def mutate(ctx: Context) -> Outcome:
 
 
 def inverse(ctx: Context) -> Outcome:
-    """↩️ The same verb, then this implementation's own undo of it. The restored document must be
+    """📄️ The same verb, then this implementation's own undo of it. The restored document must be
     the note again — asserted here, and compared against the subject's restored document by the
     runner, so a wrong undo that happens to be self-consistent still shows up."""
     document = note(ctx)
@@ -430,7 +365,7 @@ def inverse(ctx: Context) -> Outcome:
 
 
 def spec_vector(ctx: Context) -> Outcome:
-    """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
+    """🌀️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
     is a THIRD statement of what the verb means, independent of both implementations."""
     before_uri, mutation_uri, after_uri = ctx.step_input_uris()[:3]
     before = snapshot_json(ctx, before_uri)
@@ -466,7 +401,7 @@ def carrier_pair(ctx: Context, dsl_uri: str, pack_uri: str, what: str) -> dict:
 
 
 def identity_round_trip(ctx: Context) -> Outcome:
-    """🔁️ Both documents, in both encodings — four files, all four reproduced byte for byte.
+    """🧊️ Both documents, in both encodings — four files, all four reproduced byte for byte.
 
     The committed note's two files were written by the RUST codec, so this implementation
     reproducing them is a cross-language byte agreement, not a codec agreeing with itself. The

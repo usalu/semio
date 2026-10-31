@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "birthDenials": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "closeOrder": [
+    "reader-begin",
+    "source-terminal",
+    "reader-drop"
+  ],
+  "cases": [
+    {
+      "name": "complete-valid",
+      "stop": "done",
+      "duplicateStory": false,
+      "completed": true,
+      "valid": true
+    },
+    {
+      "name": "complete-invalid",
+      "stop": "done",
+      "duplicateStory": true,
+      "completed": true,
+      "valid": false
+    },
+    {
+      "name": "cancel-before-index",
+      "stop": "birth",
+      "duplicateStory": false,
+      "completed": false,
+      "valid": null
+    },
+    {
+      "name": "cancel-index",
+      "stop": "index",
+      "duplicateStory": false,
+      "completed": false,
+      "valid": null
+    },
+    {
+      "name": "cancel-program-birth",
+      "stop": "program-birth",
+      "duplicateStory": false,
+      "completed": false,
+      "valid": null
+    },
+    {
+      "name": "cancel-program-pending",
+      "stop": "program-pending",
+      "duplicateStory": false,
+      "completed": false,
+      "valid": null
+    }
+  ],
+  "maxObservedTurns": 4096
+}

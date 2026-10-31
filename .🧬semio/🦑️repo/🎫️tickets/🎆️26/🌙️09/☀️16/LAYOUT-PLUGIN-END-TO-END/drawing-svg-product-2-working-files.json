@@ -1,0 +1,47 @@
+{
+  "scope": "exact bounded strict correction/interface ownership follow-up; current bytes, no wider Source claim",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🎟️work/🧪️tests/owned.test.ts",
+      "status": "updated",
+      "beforeSha256": "ba666751758fefa3eff48aab30d4e772a06ca82c0a394fafa7caf990774b06d4",
+      "sha256": "9c019896a046694993b84ec1c58702dca7147244cf5fc11fbfeb73af0c715b88"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🟦️.ts",
+      "status": "updated",
+      "beforeSha256": "61f91b4234bd806ee642c2be818630a2efc4e5371ed1242911fa16864c736c6b",
+      "sha256": "de0a92598572d6d568710da9bf76356ca166d9280a245980ebcedd255331ad36"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🟦️.ts",
+      "status": "updated",
+      "beforeSha256": "9f948cfbbca3cbca6f721f46d083944fa89530b44a468e976427364f1ca8fc0e",
+      "sha256": "bc2d94de61d4109eaecc4a12ec90f7676b95f834572748d6bca403f70c3aac74"
+    },
+    {
+      "path": "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/📷️png/✍️encode/🟦️.ts",
+      "status": "updated",
+      "beforeSha256": "5265477e120b180eb9156ef1cfa499792bb3f9d4c04c212691197438f4c798c4",
+      "sha256": "ccb43d1b3bfb1457d8e3978825e9ae1c6379cbf3fd2789ab296070e45b967095"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🟦️.ts",
+      "status": "updated",
+      "beforeSha256": "539261c56c936623179421c575c4428c597534456a2abca57313d24a06f39c1f",
+      "sha256": "dffd02466ba806ee3e2a8b9b690351d74180323c1f37a7e7833b8289f3c25b81"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🟦️.ts",
+      "status": "updated",
+      "beforeSha256": "c82c097889a58405fa4bff6b28529555d418cbe8ffae668148235f2f7fab1a0f",
+      "sha256": "65f6a36a1ef6833d8889e4adbcc5fb8ccef82a7c4ba11784ba635b644553e424"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧬️schema/🟦️.ts",
+      "status": "added",
+      "beforeSha256": null,
+      "sha256": "e0ebd808a9f075911cc837bd0186d23e0efd4e0d3b2597cc0d99cf5531877a35"
+    }
+  ]
+}

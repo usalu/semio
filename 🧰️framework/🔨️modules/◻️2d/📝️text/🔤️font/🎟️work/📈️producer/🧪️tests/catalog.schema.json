@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Actual Font Catalog Child Custody",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "family",
+    "failure",
+    "semantic",
+    "stock",
+    "fuel",
+    "rules"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "family": {
+      "const": "Anta"
+    },
+    "failure": {
+      "const": "Required font table missing"
+    },
+    "semantic": {
+      "const": 4
+    },
+    "stock": {
+      "const": [
+        512,
+        131072,
+        131072,
+        131072,
+        64
+      ]
+    },
+    "fuel": {
+      "const": 512
+    },
+    "rules": {
+      "const": {
+        "actualSourceRegistry": true,
+        "actualPrivateChild": true,
+        "sameLedger": true,
+        "realFinalErrorCpu": true,
+        "noDoubleChildSemantic": true,
+        "constructorSelectionDoesNotAllocateExpectedList": true,
+        "inputSourcesRemainBorrowed": true
+      }
+    }
+  }
+}

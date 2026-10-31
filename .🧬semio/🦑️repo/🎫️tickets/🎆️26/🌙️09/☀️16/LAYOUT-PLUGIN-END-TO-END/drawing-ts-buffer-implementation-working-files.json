@@ -1,0 +1,69 @@
+{
+  "state": "partial-source-authored-not-SourceReady",
+  "runtimeExecuted": false,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "bytes": 23659,
+      "sha256": "4a03c33df6b3ba4f5165d59a8e2060caa81cdffe4507bb10cb3fcf3f13c81acb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧬️schema/🔣️.json",
+      "bytes": 3040,
+      "sha256": "ae5aa4bc19f6637fd77f4b11fd0e9e3a852630245a3be75b91e28e4d91cfa56c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 1889,
+      "sha256": "1639035fe0ad6327cce64e88d2fc7881dee9dca2a49c14f7e657b48c5207fc21"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/fixture.ts",
+      "bytes": 4477,
+      "sha256": "6852e075943499c0229b12ccc931cbe5a7a7dcc0bbdb8aa200e9b2310319ff29"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🟦️.ts",
+      "bytes": 11474,
+      "sha256": "389eeb8de19180b1640a96509a146c1ede115b34d33e75d935866aa36a9238db"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+      "bytes": 10815,
+      "sha256": "504a3633840b041ec8bd7ac4b8bd9195128c3cf53c77187b95fa78d71d5e3d19"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "bytes": 11202,
+      "sha256": "63d139d357980400ca8d359cdce7c0ce298e70e87186ed3021790234a5ba4efe"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "bytes": 10135,
+      "sha256": "a7fb4302d11ca2f9193c7428e21265a51bc1eab429f58c6b7190368422d33238"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+      "bytes": 14913,
+      "sha256": "4ac6bd88230a7431188c303322a97b5b7167074395f6b594342fc0d120763e1c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "bytes": 5468,
+      "sha256": "7f0cf530f9990693499024b760f7be2c7e153cfbf06b7094756192f29ca1d20d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "bytes": 15276,
+      "sha256": "24db4789744b3fd83486c91e51cd96707559f2b3d27af05de0985c801047be5d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.test.ts",
+      "bytes": 4102,
+      "sha256": "c86a9680338d7d7c8e3d57a29bc76f1606812877f433d068a338de1c7ee1447f"
+    }
+  ],
+  "attribution": "Core Buffer/private ledger sections only; Cursor retirement/helper hunks shared. Font retirement sections owned by Cursor. Exact paths are not blanket peer-hunk claims.",
+  "canonicalPageLawsAuthored": 8,
+  "existingBehavioralRegressionUnchanged": true
+}

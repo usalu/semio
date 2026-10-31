@@ -17,7 +17,6 @@ import {
   readStoredUiChromeAppearance,
   readStoredUiChromeLayout,
   readStoredUiDriver,
-  registerUiTranslationBundles,
   UI_MOBILE_MEDIA_QUERY,
   useElementsSurfaceChrome,
   useLabel,
@@ -35,7 +34,8 @@ import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
 import { createFrameworkOsHostPortsV1 } from "@semio-tech/framework-os-dev/host-ports";
 import { DemonstratorCard } from "./⚛️demonstrator-card.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
-import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, demonstratorPaneBootVariants, type DemonstratorPaneSpec } from "./🪧️brand.ts";
+import { demonstratorUiLabel } from "./🔨️modules/🌐️locale/⚛️.ts";
+import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, ENTWERFEN_MIT_BESTAND_NAME, demonstratorPaneBootVariants, type DemonstratorPaneSpec } from "./🪧️brand.ts";
 import "./🎨️globals.css";
 
 // 🎪️ Page-owning (single React root, no `ShellScope` of its own) — plain browser storage is correct;
@@ -52,44 +52,6 @@ initUiLocaleSync(DEMONSTRATOR_LOCALE);
 
 /** 📱️ Touch phones swipe through the same grid one app at a time instead of seeing every card at once. */
 const DEMONSTRATOR_SWIPE_MEDIA_QUERY = `${UI_MOBILE_MEDIA_QUERY} and (hover: none) and (pointer: coarse)`;
-
-//#region 🌐️DemonstratorLandingLabels
-/** 🌐️ The landing's own chrome strings, for English AND German (no default language) — the German lock picks German. */
-export const demonstratorLandingUiLabel = registerUiTranslationBundles({
-  en: {
-    translation: {
-      demonstrator: {
-        landing: {
-          grid: { label: { normal: "Every demonstrator", beginner: "Every demonstrator" } },
-          overview: { label: { normal: "Overview", beginner: "Back to all demonstrators" } },
-          paneWaiting: { label: { normal: "{{label}} is being prepared", beginner: "{{label}} is being prepared" } },
-          paneFailed: { label: { normal: "{{label}} could not be loaded.", beginner: "{{label}} could not be loaded." } },
-          neighbourUp: { label: { normal: "Go up to {{label}}", beginner: "Swipe down to reach {{label}} above" } },
-          neighbourLeft: { label: { normal: "Go left to {{label}}", beginner: "Swipe right to reach {{label}} on the left" } },
-          neighbourRight: { label: { normal: "Go right to {{label}}", beginner: "Swipe left to reach {{label}} on the right" } },
-          neighbourDown: { label: { normal: "Go down to {{label}}", beginner: "Swipe up to reach {{label}} below" } },
-        },
-      },
-    },
-  },
-  de: {
-    translation: {
-      demonstrator: {
-        landing: {
-          grid: { label: { normal: "Alle Demonstratoren", beginner: "Alle Demonstratoren" } },
-          overview: { label: { normal: "Übersicht", beginner: "Zurück zu allen Demonstratoren" } },
-          paneWaiting: { label: { normal: "{{label}} wird vorbereitet", beginner: "{{label}} wird vorbereitet" } },
-          paneFailed: { label: { normal: "{{label}} konnte nicht geladen werden.", beginner: "{{label}} konnte nicht geladen werden." } },
-          neighbourUp: { label: { normal: "Nach oben zu {{label}}", beginner: "Nach unten wischen, um {{label}} oben zu erreichen" } },
-          neighbourLeft: { label: { normal: "Nach links zu {{label}}", beginner: "Nach rechts wischen, um {{label}} links zu erreichen" } },
-          neighbourRight: { label: { normal: "Nach rechts zu {{label}}", beginner: "Nach links wischen, um {{label}} rechts zu erreichen" } },
-          neighbourDown: { label: { normal: "Nach unten zu {{label}}", beginner: "Nach oben wischen, um {{label}} unten zu erreichen" } },
-        },
-      },
-    },
-  },
-});
-//#endregion 🌐️DemonstratorLandingLabels
 
 //#region 🎪️DemonstratorPages
 /** 📍️ The eight apps fill a gapless 4 × 2 in row-major order. */
@@ -160,14 +122,14 @@ function DemonstratorLanding() {
 
   const [introductionStep, setIntroductionStep] = useState(0);
   const [introductionDismissed, setIntroductionDismissed] = useState(false);
-  const gridLabel = useLabel(demonstratorLandingUiLabel("demonstrator.landing.grid"));
-  const overviewLabel = useLabel(demonstratorLandingUiLabel("demonstrator.landing.overview"));
-  const waitingLabel = useLabelFormatter(demonstratorLandingUiLabel("demonstrator.landing.paneWaiting"));
-  const failedLabel = useLabelFormatter(demonstratorLandingUiLabel("demonstrator.landing.paneFailed"));
-  const up = useLabelFormatter(demonstratorLandingUiLabel("demonstrator.landing.neighbourUp"));
-  const left = useLabelFormatter(demonstratorLandingUiLabel("demonstrator.landing.neighbourLeft"));
-  const right = useLabelFormatter(demonstratorLandingUiLabel("demonstrator.landing.neighbourRight"));
-  const down = useLabelFormatter(demonstratorLandingUiLabel("demonstrator.landing.neighbourDown"));
+  const gridLabel = useLabel(demonstratorUiLabel("demonstrator.landing.grid"));
+  const overviewLabel = useLabel(demonstratorUiLabel("demonstrator.landing.overview"));
+  const waitingLabel = useLabelFormatter(demonstratorUiLabel("demonstrator.landing.paneWaiting"));
+  const failedLabel = useLabelFormatter(demonstratorUiLabel("demonstrator.landing.paneFailed"));
+  const up = useLabelFormatter(demonstratorUiLabel("demonstrator.landing.neighbourUp"));
+  const left = useLabelFormatter(demonstratorUiLabel("demonstrator.landing.neighbourLeft"));
+  const right = useLabelFormatter(demonstratorUiLabel("demonstrator.landing.neighbourRight"));
+  const down = useLabelFormatter(demonstratorUiLabel("demonstrator.landing.neighbourDown"));
   const labels = useMemo(
     () => ({
       grid: gridLabel,
@@ -195,7 +157,7 @@ function DemonstratorLanding() {
         {revealed ? null : (
           <div className="pointer-events-none absolute inset-x-0 top-0 z-40">
             <Navbar
-              label="Entwerfen mit Bestand"
+              label={ENTWERFEN_MIT_BESTAND_NAME}
               items={[
                 {
                   key: "logoAndTitle",
@@ -204,7 +166,7 @@ function DemonstratorLanding() {
                     <div className="flex min-w-0 shrink-0 items-center gap-single">
                       <ShellBrandLogo svg={ENTWERFEN_MIT_BESTAND_LOGO_SVG} className="size-workbench shrink-0" />
                       <span data-slot="app-name" className="px-single text-sm font-semibold text-foreground">
-                        Entwerfen mit Bestand
+                        {ENTWERFEN_MIT_BESTAND_NAME}
                       </span>
                     </div>
                   ),

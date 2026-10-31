@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scope",
+    "stock",
+    "maximumTurns",
+    "authorityBirthWork",
+    "metadataCopyBytes",
+    "oneBank",
+    "renewal"
+  ],
+  "properties": {
+    "scope": {
+      "const": "payload-domain-port-without-host-context-qualification"
+    },
+    "stock": {
+      "const": {
+        "items": 4096,
+        "copy": 16777216,
+        "capacity": 16777216,
+        "release": 16777216,
+        "depth": 128
+      }
+    },
+    "maximumTurns": {
+      "const": 1024
+    },
+    "authorityBirthWork": {
+      "const": 1
+    },
+    "metadataCopyBytes": {
+      "const": 0
+    },
+    "oneBank": {
+      "const": true
+    },
+    "renewal": {
+      "const": false
+    }
+  }
+}

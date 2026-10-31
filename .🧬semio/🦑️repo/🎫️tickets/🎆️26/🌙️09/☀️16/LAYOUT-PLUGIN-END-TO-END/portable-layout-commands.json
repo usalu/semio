@@ -1,0 +1,14 @@
+{
+  "sourceApplied": true,
+  "focusedLaw": "repo --service=off tools exec bun -- test './🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🧪️tests/🟦️.ts' -t 'portable dependency layout removes repeated long package names and changes generation identity'",
+  "applyRequiresExplicitRootRelease": true,
+  "preparedCheck": "repo --service=off tools exec python -- '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/portable-layout-edit.py' --check-prepared",
+  "appliedPacketSha256": "589b27671fa2bea62c783bea1d0bd5606c94779599040874d1f7e5bf257a56a2",
+  "requiredEnvironment": {
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/tmp",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/tests"
+  },
+  "environmentScope": "Set these four values on the actual repo process before every future task test/check; values are caller-owned and inherited through the existing sanitized tool interface."
+}

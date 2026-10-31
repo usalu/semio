@@ -4,9 +4,9 @@ use quote::{format_ident,quote};
 use syn::{Data,DeriveInput,Fields,Member,parse_quote};
 pub fn expand(input:&DeriveInput)->syn::Result<TokenStream>{
  let name=&input.ident;let visibility=&input.vis;let mut generics=input.generics.clone();
- let persistent=super::component::declared_persistent_crate(input)?;
- for parameter in generics.type_params_mut(){parameter.bounds.push(parse_quote!(#persistent::retained_equality::RetainedEquality));}
- let (ig,tg,wc)=generics.split_for_impl();let root=quote!(#name #tg);let v=super::component::declared_value_crate(input)?;let eq=quote!(#persistent::retained_equality);let v=quote!(#v);let mut declarations=Vec::new();let mut shape=Vec::new();let mut sizes=Vec::new();let mut births=Vec::new();let mut inline_sizes=Vec::new();let mut inline_comparisons=Vec::new();
+ let equality=super::component::declared_equality_crate(input)?;
+ for parameter in generics.type_params_mut(){parameter.bounds.push(parse_quote!(#equality::retained_equality::RetainedEquality));}
+ let (ig,tg,wc)=generics.split_for_impl();let root=quote!(#name #tg);let v=super::component::declared_value_crate(input)?;let eq=quote!(#equality::retained_equality);let v=quote!(#v);let mut declarations=Vec::new();let mut shape=Vec::new();let mut sizes=Vec::new();let mut births=Vec::new();let mut inline_sizes=Vec::new();let mut inline_comparisons=Vec::new();
  let variants:Vec<(Option<&syn::Ident>,&Fields)>=match &input.data{Data::Struct(data)=>vec![(None,&data.fields)],Data::Enum(data)=>data.variants.iter().map(|variant|(Some(&variant.ident),&variant.fields)).collect(),Data::Union(data)=>return Err(syn::Error::new_spanned(data.union_token,"typed equality does not support unions"))};
  for (variant_index,(variant,fields)) in variants.iter().enumerate(){
   let count=fields.len();let prefix=variant.map(|variant|quote!(#name::#variant)).unwrap_or(quote!(#name));
@@ -20,10 +20,10 @@ pub fn expand(input:&DeriveInput)->syn::Result<TokenStream>{
     #visibility struct #wrapper #ig #wc{cursor:<#ty as #eq::RetainedEquality>::Equality,marker:std::marker::PhantomData<fn()->#root>}
     impl #ig #eq::RetainedEqualityCursor<#root> for #wrapper #tg #wc{
      fn demand(&self,left:&#root,right:&#root,body:usize)->Result<#v::RetirementDemand,#v::ValueError>{<<#ty as #eq::RetainedEquality>::Equality as #eq::RetainedEqualityCursor<#ty>>::demand(&self.cursor,#left,#right,body)}
-     fn advance(&mut self,left:&#root,right:&#root,grant:#v::RetainedCloneGrant)->Result<#eq::RetainedEqualityStep,#v::ValueError>{<<#ty as #eq::RetainedEquality>::Equality as #eq::RetainedEqualityCursor<#ty>>::advance(&mut self.cursor,#left,#right,grant)}
+     fn advance(&mut self,left:&#root,right:&#root,grant:#v::RetainedCloneGrant)->#v::RetainedWorkOutcome<#eq::RetainedEqualityStep>{let projected=(||->Result<_,#v::ValueError>{let left=#left;let right=#right;Ok(<<#ty as #eq::RetainedEquality>::Equality as #eq::RetainedEqualityCursor<#ty>>::advance(&mut self.cursor,left,right,grant))})();match projected{Ok(turn)=>turn,Err(error)=>#v::RetainedWorkOutcome{result:Err(error),work:0}}}
      fn begin_close(&mut self){<<#ty as #eq::RetainedEquality>::Equality as #eq::RetainedEqualityCursor<#ty>>::begin_close(&mut self.cursor)}
      fn close_demand(&self,body:usize)->Result<#v::RetirementDemand,#v::ValueError>{<<#ty as #eq::RetainedEquality>::Equality as #eq::RetainedEqualityCursor<#ty>>::close_demand(&self.cursor,body)}
-     fn close_step(&mut self,grant:#v::RetainedCloneGrant)->Result<#v::RetainedCloneStep,#v::ValueError>{<<#ty as #eq::RetainedEquality>::Equality as #eq::RetainedEqualityCursor<#ty>>::close_step(&mut self.cursor,grant)}
+     fn close_step(&mut self,grant:#v::RetainedCloneGrant)->#v::RetainedWorkOutcome{<<#ty as #eq::RetainedEquality>::Equality as #eq::RetainedEqualityCursor<#ty>>::close_step(&mut self.cursor,grant)}
      fn terminal_is_empty(&self)->bool{<<#ty as #eq::RetainedEquality>::Equality as #eq::RetainedEqualityCursor<#ty>>::terminal_is_empty(&self.cursor)}
     }
    });
@@ -31,12 +31,12 @@ pub fn expand(input:&DeriveInput)->syn::Result<TokenStream>{
    let inline_left=left.clone();let inline_right=right.clone();
    field_inline_comparisons.push(quote!(#index=>{let compared=(||->Result<Option<bool>,#v::ValueError>{Ok(<#ty as #eq::RetainedEquality>::inline_equal(#inline_left,#inline_right))})();compared.ok().flatten()}));
    field_sizes.push(quote!(#index=>std::mem::size_of::<#wrapper #tg>()));
-   field_births.push(quote!(#index=>Ok(#eq::equality_box(#wrapper{cursor:<#ty as #eq::RetainedEquality>::equality_cursor(),marker:Default::default()})?)));
+   field_births.push(quote!(#index=>{let turn=#eq::equality_box(#wrapper{cursor:<#ty as #eq::RetainedEquality>::equality_cursor(),marker:Default::default()},grant);#v::RetainedWorkOutcome{work:turn.work,result:turn.result.map(|row|row.map(|(owner,p)|(owner as Box<dyn #eq::RetainedEqualityCursor<Self>>,p)))}}));
   }
   inline_sizes.push(quote!(#shape_pattern=>match index{#(#field_inline_sizes,)*_=>None}));
   inline_comparisons.push(quote!((#shape_pattern,#shape_pattern)=>match index{#(#field_inline_comparisons,)*_=>None}));
   sizes.push(quote!(#shape_pattern=>match index{#(#field_sizes,)*_=>0}));
-  births.push(quote!(#shape_pattern=>match index{#(#field_births,)*_=>Err(#v::ValueError::literal(#v::ValueRefusalKind::InvariantViolated,"typed equality field index is outside original shape"))}));
+  births.push(quote!(#shape_pattern=>match index{#(#field_births,)*_=>#v::RetainedWorkOutcome{result:Err(#v::ValueError::literal(#v::ValueRefusalKind::InvariantViolated,"typed equality field index is outside original shape")),work:0}}));
  }
  Ok(quote!{
   #(#declarations)*
@@ -51,7 +51,7 @@ pub fn expand(input:&DeriveInput)->syn::Result<TokenStream>{
    fn equality_field_inline_bytes(left:&Self,index:usize)->Option<usize>{match left{#(#inline_sizes),*}}
    fn equality_field_inline(left:&Self,right:&Self,index:usize)->Option<bool>{match(left,right){#(#inline_comparisons,)*_=>None}}
    fn equality_field_bytes(left:&Self,index:usize)->usize{match left{#(#sizes),*}}
-   fn equality_field(left:&Self,index:usize)->Result<Box<dyn #eq::RetainedEqualityCursor<Self>>,#v::ValueError>{match left{#(#births),*}}
+   fn equality_field(left:&Self,index:usize,grant:#v::RetainedCloneGrant)->#v::RetainedWorkOutcome<Option<(Box<dyn #eq::RetainedEqualityCursor<Self>>,#v::RetainedCloneProgress)>>{match left{#(#births),*}}
   }
  })
 }

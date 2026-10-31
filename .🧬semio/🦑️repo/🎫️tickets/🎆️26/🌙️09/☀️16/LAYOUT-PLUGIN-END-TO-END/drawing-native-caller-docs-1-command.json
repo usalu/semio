@@ -1,0 +1,31 @@
+{
+  "state": "prepared-production-diagnostic",
+  "cwd": "/Users/ueli/Documents/semio",
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/Cargo.toml",
+    "-p",
+    "semio-framework-job-native-decode",
+    "--doc"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/drawing-native-caller-docs-1",
+    "TMPDIR": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/drawing-native-caller-docs-1/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/drawing-native-caller-docs-1/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/drawing-native-caller-docs-1/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/drawing-native-caller-docs-1/tmp"
+  },
+  "log": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/drawing-native-caller-docs-1/native.log",
+  "sourcePacket": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/drawing-native-caller-owning-2-inputs.json",
+  "scope": "Genuine owning unfiltered all targets; all declared laws retained; no whole Host/Source acceptance.",
+  "sourcePacketSha256": "f7951b9bf9ad9adfb0d7eb089a1633b8c74be4e556f0e452d0f97a3d2d95ea3c",
+  "metadataSha256": "2f42bbb30ed0ef02d1ea1201043fd33ee771968050f67da2c265e7ac8b2a6eb3"
+}

@@ -1,7 +1,6 @@
 //! 🧬️ `stdio.gltf` model: the glTF 2.0 snapshot, diff and schema, the accessor and GLB vocabulary, the reader, the writer and the native codecs.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

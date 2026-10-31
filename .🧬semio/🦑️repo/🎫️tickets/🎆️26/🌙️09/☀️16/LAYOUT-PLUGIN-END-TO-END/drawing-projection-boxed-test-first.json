@@ -1,0 +1,14 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/boxed.json",
+    "sha256": "446ad93df56a719bdfe036610bfbcce5362020850bebc960df35a237e14a0ede"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/boxed.schema.json",
+    "sha256": "67969e1198c29a7d873c5e07069c6338de08d5c8328ba130417660d4e197c527"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/🦀️.rs",
+    "sha256": "56a6eadadaf3ed33ed7387838b2f525c25553b6f3cf4e60f8388a3bf49201ba1"
+  }
+]

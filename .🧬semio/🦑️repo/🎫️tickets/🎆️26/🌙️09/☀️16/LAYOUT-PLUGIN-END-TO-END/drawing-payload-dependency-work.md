@@ -1,0 +1,3 @@
+Existing Job payload domain uses only lower Control/RetainedClone/Retirement/Trace owners; removed unnecessary Value umbrella runtime dependency and reexported actual first-party control types. Physical definitions use owner crate types/helpers. No Native/Job Host runtime dependency added. Production --lib check can now expose actual payload compiler errors; integrated Jobdev owning tests/all old laws still mandatory. No cap/test/profile changed.
+
+Bounded metadata observed one cfg(test) literal path error in existing close law: ../../📐json resolved nonexistent builder root; corrected to ../📐json, the same existing close neutral record. Values/stock/assertions unchanged. Refreshed observation before first production check; owning runtime still required.

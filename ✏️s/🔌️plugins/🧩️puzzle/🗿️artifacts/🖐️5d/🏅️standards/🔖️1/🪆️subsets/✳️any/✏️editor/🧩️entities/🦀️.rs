@@ -399,7 +399,7 @@ fn puzzle5d_projection_value<T:std::borrow::Borrow<semio_framework_value::DslVal
 }
 
 pub fn puzzle5d_editor_projection(snapshot: &Puzzle5dPlaySnapshot) -> Value {
-    value_from_document(&puzzle5d_document_from_snapshot(snapshot.typed()).expect("admitted typed snapshot has a host projection"))
+    semio_framework_pack_json::from_dsl_value(snapshot.projection_with(|typed| value_of_document(typed)))
 }
 
 /// 🌱️ Admits a native host projection through the owned record contract.
@@ -453,8 +453,8 @@ pub fn puzzle5d_document_from_snapshot(snapshot: &Puzzle5dSnapshot) -> Result<Pu
     puzzle5d_record_from_projection(value)
 }
 
-fn value_from_document(document: &Puzzle5dDocument) -> Value {
-    semio_framework_pack_json::from_dsl_value(&document.to_value())
+fn value_of_document(typed: &Puzzle5dSnapshot) -> semio_framework_value::DslValue {
+    puzzle5d_document_from_snapshot(typed).map_or(semio_framework_value::DslValue::Null, |document| document.to_value())
 }
 
 /// 📋️ The concrete kinds one materialized paste consists of: a `create-part` per fresh part, then a `connect-grips`

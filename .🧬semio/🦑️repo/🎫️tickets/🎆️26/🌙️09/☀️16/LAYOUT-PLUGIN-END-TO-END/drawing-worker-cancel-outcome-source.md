@@ -1,0 +1,5 @@
+# Worker Cancellation Return Outcome
+
+Canonical Authority, Session, Mounted/Batch and erased Preview ports now return full RetainedWorkOutcome with the existing exact error types. Ineligible/cached turns are0; actual child work is forwarded before error mapping and custody gate restoration. No production receipt-to-CPU inference remains in this seam. The preview close receiver and same-Source testkit fold that full outcome; preview ACK now uses the current genuine context-owned API. NativeIO original session close also forwards exact work rather than inferred1.
+
+The existing matching-root mounted law retains its finite issuer and all pointer/handback/paid-close assertions, adding a closed neutral four-phase work contract, real zero-item denial/heap0, and cached empty0. All other worker/session-return/authority old direct test consumers still need full-outcome hand migration before an owning worker gate. No native worker/Host acceptance is claimed. Worker session-admission owned output slot is the next production seam; its old consuming output remains a blocker.

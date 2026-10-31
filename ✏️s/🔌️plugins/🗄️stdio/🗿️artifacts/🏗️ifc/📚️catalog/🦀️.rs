@@ -1,5 +1,8 @@
 //! 📚️ Schema-neutral retained EXPRESS declarations and borrowed queries.
 use std::collections::{BTreeMap,BTreeSet};
+#[path="📦️pack/🦀️.rs"]mod pack;
+pub use pack::{decode_catalog_pack,embedded_catalog,CatalogPackError};
+#[cfg(test)]#[path="📦️pack/🧪️tests/🦀️.rs"]pub mod pack_law;
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct IfcTypeExpression {
     pub kind: String,

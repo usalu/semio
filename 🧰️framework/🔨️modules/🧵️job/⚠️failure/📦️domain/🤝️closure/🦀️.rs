@@ -1,8 +1,9 @@
 //! 🤝️ Source retirement preserves both complete original failures under the existing paid domain frontier.
 use crate::{OriginalTurnFailure,OriginalDomainFailure,OriginalDomainProjection,OriginalDomainView as V,project_original_turn_failure,key_original_turn_failure};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
+use semio_framework_value_retained_clone::{ValueError,ValueRefusalKind,RetainedCloneProgress};
 /// 🪢️ The initial failure remains independent from its complete source-closure failure.
-#[derive(Debug,semio_framework_value::RetireOwned)]
+#[derive(Debug,semio_framework_value_derive::RetireOwned)]
+#[value(crate="::semio_framework_value_retained_clone")]
 #[value(send_only)]
 pub struct OriginalClosureFailure{pub initial:OriginalTurnFailure,pub closure:OriginalTurnFailure}
 impl OriginalDomainFailure for OriginalClosureFailure{

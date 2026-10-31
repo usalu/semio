@@ -15,7 +15,8 @@ impl RetirementCursor for ValueRetirement {
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         match self.0.take() {
-            None | Some(crate::DslValue::Null) => RetirementStep::Complete,
+            None => RetirementStep::Complete(0),
+            Some(crate::DslValue::Null) => RetirementStep::Complete(1),
             Some(crate::DslValue::Bool(value)) => RetirementStep::Child(value.retirement()),
             Some(crate::DslValue::Number(value)) => RetirementStep::Child(match value {
                 crate::Number::UInt(value) => value.retirement(),

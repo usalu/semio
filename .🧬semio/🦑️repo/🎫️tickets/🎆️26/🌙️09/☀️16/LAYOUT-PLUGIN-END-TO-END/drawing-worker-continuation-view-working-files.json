@@ -1,0 +1,32 @@
+[
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udc77\ufe0fworker/\u26a0\ufe0ffailure/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "sha256": "0e7952bcf06d1f04e48a51eb30ff8c18a149f19c364af69e17f830f10d8d9870",
+    "bytes": 8039
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udc77\ufe0fworker/\ud83c\udf9f\ufe0fauthority/\ud83e\udd80\ufe0f.rs",
+    "sha256": "057ae036448e9e1a102f73a0a1b427914c065d57a41dd25d87004a5b994442c0",
+    "bytes": 56493
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udc77\ufe0fworker/\ud83c\udfc1\ufe0foutcome-and-rejection/\ud83e\udd80\ufe0f.rs",
+    "sha256": "539fc7bbfe4e3679d54a527f94d58880bd5ecde9c6d283aa3de3ee9404c3e2ad",
+    "bytes": 6300
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udc77\ufe0fworker/\ud83e\uddf0\ufe0fmounted-and-batch-sessions/\ud83e\udd80\ufe0f.rs",
+    "sha256": "559f4a4c585ff2f014bcfe8618f8950ce15313b80199dc59c23914462d8d43fe",
+    "bytes": 16711
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udc77\ufe0fworker/\ud83c\udf9f\ufe0fturn/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "sha256": "fb6120e2aa8356fcb63d7cf671344705f9df1b9eebd14808e01f07f2f97059ce",
+    "bytes": 12466
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udc77\ufe0fworker/\ud83c\udf9f\ufe0fturn/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udcd0\ufe0f.json",
+    "sha256": "31487a720b5f2b3ef410a160cf2027a060d8a73024a40e26df6e9f09686ba690",
+    "bytes": 793
+  }
+]

@@ -1,0 +1,3 @@
+# Framework Lock Root Audit
+
+The known Pixels test-only Trace/TinySkia removals alone did not reconstruct the complete prelaunch lock. Root then read the existing HEAD lock in memory through supported read-only repo tools git show; no Source file was copied and no lock was edited. Exact captured hash match: **False**. Full captured/HEAD/current hashes and bounded package-level added/removed-line observations are in the adjacent JSON packet. Changed package count 6. New/removed package identities 2/0. No resolved-version equivalence is claimed unless the old bytes exactly match the captured hash.

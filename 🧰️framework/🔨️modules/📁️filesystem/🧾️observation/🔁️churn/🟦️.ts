@@ -1,5 +1,5 @@
 import {noticeLanguagesV1} from "../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
-import {renameSync} from "node:fs";
+import {renameSync,statSync} from "node:fs";
 import protocolSchema from "./🧬️schema/🔣️.json" with {type:"json"};
 import {filesystemRaceOfErrorV1,filesystemRaceTableV1} from "./🌊️races/🟦️.ts";
 
@@ -13,11 +13,11 @@ export type ChurnProfileNameV1="read"|"snapshot"|"build";
 /** 📜️ One layer of the schema: its rank, its attempt bound and the pause before each further attempt. */
 export type ChurnProfileV1=Readonly<{rank:number;maximumAttempts:number;backoffMs:readonly number[]}>;
 /** 📖️ The closed protocol exactly as the schema declares it. */
-export type ChurnProtocolV1=Readonly<{version:1;staleImplementationCode:string;staleImplementationCodes:readonly string[];concurrentEditCode:string;primaryFirstAggregates:readonly string[];languages:readonly string[];settleMilliseconds:number;profiles:Readonly<Record<ChurnProfileNameV1,ChurnProfileV1>>;reasons:Readonly<Record<string,Readonly<Record<ConcurrentEditReasonV1,string>>>>;texts:Readonly<Record<string,Readonly<Record<"retry"|"exhausted",string>>>>}>;
+export type ChurnProtocolV1=Readonly<{version:1;staleImplementationCode:string;staleImplementationCodes:readonly string[];concurrentEditCode:string;primaryFirstAggregates:readonly string[];languages:readonly string[];settleMilliseconds:number;quiet:Readonly<{futureToleranceMilliseconds:number;windowMilliseconds:number;ceilingMilliseconds:number;reasons:readonly ConcurrentEditReasonV1[]}>;profiles:Readonly<Record<ChurnProfileNameV1,ChurnProfileV1>>;reasons:Readonly<Record<string,Readonly<Record<ConcurrentEditReasonV1,string>>>>;texts:Readonly<Record<string,Readonly<Record<"retry"|"exhausted",string>>>>}>;
 /** 📣️ One announced retry: the layer, the attempt about to start, what changed and how long the pause is. */
 export type ChurnRetryEventV1=Readonly<{profile:ChurnProfileNameV1;attempt:number;maximum:number;path:string;reason:ConcurrentEditReasonV1;delayMs:number;text:string}>;
 /** 🎛️ Cancellation, progress and clock authority of one retrying step; `retryable` lets a caller refuse a retry of a failure that came out of work it ran inside (a tracked unit that failed closed its owners, so running again can only fail again). */
-export type ChurnOptionsV1=Readonly<{signal?:AbortSignal;retryable?:(error:unknown)=>boolean;environment?:Readonly<Record<string,string|undefined>>;onRetry?:(event:ChurnRetryEventV1)=>void;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;sleepSync?:(milliseconds:number)=>void}>;
+export type ChurnOptionsV1=Readonly<{modifiedAgeMs?:(path:string)=>number|undefined;signal?:AbortSignal;retryable?:(error:unknown)=>boolean;environment?:Readonly<Record<string,string|undefined>>;onRetry?:(event:ChurnRetryEventV1)=>void;sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>;sleepSync?:(milliseconds:number)=>void}>;
 
 /** 📕️ The closed churn protocol: layers, attempt bounds, pauses and EN/DE texts. */
 export function churnProtocolV1():ChurnProtocolV1{return protocol;}
@@ -94,6 +94,12 @@ const defaultSleep=(milliseconds:number,signal?:AbortSignal):Promise<void>=>new 
 const defaultSleepSync=(milliseconds:number):void=>{if(milliseconds>0)Atomics.wait(sleeper,0,0,milliseconds);};
 const defaultReport=(event:ChurnRetryEventV1):void=>{try{process.stderr.write(event.text+"\n");}catch{}};
 
+const defaultModifiedAge=(path:string):number|undefined=>{try{const age=Date.now()-statSync(path).mtimeMs;return age<-protocol.quiet.futureToleranceMilliseconds?undefined:Math.max(0,age);}catch{return undefined;}};
+/** 🤫️ (A modification time in the future beyond `futureToleranceMilliseconds`, clock skew of a network mount or container, says nothing about quiet and waits for nothing; the synchronous variant blocks its thread for at most the ceiling because its callers are synchronous.) How long to wait until an edited file has been quiet for `quiet.windowMilliseconds`, bounded by what the retry call has already spent against `quiet.ceilingMilliseconds`; 0 when the file is quiet, unreadable or the budget is spent. A peer that saves a file every few seconds then costs time, not retry attempts: the attempts of the layers stay for real torn reads. */
+export function quietWaitMillisecondsV1(path:string,spentMilliseconds:number,options:Pick<ChurnOptionsV1,"modifiedAgeMs">={}):number{
+ const age=(options.modifiedAgeMs??defaultModifiedAge)(path);if(age===undefined||age>=protocol.quiet.windowMilliseconds)return 0;
+ return Math.max(0,Math.min(protocol.quiet.windowMilliseconds-age,protocol.quiet.ceilingMilliseconds-spentMilliseconds));
+}
 function plan(profileName:ChurnProfileNameV1,error:unknown,attempt:number,options:ChurnOptionsV1):Readonly<{retry:ChurnRetryEventV1}>|Readonly<{fail:Error}>|undefined{
  const profile=protocol.profiles[profileName],edit=editOf(error);if(!edit||edit.rank>=profile.rank||options.retryable?.(error)===false)return;
  const environment=options.environment??process.env;
@@ -109,10 +115,13 @@ function plan(profileName:ChurnProfileNameV1,error:unknown,attempt:number,option
 
 /** 🔁️ Runs `body` as one snapshot of its layer: on a concurrent edit the layer pauses as the schema declares, announces the retry in the declared languages and runs `body` again with the next attempt number, until the layer's attempts are used up and the edit fails the step naming its path. Cancellation ends the wait at once. */
 export async function retryOnConcurrentEditV1<T>(profile:ChurnProfileNameV1,body:(attempt:number)=>Promise<T>,options:ChurnOptionsV1={}):Promise<T>{
+ let quietSpent=0;
  for(let attempt=1;;attempt++){
   options.signal?.throwIfAborted();
   try{return await body(attempt);}
   catch(error){
+   const edit=editOf(error),quiet=edit&&protocol.quiet.reasons.includes(edit.reason)&&protocol.profiles[profile].rank>edit.rank&&options.retryable?.(error)!==false?quietWaitMillisecondsV1(edit.path,quietSpent,options):0;
+   if(quiet>0){quietSpent+=quiet;await(options.sleep??defaultSleep)(quiet,options.signal);attempt--;continue;}
    const next=plan(profile,error,attempt,options);if(!next)throw error;
    if("fail"in next)throw next.fail;
    (options.onRetry??defaultReport)(next.retry);
@@ -123,10 +132,13 @@ export async function retryOnConcurrentEditV1<T>(profile:ChurnProfileNameV1,body
 
 /** 🔂️ The synchronous layer of {@link retryOnConcurrentEditV1} for readers that cannot suspend (it pauses the thread). */
 export function retryOnConcurrentEditSyncV1<T>(profile:ChurnProfileNameV1,body:(attempt:number)=>T,options:ChurnOptionsV1={}):T{
+ let quietSpent=0;
  for(let attempt=1;;attempt++){
   options.signal?.throwIfAborted();
   try{return body(attempt);}
   catch(error){
+   const edit=editOf(error),quiet=edit&&protocol.quiet.reasons.includes(edit.reason)&&protocol.profiles[profile].rank>edit.rank&&options.retryable?.(error)!==false?quietWaitMillisecondsV1(edit.path,quietSpent,options):0;
+   if(quiet>0){quietSpent+=quiet;(options.sleepSync??defaultSleepSync)(quiet);attempt--;continue;}
    const next=plan(profile,error,attempt,options);if(!next)throw error;
    if("fail"in next)throw next.fail;
    (options.onRetry??defaultReport)(next.retry);

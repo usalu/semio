@@ -757,7 +757,7 @@ impl SubspaceIterationJob {
 
 
 
-    pub(super) fn advance_preview_entry(state: &mut SubspaceCheckpoint, operation: Operation, writer: &mut RetainedJobPayloadWriter, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
+    pub(super) fn advance_preview_entry(state: &mut SubspaceCheckpoint, operation: Operation, writer: &mut RetainedPayloadBuilder, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
         let published=state.p.min(state.final_theta.len());
         let cursor = NumericalPageCursor { field: state.publication_stage as u16, owner: state.publication_first, item: state.publication_second };
         if advance_numerical_page_header(writer, b"FEMSUB2\0", 2, cursor, context)? {
@@ -767,8 +767,7 @@ impl SubspaceIterationJob {
             0 => {
                 let values = [operation.operation.0, operation.base_revision.0, operation.generation.0, operation.seed, state.iteration as u64, state.converged_count as u64, state.converged as u64, state.n as u64, published as u64];
                 if let Some(value) = values.get(state.publication_first) {
-                    writer.write_staged(&value.to_le_bytes())?;
-                    state.publication_first += 1;
+                    if write_numerical_entry(writer, &value.to_le_bytes(), context)? { state.publication_first += 1; }
                 } else {
                     state.publication_first = 0;
                     state.publication_stage = 1;
@@ -776,8 +775,7 @@ impl SubspaceIterationJob {
             }
             1 => {
                 if let Some(value) = state.final_theta.get(state.publication_first).filter(|_| state.publication_first < published) {
-                    writer.write_staged(&value.to_bits().to_le_bytes())?;
-                    state.publication_first += 1;
+                    if write_numerical_entry(writer, &value.to_bits().to_le_bytes(), context)? { state.publication_first += 1; }
                 } else {
                     state.publication_first = 0;
                     state.publication_stage = 2;
@@ -785,11 +783,12 @@ impl SubspaceIterationJob {
             }
             2 => {
                 if state.publication_first < published {
-                    writer.write_staged(&state.x.get(state.publication_second, state.publication_first).to_bits().to_le_bytes())?;
-                    state.publication_second += 1;
-                    if state.publication_second == state.n {
-                        state.publication_second = 0;
-                        state.publication_first += 1;
+                    if write_numerical_entry(writer, &state.x.get(state.publication_second, state.publication_first).to_bits().to_le_bytes(), context)? {
+                        state.publication_second += 1;
+                        if state.publication_second == state.n {
+                            state.publication_second = 0;
+                            state.publication_first += 1;
+                        }
                     }
                 } else {
                     state.publication_first = 0;
@@ -798,13 +797,12 @@ impl SubspaceIterationJob {
             }
             3 => {
                 if let Some(value) = state.residuals.get(state.publication_first).filter(|_| state.publication_first < published) {
-                    writer.write_staged(&value.to_bits().to_le_bytes())?;
-                    state.publication_first += 1;
+                    if write_numerical_entry(writer, &value.to_bits().to_le_bytes(), context)? { state.publication_first += 1; }
                 } else {
                     state.publication_stage = 4;
                 }
             }
-            4 => { if !writer.commit_staged_page_funded(context, 3 * size_of::<usize>())? { return Ok(false); } },
+            4 => { if !numerical_commit_page(writer, context)? { return Ok(false); } },
             _ => {}
         }
         Ok(state.publication_stage == 4 && writer.staged_page_len().is_none())

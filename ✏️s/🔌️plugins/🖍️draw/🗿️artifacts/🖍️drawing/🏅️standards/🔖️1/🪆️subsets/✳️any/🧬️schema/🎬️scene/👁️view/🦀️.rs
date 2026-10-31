@@ -34,7 +34,7 @@ pub fn view<'a>(plan:&'a DocumentScenePlan,node:&'a DocumentSceneNode)->Result<O
  let mut out=PreparedSceneNode{id:&node.id,groups:&node.groups,transform:node.transform,segments:Cow::Borrowed(&[]),fill:None,stroke:None,opacity:node.opacity,blend_mode:&node.blend_mode,visible:node.visible,fill_rule:None,image:None};
  let paint=match &node.content{
   DocumentSceneContent::Path{segments,fill_rule,fill,stroke}|DocumentSceneContent::Glyphs{segments,fill_rule,fill,stroke,..}=>{out.segments=Cow::Borrowed(segments);Some((fill_rule,fill,stroke))},
-  DocumentSceneContent::Image{asset,width,height}=>{out.image=Some((plan.assets.iter().find(|entry|entry.id==*asset).ok_or_else(||DocumentSceneError::Invalid(format!("Missing completed scene image asset: {asset}")))?,*width,*height));None},
+  DocumentSceneContent::Image{asset,width,height}=>{out.image=Some((plan.assets.iter().find(|entry|entry.id==*asset).ok_or_else(||DocumentSceneError::Invalid(format!("Missing completed scene image asset: {asset}").into()))?,*width,*height));None},
   DocumentSceneContent::Group{..}=>return Ok(None),
   DocumentSceneContent::Text{..}|DocumentSceneContent::Boolean{..}|DocumentSceneContent::Trace{..}=>return Err(DocumentSceneError::Invalid("Unresolved algorithm in completed canvas plan".into())),
  };

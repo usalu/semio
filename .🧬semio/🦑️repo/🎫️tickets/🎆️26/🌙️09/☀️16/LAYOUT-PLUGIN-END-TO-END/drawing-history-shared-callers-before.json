@@ -1,0 +1,22 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧾️metadata/🦀️.rs",
+    "sha256": "530f0c5d2f4f59a59ae6d217f30d3b61e64943ace92e98480d7c8bef4ac0d7ce"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️transition/🦀️.rs",
+    "sha256": "92c2be7ab64a90af73958d8d6066093beaca3d8a86f73092b5aceaf934a0c4a4"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧵️edit/🦀️.rs",
+    "sha256": "abc27b12edc8c33b2bf86cffaef5c51a7877ea86bc981c16a0370ca39bc95007"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/⚔️conflict/🦀️.rs",
+    "sha256": "9d1bd9912fdf7527d8d2102b9375393b01a2288302654b438edf5b976508bac0"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🗂️file/🦀️.rs",
+    "sha256": "16ef1d2b8aabde8d30d11f048d8c71efe140209402da7883c7997dc66a95c5c4"
+  }
+]

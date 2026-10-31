@@ -1,0 +1,23 @@
+{
+  "state": "schema-first-standalone-parser-regression-authored-before-body",
+  "laws": 1,
+  "cases": 6,
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️attributes/🧪️tests/🎯️value/📐️.json",
+      "bytes": 1258,
+      "sha256": "7448e88dbd3ef1275b848fae4adc78dce6fe004bf1dad7ee46550f6cfffa7133"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️attributes/🧪️tests/🎯️value/🔣️.json",
+      "bytes": 1831,
+      "sha256": "76f017867cfa3a6345c2cc249269cea9cdb362fe7098d7241cd994e303212050"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️attributes/🧪️tests/🎯️value/value.test.ts",
+      "bytes": 2456,
+      "sha256": "2ce0de3801a44d432a349748399641174bb2f95bd656fa30850c0d8156f0cd2d"
+    }
+  ],
+  "scope": "Existing standalone nonnullable fill/stroke API rejects null/undefined with canonical typed position refusal; nullable attributes continue preserving explicit null. Independent Ajv canonical value schema, valid values equal same attribute object parsing. No grant/body/fixture/stock change, runtime unexecuted."
+}

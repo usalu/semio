@@ -1,0 +1,21 @@
+{
+  "beforeSha256": "7847204b4f8246bf46cba20fdaf6ab694ae57228f7b7d31473e360c197c906fc",
+  "producerPrefixUnchanged": "96e596c38c45d7dcb3c0cabf7c39eb0b7dc34a89844d28786ff435cbd704155a",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "sha256": "387f43febdaa383328a697f52731a1749d2835da98ac15958fa50775f5858b07"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🎟️work/📐️.json",
+      "sha256": "4d7d6a72b8a635285b2928e8cc3b34a7a3c770246935ca33bfbc436d1a1cfd4f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🎟️work/🔣️.json",
+      "sha256": "ae0e469c4eaa6ad24735d2f4ecb7e984d7268dfffd9ee56644d3d4df698e0d0a"
+    }
+  ],
+  "status": "Source authored, no runtime",
+  "borrowedHeaderClearBeforeSha256": "c6cd8c903feab9056326e12de05412b6e4b697467811654983799a73fa1fb64a",
+  "borrowedHeaderProducerPrefixUnchanged": "96e596c38c45d7dcb3c0cabf7c39eb0b7dc34a89844d28786ff435cbd704155a"
+}

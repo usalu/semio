@@ -59,17 +59,24 @@ static NEXT_CANCEL_WAITER: std::sync::atomic::AtomicU64 = std::sync::atomic::Ato
 pub struct CancelToken(#[doc(hidden)] pub Arc<CancelNode>);
 
 impl CancelToken {
+    /// 🪢️ Admits one atomic alias of this exact original node without allocating or copying its body.
+    pub fn admit_alias(&self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Self,semio_framework_value::RetainedCloneProgress)>>{
+        if grant.maximum_items==0||grant.maximum_depth==0{return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0};}
+        let alias=Self(Arc::clone(&self.0));
+        semio_framework_value::RetainedWorkOutcome{result:Ok(Some((alias,semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1}
+    }
+
     /// 📏️ Quotes one original cancellation Arc and its inline empty waiter owner.
     pub fn root_admission_demands()->semio_framework_value::RetirementDemand{
-        semio_framework_value::RetirementDemand{capacity_bytes:semio_framework_value::shared_retirement_allocation_bytes::<CancelNode>(),depth:1,..Default::default()}
+        semio_framework_value::RetirementDemand{capacity_bytes:semio_framework_value_allocation_return::shared_allocation_bytes::<CancelNode>(),depth:1,..Default::default()}
     }
 
     /// 🎟️ Creates one live root only after its original independent authority admits the actual birth.
-    pub fn admit_root(grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Self,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{
-        let bytes=semio_framework_value::shared_retirement_allocation_bytes::<CancelNode>();
-        if grant.maximum_items==0||grant.maximum_capacity_bytes<bytes||grant.maximum_depth==0{return Ok(None);}
-        let original=Self(Arc::new(CancelNode{local:AtomicU8::new(0),parent:None,waiters:CancelWaiters::new()}));
-        Ok(Some((original,semio_framework_value::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()})))
+    pub fn admit_root(grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Self,semio_framework_value::RetainedCloneProgress)>>{
+        let demand=Self::root_admission_demands();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0}}
+        let turn=semio_framework_value_allocation_return::admit_shared_allocation(CancelNode{local:AtomicU8::new(0),parent:None,waiters:CancelWaiters::new()},grant);
+        semio_framework_value::RetainedWorkOutcome{work:turn.work,result:turn.result.map(|(node,p)|Some((Self(node),p))).map_err(|(error,_)|error)}
     }
 
     /// 👶️ Creates one admitted child while retaining the exact borrowed original parent.
@@ -255,3 +262,11 @@ impl std::fmt::Debug for CancelToken {
     }
 }
 //#endregion 🛑️CancelToken
+
+#[cfg(test)]
+#[path="🎟️alias/🧪️tests/🦀️.rs"]
+mod actual_alias_work_tests;
+
+#[cfg(test)]
+#[path="🎟️root/🧪️tests/actual.rs"]
+mod actual_root_work_tests;

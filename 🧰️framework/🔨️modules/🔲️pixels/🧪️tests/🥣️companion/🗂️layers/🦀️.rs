@@ -8,3 +8,5 @@ use std::{collections::BTreeMap, sync::Arc};
 
 #[path = "../../../🧩️compositing/🗂️layers/🧪️tests/🦀️.rs"]
 mod tests;
+#[path = "../../../🧩️compositing/🗂️layers/🎟️work/🧪️tests/🦀️.rs"]
+mod work_tests;

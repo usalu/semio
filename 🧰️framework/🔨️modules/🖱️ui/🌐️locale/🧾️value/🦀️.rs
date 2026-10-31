@@ -15,8 +15,7 @@ macro_rules! axis_value {
         }
         impl<I:semio_framework_value_native_owned::owned::tree::NativeValueSource+?Sized> semio_framework_value_native_owned::NativeReceive<I> for $owner {
             type Receiver=semio_framework_value_native_owned::owned::tree::NativeScalarReceiver<I,Self>;
-            fn receive_birth_demand()->semio_framework_value::RetirementDemand{Self::Receiver::birth()}
-            fn begin_receive(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::Receiver,semio_framework_value::RetainedCloneProgress),ValueError>{Self::Receiver::begin(grant)}
+            fn receiver()->Self::Receiver{Self::Receiver::new()}
         }
         impl ToValue for $owner {
             fn to_value(&self) -> DslValue { DslValue::String(self.as_str().to_string()) }

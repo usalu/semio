@@ -1,0 +1,12 @@
+{
+  "outerExit": 1,
+  "phase": "layout:typescript:behavior",
+  "pass": 69,
+  "fail": 6,
+  "tests": 75,
+  "files": 16,
+  "assertions": 298,
+  "behaviorDurationSeconds": 15.96,
+  "logSha256": "d583273382efe1629d074ce28a8f760a9a99d5d5b4217bda5077014687a86eb1",
+  "scope": "unheld diagnostic with peer source edits; later phases not run; not current closure acceptance"
+}

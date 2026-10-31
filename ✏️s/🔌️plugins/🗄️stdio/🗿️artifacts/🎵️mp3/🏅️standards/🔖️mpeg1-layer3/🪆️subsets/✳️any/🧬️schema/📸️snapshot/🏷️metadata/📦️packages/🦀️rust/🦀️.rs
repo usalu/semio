@@ -1,7 +1,6 @@
 //! 🏷️ metadata of `semio-s-artifact-stdio-mp3` — a path-preserving carve of the artifact root mounts.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_value_derive as value_derive;

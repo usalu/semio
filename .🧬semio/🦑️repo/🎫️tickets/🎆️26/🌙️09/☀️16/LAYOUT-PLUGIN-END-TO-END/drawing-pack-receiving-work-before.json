@@ -1,0 +1,17 @@
+[
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf92\ufe0fpack/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\udef4\ufe0freceiving/\ud83e\udd80\ufe0f.rs",
+    "bytes": 40465,
+    "sha256": "fd6c8f174cb8d7eb264f959ab4f4c9a3eaa0c6260ab8a4db14e53118262867d8"
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf92\ufe0fpack/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\udef4\ufe0freceiving/\ud83d\udce6\ufe0fdocument/\ud83e\udd80\ufe0f.rs",
+    "bytes": 4202,
+    "sha256": "b9e5d05fc3ef2c0e9b280bdf4da9a82087339dd3a485eec21714a9d52e28381d"
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf92\ufe0fpack/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\udef4\ufe0freceiving/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "bytes": 34227,
+    "sha256": "129e0a0d80633a24c7fc1afbd82dfa3edba597b1eea5d1d778645eda24279b0d"
+  }
+]

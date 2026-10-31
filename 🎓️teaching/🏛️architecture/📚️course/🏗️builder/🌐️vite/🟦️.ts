@@ -14,7 +14,7 @@ import { semioReferencedAssetsVitePlugin } from "../../../../../🧰️framework
 import { semioServeCloseVitePlugin, semioServeUpgradeVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
 import course from "../../🔣️.json" with { type: "json" };
 import deployment from "../../🚀️deploy/🔣️.json" with { type: "json" };
-import courseContract from "../../../../../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🧬️schema/🔣️json/🟦️.ts" with { type: "json" };
+import courseContract from "../../../../../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🧬️schema/🔣️json/🟦️.ts";
 import { projectContractDefinitions } from "../../../../../🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🧬️schema/📽️projection/🟦️.ts";
 // #endregion 🔌️Adapters
 

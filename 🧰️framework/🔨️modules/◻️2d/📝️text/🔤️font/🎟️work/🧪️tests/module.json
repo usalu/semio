@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "runtime": [
+    "RetainedWorkBuffer",
+    "RetainedWorkLedger",
+    "RetainedWorkRetirement",
+    "retireRetainedWorkBuffer",
+    "popRetainedWorkBuffer",
+    "retireRetainedWorkArchive",
+    "retireRetainedWorkBuffers",
+    "retireRetainedWorkChildren",
+    "retainedWorkChildRetirement",
+    "retireRetainedWorkMatcher"
+  ],
+  "declarations": [
+    "RetainedWorkGrant",
+    "RetainedWorkDemand",
+    "RetainedWorkReceipt",
+    "RetainedWorkRetirementProgress",
+    "RetainedWorkRetirementCursor"
+  ],
+  "forbidden": [
+    "FontWorkLedger",
+    "FontBuffer",
+    "FontRetirement",
+    "FontRetainedGrant",
+    "FontRetirementCursor"
+  ],
+  "rules": {
+    "sameCanonicalRuntimeIdentity": true,
+    "nativeRequireAndEsmAgree": true,
+    "explicitErasedExports": true,
+    "noRuntimeAliases": true
+  }
+}

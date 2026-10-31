@@ -54,6 +54,7 @@ pub struct UiNativeResourceLoans {
     complete: bool,
     closing: bool,
     pending_failure: Option<UiNativeResourceTurnFailure>,
+    failure_place: UiNativeFailurePlace,
 }
 
 impl UiNativeResourceLoanSource for UiNativeResourceLoans {
@@ -125,14 +126,14 @@ impl UiNativeResourceLoans {
     }
 
     pub fn capture_step_on_original<S: UiNativeResourceLoanSource + ?Sized>(&mut self, source: &S, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<bool>, semio_framework_job::OriginalTurnFailure> {
-        if self.pending_failure.is_some() { return admit_native_resource_failure(&mut self.pending_failure, cx); }
+        if self.pending_failure.is_some() { return admit_native_resource_failure(&mut self.pending_failure, &mut self.failure_place, cx); }
         if self.capture_complete() { return Ok(Some(true)); }
         let grant = cx.retained_grant();
         if cx.should_yield() || cx.is_cancelled() || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
         if self.pending.is_some() && self.phase >= 2 && !self.rows.has_reserved_slot() {
             let demand = match self.rows.next_allocation_bytes() {
                 Ok(demand) => demand,
-                Err(primary) => { self.pending_failure = Some(UiNativeResourceTurnFailure::Native { primary: UiNativeResourceFailure::Storage(primary), receipt_refusal: None }); return admit_native_resource_failure(&mut self.pending_failure, cx); }
+                Err(primary) => { self.pending_failure = Some(UiNativeResourceTurnFailure::Native { primary: UiNativeResourceFailure::Storage(primary), receipt_refusal: None }); return admit_native_resource_failure(&mut self.pending_failure, &mut self.failure_place, cx); }
             };
             if demand > grant.maximum_capacity_bytes { return Ok(None); }
         }
@@ -174,11 +175,12 @@ impl UiNativeResourceLoans {
     }
 
     pub fn close_step_on_original(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<bool>, semio_framework_job::OriginalTurnFailure> {
-        if self.pending_failure.is_some() { return admit_native_resource_failure(&mut self.pending_failure, cx); }
+        if self.pending_failure.is_some() { return admit_native_resource_failure(&mut self.pending_failure, &mut self.failure_place, cx); }
+        if self.rows.terminal_is_empty() && self.pending.is_none() && self.source.is_none() && !self.failure_place.terminal_is_empty() { close_native_failure_place(&mut self.failure_place, cx)?; return Ok(Some(self.terminal_is_empty())); }
         if self.terminal_is_empty() { return Ok(Some(true)); }
         let grant = cx.retained_grant();
         if cx.should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
-        let demand = match self.close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(primary) => { self.pending_failure = Some(UiNativeResourceTurnFailure::Native { primary, receipt_refusal: None }); return admit_native_resource_failure(&mut self.pending_failure, cx); } };
+        let demand = match self.close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(primary) => { self.pending_failure = Some(UiNativeResourceTurnFailure::Native { primary, receipt_refusal: None }); return admit_native_resource_failure(&mut self.pending_failure, &mut self.failure_place, cx); } };
         if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes || demand.depth > grant.maximum_depth { return Ok(None); }
         let result = self.close_step(grant);
         let progress = match &result { Ok(step) => step.progress, Err(primary) => primary.retained_progress() };
@@ -191,7 +193,7 @@ impl UiNativeResourceLoans {
         }
     }
 
-    pub fn terminal_is_empty(&self) -> bool { self.rows.terminal_is_empty() && self.pending.is_none() && self.source.is_none() && self.pending_failure.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.rows.terminal_is_empty() && self.pending.is_none() && self.source.is_none() && self.pending_failure.is_none() && self.failure_place.terminal_is_empty() }
 }
 
 impl Drop for UiNativeResourceLoans {

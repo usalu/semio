@@ -1,0 +1,30 @@
+{
+  "state": "authored-before-publication-cut-cancellation-hunk-no-runtime",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🦀️.rs",
+      "bytes": 24673,
+      "sha256": "7066fcd7df08abc685a34d459012da0722c3e844d797ba5d4168a6c5aa97f3b3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/actual.json",
+      "bytes": 433,
+      "sha256": "b9c0849786adf3106e0ec15de29d97295303ce1a33b6a69ce31ee40fba2e8501"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/actual.schema.json",
+      "bytes": 1325,
+      "sha256": "1e0a66b3d8981fcdc2f5944a901cc447ee8d8705203f35de71072f6d1e2cb1fd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 2551,
+      "sha256": "e6d115c59067d51f9ee1a849d6a942a85d43ea23353e7aea44d3f0058580f032"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧬️schema/🔣️.json",
+      "bytes": 3179,
+      "sha256": "3961f2a1acf41ee1d58cd5d6937de5073fa5a87d68c88a20400f05c50c5c6916"
+    }
+  ]
+}

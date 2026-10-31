@@ -172,3 +172,30 @@ fn exact_domain_layout_preserves_full_identity_and_rejects_unregistered_pairs() 
     assert!(validate_mutation_leaf_source(&DOMAIN_DESCRIPTOR, &DOMAIN_PROVENANCE, &MutationLeafSourceScope { owner_layout: duplicate, ..DOMAIN_SCOPE }).is_err());
     assert!(validate_mutation_leaf_source(&DOMAIN_DESCRIPTOR, &DOMAIN_PROVENANCE, &MutationLeafSourceScope { owner_layout: MutationOwnerLayout::DomainOperations(&[]), ..DOMAIN_SCOPE }).is_err());
 }
+
+#[test]
+fn roster_uniqueness_hashes_a_bounded_tail_yet_compares_full_identities() {
+    let tail = "t".repeat(96);
+    let leak = |text: String| -> &'static str { Box::leak(text.into_boxed_str()) };
+    let root = "✏️s/🔌️plugins/🧪️probe/🧬️mutations";
+    let distinct: &'static [MutationLeafDescriptor] = Box::leak(
+        (0..300)
+            .map(|index| MutationLeafDescriptor { owner: leak(format!("{root}/head-{index}/{tail}")), semantic_kind: leak(format!("kind-{index}-x")), text_opcode: None, binary_tag: Some(index), ..LEAF_DESCRIPTOR })
+            .collect::<Vec<_>>()
+            .into_boxed_slice(),
+    );
+    assert_eq!(validate_mutation_leaf_descriptor_roster_uniqueness(root, distinct, MutationOwnerLayout::Flat), Ok(()));
+    let mut duplicated = distinct.to_vec();
+    duplicated[299] = MutationLeafDescriptor { owner: distinct[7].owner, ..distinct[299] };
+    let duplicated: &'static [MutationLeafDescriptor] = Box::leak(duplicated.into_boxed_slice());
+    assert_eq!(validate_mutation_leaf_descriptor_roster_uniqueness(root, duplicated, MutationOwnerLayout::Flat), Err(MutationLeafDescriptorRosterValidationError { owner: root, field: "owner", first_index: 7, index: 299 }));
+}
+
+#[test]
+fn identity_hash_separates_owners_that_share_a_long_tail_or_a_long_head() {
+    let tail = "t".repeat(96);
+    let hash = |owner: String| identity_hash(&MutationLeafDescriptor { owner: Box::leak(owner.into_boxed_str()), ..LEAF_DESCRIPTOR }, 1).unwrap();
+    let shared_tail = (0..300).map(|index| hash(format!("{index}-{tail}"))).collect::<std::collections::BTreeSet<_>>();
+    let shared_head = (0..300).map(|index| hash(format!("{tail}-{index}"))).collect::<std::collections::BTreeSet<_>>();
+    assert_eq!((shared_tail.len(), shared_head.len()), (300, 300), "colliding identity hashes degrade the const probe to quadratic string compares");
+}

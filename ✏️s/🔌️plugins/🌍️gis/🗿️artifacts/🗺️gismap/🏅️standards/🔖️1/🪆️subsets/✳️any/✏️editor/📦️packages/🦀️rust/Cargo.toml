@@ -19,6 +19,7 @@ path = "🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-2d-compute = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }

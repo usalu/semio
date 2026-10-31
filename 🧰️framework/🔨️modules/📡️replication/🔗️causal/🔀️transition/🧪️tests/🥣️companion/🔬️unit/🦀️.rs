@@ -1,0 +1,728 @@
+use semio_framework_replication_history::*;
+use semio_framework_replication_ids::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId};
+
+fn every_transition() -> Vec<HistoryTransition> {
+    vec![
+        HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into()), MutationId("op-b".into())] },
+        HistoryTransition::Reinstate { mutation_ids: vec![MutationId("op-a".into())] },
+        HistoryTransition::Commit(TransitionCheckpoint {
+            checkpoint_id: "ck-1".into(),
+            parent_id: Some("ck-0".into()),
+            change_id: "change-1".into(),
+            mutation_ids: vec![MutationId("op-a".into())],
+            description: Some("first".into()),
+            saved_at: "2026-09-19T00:00:00.000Z".into(),
+            authors: vec![Author { id: "u1".into(), name: "Ada".into(), avatar: None }, Author { id: "u2".into(), name: "Bo".into(), avatar: Some("b.png".into()) }],
+            message: Some("first".into()),
+            timestamp: "2026-09-19T00:00:00.001Z".into(),
+            line_id: Some("alternative-2".into()),
+        }),
+        HistoryTransition::Branch { alternative_id: "alt-1".into(), name: "Variant".into(), checkpoint_id: "ck-1".into() },
+        HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: None },
+        HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: Some("alt-1".into()) },
+        HistoryTransition::Repin { checkpoint_id: "ck-1".into(), pinned_checkpoint_id: "ck-2".into(), pins: vec![TransitionPin { child_uri: "semio://child".into(), checkpoint_id: "ck-c".into() }] },
+        HistoryTransition::Supersede(TransitionSupersede { scope: None, inputs: vec![input("op-a", &[1, 2, 3]), SupersededInput { target: MutationId("op-b".into()), replacement: InputReplacement::Withdrawn }] }),
+        HistoryTransition::Supersede(TransitionSupersede { scope: Some("alt-1".into()), inputs: vec![input("op-a", &[])] }),
+    ]
+}
+
+fn input(target: &str, payload: &[u8]) -> SupersededInput {
+    SupersededInput { target: MutationId(target.into()), replacement: InputReplacement::Input { schema: "demo/v1".into(), payload: payload.to_vec() } }
+}
+
+/// 🔁️ Every variant survives an encode/decode round trip byte-exactly.
+#[test]
+fn every_transition_round_trips() {
+    for transition in every_transition() {
+        let bytes = encode_history_transition(&transition);
+        assert_eq!(decode_history_transition(&bytes).expect("decode"), transition);
+    }
+}
+
+/// 🚫️ Trailing bytes and unknown tags are refused instead of silently ignored.
+#[test]
+fn malformed_payloads_are_refused() {
+    let mut bytes = encode_history_transition(&HistoryTransition::Checkout { checkpoint_id: "ck".into(), alternative_id: None });
+    bytes.push(0);
+    assert!(decode_history_transition(&bytes).is_err());
+    assert!(decode_history_transition(&[9]).is_err());
+    assert!(decode_history_transition(&[]).is_err());
+}
+
+/// 🪪️ Transition ids are content-addressed: same author, tick and payload → same id; any change → new id.
+#[test]
+fn transition_ids_are_content_addressed() {
+    let actor = ActorId("actor-a".into());
+    let tick = HybridLogicalTimestamp { actor: 1, physical_ms: 10, logical: 2 };
+    let transition = HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] };
+    let a = history_transition_envelope(&transition, &ArtifactId("doc".into()), &actor, Vec::new(), tick);
+    let b = history_transition_envelope(&transition, &ArtifactId("doc".into()), &actor, Vec::new(), tick);
+    assert_eq!(a.mutation_id, b.mutation_id);
+    assert!(a.mutation_id.0.starts_with("transition-"));
+    let later = history_transition_envelope(&transition, &ArtifactId("doc".into()), &actor, Vec::new(), HybridLogicalTimestamp { logical: 3, ..tick });
+    assert_ne!(a.mutation_id, later.mutation_id);
+}
+
+/// 🛂️ The actor string is authentication metadata, not content: the same authored transition (HLC and payload)
+/// has the same id whichever actor string an author, a relay or the hub's socket binding stamps on it.
+#[test]
+fn a_transition_id_ignores_the_actor_string() {
+    let tick = HybridLogicalTimestamp { actor: 2_557_761_449, physical_ms: 1_790_622_765_027, logical: 3 };
+    for transition in every_transition() {
+        let authored = history_transition_envelope(&transition, &ArtifactId("doc".into()), &ActorId("local".into()), Vec::new(), tick);
+        let rebound = history_transition_envelope(&transition, &ArtifactId("doc".into()), &ActorId("hub.v1.370722f0cfb78d4e3eaf44a8b576001a0afd3711c6d35e600e17b516da8ac1a0".into()), Vec::new(), tick);
+        assert_eq!(authored.mutation_id, rebound.mutation_id, "{transition:?}");
+        assert_eq!(authored.mutation_id, history_transition_id(&tick, &authored.diff.payload));
+        assert_ne!(authored.mutation_id, history_transition_envelope(&transition, &ArtifactId("doc".into()), &ActorId("local".into()), Vec::new(), HybridLogicalTimestamp { actor: tick.actor + 1, ..tick }).mutation_id, "the numeric HLC actor stays part of the address");
+    }
+}
+
+/// 🏷️ The schema tag alone routes an envelope: transitions decode, domain ops pass through as `None`.
+#[test]
+fn schema_tag_routes_envelopes() {
+    let transition = HistoryTransition::Reinstate { mutation_ids: vec![MutationId("op-a".into())] };
+    let envelope = history_transition_envelope(&transition, &ArtifactId("doc".into()), &ActorId("a".into()), vec![MutationId("op-a".into())], HybridLogicalTimestamp::new(0, 1));
+    assert!(is_history_transition(&envelope));
+    assert_eq!(history_transition_from_envelope(&envelope).expect("decode"), Some(transition));
+    let mut operation = envelope.clone();
+    operation.diff.schema = SchemaId("app.lowpoly".into());
+    assert_eq!(history_transition_from_envelope(&operation).expect("decode"), None);
+}
+
+fn edit(id: &str, actor: &str, physical_ms: u64) -> FoldEdit {
+    FoldEdit { id: id.into(), actor: Some(actor.into()), timestamp: HybridLogicalTimestamp { actor: 0, physical_ms, logical: 0 }, mutation_ids: vec![MutationId(format!("op-{id}"))], line: None }
+}
+
+fn on_line(mut edit: FoldEdit, line: &str) -> FoldEdit {
+    edit.line = Some(line.into());
+    edit
+}
+
+fn at(transition: HistoryTransition, actor: &str, physical_ms: u64) -> semio_framework_replication_causal::MutationEnvelope {
+    history_transition_envelope(&transition, &ArtifactId("doc".into()), &ActorId(actor.into()), Vec::new(), HybridLogicalTimestamp { actor: 0, physical_ms, logical: 0 })
+}
+
+fn commit(checkpoint_id: &str, parent_id: Option<&str>, operations: &[&str]) -> HistoryTransition {
+    commit_line(checkpoint_id, parent_id, operations, None)
+}
+
+fn commit_line(checkpoint_id: &str, parent_id: Option<&str>, operations: &[&str], line: Option<&str>) -> HistoryTransition {
+    HistoryTransition::Commit(TransitionCheckpoint {
+        checkpoint_id: checkpoint_id.into(),
+        parent_id: parent_id.map(Into::into),
+        change_id: format!("change-{checkpoint_id}"),
+        mutation_ids: operations.iter().map(|operation| MutationId(format!("op-{operation}"))).collect(),
+        description: None,
+        saved_at: "t".into(),
+        authors: Vec::new(),
+        message: None,
+        timestamp: "t".into(),
+        line_id: line.map(str::to_string),
+    })
+}
+
+fn head(line: &str, checkpoint: Option<&str>) -> ViewerHead {
+    ViewerHead { line_id: line.into(), checkpoint_id: checkpoint.map(str::to_string) }
+}
+
+fn none() -> std::collections::HashSet<String> {
+    std::collections::HashSet::new()
+}
+
+/// 🎚️ Operation ownership is unique and tied HLC events follow UTF-8 order across reload and arrival permutations.
+#[test]
+fn history_invariants_follow_portable_ownership_and_utf8_vectors() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🪪️history-invariants/🔣️.json")).expect("history invariants fixture");
+    let strings = |value: &serde_json::Value| value.as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_owned()).collect::<Vec<_>>();
+    for case in fixture["cases"].as_array().unwrap() {
+        let mut edits: Vec<_> = case["edits"].as_array().unwrap().iter().map(|row| {
+            let mut edit = edit(row["id"].as_str().unwrap(), row["actor"].as_str().unwrap(), row["logicalMs"].as_u64().unwrap());
+            edit.mutation_ids = strings(&row["mutationIds"]).into_iter().map(MutationId).collect();
+            edit
+        }).collect();
+        let mut transitions: Vec<_> = case["transitions"].as_array().unwrap().iter().map(|row| {
+            let mutation_ids = strings(&row["mutationIds"]).into_iter().map(MutationId).collect();
+            let transition = if row["kind"] == "revert" { HistoryTransition::Revert { mutation_ids } } else { HistoryTransition::Reinstate { mutation_ids } };
+            let mut envelope = at(transition, row["actor"].as_str().unwrap(), row["logicalMs"].as_u64().unwrap());
+            envelope.mutation_id = MutationId(row["id"].as_str().unwrap().into());
+            envelope
+        }).collect();
+        for reversed in [false, true] {
+            if reversed { edits.reverse(); transitions.reverse(); }
+            let expected = &case["expected"];
+            let folded = fold_history(&ArtifactId("doc".into()), &edits, &transitions, &none());
+            if expected["outcome"] == "malformed" {
+                assert!(matches!(folded, Err(semio_framework_replication_error::ProtocolError::Malformed { what: "history fold", detail, .. }) if detail == expected["detail"].as_str().unwrap()), "{}: ambiguous ownership must reject before publication", case["id"]);
+            } else {
+                let folded = folded.unwrap();
+                assert_eq!(folded.applied, strings(&expected["applied"]), "{}", case["id"]);
+                assert_eq!(folded.redo, strings(&expected["redo"]), "{}", case["id"]);
+                assert_eq!(folded.refused, strings(&expected["refused"]), "{}", case["id"]);
+            }
+        }
+    }
+}
+
+/// 🧮️ Edits fold into HLC order regardless of the order they are listed in.
+#[test]
+fn fold_orders_edits_by_hlc_whatever_their_arrival() {
+    let forward = fold_history(&ArtifactId("doc".into()), &[edit("a", "x", 1), edit("b", "y", 2), edit("c", "x", 3)], &[], &none()).expect("fold");
+    let shuffled = fold_history(&ArtifactId("doc".into()), &[edit("c", "x", 3), edit("a", "x", 1), edit("b", "y", 2)], &[], &none()).expect("fold");
+    assert_eq!(forward, shuffled);
+    assert_eq!(forward.applied, vec!["a", "b", "c"]);
+}
+
+/// ⏪️ Revert moves an edit to redo; a later reinstate restores it at its HLC position, not the tail.
+#[test]
+fn revert_and_reinstate_toggle_membership_in_hlc_order() {
+    let edits = [edit("a", "x", 1), edit("b", "y", 3)];
+    let reverted = fold_history(&ArtifactId("doc".into()), &edits, &[at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "x", 2)], &none()).expect("fold");
+    assert_eq!(reverted.applied, vec!["b"]);
+    assert_eq!(reverted.redo, vec!["a"]);
+    let reinstated = fold_history(&ArtifactId("doc".into()), &edits, &[at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "x", 2), at(HistoryTransition::Reinstate { mutation_ids: vec![MutationId("op-a".into())] }, "x", 4)], &none()).expect("fold");
+    assert_eq!(reinstated.applied, vec!["a", "b"]);
+    assert!(reinstated.redo.is_empty());
+}
+
+/// ✏️ A new edit by the same author clears that author's redo stack; other authors' entries survive.
+#[test]
+fn an_authors_new_edit_clears_only_its_own_redo() {
+    let edits = [edit("a", "x", 1), edit("b", "y", 2), edit("c", "x", 5)];
+    let transitions = [at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "x", 3), at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-b".into())] }, "y", 4)];
+    let fold = fold_history(&ArtifactId("doc".into()), &edits, &transitions, &none()).expect("fold");
+    assert_eq!(fold.applied, vec!["c"]);
+    assert_eq!(fold.redo, vec!["b"]);
+}
+
+/// ↩️ An undo belongs to its author: a revert or reinstate naming another actor's operation — alone or beside the
+/// actor's own — withdraws or restores nothing and is listed as refused, on every replica.
+#[test]
+fn a_transition_naming_another_actors_operation_is_refused_whole() {
+    let edits = [edit("a", "x", 1), edit("b", "y", 2)];
+    let foreign = at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "y", 3);
+    let mixed = at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into()), MutationId("op-b".into())] }, "y", 4);
+    let fold = fold_history(&ArtifactId("doc".into()), &edits, &[foreign.clone(), mixed.clone()], &none()).expect("fold");
+    assert_eq!(fold.applied, vec!["a", "b"]);
+    assert!(fold.redo.is_empty());
+    assert_eq!(fold.refused, vec![foreign.mutation_id.0.clone(), mixed.mutation_id.0.clone()]);
+    let own = at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-a".into())] }, "x", 5);
+    let stolen = at(HistoryTransition::Reinstate { mutation_ids: vec![MutationId("op-a".into())] }, "y", 6);
+    let fold = fold_history(&ArtifactId("doc".into()), &edits, &[own, stolen.clone()], &none()).expect("fold");
+    assert_eq!(fold.applied, vec!["b"]);
+    assert_eq!(fold.redo, vec!["a"]);
+    assert_eq!(fold.refused, vec![stolen.mutation_id.0.clone()]);
+}
+
+/// 🚩️ Commit materializes change/checkpoint facts. The canonical head stays at the trunk tip; an explicit
+/// viewer checkpoint shows that checkpoint's live edits.
+#[test]
+fn commit_and_checkout_materialize_facts_and_positions() {
+    let document = ArtifactId("doc".into());
+    let edits = [edit("a", "x", 1), edit("b", "x", 3)];
+    let transitions = [at(commit("ck-1", None, &["a"]), "x", 2), at(commit("ck-2", Some("ck-1"), &["b"]), "x", 4), at(HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: None }, "x", 5)];
+    let fold = fold_history(&document, &edits, &transitions, &none()).expect("fold");
+    assert_eq!(fold.applied, vec!["a", "b"]);
+    assert_eq!(fold.checkpoint.as_deref(), Some("ck-2"));
+    assert_eq!(fold.alternative, None);
+    assert_eq!(fold.checkpoints[1].change_ids, vec!["change-ck-1", "change-ck-2"]);
+    assert_eq!(fold.changes[1].edit_ids, vec!["b"]);
+    let pinned = fold_history_for(&document, &edits, &transitions, &none(), &head(&fold.trunk, Some("ck-1"))).expect("pinned");
+    assert_eq!(pinned.applied, vec!["a"]);
+    assert_eq!(pinned.checkpoint.as_deref(), Some("ck-1"));
+}
+
+/// 👁 A checkout in the log does not move any viewer's head. The trunk tip keeps uncommitted trunk edits
+/// whatever their HLC; an explicit checkpoint hides them. The same events shuffled agree.
+#[test]
+fn checkout_governs_concurrent_edits_by_hlc() {
+    let document = ArtifactId("doc".into());
+    let edits = [edit("a", "x", 1), edit("late-old", "y", 3), edit("late-new", "y", 6), on_line(edit("branched", "y", 4), "alt")];
+    let transitions = [at(commit("ck-1", None, &["a"]), "x", 2), at(HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: None }, "x", 5)];
+    let fold = fold_history(&document, &edits, &transitions, &none()).expect("fold");
+    assert_eq!(fold.applied, vec!["a", "late-old", "late-new"]);
+    let pinned = fold_history_for(&document, &edits, &transitions, &none(), &head(&fold.trunk, Some("ck-1"))).expect("pinned");
+    assert_eq!(pinned.applied, vec!["a"]);
+    let shuffled = fold_history(&document, &[edit("late-new", "y", 6), edit("a", "x", 1), edit("late-old", "y", 3)], &transitions, &none()).expect("shuffled");
+    assert_eq!(shuffled.applied, fold.applied);
+}
+
+/// 🌳️ The trunk is a first-class alternative: a commit that names no line grows its chain and lists it first.
+/// A checkout event does not select it. A viewer head on a branch sees that branch's chain and its scoped
+/// supersessions; the canonical fold stays on the trunk. No branch may claim the trunk id.
+#[test]
+fn the_trunk_is_a_first_class_alternative() {
+    let document = ArtifactId("doc".into());
+    let trunk = trunk_alternative_id(&document);
+    let edits = [edit("a", "x", 1), edit("b", "x", 5)];
+    let scoped = |scope: &str, operation: &str| HistoryTransition::Supersede(TransitionSupersede { scope: Some(scope.into()), inputs: vec![input(&format!("op-{operation}"), &[7])] });
+    let mut transitions = vec![
+        at(commit("ck-1", None, &["a"]), "x", 2),
+        at(HistoryTransition::Branch { alternative_id: "alt".into(), name: "Variant".into(), checkpoint_id: "ck-1".into() }, "x", 3),
+        at(commit_line("ck-2", Some("ck-1"), &["b"], Some("alt")), "x", 6),
+        at(HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: Some(trunk.clone()) }, "x", 7),
+        at(scoped(&trunk, "a"), "x", 8),
+        at(scoped("alt", "b"), "x", 9),
+    ];
+    let on_trunk = fold_history(&document, &edits, &transitions, &none()).expect("fold");
+    assert_eq!(on_trunk.trunk, trunk);
+    assert_eq!(on_trunk.alternative, None);
+    assert_eq!(on_trunk.applied, vec!["a"]);
+    assert_eq!(on_trunk.alternatives.iter().map(|alternative| (alternative.id.as_str(), alternative.name.as_str(), alternative.checkpoint_ids.clone())).collect::<Vec<_>>(), vec![(trunk.as_str(), "", vec!["ck-1".to_string()]), ("alt", "Variant", vec!["ck-1".to_string(), "ck-2".to_string()])]);
+    assert_eq!(on_trunk.supersessions.keys().map(|id| id.0.as_str()).collect::<Vec<_>>(), vec!["op-a"]);
+    let on_branch = fold_history_for(&document, &edits, &transitions, &none(), &head("alt", None)).expect("branch");
+    assert_eq!((on_branch.alternative.as_deref(), on_branch.applied.clone()), (Some("alt"), vec!["a".to_string(), "b".to_string()]));
+    assert_eq!(on_branch.supersessions.keys().map(|id| id.0.as_str()).collect::<Vec<_>>(), vec!["op-b"]);
+    transitions.push(at(HistoryTransition::Checkout { checkpoint_id: "ck-2".into(), alternative_id: Some("alt".into()) }, "x", 10));
+    let still_trunk = fold_history(&document, &edits, &transitions, &none()).expect("checkout does not move the canonical head");
+    assert_eq!(still_trunk.alternative, None);
+    assert_eq!(still_trunk.supersessions.keys().map(|id| id.0.as_str()).collect::<Vec<_>>(), vec!["op-a"]);
+    transitions.push(at(commit("ck-3", Some("ck-1"), &[]), "x", 12));
+    let grown = fold_history(&document, &edits, &transitions, &none()).expect("fold");
+    assert_eq!(grown.alternatives[0].checkpoint_ids, vec!["ck-1", "ck-3"]);
+    transitions.push(at(HistoryTransition::Branch { alternative_id: trunk.clone(), name: "Stolen".into(), checkpoint_id: "ck-1".into() }, "x", 13));
+    assert!(fold_history(&document, &edits, &transitions, &none()).is_err_and(|error| format!("{error:?}").contains("branch claims the trunk alternative")));
+    let bare = fold_history(&document, &edits[..1], &[], &none()).expect("fold");
+    assert!(bare.alternatives.is_empty(), "a trunk without a checkpoint is not listed");
+    assert_ne!(trunk_alternative_id(&ArtifactId("other".into())), trunk);
+}
+
+/// 🌿️ Branch registers an alternative. A commit names the line it grows. Repin re-identifies that checkpoint.
+/// The canonical head stays on the trunk tip; the alternative's viewer sees the repinned tip.
+#[test]
+fn branch_commit_and_repin_track_alternative_chains() {
+    let document = ArtifactId("doc".into());
+    let edits = [edit("a", "x", 1), edit("b", "x", 4)];
+    let transitions = [
+        at(commit("ck-1", None, &["a"]), "x", 2),
+        at(HistoryTransition::Branch { alternative_id: "alt".into(), name: "Variant".into(), checkpoint_id: "ck-1".into() }, "x", 3),
+        at(commit_line("ck-2", Some("ck-1"), &["b"], Some("alt")), "x", 5),
+        at(HistoryTransition::Repin { checkpoint_id: "ck-2".into(), pinned_checkpoint_id: "ck-2p".into(), pins: vec![TransitionPin { child_uri: "semio://c".into(), checkpoint_id: "c-1".into() }] }, "x", 6),
+    ];
+    let fold = fold_history(&document, &edits, &transitions, &none()).expect("fold");
+    assert_eq!(fold.alternative, None);
+    assert_eq!(fold.alternatives[1].checkpoint_ids, vec!["ck-1", "ck-2p"]);
+    assert_eq!((fold.alternatives[0].id.as_str(), fold.alternatives[0].checkpoint_ids.clone()), (fold.trunk.as_str(), vec!["ck-1".to_string()]));
+    assert_eq!(fold.checkpoint.as_deref(), Some("ck-1"));
+    assert_eq!(fold.checkpoints[1].pins.len(), 1);
+    assert_eq!(fold.applied, vec!["a"]);
+    let viewed = fold_history_for(&document, &edits, &transitions, &none(), &head("alt", Some("ck-2"))).expect("repinned explicit checkpoint");
+    assert_eq!(viewed.checkpoint.as_deref(), Some("ck-2p"));
+    assert_eq!(viewed.applied, vec!["a", "b"]);
+}
+
+/// ⚔️ Quarantined edits never become active, even when a checkout names them.
+#[test]
+fn excluded_edits_stay_inactive() {
+    let edits = [edit("a", "x", 1), edit("q", "y", 2)];
+    let excluded: std::collections::HashSet<String> = ["q".to_string()].into_iter().collect();
+    let transitions = [at(commit("ck-1", None, &["a", "q"]), "x", 3), at(HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: None }, "x", 4)];
+    assert_eq!(fold_history(&ArtifactId("doc".into()), &edits, &transitions, &excluded).expect("fold").applied, vec!["a"]);
+}
+
+/// 🛑️ A transition naming an unknown operation or checkpoint is refused instead of silently skipped.
+#[test]
+fn dangling_references_are_refused() {
+    assert!(fold_history(&ArtifactId("doc".into()), &[], &[at(HistoryTransition::Revert { mutation_ids: vec![MutationId("op-ghost".into())] }, "x", 1)], &none()).is_err());
+    assert!(fold_history(&ArtifactId("doc".into()), &[], &[at(HistoryTransition::Checkout { checkpoint_id: "ghost".into(), alternative_id: None }, "x", 1)], &none()).is_err());
+}
+
+/// 🔂️ The event set is a set: a transition delivered twice into one log is refused, never folded twice.
+#[test]
+fn a_repeated_transition_is_refused() {
+    let edits = [edit("a", "x", 1)];
+    let commit = at(commit("ck-1", None, &["a"]), "x", 2);
+    assert!(fold_history(&ArtifactId("doc".into()), &edits, &[commit.clone(), commit], &none()).is_err());
+}
+
+fn fixture_transition(json: &serde_json::Value) -> HistoryTransition {
+    let text = |key: &str| json[key].as_str().unwrap_or_else(|| panic!("fixture field {key}")).to_string();
+    let optional = |key: &str| json[key].as_str().map(str::to_string);
+    let ids = |key: &str| json[key].as_array().expect("fixture ids").iter().map(|id| MutationId(id.as_str().expect("fixture id").to_string())).collect::<Vec<_>>();
+    match json["kind"].as_str().expect("fixture kind") {
+        "revert" => HistoryTransition::Revert { mutation_ids: ids("mutationIds") },
+        "reinstate" => HistoryTransition::Reinstate { mutation_ids: ids("mutationIds") },
+        "commit" => HistoryTransition::Commit(TransitionCheckpoint {
+            checkpoint_id: text("checkpointId"),
+            parent_id: optional("parentId"),
+            change_id: text("changeId"),
+            mutation_ids: ids("mutationIds"),
+            description: optional("description"),
+            saved_at: text("savedAt"),
+            authors: json["authors"].as_array().expect("fixture authors").iter().map(|author| Author { id: author["id"].as_str().expect("author id").into(), name: author["name"].as_str().expect("author name").into(), avatar: author["avatar"].as_str().map(str::to_string) }).collect(),
+            message: optional("message"),
+            timestamp: text("timestamp"),
+            line_id: optional("lineId"),
+        }),
+        "branch" => HistoryTransition::Branch { alternative_id: text("alternativeId"), name: text("name"), checkpoint_id: text("checkpointId") },
+        "checkout" => HistoryTransition::Checkout { checkpoint_id: text("checkpointId"), alternative_id: optional("alternativeId") },
+        "repin" => HistoryTransition::Repin {
+            checkpoint_id: text("checkpointId"),
+            pinned_checkpoint_id: text("pinnedCheckpointId"),
+            pins: json["pins"].as_array().expect("fixture pins").iter().map(|pin| TransitionPin { child_uri: pin["childUri"].as_str().expect("pin uri").into(), checkpoint_id: pin["checkpointId"].as_str().expect("pin checkpoint").into() }).collect(),
+        },
+        "supersede" => HistoryTransition::Supersede(TransitionSupersede {
+            scope: optional("scope"),
+            inputs: json["inputs"]
+                .as_array()
+                .expect("fixture inputs")
+                .iter()
+                .map(|input| SupersededInput { target: MutationId(input["target"].as_str().expect("input target").into()), replacement: fixture_replacement(&input["replacement"]) })
+                .collect(),
+        }),
+        other => panic!("unknown fixture kind {other}"),
+    }
+}
+
+fn fixture_hex(hex: &str) -> Vec<u8> {
+    (0..hex.len()).step_by(2).map(|index| u8::from_str_radix(&hex[index..index + 2], 16).expect("hex byte")).collect()
+}
+
+fn fixture_replacement(json: &serde_json::Value) -> InputReplacement {
+    match json["kind"].as_str().expect("replacement kind") {
+        "input" => InputReplacement::Input { schema: json["schema"].as_str().expect("replacement schema").into(), payload: fixture_hex(json["payloadHex"].as_str().expect("replacement payloadHex")) },
+        "withdrawn" => InputReplacement::Withdrawn,
+        other => panic!("unknown replacement kind {other}"),
+    }
+}
+
+/// ♻️ Language-agnostic durable collaborative redo: two authors interleave, each undoes/redoes only
+/// their own mutations, another actor's revert/reinstate of them is refused, and reload/`hub-restart`
+/// steps re-fold the same event set to the same applied/redo/refused projection (pure durability
+/// proof shared with the TypeScript runner).
+#[test]
+fn durable_collaborative_redo_fixture_survives_reload_and_hub_restart() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🗄️durable-collaborative-redo-v1/🔣️.json")).expect("durable collaborative redo fixture parses");
+    assert_eq!(fixture["schema"].as_str(), Some("semio.history.durable-collaborative-redo.v1"));
+    let edits: Vec<FoldEdit> = fixture["edits"]
+        .as_array()
+        .expect("edits")
+        .iter()
+        .map(|row| FoldEdit {
+            id: row["id"].as_str().expect("edit id").into(),
+            actor: Some(row["actor"].as_str().expect("actor").into()),
+            timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().expect("logicalMs"), logical: 0 },
+            mutation_ids: row["mutationIds"].as_array().expect("mutationIds").iter().map(|id| MutationId(id.as_str().expect("mutation id").into())).collect(),
+            line: row["line"].as_str().map(str::to_string),
+        })
+        .collect();
+    let mut transitions: Vec<semio_framework_replication_causal::MutationEnvelope> = Vec::new();
+    let document = ArtifactId(fixture["documentId"].as_str().expect("documentId").into());
+    let none = none();
+    for step in fixture["steps"].as_array().expect("steps") {
+        match step["kind"].as_str().expect("kind") {
+            "revert" | "reinstate" => {
+                let mutation_ids = step["mutationIds"].as_array().expect("mutationIds").iter().map(|id| MutationId(id.as_str().expect("id").into())).collect::<Vec<_>>();
+                let transition = if step["kind"] == "revert" { HistoryTransition::Revert { mutation_ids } } else { HistoryTransition::Reinstate { mutation_ids } };
+                let actor = ActorId(step["actor"].as_str().expect("actor").into());
+                let clock = HybridLogicalTimestamp { actor: 0, physical_ms: step["logicalMs"].as_u64().expect("logicalMs"), logical: 0 };
+                let mut envelope = history_transition_envelope(&transition, &document, &actor, Vec::new(), clock);
+                if let Some(id) = step["id"].as_str() {
+                    envelope.mutation_id = MutationId(id.into());
+                }
+                transitions.push(envelope);
+            }
+            "expect" => {
+                let fold = fold_history(&document, &edits, &transitions, &none).unwrap_or_else(|error| panic!("{}: {error:?}", step["label"].as_str().unwrap_or("expect")));
+                let applied: Vec<String> = step["expect"]["applied"].as_array().expect("applied").iter().map(|id| id.as_str().expect("id").into()).collect();
+                let redo: Vec<String> = step["expect"]["redo"].as_array().expect("redo").iter().map(|id| id.as_str().expect("id").into()).collect();
+                assert_eq!(fold.applied, applied, "{}", step["label"].as_str().unwrap_or("applied"));
+                assert_eq!(fold.redo, redo, "{}", step["label"].as_str().unwrap_or("redo"));
+                let refused: Vec<String> = step["expect"]["refused"].as_array().expect("refused").iter().map(|id| id.as_str().expect("id").into()).collect();
+                assert_eq!(fold.refused, refused, "{}", step["label"].as_str().unwrap_or("refused"));
+            }
+            "reload" | "hub-restart" => {
+                let first = fold_history(&document, &edits, &transitions, &none).expect("fold before restart");
+                let second = fold_history(&document, &edits, &transitions, &none).expect("fold after restart");
+                assert_eq!(first, second, "{} must be a pure re-fold of the same event set", step["label"].as_str().unwrap_or("restart"));
+            }
+            other => panic!("unknown step kind {other}"),
+        }
+    }
+    let observations: Vec<&str> = fixture["observations"].as_array().expect("observations").iter().map(|row| row.as_str().expect("obs")).collect();
+    assert!(observations.contains(&"durable-collaborative-redo"));
+    assert!(observations.contains(&"survives-hub-restart"));
+    assert!(observations.contains(&"foreign-transition-refused"));
+}
+
+#[test]
+fn the_language_agnostic_fixture_matches_the_codec_byte_for_byte() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧫️history-transition/🔣️.json")).expect("history transition fixture parses");
+    assert_eq!(fixture["diffSchema"].as_str(), Some(HISTORY_TRANSITION_SCHEMA));
+    let clock = HybridLogicalTimestamp { actor: fixture["idClock"]["actor"].as_u64().expect("idClock actor"), physical_ms: fixture["idClock"]["physicalMs"].as_u64().expect("idClock physicalMs"), logical: fixture["idClock"]["logical"].as_u64().expect("idClock logical") };
+    for case in fixture["cases"].as_array().expect("fixture cases") {
+        let id = case["id"].as_str().expect("case id");
+        let hex = case["payloadHex"].as_str().expect("payload hex");
+        let bytes = (0..hex.len()).step_by(2).map(|index| u8::from_str_radix(&hex[index..index + 2], 16).expect("hex byte")).collect::<Vec<_>>();
+        match case["expect"]["outcome"].as_str().expect("outcome") {
+            "accepted" => {
+                let expected = fixture_transition(&case["expect"]["transition"]);
+                assert_eq!(encode_history_transition(&expected), bytes, "{id}: encode");
+                assert_eq!(decode_history_transition(&bytes).unwrap_or_else(|error| panic!("{id}: {error:?}")), expected, "{id}: decode");
+                let transition_id = case["expect"]["transitionId"].as_str().expect("transitionId");
+                assert_eq!(history_transition_id(&clock, &bytes).0, transition_id, "{id}: first-party id");
+                let mut material = Vec::new();
+                semio_framework_replication_wire_core::write_varint_u64(&mut material, clock.actor);
+                semio_framework_replication_wire_core::write_varint_u64(&mut material, clock.physical_ms);
+                semio_framework_replication_wire_core::write_varint_u64(&mut material, clock.logical);
+                semio_framework_replication_wire_core::write_bytes(&mut material, &bytes);
+                assert_eq!(format!("transition-{}", &blake3::hash(&material).to_hex()[..16]), transition_id, "{id}: third-party blake3 id");
+            }
+            "malformed" => {
+                let detail = case["expect"]["detail"].as_str().expect("detail");
+                let error = decode_history_transition(&bytes).expect_err(id);
+                assert!(format!("{error:?}").to_lowercase().contains(detail), "{id}: {error:?} lacks {detail}");
+            }
+            other => panic!("{id}: unknown outcome {other}"),
+        }
+    }
+    for trunk in fixture["trunks"].as_array().expect("trunk vectors") {
+        let document = trunk["documentId"].as_str().expect("documentId");
+        let expected = trunk["alternativeId"].as_str().expect("alternativeId");
+        assert_eq!(trunk_alternative_id(&ArtifactId(document.into())), expected, "{document}: first-party trunk id");
+        let mut material = Vec::new();
+        semio_framework_replication_wire_core::write_str(&mut material, "semio.history.trunk");
+        semio_framework_replication_wire_core::write_str(&mut material, document);
+        assert_eq!(format!("trunk-{}", &blake3::hash(&material).to_hex()[..16]), expected, "{document}: third-party blake3 trunk id");
+    }
+    for row in fixture["shapes"].as_array().expect("shape rows") {
+        let shape = [HistoryShape::Document, HistoryShape::Config].into_iter().find(|shape| shape.name() == row["shape"].as_str().expect("shape")).expect("a known shape");
+        let admitted: Vec<&str> = HistoryTransitionKind::ALL.into_iter().filter(|kind| shape.admits(*kind)).map(HistoryTransitionKind::name).collect();
+        assert_eq!(admitted, row["admits"].as_array().expect("admits").iter().map(|kind| kind.as_str().expect("kind")).collect::<Vec<_>>(), "{}: admitted kinds", shape.name());
+    }
+    assert_eq!(every_transition().iter().map(HistoryTransition::kind).collect::<std::collections::HashSet<_>>().len(), HistoryTransitionKind::ALL.len(), "every kind is exercised");
+}
+
+/// 📝️ Authoring refuses exactly what the codec refuses: no input, a repeated target, an oversized scope or payload.
+#[test]
+fn supersede_validation_refuses_what_the_codec_refuses() {
+    let valid = TransitionSupersede { scope: Some("s".repeat(SUPERSEDE_SCOPE_MAX_BYTES)), inputs: vec![input("op-a", &vec![0; SUPERSEDE_PAYLOAD_MAX_BYTES])] };
+    assert!(valid.validate().is_ok());
+    assert_eq!(decode_history_transition(&encode_history_transition(&HistoryTransition::Supersede(valid.clone()))).expect("the bounds are inclusive"), HistoryTransition::Supersede(valid));
+    let refusals = [
+        (TransitionSupersede { scope: None, inputs: Vec::new() }, "supersede names no input"),
+        (TransitionSupersede { scope: None, inputs: vec![input("op-a", &[1]), input("op-a", &[2])] }, "supersede repeats target op-a"),
+        (TransitionSupersede { scope: Some("s".repeat(SUPERSEDE_SCOPE_MAX_BYTES + 1)), inputs: vec![input("op-a", &[])] }, "supersede scope exceeds 256 bytes"),
+        (TransitionSupersede { scope: None, inputs: vec![input("op-a", &vec![0; SUPERSEDE_PAYLOAD_MAX_BYTES + 1])] }, "supersede payload exceeds 262144 bytes"),
+    ];
+    for (supersede, detail) in refusals {
+        assert!(format!("{:?}", supersede.validate().expect_err(detail)).contains(detail), "{detail}");
+        let bytes = encode_history_transition(&HistoryTransition::Supersede(supersede));
+        assert!(format!("{:?}", decode_history_transition(&bytes).expect_err(detail)).contains(detail), "{detail}: decode");
+    }
+}
+
+/// 🔗️ A supersession's envelope depends on its targets, so a replica holds it until every superseded operation arrived.
+#[test]
+fn a_supersede_envelope_depends_on_its_targets() {
+    let supersede = TransitionSupersede { scope: None, inputs: vec![input("op-b", &[1]), input("op-a", &[2])] };
+    let envelope = history_transition_envelope(&HistoryTransition::Supersede(supersede.clone()), &ArtifactId("doc".into()), &ActorId("x".into()), supersede.targets(), HybridLogicalTimestamp::new(0, 1));
+    assert_eq!(envelope.dependencies, vec![MutationId("op-b".into()), MutationId("op-a".into())]);
+    assert!(envelope.target.is_empty());
+    assert_eq!(envelope.transaction, None);
+}
+
+fn supersede_fold_fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧫️supersede-fold/🔣️.json")).expect("supersede fold fixture parses")
+}
+
+fn fixture_step_envelope(document: &ArtifactId, step: &serde_json::Value) -> semio_framework_replication_causal::MutationEnvelope {
+    let transition = fixture_transition(&step["transition"]);
+    let dependencies = match &transition {
+        HistoryTransition::Supersede(supersede) => supersede.targets(),
+        _ => Vec::new(),
+    };
+    let clock = HybridLogicalTimestamp { actor: 0, physical_ms: step["logicalMs"].as_u64().expect("logicalMs"), logical: 0 };
+    let mut envelope = history_transition_envelope(&transition, document, &ActorId(step["actor"].as_str().expect("actor").into()), dependencies, clock);
+    envelope.mutation_id = MutationId(step["id"].as_str().expect("transition id").into());
+    envelope
+}
+
+/// 🌉️ The value shapes of a replacement and an effective supersession round-trip.
+#[test]
+fn supersession_values_round_trip() {
+    for replacement in [InputReplacement::Input { schema: "demo/v1".into(), payload: vec![1, 2] }, InputReplacement::Withdrawn] {
+        let supersession = EffectiveSupersession { transition_id: "transition-1".into(), actor: "alice".into(), timestamp: HybridLogicalTimestamp::new(3, 4), scope: Some("alt".into()), replacement };
+        let decoded: EffectiveSupersession = semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&supersession)).expect("decode");
+        assert_eq!(decoded, supersession);
+    }
+}
+
+/// ⏳️ Neutral bounded-fold grants reproduce the complete semantic corpus and cancel without further fold work.
+#[test]
+fn bounded_history_fold_obeys_the_neutral_law() {
+    use semio_framework_value::ErasedSnapshotRetirement;
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️fold/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture = supersede_fold_fixture();
+    let document = ArtifactId(fixture["documentId"].as_str().unwrap().into());
+    let edits: Vec<FoldEdit> = fixture["edits"].as_array().unwrap().iter().map(|row| FoldEdit { id: row["id"].as_str().unwrap().into(), actor: row["actor"].as_str().map(Into::into), timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().unwrap(), logical: 0 }, mutation_ids: row["mutationIds"].as_array().unwrap().iter().map(|id| MutationId(id.as_str().unwrap().into())).collect(), line: row["line"].as_str().map(str::to_owned) }).collect();
+    let transitions: Vec<semio_framework_replication_causal::MutationEnvelope> = fixture["steps"].as_array().unwrap().iter().filter(|row| row["kind"] == "transition").map(|row| fixture_step_envelope(&document, row)).collect();
+    let expected = fold_history(&document, &edits, &transitions, &none()).unwrap();
+    let input = std::sync::Arc::new((document, edits, transitions));
+    for bytes in law["byteGrants"].as_array().unwrap() {
+    for grant in law["workGrants"].as_array().unwrap() {
+        let grant = grant.as_u64().unwrap() as usize;
+        let captured = input.clone();
+        let mut job = HistoryFoldJob::new(move |control| async move { let excluded = HistoryFoldIndex::<String,()>::new(); fold_history_for_controlled(&captured.0, &captured.1, &captured.2, &excluded, &ViewerHead::canonical_trunk(&captured.0), &control).await });
+        let mut done = 0;
+        let mut result = None;
+        for _ in 0..100000 {
+            match job.step(job.next_step_grant(grant,bytes.as_u64().unwrap() as usize).unwrap(),bytes.as_u64().unwrap() as usize, &mut || false).unwrap() {
+                HistoryFoldJobStep::Pending { completed, .. } => { assert!(completed >= done && completed-done <= grant as u64); done = completed; },
+                HistoryFoldJobStep::Ready { value: fold, .. } => { result = Some(fold); break; },
+                HistoryFoldJobStep::Rejected { .. } => panic!("bounded fold: {:?}", job.rejection()),
+            }
+        }
+        assert_eq!(result.unwrap(), expected);
+        assert!(job.terminal_is_empty());
+    }
+    }
+    for cancelled_at in law["cancelAt"].as_array().unwrap() {
+        let captured = input.clone();
+        let mut job = HistoryFoldJob::new(move |control| async move { let excluded = HistoryFoldIndex::<String,()>::new(); fold_history_for_controlled(&captured.0, &captured.1, &captured.2, &excluded, &ViewerHead::canonical_trunk(&captured.0), &control).await });
+        for _ in 0..cancelled_at.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1,7).unwrap(),7, &mut || false).unwrap(); }
+        let done = job.completed();
+        job.request_cancel();
+        let mut closed = false;
+        for _ in 0..100000 { if matches!(job.close_step(job.next_step_grant(1,7).unwrap()).result.unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) { closed = true; break; } }
+        assert!(closed && job.terminal_is_empty());
+        assert_eq!(job.completed(), done);
+    }
+}
+
+/// 🔤️ Byte grants preserve every transition variant and UTF-8 refusal, including split scalars.
+#[test]
+fn bounded_history_transition_decoding_obeys_the_neutral_law() {
+    use semio_framework_value::ErasedSnapshotRetirement;
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️fold/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let mut cases: Vec<(Vec<u8>, Result<HistoryTransition, semio_framework_replication_error::ProtocolError>)> = every_transition().into_iter().map(|transition| (encode_history_transition(&transition), Ok(transition))).collect();
+    for row in law["decodeCases"].as_array().unwrap() {
+        let bytes: Vec<u8> = row["payloadHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
+        let expected = decode_history_transition(&bytes);
+        assert_eq!(expected.is_ok(), row["valid"].as_bool().unwrap());
+        if let Ok(HistoryTransition::Checkout { checkpoint_id, .. }) = &expected { assert_eq!(checkpoint_id, row["checkpoint"].as_str().unwrap()); }
+        cases.push((bytes, expected));
+    }
+    for (bytes, expected) in cases {
+        let bytes = std::sync::Arc::new(bytes);
+        for grant in law["byteGrants"].as_array().unwrap() {
+            let input = bytes.clone();
+            let mut job = HistoryFoldJob::new(move |control| async move { decode_history_transition_controlled(input.as_slice(), &control).await });
+            let mut actual = None;
+            for _ in 0..100000 {
+                match job.step(job.next_step_grant(1,grant.as_u64().unwrap() as usize).unwrap(),grant.as_u64().unwrap() as usize, &mut || false).unwrap() {
+                    HistoryFoldJobStep::Pending { .. } => {},
+                    HistoryFoldJobStep::Ready { value, .. } => { actual = Some(Ok(value)); break; },
+                    HistoryFoldJobStep::Rejected { .. } => { actual = Some(Err(job.take_rejection().expect("closed decoder retains original refusal"))); break; },
+                }
+            }
+            let actual = actual.expect("decoder terminates under bounded grants");
+            assert_eq!(actual.is_ok(), expected.is_ok());
+            if let (Ok(actual), Ok(expected)) = (actual, &expected) { assert_eq!(&actual, expected); }
+            assert!(job.terminal_is_empty());
+        }
+    }
+}
+
+/// 📦️ Quarantine decoding preserves opaque payloads and rejects flags/trailing bytes under the same granted neutral law.
+#[test]
+fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
+    use semio_framework_value::ErasedSnapshotRetirement;
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../🔁️fold/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    for row in law["envelopeCases"].as_array().unwrap() {
+        let bytes: Vec<u8> = row["payloadHex"].as_str().unwrap().as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap()).collect();
+        let mut position = 0;
+        let expected = semio_framework_replication_causal::binary::decode_envelope(&bytes, &mut position);
+        let valid = expected.is_ok() && position == bytes.len();
+        assert_eq!(valid, row["valid"].as_bool().unwrap());
+        if valid {
+            let value = expected.as_ref().unwrap();
+            assert_eq!(value.actor.0.as_str(), row["actor"].as_str().unwrap());
+            assert_eq!(value.diff.payload.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), row["diffPayloadHex"].as_str().unwrap());
+        }
+        let source = std::sync::Arc::new(bytes);
+        for grant in law["byteGrants"].as_array().unwrap() {
+            let input = source.clone();
+            let mut job = HistoryFoldJob::new(move |control| async move { decode_history_envelope_controlled(input.as_slice(), &control).await });
+            let mut outcome = None;
+            for _ in 0..100000 {
+                match job.step(job.next_step_grant(1,grant.as_u64().unwrap() as usize).unwrap(),grant.as_u64().unwrap() as usize, &mut || false).unwrap() {
+                    HistoryFoldJobStep::Pending { .. } => {},
+                    HistoryFoldJobStep::Ready { value, .. } => { outcome = Some(Ok(value)); break; },
+                    HistoryFoldJobStep::Rejected { .. } => { outcome = Some(Err(job.take_rejection().expect("closed envelope retains original refusal"))); break; },
+                }
+            }
+            let outcome = outcome.expect("quarantine decoder terminates");
+            assert_eq!(outcome.is_ok(), valid);
+            if valid { assert_eq!(outcome.unwrap(), *expected.as_ref().unwrap()); }
+            assert!(job.terminal_is_empty());
+        }
+        for stop in law["cancelAt"].as_array().unwrap() {
+            let input = source.clone();
+            let mut job = HistoryFoldJob::new(move |control| async move { decode_history_envelope_controlled(input.as_slice(), &control).await });
+            for _ in 0..stop.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1,1).unwrap(),1, &mut || false).unwrap(); }
+            let completed = job.completed();
+            job.request_cancel();
+            for _ in 0..100000 { if matches!(job.close_step(job.next_step_grant(1,7).unwrap()).result.unwrap(),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) { break; } }
+            assert!(job.terminal_is_empty());
+            assert_eq!(job.completed(), completed);
+        }
+    }
+}
+
+#[test]
+fn history_fold_terminal_output_preserves_actual_cleanup_receipt() {
+    use semio_framework_value::{ErasedSnapshotRetirement, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 65536, maximum_depth: 8 };
+    for refused in [false, true] {
+        let ((job, pointer), born, freed) = semio_framework_trace_memory_testing::observe_backing(|| {
+            let fault = refused.then(|| semio_framework_replication_error::ProtocolError::Malformed { what: "terminal receipt law", offset: 0, detail: String::with_capacity(37) });
+            let pointer = fault.as_ref().map(|error| match error { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => detail.as_ptr(), _ => unreachable!() });
+            (HistoryFoldJob::new(move |_| async move { match fault { Some(error) => Err(error), None => Ok(()) } }), pointer)
+        });
+        let held = born - freed;
+        let mut job = job;
+        let mut total_born = 0;
+        let mut total_released = 0;
+        let mut outcome = None;
+        for _ in 0..64 {
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.step(grant,4096, &mut || false).unwrap());
+            let (progress, done) = match step {
+                HistoryFoldJobStep::Pending { progress, .. } => (progress, false),
+                HistoryFoldJobStep::Ready { value: (), progress } => { assert!(!refused); (progress, true) },
+                HistoryFoldJobStep::Rejected { progress } => { assert!(refused); (progress, true) },
+            };
+            assert!(progress.fits(grant));
+            assert_eq!(progress.retained_capacity_bytes, allocated);
+            assert_eq!(progress.released_bytes, released);
+            assert!(done || progress != RetainedCloneProgress::default());
+            total_born += allocated;
+            total_released += released;
+            if done { outcome = Some(progress); break; }
+        }
+        let outcome = outcome.expect("fixed independent fold policy makes finite progress");
+        assert!(outcome.released_bytes > 0);
+        if refused {
+            assert!(!job.terminal_is_empty());
+            let original = match job.rejection().unwrap() { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => { assert_eq!(detail.capacity(), 37); detail.as_ptr() }, _ => panic!("same original refusal") };
+            assert_eq!(Some(original), pointer);
+            let denied = RetainedCloneGrant { maximum_release_bytes: 36, ..grant };
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.close_step(denied).result.unwrap());
+            assert_eq!(step.progress(), RetainedCloneProgress::default());
+            assert_eq!((allocated, released), (0, 0));
+            assert_eq!(match job.rejection().unwrap() { semio_framework_replication_error::ProtocolError::Malformed { detail, .. } => detail.as_ptr(), _ => unreachable!() }, original);
+            for _ in 0..4 {
+                if job.terminal_is_empty() { break; }
+                let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| job.close_step(grant).result.unwrap());
+                assert!(step.progress().fits(grant));
+                assert_eq!(step.progress().retained_capacity_bytes, allocated);
+                assert_eq!(step.progress().released_bytes, released);
+                total_born += allocated;
+                total_released += released;
+            }
+        }
+        assert!(job.terminal_is_empty());
+        assert_eq!(total_released, held + total_born);
+        let (_, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(job));
+        assert_eq!((allocated, released), (0, 0));
+    }
+}

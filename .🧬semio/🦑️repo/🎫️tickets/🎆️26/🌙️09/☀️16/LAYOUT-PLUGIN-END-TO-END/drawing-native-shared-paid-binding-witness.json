@@ -1,0 +1,9 @@
+{
+  "file": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/📖️public/🦀️.rs",
+  "before": "87c52434bc459e06f26774ed12c5bfddf7a84466a1e8c88c5f894390ada4c9aa",
+  "after": "c3e7db6dabd5c84e8619f1b4d862321f0bf74849d197a754d48299280dc7ed5a",
+  "inverseVerified": true,
+  "condition": "paid_binding set only after actual first defining bind returns work1 and receipt.items1; denies run separately and cannot set it",
+  "currencyInference": false,
+  "valuesCutsStocksUnchanged": true
+}

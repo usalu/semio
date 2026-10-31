@@ -1,0 +1,12 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛬️receive/🧪️tests/🦀️.rs",
+    "sha256": "e83864f7e38f7c5420f4006d3435f9d6fd9e6df616428e7500662990e0ac9c01",
+    "bytes": 9543
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🌳️intrinsic/🧪️tests/🦀️.rs",
+    "sha256": "79540852a0362e8b3d79ba46185cb409fa95da3ef2ef851000a491f285d4e865",
+    "bytes": 5222
+  }
+]

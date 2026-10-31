@@ -1,0 +1,38 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/🗂️expanded/🦀️.rs",
+    "bytes": 6011,
+    "sha256": "7a90fed387ab6cf116776fcd2e35003e6da7e852f136377c64e7cd5212f3d8b3",
+    "absoluteUtf16": 154
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/🗂️expanded/🛬️receive/🎟️work/📐️.json",
+    "bytes": 2126,
+    "sha256": "eeafc7eb043db7964da55679117dfe29c78e010ffef9548de096c3ecc3252f3b",
+    "absoluteUtf16": 175
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/🗂️expanded/🛬️receive/🎟️work/🔣️.json",
+    "bytes": 2689,
+    "sha256": "06baf1270720b0a0458624a6dafe1af115bf252bf22fd8fa6f23022fc5de7c03",
+    "absoluteUtf16": 175
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/🗂️expanded/🛬️receive/🎟️work/🧪️tests/🦀️.rs",
+    "bytes": 5271,
+    "sha256": "ac4c2ccc0c9a52f68b8fb55933b370cfbae90eeee76f24449bdd038b675201ea",
+    "absoluteUtf16": 182
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/🗂️expanded/🛬️receive/🦀️.rs",
+    "bytes": 11434,
+    "sha256": "d4bd660df4209c9e6ad52f7afd7e1401517876741ece91f039893c579ea7bdd1",
+    "absoluteUtf16": 165
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/📦️packages/🦀️rust/Cargo.toml",
+    "bytes": 2161,
+    "sha256": "b64cc55dfd60968f3b1f50ccd42761a3b222e7cdcd347c57b6db7191652f9c9a",
+    "absoluteUtf16": 166
+  }
+]

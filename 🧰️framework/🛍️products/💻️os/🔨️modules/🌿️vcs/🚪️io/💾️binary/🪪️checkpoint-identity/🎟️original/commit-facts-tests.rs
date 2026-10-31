@@ -5,7 +5,7 @@ fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_item
 fn observe<T>(run:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_memory_testing::observe_backing(run)}
 #[test]
 fn original_commit_facts_preserve_authored_allocations_and_every_cancelled_prefix(){
- let law:serde_json::Value=serde_json::from_str(include_str!("commit-facts.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🚪️io/💾️binary/🪪️checkpoint-identity/🎟️original/commit-facts.json")).unwrap();
  for cut in law["cancelCuts"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize)).chain([None]){
   let parent=Checkpoint{id:law["parent"]["id"].as_str().unwrap().into(),change_ids:vec!["change-old".into(),"change-other".into()],parent_id:None,authors:Vec::new(),message:None,timestamp:"parent-time".into(),composition_pins:Vec::new()};
   let input=OriginalCommitFactInput{generation:71,parent:Some(&parent),change_id:law["changeId"].as_str().unwrap(),saved_at:law["savedAt"].as_str().unwrap(),timestamp:law["timestamp"].as_str().unwrap()};

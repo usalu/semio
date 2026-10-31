@@ -321,8 +321,8 @@ impl AppBuilder {
                     validate_referenced_element_id(&self.id, &step_context, "show", id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids);
                 }
                 for interaction in &step.interactions {
-                    if !(!interaction.label.trim().is_empty()) {
-                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} introduction step {} interaction has an empty label", self.id, step.id)));
+                    if interaction.label.has_blank_cell() {
+                        return Err(PluginAssemblyError::new("app-definition.invalid", format!("app {} introduction step {} interaction has a blank label cell", self.id, step.id)));
                     }
                     match &interaction.on {
                         IntroductionInteractionKind::Action(action_ref) => {

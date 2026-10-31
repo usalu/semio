@@ -16,12 +16,6 @@ pub(super)fn layout(limits:SqliteDatabaseLimits)->Result<()>{
 }
 fn text(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)->Result<usize>{Ok(control.borrow_text(native::bytes(reader)?)?.len())}
 fn scalar(value:f64)->usize{if value.is_nan(){11}else if value.is_infinite(){32}else{22}}
-fn binary_scalar(reader:&mut store::ByteReader<'_>)->Result<usize>{Ok(scalar(reader.read_f64_le().map_err(|_|invalid())?))}
-fn binary_optional(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)->Result<usize>{match reader.read_u8().map_err(|_|invalid())?{0=>Ok(0),1=>text(reader,control),_=>Err(invalid())}}
-fn binary_properties(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
- let count=native::length(reader)?;census.future(count.checked_mul(2).ok_or_else(invalid)?)?;
- control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{census.row(add(32,text(reader,control)?)?)?;values::value_binary(reader,census,control,limits)?;control.step()?;}control.checkpoint()})
-}
 struct Hex<'a>{bytes:&'a[u8],at:usize}
 impl Hex<'_>{
  fn peek(&self)->Option<u8>{if self.at==self.bytes.len(){None}else{let digit=|v:u8|match v{b'0'..=b'9'=>v-b'0',b'a'..=b'f'=>v-b'a'+10,b'A'..=b'F'=>v-b'A'+10,_=>unreachable!()};Some((digit(self.bytes[self.at])<<4)|digit(self.bytes[self.at+1]))}}
@@ -54,24 +48,6 @@ fn hex_scalar(value:&str,control:&mut NativeDecodeControl<'_>)->Result<usize>{
   if order<308{return Ok(22)}if order>308{return Ok(32)}
   const MIDPOINT:&[u8;309]=b"179769313486231580793728971405303415079934132710037826936173778980444968292764750946649017977587207096330286416692887910946555547851940402630657488671505820681908902000708383676273854845817711531764475730270069855571366959622842914819860834936475292719074168444365510704342711559699508093042880177904174497792";
   Ok(if kept.as_slice()<MIDPOINT.as_slice(){22}else{32})
- })
-}
-/// 📦️ Counts exact four-coordinate words and all nested property entities in actual binary order.
-pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
- layout(limits)?;control.scoped_stage(|control|{
-  let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}
-  let mut census=Census::new(limits);census.row(add(8,text(&mut reader,control)?)?)?;let count=native::length(&mut reader)?;census.future(count)?;control.begin_stage(count)?;
-  for _ in 0..count{
-   let mut bytes=add(add(add(24,text(&mut reader,control)?)?,text(&mut reader,control)?)?,text(&mut reader,control)?)?;for _ in 0..4{bytes=add(bytes,binary_scalar(&mut reader)?)?;}census.row(bytes)?;
-   let count=native::length(&mut reader)?;census.future(count)?;
-   control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let name=text(&mut reader,control)?;let kind=match reader.read_u8().map_err(|_|invalid())?{0=>2,1=>3,2=>6,_=>return Err(invalid())};census.row(add(add(add(24,name)?,kind)?,text(&mut reader,control)?)?)?;binary_properties(&mut reader,&mut census,control,limits)?;control.step()?;}control.checkpoint()})?;
-   binary_properties(&mut reader,&mut census,control,limits)?;control.step()?;
-  }
-  let count=native::length(&mut reader)?;census.future(count)?;control.begin_stage(count)?;
-  for _ in 0..count{
-   let id=text(&mut reader,control)?;text(&mut reader,control)?;text(&mut reader,control)?;let kind=text(&mut reader,control)?;let label=text(&mut reader,control)?;let source_port=binary_optional(&mut reader,control)?;let target_port=binary_optional(&mut reader,control)?;
-   census.row(add(add(add(add(add(40,id)?,kind)?,label)?,source_port)?,target_port)?)?;binary_properties(&mut reader,&mut census,control,limits)?;control.step()?;
-  }if reader.remaining()!=0{return Err(invalid())}control.checkpoint()
  })
 }
 fn document_optional(value:&str,control:&mut NativeDecodeControl<'_>)->Result<usize>{if value=="-"{Ok(0)}else{let[value]=native::record(value,control)?;native::hex_text_extent(value,control)}}

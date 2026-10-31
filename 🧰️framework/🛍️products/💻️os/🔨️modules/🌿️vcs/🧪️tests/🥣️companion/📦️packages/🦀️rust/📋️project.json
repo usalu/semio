@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-vcs-tests-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

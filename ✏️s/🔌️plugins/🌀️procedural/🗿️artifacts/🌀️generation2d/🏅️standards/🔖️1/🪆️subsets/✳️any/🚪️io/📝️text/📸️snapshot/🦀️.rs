@@ -30,107 +30,8 @@ use std::collections::BTreeMap;
 pub const GENERATION2D_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
 
 //#region 🔖️DslMirror
-pub use semio_s_procedural_core_generation_sqlite_native::{
-    camera_from_dsl, camera_to_dsl, form_generation_from_dsl, form_generation_to_dsl, layout_from_dsl, layout_to_dsl, synapse_from_dsl, synapse_to_dsl, widget_from_dsl, widget_to_dsl, CameraJsonDsl, FormGenerationDsl, SynapseSpecDsl, WidgetDsl, WidgetLayoutDsl,
-};
-
-/// 🧾️ Local twin of `Generation2dSnapshot`, flattening `FlowHostSnapshot`/`GenerationPlayState`'s fields
-/// into one top-level `#[derive(dsl::DslRecord)]` grammar.
-#[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
-#[dsl(id = "procedural.generation2d", layout = "lines")]
-pub struct Generation2dSnapshotDsl {
-    schema: String,
-    #[dsl(block)]
-    camera: CameraJsonDsl,
-    #[dsl(statements, block)]
-    widgets: Vec<WidgetDsl>,
-    #[dsl(table)]
-    synapses: Vec<SynapseSpecDsl>,
-    layout: BTreeMap<String, WidgetLayoutDsl>,
-    #[dsl(key = "selected-generation")]
-    selected_generation_id: Option<String>,
-    preview_text: Option<String>,
-    #[dsl(table)]
-    generations: Vec<FormGenerationDsl>,
-}
-//#region 🔖️HandcraftedArtifactCodecs
-/// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
-impl pack::snapshot::ArtifactDsl for Generation2dSnapshotDsl {
-    const EXTENSION: &'static str = "generation2d";
-    fn envelope_id() -> &'static str {
-        "procedural.generation2d"
-    }
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-        Self::__dsl_from_record(&record)
-    }
-    fn print_dsl(&self) -> String {
-        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-
-//#endregion 🔖️HandcraftedArtifactCodecs
-
-pub fn generation2d_document_to_dsl(document: &Generation2dSnapshot) -> Generation2dSnapshotDsl {
-    let host_snapshot = &document.host_snapshot;
-    let generation = &document.generation;
-    Generation2dSnapshotDsl {
-        schema: host_snapshot.schema.clone(),
-        camera: camera_to_dsl(&host_snapshot.camera),
-        widgets: host_snapshot.widgets.iter().map(widget_to_dsl).collect(),
-        synapses: host_snapshot.synapses.iter().map(synapse_to_dsl).collect(),
-        layout: host_snapshot.layout.iter().map(|(id, entry)| (id.clone(), layout_to_dsl(entry))).collect(),
-        selected_generation_id: generation.selected_generation_id.clone(),
-        preview_text: generation.preview_text.clone(),
-        generations: generation.generations.iter().map(form_generation_to_dsl).collect(),
-    }
-}
-
-pub fn generation2d_document_from_dsl(parsed: Generation2dSnapshotDsl) -> Result<Generation2dSnapshot, semio_framework_diagnostic::TextError> {
-    let widgets = parsed.widgets.into_iter().map(widget_from_dsl).collect::<Result<Vec<_>, _>>()?;
-    let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
-    let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();
-    Ok(Generation2dSnapshot {
-        host_snapshot: FlowHostSnapshot { schema: parsed.schema, camera: camera_from_dsl(&parsed.camera), widgets, synapses, layout },
-        generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text }.into(),
-    })
-}
-
-/// 📜️ `.generation2d` textual document — derive-engine grammar via `Generation2dSnapshotDsl`.
-impl pack::snapshot::ArtifactDsl for Generation2dSnapshot {
-    const EXTENSION: &'static str = "generation2d";
-
-    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let parsed = <Generation2dSnapshotDsl as pack::snapshot::ArtifactDsl>::parse_dsl(text)?;
-        generation2d_document_from_dsl(parsed)
-    }
-
-    fn print_dsl(&self) -> String {
-        <Generation2dSnapshotDsl as pack::snapshot::ArtifactDsl>::print_dsl(&generation2d_document_to_dsl(self))
-    }
-}
-
-/// 📦️ `.generation2d` binary pack — same `Generation2dSnapshotDsl` mirror as `ArtifactDsl` above;
-/// `dsl::DslArtifact`'s derive already gives `Generation2dSnapshotDsl` its own `ArtifactPack` impl.
-
+pub use semio_s_artifact_procedural_2d_model::dsl_mirror::*;
 //#endregion 🔖️DslMirror
-
-/// 📖️ Parses `.generation2d` DSL text into a `Generation2dSnapshot`.
-pub fn parse_dsl(text: &str) -> Result<Generation2dSnapshot, semio_framework_diagnostic::TextError> {
-    <Generation2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
-}
-
-/// 🖨️ Prints a `Generation2dSnapshot` back to `.generation2d` DSL text.
-pub fn print_dsl(document: &Generation2dSnapshot) -> String {
-    pack::snapshot::ArtifactDsl::print_dsl(document)
-}
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -142,46 +43,7 @@ mod tests;
 /// 🚚️ The carrier this facet's `parse`/`print` speak, named as the schema names the export.
 pub type Generation2dSnapshotText = String;
 
-struct Generation2dNative;
-
-impl semio_s_procedural_core_generation_sqlite_native::GenerationNative for Generation2dNative {
-    type Snapshot = Generation2dSnapshot;
-    const ENVELOPE_ID: &'static str = "procedural.generation2d";
-    const PACK_PREFIX: Option<&'static [u8]> = Some(b"P2D2");
-    fn spec_producer() -> semio_framework_dsl_record::RecordSpecProducer {
-        Generation2dSnapshotDsl::__dsl_spec_producer()
-    }
-    fn fields(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<semio_s_procedural_core_generation_sqlite_native::GenerationFields, semio_framework_value::ValueError> {
-        let parsed = Generation2dSnapshotDsl::__dsl_from_record_controlled(record, control)?;
-        Ok(semio_s_procedural_core_generation_sqlite_native::GenerationFields {
-            schema: parsed.schema,
-            camera: parsed.camera,
-            widgets: parsed.widgets,
-            synapses: parsed.synapses,
-            layout: parsed.layout,
-            selected_generation_id: parsed.selected_generation_id,
-            preview_text: parsed.preview_text,
-            generations: parsed.generations,
-        })
-    }
-    fn host(snapshot: &Generation2dSnapshot) -> &FlowHostSnapshot {
-        &snapshot.host_snapshot
-    }
-    fn state(snapshot: &Generation2dSnapshot) -> &GenerationPlayState {
-        snapshot.generation.as_state()
-    }
-    fn assemble(host_snapshot: FlowHostSnapshot, generation: semio_framework_artifact_playbook_playbook::GenerationPlayRoot) -> Generation2dSnapshot {
-        Generation2dSnapshot { host_snapshot, generation }
-    }
-}
-
-pub fn encode_sqlite_native(document: &Generation2dSnapshot, encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, semio_framework_value::ValueError> {
-    semio_s_procedural_core_generation_sqlite_native::encode::<Generation2dNative>(document, encoding, control, native_owner)
-}
-
-pub fn decode_sqlite_native(payload: &store::io_schema::IoPayload, control: &mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl<'_>, native_owner: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Generation2dSnapshot, semio_framework_value::ValueError> {
-    semio_s_procedural_core_generation_sqlite_native::decode::<Generation2dNative>(payload, control, native_owner)
-}
+pub use semio_s_artifact_procedural_2d_model::sqlite_codec::{decode_sqlite_native, encode_sqlite_native};
 //#endregion 🚚️Carrier
 
 #[allow(unused_imports)]
@@ -351,7 +213,7 @@ use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_info_map,
 use semio_framework_ui_declaration::ui::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use semio_framework_value_derive::{FromValue, ToValue};
 use pack::snapshot::ArtifactDsl;
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
+/// 🧬️ Entities this module's schema exports and its crate declares elsewhere.
 use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 

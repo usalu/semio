@@ -9,6 +9,7 @@ struct State {
     bytes:Option<Vec<u8>>,
     key:Option<String>,
     child:Option<Box<DslValueRetainedCloneCursor>>,
+    child_value:Option<DslValue>,
     index:usize,
     phase:u8,
     draining:bool,
@@ -21,7 +22,7 @@ struct State {
 pub struct DslValueRetainedCloneCursor {state:ManuallyDrop<State>}
 
 impl Default for DslValueRetainedCloneCursor {
-    fn default()->Self {Self {state:ManuallyDrop::new(State {source:None,target:None,bytes:None,key:None,child:None,index:0,phase:0,draining:false,closing:false,spent:false,close:Default::default()})}}
+    fn default()->Self {Self {state:ManuallyDrop::new(State {source:None,target:None,bytes:None,key:None,child:None,child_value:None,index:0,phase:0,draining:false,closing:false,spent:false,close:Default::default()})}}
 }
 
 impl DslValueRetainedCloneCursor {
@@ -41,7 +42,7 @@ impl DslValueRetainedCloneCursor {
         }
         Ok(())
     }
-    fn empty(&self)->bool {let s=&self.state;s.source.is_none()&&s.target.is_none()&&s.bytes.is_none()&&s.key.is_none()&&s.child.is_none()&&s.close.is_empty()}
+    fn empty(&self)->bool {let s=&self.state;s.source.is_none()&&s.target.is_none()&&s.bytes.is_none()&&s.key.is_none()&&s.child.is_none()&&s.child_value.is_none()&&s.close.is_empty()}
     fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError> {demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"dynamic clone child depth overflow"))?;Ok(demand)}
     fn child_close_demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {
         let child=self.state.child.as_ref().unwrap();
@@ -56,6 +57,7 @@ impl DslValueRetainedCloneCursor {
         if !s.close.is_empty(){return s.close.next_owner_demands::<DslValue>(false,&s.source,copy);}
         if s.bytes.is_some(){return s.close.next_owner_demands::<Vec<u8>>(true,&s.source,copy);}
         if s.key.is_some(){return s.close.next_owner_demands::<String>(true,&s.source,copy);}
+        if s.child_value.is_some(){return s.close.next_owner_demands::<DslValue>(true,&s.source,copy);}
         s.close.next_owner_demands::<DslValue>(s.target.is_some(),&s.source,copy)
     }
     /// 🧮️ Borrows the exact next original clone effect, including normal spent-child closure.
@@ -80,7 +82,8 @@ impl DslValueRetainedCloneCursor {
         }
         if let Some(child)=s.child.as_ref(){
             if s.draining{return self.child_close_demands(copy);}
-            if child.output_ready(){return Ok(RetirementDemand {copy_bytes:if matches!(source.get(),DslValue::Object(_)){size_of::<(String,DslValue)>()}else{size_of::<DslValue>()},depth:1,..Default::default()});}
+            if s.child_value.is_some(){return Ok(RetirementDemand{copy_bytes:if matches!(source.get(),DslValue::Object(_)){size_of::<(String,DslValue)>()}else{size_of::<DslValue>()},depth:1,..Default::default()});}
+            if child.output_ready(){return Self::nested(child.take_demand()?);}
             return Self::nested(child.demands(self.child_source(source)?,copy)?);
         }
         Ok(match source.get(){
@@ -101,13 +104,13 @@ impl DslValueRetainedCloneCursor {
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"dynamic clone requires admitted original depth"));}
         Ok(demand.copy_bytes<=grant.maximum_copy_bytes&&demand.capacity_bytes<=grant.maximum_capacity_bytes&&demand.release_bytes<=grant.maximum_release_bytes)
     }
-    fn close_child(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+    fn close_child(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{let mut work=0;let result=(||{
         let child=self.state.child.as_mut().unwrap();
-        if child.begin_close(){return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()}));}
-        if !child.terminal_is_empty(){let step=child.close_step(RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant})?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-        self.state.child.take();self.state.draining=false;self.state.index+=usize::from(!self.state.closing);
+        if child.begin_close(){work+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()}));}
+        if !child.terminal_is_empty(){let step={let turn=child.close_step(RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant});work+=turn.work;turn.result}?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+        self.state.child.take();work+=1;self.state.draining=false;self.state.index+=usize::from(!self.state.closing);
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:size_of::<Self>(),..Default::default()}))
-    }
+    })();crate::RetainedWorkOutcome{result,work}}
 }
 
 impl RetainedClone for DslValue {
@@ -120,24 +123,23 @@ impl RetainedCloneDemandCursor<DslValue> for DslValueRetainedCloneCursor {
 }
 
 impl RetainedCloneCursor<DslValue> for DslValueRetainedCloneCursor {
-    fn close_demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{DslValueRetainedCloneCursor::close_demands(self,body)}
+    fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{DslValueRetainedCloneCursor::close_demands(self,body)}
     fn output_ready(&self)->bool{self.state.phase==2&&self.state.target.is_some()}
     fn advance_demands(&self,source:RetainedCloneRef<'_,DslValue>,body:usize)->Result<RetirementDemand,ValueError>{self.demands(source,body)}
-    fn advance(&mut self,source:RetainedCloneRef<'_,DslValue>,body: usize, grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+    fn advance(&mut self,source:RetainedCloneRef<'_,DslValue>,body: usize, grant:RetainedCloneGrant)->RetainedWorkOutcome{let mut work=0;let result=(||{
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         let demand=self.demands(source,body)?;
         if !Self::admitted(demand,grant)?{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.state.phase==2{return Ok(RetainedCloneStep::Complete(Default::default()));}
-        if let Some(progress)=source.bind(&mut self.state.source,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
-        if self.state.draining{return self.close_child(grant);}
+        if let Some(progress)={let turn=source.bind(&mut self.state.source,grant);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
+        if self.state.draining{return {let turn=self.close_child(grant);work+=turn.work;turn.result};}
+        if self.state.child_value.is_some(){let state:&mut State=&mut self.state;let value=state.child_value.take().unwrap();match state.target.as_mut().unwrap(){DslValue::Array(values)=>values.push(value),DslValue::Object(values)=>values.push((state.key.take().unwrap(),value)),_=>unreachable!()}state.draining=true;work+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
         if let Some(child)=self.state.child.as_mut(){
-            if !child.output_ready() {let projected=self.child_source(source)?;let step=self.state.child.as_mut().unwrap().advance(projected,body,RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant})?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-            let value=child.take().ok_or_else(||Self::refusal("dynamic child completed without its original output"))?;
-            let state:&mut State=&mut self.state;match state.target.as_mut().unwrap(){DslValue::Array(values)=>values.push(value),DslValue::Object(values)=>values.push((state.key.take().unwrap(),value)),_=>unreachable!()}
-            self.state.draining=true;
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));
+            if !child.output_ready() {let projected=self.child_source(source)?;let step={let turn=self.state.child.as_mut().unwrap().advance(projected,body,RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant});work+=turn.work;turn.result}?;return Ok(RetainedCloneStep::Progress(step.progress()));}
+            let nested=super::nested_retained_clone_grant(grant)?;let turn=child.take(nested);work+=turn.work;let Some((value,progress))=turn.result? else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.state.child_value=Some(value);
+            return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,progress,"dynamic child take")?));
         }
-        if self.state.phase==0 {
+        work+=1;if self.state.phase==0 {
             self.state.target=Some(match source.get(){
                 DslValue::Null=>DslValue::Null,
                 DslValue::Bool(value)=>DslValue::Bool(*value),
@@ -164,27 +166,29 @@ impl RetainedCloneCursor<DslValue> for DslValueRetainedCloneCursor {
         }
         let progress=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,released_bytes:demand.release_bytes};
         Ok(if self.state.phase==2{RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
-    }
-    fn take(&mut self)->Option<DslValue> {if self.state.phase!=2{return None;}let output=self.state.target.take();self.state.spent|=output.is_some();output}
+    })();crate::RetainedWorkOutcome{result,work}}
+    fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
+    fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(DslValue,RetainedCloneProgress)>>{if !self.output_ready(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=crate::retained_clone::take_retained_clone_output(&mut self.state.target,grant);if matches!(&turn.result,Ok(Some(_))){self.state.spent = true;}turn}
     fn begin_close(&mut self)->bool {if self.state.closing{return false;}self.state.closing=true;true}
     fn terminal_is_empty(&self)->bool {self.state.closing&&self.empty()}
     fn next_close_depth_demand(&self)->Result<usize,ValueError> {Ok(self.close_demands(0)?.depth)}
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(self.close_demands(0)?.copy_bytes)}
     fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {Ok(self.close_demands(copy)?.capacity_bytes)}
     fn next_close_release_byte_demand(&self)->Result<usize,ValueError> {Ok(self.close_demands(0)?.release_bytes)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{let mut work=0;let result=(||{
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if !self.state.closing{return Err(Self::refusal("dynamic clone must retain custody through begin_close"));}
         let demand=self.close_demands(grant.maximum_copy_bytes)?;
         if !Self::admitted(demand,grant)?{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if self.state.child.is_some(){return self.close_child(grant);}
+        if self.state.child.is_some(){return {let turn=self.close_child(grant);work+=turn.work;turn.result};}
         let s:&mut State=&mut self.state;
-        if !s.close.is_empty(){return s.close.step_granted(grant);}
-        if let Some(step)=s.close.begin_granted(&mut s.bytes,grant)?{return Ok(step);}
-        if let Some(step)=s.close.begin_granted(&mut s.key,grant)?{return Ok(step);}
-        if let Some(step)=s.close.begin_granted(&mut s.target,grant)?{return Ok(step);}
-        close_retained_binding(&mut s.source,grant)
-    }
+        if !s.close.is_empty(){return {let turn=s.close.step_granted(grant);work+=turn.work;turn.result};}
+        if let Some(step)={let turn=s.close.begin_granted(&mut s.bytes,grant);work+=turn.work;turn.result}?{return Ok(step);}
+        if let Some(step)={let turn=s.close.begin_granted(&mut s.key,grant);work+=turn.work;turn.result}?{return Ok(step);}
+        if let Some(step)={let turn=s.close.begin_granted(&mut s.child_value,grant);work+=turn.work;turn.result}?{return Ok(step);}
+        if let Some(step)={let turn=s.close.begin_granted(&mut s.target,grant);work+=turn.work;turn.result}?{return Ok(step);}
+        {let turn=close_retained_binding(&mut s.source,grant);work+=turn.work;turn.result}
+    })();crate::RetainedWorkOutcome{result,work}}
 }
 
 impl Drop for DslValueRetainedCloneCursor {
@@ -192,8 +196,11 @@ impl Drop for DslValueRetainedCloneCursor {
 }
 
 #[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+#[path="🧪️tests/protocol.rs"]
+mod protocol;
+#[cfg(test)]
+#[path="🧪️tests/private.rs"]
+mod private_binding_tests;
 
 #[cfg(test)]
 #[path="🧪️tests/🎯️dispatch/🦀️.rs"]

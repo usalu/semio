@@ -106,7 +106,7 @@ pub fn edit_fill(source: Option<&FillStyle>, edit: &FillEdit) -> Result<Option<F
             if stops.len() >= 64 || stops.is_empty() { return Err("Cannot add another gradient stop"); }
             sort_stops(stops);
             let right = stops.iter().take_while(|stop| stop.offset <= *offset).count();
-            let color = sampling::GradientRamp::new(stops)?.sample(*offset)?;
+            let color = sampling::sample_gradient_stops(stops,*offset)?;
             stops.insert(right,GradientStop { offset:*offset,color });
         }
         FillEdit::RemoveStop { index } => {

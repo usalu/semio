@@ -1,0 +1,3 @@
+# Glyph Gap Test Annotation Refresh
+
+Prepared only, expectedsix owning registrations/strict5,23 inputs/54 edges. Exactly one original law file changed:one explicit matcher generic and two throwing getter function return annotations. Reversing those three erased annotations reconstructs the ENTIRE prior law hash (drawing-font-gap-3-type-fix.json). All21 other common inputs match; actual importer has a dedicated new path and the same original registration. No production/schema/stock/fuel/assertion changes; old actualsix/434 and strict diagnostics remain immutable. Root review/release required before one normal repeat and captured strict.

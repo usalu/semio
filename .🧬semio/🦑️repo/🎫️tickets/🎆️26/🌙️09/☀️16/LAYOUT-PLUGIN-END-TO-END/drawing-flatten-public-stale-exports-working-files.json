@@ -1,0 +1,10 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🟦️.ts",
+      "beforeSha256": "f9d1b5d73d261e2b76fc1ae0d63f06a8528ada1ec45b61e13bd02124ca77f67b",
+      "sha256": "cc0aeda09c5e503fea6ea26284a7ef793731711ba78996288d1662398750f449"
+    }
+  ],
+  "removed": "Only stale barrel exports preparePath, PathFlattenOptions, PathFlattenRetirementProgress after their genuine defining API removal; no compatibility alias or replacements."
+}

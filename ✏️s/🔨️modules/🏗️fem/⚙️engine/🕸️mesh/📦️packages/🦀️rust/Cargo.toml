@@ -16,9 +16,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-fem-payload-turns = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-s-fem-sparse = { workspace = true }
 
 [dev-dependencies]
 semio-s-fem-test-support = { workspace = true }

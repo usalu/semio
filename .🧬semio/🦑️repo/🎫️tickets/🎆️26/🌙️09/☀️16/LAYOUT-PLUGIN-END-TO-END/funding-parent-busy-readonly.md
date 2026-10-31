@@ -1,0 +1,8 @@
+# Protected Funding Parent Busy Trace
+This lane performed source/log inspection only and handed further analysis to the dependency owner when root prioritized compiler preview. No protected-parent source, schema, timeout or outcome was edited.
+
+The native protected parent in process/native-build/storage/publication/platform builds resource native-fixed-image: plus options.directory, and uses options.leaseDirectory for an exclusive timeout0 acquisition. Its catch checks the actual control, recognizes the exact requested-resource timeout message and returns only acquired:false. The setup funding caller turns that value into the generic funding-parent-busy error. Retained setup3 output contains no exact failed resource/admission context.
+
+The defining acquireHoldingGate also normalizes a directory-admission timeout to the requested resource message, preserving a resourceLeaseAdmission descriptor on the Error. The protected-parent catch discards that distinction. Thus the historical busy result alone cannot distinguish directory gate contention, requested file opening, or requested EX contention; it is not proof of a deterministic timeout0 bug or a stale peer. Independent read-only review found the zero-time path attempts once and skips ordinary positive-time cutoff checks.
+
+Full historical snapshots and the later genuine dependency SH transitions are point-in-time observations. A zero dependency-holder snapshot cannot prove all admission gates or later requested custody remain free. The dependency owner owns the isolated actual-issued kernel test and any further bounded inert diagnostic proposal. No timeout extension, fake issuer, retry or shared-store action is authorized by this trace.

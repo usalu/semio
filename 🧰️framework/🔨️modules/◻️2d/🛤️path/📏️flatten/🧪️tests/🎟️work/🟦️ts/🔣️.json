@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "const": {
+    "version": 1,
+    "pointRowLogicalBytes": 16,
+    "contourReferenceLogicalBytes": 16,
+    "curveRowLogicalBytes": 128,
+    "quanta": [
+      1,
+      7,
+      4096
+    ],
+    "limits": {
+      "maximumPoints": 65536,
+      "maximumContours": 4096,
+      "maximumDepth": 32
+    },
+    "deniedAxes": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ],
+    "deniedEffects": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "sourceCustody": "borrowed-unchanged",
+    "outputCustody": "same-bank-owned-pages",
+    "cpu": "defining-issued-turn-work",
+    "semantic": "original-algorithm-steps-only",
+    "cancellationFrontiers": [
+      "empty",
+      "contour-birth",
+      "point-write",
+      "curve-push",
+      "curve-pop",
+      "child-right",
+      "child-left",
+      "complete"
+    ],
+    "maxTurns": 1048576,
+    "sameStock": {
+      "items": 1048576,
+      "copy": 134217728,
+      "capacity": 33554432,
+      "release": 33554432,
+      "depth": 64
+    }
+  }
+}

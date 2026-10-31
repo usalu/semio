@@ -87,6 +87,9 @@ pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions)
     let budget=ValueMaterialization{used:std::cell::Cell::new(retained),maximum:options.limits.max_total_alloc};
     let mut dec_ctx = DecCtx { source: DecSource::File(&pack_file), limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new(), materialization: &budget };
     let record = decode_record_fields(&mut reader, Some(spec), &mut dec_ctx, 0)?;
+    if reader.remaining() != 0 {
+        return Err(PackRefusal::Malformed { kind: ValueRefusalKind::InvalidValue, what: "document", offset: reader.position() as u64, detail: "trailing document body bytes".into() });
+    }
 
     let report = DecodeReport { unknown_field_ids: dec_ctx.unknown_field_ids, unknown_segments: Vec::new(), schema_drift, verified: options.verification };
     Ok((record, report))

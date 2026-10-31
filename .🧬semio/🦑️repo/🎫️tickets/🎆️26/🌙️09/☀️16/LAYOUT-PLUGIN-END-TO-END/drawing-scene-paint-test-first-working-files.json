@@ -1,0 +1,25 @@
+{
+  "state": "tests-authored-first-no-runtime",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎟️work/🔣️.json",
+      "sha256": "4ecd711d13291c06aae82aec49016eac900a0b883777f9c771b4a9a54c30f323",
+      "bytes": 2238
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎟️work/🧫️fixtures/🔣️.json",
+      "sha256": "24fab5ef129dbde95f9e281ad398b2ffe07c05db1a0a4bd72e56e2efbdce6d5b",
+      "bytes": 553
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🎟️work/🦀️.rs",
+      "sha256": "ced63ed008f5e908059d12febc286bf44f696d4bb68cbc5529203ae34f72874e",
+      "bytes": 7266
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "e4d22bef864afb7efd9a585af24689ba88f375892d5e088d6ae7925de651c7b0",
+      "bytes": 7503
+    }
+  ]
+}

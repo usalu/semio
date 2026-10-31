@@ -35,21 +35,21 @@ fn original_widget_output_moves_once_on_same_caller_and_retires_all_fields() {
     let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(handoff,|cx|ReadyJob::admit(&mut original,cx)));
     let mut job=result.unwrap().unwrap();assert!(original.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
     for denied in [RetainedCloneGrant::default(),RetainedCloneGrant{maximum_items:1,..Default::default()}] {
-        let before=caller.cumulative_receipt();let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(denied,|cx|job.step_on_original(cx)));
+        let before=caller.cumulative_receipt();let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(denied,|cx|job.step(cx)));
         assert!(result.unwrap().is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(caller.cumulative_receipt(),before);
     }
     let before=caller.cumulative_receipt();let mut denied_output=None;
-    let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(stock,|cx|cx.with_original_work_loan(0,cx.deadline_us(),|cx|{denied_output=job.step_on_original(cx)?;Ok(())})));
+    let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(stock,|cx|cx.with_original_work_loan(0,cx.deadline_us(),|cx|{denied_output=job.step(cx)?;Ok(())})));
     result.unwrap();assert!(denied_output.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(caller.cumulative_receipt(),before);
     let mut foreign=OriginalJobFixtureCaller::admit(OperationId(742),Generation(3),stock,clock,c["deadlineMicros"].as_u64().unwrap(),c["fuel"].as_u64().unwrap());
-    let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||foreign.turn(stock,|cx|Ok(job.step_on_original(cx))));
+    let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||foreign.turn(stock,|cx|Ok(job.step(cx))));
     assert!(result.unwrap().is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));foreign.retire(stock);
-    let before=caller.cumulative_receipt();let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(handoff,|cx|job.step_on_original(cx)));
+    let before=caller.cumulative_receipt();let (result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(handoff,|cx|job.step(cx)));
     let WidgetStep::Done(evaluation)=result.unwrap().unwrap() else {panic!("single original Ready output")};
     assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(caller.cumulative_receipt().copied_items-before.copied_items,1);
     assert_eq!(caller.cumulative_receipt().copied_bytes,before.copied_bytes);
     assert_eq!(match evaluation.outputs.get("alpha").unwrap(){GeometryValue::Text(text)=>text.as_ptr(),_=>unreachable!()},pointer);
-    assert!(caller.turn(handoff,|cx|job.step_on_original(cx)).unwrap().is_none());
+    assert!(caller.turn(handoff,|cx|job.step(cx)).unwrap().is_none());
     let mut owner=ControlledRetirement::new((job,evaluation)).ok().unwrap();let mut born=0;let mut released=0;
     for _ in 0..10000 {
         if owner.terminal_is_empty(){break;}
@@ -70,9 +70,9 @@ fn original_widget_output_cancel_keeps_nested_payload_for_same_caller_retirement
     let handoff=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};
     let mut job=caller.turn(handoff,|cx|ReadyJob::admit(&mut evaluation,cx)).unwrap().unwrap();assert!(evaluation.is_none());
     let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_async::poll::resolve_ready(caller.cancel().cancel()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    let before=caller.cumulative_receipt();assert!(caller.turn(stock,|cx|job.step_on_original(cx)).unwrap().is_none());assert_eq!(caller.cumulative_receipt(),before);
+    let before=caller.cumulative_receipt();assert!(caller.turn(stock,|cx|job.step(cx)).unwrap().is_none());assert_eq!(caller.cumulative_receipt(),before);
     let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.cancel());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    let before=caller.cumulative_receipt();assert!(caller.turn(stock,|cx|job.step_on_original(cx)).unwrap().is_none());assert_eq!(caller.cumulative_receipt(),before);
+    let before=caller.cumulative_receipt();assert!(caller.turn(stock,|cx|job.step(cx)).unwrap().is_none());assert_eq!(caller.cumulative_receipt(),before);
     let mut owner=ControlledRetirement::new(job).ok().unwrap();let mut born=0;let mut released=0;
     for _ in 0..10000 {
         if owner.terminal_is_empty(){break;}

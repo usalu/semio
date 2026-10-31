@@ -37,13 +37,15 @@ fn an_independent_decoder_job_recovers_its_response_from_an_unadmitted_session()
     fn config()->semio_framework_job_worker_authority::BatchDriveConfig{semio_framework_job_worker_authority::BatchDriveConfig{retained:renderer_law_stock(),site:"decoder_admission_law",stage:InteractiveStage::InteractiveStep,fuel_per_step:1,step_budget_us:INTERACTIVE_LANE_WALL_US}}
     let mut caller=OriginalRendererFixture::new();let mut occupied=Vec::with_capacity(WORKER_JOB_SESSION_SLOTS);
     for _ in 0..WORKER_JOB_SESSION_SLOTS {
-        let mut source=caller.turn(|cx|Ok(RefusedWorkerSource::pending(Occupied,(cx.operation(),cx.generation())))).unwrap();
-        let mut admitted=None;for _ in 0..16{admitted=caller.turn(|cx|source.admit_pending(config(),cx)).unwrap();if admitted.is_some(){break}}
-        assert!(source.terminal_is_empty());occupied.push(admitted.expect("real original worker slot admits its exact owner"));
+        let mut source=Some(caller.turn(|cx|Ok(RefusedWorkerSource::pending(Occupied,(cx.operation(),cx.generation())))).unwrap());
+        let mut admitted=None;let mut acknowledged=false;for _ in 0..16{acknowledged=caller.turn(|cx|source.as_mut().unwrap().admit_pending(config(),&mut admitted,cx)).unwrap();if acknowledged{break}}
+        assert!(acknowledged);assert!(source.as_ref().unwrap().terminal_is_empty());assert!(admitted.is_some());
+        caller.turn(|cx|{let before=cx.retained_progress();let work=cx.original_work_units_spent();assert!(RefusedWorkerSource::retire_empty(&mut source,cx)?);assert_eq!(cx.retained_progress().copied_items-before.copied_items,1);assert_eq!(cx.retained_progress().copied_bytes,before.copied_bytes);assert_eq!(cx.original_work_units_spent()-work,1);Ok(())}).unwrap();assert!(source.is_none());
+        occupied.push(admitted.expect("real original worker slot admits its exact owner"));
     }
     let (authority,probe)=owned_decoder_fixture();let token=probe.owner().owner().token();let bytes=probe.owner().owner().received_bytes();
     let mut rejected=caller.turn(|cx|Ok(RefusedWorkerSource::pending(RendererAssetDecodeJob::new(probe),(cx.operation(),cx.generation())))).unwrap();
-    for _ in 0..4{assert!(caller.turn(|cx|rejected.admit_pending(config(),cx)).unwrap().is_none());}
+    let mut refused_output=None;for _ in 0..4{assert!(!caller.turn(|cx|rejected.admit_pending(config(),&mut refused_output,cx)).unwrap());assert!(refused_output.is_none());}
     let recovered=rejected.job().unwrap().take_probe().expect("maximum-plus-one retains its original exact response");assert_eq!(recovered.owner().owner().token(),token);assert_eq!(recovered.owner().owner().received_bytes(),bytes);assert_eq!(recovered.observed_bytes,0);assert!(rejected.job().unwrap().take_probe().is_none());
     for _ in 0..65536{caller.turn(|cx|{rejected.close_step(cx)?;Ok(())}).unwrap();if rejected.terminal_is_empty(){break}}assert!(rejected.terminal_is_empty());
     for session in &mut occupied {
@@ -52,7 +54,7 @@ fn an_independent_decoder_job_recovers_its_response_from_an_unadmitted_session()
             caller.turn(|cx| {
                 let witness=cx.borrowed_original_cancel_token()?;
                 if matches!(session.has_original_cancel_alias_witness(witness),Ok(true)){
-                    close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|grant|session.return_original_cancel_alias_step(witness,grant).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(|error|match error{semio_framework_job_worker::WorkerJobDemandError::Refused(error)=>error,semio_framework_job_worker::WorkerJobDemandError::Contention(_)=>semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original saturation cancellation return contended")}))?;
+                    close_original_retained_step(cx,semio_framework_value::RetirementDemand{depth:1,..Default::default()},|grant|{let turn=session.return_original_cancel_alias_step(witness,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(|error|match error{semio_framework_job_worker::WorkerJobDemandError::Refused(error)=>error,semio_framework_job_worker::WorkerJobDemandError::Contention(_)=>semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original saturation cancellation return contended")}),work:turn.work}})?;
                 } else { session.close_step(cx)?; }Ok(())
             }).unwrap();if session.terminal_is_empty(){break}
         }

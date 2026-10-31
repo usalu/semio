@@ -4,7 +4,7 @@ fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_item
 fn close_authority(mut owner:semio_framework_value::FactoryAuthority){while !owner.terminal_is_empty(){let d=owner.demands(4096).unwrap();let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(grant(d)).unwrap());assert!(step.progress().fits(grant(d)));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}}
 #[test]
 fn original_history_replacements_share_one_decision_and_return_original_owners(){
- let fixture:serde_json::Value=serde_json::from_str(include_str!("replacements.json")).unwrap();
+ let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../🗃️history-ledger/replacements.json")).unwrap();
  for case in fixture["cases"].as_array().unwrap(){
   let mut ledger=ArtifactHistoryLedger::<i32>::new();for value in case["before"].as_array().unwrap(){ledger.try_push(value.as_i64().unwrap()as i32).unwrap();}
   let issuance=ledger.retained_issuance();let mut publisher=ArtifactGroupVisibilityOwner::new();let view:std::sync::Arc<dyn semio_framework_value::RetainedPublicationDecision>=publisher.view();let mut keys=Vec::new();

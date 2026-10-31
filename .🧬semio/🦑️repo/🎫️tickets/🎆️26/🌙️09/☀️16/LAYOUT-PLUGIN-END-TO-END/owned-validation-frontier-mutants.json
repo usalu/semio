@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "birth-advanced",
+      "target": "cancel-before-index",
+      "donor": "cancel-index"
+    },
+    {
+      "id": "index-entered-program",
+      "target": "cancel-index",
+      "donor": "cancel-program-birth"
+    },
+    {
+      "id": "program-birth-passed-first-poll",
+      "target": "cancel-program-birth",
+      "donor": "cancel-program-pending"
+    },
+    {
+      "id": "program-pending-never-polled",
+      "target": "cancel-program-pending",
+      "donor": "cancel-program-birth"
+    }
+  ]
+}

@@ -26,7 +26,7 @@ impl Default for WavFmt {
     }
 }
 
-/// 📦️ Owned by `wav`: the `data` chunk's samples, typed per `WavFmt`'s
+/// 🎵️ Owned by `wav`: the `data` chunk's samples, typed per `WavFmt`'s
 /// `(audio_format, bits_per_sample)` — `Raw` is the honest fallback for anything this codec
 /// doesn't interpret sample-by-sample (24-bit PCM, ADPCM, WAVE_FORMAT_EXTENSIBLE payloads, …).
 /// 🔢️ JSON float samples retain their complete unsigned IEEE 754 words.
@@ -213,9 +213,9 @@ impl semio_framework_dsl_record::DslField for WavData {
     }
 }
 
-/// 📦️ Owned by `wav`: any auxiliary or duplicate canonical RIFF chunk, retained byte-for-byte
+/// 🧊️ Owned by `wav`: any auxiliary or duplicate canonical RIFF chunk, retained byte-for-byte
 /// together with its word-alignment pad byte.
-pub(crate) fn is_zero_byte(value: &u8) -> bool {
+pub fn is_zero_byte(value: &u8) -> bool {
     *value == 0
 }
 
@@ -367,7 +367,7 @@ fn pad_is_representable(pad_byte: u8, payload_is_odd: bool, target: &'static str
     Ok(())
 }
 
-/// 🧭️ Refuses snapshot states that cannot survive one exact RIFF/WAVE save and reopen.
+/// ⛔️ Refuses snapshot states that cannot survive one exact RIFF/WAVE save and reopen.
 pub fn validate_wav_serialization(snapshot: &WavSnapshot) -> Result<(), WavSerializationIssue> {
     let ext_len = snapshot.fmt.ext.as_ref().map_or(0, Vec::len);
     if ext_len > MAXIMUM_FMT_EXTENSION_BYTES {
@@ -460,9 +460,9 @@ impl Tree for WavFloatBits {
     fn canonical_tree_node(&self) -> Result<TreeNode<'_>, TreeError> {
         Ok(TreeNode::Object(1))
     }
+    /// 🛡️ Safety: `f32` and `u32` share size and alignment, and every bit pattern is a valid `u32`.
     fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn Tree, TreeError> {
         match ordinal {
-            // SAFETY: `f32` and `u32` share size and alignment, and every bit pattern is a valid `u32`.
             0 => Ok(unsafe { &*(&self.0 as *const f32 as *const u32) }),
             _ => Err(tree_absent("canonical WAV float word ordinal is absent")),
         }
@@ -476,9 +476,9 @@ impl Tree for WavFloatSamples {
     fn canonical_tree_node(&self) -> Result<TreeNode<'_>, TreeError> {
         Ok(TreeNode::Array(self.0.len()))
     }
+    /// 🧷 Safety: `WavFloatBits` is `repr(transparent)` over the borrowed `f32`.
     fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn Tree, TreeError> {
         let sample = self.0.get(ordinal).ok_or_else(|| tree_absent("canonical WAV float sample ordinal is absent"))?;
-        // SAFETY: `WavFloatBits` is `repr(transparent)` over the borrowed `f32`.
         Ok(unsafe { &*(sample as *const f32 as *const WavFloatBits) })
     }
 }
@@ -488,6 +488,7 @@ impl Tree for WavData {
     fn canonical_tree_node(&self) -> Result<TreeNode<'_>, TreeError> {
         Ok(TreeNode::Object(2))
     }
+    /// 🪢 Safety: `WavFloatSamples` is `repr(transparent)` over the borrowed vector.
     fn canonical_tree_child(&self, ordinal: usize) -> Result<&dyn Tree, TreeError> {
         match (ordinal, self) {
             (0, Self::Pcm16(_)) => Ok(&WAV_DATA_KINDS[0]),
@@ -496,7 +497,6 @@ impl Tree for WavData {
             (0, Self::Float32(_)) => Ok(&WAV_DATA_KINDS[3]),
             (1, Self::Pcm16(samples)) => Ok(samples),
             (1, Self::Pcm8(samples) | Self::Raw(samples)) => Ok(samples),
-            // SAFETY: `WavFloatSamples` is `repr(transparent)` over the borrowed vector.
             (1, Self::Float32(samples)) => Ok(unsafe { &*(samples as *const Vec<f32> as *const WavFloatSamples) }),
             _ => Err(tree_absent("canonical WAV data ordinal is absent")),
         }
@@ -506,7 +506,7 @@ impl Tree for WavData {
     }
 }
 
-/// 🌲️ Projects `{kind}` or `{kind, value}` where `other` carries its chunk index as decimal text.
+/// 🗂️ Projects `{kind}` or `{kind, value}` where `other` carries its chunk index as decimal text.
 impl Tree for WavChunkRef {
     fn canonical_tree_node(&self) -> Result<TreeNode<'_>, TreeError> {
         Ok(TreeNode::Object(if matches!(self, Self::Other(_)) { 2 } else { 1 }))

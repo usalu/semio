@@ -1,0 +1,16 @@
+{
+  "cases": [
+    "unissued",
+    "copied",
+    "expired"
+  ],
+  "owners": [
+    "genuine",
+    "trap"
+  ],
+  "untrustedOwnerReads": 0,
+  "untrustedLoanReads": 0,
+  "rejectedCpu": 0,
+  "validCloseCpu": 1,
+  "message": "Retained work turn loan is unissued or expired"
+}

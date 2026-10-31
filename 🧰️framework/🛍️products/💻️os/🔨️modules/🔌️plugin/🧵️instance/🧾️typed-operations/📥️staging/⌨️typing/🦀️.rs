@@ -76,7 +76,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             },
             2=>{
                 let meta=typing.original_metadata.as_ref().ok_or_else(invalid)?;let window=typing.after.as_ref().ok_or_else(invalid)?.as_str();let key=typing.key.ok_or_else(invalid)?;
-                if !self.tool_machines.typing.original_live(window,key)?{typing.transition(1,cx)?;return Ok(false)}
+                if !self.tool_machines.typing.original_resident_live(window,key)?{typing.transition(1,cx)?;return Ok(false)}
                 let state=self.tool_machines.typing.open(window).ok_or_else(invalid)?;
                 let explicit=typing.suppress&&meta.view_state.as_ref().and_then(|view|view.window_id.as_deref()).unwrap_or("")==window;
                 if crate::original_typing::original_typing_commit_required(typing.all,explicit,state.deadline_ms,typing.now,!typing.control,None)==Some(true){typing.transition(3,cx)?;return Ok(false)}

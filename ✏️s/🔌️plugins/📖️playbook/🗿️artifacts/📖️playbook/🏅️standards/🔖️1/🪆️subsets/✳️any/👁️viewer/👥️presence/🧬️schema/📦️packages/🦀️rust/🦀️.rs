@@ -45,8 +45,7 @@ pub mod standards {
                             #[path = "../../../../../🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs"]
                             mod tests;
                         }
-                        #[path = "../../../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
-                        pub mod diff;
+                        pub use semio_s_artifact_playbook_playbook_snapshot::standards::v1::subsets::any::io::binary::diff;
                     }
                 }
             }

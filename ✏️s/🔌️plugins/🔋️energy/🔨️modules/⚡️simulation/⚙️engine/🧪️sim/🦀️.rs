@@ -15,8 +15,8 @@ extern crate semio_s_plugin_energy_engine_units as units;
 extern crate semio_s_plugin_energy_engine_sim_retirement as retirement;
 extern crate semio_s_plugin_energy_engine_sim_wire as wire;
 
-use crate::retirement::{ENERGY_RUNG_DEMAND, close_config_step, close_meter_table_step, close_model_step, close_results_step, close_sizing_step, close_string_step, close_string_vector_step, close_summaries_step, close_time_series_step, config_is_terminal_empty, energy_done, energy_grant_covers, energy_guarded, energy_idle, energy_one, energy_rung, energy_self_funded, energy_turn, model_is_terminal_empty, summaries_are_terminal_empty};
-use crate::wire::{ENERGY_WIRE_HEADER_BYTES, ENERGY_WIRE_QUEUE_SLOTS, EnergyCommitReservation, EnergyJobCursor, EnergyJobPreview, EnergyJobStage, EnergyNumericalBounds, EnergyNumericalCensus, EnergyNumericalDimension, EnergyPublicationChannels, EnergyQualityTier, EnergyWireBuild, EnergyWireIdentity, EnergyWireKind, EnergyWireLease, EnergyWirePacket, EnergyWireRejection, close_retained_packet, decode_preview_packet, end_use_code, energy_spend, energy_wire_header, fuel_code, unit_code, weather_copy_target};
+use crate::retirement::{ENERGY_RUNG_DEMAND, energy_builder_close, energy_builder_demand, close_config_step, close_meter_table_step, close_model_step, close_results_step, close_sizing_step, close_string_step, close_string_vector_step, close_summaries_step, close_time_series_step, config_is_terminal_empty, energy_done, energy_grant_covers, energy_guarded, energy_idle, energy_one, energy_rung, energy_self_funded, energy_turn, model_is_terminal_empty, summaries_are_terminal_empty};
+use crate::wire::{ENERGY_WIRE_HEADER_BYTES, ENERGY_WIRE_QUEUE_SLOTS, EnergyCommitReservation, EnergyJobCursor, EnergyJobPreview, EnergyJobStage, EnergyNumericalBounds, EnergyNumericalCensus, EnergyNumericalDimension, EnergyPublicationChannels, EnergyQualityTier, EnergyWireBuild, EnergyWireIdentity, EnergyWireKind, EnergyWireLease, EnergyWirePacket, EnergyWireRejection, close_retained_packet, decode_preview_packet, end_use_code, energy_spend, energy_post, energy_wire_header, fuel_code, unit_code, weather_copy_target};
 use crate::error::Error;
 use crate::kernel::{HourWeather, SimulationConfig, SimulationEnvironment, SimulationKernel, SimulationModel, SurfaceState, TimestepBuilder, TimestepWork, WindowState, ZoneState};
 use crate::meters::{EndUse, FuelType, Meter, MeterTable};
@@ -28,7 +28,7 @@ use crate::results::{Results, RunMetadata, SizingTables, SummaryRow, SummaryTabl
 use crate::site::WeatherRecord;
 use crate::sizing::{SizingBuilder, SizingConfig};
 use crate::units::Unit;
-use semio_framework_job::{allocate_operation_id, default_now_us, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RevisionId, OriginalTurnFailure, StepBudget, StepContext};
+use semio_framework_job::{InteractiveJobStep, OriginalJobReturnClaim, RetainedCloneStep, allocate_operation_id, default_now_us, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RevisionId, OriginalTurnFailure, StepBudget, StepContext};
 use semio_framework_job_payload::{JobPayloadStream, RetainedJobPayload};
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};

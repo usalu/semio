@@ -1,0 +1,63 @@
+{
+  "state": "HEAD-hypothesis-not-exact",
+  "capturedSha256": "eec12c8f290109a7e965bdbca5f59ab095f2e680fc1d78a637c339bd7b67c974",
+  "headSha256": "661ee464a5dfbea26446b4dbf7d9f24b418de4f1831476a93cba7f4e3d29a9b0",
+  "headBytes": 304746,
+  "currentSha256": "9afaf5e8f000295b4da31ad1adfd13e2c8fb2ebaff1d1928029b8caa8fdcd6d0",
+  "addedPackages": [
+    "semio-framework-text-splice-native",
+    "semio-framework-tool-typing-edit"
+  ],
+  "removedPackages": [],
+  "changedPackages": [
+    {
+      "package": "semio-framework-2d-booleans",
+      "addedLines": [
+        " \"semio-framework-trace\",",
+        " \"semio-framework-value-testing-allocator\",",
+        " \"tiny-skia\","
+      ],
+      "removedLines": []
+    },
+    {
+      "package": "semio-framework-2d-path-flatten",
+      "addedLines": [
+        " \"semio-framework-trace\",",
+        " \"semio-framework-value-persistent\","
+      ],
+      "removedLines": []
+    },
+    {
+      "package": "semio-framework-2d-path-stroke",
+      "addedLines": [
+        " \"semio-framework-trace\",",
+        " \"semio-framework-value-persistent\",",
+        " \"tiny-skia\","
+      ],
+      "removedLines": []
+    },
+    {
+      "package": "semio-framework-2d-trace",
+      "addedLines": [
+        " \"semio-framework-trace\",",
+        " \"semio-framework-value-testing-allocator\","
+      ],
+      "removedLines": []
+    },
+    {
+      "package": "semio-framework-pixels-tests",
+      "addedLines": [
+        " \"semio-framework-trace\",",
+        " \"tiny-skia\","
+      ],
+      "removedLines": []
+    },
+    {
+      "package": "semio-framework-value-persistent",
+      "addedLines": [
+        " \"semio-framework-trace\","
+      ],
+      "removedLines": []
+    }
+  ]
+}

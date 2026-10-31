@@ -1,6 +1,6 @@
 //! 🫧️ Generation3d viewer transient — the closed semantic mutation aggregate.
 
-use super::{Generation3dViewTransient, Generation3dViewTransientPatch, Generation3dPreviewEvalChange};
+use super::{Generation3dViewTransient, Generation3dViewTransientPatch};
 
 #[path = "👁️set-preview-eval/🦀️.rs"]
 mod set_preview_eval;
@@ -9,7 +9,7 @@ pub use set_preview_eval::SetPreviewEval;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = Generation3dViewTransient, diff = Generation3dViewTransientPatch, schema = "generation3dview.transient", reference = Generation3dViewTransient, reference_diff = Generation3dViewTransientPatch)]
+#[mutations(snapshot = Generation3dViewTransient, diff = Generation3dViewTransientPatch, schema = "generation3dview.transient", reference = Generation3dViewTransient, reference_diff = Generation3dViewTransientPatch, retained)]
 pub enum Generation3dViewTransientMutation {
     #[dsl(key = "set-preview-eval")]
     SetPreviewEval(SetPreviewEval),

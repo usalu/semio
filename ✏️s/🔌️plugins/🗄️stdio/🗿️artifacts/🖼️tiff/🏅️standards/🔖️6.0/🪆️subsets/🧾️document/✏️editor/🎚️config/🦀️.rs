@@ -49,11 +49,23 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 
 store::config_diff! { record: TiffEditorConfig, diff: TiffEditorConfigDiff, fields: { selected_ifd: usize } }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[value(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
 pub enum TiffEditorConfigMutation {
-    SetSelectedIfd { selected_ifd: usize },
+    #[dsl(key = "select-ifd")]
+    SetSelectedIfd(SetSelectedIfdEdit),
+}
+
+/// 🧭️ `SetSelectedIfd` payload record.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub struct SetSelectedIfdEdit {
+    pub selected_ifd: usize,
+}
+
+impl TiffEditorConfigMutation {
+    /// 👆️ Selects the image-file directory at `selected_ifd`.
+    pub fn select_ifd(selected_ifd: usize) -> Self { Self::SetSelectedIfd(SetSelectedIfdEdit { selected_ifd }) }
 }
 
 impl Mutation<TiffEditorConfig> for TiffEditorConfigMutation {
@@ -80,41 +92,63 @@ impl Mutation<TiffEditorConfig> for TiffEditorConfigMutation {
 impl protocol::ColdMutation<TiffEditorConfig> for TiffEditorConfigMutation {
     type ReferenceDiff = TiffEditorConfigDiff;
     fn diff(&self, base: &TiffEditorConfig) -> protocol::MutationOutcome<Self::ReferenceDiff> {
-        let Self::SetSelectedIfd { selected_ifd } = self;
+        let Self::SetSelectedIfd(SetSelectedIfdEdit { selected_ifd }) = self;
         if base.selected_ifd == *selected_ifd {
             return protocol::MutationOutcome::new(TiffEditorConfigDiff::default()).warning("mutation.no-op", "TIFF image page is already selected.");
         }
         protocol::MutationOutcome::new(TiffEditorConfigDiff { selected_ifd: Some(*selected_ifd) })
     }
     fn inverse(&self, base: &TiffEditorConfig) -> Result<Vec<Self>, semio_framework_value::ValueError> {
-        Ok(vec![Self::SetSelectedIfd { selected_ifd: base.selected_ifd }])
+        Ok(vec![Self::select_ifd(base.selected_ifd)])
     }
 }
 
 impl protocol::OpText for TiffEditorConfigMutation {
-    fn print_op(&self) -> String { semio_framework_pack_json::to_json_string(self) }
-    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        semio_framework_pack_json::from_json_str(line, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1)))
-    }
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_dsl_record::variants_text::parse_op(line) }
+    fn print_op(&self) -> String { semio_framework_dsl_record::variants_text::print_op(self) }
 }
 
 impl protocol::OpBinary for TiffEditorConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> { Ok(protocol::OpText::print_op(self).into_bytes()) }
+    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
+        const OP_BINARY_FORMAT: u8 = 1;
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
+        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
+        let spec = (variants[ordinal].1.ordinary)();
+        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        let mut out = Vec::with_capacity(body.len() + 3);
+        out.push(OP_BINARY_FORMAT);
+        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
+        out.extend_from_slice(&body);
+        Ok(out)
+    }
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        let text = std::str::from_utf8(bytes).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(semio_framework_value::ValueError::from(error))))?;
-        semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| protocol::ProtocolError::Pack(store::PackError::from(error)))
+        const OP_BINARY_FORMAT: u8 = 1;
+        let mut reader = store::pack_rt::ByteReader::new(bytes);
+        let format = reader.read_u8()?;
+        if format != OP_BINARY_FORMAT {
+            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
+        }
+        let ordinal = reader.read_varint_u64()?;
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
+        let spec = (spec_fn.ordinary)();
+        let body = &bytes[reader.position()..];
+        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
     }
 }
+semio_framework_os_kernel::original_ordinal_operation_receiving!(TiffEditorConfigMutation);
 
-/// 🧭️ Resolves a safe image page for the current snapshot; stale local state returns to page zero.
+/// 🦺️ Resolves a safe image page for the current snapshot; stale local state returns to page zero.
 pub fn selected_ifd(config: &TiffEditorConfig, snapshot: &crate::TiffSnapshot) -> Option<usize> {
     (!snapshot.ifds.is_empty()).then_some(config.selected_ifd).map(|index| if index < snapshot.ifds.len() { index } else { 0 })
 }
 
 impl store::snapshot_clone_preparation::ConfigApplyMutation<TiffEditorConfig> for TiffEditorConfigMutation {
     fn exchange(self, post: &mut TiffEditorConfig) -> Result<Self, (semio_framework_value::ValueError, Self)> {
-        let Self::SetSelectedIfd { mut selected_ifd } = self;
+        let Self::SetSelectedIfd(SetSelectedIfdEdit { mut selected_ifd }) = self;
         std::mem::swap(&mut selected_ifd, &mut post.selected_ifd);
-        Ok(Self::SetSelectedIfd { selected_ifd })
+        Ok(Self::select_ifd(selected_ifd))
     }
 }

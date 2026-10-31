@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-fem-payload-turns = { workspace = true }
 replication = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }

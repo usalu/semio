@@ -1,0 +1,32 @@
+{
+  "contract": "stroke-same-bank-v1",
+  "quanta": [
+    1,
+    7,
+    4096
+  ],
+  "sourceCases": 32,
+  "maximumTurns": 1048576,
+  "pointBytes": 16,
+  "scalarBytes": 8,
+  "deniedCpu": 0,
+  "cachedCpu": 0,
+  "oracleTolerance": 2,
+  "cancelSemanticCuts": [
+    0,
+    1,
+    2,
+    3,
+    7,
+    15
+  ],
+  "ownership": [
+    "source-points-owned",
+    "solid-runs-borrow-source",
+    "dashed-runs-own-points",
+    "round-points-output-owned",
+    "queue-polygons-own-points",
+    "published-output-private-until-transfer",
+    "seam-scalars-owned"
+  ]
+}

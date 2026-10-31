@@ -38,8 +38,7 @@ pub mod standards {
                     pub use component::*;
                     #[path = "."]
                     pub mod binary {
-                        #[path = "../../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
-                        pub mod diff;
+                        pub use semio_s_artifact_flow_flow_diff::standards::v1::subsets::any::io::binary::diff;
                         #[path = "../../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
                         pub mod mutations;
                     }

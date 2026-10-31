@@ -1,0 +1,5 @@
+# Cancel Root Actual Birth
+
+Closed neutral schema and genuine null/same-bank retry/full native close law were authored before changing admit_root. Existing alias profile32items/copy0/capacity+release65536/depth1/max16turns is preserved. Independent futures AbortHandle verifies initial live state; actual firstparty allocator observes a real standard Arc null and exact successful backing. No owning gate yet; Async depends on broader Value closure. admit_child remains a distinct staged parent-alias plus allocation problem and is not wrapped as one opaque action.
+
+admit_root now returns mandatory full Outcome and forwards canonical fallible standard Arc backend actualwork before Result. Underfilled offer returns None/work0 before node construction; actual null yields AllocationFailed/work1; success exactbacking/work1/copy0. Existing alias law now debits direct actualwork for root/alias/return/close, preserving original profile and thirdparty cancellation oracle. Added only firstparty runtime allocator-return and test-only allocator observer dependencies; no external runtime library/unstable feature outside backend. No Async/Job owning gate yet.

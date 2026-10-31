@@ -1,0 +1,11 @@
+{
+  "state": "existing-assertions-preserved-source-migrated-not-run",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "e4d22bef864afb7efd9a585af24689ba88f375892d5e088d6ae7925de651c7b0",
+      "sha256": "2b162d66e0bbcd0fb65a25dcb8eae971342d28e383af3e3919e19480ec023773"
+    }
+  ],
+  "originalVectorHelper": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🧪️tests/🎟️vector/🦀️.rs"
+}

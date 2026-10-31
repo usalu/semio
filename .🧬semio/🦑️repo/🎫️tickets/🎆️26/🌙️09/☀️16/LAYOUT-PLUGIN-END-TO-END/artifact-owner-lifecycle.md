@@ -1,0 +1,35 @@
+# Completed Input Receipt Funding Read
+
+## Actual failure and defining cause
+
+Setup37477 terminated at approximately1160seconds with `Live unused actual current artifact owner required`, before completion. This is the actual runtime RED; no new effect run was made to reproduce it. Initial measurement uses the unused artifact mutation token correctly. Successful staging or existing-input observation explicitly adds that same token to artifactRetirementStartedV1. The caller then attempted to measure through the consumed token. The second guard disjunct rejects it before evaluating parent scope/control. This is a one-shot mutation/read phase mismatch, not evidence of deadline expiry.
+
+## Defining correction
+
+The unused mutation guard is unchanged. Initial measurement still uses measureNativePlatformProtectedArtifactFundingV1(token,control). Completed staging/observation returns the existing private input-group receipt. The new explicit measureNativePlatformProtectedArtifactInputGroupFundingV1(receipt,control) authenticates that exact private receipt in the same live parent scope, runs the existing full immutable-input/journal/current-backing read, reauthenticates its scope, then performs the unchanged actual bounded measurement under the same retained allocation and journal. The result remains inert authority:false usage DATA.
+
+The private group-owner authentication was factored once and reused by existing group reads. No token flag is cleared, receipt copied/rebranded, mutation authority renewed, late artifact token captured, deadline/capacity changed or Original fabricated. Failed/incomplete stage has no private completed receipt. Copied/foreign/closed receipt cannot obtain this read.
+
+Dependency owner owns the producer caller migration: every poststage measurement and context recheck must use the same actual receipt. Initial token read remains prior to staging. Existing group reads perform the recheck rather than trying to reuse the consumed mutation owner.
+
+## Test-first and current verification
+
+Authored receipt-funding.json plus closed schema before implementation: nine neutral cases include fresh/observed completion, copied receipt, closed parent, foreign scope, wrong terminal action, pending reader, changed inputs and over-allocation. The law extracts the actual defining production functions, preserves the consumed mutation-token refusal in every case, compares acceptance against independent SQLite predicates and Ajv schema validation, and proves repeated accepted reads/measurements preserve usage/authority:false. Existing private freshness and initial measurement extraction laws were updated to include the newly factored defining helpers without removing assertions.
+
+Normal managed focused session51879 authoritatively TERMINAL EXIT0:7tests,0failures,306assertions, including all existing observation/freshness/initialmeasurement laws and the new receipt law. Capacity waited approximately195seconds before genuine admission; execution took978ms. Output is generated/artifact-receipt/native-receipt-focused.log. Dependency owner reported its current caller69782 POSTFIXGREEN7tests35assertions; it is not a new RED because current source was admitted after Root authorized the fix. Joint canonical ordinary tsc session72281 over both Native roots and caller/test roots authoritatively TERMINAL EXIT0, retained generated/producer-phase-strict-current.log (dependency owner). No setup, Cargo, GC, retirement or shared-cache action has been launched.
+
+## Second Actual Boundary: Reader Quiescence
+
+Setup51286 terminated after two genuine funding-measured events at `Quiescent immutable input completion required`. The consumed-token fix advanced to a separate nesting mismatch. withNativePlatformProtectedMaintenanceReadV1 itself uses runProtectedMaintenanceOperationV1, whose promise is retained in the exact scope.pending Set until completion. Calling a full completed-group recheck from inside that read callback necessarily observes its own pending reader. This is not a reason to subtract the current reader, allow blanket reentrancy or discount unrelated pending readers.
+
+No defining Native production guard/API changes are needed for the preferred ordering: complete the receipt recheck before entering the maintenance read; use the authenticated read callback physical/control checks during its body; await the reader to drain; then perform the full receipt recheck again. Dependency owner is implementing actual caller ordering and validating what physical/journal checks must remain inside.
+
+Authored reader-quiescence.json/schema before adding a composed law. The law extracts the actual defining requireScope, runOperation, withMaintenanceRead, private receipt-owner check and completed-group reader functions. It uses actual AsyncLocalStorage frame state and the actual operation promise/pending Set implementation, rather than a flat stub of runOperation. Four language-neutral sequences cover successful outside boundaries, self-reader rejection, unrelated held reader rejection and success after that reader drains. Independent SQLite predicates compare each actual pending count to its observed group acceptance. The escaped read.check must also reject after callback release. Physical I/O/control issuer ports remain finite test ports; this is an implementation composition test, not a claim of real image or kernel effects.
+
+Normal managed session18113 authoritatively TERMINAL EXIT0 for the complete eight-law Native observation suite:8passed,0failed,427assertions, generated/artifact-receipt/native-reader-quiescence.log. No setup, Cargo, GC, retirement or deletion was launched. Prior seven-law receipt success remains separate. The new four-sequence Native composition regression now passed; actual caller-wrapper composition and final joint strict remain pending.
+
+## Joint Actual Caller And Native Composition
+
+After the Native-only eight-law pass, the regression now also extracts the current createRepositoryDependencyProducerArtifactPhaseV1 and withRepositoryDependencyProducerArtifactReadV1 from the actual caller source. Its dependencyMaintenanceNative namespace binds the actual extracted Native withRead and completed-group reader functions, not a flat substitute. It asserts the exact immutable-input verification event order inputs → body → inputs; body context.check/recheck executes with actual pending1 and does not recursively request a full group read; after return pending0 and the escaped producer context refuses access. The original same/other pending-reader rejection sequences remain intact.
+
+Current joint normal managed session50554 authoritatively TERMINAL EXIT0:8passed,0failed,591assertions, generated/artifact-receipt/native-reader-caller-composition.log. Dependency owner caller suite passed13tests82assertions. Current joint canonical ordinary tsc session55159 over all4 Native/caller/test roots authoritatively TERMINAL EXIT0, generated/producer-reader-strict.log. Both corrected compositions are SourceReady; no live setup success is claimed. No Native production change or new API/grant was introduced for the quiescence correction.

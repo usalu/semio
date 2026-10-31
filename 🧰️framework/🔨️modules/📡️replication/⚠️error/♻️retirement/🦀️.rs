@@ -65,9 +65,9 @@ impl semio_framework_value::retirement::RetirementCursor for ProtocolErrorRetire
  fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
   use semio_framework_value::retirement::RetirementStep;
   match close_protocol_error_one(&mut self.cause,grant){
-   Err(error)=>RetirementStep::Failure(error),
-   Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,
-   Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress),
+   Err(error)=>RetirementStep::Failure(error,0),
+   Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(0),
+   Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,1),
   }
  }
  fn terminal_is_empty(&self)->bool{self.cause.is_none()}

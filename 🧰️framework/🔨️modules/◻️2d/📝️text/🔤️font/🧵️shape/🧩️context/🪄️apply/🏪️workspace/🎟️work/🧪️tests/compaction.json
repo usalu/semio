@@ -1,0 +1,15 @@
+{
+  "glyphs": [
+    1,
+    2,
+    3
+  ],
+  "cursor": 0,
+  "semanticPerCompactionTurn": 0,
+  "positiveActualWork": true,
+  "output": [
+    1,
+    2,
+    3
+  ]
+}

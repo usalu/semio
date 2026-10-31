@@ -55,14 +55,13 @@ impl ActiveMediaExport {
 
     pub fn retire_nonterminal_outcome(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let grant=cx.retained_grant();let demand=RetirementDemand{copy_bytes:if self.resume_pending{size_of::<bool>()}else{0},depth:1,..Default::default()};
-        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,grant|self.retire_nonterminal_outcome_funded(grant).map(|step|(step,false)).map_err(Into::into))
+        semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|self.retire_nonterminal_outcome_funded(cx,grant).map(|step|(step,false)).map_err(Into::into))
     }
-    fn retire_nonterminal_outcome_funded(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+    fn retire_nonterminal_outcome_funded(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         if self.outcome_pending {
             let session = self.session.as_mut().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-session-missing"), "media outcome acknowledgement lost its mounted session"))?;
-            let step = session.acknowledge_checked_out_outcome(grant);
-            if matches!(step, RetainedCloneStep::Complete(_)) { self.outcome_pending = false; self.resume_pending = true; }
-            return Ok(PluginLifecycleStep::retained(step, false));
+            if session.acknowledge_checked_out_outcome(cx).map_err(|failure| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-outcome-acknowledgement"), format!("{failure:?}")))? { self.outcome_pending = false; self.resume_pending = true; }
+            return Ok(PluginLifecycleStep::Progress(Default::default()));
         }
         if self.resume_pending {
             if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<bool>()||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}

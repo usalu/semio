@@ -1,0 +1,13 @@
+# Canonical Setup 6
+
+The single authorized direct `repo --service=off tools setup all` invocation terminated with exit code **1**, verified by its owning session **64843**. It ran with prototype mode and all five artifact/temporary environment paths under this ticket's `🗑️generated/setup-live-6`. The actual admission point, command input, combined log, and terminal receipt remain retained. No automatic retry, cleanup, subsequent runtime, or Source edit followed.
+
+The first failure was **Declared execution work capacity exceeded**, raised by `charge` during `manifest`/`candidateProvider` in `readJavascriptDependencySourceOwnerCandidatesV1`. The enclosing Original then correctly refused further admission with that first failure. The last actual heartbeat was **10742 seconds**; the last published activity was `javascript-source-provider:7352` shared, with activity elapsed 1170831.42025 ms. This is not a claim that 7352 was the exact first failing work counter.
+
+The full log contains exactly six explicit `sync-qualified` scope events, eight funding-measured events, zero `sync-all-qualified` events, and zero `sync-all-ready` events. Neither overall dependency readiness, completed source transition, nor image publication has been established by this invocation. The six scope qualifications are partial progress, not goal completion.
+
+The exact log is **46688068 bytes**, SHA-256 **f1c1ae6374850847c430444f647c87c925b307483c38abffa2691b0d68dbc91c**. `🗑️generated/setup-live-6-receipt.json` retains the outer status, full log counts, last actual phase/heartbeat, original DATA line, and parsed partial state. `setup-live-6-partial-state.md` retains all six returned capsule records. DATA reports completedBindingsChanged=0, sourceTransitionMayBeUnresolved=false, wholeAllocationRetired=false, completedGenerationRetentions=6, generationRetentionPhaseCompleted=true. These are returned diagnostic facts, not fresh inactivity or recovery authority.
+
+Three separate log-observer process creations transiently failed with OS error 2; each actual setup handle poll remained live. Identical later observer requests succeeded. Exact requests/errors are retained in `setup-live-6-observer.md` and generated JSON. They are unrelated to the classified setup failure.
+
+This is a genuine current end-to-end RED for bounded Source-owner work. The existing work allowance has not been raised. Diagnose the actual repeated work/custody path and add schema-first neutral plus independent regression evidence before any defining correction. A future retry or artifact effect requires Root authorization and fresh genuine owner proofs; historical DATA must not be adopted as current authority.

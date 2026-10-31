@@ -23,9 +23,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️ViewCamera
 /// 📷️ The read-only preview viewport camera — orbit/pan/zoom write the whole facet at once, the
 /// way a viewport camera is never meaningfully set one field at a time.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", default)]
 pub struct Generation3dViewCamera {
     #[value(default = "default_view_camera_position")]
     #[dsl(coord)]
@@ -40,6 +40,19 @@ pub struct Generation3dViewCamera {
 impl Default for Generation3dViewCamera {
     fn default() -> Self {
         Self { position: default_view_camera_position(), target: default_view_camera_target(), fov: default_view_camera_fov() }
+    }
+}
+
+impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for Generation3dViewCamera {
+    fn native_default_demand() -> semio_framework_value::RetirementDemand {
+        semio_framework_value::RetirementDemand { copy_bytes: 2 * std::mem::size_of::<Self>(), depth: 1, ..Default::default() }
+    }
+    fn native_default(grant: semio_framework_value::RetainedCloneGrant) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        let demand = <Self as semio_framework_value_native_owned::native_decoding::owned::NativeDefault>::native_default_demand();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "a native camera default requires its physical birth grant"));
+        }
+        Ok((Self::default(), semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
     }
 }
 
@@ -67,7 +80,7 @@ pub fn default_view_sun_json() -> String {
 //#endregion 🔖️ViewCamera
 
 //#region 🔖️Config
-/// 🎚️ `Generation3dViewer`'s real `ArtifactViewer::Config` — persisted local view state that
+/// ⚙️ `Generation3dViewer`'s real `ArtifactViewer::Config` — persisted local view state that
 /// round-trips through the config `ArtifactStore` with a true `inverse` per leaf.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
@@ -75,14 +88,14 @@ pub fn default_view_sun_json() -> String {
 #[artifact(id = "procedural.generation3dviewcfg")]
 #[dsl(layout = "lines")]
 pub struct Generation3dViewConfig {
-    /// 🎚️ Level-of-detail tessellation deflection (`""`/`coarse`/`fine`).
+    /// 🌀️ Level-of-detail tessellation deflection (`""`/`coarse`/`fine`).
     pub lod_mode: String,
     /// 👁️ Preview shading mode (`shaded`/`shaded+edges`/`wireframe`/`points`).
     pub show_mode: String,
-    /// 📷️ The 3D preview viewport camera.
+    /// 🎥️ The 3D preview viewport camera.
     #[dsl(block)]
     pub preview_camera: Generation3dViewCamera,
-    /// 🌞️ JSON-encoded `semio_framework_plugin::WorldSunConfig`.
+    /// 🔐️ JSON-encoded `semio_framework_plugin::WorldSunConfig`.
     #[value(default = "default_view_sun_json")]
     pub sun_json: String,
     /// 🎨️ What this surface is looking at, in the picker's own three states: `None` — nothing has
@@ -112,7 +125,7 @@ impl Default for Generation3dViewConfig {
 }
 
 impl Generation3dViewConfig {
-    /// 🌞️ Parses `sun_json` — falls back to `WorldSunConfig::default()` on any malformed value.
+    /// 🔍️ Parses `sun_json` — falls back to `WorldSunConfig::default()` on any malformed value.
     pub fn sun(&self) -> semio_framework_plugin::WorldSunConfig {
         semio_framework_pack_json::from_json_str(&self.sun_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
     }
@@ -127,7 +140,7 @@ impl Generation3dViewConfig {
         }
     }
 
-    /// 👁️ The effective shading mode, with the empty (never-set) value resolved to `shaded`.
+    /// 🫙️ The effective shading mode, with the empty (never-set) value resolved to `shaded`.
     pub fn effective_show_mode(&self) -> &str {
         if self.show_mode.is_empty() {
             "shaded"

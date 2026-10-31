@@ -122,7 +122,7 @@ fn snapshot_read_double_return_is_counted_once_and_reclaimed_once() {
     assert!(!aliased.return_now(), "the same generation cannot be returned twice on the aliased path");
     assert_eq!(registry.returned_count(), 0, "an aliased root is reclaimed on the returning thread, not charged to the pump");
     assert_eq!(Arc::strong_count(&aliased_root), 1, "the aliased slot released its own owner alias in the same call");
-    assert!(registry.try_admit_one_returned::<u32,_>(physical_test_close_grant(),|original,_|Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()}))).map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe").is_none(), "the pump has nothing to reclaim for an aliased return");
+    assert!(registry.try_admit_one_returned::<u32,_>(physical_test_close_grant(),|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}).result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe").is_none(), "the pump has nothing to reclaim for an aliased return");
     drop(aliased);
     drop(aliased_root);
     assert!(registry.terminal_is_empty());
@@ -133,14 +133,14 @@ fn snapshot_read_double_return_is_counted_once_and_reclaimed_once() {
     assert_eq!(registry.returned_count(), 1);
     let mut reclaimed = None;
     for _ in 0..SNAPSHOT_READ_LEASE_CAPACITY {
-        if let Some(owner) = registry.try_admit_one_returned::<u32,_>(physical_test_close_grant(),|original,_|Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()}))).map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe") {
+        if let Some(owner) = registry.try_admit_one_returned::<u32,_>(physical_test_close_grant(),|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}).result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe") {
             reclaimed = Some(owner);
             break;
         }
     }
     assert_eq!(reclaimed.as_deref(), Some(&11));
     assert_eq!(registry.returned_count(), 0);
-    assert!(registry.try_admit_one_returned::<u32,_>(physical_test_close_grant(),|original,_|Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()}))).map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe").is_none(), "a reclaimed generation is never handed out a second time");
+    assert!(registry.try_admit_one_returned::<u32,_>(physical_test_close_grant(),|original,_|semio_framework_value::RetainedWorkOutcome{result:Ok((original,RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}).result.map(|(original,progress)|{assert!(progress.fits(physical_test_close_grant()));original}).expect("one fixed return probe").is_none(), "a reclaimed generation is never handed out a second time");
     drop(reclaimed);
     drop(lease);
     assert!(registry.terminal_is_empty());

@@ -1,6 +1,6 @@
 //! 📥️ A typed original snapshot owner retains its source through bounded intake and close.
 use crate::{OriginalTurnFailure,RetainedCloneGrant,RetainedCloneStep,RetirementDemand,StepContext};
-use semio_framework_value::ValueError;
+use semio_framework_value_retained_clone::ValueError;
 
 /// 🎟️ Concrete producers retain source custody and publish only their admitted typed snapshot.
 pub trait OriginalSnapshotIntake<S>:Send {

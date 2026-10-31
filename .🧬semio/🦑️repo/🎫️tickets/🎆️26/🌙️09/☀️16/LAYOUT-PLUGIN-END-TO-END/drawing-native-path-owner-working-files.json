@@ -1,0 +1,77 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 787,
+      "sha256": "c571a480c62487b16380a2f61537f3435464f8c58cd5533fbde6073ad333f3bd",
+      "absoluteUtf16Units": 133
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 360,
+      "sha256": "739246c5cff16deaa07fc2de35e85ad6cd71478710a3d02fade4476f18174c36",
+      "absoluteUtf16Units": 129
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 116,
+      "sha256": "24992bc1a38eb364f5b3bb49cb37c616f85ee72c63d0481c3808eba677a85b1f",
+      "absoluteUtf16Units": 138
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/🦀️.rs",
+      "bytes": 3515,
+      "sha256": "ccbdbaf0d40e96f26a413398435a9726c69b649e8482d87edb0d08761486127d",
+      "absoluteUtf16Units": 109
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/tests.rs",
+      "bytes": 4176,
+      "sha256": "f6cb0a44bba2819a96a45e17fddea35c14f12cc0ce6b4fc30dbe8a15a3d35d36",
+      "absoluteUtf16Units": 111
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🎟️original/payload.json",
+      "bytes": 2764,
+      "sha256": "5850c2697e2cd1dc7d8bbdd78096013232e005b9095f4f9f0f38f8dfab8d51a7",
+      "absoluteUtf16Units": 119
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🎟️original/payload.schema.json",
+      "bytes": 4128,
+      "sha256": "6332248c1805d26872700416b871ca5afd3face71ccf4345dfc3fa48383b9a09",
+      "absoluteUtf16Units": 126
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs",
+      "bytes": 43625,
+      "sha256": "1ed6a5e733ebe08f155425c17e1a38f1babcd1485ba0fdf5c4c7b451bc4a3acf",
+      "absoluteUtf16Units": 101
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1368,
+      "sha256": "d00b6f5e911e535044fd97727a87495a1e204329642a2e2efd1bb998958783ad",
+      "absoluteUtf16Units": 125
+    },
+    {
+      "path": "Cargo.toml",
+      "bytes": 129008,
+      "sha256": "6c97e19c8515074acb87820787b7a75637aadf953c5f6407203fa00e105934d9",
+      "absoluteUtf16Units": 38
+    },
+    {
+      "path": "📋️build-owners.json",
+      "bytes": 1676422,
+      "sha256": "c15ddddd8f394adae2b7e2d0c487b2d400139e7a86bf175a13db21ebcee883ab",
+      "absoluteUtf16Units": 48
+    }
+  ],
+  "state": "authored-uncompiled",
+  "runtimeDependencies": [
+    "semio-framework-value-control-contract",
+    "semio-framework-value-native-storage"
+  ],
+  "expectedOwningLaws": 1,
+  "notHostAcceptance": true
+}

@@ -20,6 +20,9 @@ name = "authoring_law"
 path = "../../🧪️tests/⚖️authoring-law/🦀️.rs"
 
 [dependencies]
+semio-framework-dsl-record = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
+semio-framework-os-store-operation-wire = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
 semio-s-artifact-energy-model-initialization = { workspace = true }
 semio-framework-plugin-ownership = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
@@ -41,6 +44,7 @@ semio-s-artifact-energy-model-editor-edit = { workspace = true }
 semio-s-artifact-energy-model-editor-interaction = { workspace = true }
 semio-s-artifact-energy-model-editor-panels = { workspace = true }
 semio-s-artifact-energy-model-editor-results = { workspace = true }
+semio-s-artifact-energy-model-editor-inspector = { workspace = true }
 semio-s-artifact-energy-model-examples = { workspace = true }
 semio-s-artifact-energy-model-mut-boundary = { workspace = true }
 semio-s-artifact-energy-model-mut-construction = { workspace = true }

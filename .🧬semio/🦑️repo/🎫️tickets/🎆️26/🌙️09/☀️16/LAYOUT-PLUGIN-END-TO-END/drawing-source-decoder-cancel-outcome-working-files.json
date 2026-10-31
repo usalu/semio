@@ -1,0 +1,111 @@
+{
+  "status": "Authored, uncompiled/unexecuted; not SourceReady",
+  "validatorSliceSha256": "ac5db241ece3746ebb5569c69a3f0a7d832266e45adbc4e60ef49b788c7be799",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 3000,
+      "sha256": "1e8138330184f2bc667479e371f7ef1b4b5b8a9d1196657e675bb07b438782bd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/♻️retirement/🎟️work/📐️.json",
+      "bytes": 350,
+      "sha256": "1f0306f70303035ec1f7de28c5e734c6b727243be65251d9dd37ec15c4e10022"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/♻️retirement/🎟️work/🔣️.json",
+      "bytes": 732,
+      "sha256": "735968f999c67eac317223fef7e9223fe4c2f0f63bc293644c38ab84aa8dc13a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/♻️retirement/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 3504,
+      "sha256": "8a7d1d96f38bb7cc2ceaf1e01acdcdf1fba51a648b43ef2572a27edb54ffef29"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/♻️retirement/🦀️.rs",
+      "bytes": 9237,
+      "sha256": "99d2296874f84cd2f1f628690499ff826e7c0126dcdfed98ba7e9650c02b3221"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/♻️close/📐️.json",
+      "bytes": 338,
+      "sha256": "910c0b0cc95fa10033b203db2b805699d1af5f11de9531d6b1d1229732fe9b24"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/♻️close/🔣️.json",
+      "bytes": 848,
+      "sha256": "33f47bed85fb91ea6c189ebd31eb0f3b37c5226779c7794edacfba8a2b0aac1b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/♻️close/🧪️tests/🦀️.rs",
+      "bytes": 3071,
+      "sha256": "9d3604d0f67020065011cad2454888a356d40a869d71eb9f7b09b4f5500493d7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/♻️close/🪢️loan/📐️.json",
+      "bytes": 323,
+      "sha256": "faf250017a3e998e007c3a076dc8cc104010ee5cef4379ceaa49000e6e83d47f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/♻️close/🪢️loan/🔣️.json",
+      "bytes": 815,
+      "sha256": "b971b9afc4da8886cade8dd89b10e6e8957ebd06f30c694fcce2eee79639bde8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/♻️close/🪢️loan/🧪️tests/🦀️.rs",
+      "bytes": 2406,
+      "sha256": "35d86f208ee5f4b8d0d54b65c50b83bbdfbc33a4e48bcb5213cdd52c58094324"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/👶️child/♻️close/📐️.json",
+      "bytes": 442,
+      "sha256": "295bf311243d362db881a5328efbd92b29011f16d5936814fbe1af9fb24f4387"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/👶️child/♻️close/🔣️.json",
+      "bytes": 1066,
+      "sha256": "ea2cc20d588d675c57afc9283e3eafccc2459afdd3cdc7b2e9ff0549b1e7d79d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/👶️child/♻️close/🧪️tests/🦀️.rs",
+      "bytes": 2753,
+      "sha256": "ddcf1f83a4ee09506170fedbd24a949dce87a2ec05937cd75075034cf815724d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/👶️child/🦀️.rs",
+      "bytes": 13515,
+      "sha256": "50906e03545a9e18ed0a0800ee38c48fad6f38ff878e6b0d34e385d91c189d06"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🦀️.rs",
+      "bytes": 16944,
+      "sha256": "2d9fbd19f1fc476e69e48d1a5f4b70de3b260ee09cce669d5b1959e5b4ca76fc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🛬️receiving/♻️close/📐️.json",
+      "bytes": 331,
+      "sha256": "eac26d2e6f5f252ad6faf2781df23733d6f08e62fa7d54050801836462141c22"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🛬️receiving/♻️close/🔣️.json",
+      "bytes": 857,
+      "sha256": "faed2578a64ab7397b9228d64f0a99e73ae5ac54af2b0ac137708205e8f32351"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🛬️receiving/♻️close/🧪️tests/🦀️.rs",
+      "bytes": 2223,
+      "sha256": "f6747509322776294abc75a4ea41cd7611dec25d2ddd901351645c3bca52712b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🛬️receiving/🦀️.rs",
+      "bytes": 6470,
+      "sha256": "f4c1f58710f5d00658ffa04689ec0835034d7ed0faf862ee7b68376ef66ec7b6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️testing/📬️payload/🦀️.rs",
+      "bytes": 4538,
+      "sha256": "e0079f3c55e630799880fd621c672a748c9ace3e230793d50802834203abebbb"
+    }
+  ]
+}

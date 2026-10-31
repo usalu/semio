@@ -1,0 +1,23 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "before": "8e465f0c0ef28481bdb59e464565a61235d71bfa4631b21d5186498a76c954bc",
+      "sha256": "0f4b06fd8cad8c49a8ff433f63592f738c133b524696f536511f833c00f81545",
+      "scope": "Borrow actual firstparty readonly FontFace sequence via at/length; source identity validation unchanged."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🟦️.ts",
+      "before": "990957bf1fc6ff4cdef434f4cc3df69973cfd980cf8e1734d27534e403b3735d",
+      "sha256": "76054af04eccb8d071b4e47035bcf98de7053e36af7589f25b772bddae8286a3",
+      "scope": "Forward authentic borrowed face sequence to Run unchanged; no materialization."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧪️tests/🟦️.ts",
+      "before": "046e28c53eef525447db6ee8730e98c51da58b665ffd1fac67a41a97035a5988",
+      "sha256": "bce221d4600465c60bc32f170cddf293a7f66077dcbbb09fec18640dabdecb2e",
+      "scope": "Three actual Catalog page reads: original bytes identity, foreign glyph count and foreign unitsPerEm assertions unchanged."
+    }
+  ],
+  "reversal": "Entire prior Run and Paragraph hashes reconstructed by exact inverse API/read substitutions; no Source copies."
+}

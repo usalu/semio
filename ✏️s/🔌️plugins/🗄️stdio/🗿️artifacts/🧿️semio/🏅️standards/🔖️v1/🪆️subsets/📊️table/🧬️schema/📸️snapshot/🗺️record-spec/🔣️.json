@@ -1,0 +1,352 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "s.stdio.semio.table",
+ "schemaHash": "115fe91c0b65af9466e01fdac314b1f8e6df9a2b4828a4c0dea6cbab0dbe427f",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "columns",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 1
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "rows",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 2
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "name",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "kind",
+    "optional": false,
+    "shape": {
+     "kind": "enum",
+     "variants": [
+      [
+       0,
+       "null"
+      ],
+      [
+       1,
+       "bool"
+      ],
+      [
+       2,
+       "int"
+      ],
+      [
+       3,
+       "float"
+      ],
+      [
+       4,
+       "str"
+      ],
+      [
+       5,
+       "bytes"
+      ]
+     ]
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "cells",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "bool",
+        3
+       ],
+       [
+        "bytes",
+        4
+       ],
+       [
+        "float",
+        5
+       ],
+       [
+        "int",
+        5
+       ],
+       [
+        "list",
+        6
+       ],
+       [
+        "map",
+        7
+       ],
+       [
+        "null",
+        8
+       ],
+       [
+        "ref",
+        9
+       ],
+       [
+        "str",
+        10
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "uint"
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "lexeme",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "items",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "bool",
+        3
+       ],
+       [
+        "bytes",
+        4
+       ],
+       [
+        "float",
+        5
+       ],
+       [
+        "int",
+        5
+       ],
+       [
+        "list",
+        6
+       ],
+       [
+        "map",
+        7
+       ],
+       [
+        "null",
+        8
+       ],
+       [
+        "ref",
+        9
+       ],
+       [
+        "str",
+        10
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "entries",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 11
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 10
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "key",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "bool",
+        3
+       ],
+       [
+        "bytes",
+        4
+       ],
+       [
+        "float",
+        5
+       ],
+       [
+        "int",
+        5
+       ],
+       [
+        "list",
+        6
+       ],
+       [
+        "map",
+        7
+       ],
+       [
+        "null",
+        8
+       ],
+       [
+        "ref",
+        9
+       ],
+       [
+        "str",
+        10
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ]
+ ],
+ "annotations": {
+  "single": [
+   [
+    11,
+    1
+   ]
+  ],
+  "verbatim": [
+   [
+    2,
+    0
+   ],
+   [
+    6,
+    0
+   ],
+   [
+    11,
+    1
+   ]
+  ]
+ }
+}

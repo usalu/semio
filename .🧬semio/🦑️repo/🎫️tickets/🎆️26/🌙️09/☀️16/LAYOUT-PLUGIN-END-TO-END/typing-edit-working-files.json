@@ -1,13 +1,35 @@
 {
   "files": [
+    "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/🦀️.rs",
+    "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/🗃️resident/🦀️.rs",
     "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/🦀️.rs",
+    "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/🧪️tests/🦀️.rs",
     "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/🧪️tests/🔣️.json",
-    "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/🧪️tests/📐️.json"
+    "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/🧪️tests/📐️.json",
+    "🧰️framework/🔨️modules/🛠️tool-machine/🔗️read/📤️transfer/🦀️.rs",
+    "🧰️framework/🔨️modules/🛠️tool-machine/🔗️read/🧪️tests/🦀️.rs",
+    "🧰️framework/🔨️modules/🛠️tool-machine/🟦️.ts",
+    "🧰️framework/🔨️modules/🛠️tool-machine/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️typing-law/🔣️.json",
+    "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🔬️unit/⌨️typing-laws/🦀️.rs",
+    "🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧪️conformance/🟦️.ts",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/⌨️typing/🎟️original/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/⌨️typing/🎟️original/🧪️tests/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/🔁️follow/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/⌨️typing/🦀️.rs"
   ],
   "removed": [],
   "reportsInputs": [
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/typing-edit.md",
-    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/typing-edit-oracle.ts"
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/typing-edit-oracle.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/typing-original.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/typing-original-oracle.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/typing-oracle-hostile.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/typing-oracle-coverage.md"
   ],
-  "status": "unmounted draft; cancellation rollback/ack contract pending; no manifest or defining ledger changes"
+  "status": "source-ready; canonical admission and independent TS/reference tests passed; native Rust execution pending",
+  "ownership": "Exact defining net/edit/reader/follower/commit hunks; root owns manifests membership/build-owner rows, other agents own SDK settlement/fold producers.",
+  "oracleStatus": "strict unique exact-case coverage source-ready; reference10+8 passed, actual-native hostile execution pending"
 }

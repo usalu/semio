@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "work",
+    "receipt",
+    "handbacks"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "work": {
+      "const": {
+        "ineligible": 0,
+        "denied": 0,
+        "returned": 1,
+        "cached": 0
+      }
+    },
+    "receipt": {
+      "const": {
+        "items": 1,
+        "copyBytes": 0
+      }
+    },
+    "handbacks": {
+      "const": 1
+    }
+  }
+}

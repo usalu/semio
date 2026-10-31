@@ -219,7 +219,7 @@ impl RetainedPackSymbolTable {
             }
         };
         if self.allocated_bytes() > self.maximum_allocation_bytes {
-            let fault = RetainedPackCatalogFault{cause:RetainedPackCatalogCause::Allocation(PagedListAllocationError{kind:PagedListRefusalKind::OwnershipLimit,reason:"retained-pack.symbol-allocation-overgrant",allocated_bytes:step.allocated_bytes}),code:"retained-pack.symbol-allocation-overgrant",offset};
+            let fault = RetainedPackCatalogFault{cause:RetainedPackCatalogCause::Allocation(PagedListAllocationError{work:0,kind:PagedListRefusalKind::OwnershipLimit,reason:"retained-pack.symbol-allocation-overgrant",allocated_bytes:step.allocated_bytes}),code:"retained-pack.symbol-allocation-overgrant",offset};
             self.fault.get_or_insert(fault);
             return Err(RetainedPackCatalogAllocationError { allocated_bytes: step.allocated_bytes, fault });
         }

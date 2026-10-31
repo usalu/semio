@@ -1,0 +1,21 @@
+{
+  "states": [
+    0,
+    1,
+    2
+  ],
+  "fuel": 4096,
+  "byteStock": 16777216,
+  "depth": 128,
+  "body": 4096,
+  "maxTurns": 10000,
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "deniedWork": 0,
+  "cachedWork": 0
+}

@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sealed Shared Alias Actual Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value",
+    "maximumCpuWork",
+    "grant",
+    "expected"
+  ],
+  "properties": {
+    "value": {
+      "const": 17
+    },
+    "maximumCpuWork": {
+      "const": 1024
+    },
+    "grant": {
+      "const": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 4096,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 65536,
+        "maximumDepth": 64
+      }
+    },
+    "expected": {
+      "const": [
+        {
+          "label": "deniedAlias",
+          "work": 0,
+          "aliases": 2
+        },
+        {
+          "label": "blockedUnwrap",
+          "work": 1,
+          "aliases": 2
+        },
+        {
+          "label": "paidAliasReturn",
+          "work": 1,
+          "aliases": 1
+        },
+        {
+          "label": "cachedAliasReturn",
+          "work": 0,
+          "aliases": 1
+        },
+        {
+          "label": "deniedUnwrap",
+          "work": 0,
+          "aliases": 1
+        },
+        {
+          "label": "paidUnwrap",
+          "work": 1,
+          "value": 17
+        }
+      ]
+    }
+  }
+}

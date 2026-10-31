@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Offline growth of a fixed native cache image",
+  "description": "📏️ Schema-first contract of `repo cache grow`: a fixed APFS cache image is grown to the size its policy declares WITHOUT being born again. The image cannot grow while attached (hdiutil and diskutil refuse with EAGAIN), so the operation holds the image lease exclusively, detaches the image, resizes the backing file offline, attaches it again and re-stamps every record that names the old size or the old mount device. Every phase is recorded in a journal beside the receipt, so a killed run resumes where it stopped. / Schema-first Vertrag von `repo cache grow`: ein festes APFS-Cache-Image wird ohne Neugeburt auf die von der Richtlinie deklarierte Größe gebracht.",
+  "definitions": {
+    "Protocol": {
+      "type": "object",
+      "const": {
+        "version": 1,
+        "languages": ["en", "de"],
+        "journalFile": "grow.json",
+        "receiptFile": "image.json",
+        "imageFile": "fixed.dmg",
+        "eventsFile": "storage-events.jsonl",
+        "mountDirectory": "m",
+        "leaseResourcePrefix": "native-fixed-image:",
+        "alignBytes": 1048576,
+        "physicalMarginBytes": 1048576,
+        "minimumVolumeShareBasisPoints": 9500,
+        "maximumHolderLines": 10,
+        "collector": { "signature": ["--semio-unit-cache", "gc", "--single-flight"] },
+        "holderGraceMilliseconds": 300000,
+        "holderPollMilliseconds": 5000,
+        "detachAttempts": 6,
+        "detachRetryMilliseconds": 5000,
+        "forcedUnmountDissenters": [
+          "/usr/libexec/syspolicyd",
+          "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds",
+          "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds_stores",
+          "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/FSEvents.framework/Versions/A/Support/fseventsd"
+        ],
+        "maximumForcedUnmountRecords": 16,
+        "auditFile": "grow-audit.jsonl",
+        "toolTimeoutMilliseconds": 120000,
+        "resizeTimeoutMilliseconds": 600000,
+        "maximumJournalBytes": 1048576,
+        "phases": ["planned", "drained", "detached", "resized", "attached", "restamped"],
+        "partitions": {
+          "rust": { "elastic": "rust", "strict": "strictStorage" }
+        },
+        "tools": {
+          "resize": { "program": "/usr/sbin/diskutil", "arguments": ["image", "resize", "--size", "{bytes}B", "{image}"] },
+          "detach": { "program": "/usr/bin/hdiutil", "arguments": ["detach", "{target}"] },
+          "attach": { "program": "/usr/bin/hdiutil", "arguments": ["attach"] },
+          "roster": { "program": "/usr/bin/hdiutil", "arguments": ["info", "-plist"] },
+          "plist": { "program": "/usr/bin/plutil", "arguments": ["-convert", "json", "-o", "-", "-"] },
+          "holders": { "program": "/usr/sbin/lsof", "arguments": ["+f", "--", "{mount}"] },
+          "signature": { "program": "/usr/bin/codesign", "arguments": ["--verify", "-R=anchor apple", "{path}"] },
+          "unmountProbe": { "program": "/usr/sbin/diskutil", "arguments": ["unmount", "{target}"] },
+          "unmountForce": { "program": "/usr/sbin/diskutil", "arguments": ["unmount", "force", "{target}"] }
+        }
+      }
+    },
+    "Journal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "phase", "partition", "fromBytes", "toBytes", "oldDevice", "newDevice"],
+      "properties": {
+        "version": { "const": 1 },
+        "phase": { "enum": ["planned", "drained", "detached", "resized", "attached", "restamped"] },
+        "partition": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "fromBytes": { "type": "integer", "minimum": 33554432 },
+        "toBytes": { "type": "integer", "minimum": 33554432 },
+        "oldDevice": { "type": ["integer", "null"], "minimum": 0 },
+        "newDevice": { "type": ["integer", "null"], "minimum": 0 },
+        "forcedUnmount": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 512 }, "maxItems": 16 }
+      }
+    },
+    "Messages": {
+      "type": "object",
+      "const": {
+        "en": {
+          "plan": "{partition}: grow {from} to {to} (host free {free}, declared {declared}, rule maximum {maximum})",
+          "plan.dry": "{partition}: dry run, nothing is changed",
+          "refused.nothing-to-grow": "{partition}: the image already has the declared size {from}",
+          "refused.above-declared": "{partition}: {requested} exceeds the declared size {declared} or the rule maximum {maximum}; raise the policy first",
+          "refused.host-free": "{partition}: the host volume has {free} free, growth is bounded to {allowed} by the reserve of {reserve} percent",
+          "refused.misaligned": "{partition}: {requested} is not a whole number of MiB",
+          "refused.unsupported": "{partition}: only the partitions {supported} can grow",
+          "refused.absent": "{partition}: no image with a receipt exists at {directory}",
+          "refused.receipt": "{partition}: the receipt does not describe a fixed image of {from} bytes ({reason})",
+          "refused.busy": "{partition}: the image is in use ({holders})",
+          "refused.children": "{partition}: a nested image is attached and cannot be detached: {children}",
+          "refused.state": "{partition}: the backing file has {actual} bytes, neither {from} nor {to}",
+          "step.waiting": "{partition}: waiting for the exclusive image lease; running commands finish first",
+          "step.collector": "{partition}: asking the background unit-cache collector {pid} to stop (SIGTERM, its documented cancel); it starts again with the next compile",
+          "step.holders": "{partition}: the lease is held, {holders} process(es) still have files open in the image; background collectors end on their own, waiting",
+          "step.detached": "{partition}: image detached",
+          "step.resized": "{partition}: backing file resized to {to}",
+          "step.attached": "{partition}: image attached again, volume {volume}",
+          "step.restamped": "{partition}: receipt and storage journal re-stamped",
+          "done": "{partition}: grown from {from} to {to}",
+          "resumed": "{partition}: resuming an interrupted growth after phase {phase}"
+        },
+        "de": {
+          "plan": "{partition}: von {from} auf {to} vergrößern (Host frei {free}, deklariert {declared}, Regelmaximum {maximum})",
+          "plan.dry": "{partition}: Probelauf, nichts wird geändert",
+          "refused.nothing-to-grow": "{partition}: das Image hat bereits die deklarierte Größe {from}",
+          "refused.above-declared": "{partition}: {requested} übersteigt die deklarierte Größe {declared} oder das Regelmaximum {maximum}; zuerst die Richtlinie anheben",
+          "refused.host-free": "{partition}: der Host hat {free} frei, das Wachstum ist durch die Reserve von {reserve} Prozent auf {allowed} begrenzt",
+          "refused.misaligned": "{partition}: {requested} ist keine ganze Zahl von MiB",
+          "refused.unsupported": "{partition}: nur die Partitionen {supported} können wachsen",
+          "refused.absent": "{partition}: unter {directory} gibt es kein Image mit Beleg",
+          "refused.receipt": "{partition}: der Beleg beschreibt kein festes Image von {from} Bytes ({reason})",
+          "refused.busy": "{partition}: das Image wird benutzt ({holders})",
+          "refused.children": "{partition}: ein verschachteltes Image ist eingehängt und lässt sich nicht aushängen: {children}",
+          "refused.state": "{partition}: die Sicherungsdatei hat {actual} Bytes, weder {from} noch {to}",
+          "step.waiting": "{partition}: warte auf die exklusive Image-Lease; laufende Befehle enden zuerst",
+          "step.collector": "{partition}: bitte den Hintergrund-Sammler {pid} des Unit-Caches, sich zu beenden (SIGTERM, sein dokumentierter Abbruch); er startet mit der nächsten Kompilierung wieder",
+          "step.holders": "{partition}: die Lease ist gehalten, {holders} Prozess(e) haben noch Dateien im Image offen; Hintergrund-Sammler enden von selbst, warte",
+          "step.detached": "{partition}: Image ausgehängt",
+          "step.resized": "{partition}: Sicherungsdatei auf {to} vergrößert",
+          "step.attached": "{partition}: Image wieder eingehängt, Volume {volume}",
+          "step.restamped": "{partition}: Beleg und Speicherjournal neu gestempelt",
+          "done": "{partition}: von {from} auf {to} vergrößert",
+          "resumed": "{partition}: setze ein unterbrochenes Wachstum nach Phase {phase} fort"
+        }
+      }
+    }
+  }
+}

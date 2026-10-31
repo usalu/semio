@@ -82,17 +82,16 @@ pub fn expand(input: &DeriveInput) -> syn::Result<TokenStream> {
                 #(if !<#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_preparation_is_complete(&state.#indices){return <#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_preparation_demands(&self.#owned_members,&state.#indices,body);})*
                 Ok(Default::default())
             }
-            fn prepare_close_state_step(&self,state:&mut Self::CloseState,grant: #value_crate::retained_clone::RetainedCloneGrant)->Result<#value_crate::retained_clone::RetainedCloneStep,#value_crate::ValueError>{
-                #(if state.0.prepared==#child_indices {
-                    let slot=&mut state.0.slots[#child_indices];
-                    if slot.preparation_is_complete(){
-                        if grant.maximum_items==0||grant.maximum_depth==0{return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default()));}
-                        state.0.prepared+=1;return Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()}));
+            fn prepare_close_state_step(&self,state:&mut Self::CloseState,grant:#value_crate::retained_clone::RetainedCloneGrant)->#value_crate::RetainedWorkOutcome{
+                #(if state.0.prepared==#child_indices{
+                    let slot=&mut state.0.slots[#child_indices];if slot.preparation_is_complete(){
+                        if grant.maximum_items==0||grant.maximum_depth==0{return #value_crate::RetainedWorkOutcome{result:Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(Default::default())),work:0}}
+                        state.0.prepared+=1;return #value_crate::RetainedWorkOutcome{result:Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(#value_crate::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
                     }
-                    return slot.prepare_step(self.#children.as_ref(),||{let original: ::std::sync::Arc<dyn #value_crate::FactoryRetirement>=self.#children.clone();original},grant).map(|step|#value_crate::retained_clone::RetainedCloneStep::Progress(step.progress()));
+                    let turn=slot.prepare_step(self.#children.as_ref(),||{let original: ::std::sync::Arc<dyn #value_crate::FactoryRetirement>=self.#children.clone();original},grant);return #value_crate::RetainedWorkOutcome{result:turn.result.map(|step|#value_crate::retained_clone::RetainedCloneStep::Progress(step.progress())),work:turn.work}
                 })*
-                #(if !<#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_preparation_is_complete(&state.#indices){return <#owned_types as #value_crate::FactoryPayloadRetirement>::prepare_close_state_step(&self.#owned_members,&mut state.#indices,grant).map(|step|#value_crate::retained_clone::RetainedCloneStep::Progress(step.progress()));})*
-                Ok(#value_crate::retained_clone::RetainedCloneStep::Complete(Default::default()))
+                #(if !<#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_preparation_is_complete(&state.#indices){let turn=<#owned_types as #value_crate::FactoryPayloadRetirement>::prepare_close_state_step(&self.#owned_members,&mut state.#indices,grant);return #value_crate::RetainedWorkOutcome{result:turn.result.map(|step|#value_crate::retained_clone::RetainedCloneStep::Progress(step.progress())),work:turn.work}})*
+                #value_crate::RetainedWorkOutcome{result:Ok(#value_crate::retained_clone::RetainedCloneStep::Complete(Default::default())),work:0}
             }
             fn close_state_preparation_is_complete(state:&Self::CloseState)->bool {
                 state.0.prepared==#count #(&& <#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_preparation_is_complete(&state.#indices))*
@@ -107,16 +106,16 @@ pub fn expand(input: &DeriveInput) -> syn::Result<TokenStream> {
                 #(if !<#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_terminal_is_empty(&state.#indices) { return <#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_demands(&state.#indices, copy); })*
                 Ok(#value_crate::RetirementDemand::default())
             }
-            fn close_state_step(state: &mut Self::CloseState, grant: #value_crate::retained_clone::RetainedCloneGrant) -> Result<#value_crate::retained_clone::RetainedCloneStep, #value_crate::ValueError> {
-                if !state.0.terminal_is_empty() { return state.0.close_step(grant); }
-                #(if !<#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_terminal_is_empty(&state.#indices) {
-                    return match <#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_step(&mut state.#indices, grant)? {
-                        #value_crate::retained_clone::RetainedCloneStep::Complete(progress) if <#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_terminal_is_empty(&state.#indices) => Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(progress)),
-                        #value_crate::retained_clone::RetainedCloneStep::Complete(_) => Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated, "factory inline payload returned false terminal")),
-                        step => Ok(step),
-                    };
+            fn close_state_step(state:&mut Self::CloseState,grant:#value_crate::retained_clone::RetainedCloneGrant)->#value_crate::RetainedWorkOutcome{
+                if !state.0.terminal_is_empty(){return state.0.close_step(grant)}
+                #(if !<#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_terminal_is_empty(&state.#indices){
+                    let turn=<#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_step(&mut state.#indices,grant);let complete=<#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_terminal_is_empty(&state.#indices);let result=turn.result.and_then(|step|match step{
+                        #value_crate::retained_clone::RetainedCloneStep::Complete(progress)if complete=>Ok(#value_crate::retained_clone::RetainedCloneStep::Progress(progress)),
+                        #value_crate::retained_clone::RetainedCloneStep::Complete(progress)=>Err(#value_crate::ValueError::literal(#value_crate::ValueRefusalKind::InvariantViolated,"factory inline payload returned false terminal").with_retained_progress(progress)),
+                        step=>Ok(step),
+                    });return #value_crate::RetainedWorkOutcome{result,work:turn.work}
                 })*
-                Ok(#value_crate::retained_clone::RetainedCloneStep::Complete(#value_crate::retained_clone::RetainedCloneProgress::default()))
+                #value_crate::RetainedWorkOutcome{result:Ok(#value_crate::retained_clone::RetainedCloneStep::Complete(Default::default())),work:0}
             }
             fn close_state_terminal_is_empty(state: &Self::CloseState) -> bool { state.0.terminal_is_empty() #(&& <#owned_types as #value_crate::FactoryPayloadRetirement>::close_state_terminal_is_empty(&state.#indices))* }
         }

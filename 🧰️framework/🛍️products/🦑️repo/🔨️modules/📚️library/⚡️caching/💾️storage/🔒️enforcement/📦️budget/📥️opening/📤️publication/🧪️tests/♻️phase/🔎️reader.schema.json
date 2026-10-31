@@ -1,0 +1,50 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "sourceOnly",
+          "bodyFailure",
+          "afterFailure",
+          "refusal"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sourceOnly": {
+            "type": "boolean"
+          },
+          "bodyFailure": {
+            "type": "boolean"
+          },
+          "afterFailure": {
+            "type": "boolean"
+          },
+          "refusal": {
+            "enum": [
+              "none",
+              "body",
+              "after",
+              "aggregate"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

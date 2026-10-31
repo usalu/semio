@@ -132,7 +132,8 @@ impl StepOutcome {
 //#endregion 🚦️StepOutcome
 
 //#region 🧩️InteractiveJob
-#[derive(Clone, Copy, Debug, PartialEq, Eq,semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq,semio_framework_value_derive::RetireOwned)]
+#[value(crate="::semio_framework_value_retained_clone")]
 pub enum InteractiveJobCloseStep {
     Pending { progress: RetainedCloneProgress },
     Blocked,
@@ -172,7 +173,7 @@ impl<T: ?Sized> JobThreadTransfer for T {}
 /// and returns before the hard ceiling), cancellable ([`StepContext::is_cancelled`]) and explicitly
 /// resumable (a fresh [`StepContext`] each call, job-owned state carries everything between calls).
 pub trait InteractiveJob: JobThreadTransfer {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>;
+    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,return_claim:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>;
     fn borrow_outcome<'a>(&'a self, descriptor:&'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>,ValueError>;
     fn begin_close(&mut self);
     /// 🎟️ Consumes physical and work effects once under the same original caller; successful progress reports that debit.

@@ -123,20 +123,14 @@ let retire_cold = attrs.retire_cold.map(|retire| quote! {
     };
     let components = if authority.component_roots.is_empty() { vec![(mutation_root.clone(), authority.domain_operations.clone())] } else { authority.component_roots.clone() };
     let mut component_completeness = Vec::new();
-    let scopes = components.iter().map(|(root, operations)| {
+    let component_count = components.len();
+    let scopes = components.iter().enumerate().map(|(component, (root, operations))| {
         let layout = if let Some(operations) = operations {
             let entries = operations.iter().map(|(owner, identity)| quote! { ::protocol::MutationDomainOperation { owner: #owner, semantic_kind: #identity } });
-            for (owner, _) in operations {
-                component_completeness.push(quote! {
-                    let mut found = false;
-                    let mut index = 0;
-                    while index < descriptors.len() {
-                        if ::semio_framework_os_command::str_eq(descriptors[index].owner, #owner) { found = true; }
-                        index += 1;
-                    }
-                    assert!(found, "Mutations requires every explicitly registered component domain operation");
-                });
-            }
+            let registered = operations.len();
+            component_completeness.push(quote! {
+                assert!(scope_counts[#component] == #registered, "Mutations requires every explicitly registered component domain operation");
+            });
             quote! { ::protocol::MutationOwnerLayout::DomainOperations(&[#(#entries),*]) }
         } else { quote! { ::protocol::MutationOwnerLayout::Flat } };
         quote! {
@@ -221,13 +215,14 @@ let mut timestamp_arms = Vec::new();
             assert!(::semio_framework_os_command::str_eq(#leaf::DESCRIPTOR.aggregate_variant, #expected_variant), "Mutations descriptor variant must match its wrapped leaf");
             assert!(::semio_framework_os_command::str_eq(#leaf::DESCRIPTOR.semantic_kind, #kind::SEMANTICS.kind), "Mutations descriptor and semantic kind must agree");
             let mut scope_index = 0;
-            let mut matched = false;
+            let mut matched = SCOPES.len();
             while scope_index < SCOPES.len() {
-                if let Ok(()) = SCOPES[scope_index].validate_leaf(&#leaf::DESCRIPTOR, &#leaf::PROVENANCE) { matched = true; break; }
+                if let Ok(()) = SCOPES[scope_index].validate_leaf(&#leaf::DESCRIPTOR, &#leaf::PROVENANCE) { matched = scope_index; break; }
                 scope_index += 1;
             }
-            assert!(matched, "Mutations leaf source must match its aggregate workspace and declared component owner");
-        }; });
+            assert!(matched < SCOPES.len(), "Mutations leaf source must match its aggregate workspace and declared component owner");
+            matched
+        } });
         conversions.push(quote! {
             impl #impl_generics ::core::convert::From<#payload_ty> for #aggregate_ty #where_clause {
                 fn from(payload: #payload_ty) -> Self {
@@ -282,13 +277,18 @@ impl #impl_generics ::protocol::Mutation<#snapshot_ty> for #aggregate_ty #where_
             type Diff = #diff_ty;
             const DESCRIPTORS: &'static [::protocol::MutationLeafDescriptor] = {
                 const SCOPES: &[::protocol::ValidatedMutationLeafSourceScope] = &[#(#scopes),*];
-                #(#leaf_checks)*
-                let descriptors: &'static [::protocol::MutationLeafDescriptor] = &[#(#leaf_descriptors),*];
+                let mut scope_counts = [0usize; #component_count];
+                #(scope_counts[#leaf_checks] += 1;)*
                 #(#component_completeness)*
-                match ::protocol::validate_mutation_leaf_descriptor_roster_uniqueness(#mutation_root, descriptors, #owner_layout) {
-                    Ok(()) => descriptors,
-                    Err(_) => panic!("Mutations requires a unique and complete direct leaf descriptor roster"),
-                }
+                const {
+                    let descriptors: &'static [::protocol::MutationLeafDescriptor] = &[#(#leaf_descriptors),*];
+                    match ::protocol::validate_mutation_leaf_descriptor_roster_uniqueness(#mutation_root, descriptors, #owner_layout) {
+                        Ok(()) => {},
+                        Err(_) => panic!("Mutations requires a unique and complete direct leaf descriptor roster"),
+                    }
+                };
+                let descriptors: &'static [::protocol::MutationLeafDescriptor] = &[#(#leaf_descriptors),*];
+                descriptors
             };
             fn descriptor(&self) -> &'static ::protocol::MutationLeafDescriptor {
                 match self { #(#descriptor_arms),* }
@@ -387,6 +387,8 @@ fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &Type, reference_ty
     let Some(relative) = mutation_relative_path(Path::new(&manifest), owner) else { return quote! {} };
     let subsets = owner.parent().filter(|subsets| subsets.file_name().and_then(|segment| segment.to_str()) == Some("🪆️subsets")).unwrap_or(owner);
     let Some(footprint_relative) = mutation_relative_path(Path::new(&manifest), subsets) else { return quote! {} };
+    let Some(workspace_relative) = mutation_relative_path(Path::new(&manifest), &authority.workspace_root) else { return quote! {} };
+    let descriptor_filename = &authority.descriptor_filename;
     let source = crate::compiler_resources::read_to_string(authority.mutation_root.join(&authority.source_filename)).unwrap_or_default();
     let signature = format!("demo_mutation_cases() -> Vec<{name}>");
     let demo_cases = source.lines().any(|line| ["fn ", "pub fn ", "pub(crate) fn "].iter().any(|prefix| line.strip_prefix(prefix).is_some_and(|rest| rest.starts_with(&signature)))).then(|| quote! { ops.extend(demo_mutation_cases()); });
@@ -400,6 +402,7 @@ fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &Type, reference_ty
             #demo_cases
             let count = ops.len();
             let mut failures = ::semio_framework_os_command::mutation_input_schema_failures::<#snapshot_ty, #name>();
+            failures.extend(::semio_framework_os_command::mutation_descriptor_roster_failures::<#snapshot_ty, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#workspace_relative), #descriptor_filename));
             failures.extend(::semio_framework_os_command::mutation_label_failures::<#snapshot_ty, #name>(&ops));
             failures.extend(::semio_framework_os_store_one_item::mutation_inverse_rows_declaration_failures::<#snapshot_ty, #name>(&ops));
             failures.extend(::semio_framework_os_command::mutation_payload_round_trip_failures::<#snapshot_ty, #name>(ops));

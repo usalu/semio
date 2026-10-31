@@ -1,0 +1,36 @@
+{
+  "schema": "framework.value.read-owned-work",
+  "stock": {
+    "items": 65536,
+    "copyBytes": 16777216,
+    "capacityBytes": 16777216,
+    "releaseBytes": 16777216,
+    "depth": 128,
+    "fuel": 65536
+  },
+  "maximumTurns": 65536,
+  "quantumItems": [
+    1,
+    2,
+    31
+  ],
+  "copyBytes": [
+    1,
+    3,
+    64
+  ],
+  "deniedWork": 0,
+  "cachedWork": 0,
+  "readAliasReturnWork": 1,
+  "closingChildHandoffWork": 1,
+  "completedChildHeaderWork": 1,
+  "emptyFactoryPreparationWork": 0,
+  "forwardChildWorkBeforeResult": true,
+  "originalRootAndRegistryRetainedOnRefusal": true,
+  "cases": [
+    "typed-read",
+    "erased-read",
+    "authority-view",
+    "source-admission"
+  ]
+}

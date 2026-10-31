@@ -1,6 +1,6 @@
 //! 👁️ Replaces the app-local computed preview shared by Generation3d generation windows.
 
-use super::{Generation3dTransientPatch, Generation3dPreviewTextChange, Generation3dTransient, Generation3dTransientMutation};
+use super::{Generation3dTransientPatch, Generation3dTransient, Generation3dTransientMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -24,7 +24,7 @@ impl protocol::MutationKind<Generation3dTransient, Generation3dTransientMutation
 
 impl protocol::ColdMutationKind<Generation3dTransient, Generation3dTransientMutation> for SetGenerationPreview {
     fn diff(&self, _base: &Generation3dTransient) -> protocol::MutationOutcome<Generation3dTransientPatch> {
-        protocol::MutationOutcome::new(Generation3dTransientPatch { generation_preview_text: Some(Generation3dPreviewTextChange { text: self.preview_text.clone() }), ..Default::default() })
+        protocol::MutationOutcome::new(Generation3dTransientPatch { generation_preview_text: Some(self.preview_text.clone()) })
     }
     fn inverse(&self, base: &Generation3dTransient) -> Result<Vec<Generation3dTransientMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -33,3 +33,5 @@ impl protocol::ColdMutationKind<Generation3dTransient, Generation3dTransientMuta
     })())
 }
 }
+
+protocol::retained_set_field!(SetGenerationPreview => Generation3dTransient, Generation3dTransientPatch, Generation3dTransientMutation { preview_text: Option<String> => generation_preview_text @ 0 });

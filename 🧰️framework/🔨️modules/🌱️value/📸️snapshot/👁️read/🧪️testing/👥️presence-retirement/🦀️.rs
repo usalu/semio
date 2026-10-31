@@ -7,7 +7,7 @@ use std::sync::Arc;
 pub use semio_framework_value_testing_presence_retirement::*;
 
 pub fn observed_box_close(owner: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> RetainedCloneStep {
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::artifact_retirement_box_close_step(owner, grant).unwrap());
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::artifact_retirement_box_close_step(owner, grant).result.unwrap());
     assert!(step.progress().fits(grant));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
     step
@@ -18,7 +18,7 @@ pub fn admit_returned_string(registry: &crate::SnapshotReadRegistryHandle, expec
         assert_eq!(original.as_str(), expected);
         assert_eq!(Arc::strong_count(&original), 1);
         semio_framework_value::retirement::arc_custody::admit_shared_retirement(original, grant, false)
-    }));
+    }).result);
     match result {
         Ok((owner, receipt)) => { assert!(receipt.fits(CLOSE_GRANT)); assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes)); owner }
         Err(crate::SnapshotReadLeaseRefusal::Busy) => { assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0)); None }

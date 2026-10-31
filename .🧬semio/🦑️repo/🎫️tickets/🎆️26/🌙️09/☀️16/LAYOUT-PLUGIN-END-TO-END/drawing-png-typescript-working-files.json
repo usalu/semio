@@ -1,0 +1,40 @@
+{
+  "state": "scoped-standalone-owner-green-drawing-callers-pending",
+  "files": [
+    "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🔣️.json",
+    "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/📐️.json"
+  ],
+  "inputs": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts",
+      "sha256": "d3967b1d1dc270c5d64641dfd69f4c654921eccafd32a544d2a3582d999f07d1",
+      "bytes": 11998
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts",
+      "sha256": "c32f02290fc89a9f0e93bdba0818e1454679e0cedb74a5822d4f2f6620296b23",
+      "bytes": 7411
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🔣️.json",
+      "sha256": "af5f6c896a8ddcc278b5ab5454e15876ae2f81196d7fc9039efc730783fd4d71",
+      "bytes": 1359
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/📐️.json",
+      "sha256": "2f09db171e8d934f747c28cd2d106c43b7a24152dbd423a1cb466026e05bec06",
+      "bytes": 2115
+    }
+  ],
+  "notes": "Source-only defining byte and PNG witnesses now hand-migrated. One actual funded byte mutation per emission turn, five laws incl Sharp, all axes, cancellation and pure publication. Byte close/child-final defers parent metadata to later own actual turn. Real Drawing callers not yet migrated, absolute demands pending canonical core API; no full closure.",
+  "laws": 5,
+  "scopedProof": {
+    "testSession": 86887,
+    "strictSession": 36068,
+    "pass": 10,
+    "assertions": 1912,
+    "scope": "Byte5+PNG5, strict4"
+  }
+}

@@ -6,4 +6,4 @@ use crate::retained_clone::RetainedCloneSource;
 mod contract;
 pub(super) use contract::record;
 #[test]
-fn standard_entries_generic_close_dispatch_selects_one_body_correlated_event(){contract::verify(||std::collections::BTreeMap::<u64,()>::new(),RetainedCloneEntriesCursor::<std::collections::BTreeMap<u64,()>>::close_demands);}
+fn standard_entries_generic_close_dispatch_selects_one_body_correlated_event(){contract::verify(||BTreeMap::<u64,()>::new(),RetainedCloneEntriesCursor::<BTreeMap<u64,()>>::close_demands);}

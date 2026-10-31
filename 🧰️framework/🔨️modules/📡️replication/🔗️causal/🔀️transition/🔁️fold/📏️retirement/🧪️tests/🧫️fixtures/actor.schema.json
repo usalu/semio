@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "original",
+    "deniedAxes",
+    "expected",
+    "work"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.history.fold-shared-actor-admission/v1"
+    },
+    "original": {
+      "const": "actor-original-雪"
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "capacity",
+        "depth"
+      ]
+    },
+    "expected": {
+      "const": {
+        "sameOriginal": true,
+        "deniedHeap": [
+          0,
+          0
+        ],
+        "birth": "actual-shared-arc-frame",
+        "copy": "none",
+        "prebornFrame": "same-queued-shell",
+        "terminalHeap": [
+          0,
+          0
+        ]
+      }
+    },
+    "work": {
+      "const": {
+        "admit": 1,
+        "lease": 1,
+        "denied": 0,
+        "null": 1,
+        "nullCapacityBytes": 0,
+        "failureKeepsOriginal": true
+      }
+    }
+  }
+}

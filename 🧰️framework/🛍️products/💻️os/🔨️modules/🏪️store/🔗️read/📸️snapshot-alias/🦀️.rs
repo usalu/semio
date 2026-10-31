@@ -16,7 +16,7 @@ impl<P:Send+Sync+'static> SnapshotAliasRetirement<P>{
 impl<P:Send+Sync+'static> ErasedSnapshotRetirement for SnapshotAliasRetirement<P>{
  fn requires_original_control(&self)->bool{self.active.as_ref().is_some_and(|owner|owner.requires_original_control())}
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(active)=self.active.as_ref(){return semio_framework_value::factory_ticket_demands(active,body)}if self.registry.is_some(){return snapshot_registry_alias_demands(&self.registry)}if self.alias.is_some(){return Ok(RetirementDemand{capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:1,..Default::default()})}if self.snapshots.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(),depth:1,..Default::default()})}self.factory.as_ref().map_or(Ok(Default::default()),|factory|factory.demands(body))}
- fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.step(g,None)}
+ fn close_step(&mut self, g: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {self.step(g,None)})(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
  fn close_step_controlled(&mut self,g:RetainedCloneGrant,c:&mut dyn OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{self.step(g,Some(c))}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(4096)?.copy_bytes)}
  fn next_capacity_byte_demand(&self,b:usize)->Result<usize,ValueError>{Ok(self.next_demand(b)?.capacity_bytes)}

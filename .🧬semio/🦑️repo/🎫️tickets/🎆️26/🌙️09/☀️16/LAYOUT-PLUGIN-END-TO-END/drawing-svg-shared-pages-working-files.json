@@ -1,0 +1,16 @@
+{
+  "status": "Source only after SVG scoped acceptance; new shared owner laws precede body, PDF integration ongoing",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🟦️.ts",
+      "beforeSha256": "e268bd91353f79fb8581d169ac560fd200a32e137827c4c41fd4f9fcde4f6da0",
+      "sha256": "97cc4957194ef4e59271fda4212b2ec680372856f304317a3935f3cf67952157"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎨️corpus/corpus.test.ts",
+      "beforeSha256": "7b9e3a2fcd251487471b7f6a7c3782d3a79059002eb96a24212278dda95d424b",
+      "sha256": "f0b47cc5bbaec37ae9dc1f8aef00b999e8d4f535bcf0b74bba23a9f8926e4d5c"
+    }
+  ],
+  "sharedFragment": "Actual UTF-16 fragment implementation physically shared with PDF continuation; original SVG formatting remains. Unexecuted."
+}

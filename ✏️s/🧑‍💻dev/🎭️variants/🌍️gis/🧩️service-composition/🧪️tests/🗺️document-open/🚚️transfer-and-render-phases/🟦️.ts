@@ -162,7 +162,7 @@ export async function runViewRefreshAndEarlyCommandPhase({ vitest, dependencies,
   expect(visibleViews.at(-1)?.terminology).toBe("native");
   expect(JSON.stringify(state.config)).toBe(beforeConfig);
   expect(JSON.stringify(state.frontier)).toBe(beforeFrontier);
-  await vi.waitFor(() => expect((probe.reservation as unknown as { viewRefresh: Promise<void> | null }).viewRefresh).toBeNull());
+  await vi.waitFor(() => expect((probe.reservation as unknown as { hub: { session: { viewRefresh: Promise<void> | null } } }).hub.session.viewRefresh).toBeNull());
 
   const actionRequest = createBrowserActorUiIntentRequestV1(
     {

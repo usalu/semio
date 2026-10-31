@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "uncontended-zero",
+      "held": false,
+      "cancelled": false,
+      "expected": "granted"
+    },
+    {
+      "id": "real-reader-zero",
+      "held": true,
+      "cancelled": false,
+      "expected": "busy"
+    },
+    {
+      "id": "cancelled-zero",
+      "held": false,
+      "cancelled": true,
+      "expected": "cancelled"
+    }
+  ]
+}

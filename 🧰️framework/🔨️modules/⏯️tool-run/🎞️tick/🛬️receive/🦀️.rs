@@ -67,7 +67,7 @@ impl ToolRunTickNativeCursor{
  /// ⏱️ Reborrows the exact same source, decoder ledger, cancellation observer and construction recipient.
  pub fn advance(&mut self,source:&dyn OriginalTickWireSource,control:&mut NativeDecodeControl<'_>)->Result<RetainedCloneStep,semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<ValueError>>{
   if self.source!=(source.identity(),source.byte_len()){return Err(malformed("native Tick requires the same original wire pages").into())}if self.closing{return Err(malformed("native Tick receive after close").into())}if self.complete{return Ok(RetainedCloneStep::Complete(Default::default()))}
-  let demand=self.next_demands()?;control.receive_construction_step(demand,|control,grant|self.advance_admitted(source,control,grant,demand))
+  let demand=self.next_demands()?;control.receive_construction_step(demand,|control,grant|semio_framework_value::RetainedWorkOutcome{result:self.advance_admitted(source,control,grant,demand),work:1}).result
  }
  fn advance_admitted(&mut self,source:&dyn OriginalTickWireSource,control:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant,demand:RetirementDemand)->Result<RetainedCloneStep,ValueError>{
   let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};

@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "pageBytes",
+    "referenceRowBytes",
+    "maximumBytes",
+    "bytes",
+    "quanta",
+    "publication",
+    "source",
+    "zeroDenial",
+    "publicationGrantRequired",
+    "text",
+    "logicalUtf16Bytes",
+    "closeSelectionItems"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "pageBytes": {
+      "const": 3072
+    },
+    "referenceRowBytes": {
+      "const": 8
+    },
+    "maximumBytes": {
+      "const": 8192
+    },
+    "bytes": {
+      "const": [
+        0,
+        1,
+        127,
+        128,
+        255
+      ]
+    },
+    "quanta": {
+      "const": [
+        1,
+        7
+      ]
+    },
+    "publication": {
+      "const": "single-authentic-issued-turn"
+    },
+    "source": {
+      "const": "caller-keeps-borrow"
+    },
+    "zeroDenial": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "depth",
+        "release"
+      ]
+    },
+    "publicationGrantRequired": {
+      "const": true
+    },
+    "text": {
+      "const": "AÄ🙂\r\n"
+    },
+    "logicalUtf16Bytes": {
+      "const": 2
+    },
+    "closeSelectionItems": {
+      "const": 1
+    }
+  }
+}

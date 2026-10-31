@@ -41,11 +41,12 @@ impl<A:ArtifactApp> ToolRunEntryRetirement<A>{
   if !self.native.terminal_is_empty(){return semio_framework_job::close_original_retained_step(cx,d,|grant|self.native.close_step(grant)).map(|step|RetainedCloneStep::Progress(step.progress()))}
   if !self.operations.terminal_is_empty(){let before=cx.retained_progress();self.operations.close_step(store,cx)?;let after=cx.retained_progress();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))}
   if let Some(job)=self.job.as_mut().filter(|job|!job.terminal_is_empty()){job.begin_close();return job.close_step(cx)}
+  if let Some(finalize)=self.finalize.as_mut().filter(|f|f.publication.is_none()&&!f.ingress.terminal_is_empty()){return semio_framework_job::close_original_retained_step(cx,d,|grant|finalize.ingress.close_step(grant)).map(|step|RetainedCloneStep::Progress(step.progress()))}
   let step=semio_framework_job::close_original_retained_step(cx,d,|grant|{
    if self.job.is_some(){self.job=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}
    if let Some(finalize)=self.finalize.as_mut(){
     if let Some(publication)=finalize.publication.as_mut(){if publication.terminal_is_empty(){finalize.publication=None;}else{publication.begin_close();return publication.close_step(grant)}}
-    else if !finalize.ingress.terminal_is_empty(){return finalize.ingress.close_step(grant)}else{self.finalize=None;}
+    else{self.finalize=None;}
     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
    }
    if self.retirement.is_some(){return close_tool_erased_retirement(&mut self.retirement,grant)}

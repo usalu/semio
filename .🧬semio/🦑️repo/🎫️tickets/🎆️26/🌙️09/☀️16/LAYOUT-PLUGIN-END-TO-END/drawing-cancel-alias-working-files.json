@@ -1,0 +1,22 @@
+{
+  "before": "8d15eca0ec4e7c4ea4974d993978be283e807f720ddb89af3522bcbec07103b1",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🦀️.rs",
+      "sha256": "c433782d13c88ffa4002dc1831a1a2072c49e403457e191f3588a5d6922acd9f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🎟️alias/📐️.json",
+      "sha256": "655c9d9b24b3bb1dfe5fceed111a0076fef127e605a8258de140d3298702bacd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🎟️alias/🔣️.json",
+      "sha256": "4809d1a110ca388013de177ee79d1a8f3a52784ace8475fe5c3bc8fbb7bb5dcf"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🎟️alias/🧪️tests/🦀️.rs",
+      "sha256": "deac872911d36f611d76a081b97e90bedeb30d82c37031a67968cfd5a85ea814"
+    }
+  ],
+  "status": "Source authored; no compilation/test execution"
+}

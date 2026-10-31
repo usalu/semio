@@ -1,0 +1,18 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔢️bounded-ord/🧪️tests/actual.json",
+    "sha256": "9525064c702dcd363c30adf0f5b88b46916f99f8556088b44e37214c7ae37612"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔢️bounded-ord/🧪️tests/actual.schema.json",
+    "sha256": "23d304c177ef6164ee2ff6d7b2efba8d6d38c749b8eaef5c24996efbe82683cd"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔢️bounded-ord/🧪️tests/🦀️.rs",
+    "sha256": "0504bfc9cc2ebc273754c47ac4792e9590e28207cb233108b7ccdbc52612c811"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔢️bounded-ord/🦀️.rs",
+    "sha256": "f24bb45619fce12da679185abebfcd5f1b48f3254e6655d70cd1f4e15565a6cb"
+  }
+]

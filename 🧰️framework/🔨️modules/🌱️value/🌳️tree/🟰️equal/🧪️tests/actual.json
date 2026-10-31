@@ -1,0 +1,50 @@
+{
+  "schema": "value.typed-equality.actual/v1",
+  "stock": {
+    "items": 4096,
+    "copy": 16777216,
+    "capacity": 16777216,
+    "release": 16777216,
+    "depth": 128
+  },
+  "cases": [
+    {
+      "left": [
+        "Grüße",
+        "alpha"
+      ],
+      "right": [
+        "Grüße",
+        "alpha"
+      ]
+    },
+    {
+      "left": [
+        "same",
+        "left"
+      ],
+      "right": [
+        "same",
+        "right"
+      ]
+    }
+  ],
+  "nullWork": 1,
+  "deniedWork": 0,
+  "cachedWork": 0,
+  "maximumTurns": 10000,
+  "laws": {
+    "actualFieldNull": true,
+    "sameBankRetryAndClose": true,
+    "originalPointers": true,
+    "serdeEqualityOracle": true,
+    "exactHeap": true,
+    "cachedZero": true
+  },
+  "compoundTraversal": {
+    "zeroArrayLength": 4097,
+    "reserveCloseItems": 1,
+    "wholeInlineCollapse": false,
+    "callerStockRenewed": false
+  }
+}

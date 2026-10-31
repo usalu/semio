@@ -1,0 +1,21 @@
+{
+  "count": 2,
+  "text": "Native UTF8🧱",
+  "deniedWork": 0,
+  "nullWork": 1,
+  "birthWork": 1,
+  "copiedBytes": 0,
+  "nullOwnedBytes": 0,
+  "stock": {
+    "items": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "fuel": 100000,
+    "maximumTurns": 100000
+  },
+  "requireActualWorkRecipient": true,
+  "unscopedWork": 0,
+  "observedBirthWork": 3
+}

@@ -10,8 +10,8 @@ struct Patch{#[serde(skip_serializing_if="Option::is_none")]name:Option<String>,
 crate::retained_row_patch!(pub inverse_fields for Patch => Row{name:String,value:f64});
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn observe<T>(op:impl FnOnce()->T)->(T,(usize,usize)){let(result,born,released)=crate::test_allocation::observe_backing(op);(result,(born,released))}
-fn source<T:RetireOwned+Sync>(value:T)->RetainedCloneSource<T>{match RetainedCloneSource::admit_owned(value,(),RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}){Ok((source,_))=>source,Err((error,_,()))=>panic!("sparse original source:{error}")}}
-fn close_source<T:RetireOwned+Sync>(source:&mut RetainedCloneSource<T>){while !source.terminal_is_empty(){let quote=grant(source.next_close_demand(4096).unwrap());assert!(source.close_step(quote).unwrap().progress().fits(quote));}}
+fn source<T:RetireOwned+Sync>(value:T)->RetainedCloneSource<T>{let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096};let mut admission=RetainedCloneSource::admission_owned(value,());let mut output=None;for _ in 0..64{if admission.terminal_is_empty(){break}if admission.phase()=="ready"{admission.take_output(&mut output,g).result.unwrap();}else{admission.advance(g).result.unwrap();}}output.expect("staged source admission")}
+fn close_source<T:RetireOwned+Sync>(source:&mut RetainedCloneSource<T>){while !source.terminal_is_empty(){let quote=grant(source.next_close_demand(4096).unwrap());assert!(source.close_step(quote).result.unwrap().progress().fits(quote));}}
 fn close(cursor:&mut inverse_fields::Fields){cursor.begin_close();let mut turns=0;while !cursor.terminal_is_empty(){turns+=1;assert!(turns<1000);let quote=grant(cursor.close_demand(4096).unwrap());let(step,heap)=observe(||cursor.close_step(quote).unwrap());assert!(step.progress().fits(quote));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}}
 fn retire<T:RetireOwned+std::fmt::Debug>(value:T){let mut close=ControlledRetirement::new(value).unwrap();while !close.terminal_is_empty(){let quote=grant(close.next_demand(4096).unwrap());assert!(close.step(quote).unwrap().progress().fits(quote));}}
 fn row(value:&serde_json::Value)->Row{Row{name:value["name"].as_str().unwrap().into(),value:value["value"].as_f64().unwrap(),untouched:vec![42;1024]}}
@@ -75,4 +75,10 @@ fn retained_row_patch_apply_preserves_portable_rows_and_every_cancelled_frontier
    assert_eq!(observe(||drop(apply)).1,(0,0));close_source(&mut authored);close_source(&mut original);
   }
  }
+}
+
+/// 📏️ The apply header holds its staged field owner behind a charged allocation, so a retained diff's birth quote never carries the field owners inline.
+#[test]
+fn the_sparse_apply_header_stays_independent_of_the_field_owner_size(){
+ assert!(std::mem::size_of::<RetainedRowPatchApply<Row,Patch>>()<std::mem::size_of::<inverse_fields::Fields>()+std::mem::size_of::<Option<Patch>>());
 }

@@ -1,0 +1,222 @@
+{
+  "wallet": {
+    "items": 65536,
+    "copy": 1048576,
+    "capacity": 1048576,
+    "release": 1048576,
+    "depth": 128,
+    "maxTurns": 4096
+  },
+  "cases": [
+    {
+      "source": "literal",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "invalid",
+        "message": "Owned 源 \"message\"\n",
+        "original": {
+          "kind": "literal",
+          "text": "Owned 源 \"message\"\n"
+        }
+      }
+    },
+    {
+      "source": "owned",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "invalid",
+        "message": "Owned 源 \"message\"\n",
+        "original": {
+          "kind": "owned",
+          "text": "Owned 源 \"message\"\n"
+        }
+      }
+    },
+    {
+      "source": "flatten",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "pathRaster",
+        "message": "Owned 源 \"message\"\n",
+        "original": {
+          "kind": "flatten",
+          "message": "Owned 源 \"message\"\n",
+          "original": {
+            "kind": "invalid",
+            "message": "Owned 源 \"message\"\n"
+          }
+        }
+      }
+    },
+    {
+      "source": "stroke",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "pathRaster",
+        "message": "Stroke preparation is incomplete",
+        "original": {
+          "kind": "stroke",
+          "message": "Stroke preparation is incomplete",
+          "original": {
+            "kind": "incomplete",
+            "message": "Stroke preparation is incomplete"
+          }
+        }
+      }
+    },
+    {
+      "source": "pixels",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "pathRaster",
+        "message": "Pixel operation cancelled",
+        "original": {
+          "kind": "pixels",
+          "message": "Pixel operation cancelled",
+          "original": {
+            "kind": "cancelled",
+            "message": "Pixel operation cancelled"
+          }
+        }
+      }
+    },
+    {
+      "source": "retirement",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "pathRaster",
+        "message": "Owned 源 \"message\"\n",
+        "original": {
+          "kind": "retirement",
+          "message": "Owned 源 \"message\"\n",
+          "original": {
+            "kind": "ownershipLimit",
+            "message": "Owned 源 \"message\"\n",
+            "postingRefusal": "original retained refusal"
+          }
+        }
+      }
+    },
+    {
+      "source": "ownedRetirement",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "pathRaster",
+        "message": "Owned 源 \"message\"\n",
+        "original": {
+          "kind": "ownedRetirement",
+          "message": "Owned 源 \"message\"\n",
+          "original": {
+            "kind": "ownershipLimit",
+            "message": "Owned 源 \"message\"\n",
+            "postingRefusal": "original retained refusal"
+          }
+        }
+      }
+    },
+    {
+      "source": "incomplete",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "incomplete",
+        "message": "Document scene preparation incomplete"
+      }
+    },
+    {
+      "source": "cancelled",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "cancelled",
+        "message": "Document scene preparation cancelled"
+      }
+    },
+    {
+      "source": "rasterInvalid",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "pathRaster",
+        "message": "Owned 源 \"message\"\n",
+        "original": {
+          "kind": "invalid",
+          "message": "Owned 源 \"message\"\n"
+        }
+      }
+    },
+    {
+      "source": "rasterIncomplete",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "pathRaster",
+        "message": "Path raster is incomplete",
+        "original": {
+          "kind": "incomplete",
+          "message": "Path raster is incomplete"
+        }
+      }
+    },
+    {
+      "source": "rasterCancelled",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "pathRaster",
+        "message": "Path raster cancelled",
+        "original": {
+          "kind": "cancelled",
+          "message": "Path raster cancelled"
+        }
+      }
+    },
+    {
+      "source": "affineInvalid",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "affineImage",
+        "message": "Owned 源 \"message\"\n",
+        "original": {
+          "kind": "invalid",
+          "message": "Owned 源 \"message\"\n"
+        }
+      }
+    },
+    {
+      "source": "affinePixels",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "affineImage",
+        "message": "Owned 源 \"message\"\n",
+        "original": {
+          "kind": "pixels",
+          "message": "Owned 源 \"message\"\n",
+          "original": {
+            "kind": "invalid",
+            "message": "Owned 源 \"message\"\n"
+          }
+        }
+      }
+    },
+    {
+      "source": "affineIncomplete",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "affineImage",
+        "message": "Affine sample job is incomplete",
+        "original": {
+          "kind": "incomplete",
+          "message": "Affine sample job is incomplete"
+        }
+      }
+    },
+    {
+      "source": "affineCancelled",
+      "message": "Owned 源 \"message\"\n",
+      "expected": {
+        "kind": "affineImage",
+        "message": "Affine sample job cancelled",
+        "original": {
+          "kind": "cancelled",
+          "message": "Affine sample job cancelled"
+        }
+      }
+    }
+  ]
+}

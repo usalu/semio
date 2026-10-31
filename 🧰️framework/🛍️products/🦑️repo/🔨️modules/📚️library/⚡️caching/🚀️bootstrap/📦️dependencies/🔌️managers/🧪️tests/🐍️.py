@@ -125,7 +125,7 @@ def bootstrap_key(d, case):
     host = case["host"]
     ident = runtime(d, host["versions"], case.get("probe"))
     fields = [case["manifest"].get(name) for name in d["manifestIdentity"]["bootstrapFields"]]
-    digest = hashlib.sha256(compact(fields + [ident, host["platform"], host["arch"]]).encode("utf-8"))
+    digest = hashlib.sha256(compact([d["recipe"]] + fields + [ident, host["platform"], host["arch"]]).encode("utf-8"))
     digest.update(case["lock"].encode("utf-8"))
     return digest.hexdigest()
 

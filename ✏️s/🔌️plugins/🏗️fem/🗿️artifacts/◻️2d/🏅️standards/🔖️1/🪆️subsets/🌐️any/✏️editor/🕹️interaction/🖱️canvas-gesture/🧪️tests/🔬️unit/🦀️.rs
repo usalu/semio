@@ -6,7 +6,7 @@ use crate::editor::fem2d::interaction::screen_2d;
 
 /// 🪟️ Any Canvas2d window kind: the gesture store is window-kind agnostic.
 const WINDOW_KIND_ID: &str = "fem2d-model";
-/// 🪟️ The body key the addressed window refreshes under.
+/// 🧍️ The body key the addressed window refreshes under.
 const BODY_KEY: &str = "fem2d.play.model";
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework::kernel::UiDirtyScope;
@@ -168,7 +168,7 @@ fn rectangle_release_coordinates_complete_a_drag_without_a_move() {
     assert_eq!(args.get("method").and_then(semio_framework_value::DslValue::as_str), Some("rectangle"));
     assert!(args.get("targets").and_then(semio_framework_value::DslValue::as_str).is_some_and(|raw| raw.contains("n1") && raw.contains("n2")));
     assert_eq!(gesture_for_window("w"), Fem2dCanvasGesture::default());
-    eprintln!("[DEBUG] FEM rectangle release selected final endpoint geometry and retired its gesture");
+    
 }
 
 #[test]

@@ -1,0 +1,17 @@
+{
+  "contract": "semio.tool.original-read-work-forward.v1",
+  "roles": [
+    "scrub",
+    "typing",
+    "gesture"
+  ],
+  "operations": [
+    "advanceRead",
+    "retainRead",
+    "returnRead"
+  ],
+  "forwardOriginalChildWork": true,
+  "missingSlotWork": 0,
+  "deniedWork": 0,
+  "transferLaw": "oneFixedResidentMetadataAction"
+}

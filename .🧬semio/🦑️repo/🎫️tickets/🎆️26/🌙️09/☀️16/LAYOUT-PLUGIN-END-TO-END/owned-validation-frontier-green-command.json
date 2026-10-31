@@ -1,0 +1,63 @@
+{
+  "mode": "full current reference/literal/27 hostile frontier+other/checker harness; NOT Native parity",
+  "cwd": "/Users/ueli/Documents/semio",
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/frontier-green",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/frontier-green/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/frontier-green/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/frontier-green/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/frontier-green/tmp"
+  },
+  "argv": [
+    "repo",
+    "--service=off",
+    "tools",
+    "exec",
+    "bun",
+    "--",
+    "test",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.test.ts"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/frontier-green/selftest.log",
+  "shell": "SEMIO_BUILD_MODE=prototype SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/frontier-green' TMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/frontier-green/tmp' TMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/frontier-green/tmp' TEMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/frontier-green/tmp' TEMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/frontier-green/tmp' repo --service=off tools exec bun -- test '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.test.ts' > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/frontier-green/selftest.log' 2>&1",
+  "preInputs": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.ts",
+      "sha256": "88ade6339da94db8c9c217fdce51322ccef3ef3e13b2308bc76d5129449c0b32"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.test.ts",
+      "sha256": "dab58101dc0c2c0b5ae6a740fb0c79e71f9fcbd50a2814069ad3bb5fefd92c1f"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.schema.json",
+      "sha256": "2fef90d2866b377d214b26e1b9110ef7df9d64d7abf233954bdfb2eb21d78d39"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle-mutants.json",
+      "sha256": "7ab6172319e311c2d9c49f18661937cd22c8abc430e78e9c645f7647fd040842"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🧪️tests/🔣️.json",
+      "sha256": "c2108c2f7247ad81357f0ec9ffe6cc89b6a52a30d9a51d6a62be9ad24e47f897"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🧪️tests/📐️.json",
+      "sha256": "fa56ac205d298c8930cc6b45778d84a09695e10d143415826ea90b0830a29f09"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✅️validation/🔣️.json",
+      "sha256": "6d80a7c91eb1dba8512875d8e7d2096c9abdf8d40d710f137a209fb34595bdf9"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-emitter-fixture.json",
+      "sha256": "0d62d4b2f184082e5ee64c6ac6f5531b39fd6bac6beb85200c44aac16d9a67c6"
+    },
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-frontier-mutants.json",
+      "sha256": "cd70e255db46d77e4f6ff939f50d745581ee37d1a41547f55d418e9327ad7ee1"
+    }
+  ],
+  "actualRedSession": 12532
+}

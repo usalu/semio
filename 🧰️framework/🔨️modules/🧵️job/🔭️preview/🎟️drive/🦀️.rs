@@ -77,8 +77,7 @@ impl JobPreviewDriver{
    },
    JobPreviewPhase::FaultInput=>match session.checked_out_outcome()?{Some(JobOutcomeView::Fault{detail,..})=>Ok(JobPreviewStep::Fault{detail}),_=>Err(Self::invalid().into())},
    JobPreviewPhase::Acknowledge=>{
-    let step=session.acknowledge_outcome(grant);cx.consume_retained(step.progress())?;
-    if matches!(step,RetainedCloneStep::Complete(_)){self.phase=JobPreviewPhase::Resume;}
+    if session.acknowledge_outcome(cx)?{self.phase=JobPreviewPhase::Resume;}
     Ok(JobPreviewStep::Pending)
    },
    JobPreviewPhase::Resume=>{
@@ -89,11 +88,7 @@ impl JobPreviewDriver{
    JobPreviewPhase::Close=>{
     if session.terminal_is_empty(){if Self::metadata(cx)?{self.phase=JobPreviewPhase::Complete;self.binding=None;return Ok(JobPreviewStep::Complete(self.verdict()))}return Ok(JobPreviewStep::Pending)}
     if session.has_original_cancel_alias_witness(cx.original_cancel_token()).unwrap_or(false){
-     match session.return_original_cancel_alias_step(cx.original_cancel_token(),grant){
-      Ok(Some(step))=>{cx.consume_retained(step.progress())?;return Ok(JobPreviewStep::Pending)},
-      Ok(None)|Err(WorkerJobDemandError::Contention(_))=>return Ok(JobPreviewStep::Pending),
-      Err(WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx))
-     }
+     let turn=session.return_original_cancel_alias_step(cx.original_cancel_token(),grant);let result=match turn.result{Ok(Some(step))=>Ok(step),Ok(None)|Err(WorkerJobDemandError::Contention(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(WorkerJobDemandError::Refused(error))=>Err(error)};receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})?;return Ok(JobPreviewStep::Pending)
     }
     let step=session.close_step(cx)?;
     match step{WorkerJobCloseStep::Complete{..}=>if session.terminal_is_empty(){Ok(JobPreviewStep::Pending)}else{Err(Self::invalid().into())},WorkerJobCloseStep::Pending{..}|WorkerJobCloseStep::Blocked=>Ok(JobPreviewStep::Pending)}

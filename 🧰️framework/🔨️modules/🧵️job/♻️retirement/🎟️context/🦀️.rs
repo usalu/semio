@@ -1,44 +1,45 @@
 //! 🎟️ Close cursors borrow the same original clock, work and independently remaining retained currencies.
-use crate::{default_now_us,root_cancel_token,CancelToken,Generation,InteractiveJobCloseStep,OperationId,OriginalTurnFailure,RetainedCloneProgress,StepBudget,StepContext};
-use semio_framework_value::{RetainedCloneGrant,RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};
+use crate::{InteractiveJobCloseStep,OriginalTurnFailure,RetainedCloneProgress,StepContext};
+use semio_framework_value_retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetirementDemand,RetainedWorkOutcome,ValueError,ValueRefusalKind};
 
-/// 🪙️ One quoted original cursor action records its actual physical effects and CPU exactly once.
-pub fn close_original_retained_step(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
- close_original_retained_turn(cx,demand,|grant|advance(grant).map_err(Into::into))
+/// 🪙️ One quoted original cursor action records its actual physical effects and independent CPU once.
+pub fn close_original_retained_step(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+ close_original_retained_turn(cx,demand,|grant|{let turn=advance(grant);RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work}})
 }
-
-/// 🧳️ The original diagnostic or value refusal keeps its complete owned primary and physical receipt.
-pub fn close_original_retained_turn(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(RetainedCloneGrant)->Result<RetainedCloneStep,crate::OriginalTurnPrimary>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
- let remaining=cx.retained_grant();if cx.retirement_should_yield()||remaining.maximum_items==0||remaining.maximum_copy_bytes<demand.copy_bytes||remaining.maximum_capacity_bytes<demand.capacity_bytes||remaining.maximum_release_bytes<demand.release_bytes||remaining.maximum_depth<demand.depth{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
- let grant=RetainedCloneGrant{maximum_items:1,..remaining};cx.consume_fuel(1);let step=advance(grant).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;let progress=step.progress();cx.consume_retained(progress)?;Ok(InteractiveJobCloseStep::Pending{progress})
-}
-
-/// 🎫️ One grant-shaped close body runs once over the caller's remaining retained grant; its actual effects or its whole refusal are debited to that same context.
-pub fn close_original_granted_step(cx:&mut StepContext<'_>,close:impl FnOnce(RetainedCloneGrant)->Result<InteractiveJobCloseStep,ValueError>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
- if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
- cx.consume_fuel(1);match close(cx.retained_grant()){Ok(step)=>{cx.consume_retained(step.progress())?;Ok(step)},Err(error)=>Err(OriginalTurnFailure::debit_original(error,cx))}
-}
-
-/// 🪆️ A close body that closes nested original jobs over loaned contexts debits only the part of its reported step the nested callers have not already posted.
-pub fn close_original_nested_step(cx:&mut StepContext<'_>,close:impl FnOnce(&mut StepContext<'_>,RetainedCloneGrant)->Result<InteractiveJobCloseStep,OriginalTurnFailure>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
- if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
- let before=cx.retained_progress();let grant=cx.retained_grant();cx.consume_fuel(1);let step=close(cx,grant)?;
- let(after,report)=(cx.retained_progress(),step.progress());let owed=|reported:usize,initial:usize,current:usize|current.checked_sub(initial).and_then(|posted|reported.checked_sub(posted)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original nested close reported fewer effects than its nested callers posted"));
- cx.consume_retained(RetainedCloneProgress{copied_items:owed(report.copied_items,before.copied_items,after.copied_items)?,copied_bytes:owed(report.copied_bytes,before.copied_bytes,after.copied_bytes)?,retained_capacity_bytes:owed(report.retained_capacity_bytes,before.retained_capacity_bytes,after.retained_capacity_bytes)?,released_bytes:owed(report.released_bytes,before.released_bytes,after.released_bytes)?})?;Ok(step)
-}
-
-/// 🧪️ A throwaway caller whose one cancellation root serves every close turn it lends; single-owner laws use it where no host caller exists, and allocation oracles build it before they observe.
-pub struct SelfFundedCloseCaller{cancel:CancelToken,sequence:u64}
-impl SelfFundedCloseCaller{
- pub fn new()->Self{Self{cancel:root_cancel_token(),sequence:0}}
- /// 🏛️ Lends one context whose whole retained authority is `grant`, with unbounded fuel and deadline, and returns the body's outcome whole.
- pub fn turn<T>(&mut self,grant:RetainedCloneGrant,close:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<T,OriginalTurnFailure>{
-  let mut receipt=RetainedCloneProgress::default();
-  let mut cx=StepContext::new(OperationId(1),Generation(1),StepBudget::new(u64::MAX,u64::MAX,grant),self.cancel.clone(),default_now_us,&mut self.sequence,&mut receipt);
-  close(&mut cx)
+fn context_refusal(cx:&StepContext<'_>)->Option<ValueError>{cx.original_source_parent().and_then(|parent|parent.validate_borrowed_context(cx)).err()}
+fn receive_original_work<T:Copy,E:Into<crate::OriginalTurnPrimary>>(cx:&mut StepContext<'_>,turn:RetainedWorkOutcome<T,E>,effects:impl FnOnce(&T)->RetainedCloneProgress)->Result<T,OriginalTurnFailure>{
+ let result:Result<T,crate::OriginalTurnPrimary>=turn.result.map_err(Into::into);let progress=match &result{Ok(value)=>effects(value),Err(primary)=>primary.retained_progress()};let receipt_refusal=cx.consume_retained(progress).err();cx.consume_fuel(turn.work);let context_refusal=context_refusal(cx);
+ match result{
+  Err(primary)=>Err(OriginalTurnFailure{effects:progress,primary,receipt_refusal,context_refusal}),
+  Ok(value)=>match(receipt_refusal,context_refusal){(None,None)=>Ok(value),(Some(primary),context_refusal)=>Err(OriginalTurnFailure{effects:progress,primary:primary.into(),receipt_refusal:None,context_refusal}),(None,Some(primary))=>Err(OriginalTurnFailure{effects:progress,primary:primary.into(),receipt_refusal:None,context_refusal:None})}
  }
 }
-impl Default for SelfFundedCloseCaller{fn default()->Self{Self::new()}}
+/// 📊️ Receives one actual grant-only outcome without losing its primary, posting refusal or independent CPU.
+pub fn receive_original_retained_work<E:Into<crate::OriginalTurnPrimary>>(cx:&mut StepContext<'_>,turn:RetainedWorkOutcome<RetainedCloneStep,E>)->Result<RetainedCloneStep,OriginalTurnFailure>{receive_original_work(cx,turn,|step|step.progress())}
+fn fold_original_close(cx:&mut StepContext<'_>,turn:RetainedWorkOutcome<InteractiveJobCloseStep,crate::OriginalTurnPrimary>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{receive_original_work(cx,turn,|step|step.progress())}
 
-/// 📪️ Drives one close turn over a fresh [`SelfFundedCloseCaller`].
-pub fn close_with_self_funded_context<T>(grant:RetainedCloneGrant,close:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<T,OriginalTurnFailure>{SelfFundedCloseCaller::new().turn(grant,close)}
+/// 🧳️ The original diagnostic, receipt and source-context refusals retain complete owned fields.
+pub fn close_original_retained_turn(cx:&mut StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,crate::OriginalTurnPrimary>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+ cx.original_source_parent()?.validate_borrowed_context(cx)?;
+ let remaining=cx.retained_grant();if cx.retirement_should_yield()||remaining.maximum_items==0||remaining.maximum_copy_bytes<demand.copy_bytes||remaining.maximum_capacity_bytes<demand.capacity_bytes||remaining.maximum_release_bytes<demand.release_bytes||remaining.maximum_depth<demand.depth{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+ let turn=advance(RetainedCloneGrant{maximum_items:1,..remaining});fold_original_close(cx,RetainedWorkOutcome{result:turn.result.map(|step|InteractiveJobCloseStep::Pending{progress:step.progress()}),work:turn.work})
+}
+
+/// 🎫️ A grant-shaped close returns its full actual CPU witness, including denial and failure.
+pub fn close_original_granted_step(cx:&mut StepContext<'_>,close:impl FnOnce(RetainedCloneGrant)->RetainedWorkOutcome<InteractiveJobCloseStep>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+ cx.original_source_parent()?.validate_borrowed_context(cx)?;
+ if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+ let turn=close(cx.retained_grant());fold_original_close(cx,RetainedWorkOutcome{result:turn.result.map_err(Into::into),work:turn.work})
+}
+
+/// 🪆️ Context-aware children post their own actual CPU; only unposted success effects are reconciled.
+pub fn close_original_nested_step(cx:&mut StepContext<'_>,close:impl FnOnce(&mut StepContext<'_>,RetainedCloneGrant)->Result<InteractiveJobCloseStep,OriginalTurnFailure>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
+ cx.original_source_parent()?.validate_borrowed_context(cx)?;
+ if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
+ let before=cx.retained_progress();let grant=cx.retained_grant();let step=close(cx,grant)?;
+ let(after,report)=(cx.retained_progress(),step.progress());let owed=|reported:usize,initial:usize,current:usize|current.checked_sub(initial).and_then(|posted|reported.checked_sub(posted)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original nested close reported fewer effects than its nested callers posted"));
+ let progress=RetainedCloneProgress{copied_items:owed(report.copied_items,before.copied_items,after.copied_items)?,copied_bytes:owed(report.copied_bytes,before.copied_bytes,after.copied_bytes)?,retained_capacity_bytes:owed(report.retained_capacity_bytes,before.retained_capacity_bytes,after.retained_capacity_bytes)?,released_bytes:owed(report.released_bytes,before.released_bytes,after.released_bytes)?};
+ fold_original_close(cx,RetainedWorkOutcome{result:Ok(InteractiveJobCloseStep::Pending{progress}),work:0})?;Ok(step)
+}
+
+

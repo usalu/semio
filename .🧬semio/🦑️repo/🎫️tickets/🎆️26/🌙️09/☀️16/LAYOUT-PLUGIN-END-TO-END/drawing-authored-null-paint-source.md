@@ -1,0 +1,7 @@
+# Canonical Authored Nullable Paint
+
+The closed twelve-case language-neutral parser law preceded body/schema edits. Omission remains omitted; explicit null is retained and renders no paint. Nonnull scalar/string/array/malformed object cases still refuse. The untouched original seventeenth preparation row supplies the real failing explicit-null source. No fixture stripping/coercion, pixel threshold, geometry, stock or fuel changed.
+
+Actual existing fill union, color and stops definitions moved from Diff into canonical artifact FillStyle/FillColor/FillStops. Diff DrawingFillValue now references artifact FillStyle plus null; artifact does not depend on Diff. Existing bilingual annotations and numeric/style bounds moved unchanged. Artifact now explicitly declares fill and allows null for fill/stroke. Canonical TypeScript DrawingAttributes and ownedAttributes preserve null before the unchanged nonnull object parser; no legacy adapter. The only preparation body-file change is an erased missing DrawingPathSegment type import.
+
+Both ENTIRE old JSON files were reconstructed in memory from the current canonical move and definition order before writing; the root type/parser file and erased import likewise reconstruct whole old hashes. Exact metadata is drawing-authored-null-paint-reversal.json. New parser law uses independent Ajv canonical artifact/Diff refs and SQLite omitted/null/object type queries; external tools remain test-only. No runtime executed yet. Fresh combined25+strict10 packet follows; first22/2 and strict1 diagnostic remain immutable.

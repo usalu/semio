@@ -232,9 +232,10 @@ impl MountedSurfaceResizeLane {
 
     pub fn drive_one(&mut self, cx: &mut StepContext<'_>) -> Result<(), OriginalTurnFailure> {
         if self.session_closing { self.drive_session_close_one(cx)?; return Ok(()); }
+        if self.source.as_ref().is_some_and(RefusedWorkerSource::terminal_is_empty) { RefusedWorkerSource::retire_empty(&mut self.source,cx)?; return Ok(()); }
         if let Some(source) = self.source.as_mut() {
             let config = BatchDriveConfig { retained: cx.retained_grant(), site: "os_renderer_surface_resize", stage: InteractiveStage::InteractiveStep, fuel_per_step: SURFACE_RESIZE_STEP_FUEL, step_budget_us: SURFACE_RESIZE_STEP_BUDGET_US };
-            if let Some(session) = source.admit_pending(config, cx)? { self.session = Some(session); assert!(source.terminal_is_empty()); self.source = None; }
+            source.admit_pending(config, &mut self.session, cx)?;
             return Ok(());
         }
         if let Some(session) = self.session.as_mut() {
@@ -246,8 +247,7 @@ impl MountedSurfaceResizeLane {
                 } else if matches!(kind, JobOutcomeKind::Cancelled | JobOutcomeKind::Fault) {
                     session.begin_close(); self.session_closing = true;
                 } else {
-                    let demand = RetirementDemand { depth: 2, ..Default::default() };
-                    semio_framework_job::close_original_retained_step(cx, demand, |grant| Ok(session.acknowledge_checked_out_outcome(grant)))?;
+                    session.acknowledge_checked_out_outcome(cx)?;
                     if session.checked_out_outcome_descriptor().is_none() { session.resume().map_err(|_| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "resize lost its original checked-out worker"))?; }
                 }
                 return Ok(());
@@ -257,24 +257,24 @@ impl MountedSurfaceResizeLane {
             return Ok(());
         }
         if cx.should_yield() || cx.retained_grant().maximum_items == 0 || cx.retained_grant().maximum_depth == 0 { return Ok(()); }
-        if self.pending.is_some() { cx.consume_retained(RetainedCloneProgress { copied_items: 1, ..Default::default() })?; cx.consume_fuel(1); }
-        if let Some(request) = self.pending.take() { self.source = Some(RefusedWorkerSource::pending(SurfaceResizeJob::new(request), (cx.operation(), cx.generation()))); }
+        if let Some(request) = self.pending.take() { self.source = Some(RefusedWorkerSource::pending(SurfaceResizeJob::new(request), (cx.operation(), cx.generation()))); semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})?; }
         Ok(())
     }
 
     fn drive_session_close_one(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        if self.source.as_ref().is_some_and(RefusedWorkerSource::terminal_is_empty) { RefusedWorkerSource::retire_empty(&mut self.source,cx)?; return Ok(true); }
         if let Some(source) = self.source.as_mut() {
             source.close_step(cx)?;
-            if source.terminal_is_empty() { self.source = None; }
             return Ok(true);
         }
+        if self.session.as_ref().is_some_and(|session|session.terminal_is_empty()) { semio_framework_job::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.session=None;self.session_closing=false;semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(true); }
         let Some(session) = self.session.as_mut() else { self.session_closing = false; return Ok(false); };
         let witness = cx.borrowed_original_cancel_token()?;
         match session.has_original_cancel_alias_witness(witness) {
             Ok(true) => {
                 let demand = RetirementDemand { depth: 1, ..Default::default() };
                 semio_framework_job::close_original_retained_step(cx, demand, |grant| {
-                    session.return_original_cancel_alias_step(witness, grant).map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(|error| match error { semio_framework_job_worker::WorkerJobDemandError::Refused(error) => error, semio_framework_job_worker::WorkerJobDemandError::Contention(_) => ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "resize cancellation return is contended") })
+                    {let turn=session.return_original_cancel_alias_step(witness,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(|error| match error { semio_framework_job_worker::WorkerJobDemandError::Refused(error) => error, semio_framework_job_worker::WorkerJobDemandError::Contention(_) => ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "resize cancellation return is contended") }),work:turn.work}}
                 })?;
                 return Ok(true);
             }
@@ -282,7 +282,7 @@ impl MountedSurfaceResizeLane {
             Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => return Err(error.into()),
             Ok(false) => {}
         }
-        if matches!(session.close_step(cx)?, WorkerJobCloseStep::Complete { .. }) && session.terminal_is_empty() { self.session = None; self.session_closing = false; }
+        session.close_step(cx)?;
         Ok(true)
     }
 
@@ -320,7 +320,7 @@ impl MountedSurfaceResizeLane {
             if self.ready.take().is_none() && self.pending.take().is_none() {
                 if let Some(token) = self.token.take() { let slot = token.slot as usize; if SURFACE_LANE_GENERATIONS[slot].load(Ordering::Acquire) == token.generation { SURFACE_LANE_OCCUPIED[slot].store(false, Ordering::Release); } } else { self.operation = None; }
             }
-            Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+            semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })),work:1}
         })?;
         Ok(self.terminal_is_empty())
     }

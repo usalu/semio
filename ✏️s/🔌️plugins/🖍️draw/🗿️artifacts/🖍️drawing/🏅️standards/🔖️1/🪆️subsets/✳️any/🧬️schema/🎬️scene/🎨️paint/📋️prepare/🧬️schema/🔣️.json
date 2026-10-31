@@ -59,7 +59,7 @@
           "enum": [
             "nodes",
             "bounds",
-            
+            "pathInput",
             "path",
             "pathCleanup",
             "complete"
@@ -110,7 +110,7 @@
         },
         "flatness": {
           "type": "number",
-          "minimum": 0.000001,
+          "minimum": 1e-06,
           "maximum": 16
         },
         "counts": {
@@ -227,7 +227,7 @@
                         "properties": {
                           "flatness": {
                             "type": "number",
-                            "minimum": 0.000001,
+                            "minimum": 1e-06,
                             "maximum": 16
                           },
                           "fillRule": {

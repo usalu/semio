@@ -29,8 +29,6 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-       "language",
-       "fallbackLanguage",
        "supportedLanguages"
       ],
       "properties": {

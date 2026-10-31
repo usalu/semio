@@ -264,3 +264,15 @@ test("a resident daemon slot is inert: held for a daemon's whole life it blocks 
  expect(validatePolicy({...authored,classes:authored.classes.map(row=>row.id==="daemon-slot"?{...row,inert:"yes"}:row)})).toBe(false);
  expect(validatePolicy({...authored,classes:authored.classes.map(row=>row.id==="daemon-slot"?{...row,quiet:true}:row)})).toBe(false);
 });
+
+/** 🧹️ The rustup bootstrap (toolchain, rank 1) may be requested under a PRIVATE per-invocation scratch claim, never under a scratch claim shared between invocations. */
+test("a private artifact scratch claim may wait for the toolchain, a shared one still refuses",()=>{
+ const policy=leaseOrderPolicyV1(),held=(resource:string)=>[{directory:"/l",resource,mode:"exclusive" as const,atMs:1,task:1}],request={directory:"/l",resource:"rustup:bootstrap",mode:"shared" as const};
+ const hash="a".repeat(64);
+ expect(classifyLeaseResourceV1(policy,"artifact-scratch-private:"+hash)).toMatchObject({id:"artifact",rank:6});expect(classifyLeaseResourceV1(policy,"artifact-scratch:"+hash)).toMatchObject({id:"artifact",rank:6});
+ expect(checkLeaseOrderV1(policy,held("artifact-scratch-private:"+hash),request as never),"private scratch").toBeUndefined();
+ expect(checkLeaseOrderV1(policy,held("artifact-scratch:"+hash),request as never)?.kind,"shared scratch").toBe("out-of-order");
+ expect(checkLeaseOrderV1(policy,held("artifact:/x/y"),request as never)?.kind,"every other artifact lease").toBe("out-of-order");
+ expect(checkLeaseOrderV1(policy,held("artifact-scratch-private:"+hash),{...request,resource:"cargo:registry:/x"} as never)?.kind,"the exemption is only for the toolchain").toBe("out-of-order");
+ const edge=policy.allowed.find(row=>row.from==="artifact"&&row.to==="toolchain")!;expect(edge.binding).toEqual({kind:"held-prefix",fromPrefix:"artifact-scratch-private:"});expect(edge.reason.en.length).toBeGreaterThan(100);expect(edge.reason.de.length).toBeGreaterThan(100);
+});

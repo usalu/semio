@@ -1,0 +1,97 @@
+{
+  "rustFiles": 37361,
+  "limit": 60000,
+  "prunedDirectories": [
+    ".cache",
+    ".git",
+    ".🧬semio",
+    "node_modules",
+    "target"
+  ],
+  "rows": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+      "sites": [
+        {
+          "line": 403,
+          "text": "/// non-blocking [`poll_ready_now`], see the module doc. A job MUST check this on entry and after"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔁️blocking/🦀️.rs",
+      "sites": [
+        {
+          "line": 82,
+          "text": "pub fn receive_blocking<T:NativeReceive<DslValue>>(value:DslValue)->Result<T,ValueError>{"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️time-travel-part-1/🧨️inert-label-op-and-hostile-input/🦀️.rs",
+      "sites": [
+        {
+          "line": 1,
+          "text": "// 🧨️ Inert label op and hostile input: the inert label operation fixture, a blocking mutation without editable inputs, an inverse refusal and hostile history edit input."
+        },
+        {
+          "line": 166,
+          "text": "/// ⚖️ LAW (design §22.1, §22.20): a blocking mutation without editable inputs is always resolvable. A mutation whose"
+        },
+        {
+          "line": 173,
+          "text": "async fn a_blocking_mutation_without_editable_inputs_is_withdrawn_and_the_review_becomes_ready() {"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+      "sites": [
+        {
+          "line": 1,
+          "text": "//! 🗃️ Local-first, non-blocking, client-side, in-memory document store — hot-swappable"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧬️original/📜️carrier/🦀️.rs",
+      "sites": [
+        {
+          "line": 7,
+          "text": "use semio_framework_value_native_owned::blocking::receive_blocking;"
+        },
+        {
+          "line": 21,
+          "text": "Some(FieldValue::Value(document))=>receive_blocking(document.clone()),"
+        },
+        {
+          "line": 35,
+          "text": "pub fn from_document(document:DslValue)->Result<Self,ValueError>{receive_blocking(document)}"
+        },
+        {
+          "line": 46,
+          "text": "fn from_value(value:DslValue)->Result<Self,ValueError>{receive_blocking(value)}"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🔬️bestest-load/🦀️.rs",
+      "sites": [
+        {
+          "line": 6,
+          "text": "semio_framework_value_native_owned::blocking::retire(snapshot).expect(\"funded retirement\");"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🌉️native-cold/🦀️.rs",
+      "sites": [
+        {
+          "line": 24,
+          "text": "let _ = semio_framework_value_native_owned::blocking::retire(displaced);"
+        }
+      ]
+    }
+  ],
+  "limitations": "literal whole repository Rust identifier/import census, no computed generator/type-resolved linker claim"
+}

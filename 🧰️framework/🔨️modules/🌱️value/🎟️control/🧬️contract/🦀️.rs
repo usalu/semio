@@ -142,3 +142,7 @@ pub use original_close::OriginalRetirementCloseLoan;
 #[path="../../📦️paged/📖️read/🎟️.rs"]
 mod byte_source;
 pub use byte_source::{ByteReadSource,ByteReadRange};
+
+/// 📫️ One original retained-work invocation owns its full result and independent actual CPU.
+#[derive(Debug)]
+pub struct RetainedWorkOutcome<T=RetainedCloneStep,E=ValueError>{pub result:Result<T,E>,pub work:u64}

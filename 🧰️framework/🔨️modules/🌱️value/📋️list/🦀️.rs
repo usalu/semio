@@ -13,6 +13,7 @@ pub use edit::{PagedListEditCursor, PagedListEditStep};
 pub struct PagedListReturnProgress{pub progressed:bool,pub returned_allocation_bytes:usize}
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct PagedListProgress {
+    pub work: u64,
     pub progressed: bool,
     pub allocated_bytes: usize,
     pub placed_bytes: usize,
@@ -33,6 +34,7 @@ impl std::fmt::Display for PagedListError { fn fmt(&self, output: &mut std::fmt:
 impl std::error::Error for PagedListError {}
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PagedListAllocationError {
+    pub work: u64,
     pub allocated_bytes: usize,
     pub kind: PagedListRefusalKind,
     pub reason: &'static str,
@@ -468,16 +470,16 @@ impl<T, const N: usize> PagedList<T, N> {
     /// 📃️ Reserves one original metadata or payload page only with independent structural funding.
     pub fn reserve_one_funded(&mut self, grant:semio_framework_value_control_contract::RetainedCloneGrant) -> Result<semio_framework_value_control_contract::RetainedCloneProgress,PagedListAllocationError> {
         if self.has_reserved_slot() { return Ok(Default::default()); }
-        let copy=self.next_reserve_copy_byte_demand().map_err(|error|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason})?;
-        let capacity=self.next_allocation_bytes().map_err(|error|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason})?;
-        let depth=self.next_reserve_depth_demand().map_err(|error|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason})?;
+        let copy=self.next_reserve_copy_byte_demand().map_err(|error|PagedListAllocationError{work:0,allocated_bytes:0,kind:error.kind,reason:error.reason})?;
+        let capacity=self.next_allocation_bytes().map_err(|error|PagedListAllocationError{work:0,allocated_bytes:0,kind:error.kind,reason:error.reason})?;
+        let depth=self.next_reserve_depth_demand().map_err(|error|PagedListAllocationError{work:0,allocated_bytes:0,kind:error.kind,reason:error.reason})?;
         if grant.maximum_items==0||grant.maximum_depth<depth||copy>grant.maximum_copy_bytes||capacity>grant.maximum_capacity_bytes { return Ok(Default::default()); }
         let progress=self.reserve_one(grant.maximum_capacity_bytes)?;
         Ok(semio_framework_value_control_contract::RetainedCloneProgress{copied_items:usize::from(progress.progressed),copied_bytes:if progress.progressed{copy}else{0},retained_capacity_bytes:progress.allocated_bytes,released_bytes:0})
     }
     /// 📬️ Reserves at most one original page toward a requested logical capacity only with independent structural funding.
     pub fn reserve_capacity_one_funded(&mut self, capacity:usize, grant:semio_framework_value_control_contract::RetainedCloneGrant) -> Result<semio_framework_value_control_contract::RetainedCloneProgress,PagedListAllocationError> {
-        let refused=|error:PagedListError|PagedListAllocationError{allocated_bytes:0,kind:error.kind,reason:error.reason};
+        let refused=|error:PagedListError|PagedListAllocationError{work:0,allocated_bytes:0,kind:error.kind,reason:error.reason};
         let copy=self.next_capacity_copy_byte_demand(capacity).map_err(refused)?;
         let Some(bytes)=self.next_capacity_allocation_bytes(capacity).map_err(refused)? else { return Ok(Default::default()); };
         let depth=self.next_page_reserve_depth_demand().map_err(refused)?;
@@ -497,7 +499,7 @@ impl<T, const N: usize> PagedList<T, N> {
     /// 🧱️ The source's declared final extent funds one genuine metadata or payload allocation.
     pub fn reserve_exact_capacity_one(&mut self, limit: usize, grant: usize) -> Result<PagedListProgress, PagedListAllocationError> {
         if limit > N || limit < self.length {
-            return Err(PagedListAllocationError { allocated_bytes: 0, kind: PagedListRefusalKind::OwnershipLimit, reason: "exact final extent exceeds logical authority" });
+            return Err(PagedListAllocationError { work: 0, allocated_bytes: 0, kind: PagedListRefusalKind::OwnershipLimit, reason: "exact final extent exceeds logical authority" });
         }
         if limit <= self.capacity { return Ok(PagedListProgress::default()); }
         self.reserve_page_using_for_limit::<ExactAllocation>(grant, limit)
@@ -519,7 +521,7 @@ impl<T, const N: usize> PagedList<T, N> {
     /// ⏪️ Admits at most one backing allocation toward a requested logical capacity.
     pub fn reserve_capacity_one(&mut self, capacity: usize, grant: usize) -> Result<PagedListProgress, PagedListAllocationError> {
         if capacity > N {
-            return Err(PagedListAllocationError { allocated_bytes: 0, kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list logical capacity exhausted" });
+            return Err(PagedListAllocationError { work: 0, allocated_bytes: 0, kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list logical capacity exhausted" });
         }
         if capacity <= self.capacity { return Ok(PagedListProgress::default()); }
         self.reserve_page_using_for_limit::<ExactAllocation>(grant,capacity)
@@ -541,7 +543,7 @@ impl<T, const N: usize> PagedList<T, N> {
     fn reserve_page_using<A: PageAllocation>(&mut self, grant: usize) -> Result<PagedListProgress, PagedListAllocationError> { self.reserve_page_using_for_limit::<A>(grant, N) }
 
     fn reserve_page_using_for_limit<A: PageAllocation>(&mut self, grant: usize, limit: usize) -> Result<PagedListProgress, PagedListAllocationError> {
-        let rejected = |kind, reason| PagedListAllocationError { allocated_bytes: 0, kind, reason };
+        let rejected = |kind, reason| PagedListAllocationError { work: 0, allocated_bytes: 0, kind, reason };
         let requested = self.next_page_allocation_bytes_for_limit(limit).map_err(|error| rejected(error.kind, error.reason))?;
         if grant < requested {
             return Ok(PagedListProgress::default());
@@ -552,8 +554,8 @@ impl<T, const N: usize> PagedList<T, N> {
         let root_height = self.height();
         if Self::page_height(page) > root_height {
             let mut root = Vec::new();
-            A::reserve(&mut root, 1).map_err(|_| rejected(PagedListRefusalKind::AllocationFailed, "fixed list metadata allocation failed"))?;
-            if root.capacity()<1{return Err(rejected(PagedListRefusalKind::InvariantViolated,"fixed list metadata allocation provided no reserved slot"));}
+            A::reserve(&mut root, 1).map_err(|_| PagedListAllocationError{work:1,..rejected(PagedListRefusalKind::AllocationFailed, "fixed list metadata allocation failed")})?;
+            if root.capacity()<1{return Err(PagedListAllocationError{work:1,..rejected(PagedListRefusalKind::InvariantViolated,"fixed list metadata allocation provided no reserved slot")});}
             let actual = root.capacity() * size_of::<Page<T>>();
             let mut children = std::array::from_fn(|_| Vec::new());
             children[0] = std::mem::take(&mut self.root);
@@ -561,47 +563,47 @@ impl<T, const N: usize> PagedList<T, N> {
             self.root = root;
             self.allocated = self.allocated.checked_add(actual).expect("preflight and Vec backing each fit signed addressable size");
             if self.allocated > isize::MAX as usize {
-                return Err(PagedListAllocationError { allocated_bytes: actual, kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list actual allocation exceeds addressable ownership; owner retained" });
+                return Err(PagedListAllocationError { work: 1, allocated_bytes: actual, kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list actual allocation exceeds addressable ownership; owner retained" });
             }
             if actual > grant {
-                return Err(PagedListAllocationError { allocated_bytes: actual, kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list metadata allocation exceeded admission; owner retained" });
+                return Err(PagedListAllocationError { work: 1, allocated_bytes: actual, kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list metadata allocation exceeded admission; owner retained" });
             }
-            return Ok(PagedListProgress { progressed: true, allocated_bytes: actual, ..Default::default() });
+            return Ok(PagedListProgress { work: 1, progressed: true, allocated_bytes: actual, ..Default::default() });
         }
         let mut link = &mut self.root;
         for height in (0..=root_height).rev() {
             if link.is_empty() {
-                A::reserve(link, 1).map_err(|_| rejected(PagedListRefusalKind::AllocationFailed, "fixed list metadata allocation failed"))?;
-                if link.capacity()<1{return Err(rejected(PagedListRefusalKind::InvariantViolated,"fixed list metadata allocation provided no reserved slot"));}
+                A::reserve(link, 1).map_err(|_| PagedListAllocationError{work:1,..rejected(PagedListRefusalKind::AllocationFailed, "fixed list metadata allocation failed")})?;
+                if link.capacity()<1{return Err(PagedListAllocationError{work:1,..rejected(PagedListRefusalKind::InvariantViolated,"fixed list metadata allocation provided no reserved slot")});}
                 let actual = link.capacity() * size_of::<Page<T>>();
                 link.push(if height == 0 { Page::Leaf { items: Vec::new(), slots: 0 } } else { Page::Branch { height, children: std::array::from_fn(|_| Vec::new()) } });
                 self.allocated = self.allocated.checked_add(actual).expect("preflight and Vec backing each fit signed addressable size");
                 if self.allocated > isize::MAX as usize {
-                    return Err(PagedListAllocationError { allocated_bytes: actual, kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list actual allocation exceeds addressable ownership; owner retained" });
+                    return Err(PagedListAllocationError { work: 1, allocated_bytes: actual, kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list actual allocation exceeds addressable ownership; owner retained" });
                 }
                 if actual > grant {
-                    return Err(PagedListAllocationError { allocated_bytes: actual, kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list metadata allocation exceeded admission; owner retained" });
+                    return Err(PagedListAllocationError { work: 1, allocated_bytes: actual, kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list metadata allocation exceeded admission; owner retained" });
                 }
-                return Ok(PagedListProgress { progressed: true, allocated_bytes: actual, ..Default::default() });
+                return Ok(PagedListProgress { work: 1, progressed: true, allocated_bytes: actual, ..Default::default() });
             }
             match &mut link[0] {
                 Page::Branch { children, .. } => link = &mut children[Self::slot(page, height)],
                 Page::Leaf { items, slots } => {
                     let admitted_slots = page_items.min(limit - self.capacity);
                     if *slots==0&&size_of::<T>()!=0&&items.capacity()!=0{return Err(rejected(PagedListRefusalKind::InvariantViolated,"fixed list partial allocation requires funded settlement before reservation"));}
-                    A::reserve(items, admitted_slots).map_err(|_| rejected(PagedListRefusalKind::AllocationFailed, "fixed list payload allocation failed"))?;
+                    A::reserve(items, admitted_slots).map_err(|_| PagedListAllocationError{work:1,..rejected(PagedListRefusalKind::AllocationFailed, "fixed list payload allocation failed")})?;
                     let actual = if size_of::<T>() == 0 { 0 } else { items.capacity() * size_of::<T>() };
                     self.allocated = self.allocated.checked_add(actual).expect("preflight and Vec backing each fit signed addressable size");
-                    if items.capacity()<admitted_slots{return Err(PagedListAllocationError{allocated_bytes:actual,kind:PagedListRefusalKind::InvariantViolated,reason:"fixed list payload allocation provided fewer reserved slots; owner retained"});}
+                    if items.capacity()<admitted_slots{return Err(PagedListAllocationError{work:1,allocated_bytes:actual,kind:PagedListRefusalKind::InvariantViolated,reason:"fixed list payload allocation provided fewer reserved slots; owner retained"});}
                     *slots = admitted_slots;
                     self.capacity += admitted_slots;
                     if self.allocated > isize::MAX as usize {
-                        return Err(PagedListAllocationError { allocated_bytes: actual, kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list actual allocation exceeds addressable ownership; owner retained" });
+                        return Err(PagedListAllocationError { work: 1, allocated_bytes: actual, kind: PagedListRefusalKind::OwnershipLimit, reason: "fixed list actual allocation exceeds addressable ownership; owner retained" });
                     }
                     if actual > grant {
-                        return Err(PagedListAllocationError { allocated_bytes: actual, kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list payload allocation exceeded admission; owner retained" });
+                        return Err(PagedListAllocationError { work: 1, allocated_bytes: actual, kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list payload allocation exceeded admission; owner retained" });
                     }
-                    return Ok(PagedListProgress { progressed: true, allocated_bytes: actual, ..Default::default() });
+                    return Ok(PagedListProgress { work: 1, progressed: true, allocated_bytes: actual, ..Default::default() });
                 }
             }
         }
@@ -644,7 +646,7 @@ impl<T, const N: usize> PagedList<T, N> {
             *source = Some(owner);
             return Err(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list reserved authority rejected exact owner" });
         }
-        Ok(PagedListProgress { progressed: true, placed_bytes: size_of::<T>(), ..Default::default() })
+        Ok(PagedListProgress { work: 1, progressed: true, placed_bytes: size_of::<T>(), ..Default::default() })
     }
 
     /// 🤝 Adopts an already-copied owner into admitted backing without charging another payload copy.
@@ -656,7 +658,7 @@ impl<T, const N: usize> PagedList<T, N> {
             *source = Some(owner);
             return Err(PagedListError { kind: PagedListRefusalKind::InvariantViolated, reason: "fixed list reserved authority rejected adopted owner" });
         }
-        Ok(PagedListProgress { progressed: true, ..Default::default() })
+        Ok(PagedListProgress { work: 1, progressed: true, ..Default::default() })
     }
 
     pub fn pop(&mut self) -> Option<T> {
@@ -779,14 +781,14 @@ impl<T, const N: usize> PagedList<T, N> {
                         *items = Vec::new();
                         *slots -= *reserved;
                         *reserved = 0;
-                        return Ok(PagedListProgress { progressed: true, released_allocation_bytes: bytes, ..Default::default() });
+                        return Ok(PagedListProgress { work: 1, progressed: true, released_allocation_bytes: bytes, ..Default::default() });
                     }
                 }
             }
             let bytes = link.capacity() * size_of::<Page<T>>();
             if bytes > maximum_bytes { return Ok(PagedListProgress::default()); }
             *link = Vec::new();
-            Ok(PagedListProgress { progressed: true, released_allocation_bytes: bytes, ..Default::default() })
+            Ok(PagedListProgress { work: 1, progressed: true, released_allocation_bytes: bytes, ..Default::default() })
         }
         let step = release(&mut self.root, &mut self.capacity, maximum_bytes)?;
         self.allocated -= step.released_allocation_bytes;

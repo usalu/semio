@@ -1,0 +1,258 @@
+{
+  "cases": [
+    {
+      "name": "filled square",
+      "width": 2,
+      "height": 2,
+      "mask": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "threshold": 0.5,
+      "epsilon": 0.0,
+      "expected": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2.0,
+              0.0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0.0,
+              2.0
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ]
+      }
+    },
+    {
+      "name": "empty",
+      "width": 2,
+      "height": 2,
+      "mask": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "threshold": 0.5,
+      "epsilon": 0.0,
+      "expected": {
+        "segments": []
+      }
+    },
+    {
+      "name": "invalid dimensions",
+      "width": 0,
+      "height": 1,
+      "mask": [],
+      "threshold": 0.5,
+      "epsilon": 0.0,
+      "expected": {
+        "error": "invalid input: Invalid bitmap trace contract"
+      }
+    },
+    {
+      "name": "invalid extent",
+      "width": 2,
+      "height": 2,
+      "mask": [
+        255
+      ],
+      "threshold": 0.5,
+      "epsilon": 0.0,
+      "expected": {
+        "error": "invalid input: Bitmap trace expects exact dimensions within the pixel budget"
+      }
+    },
+    {
+      "name": "former kernel trait square",
+      "width": 6,
+      "height": 6,
+      "mask": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        255,
+        255,
+        255,
+        255,
+        0,
+        0,
+        255,
+        255,
+        255,
+        255,
+        0,
+        0,
+        255,
+        255,
+        255,
+        255,
+        0,
+        0,
+        255,
+        255,
+        255,
+        255,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "threshold": 0.5,
+      "epsilon": 0.5,
+      "expected": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1.0,
+              1.0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              5.0,
+              1.0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              5.0,
+              5.0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              1.0,
+              5.0
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ]
+      }
+    },
+    {
+      "name": "former extension trace square",
+      "width": 4,
+      "height": 4,
+      "mask": [
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255
+      ],
+      "threshold": 0.5,
+      "epsilon": 0.0,
+      "expected": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              4.0,
+              0.0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              4.0,
+              4.0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              0.0,
+              4.0
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ]
+      }
+    }
+  ],
+  "stock": {
+    "items": 4194304,
+    "copy": 268435456,
+    "capacity": 33554432,
+    "release": 67108864,
+    "depth": 256
+  },
+  "turn": {
+    "items": 1,
+    "copy": 64,
+    "capacity": 33554432,
+    "release": 67108864,
+    "depth": 256
+  },
+  "operation": 2605,
+  "generation": 17,
+  "deadline": 1500,
+  "fuel": 4194304,
+  "maxTurns": 262144,
+  "foreignOperation": 2606,
+  "deniedCpu": 0,
+  "outputPublication": {
+    "actualWork": 1,
+    "semanticWork": 0,
+    "preservePointerOnDenial": true
+  }
+}

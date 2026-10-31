@@ -1,0 +1,18 @@
+{
+  "state": "source-authored-unexecuted",
+  "cause": "fill switch fell through to path after successful stage; gradient also changed phase before admitted stage",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🟦️.ts",
+      "beforeSha256": "5c10c158ceb8117cf3333bf3f071efb686ad0948f03b0c1bf5219e48ef09ef83",
+      "sha256": "b829add119916e28bbcfaa89ad1de219d28f86fd8ec8d4bcb1b7241c3d9f9660",
+      "wholeInverseMatches": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🧪️tests/admission.test.ts",
+      "sha256": "fa5d1997b1ac1f1ecf3295f00c5902385a78d67883eae1948d26e64e648a565d"
+    }
+  ],
+  "strictOnlyCorrections": "drawing-pdf-svg-strict-erased-corrections.json",
+  "preserved": "All original pixel/geometry/cancel/caps/stocks; real allocator admission regression; no writer compatibility API."
+}

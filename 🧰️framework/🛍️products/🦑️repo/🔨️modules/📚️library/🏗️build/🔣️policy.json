@@ -202,6 +202,8 @@
       "budgetBasisPoints": 10000,
       "rampMilliseconds": 60000,
       "maximumRamping": 2,
+      "rampIdleAfterMilliseconds": 30000,
+      "rampIdleObservedBasisPoints": 2500,
       "maximumQuiet": 4,
       "quietSoftStopGrants": 1
     },

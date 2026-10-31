@@ -1,7 +1,6 @@
 //! 📸️ `stdio.step` snapshot: the AP214 document, its diff, the B-rep mesh view and the text, binary and SQLite codecs.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

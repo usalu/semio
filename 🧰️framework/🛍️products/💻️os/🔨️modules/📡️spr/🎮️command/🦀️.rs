@@ -10,7 +10,7 @@
 //! interprets an `Op`'s fields, only threads it through the trait seams a technology implements.
 
 //#region 🔖️Contract
-/// 🎞️ The mutation contract itself lives in `protocol::mutation` (framework module
+/// 💚️ The mutation contract itself lives in `protocol::mutation` (framework module
 /// `📡️replication`); this authoring layer builds on it and re-exports it so every historical
 /// `command::Mutation`/`Edit`/`MutationMessage` path keeps resolving.
 pub use protocol::mutation::*;
@@ -62,7 +62,7 @@ impl TouchedPaths {
         })
     }
 
-    /// 🔀️ [`intersects_prefix`](Self::intersects_prefix) for the path whose segments are `parts`, without splitting or allocating: a part may itself contain `/`.
+    /// 🛤️ [`intersects_prefix`](Self::intersects_prefix) for the path whose segments are `parts`, without splitting or allocating: a part may itself contain `/`.
     pub fn intersects_parts(&self, parts: &[&str]) -> bool {
         self.paths.iter().any(|path| {
             let mut rest = path.trim_start_matches('/');
@@ -82,13 +82,13 @@ impl TouchedPaths {
         })
     }
 
-    /// 🔀️ Whether any of `prefixes` intersects `self` (see [`intersects_prefix`](Self::intersects_prefix)).
+    /// 🌀️ Whether any of `prefixes` intersects `self` (see [`intersects_prefix`](Self::intersects_prefix)).
     pub fn intersects_any(&self, prefixes: &[&str]) -> bool {
         prefixes.iter().any(|prefix| self.intersects_prefix(prefix))
     }
 }
 
-/// 🗺️ Write-region coverage of a diff — the diff→invalidation bridge for inference's tier-1
+/// 🙅️ Write-region coverage of a diff — the diff→invalidation bridge for inference's tier-1
 /// gate. Deliberately a SEPARATE trait from [`MutationDiff`] (not a new method on it), following the
 /// same seeded-shrink-only rollout as [`DiffAlgebra`] above: land standalone here, adopt per-type via
 /// a `POLICY_DIFF_REGIONS` allowlist, never as a hard bound on `MutationDiff` until every implementor
@@ -256,7 +256,7 @@ where
     fn may_emit_foreign_steps(&self) -> bool {
         false
     }
-    /// 🌐️ Borrows one declared original foreign source under the original snapshot.
+    /// 🤲️ Borrows one declared original foreign source under the original snapshot.
     fn foreign_step_source<'a>(&'a self, _base: &'a P, _index: usize) -> Result<Option<ForeignStepSource<'a>>, semio_framework_value::ValueError> {
         Ok(None)
     }
@@ -283,7 +283,7 @@ pub trait SemanticMutation<P>: Mutation<P> {
 //#endregion 🔖️Semantics
 
 //#region 🔖️Collection
-/// 🧬️ Collection identity/patch/diff — single source of truth in VCS (`crate::os_vcs`).
+/// 🩹️ Collection identity/patch/diff — single source of truth in VCS (`crate::os_vcs`).
 pub use semio_framework_os_vcs::{CollectionDiff, Identified, ItemPatch, Patchable};
 
 //#endregion 🔖️Collection
@@ -367,7 +367,7 @@ where
     Ok(())
 }
 
-/// 🗃️ Index-keyed ordered-collection delta shape — the shared type behind an intrinsically
+/// 🔖️ Index-keyed ordered-collection delta shape — the shared type behind an intrinsically
 /// ordered, id-less collection's diff fragment (pptx slides/shapes, paragraphs, table rows),
 /// replacing hand-copied `IndexedTripleDiff`-shaped structs (4 copies pre-overhaul). Index
 /// convention (owned by the artifact's handcrafted `MutationKind::diff`, [`indexed_apply`] just
@@ -392,7 +392,7 @@ impl<V, Patch> IndexedTripleDiff<V, Patch> {
     }
 }
 
-/// ▶️ Validates and applies an [`IndexedTripleDiff`] in place: BASE-state `modified`
+/// ✔️ Validates and applies an [`IndexedTripleDiff`] in place: BASE-state `modified`
 /// patches first, BASE-state `removed` descending, then FINAL-state `added` ascending. Every
 /// index is exact; out-of-range and duplicate indices reject atomically instead of clamping.
 pub fn indexed_apply<V, Patch>(items: &mut Vec<V>, diff: &IndexedTripleDiff<V, Patch>) -> Result<(), MutationApplyError>
@@ -459,7 +459,7 @@ pub struct MutationDescriptor {
 }
 
 impl MutationDescriptor {
-    /// 🏗️ Validates all required metadata and fingerprints the complete immutable identity.
+    /// 🌁️ Validates all required metadata and fingerprints the complete immutable identity.
     pub fn new(id: protocol::ids::SchemaId, schema_version: protocol::ids::SchemaVersion, state_class: semio_framework_schema_state::StateClass, leaf: MutationLeafDescriptor, semantics: SemanticDescriptor) -> Result<Self, MutationDescriptorError> {
         if id.0.trim().is_empty() {
             return Err(MutationDescriptorError::InvalidField { field: "id", requirement: "must be nonblank" });
@@ -587,7 +587,7 @@ pub fn register_mutation_descriptor(descriptor: MutationDescriptor) -> Result<()
     register_mutation_descriptors([descriptor])
 }
 
-/// 📝️ Atomically registers a complete roster in the process-wide registry.
+/// ⚛️ Atomically registers a complete roster in the process-wide registry.
 pub fn register_mutation_descriptors(descriptors: impl IntoIterator<Item = MutationDescriptor>) -> Result<(), MutationDescriptorError> {
     let mut registry = mutation_descriptor_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry.register_all(descriptors)
@@ -619,7 +619,7 @@ pub struct MutationEvent {
 //#endregion 🔖️Events
 
 //#region 🔖️Outcome
-/// 🗂️ The five-channel separation `framework/core`'s `InvocationResult` later maps onto:
+/// 📺️ The five-channel separation `framework/core`'s `InvocationResult` later maps onto:
 /// durable diffs, two UI-visibility tiers, a speculative preview tier, and side-effect events.
 #[derive(Clone, Debug, Default, ToValue, FromValue)]
 pub struct CommandOutcome<Diff> {
@@ -709,7 +709,7 @@ pub struct Planner<P, Op: ColdMutation<P>> {
     messages: Vec<MutationMessage>,
 }
 
-/// 🎯️ Prefixes `message.target` with `prefix` as its new outermost segment — how [`Planner::call`]
+/// ✉️ Prefixes `message.target` with `prefix` as its new outermost segment — how [`Planner::call`]
 /// attributes each local step's messages back to "the step path" (§C4).
 // 🚫️async: R9 pure accessor — only consumer is `Iterator::map`'s sync closure below; no
 // suspension point exists in the body either.
@@ -723,7 +723,7 @@ impl<P: Clone, Op: ColdMutation<P>> Planner<P, Op> {
         Self { base: base.clone(), steps: Vec::new(), pre_states: Vec::new(), depth: 0, seen: Vec::new(), messages: Vec::new() }
     }
 
-    /// 🪞️ The snapshot as it stands after every step `call`ed so far.
+    /// 🧲️ The snapshot as it stands after every step `call`ed so far.
     pub fn base(&self) -> &P {
         &self.base
     }
@@ -735,7 +735,7 @@ impl<P: Clone, Op: ColdMutation<P>> Planner<P, Op> {
         &self.messages
     }
 
-    /// ▶️ Computes `op.diff(base)`, folds its [`MutationMessage`]s (target-prefixed by this step's
+    /// 🧱️ Computes `op.diff(base)`, folds its [`MutationMessage`]s (target-prefixed by this step's
     /// index) into `self.messages`, and — unless any message is `Fatal` — advances `base` by the
     /// diff and records `op` as a [`PlanStep::Local`], so the NEXT `call`/`call_foreign` sees the
     /// post-state, matching what sequential application of the resulting plan would do. A `Fatal`
@@ -794,15 +794,15 @@ impl<P: Clone, Op: ColdMutation<P>> Planner<P, Op> {
     }
 }
 
-/// 🕸️ Native composite vocabulary and authored metadata; retained producers own native planning.
+/// 🛂️ Native composite vocabulary and authored metadata; retained producers own native planning.
 pub trait CompositeMutationKind<P, Op: Mutation<P>>: MutationLeaf + protocol::value::ToValue + protocol::value::FromValue {
     const SEMANTICS: SemanticDescriptor;
-    /// 🌐️ Declares foreign capability without executing the local plan.
+    /// ⚡️ Declares foreign capability without executing the local plan.
     fn may_emit_foreign_steps(&self) -> bool { false }
-    /// 🌐️ Borrows an original declared hop; domain refusal remains explicit.
+    /// 🌂️ Borrows an original declared hop; domain refusal remains explicit.
     fn foreign_step_source<'a>(&'a self, _base: &'a P, _index: usize) -> Result<Option<ForeignStepSource<'a>>, semio_framework_value::ValueError> { Ok(None) }
     fn label(&self) -> crate::LocalizedLabel;
-    /// ⏱️ Returns only the clock explicitly carried by this composite payload.
+    /// 🕐️ Returns only the clock explicitly carried by this composite payload.
     fn timestamp(&self) -> Option<protocol::ids::HybridLogicalTimestamp> {
         None
     }
@@ -817,7 +817,7 @@ pub trait ColdCompositeMutationKind<P,Op:ColdMutation<P>>:MutationLeaf+protocol:
     fn foreign_step_source<'a>(&'a self,_base:&'a P,_index:usize)->Result<Option<ForeignStepSource<'a>>,semio_framework_value::ValueError>{Ok(None)}
 }
 
-/// 🏗️ Runs an explicit cold composite plan against its wire reference snapshot.
+/// 🏃️ Runs an explicit cold composite plan against its wire reference snapshot.
 pub fn plan_of<P: Clone, Op: ColdMutation<P>, K: ColdCompositeMutationKind<P, Op>>(kind: &K, base: &P) -> Result<Vec<PlanStep<Op>>, PlanError> {
     let mut planner = Planner::new(base);
     kind.plan(base, &mut planner)?;
@@ -863,7 +863,32 @@ pub fn mutation_payload_round_trip_failures<P, M: Mutation<P>>(ops: Vec<M>) -> V
     failures
 }
 
-/// 🧬️ The static editability roster of an aggregate (design §16.3): exactly one payload JSON Schema per leaf descriptor, each a
+/// 📊️ The static descriptor roster of an aggregate equals the schema-first record on disk: every descriptor in `M::DESCRIPTORS` is exactly the
+/// fourteen-field JSON (`descriptor_filename`) its owner directory under `workspace` holds, so the const-evaluated roster and the generated data agree
+/// field for field. One line per breach.
+pub fn mutation_descriptor_roster_failures<P, M: Mutation<P>>(workspace: &std::path::Path, descriptor_filename: &str) -> Vec<String> {
+    let mut failures = Vec::new();
+    for descriptor in M::DESCRIPTORS {
+        let path = workspace.join(descriptor.owner).join(descriptor_filename);
+        let Some(recorded) = std::fs::read_to_string(&path).ok().and_then(|text| semio_framework_pack_json::parse(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()).map(|json| semio_framework_pack_json::to_dsl_value(&json)) else {
+            failures.push(format!("{}: descriptor record {} is unreadable", descriptor.semantic_kind, path.display()));
+            continue;
+        };
+        let Some(entries) = semio_framework_value::ToValue::to_value(descriptor).as_object().map(<[_]>::to_vec) else { continue };
+        let recorded_keys = recorded.as_object().map_or(0, |recorded| recorded.iter().filter(|(key, _)| key != "editable").count());
+        if recorded_keys != entries.len() {
+            failures.push(format!("{}: descriptor record holds {} fields, descriptor {}", descriptor.semantic_kind, recorded_keys, entries.len()));
+        }
+        for (key, value) in &entries {
+            if recorded.get(key) != Some(value) {
+                failures.push(format!("{}: descriptor field {key} differs from its record", descriptor.semantic_kind));
+            }
+        }
+    }
+    failures
+}
+
+/// 🍃️ The static editability roster of an aggregate (design §16.3): exactly one payload JSON Schema per leaf descriptor, each a
 /// JSON object, so every leaf publishes the inputs the history editor reads before any operation exists. One line per breach.
 pub fn mutation_input_schema_failures<P, M: Mutation<P>>() -> Vec<String> {
     let mut failures = Vec::new();
@@ -879,7 +904,7 @@ pub fn mutation_input_schema_failures<P, M: Mutation<P>>() -> Vec<String> {
     failures
 }
 
-/// 🏷️ The localized-label law of an aggregate (design §16.2): every operation's `SemanticMutation::label` names it in every
+/// 🏡️ The localized-label law of an aggregate (design §16.2): every operation's `SemanticMutation::label` names it in every
 /// shell locale and terminology — no empty cell, so no history row lacks its German (or any other locale's) label. The
 /// static `schema mutation-labels` gate refuses a leaf whose label is locale-invariant data. One line per breach.
 pub fn mutation_label_failures<P, M: SemanticMutation<P>>(ops: &[M]) -> Vec<String> {

@@ -2,6 +2,7 @@
 
 use crate::editor::gis2d::commands::{example, features, inference, view};
 use crate::editor::gis2d::modes::edit;
+use crate::editor::gis2d::constants_and_io::{gis2d_features_in_port, gis2d_io, gis2d_map_out_port, GIS2D_DEFAULT_FEATURE_SPAN, GIS_MAP_LAYER_IDS};
 use crate::editor::gis2d::modes::edit::windows::map;
 use crate::editor::gis2d::panels::{artifact as document_panel, catalogue as catalogue_panel, inspection as inspection_panel};
 use crate::standards::v1::subsets::any::artifact_declaration::artifact_kind;
@@ -48,7 +49,7 @@ fn gis2d_layer_arg() -> ActionArgDef {
     ActionArgDef::select("layerId", LocalizedLabel::native("Layer", "Ebene"), options).default_value(&"positions")
 }
 
-/// 🗂️ The staged document-collection choice every per-feature editing verb takes.
+/// 🎭️ The staged document-collection choice every per-feature editing verb takes.
 fn gis2d_collection_arg() -> ActionArgDef {
     let options = features::GIS_MAP_FEATURE_COLLECTIONS.iter().map(|(id, english, german, _)| ActionArgOption::new(*id, LocalizedLabel::native(*english, *german))).collect();
     ActionArgDef::select("collection", LocalizedLabel::native("Collection", "Sammlung"), options).default_value(&"positions")

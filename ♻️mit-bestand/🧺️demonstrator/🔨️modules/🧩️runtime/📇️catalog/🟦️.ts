@@ -1,4 +1,4 @@
-import catalog from "../🔣️.json";
+import catalog from "../🔣️.json" with { type: "json" };
 
 export const DEMONSTRATOR_HOST = catalog.host;
 export const DEMONSTRATOR_ASSETS_DIR = catalog.assetsDirectory;

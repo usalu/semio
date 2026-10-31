@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "operation": 7544,
+  "generation": 4,
+  "fault": "job-session.terminal-fault",
+  "stock": {
+    "items": 4096,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 64,
+    "fuel": 16384,
+    "deadlineUs": 1000000
+  },
+  "quantum": {
+    "items": 1,
+    "fuel": 1
+  },
+  "maximumSetupTurns": 512,
+  "maximumCloseTurns": 512,
+  "phases": [
+    "actual-source-return-origin",
+    "boxed-fault-header",
+    "phased-bindings",
+    "actual-source-ledger-alias",
+    "actual-source-page-reservation",
+    "fallible-page-backing",
+    "same-page-publication",
+    "fault-byte-copy",
+    "sealed-fault",
+    "paid-native-handoff"
+  ],
+  "sameLedger": true,
+  "foreignEffects": 0,
+  "deniedEffects": 0,
+  "cachedWork": 0,
+  "terminalDropHeap": [
+    0,
+    0
+  ]
+}

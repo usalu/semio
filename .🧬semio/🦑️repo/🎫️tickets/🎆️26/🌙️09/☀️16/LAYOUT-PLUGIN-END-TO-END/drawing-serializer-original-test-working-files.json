@@ -1,0 +1,31 @@
+{
+  "state": "source-authored-not-run",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🦀️.rs",
+      "beforeSha256": "a4dcc1b6041ad350029ffe3212c41504a1b92bd4dcbdd4297e14323a6f536a96",
+      "sha256": "8eab1e158c18eb776e73710d5979ad920b7d4769af69eebdf0f9d2591cafd766",
+      "kind": "updated"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🦀️.rs",
+      "beforeSha256": "aadc1742370025575be4718dd1c8c22208a63dc8ba54b5143cb82e62dd22cccb",
+      "sha256": "ec3ea3a8620214a43b9113959661f3a1bd3ff4c88ebd8347c546ea4661eb654e",
+      "kind": "updated"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🧪️tests/🎟️vector/🦀️.rs",
+      "sha256": "2df6710468c4484f51f26f4908a6edf4b3eddd47903923433cf19a1b04fb9a24",
+      "kind": "created"
+    }
+  ],
+  "originalStock": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️original/🔣️.json",
+  "assertionsPreserved": [
+    "SVG XML/styles",
+    "foreign PNG/image pointer/Arc",
+    "PDF Poppler/render pixels",
+    "cancellation/refusal",
+    "writer finish accounting"
+  ],
+  "newRuntimeDependencies": false
+}

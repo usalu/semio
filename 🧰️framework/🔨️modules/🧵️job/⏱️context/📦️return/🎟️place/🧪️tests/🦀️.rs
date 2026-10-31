@@ -1,0 +1,24 @@
+//! 🎟️ Genuine one-shot returned-place credits conserve one original source at quantum one.
+use semio_framework_job_context::*;
+use semio_framework_job_testing_caller::OriginalJobFixtureCaller;
+use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
+#[global_allocator]
+static PLACE_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+fn clock()->Option<u64>{Some(0)}
+#[test]
+fn original_return_place_keeps_foreign_busy_cancelled_and_recorded_custody_under_one_bank(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../case.json")).unwrap();let schema:serde_json::Value=serde_json::from_str(include_str!("../case.schema.json")).unwrap();for(k,v)in law.as_object().unwrap(){assert_eq!(&schema["properties"][k]["const"],v);}let s=&law["source"];let stock=RetainedCloneGrant{maximum_items:s["items"].as_u64().unwrap()as usize,maximum_copy_bytes:s["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:s["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:s["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:s["depth"].as_u64().unwrap()as usize};let q=RetainedCloneGrant{maximum_items:1,..stock};
+ for(index,row)in law["cases"].as_array().unwrap().iter().enumerate(){
+  let mut caller=OriginalJobFixtureCaller::admit(OperationId(7620+index as u64),Generation(2),stock,clock,s["deadlineUs"].as_u64().unwrap(),s["fuel"].as_u64().unwrap());let mut place=OriginalCallerReturnPlace::empty();let before=caller.turn(q,|cx|Ok(cx.original_total_fuel_remaining())).unwrap();let mut ready=false;
+  for _ in 0..law["maximumTurns"].as_u64().unwrap(){caller.turn(q,|cx|cx.with_original_work_loan(1,cx.original_absolute_deadline_us(),|cx|{let work=cx.original_work_units_spent();let(result,heap)=observe(||place.admit(cx));ready=result?;assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(cx.original_work_units_spent()-work<=1);Ok(())})).unwrap();if ready{break}}assert!(ready);
+  let held=caller.turn(q,|cx|Ok(cx.original_total_fuel_remaining())).unwrap();assert_eq!(before-held,law["boundSourceWork"].as_u64().unwrap()+law["claimWork"].as_u64().unwrap()+law["heldReturnFuel"].as_u64().unwrap());
+  assert!(law["heldClaimsKeepSourceBorrowable"].as_bool().unwrap());let source=caller.turn(q,|cx|Ok(cx.original_source_parent()?.source_identity()?)).unwrap();let fuel=caller.fuel_remaining();let(turn,heap)=observe(||caller.retire_step(q));assert_eq!(turn.unwrap().progress(),Default::default());assert_eq!(caller.fuel_remaining(),fuel);assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));caller.turn(q,|cx|{assert_eq!(cx.original_source_parent()?.source_identity()?,source);Ok(())}).unwrap();
+  caller.turn(q,|cx|{let mut preview=0;let mut p=RetainedCloneProgress::default();let parent=cx.original_source_parent()?;let(result,heap)=observe(||parent.borrow_context(StepBudget::new(1,cx.original_absolute_deadline_us(),q),clock,&mut preview,&mut p));assert!(result.is_err());assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(place.is_admitted());assert_eq!(cx.original_total_fuel_remaining(),held);Ok(())}).unwrap();
+  if row["recordReturn"].as_bool().unwrap(){let(result,heap)=observe(||place.record_return());result.unwrap();assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}
+  let mut foreign=OriginalJobFixtureCaller::admit(OperationId(7699),Generation(2),stock,clock,s["deadlineUs"].as_u64().unwrap(),s["fuel"].as_u64().unwrap());foreign.turn(q,|cx|{let before=cx.retained_progress();let work=cx.original_work_units_spent();let(result,heap)=observe(||place.settle_return(cx));assert!(result.is_err());assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.retained_progress(),before);assert_eq!(cx.original_work_units_spent(),work);assert!(place.is_admitted());Ok(())}).unwrap();foreign.retire(stock);
+  if row["cancel"].as_bool().unwrap(){caller.cancel().cancel_now();}
+  for _ in 0..law["maximumTurns"].as_u64().unwrap(){if place.terminal_is_empty(){break}caller.turn(q,|cx|{let work=cx.original_work_units_spent();let(result,heap)=observe(||place.settle_return(cx));result?;assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cx.original_work_units_spent()-work,1);Ok(())}).unwrap();}
+  assert!(place.terminal_is_empty());let after=caller.turn(q,|cx|Ok(cx.original_total_fuel_remaining())).unwrap();assert_eq!(before-after,row["finalDebit"].as_u64().unwrap());caller.turn(q,|cx|{let work=cx.original_work_units_spent();assert!(place.settle_return(cx)?);assert_eq!(cx.original_work_units_spent(),work);Ok(())}).unwrap();let(_,heap)=observe(||drop(place));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+  caller.retire(stock);
+ }
+}

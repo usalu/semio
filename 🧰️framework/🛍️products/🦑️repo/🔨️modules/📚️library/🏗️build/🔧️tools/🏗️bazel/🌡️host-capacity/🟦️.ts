@@ -44,6 +44,9 @@ export function createBazelActionWidthV1<K>(jobs:()=>number|undefined,pollMillis
  });
 }
 
+/** 🔢️ The job bound Bazel is started with: under a grant the plan it carries now (a grant that grew after admission raises it above the `--parallel` the arguments were rewritten to at admission, and the live width still narrows it), else the explicit request. */
+export function bazelStartJobsV1(parallel:number|undefined,plan:HostPlanV1|undefined):number|undefined{return plan?plan.jobs:parallel;}
+
 /** 📥️ Reads the plan of the enclosing grant from the environment. */
 export function bazelHostPlanV1(environment:Readonly<Record<string,string|undefined>>):HostPlanV1|undefined{return readHostCapacityPlanV1(environment);}
 

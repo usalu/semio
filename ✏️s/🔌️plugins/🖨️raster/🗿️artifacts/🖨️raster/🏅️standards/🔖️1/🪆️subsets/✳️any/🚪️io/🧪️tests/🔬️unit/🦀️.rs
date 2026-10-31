@@ -50,7 +50,7 @@ async fn composite_applies_persisted_mask_assets_and_linked_transforms() {
             if let RasterLayerNode::Group {children:target,mask:target_mask,transform,opacity,..}=&mut group {*target=children;*target_mask=Some(mask);transform.x=case["layerX"].as_f64().unwrap();*opacity=case["opacity"].as_f64().unwrap() as f32;}
             document.layers.push(group);
         }else if let RasterLayerNode::Pixel {mask:target,transform,opacity,..}=&mut document.layers[0] {*target=Some(mask);transform.x=case["layerX"].as_f64().unwrap();*opacity=case["opacity"].as_f64().unwrap() as f32;}
-        let mut job=raster_composite_job(&document).unwrap();let preparation=job.advance(1).unwrap();job.cancel();
+        let mut job=raster_composite_job(&document).unwrap();let preparation=advance_stack(&mut job,1).unwrap();job.cancel();
         let result=raster_composite_image(&document);retire(document);
         assert_eq!(preparation.completed,1);
         assert_eq!(preparation.total,if case["group"].as_bool().unwrap(){15}else{6}+if case["enabled"].as_bool().unwrap(){3}else{0},"mask preparation belongs to the bounded export job");
@@ -273,7 +273,7 @@ async fn composite_source_preparation_copies_unique_images_in_bounded_grants() {
         assert_eq!(preparation.images.values().map(|image|image.pixels.len()/4).sum::<usize>(),expected);
         assert_eq!(done,expected==(width*height) as usize);
     }
-    let mut job=preparation.into_job().unwrap();while !job.advance(32768).unwrap().done {}
+    let mut job=preparation.into_job().unwrap();while !advance_stack(&mut job,32768).unwrap().done {}
     assert_eq!(job.into_result().unwrap().image.pixels,pixel.repeat((width*height) as usize));
     let mut cancelled=RasterStackPreparation::new(&document).unwrap();cancelled.advance(&document,1).unwrap();cancelled.cancel();
     assert!(cancelled.images.is_empty());assert!(cancelled.layers.is_empty());

@@ -20,30 +20,8 @@ impl Census{
 }
 fn text(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)->Result<usize>{Ok(control.borrow_text(native::bytes(reader)?)?.len())}
 fn scalar(value:f64)->usize{if value.is_nan(){11}else if value.is_infinite(){32}else{22}}
-fn binary_scalar(reader:&mut store::ByteReader<'_>)->Result<usize>{Ok(scalar(reader.read_f64_le().map_err(|_|invalid())?))}
 fn interpolation(tag:u8)->Result<usize>{match tag{0=>Ok(6),1=>Ok(4),2=>Ok(12),_=>Err(invalid())}}
 fn kind(tag:u8)->Result<usize>{match tag{0=>Ok(6),1|3=>Ok(7),2=>Ok(10),_=>Err(invalid())}}
-fn binary_value(tag:u8,reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut NativeDecodeControl<'_>)->Result<()>{
- match tag{
-  0..=2=>{let count=match tag{0=>1,1=>3,_=>4};let mut bytes=8;for _ in 0..count{bytes=add(bytes,binary_scalar(reader)?)?;}census.row(bytes)?;},
-  3=>{let count=native::length(reader)?;census.future(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{census.row(add(24,binary_scalar(reader)?)?)?;control.step()?;}control.checkpoint()})?;},
-  _=>return Err(invalid())
- }Ok(())
-}
-/// 📦️ Counts each real discriminant and source word without materializing a timeline.
-pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
- layout(limits)?;control.scoped_stage(|control|{
-  let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}
-  let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,text(&mut reader,control)?)?)?;let count=native::length(&mut reader)?;census.future(count)?;control.begin_stage(count)?;
-  for _ in 0..count{
-   let name=match reader.read_u8().map_err(|_|invalid())?{0=>0,1=>text(&mut reader,control)?,_=>return Err(invalid())};census.row(add(24,name)?)?;let count=native::length(&mut reader)?;census.future(count)?;
-   control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{
-    let node=text(&mut reader,control)?;let property=match reader.read_u8().map_err(|_|invalid())?{0=>11,1=>8,2=>5,3=>7,4=>add(6,text(&mut reader,control)?)?,_=>return Err(invalid())};let interpolation=interpolation(reader.read_u8().map_err(|_|invalid())?)?;census.row(add(add(add(24,node)?,property)?,interpolation)?)?;let count=native::length(&mut reader)?;census.future(count)?;
-    control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let time=binary_scalar(&mut reader)?;let tag=reader.read_u8().map_err(|_|invalid())?;census.row(add(add(24,time)?,kind(tag)?)?)?;binary_value(tag,&mut reader,&mut census,control)?;control.step()?;}control.checkpoint()})?;control.step()?;
-   }control.checkpoint()})?;control.step()?;
-  }if reader.remaining()!=0{return Err(invalid())}control.checkpoint()
- })
-}
 fn document_value(value:&str,time:usize,census:&mut Census,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  let(tag,body)=value.split_once(':').ok_or_else(invalid)?;let tag=match tag{"S"=>0,"V"=>1,"Q"=>2,"W"=>3,_=>return Err(invalid())};census.row(add(add(24,time)?,kind(tag)?)?)?;
  match tag{

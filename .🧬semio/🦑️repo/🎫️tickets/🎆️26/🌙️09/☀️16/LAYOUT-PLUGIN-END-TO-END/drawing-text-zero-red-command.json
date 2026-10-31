@@ -1,0 +1,70 @@
+{
+  "authority": false,
+  "state": "prepared-only-unexecuted",
+  "launchAuthorized": false,
+  "attemptsExecuted": 0,
+  "session": null,
+  "cwd": "/Users/ueli/Documents/semio",
+  "argv": [
+    "repo",
+    "--service=off",
+    "tools",
+    "exec",
+    "bun",
+    "--",
+    "test",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/zero-work.test.ts"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-work/red",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-work/red/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-work/red/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-work/red/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-work/red/tmp"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-text-work/red/test.log",
+  "expectedBoundary": "Behavioral current numeric-only advance ignores extra actual zero-authority ledger; expect actual public work1 vsrequired0, not missing-new-API RED.",
+  "inputs": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/work.schema.json",
+      "sha256": "fedb273a3ed06ebcc04e6b8a3b0d7224c62a2d276d44f0802510ac9703a23804",
+      "bytes": 3691
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/work.json",
+      "sha256": "6f1c886aeb36f169c54b0b86260468e1b4b36cf8d35fe653d1ace9b4d7fc120d",
+      "bytes": 2375
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🦀️.rs",
+      "sha256": "96d9dac0a4d6dae883cd0d323bb042ba929b363dfe0b2de96977956954b4a272",
+      "bytes": 12045
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/work.rs",
+      "sha256": "f141af04cdaaed78548142db441e7a3c9bfbe80bc826e7818030f8f965006165",
+      "bytes": 3174
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🟦️.ts",
+      "sha256": "7164b0d1729300095cc345ae4ead473dbc83ea5edcf3c68b66ecb346e297b0ef",
+      "bytes": 21818
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/zero-work.test.ts",
+      "sha256": "7676065db7379e6337069083d7495381025a4258347e1718b512c3c946ea2c93",
+      "bytes": 1965
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "sha256": "e2fd9eadf54cc03bab0e6fc3a7b6ce0a5a06877e83f4d7ab6084b22104275370",
+      "bytes": 6718
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/🟦️.ts",
+      "sha256": "6d16f584ca7ea6b951bdca34a4e6eb0646b0711c9024a8e43b481b9413d0ff9a",
+      "bytes": 12747
+    }
+  ]
+}

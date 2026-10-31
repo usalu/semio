@@ -91,7 +91,10 @@ def choose(pools):
 
 
 def recycle(row):
-    if row["rssMegabytes"] > row["megabytes"] * policy["recycleMemoryRatio"]:
+    if row["rssMegabytes"] > row["megabytes"] or (
+        row["rssMegabytes"] > row["megabytes"] * policy["recycleMemoryRatio"]
+        and (row.get("baselineMegabytes") is None or row["rssMegabytes"] > row["baselineMegabytes"] * (1 + policy["recycleGrowthRatio"]))
+    ):
         return "memory"
     if row["jobs"] >= policy["recycleAfterProjects"]:
         return "projects"

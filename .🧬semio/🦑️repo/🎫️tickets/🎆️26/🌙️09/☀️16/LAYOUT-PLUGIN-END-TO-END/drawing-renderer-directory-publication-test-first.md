@@ -1,0 +1,3 @@
+# Renderer Directory Publication Header
+
+Authored the neutral schema case and real registered global native directory test before production correction. The existing directory path publication performs a real supply and then clears its reservation in the same turn; this can require two separately funded units. The test retains one actual temporary selected.wasm path, compares its original backing pointer, asserts readiness stays false until the next paid zero-copy header clear, and verifies exactly one item/work unit before same-bank supplier cleanup. Services compiler-frontier migration must complete before runtime validation; no test pass is claimed yet.

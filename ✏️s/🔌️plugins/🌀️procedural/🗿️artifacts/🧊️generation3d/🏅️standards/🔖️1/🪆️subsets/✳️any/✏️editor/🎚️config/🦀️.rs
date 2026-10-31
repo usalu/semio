@@ -12,9 +12,9 @@ extern crate semio_framework_os_kernel as store;
 use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️PreviewCamera
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[value(rename_all = "camelCase")]
+#[value(rename_all = "camelCase", default)]
 pub struct Generation3dPreviewCamera {
     #[value(default = "default_preview_cam_pos")]
     #[dsl(coord)]
@@ -29,6 +29,19 @@ pub struct Generation3dPreviewCamera {
 impl Default for Generation3dPreviewCamera {
     fn default() -> Self {
         Self { position: default_preview_cam_pos(), target: default_preview_cam_target(), fov: default_preview_fov() }
+    }
+}
+
+impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for Generation3dPreviewCamera {
+    fn native_default_demand() -> semio_framework_value::RetirementDemand {
+        semio_framework_value::RetirementDemand { copy_bytes: 2 * std::mem::size_of::<Self>(), depth: 1, ..Default::default() }
+    }
+    fn native_default(grant: semio_framework_value::RetainedCloneGrant) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        let demand = <Self as semio_framework_value_native_owned::native_decoding::owned::NativeDefault>::native_default_demand();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "a native camera default requires its physical birth grant"));
+        }
+        Ok((Self::default(), semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
     }
 }
 
@@ -65,13 +78,13 @@ fn next_in_ladder(ladder: &[&str], current: &str) -> String {
     ladder[index].to_string()
 }
 
-/// 🔁️ The show mode one `cycleShowMode` after `current`. An unset `show_mode` reads as the `shaded`
+/// 🌀️ The show mode one `cycleShowMode` after `current`. An unset `show_mode` reads as the `shaded`
 /// the preview window's measure displays for it, so the first cycle lands on `shaded+edges`.
 pub fn next_show_mode(current: &str) -> String {
     next_in_ladder(&GENERATION_3D_SHOW_MODES, if current.is_empty() { GENERATION_3D_SHOW_MODES[0] } else { current })
 }
 
-/// 🔁️ The level of detail one `cycleLodMode` after `current`. An unset `lod_mode` reads as the
+/// 🌁️ The level of detail one `cycleLodMode` after `current`. An unset `lod_mode` reads as the
 /// `medium` the flow window's measure displays for it, so the first cycle lands on `fine`.
 pub fn next_lod_mode(current: &str) -> String {
     next_in_ladder(&GENERATION_3D_LOD_MODES, if current.is_empty() { "medium" } else { current })
@@ -87,7 +100,7 @@ pub fn default_sun_json() -> String {
 //#endregion 🔖️PreviewCamera
 
 //#region 🔖️Config
-/// 🧮️ `Generation3dPlayApp`'s real `ArtifactApp::Config` — the pure-trait config artifact. Absorbs
+/// ⚙️ `Generation3dPlayApp`'s real `ArtifactApp::Config` — the pure-trait config artifact. Absorbs
 /// LOD/show display options, flow-graph + preview cameras, sun display options, active generation
 /// selection — app-local view state
 /// round-trips through the config `ArtifactStore` exactly like document content, with a real
@@ -100,17 +113,17 @@ pub fn default_sun_json() -> String {
 #[artifact(id = "procedural.generation3dcfg")]
 #[dsl(layout = "lines")]
 pub struct Generation3dConfig {
-    /// 🎚️ Level-of-detail tessellation deflection.
+    /// 🌂️ Level-of-detail tessellation deflection.
     pub lod_mode: String,
-    /// 👁️ Preview shading mode.
+    /// 🌃️ Preview shading mode.
     pub show_mode: String,
     /// 📷️ The flow-graph node canvas camera.
     #[dsl(block)]
     pub camera: CameraJson,
-    /// 📷️ The 3D preview viewport camera.
+    /// 🎥️ The 3D preview viewport camera.
     #[dsl(block)]
     pub preview_camera: Generation3dPreviewCamera,
-    /// 🌞️ JSON-encoded `semio_framework_plugin::WorldSunConfig`.
+    /// 🔐️ JSON-encoded `semio_framework_plugin::WorldSunConfig`.
     #[value(default = "default_sun_json")]
     pub sun_json: String,
     /// 🧬️ The selected generation id.
@@ -180,7 +193,7 @@ impl Default for Generation3dConfig {
 }
 
 impl Generation3dConfig {
-    /// 🌞️ Parses `sun_json` — falls back to `WorldSunConfig::default()` on any malformed/legacy value.
+    /// 🔍️ Parses `sun_json` — falls back to `WorldSunConfig::default()` on any malformed/legacy value.
     pub fn sun(&self) -> semio_framework_plugin::WorldSunConfig {
         semio_framework_pack_json::from_json_str(&self.sun_json, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap_or_default()
     }

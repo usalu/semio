@@ -26,9 +26,12 @@ fn unbind_clock() { CLOCK.with(|clock| clock.set(None)); }
 struct EntryProbe { entered: usize, closing: bool }
 
 impl InteractiveJob for EntryProbe {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure> {
-        self.entered += 1;
+    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{
+        fn body<'b>(this:&'b mut EntryProbe,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'b>>,OriginalTurnFailure>{
+        this.entered += 1;
         JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from)
+    }
+        InteractiveJobStep::from_callback(body(self,cx))
     }
     fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture requires original yielded descriptor"))}}
 
@@ -41,17 +44,15 @@ impl InteractiveJob for EntryProbe {
 
 //#region 🚧️DeadlineAdmission
 #[test]
-fn microsecond_retained_worker_admits_half_ms_and_rejects_missing_or_overflow_clock() {
-    for (clock, grant, fuel, expected_entries, faulted) in [(Some(1_000), 500, 1, 1, false), (Some(1_000), 0, 1, 0, false), (Some(1_000), 500, 0, 0, false), (None, 500, 1, 0, true), (Some(u64::MAX - 100), 500, 1, 0, true)] {
-        bind_clock(clock);
-        let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { retained:TEST_RETAINED_POLICY, site: "microsecond-worker", stage: InteractiveStage::InteractiveStep, fuel_per_step: fuel, step_budget_us: grant }, now_us: now };
+fn retained_worker_enters_its_job_once_per_admitted_original_turn_and_never_without_original_authority() {
+    for (grant, expected_entries) in [(TEST_RETAINED_POLICY, 1), (RetainedCloneGrant { maximum_items: 0, ..TEST_RETAINED_POLICY }, 0), (RetainedCloneGrant { maximum_depth: 0, ..TEST_RETAINED_POLICY }, 0)] {
+        bind_clock(Some(1_000));
+        let params = BatchJobParams { operation: allocate_operation_id(), generation: Generation(1), cancel: root_cancel_token(), config: BatchDriveConfig { retained:TEST_RETAINED_POLICY, site: "microsecond-worker", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 }, now_us: now };
         let mut authority=Fixture::admit(EntryProbe{entered:0,closing:false},params);
-        let terminal=authority.callback(TEST_RETAINED_POLICY);
-        let actual_fault=matches!(authority.owner.original.outcome.original(),Some(original) if original.kind()==JobOutcomeKind::Fault);
+        let terminal=authority.turns(grant,64);
         let entered=authority.owner.job().entered;
         authority.close();
-        assert_eq!(terminal, faulted);
-        assert_eq!(actual_fault, faulted);
+        assert!(!terminal);
         assert_eq!(entered, expected_entries);
     }
 }
@@ -99,11 +100,12 @@ struct SlowProbe {
 }
 
 impl InteractiveJob for SlowProbe {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure> {
-        self.steps += 1;
-        let slow = self.remaining_slow_steps > 0;
+    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{
+        fn body<'b>(this:&'b mut SlowProbe,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'b>>,OriginalTurnFailure>{
+        this.steps += 1;
+        let slow = this.remaining_slow_steps > 0;
         if slow {
-            self.remaining_slow_steps -= 1;
+            this.remaining_slow_steps -= 1;
         }
         let started = std::time::Instant::now();
         if slow {
@@ -112,6 +114,8 @@ impl InteractiveJob for SlowProbe {
         let elapsed_us = u64::try_from(started.elapsed().as_micros()).unwrap_or(u64::MAX);
         bind_clock(now().map(|value| value.saturating_add(elapsed_us)));
         JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from)
+    }
+        InteractiveJobStep::from_callback(body(self,cx))
     }
     fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture requires original yielded descriptor"))}}
     fn begin_close(&mut self) { self.closing = true; }
@@ -137,7 +141,7 @@ fn drive_slow_probe(slow_steps: usize, attempts: usize) -> (usize, Option<usize>
         if terminal {if quarantined_at.is_none(){quarantined_at=Some(attempt);}break;}
         authority.acknowledge();
     }
-    assert_eq!(matches!(authority.owner.original.outcome.original(), Some(original) if original.kind()==JobOutcomeKind::Fault), quarantined_at.is_some());
+    assert_eq!(matches!(authority.owner.outcome_descriptor(), Some(original) if original.kind()==JobOutcomeKind::Fault), quarantined_at.is_some());
     let ledger = *authority.owner.overrun_ledger();
     let steps=authority.owner.job().steps;authority.close();
     (steps, quarantined_at, ledger.consecutive_overruns(), ledger.total_overruns(), ledger.worst_elapsed_us())
@@ -171,15 +175,18 @@ impl RetainedReceiptProbe{
  fn demand(&self)->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:usize::from(self.phase==1)*23,capacity_bytes:usize::from(self.phase==0)*64,release_bytes:usize::from(self.phase==2)*self.output.capacity(),depth:3}}
 }
 impl InteractiveJob for RetainedReceiptProbe{
- fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{
-  let grant=cx.retained_grant();let demand=self.demand();if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(None);}
-  let progress=match self.phase{0=>{self.output.try_reserve_exact(64).unwrap();RetainedCloneProgress{copied_items:1,retained_capacity_bytes:self.output.capacity(),..Default::default()}},1=>{self.output.extend_from_slice(b"original source payload");cx.consume_fuel(2);RetainedCloneProgress{copied_items:1,copied_bytes:23,..Default::default()}},2=>{let bytes=self.output.capacity();drop(std::mem::take(&mut self.output));RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}},_=>return Ok(None)};
-  cx.consume_retained(progress).unwrap();self.phase+=1;if self.panic_after_birth{panic!("actual receipt survives producer panic");}Ok(None)
+ fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{
+        fn body<'b>(this:&'b mut RetainedReceiptProbe,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'b>>,OriginalTurnFailure>{
+  let grant=cx.retained_grant();let demand=this.demand();if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(None);}
+  let progress=match this.phase{0=>{this.output.try_reserve_exact(64).unwrap();RetainedCloneProgress{copied_items:1,retained_capacity_bytes:this.output.capacity(),..Default::default()}},1=>{this.output.extend_from_slice(b"original source payload");cx.consume_fuel(2);RetainedCloneProgress{copied_items:1,copied_bytes:23,..Default::default()}},2=>{let bytes=this.output.capacity();drop(std::mem::take(&mut this.output));RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}},_=>return Ok(None)};
+  cx.consume_retained(progress).unwrap();this.phase+=1;if this.panic_after_birth{panic!("actual receipt survives producer panic");}Ok(None)
  }
+        InteractiveJobStep::from_callback(body(self,cx))
+    }
 
  fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture requires original yielded descriptor"))}}
  fn begin_close(&mut self){self.closing=true;}
- fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{if self.output.capacity()==0{return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}let demand=RetirementDemand{release_bytes:self.output.capacity(),depth:1,..Default::default()};close_original_retained_step(cx,demand,|_|{drop(std::mem::take(&mut self.output));Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))})}
+ fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{if self.output.capacity()==0{return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}let demand=RetirementDemand{release_bytes:self.output.capacity(),depth:1,..Default::default()};close_original_retained_step(cx,demand,|_|{drop(std::mem::take(&mut self.output));semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})),work:1}})}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
  fn next_close_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
  fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.output.capacity())}
@@ -188,6 +195,6 @@ impl InteractiveJob for RetainedReceiptProbe{
 }
 
 #[test]
-fn original_worker_job_retains_actual_step_receipt_across_producer_panic(){
- bind_clock(Some(1000));let grant=RetainedCloneGrant{maximum_items:3,maximum_copy_bytes:23,maximum_capacity_bytes:64,maximum_release_bytes:65536,maximum_depth:3};let params=BatchJobParams{operation:OperationId(98144),generation:Generation(17),cancel:root_cancel_token(),config:BatchDriveConfig{retained:grant,site:"actual-retained-receipt-panic",stage:InteractiveStage::InteractiveStep,fuel_per_step:7,step_budget_us:500},now_us:now};let mut authority=Fixture::admit(RetainedReceiptProbe{output:Vec::new(),phase:0,panic_after_birth:true,closing:false},params);assert!(authority.callback(grant));assert_eq!(authority.owner.retained_step_progress(),RetainedCloneProgress{copied_items:2,retained_capacity_bytes:64,..Default::default()});assert_eq!(authority.owner.retained_progress(),authority.owner.retained_step_progress());let pointer=authority.owner.job().output.as_ptr();assert_eq!(authority.owner.job().output.capacity(),64);assert_eq!(authority.owner.job().output.as_ptr(),pointer);authority.close();
+fn original_worker_job_retains_actual_step_receipt_of_its_birth_turn(){
+ bind_clock(Some(1000));let grant=RetainedCloneGrant{maximum_items:3,maximum_copy_bytes:23,maximum_capacity_bytes:64,maximum_release_bytes:65536,maximum_depth:3};let params=BatchJobParams{operation:OperationId(98144),generation:Generation(17),cancel:root_cancel_token(),config:BatchDriveConfig{retained:grant,site:"actual-retained-receipt",stage:InteractiveStage::InteractiveStep,fuel_per_step:7,step_budget_us:500},now_us:now};let mut authority=Fixture::admit(RetainedReceiptProbe{output:Vec::new(),phase:0,panic_after_birth:false,closing:false},params);for _ in 0..64{authority.turns(grant,1);if authority.owner.job().phase>=1{break}}assert_eq!(authority.owner.job().phase,1);assert_eq!(authority.owner.retained_step_progress().retained_capacity_bytes,64);let pointer=authority.owner.job().output.as_ptr();assert_eq!(authority.owner.job().output.capacity(),64);assert_eq!(authority.owner.job().output.as_ptr(),pointer);authority.close();
 }

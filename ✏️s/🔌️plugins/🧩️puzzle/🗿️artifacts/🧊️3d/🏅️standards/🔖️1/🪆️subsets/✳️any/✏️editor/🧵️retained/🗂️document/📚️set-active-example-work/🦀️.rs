@@ -29,9 +29,9 @@ enum Puzzle3dSetActiveExampleStage {
 /// 5 + 1 + 1 + 5 + 1 = 13. The extent is an upper bound on `step()` calls (the sibling `patchInspector`
 /// law asserts `iterations <= extent`), so it has to carry all of them; it declared `3`, which is short
 /// by ten and made a real example load overrun its own declared envelope.
-const PUZZLE3D_SET_ACTIVE_EXAMPLE_FIXED_STEPS: usize = 13;
+pub const PUZZLE3D_SET_ACTIVE_EXAMPLE_FIXED_STEPS: usize = 13;
 
-const PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK: usize = 8;
+pub const PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK: usize = 8;
 
 /// ♻️ The owners one `Puzzle3dSetActiveExampleWork` still holds when its job closes, retired as one controlled bundle.
 #[derive(semio_framework_value::RetireOwned)]
@@ -93,7 +93,7 @@ impl Puzzle3dSetActiveExampleWork {
         }
     }
 
-    fn compatibility_rows(target: &Puzzle3dSceneSnapshot) -> &[semio_framework_value::DslValue] {
+    pub fn compatibility_rows(target: &Puzzle3dSceneSnapshot) -> &[semio_framework_value::DslValue] {
         target.meta.kind_compatibility.as_ref().and_then(semio_framework_value::DslValue::as_array).unwrap_or_default()
     }
 

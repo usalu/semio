@@ -108,9 +108,11 @@ export function shellLabelLocale(): string {
 }
 
 /** 🌍️ {@link shellLabelLocale} as a {@link ShellLocale}: the language framework-owned en/de texts (kernel notices, number
- * refusals) are read in — the first shell locale until the port stands at one. */
+ * refusals) are read in. Throws while the port stands at no supported language — no language is assumed. */
 export function currentShellLocaleV1(): ShellLocale {
-  return SHELL_LOCALES.find((candidate) => candidate === shellLabelLocale()) ?? SHELL_LOCALES[0];
+  const locale = SHELL_LOCALES.find((candidate) => candidate === shellLabelLocale());
+  if (locale === undefined) throw new Error("Shell locale requires an explicit supported language source");
+  return locale;
 }
 
 /** 🗂️ EN/DE label for a `UI_RIBBON_PARENT_CATEGORIES` id, resolved off the SAME `ui.ribbon.parent.*`
@@ -146,7 +148,9 @@ export function contextMenuGroupLabel(id: string): UiLabel | undefined {
 export type FrozenLabel = { readonly en: string; readonly de: string };
 
 export function frozenLabelText(pair: FrozenLabel, locale: string): string {
-  return locale === "de" ? pair.de : pair.en;
+  if (locale === "de") return pair.de;
+  if (locale === "en") return pair.en;
+  throw new Error("Shell locale requires an explicit supported language source");
 }
 
 /** 👁️✏️ Window title chip / read-only badge text — contract freeze §5. */
@@ -371,9 +375,8 @@ export function resolveDialogDefinition(dialog: DialogDefinition, overlay: Plugi
 }
 
 /** 🗣️ Resolves an `IntroductionDefinition`'s title and every step's title/body labels from the
- * overlay's `introductionLabels` map. `title`/`body` are manifest `LocalizedLabel` fields;
- * `IntroductionInteraction.label` is a short checklist caption that is still a plain `String` on the Rust
- * side (not part of the `LocalizedLabel` migration), so it is left as-is. */
+ * overlay's `introductionLabels` map. `title`/`body` and every `IntroductionInteraction.label` are manifest
+ * `LocalizedLabel` fields. */
 export function resolveIntroductionDefinition(introduction: IntroductionDefinition, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): IntroductionDefinition {
   return {
     title: resolveAppLabel(overlay, "introduction", "intro.title", resolveManifestLabel(introduction.title, terminology, locale)),
@@ -384,7 +387,7 @@ export function resolveIntroductionDefinition(introduction: IntroductionDefiniti
         body: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.body`, resolveManifestLabel(step.body, terminology, locale)),
         interactions: (step.interactions ?? []).map((interaction, index) => ({
           ...interaction,
-          label: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.interaction.${index}.label`, interaction.label),
+          label: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.interaction.${index}.label`, resolveManifestLabel(interaction.label, terminology, locale)),
         })),
         ordered: step.ordered ?? false,
       }),

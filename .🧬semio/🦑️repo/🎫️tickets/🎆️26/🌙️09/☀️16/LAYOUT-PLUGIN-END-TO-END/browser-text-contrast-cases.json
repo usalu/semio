@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "minimumRatio": 4.5,
+  "cases": [
+    {
+      "name": "Opaque Black On White",
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "bg": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "ratio": 21,
+      "valid": true
+    },
+    {
+      "name": "Opaque White On Black",
+      "color": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "bg": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "ratio": 21,
+      "valid": true
+    },
+    {
+      "name": "Insufficient Linear Contrast",
+      "color": [
+        0.25,
+        0.25,
+        0.25,
+        1
+      ],
+      "bg": [
+        0.5,
+        0.5,
+        0.5,
+        1
+      ],
+      "ratio": 1.8333333333333335,
+      "valid": false
+    },
+    {
+      "name": "Boundary Normal Text",
+      "color": [
+        0.1,
+        0.1,
+        0.1,
+        1
+      ],
+      "bg": [
+        0.625,
+        0.625,
+        0.625,
+        1
+      ],
+      "ratio": 4.5,
+      "valid": true
+    },
+    {
+      "name": "Transparent Background Unmeasured",
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "bg": [
+        1,
+        1,
+        1,
+        0
+      ],
+      "valid": false
+    },
+    {
+      "name": "Disabled Text Excluded",
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "bg": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "disabled": true,
+      "valid": false
+    },
+    {
+      "name": "Wrong Node Identity",
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "bg": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "key": "other-button",
+      "valid": false
+    },
+    {
+      "name": "No Actual Glyphs",
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "bg": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "glyphCount": 0,
+      "valid": false
+    },
+    {
+      "name": "Unpainted Bounds",
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "bg": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "rect": [
+        0,
+        0,
+        0,
+        20
+      ],
+      "valid": false
+    },
+    {
+      "name": "Opaque Actual Input Text",
+      "kind": "input",
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "bg": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "ratio": 21,
+      "valid": true
+    }
+  ]
+}

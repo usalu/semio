@@ -68,14 +68,14 @@ fn initialization_runtime_preserves_physical_backing_and_terminal_cursor_box() {
 
 impl ErasedSnapshotRetirement for DemandingBufferRetirement {
         fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { release_bytes: self.buffer.as_ref().map_or(0,Vec::capacity), depth: usize::from(self.buffer.is_some()), ..Default::default() })}
-fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let Some(buffer)=self.buffer.as_ref() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
         if grant.maximum_items==0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
         if grant.maximum_depth==0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original buffer requires supplied depth")); }
         if grant.maximum_release_bytes<buffer.capacity() { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let released=self.buffer.take().expect("original physical buffer remains present").capacity();
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1,released_bytes: released,..Default::default() }))
-    }
+    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self)->bool { self.buffer.is_none() }
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
     fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
@@ -93,7 +93,7 @@ struct UnsupportedDemandRetirement;
 
 impl ErasedSnapshotRetirement for UnsupportedDemandRetirement {
         fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"owner has no admitted physical retirement contract"))}
-fn close_step(&mut self,_:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"owner has no admitted physical retirement contract"))}
+fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"owner has no admitted physical retirement contract"))})(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self)->bool{false}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"copy demand is unsupported"))}
     fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"capacity demand is unsupported"))}

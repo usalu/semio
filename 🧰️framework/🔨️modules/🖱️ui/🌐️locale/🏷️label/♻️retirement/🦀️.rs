@@ -13,13 +13,13 @@ impl RetirementCursor for LocalizedLabelRetirement{
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:match self.current(){Some(Cow::Owned(text))=>text.capacity(),_=>0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
 
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
-  if self.terminal_is_empty(){return RetirementStep::Complete;}
+  if self.terminal_is_empty(){return RetirementStep::Complete(0);}
   if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}
-  if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"localized label retirement requires one admitted depth"));}
+  if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"localized label retirement requires one admitted depth"),0);}
   let bytes=self.next_close_byte_demand().unwrap();
   if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}
   self.cells[self.index/Locale::COUNT][self.index%Locale::COUNT]=Cow::Borrowed("");self.index+=1;
-  RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})
+  RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()},1)
  }
  fn terminal_is_empty(&self)->bool{self.index==Terminology::COUNT*Locale::COUNT}
  fn next_close_byte_demand(&self)->Option<usize>{Some(match self.current(){Some(Cow::Owned(text))=>text.capacity(),_=>0})}

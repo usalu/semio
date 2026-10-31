@@ -19,7 +19,7 @@ fn document(layers:&serde_json::Value,fixture:&serde_json::Value)->RasterSnapsho
     document
 }
 fn composite(document:&RasterSnapshot)->semio_framework_pixels::compositing::layers::RasterStackResult {
-    let mut job=semio_s_artifact_raster_raster_io::raster_composite_job(document).unwrap();while !job.advance(1).unwrap().done {}job.into_result().unwrap()
+    let mut job=semio_s_artifact_raster_raster_io::raster_composite_job(document).unwrap();while !semio_s_artifact_raster_raster_io::advance_stack(&mut job,1).unwrap().done {}job.into_result().unwrap()
 }
 fn retire(document:RasterSnapshot) {semio_s_artifact_raster_raster_model::snapshot::retire_raster_snapshot(document);}
 #[test]
@@ -33,7 +33,7 @@ fn merge_preserves_pixels_parent_siblings_shared_assets_and_exact_inverse() {
         let (parent,index,layers)=semio_s_artifact_raster_raster_editor::merge_down_plan(&document,&command.layer_id).unwrap();
         assert_eq!(serde_json::to_value(parent).unwrap(),row["parentId"]);assert_eq!(index,row["index"].as_u64().unwrap() as usize);assert_eq!(layers.len(),2);
         let mut preparation=prepare(&command,&document).unwrap();while !preparation.advance(&document,1).unwrap() {}
-        let mut job=preparation.into_job().unwrap();while !job.advance(1).unwrap().done {}let result=job.into_result().unwrap();
+        let mut job=preparation.into_job().unwrap();while !semio_s_artifact_raster_raster_io::advance_stack(&mut job,1).unwrap().done {}let result=job.into_result().unwrap();
         assert_eq!(serde_json::to_value(&result.image.pixels).unwrap(),row.get("expectedPixels").unwrap_or(&fixture["expected"]["pixels"]).clone());assert_eq!(result.origin,[fixture["expected"]["origin"][0].as_f64().unwrap(),fixture["expected"]["origin"][1].as_f64().unwrap()]);
         let mut encoder=PngEncodeJob::new(result.image).unwrap();while !encoder.advance().unwrap().done {}
         let emit=publish(encoder.into_result().unwrap(),result.origin,&command,&document).unwrap();let mut inverses=Vec::new();

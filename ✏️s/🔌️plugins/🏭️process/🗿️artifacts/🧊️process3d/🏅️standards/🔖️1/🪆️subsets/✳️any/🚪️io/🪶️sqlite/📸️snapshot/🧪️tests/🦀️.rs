@@ -1,4 +1,5 @@
 //! 🏭️ Genuine Process3d parent capability and complete persisted-state baselines.
+#![recursion_limit = "256"]
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_os_kernel as store;
@@ -221,7 +222,7 @@ fn sqlite_snapshot_process3d_independent_sqlite_knows_every_handwritten_table_an
 use semio_framework_plugin::{plugin_app_close_prelude::*, EditorApp, PluginApp, VcsArtifactApp};
 use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
 semio_framework_dispatch_macros::dyn_enum_close! {
- /// 🏭️ The actual Process3d declared editor app.
+ /// 📝️ The actual Process3d declared editor app.
  enum SqliteProcessApps:PluginApp{Editor(VcsArtifactApp<EditorApp<semio_s_artifact_process_process3d_editor::Process3dPlayApp>,semio_s_artifact_stdio_semio::SemioMembers>)}
 }
 #[semio_framework_async_macros::async_test]

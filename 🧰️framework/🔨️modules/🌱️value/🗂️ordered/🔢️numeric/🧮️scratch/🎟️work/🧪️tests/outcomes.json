@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "outcomes": [
+    {
+      "name": "paid-preparation",
+      "semantic": 0,
+      "cpu": 1,
+      "capacityPositive": true
+    },
+    {
+      "name": "cached-completion",
+      "semantic": 0,
+      "cpu": 0,
+      "capacityPositive": false
+    }
+  ],
+  "rules": {
+    "sameFiniteStock": true,
+    "noLedgerRenewal": true,
+    "cpuIndependentOfItemReceipt": true,
+    "inlineMetadataCopyBytes": 0,
+    "newRowCopyBytes": 128
+  },
+  "stock": [
+    4096,
+    65536,
+    65536,
+    65536,
+    64
+  ],
+  "fuel": 4096,
+  "turn": [
+    1,
+    65536,
+    65536,
+    65536,
+    64
+  ]
+}

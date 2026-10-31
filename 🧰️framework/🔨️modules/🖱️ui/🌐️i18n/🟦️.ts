@@ -128,16 +128,24 @@ export function disposeShellI18nInstance(instance: UiI18nInstance): void {
 }
 // #endregion 🐚️ShellI18n
 
-function normalizeUiLocale(language?: string): UiTranslationLocaleCode {
-  return language?.toLowerCase().startsWith("de") ? "de" : "en";
+function normalizeUiLocale(language?: string): UiTranslationLocaleCode | undefined {
+  const primary = language?.toLowerCase().split(/[-_]/u)[0];
+  return primary === "de" || primary === "en" ? primary : undefined;
 }
 
-/** 🧭️ Maps a BCP47 tag (e.g. `navigator.language`, `"de-AT"`) onto a {@link ShellLocale};
- * defaults to `"en"`. Same rule the chrome's own locale detector uses — exposed so boot code
- * (renderer/demonstrator) can resolve a default before any brand lock is known. */
-export const detectShellLocale = normalizeUiLocale as (language?: string) => ShellLocale;
+/** 🧭️ Maps a BCP47 tag (e.g. `navigator.language`, `"de-AT"`) onto a supported {@link ShellLocale}, or `undefined` when the
+ * tag names no supported language — there is no default language, so an unmapped platform locale must reach an explicit
+ * language choice. Exposed so boot code (renderer/demonstrator) can resolve a locale before any brand lock is known. */
+export const detectShellLocale: (language?: string) => ShellLocale | undefined = normalizeUiLocale;
 
-const UI_I18N_STATIC_OPTIONS = { fallbackLanguage: "en", supportedLanguages: ["en", "de"] } as const;
+/** 🔒️ The decided {@link ShellLocale} of a live instance's language; throws when the instance is undecided or stands at an unsupported language — never answers a language nobody chose. */
+export function requireShellLocale(language: string | undefined): ShellLocale {
+  const locale = normalizeUiLocale(language);
+  if (locale === undefined) throw new Error("Shell locale requires an explicit supported language source");
+  return locale;
+}
+
+const UI_I18N_STATIC_OPTIONS = { supportedLanguages: ["en", "de"] } as const;
 
 const UI_I18N_SHARED_KEY = Symbol.for("semio.ui.i18n.shared");
 
@@ -145,7 +153,7 @@ function pageSharedUiI18nInstance(): UiI18nInstance | undefined {
   return (globalThis as unknown as Record<symbol, UiI18nInstance | undefined>)[UI_I18N_SHARED_KEY];
 }
 
-function resolveRequestedUiLocale(): UiTranslationLocaleCode {
+function resolveRequestedUiLocale(): UiTranslationLocaleCode | undefined {
   const storedLocale = readStoredUiChromeLocale(createBrowserStoragePort());
   if (storedLocale) return storedLocale;
   const shared = pageSharedUiI18nInstance();
@@ -185,7 +193,7 @@ export const uiI18nInstance: UiI18nInstance = (() => {
 function initializeUiI18n(): UiI18nPort {
   const requestedLocale = resolveRequestedUiLocale();
   registerUiChromeTranslationBundles();
-  if (uiI18nInstance.language !== requestedLocale) void uiI18nInstance.changeLanguage(requestedLocale);
+  if (requestedLocale !== undefined && uiI18nInstance.language !== requestedLocale) void uiI18nInstance.changeLanguage(requestedLocale);
   return createUiI18nPort(uiI18nInstance);
 }
 

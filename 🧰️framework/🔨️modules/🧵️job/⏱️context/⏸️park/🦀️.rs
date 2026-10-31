@@ -1,24 +1,36 @@
 //! ⏸️ An actual caller delegates its remaining wallet once and retains the owned issuing recipient through await.
-use super::{StepContext,StepBudget,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalRetainedLoanIdentity,OriginalTurnFailure,RetainedCloneGrant,RetainedCloneProgress,InteractiveJobCloseStep,ValueError,ValueRefusalKind,ClockStride};
+use super::{StepContext,StepBudget,OriginalCallerSourceParent,OriginalCallerSourceLoan,OriginalRetainedLoanIdentity,OriginalTurnFailure,RetainedCloneGrant,RetainedCloneProgress,InteractiveJobCloseStep,ValueError,ValueRefusalKind,ClockStride,OriginalSourceBinding,receive_original_retained_work};
 use std::mem::ManuallyDrop;
 
 struct OwnedTurnWallet{fuel:u64,deadline:u64,grant:RetainedCloneGrant,clock:fn()->Option<u64>,clock_binding:Option<u64>,epoch:u64,clock_observation:ClockStride,payload_page_granted:bool,stage:&'static str}
 
 /// 🧳️ Owns the paid original source alias and one non-renewable wallet before issuing its context.
-pub struct OriginalOwnedCallerTurn{source:ManuallyDrop<Option<OriginalCallerSourceParent>>,loan:ManuallyDrop<Option<OriginalCallerSourceLoan>>,wallet:Option<OwnedTurnWallet>,sequence:u64,recipient:RetainedCloneProgress,issued:bool,initial_fuel:u64,work_units_spent:u128,receiving_valid:bool,initial_grant:RetainedCloneGrant,deadline:u64,epoch:u64,clock:fn()->Option<u64>}
+pub struct OriginalOwnedCallerTurn{binding:OriginalSourceBinding,parent_identity:usize,active:bool,ready:bool,source:ManuallyDrop<Option<OriginalCallerSourceParent>>,loan:ManuallyDrop<Option<OriginalCallerSourceLoan>>,wallet:Option<OwnedTurnWallet>,sequence:u64,recipient:RetainedCloneProgress,issued:bool,initial_fuel:u64,work_units_spent:u128,receiving_valid:bool,initial_grant:RetainedCloneGrant,deadline:u64,epoch:u64,clock:fn()->Option<u64>}
 
 impl OriginalCallerSourceParent{
     /// 🎟️ Pays the actual source loan before moving the remaining work and physical currencies out of this donor.
-    pub fn park_owned_turn(&self,cx:&mut StepContext<'_>)->Result<Option<OriginalOwnedCallerTurn>,OriginalTurnFailure>{
-        let epoch=cx.original_source_epoch().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"owned async turn requires its genuinely issued source epoch"))?;
-        let Some(loan)=self.admit_loan(cx)?else{return Ok(None)};
+    pub fn park_owned_turn(&self,output:&mut Option<OriginalOwnedCallerTurn>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        self.validate_borrowed_context(cx)?;let epoch=cx.original_source_epoch().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"owned async turn requires its genuinely issued source epoch"))?;let identity=self.source_identity()?;
+        if let Some(owner)=output.as_ref(){if !owner.binding.matches(cx)||owner.parent_identity!=identity{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned async admission requires its unchanged original caller").into())}if owner.ready{return Ok(true)}}
+        let grant=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        if output.is_none(){self.admit_owned_turn(output,cx,epoch)?;return Ok(false)}
+        let owner=output.as_mut().unwrap();
+        if cx.fuel_remaining()<2||cx.retained_grant().maximum_items<2{return Ok(false)}
+        OriginalOwnedCallerTurn::post_control(cx)?;
         let grant=cx.retained_grant();let fuel=cx.fuel_remaining();let deadline=cx.deadline_us();let clock=cx.clock_source();let clock_binding=cx.original_clock_binding();let posted=cx.retained_progress();let sequence=std::mem::take(cx.preview_sequence);let clock_observation=cx.clock.get();let payload_page_granted=cx.payload_page_granted;let stage=cx.stage;
-        cx.fuel_remaining=0;cx.retained=RetainedCloneGrant{maximum_items:posted.copied_items,maximum_copy_bytes:posted.copied_bytes,maximum_capacity_bytes:posted.retained_capacity_bytes,maximum_release_bytes:posted.released_bytes,maximum_depth:0};
-        Ok(Some(OriginalOwnedCallerTurn{source:ManuallyDrop::new(Some(loan.into_borrowed_parent())),loan:ManuallyDrop::new(None),wallet:Some(OwnedTurnWallet{fuel,deadline,grant,clock,clock_binding,epoch,clock_observation,payload_page_granted,stage}),sequence,recipient:Default::default(),issued:false,initial_fuel:fuel,work_units_spent:0,receiving_valid:true,initial_grant:grant,deadline,epoch,clock}))
+        owner.wallet=Some(OwnedTurnWallet{fuel,deadline,grant,clock,clock_binding,epoch,clock_observation,payload_page_granted,stage});owner.sequence=sequence;owner.initial_fuel=fuel;owner.initial_grant=grant;owner.ready=true;
+        cx.fuel_remaining=0;cx.retained=RetainedCloneGrant{maximum_items:posted.copied_items,maximum_copy_bytes:posted.copied_bytes,maximum_capacity_bytes:posted.retained_capacity_bytes,maximum_release_bytes:posted.released_bytes,maximum_depth:0};Ok(true)
     }
 }
 
 impl OriginalOwnedCallerTurn{
+    pub(crate) fn from_admitted_source(source:OriginalCallerSourceParent,cx:&StepContext<'_>,parent_identity:usize,epoch:u64)->Self{Self{binding:OriginalSourceBinding::borrow(cx),parent_identity,active:true,ready:false,source:ManuallyDrop::new(Some(source)),loan:ManuallyDrop::new(None),wallet:None,sequence:0,recipient:Default::default(),issued:false,initial_fuel:0,work_units_spent:0,receiving_valid:true,initial_grant:RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0},deadline:cx.deadline_us(),epoch,clock:cx.clock_source()}}
+    fn post_control(cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{receive_original_retained_work(cx,semio_framework_value_retained_clone::RetainedWorkOutcome::<_,ValueError>{result:Ok(super::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})?;Ok(())}
+    pub fn admission_is_ready(&self)->bool{self.ready}
+    pub fn admission_is_empty(&self)->bool{!self.active&&self.source.is_none()&&self.loan.is_none()}
+
+    /// ♻️ Returns every partial original admission under the same genuine source.
+    pub fn close_admission_step(&mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{parent.validate_borrowed_context(cx)?;if self.parent_identity!=parent.source_identity()?||!self.binding.matches(cx){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"partial owned async return requires its actual source").into())}self.close_source(parent,cx)}
     /// 📏️ The actual delegated grant remains independent from all later polling callbacks.
     pub fn original_grant(&self)->RetainedCloneGrant{self.initial_grant}
     pub fn original_fuel(&self)->u64{self.initial_fuel}
@@ -28,7 +40,7 @@ impl OriginalOwnedCallerTurn{
     /// 🤝️ The owning future borrows one actual source context continuously through the asynchronous producer.
     pub async fn execute<R>(mut self,run:impl for<'turn> AsyncFnOnce(&mut StepContext<'turn>)->Result<R,OriginalTurnFailure>)->OriginalOwnedCallerReturn<R>{
         let mut receiving_refusal=None;
-        let original=if self.issued{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned original turn cannot issue its wallet twice").into())}else{
+        let original=if self.issued||!self.ready{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned original turn cannot issue its wallet twice").into())}else{
             self.issued=true;let wallet=self.wallet.take().expect("one sealed original wallet remains before its only issue");let budget=StepBudget{fuel:wallet.fuel,deadline_us:wallet.deadline,retained:wallet.grant};
             let source=self.source.as_ref().expect("paid original source remains owned through its context");
             match source.borrow_context(budget,wallet.clock,&mut self.sequence,&mut self.recipient){
@@ -45,18 +57,19 @@ impl OriginalOwnedCallerTurn{
         };
         OriginalOwnedCallerReturn{turn:self,original:ManuallyDrop::new(Some(original)),receiving_refusal:ManuallyDrop::new(receiving_refusal)}
     }
-    fn validate_polling_context(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if let Some(source)=self.source.as_ref(){source.validate_borrowed_context(cx)}else if let Some(loan)=self.loan.as_ref(){loan.validate_context(cx)}else{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned original reply source returned before its output transfer").into())}}
-    fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.loan.is_none()}
+    fn validate_polling_context(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if !self.binding.matches(cx){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned async return requires its genuine original caller").into())}if let Some(source)=self.source.as_ref(){source.validate_borrowed_context(cx).map_err(Into::into)}else if let Some(loan)=self.loan.as_ref(){loan.validate_context(cx)}else{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned original reply source returned before its output transfer").into())}}
+    fn terminal_is_empty(&self)->bool{!self.active&&self.source.is_none()&&self.loan.is_none()}
     fn close_source(&mut self,parent:&OriginalCallerSourceParent,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
-        if self.source.is_some(){let source=self.source.take().unwrap();match source.into_source_loan(){Ok(loan)=>*self.loan=Some(loan),Err(source)=>{*self.source=Some(source);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned async source cannot return while another source frontier remains").into())}}}
-        let Some(loan)=self.loan.as_mut()else{return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})};
-        let step=loan.close_step(parent,cx)?;if loan.terminal_is_empty(){self.loan.take();}Ok(step)
+        if self.source.is_some(){if cx.retirement_should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}let source=self.source.take().unwrap();match source.into_source_loan(){Ok(loan)=>*self.loan=Some(loan),Err(source)=>{*self.source=Some(source);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned async source cannot return while another source frontier remains").into())}}Self::post_control(cx)?;return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
+        if let Some(loan)=self.loan.as_mut(){if !loan.terminal_is_empty(){let step=loan.close_step(parent,cx)?;return Ok(match step{InteractiveJobCloseStep::Complete{progress}|InteractiveJobCloseStep::Pending{progress}=>InteractiveJobCloseStep::Pending{progress},InteractiveJobCloseStep::Blocked=>InteractiveJobCloseStep::Blocked})}if cx.retirement_should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}self.loan.take();Self::post_control(cx)?;return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
+        if !self.active{return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}if cx.retirement_should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}self.active=false;self.ready=false;Self::post_control(cx)?;Ok(InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})
     }
 }
 impl Drop for OriginalOwnedCallerTurn{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"owned original turn reached Drop before its paid source loan return")}}
 
 /// 📬️ Whole semantic return and independent receiving refusal remain owned together after their exact physical effects.
-#[derive(Debug,semio_framework_value::RetireOwned)]
+#[derive(Debug,semio_framework_value_derive::RetireOwned)]
+#[value(crate="::semio_framework_value_retained_clone")]
 pub struct OriginalOwnedCallerOutcome<R>{pub original:Result<R,OriginalTurnFailure>,pub receiving_refusal:Option<ValueError>}
 /// 🪢️ Carries the unchanged issuing epoch, exact physical/work receipt and still-live source until paid caller transfer.
 pub struct OriginalOwnedCallerReturn<R>{turn:OriginalOwnedCallerTurn,original:ManuallyDrop<Option<Result<R,OriginalTurnFailure>>>,receiving_refusal:ManuallyDrop<Option<ValueError>>}

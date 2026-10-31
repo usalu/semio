@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "messages": [
+    {
+      "id": "empty",
+      "message": "",
+      "expected": {
+        "origin": "app",
+        "code": "app.message",
+        "severity": "error",
+        "message": "",
+        "scope": {},
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "retryable": false
+      }
+    },
+    {
+      "id": "unicode",
+      "message": "Grüße 🦑",
+      "expected": {
+        "origin": "app",
+        "code": "app.message",
+        "severity": "error",
+        "message": "Grüße 🦑",
+        "scope": {},
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "retryable": false
+      }
+    },
+    {
+      "id": "escaped",
+      "message": "one\n\"two\"",
+      "expected": {
+        "origin": "app",
+        "code": "app.message",
+        "severity": "error",
+        "message": "one\n\"two\"",
+        "scope": {},
+        "retainedProgress": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        },
+        "retryable": false
+      }
+    }
+  ],
+  "copyRule": "utf8(message)+utf8(app.message)",
+  "capacityRule": "messageCapacity+codeCapacity+FaultScopeLayout",
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "blockedEffects": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "maxWireBytes": 8192,
+  "takeCopyRule": "fixed ownership move has zero payload copy",
+  "close": "one exact original allocation per actual release grant",
+  "cpuContract": {
+    "deniedBirth": 0,
+    "admittedBirth": 1,
+    "deniedTake": 0,
+    "admittedTake": 1,
+    "occupiedReceiver": 1,
+    "deniedClose": 0,
+    "admittedClose": 1,
+    "cachedTerminal": 0
+  }
+}

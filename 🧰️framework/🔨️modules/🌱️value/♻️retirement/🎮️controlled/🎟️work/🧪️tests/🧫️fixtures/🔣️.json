@@ -1,0 +1,30 @@
+{
+  "stock": {
+    "items": 1048576,
+    "copy": 16777216,
+    "capacity": 16777216,
+    "release": 33554432,
+    "depth": 256
+  },
+  "maximumTurns": 1048576,
+  "axes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "expected": {
+    "deniedCpu": 0,
+    "cachedCpu": 0,
+    "newFailureCpu": 1,
+    "terminalCpu": 0,
+    "source": "same original refusal source"
+  },
+  "birth": {
+    "refusedAttempts": 1,
+    "refusalKind": "allocationFailed",
+    "factoryValue": 17
+  },
+  "maximumCpuWork": 1048576
+}

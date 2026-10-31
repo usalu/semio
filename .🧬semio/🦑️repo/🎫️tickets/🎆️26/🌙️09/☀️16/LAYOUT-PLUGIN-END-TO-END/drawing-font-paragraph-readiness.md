@@ -1,0 +1,7 @@
+# Paragraph and Run Owning Gate Preparation
+
+PREP ONLY. Five schema-first genuine Paragraph laws plus both original paragraph/linked-flow laws join the complete previously accepted Run+Bidi ten. Expected seventeen registrations is distinct from actual results. Run now borrows the existing first-party read sequence directly, with no materialized adapter. Paragraph owns real row pages, folded actual child CPU/semantic outcomes, fixed scalar staging, immutable paid row replacement, original source/wrap/sort/geometry algorithms and authentic child retirement custody. All original oracle calls, source identities, stock/limits/fuel and old assertions remain.
+
+The exact closure records first-party literal import/export and literal URL assets, declaration facets, current package/lock and the actual previous font catalog asset roster plus line-break binary. Dynamic fonts are explicit. Normal Bun importer and canonical strict11 have separate dedicated all-five ticket environments/logs. No runtime, new manifest, external production dependency or full Font14/whole Drawing/controller claim. Root review/release required before launch.
+
+Source attribution is bounded by drawing-run-readonly-spans-working-file.json, drawing-font-paragraph-test-first.json, drawing-font-paragraph-producer-working-file.json, drawing-font-paragraph-close-working-file.json and drawing-font-paragraph-caller-working-files.json. Cursor authored no Paragraph hunk. Historical Run+Bidi3 remains real proof of predecessor bytes, not the new spans signature.

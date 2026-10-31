@@ -113,7 +113,7 @@ impl protocol::ColdDiffAlgebra<RetainedLoadCameraConfig> for RetainedLoadCameraC
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
 #[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
-pub(crate) enum RetainedLoadCameraConfigMutation {
+pub enum RetainedLoadCameraConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]

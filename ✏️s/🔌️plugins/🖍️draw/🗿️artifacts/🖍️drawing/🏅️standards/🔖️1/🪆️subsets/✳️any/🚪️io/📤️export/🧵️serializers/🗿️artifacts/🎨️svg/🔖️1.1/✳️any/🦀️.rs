@@ -23,7 +23,6 @@ impl Serializer<DrawingSnapshot> for DrawingIntoSvg {
 use semio_s_artifact_draw_drawing_model::DrawingSceneNode;
 use semio_s_artifact_draw_drawing_scene::flatten_drawing_document_to_scene_nodes;
 use semio_s_artifact_draw_drawing_model::{FillStyle, GradientStop, PathSegment};
-use semio_s_artifact_draw_drawing_model::fill::sampling::PreparedFill;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::typed_to_svg_document;
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::{CommonAttrs, PathCommand, SvgElement, TransformOp, ViewBox};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked;
@@ -43,7 +42,7 @@ fn stops(values: &semio_framework_value_persistent::list::PagedList<GradientStop
 
 fn presentation(node: &DrawingSceneNode, index: usize, defs: &mut Vec<SvgElement>) -> Result<CommonAttrs,String> {
     let mut common = CommonAttrs::default().with_fill("none").with_stroke("none");
-    let constant=node.fill.as_ref().map(PreparedFill::new).transpose().map_err(|message|format!("SVG layer {}: {message}",node.id))?.and_then(|fill|fill.constant_color());
+    let constant=node.fill.as_ref().map(semio_s_artifact_draw_drawing_model::fill::sampling::constant_fill_color).transpose().map_err(|message|format!("SVG layer {}: {message}",node.id))?.flatten();
     match (&node.fill,constant) {
         (_,Some(color)) => {
             common.presentation.fill = Some(rgb(&color));

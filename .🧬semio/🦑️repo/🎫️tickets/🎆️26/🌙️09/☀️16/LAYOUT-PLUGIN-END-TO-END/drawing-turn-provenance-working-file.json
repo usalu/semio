@@ -1,0 +1,9 @@
+{
+  "state": "Counter-only provenance authored after schema/law; no runtime",
+  "file": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts",
+  "beforeSha256": "df52c0b627c95d224b6ba376fd0bc1a6ffff46dacbf5f2f0008106302dd05deb",
+  "sha256": "98e33379591bea207abb9c53360fd6e92d7b07ad76db3b8ec574f4eac47d25b5",
+  "bytes": 1677,
+  "testFirstPacket": "drawing-admission-provenance-test-first-working-files.json",
+  "testFirstSha256": "150852b3b3cf49ac5f0494be6aa905f0d97f5b8cf458f63382f84488481ef315"
+}

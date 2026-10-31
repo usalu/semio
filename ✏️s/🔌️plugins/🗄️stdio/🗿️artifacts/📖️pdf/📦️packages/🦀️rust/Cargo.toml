@@ -59,7 +59,6 @@ semio-s-artifact-stdio-pdf-mut-family-9 = { path = "../../🏅️standards/7️�
 semio-s-artifact-stdio-pdf-mut-family-10 = { path = "../../🏅️standards/7️⃣1.7/🪆️subsets/🖨️x/🚪️io/💾️binary/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-mut-family-11 = { path = "../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🪄️replace-page/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-lower = { path = "../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/⬆️lower/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-pdf-testkit = { path = "../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧪️testkit/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-tests-2 = { path = "../../🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-schema-4 = { path = "../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-mut-base-8 = { path = "../../🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/➕️append-page-content/🧪️tests/🔬️unit/📦️packages/🦀️rust" }

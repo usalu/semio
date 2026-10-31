@@ -75,6 +75,9 @@
           "cannot create the lock file",
           "lock file .* needs to be updated"
         ],
+        "missingPathManifestMarkers": [
+          "failed to read `([^`\\n]+Cargo\\.toml)`\\s+Caused by:\\s+[^\\n]*\\(os error [23]\\)"
+        ],
         "missingCrateMarkers": [
           "no matching package named `([^`]+)` found",
           "failed to select a version for the requirement `([^`\\s=]+)",
@@ -107,6 +110,10 @@
         "unresolvableOffline": {
           "en": "The Cargo.lock of {workspace} cannot be refreshed: crate {crate} is not in the shared registry and this build has no network grant. Run `repo sync cargo` once with network access. {detail}",
           "de": "Die Cargo.lock von {workspace} kann nicht aktualisiert werden: Die Crate {crate} fehlt in der gemeinsamen Registry und dieser Build hat keine Netzfreigabe. Führe einmal `repo sync cargo` mit Netzzugang aus. {detail}"
+        },
+        "missingPathManifest": {
+          "en": "The Cargo.lock of {workspace} cannot be refreshed: a path dependency points at {crate}, whose manifest does not exist. Going online cannot help; create the crate or fix the path in the manifest that names it. {detail}",
+          "de": "Die Cargo.lock von {workspace} kann nicht aktualisiert werden: Eine Pfadabhängigkeit zeigt auf {crate}, dessen Manifest nicht existiert. Online zu gehen hilft nicht; die Crate anlegen oder den Pfad im nennenden Manifest korrigieren. {detail}"
         },
         "unresolvable": {
           "en": "The Cargo.lock of {workspace} cannot be refreshed: crate {crate} cannot be resolved. {detail}",

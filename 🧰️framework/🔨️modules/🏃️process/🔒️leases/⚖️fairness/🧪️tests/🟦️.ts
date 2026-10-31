@@ -7,7 +7,7 @@ import Ajv from "ajv";
 import {acquireResourceLease,acquireQueuedResourceLease,upgradeQueuedResourceLease,type ResourceLease,type ResourceLeaseControl} from "../../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import {queueMayProceedV1} from "../🟦️.ts";
+import {queueMayProceedV1,queueTicketDefersV1,writerPreferenceForResourceV1} from "../🟦️.ts";
 import policySchema from "../../⏳️wait/🧬️schema/📜️policy.json";
 import progressSchema from "../../../🧭️routing/📥️invocation/🏃️process/🧬️schema/📈️progress.json";
 import {createIssuedResourceControlV1,createRequestedIssuedResourceControlV1} from "../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -214,7 +214,7 @@ def proceeds(q,ahead):
         return True
     if q["sharedCohort"] and all(a["mode"]=="shared" and a["sharedCohort"] for a in blocking):
         return True
-    return q["mode"]=="shared" and q["holdsShared"] and all(a["mode"]=="shared" for a in blocking)
+    return q["mode"]=="shared" and q["holdsShared"]
 print(json.dumps({c["id"]:proceeds(c["requester"],c["ahead"]) for c in d["turns"]["cases"]}))
 `;
 test("the queue turn law: a writer closes the queue for later readers only while it is young and not yielding",async()=>{
@@ -276,3 +276,37 @@ test("an ordinary writer that waits for a long holder stops closing the queue fo
  }finally{await cleanup(directory);}
 },120000);
 
+
+
+test("a longer writer preference of a resource prefix keeps a draining image writer ahead of new shared requests, other resources keep the general value",()=>{
+ const fairness={writerPreferenceMilliseconds:120000,writerPreferenceByPrefix:[{prefix:"native-fixed-image:"},{prefix:"native-fixed-image:/x/",milliseconds:7200000}]};
+ expect(writerPreferenceForResourceV1(fairness,"native-fixed-image:/a")).toBe(Infinity);expect(writerPreferenceForResourceV1(fairness,"native-fixed-image:/x/y")).toBe(7200000);
+ expect(writerPreferenceForResourceV1(fairness,"other")).toBe(120000);expect(writerPreferenceForResourceV1({},"other")).toBe(Infinity);
+ const writer={pid:1,mode:"exclusive" as const,sharedCohort:false,yielding:false,arrivedAtMs:0},reader={pid:2,mode:"shared" as const,sharedCohort:true,yielding:false,holdsShared:false};
+ const at=30*60000,image=writerPreferenceForResourceV1(fairness,"native-fixed-image:/a"),general=writerPreferenceForResourceV1(fairness,"other");
+ expect(queueTicketDefersV1(reader,writer,at,image)).toBe(false);expect(queueMayProceedV1(reader,[writer],at,image)).toBe(false);
+ expect(queueTicketDefersV1(reader,writer,at,general)).toBe(true);expect(queueMayProceedV1(reader,[writer],at,general)).toBe(true);
+ expect(queueMayProceedV1(reader,[writer],1000*3600000,image),"a draining image writer is never aged out by steady shared load").toBe(false);
+});
+
+
+test("a holder of the shared resource and its descendants pass a waiting writer however long its preference lasts, everyone else queues behind it: no holder-writer deadlock",()=>{
+ const hour=3600000,writer={pid:9,mode:"exclusive" as const,sharedCohort:false,yielding:false,arrivedAtMs:0},at=30*60000;
+ const holder={pid:1,mode:"shared" as const,sharedCohort:true,yielding:false,holdsShared:true},stranger={pid:2,mode:"shared" as const,sharedCohort:true,yielding:false,holdsShared:false};
+ expect(queueMayProceedV1(holder,[writer],at,hour)).toBe(true);expect(queueMayProceedV1(holder,[writer],0,hour)).toBe(true);
+ expect(queueMayProceedV1(stranger,[writer],at,hour)).toBe(false);expect(queueMayProceedV1(stranger,[writer],hour+1,hour)).toBe(true);
+ const second={pid:3,mode:"exclusive" as const,sharedCohort:false,yielding:false,arrivedAtMs:1};
+ expect(queueMayProceedV1({...holder,mode:"exclusive"} as never,[writer],at,hour)).toBe(false);
+ expect(queueMayProceedV1(holder,[writer,second],at,hour)).toBe(true);
+});
+
+
+test("a holder tree passes a waiting writer at any age (no wait-for cycle), strangers never overtake an unbounded writer, and no holder is ever blocked by a writer in 2000 random queues",()=>{
+ const hour=3600000,writer={pid:9,mode:"exclusive" as const,sharedCohort:false,yielding:false,arrivedAtMs:0},holder={pid:1,mode:"shared" as const,sharedCohort:true,yielding:false,holdsShared:true},stranger={...holder,pid:2,holdsShared:false};
+ for(const age of [0,hour,6*hour+1,100*hour,1e9*hour]){expect(queueMayProceedV1(holder,[writer],age,Infinity)).toBe(true);expect(queueMayProceedV1(holder,[writer],age,hour)).toBe(true);expect(queueMayProceedV1(stranger,[writer],age,Infinity)).toBe(false);}
+ let seed=7;const next=(limit:number)=>{seed=(seed*1103515245+12345)%2147483648;return seed%limit;};
+ for(let round=0;round<2000;round++){
+  const ahead=Array.from({length:1+next(5)},(_,index)=>({pid:10+index,mode:next(2)?"exclusive" as const:"shared" as const,sharedCohort:next(2)===1,yielding:next(4)===0,arrivedAtMs:next(1000)}));
+  expect(queueMayProceedV1(holder,ahead,next(1e9),next(2)?Infinity:next(hour)+1000),"a shared holder waits for nothing a writer holds").toBe(true);
+ }
+});

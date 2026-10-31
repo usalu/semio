@@ -1,0 +1,51 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-job-failure"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original job failure custody, complete cause projection and caller-controlled domain admission."
+
+[package.metadata.semio]
+role = "framework"
+id = "job-failure"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_job_failure"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value-derive = { workspace = true }
+semio-framework-value-retained-clone = { path = "../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { workspace = true }
+semio-framework-diagnostic = { path = "../../../../⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-job-context = { workspace = true, features = ["testkit"] }
+semio-framework-job-testing-caller = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+
+[[test]]
+name = "original-turn-failure"
+path = "../../🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-domain-reservation"
+path = "../../📦️domain/🎟️reservation/🧪️tests/owning.rs"
+
+[[test]]
+name = "original-work-failure"
+path = "../../🎟️work/🧪️tests/owning.rs"

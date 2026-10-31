@@ -35,7 +35,7 @@ fn actions_are_localized_and_registered_as_interactive() {
 #[test]
 fn an_idle_window_still_renders_the_editable_run_settings_and_the_framework_start_chord() {
     let model = crate::model::Model::default();
-    let text = text(render(None, &EnergyModelConfig::default(), &model, None, Locale::En));
+    let text = text(render(None, &EnergyModelConfig::default(), &model.run_period, None, Locale::En));
     assert!(text.contains("energy-settings"), "the settings block must render without a run");
     assert!(text.contains("energy-setting-run-period"));
     assert!(text.contains("energy-simulation-start-hint"));
@@ -47,7 +47,7 @@ fn the_window_reads_the_run_state_from_the_framework_ledger_view() {
     let model = crate::model::Model::default();
     for state in ToolRunState::ALL {
         for locale in [Locale::En, Locale::De] {
-            let text = text(render(Some(view(state).borrowed()), &EnergyModelConfig::default(), &model, None, locale));
+            let text = text(render(Some(view(state).borrowed()), &EnergyModelConfig::default(), &model.run_period, None, locale));
             assert!(text.contains(state.label().text(locale)), "state {state:?} renders its framework label in {locale:?}");
             assert!(!text.contains("aria-live="));
             assert!(!text.contains("role=status"));
@@ -62,14 +62,14 @@ fn the_window_reads_the_run_state_from_the_framework_ledger_view() {
         }
     }
     let foreign = RunViewFixture { tool_id: "otherTool".into(), ..view(ToolRunState::Running) };
-    assert!(text(render(Some(foreign.borrowed()), &EnergyModelConfig::default(), &model, None, Locale::En)).contains("No energy simulation run"));
+    assert!(text(render(Some(foreign.borrowed()), &EnergyModelConfig::default(), &model.run_period, None, Locale::En)).contains("No energy simulation run"));
 }
 
 #[test]
 fn both_authored_languages_produce_different_text_and_the_framework_chords() {
     let model = crate::model::Model::default();
-    let english = text(render(None, &EnergyModelConfig::default(), &model, None, Locale::En));
-    let german = text(render(None, &EnergyModelConfig::default(), &model, None, Locale::De));
+    let english = text(render(None, &EnergyModelConfig::default(), &model.run_period, None, Locale::En));
+    let german = text(render(None, &EnergyModelConfig::default(), &model.run_period, None, Locale::De));
     assert_ne!(english, german);
     assert!(german.contains("Laufeinstellungen"));
     assert!(english.contains("Run settings"));
@@ -94,10 +94,10 @@ fn the_result_field_action_offers_exactly_the_published_fields_and_the_window_re
     let model = crate::model::Model::default();
     let mut settings = EnergyModelConfig::default();
     settings.result_field = ResultField::SolarTransmitted.id().into();
-    let english = text(render(None, &settings, &model, None, Locale::En));
+    let english = text(render(None, &settings, &model.run_period, None, Locale::En));
     assert!(english.contains("Solar transmitted"), "the window reads back the field it will be recoloured by: {english}");
     assert!(english.contains(SET_RESULT_FIELD_ACTION_ID), "the settings node names the verb that changes it");
-    let german = text(render(None, &settings, &model, None, Locale::De));
+    let german = text(render(None, &settings, &model.run_period, None, Locale::De));
     assert!(german.contains("Solare Transmission"), "and in German: {german}");
 }
 
@@ -113,7 +113,7 @@ fn actual_weather_identity_and_native_select_clear_bindings_are_rendered(){
  let link=store::ArtifactLink { target:semio_framework_artifact_reference::ArtifactRef::parse_uri(law["target"].as_str().unwrap()).unwrap(),pin:store::LinkPin::Head,role:law["role"].as_str().unwrap().into() };
  let model=crate::model::Model::default();
  for locale in [Locale::En,Locale::De]{
-  let rendered=text(render(None,&EnergyModelConfig::default(),&model,Some(&link),locale));
+  let rendered=text(render(None,&EnergyModelConfig::default(),&model.run_period,Some(&link),locale));
   assert!(rendered.contains(law["target"].as_str().unwrap()));
   assert!(rendered.contains(law["selectAction"].as_str().unwrap()));
   assert!(rendered.contains(law["clearAction"].as_str().unwrap()));
@@ -130,7 +130,7 @@ fn actual_meter_counters_render_kwh_in_both_languages(){
   run.progress.counters.push(semio_framework_tool_run::ToolRunCounter{counter:counter.index(),value:law[key].as_u64().unwrap()});
  }
  for locale in [Locale::En,Locale::De]{
-  let rendered=text(render(Some(run.borrowed()),&EnergyModelConfig::default(),&crate::model::Model::default(),None,locale));
+  let rendered=text(render(Some(run.borrowed()),&EnergyModelConfig::default(),&crate::model::Model::default().run_period,None,locale));
   for key in ["heatingKwh","coolingKwh","facilityKwh"]{assert!(rendered.contains(law[key].as_str().unwrap()),"{rendered}");}
   assert!(rendered.contains(say(locale,"Heating","Heizen")));
   assert!(rendered.contains(say(locale,"Cooling","Kühlen")));

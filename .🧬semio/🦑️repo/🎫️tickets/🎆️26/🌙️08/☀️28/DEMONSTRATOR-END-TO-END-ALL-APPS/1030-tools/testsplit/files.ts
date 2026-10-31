@@ -1,0 +1,12 @@
+import {readFileSync,existsSync} from "node:fs";
+import {resolve,join,dirname} from "node:path";
+import {execFileSync} from "node:child_process";
+const REPO="/Users/ueli/Documents/semio";
+const {readRustSourceClosureV1}=await import(REPO+"/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts");
+const cfg=[...execFileSync("rustc",["--print","cfg"],{encoding:"utf8"}).trim().split("\n").map(v=>v.replace(/=(".*")$/u,(_,q)=>"="+JSON.parse(q))),"test","debug_assertions"];
+const mp=resolve(process.argv[2]);const dir=dirname(mp);
+const t=Bun.TOML.parse(readFileSync(mp,"utf8")) as any;
+const lib=resolve(dir,t.lib.path);
+const inputs=await readRustSourceClosureV1([lib],REPO,cfg,async(p:string)=>{try{return new Uint8Array(readFileSync(p))}catch{return null}},{manifestDirectory:dir,generated:()=>undefined});
+const base=process.argv[3]??REPO;
+for(const x of inputs)console.log(x.bytes,x.activeLines,String(x.path??x.file??JSON.stringify(Object.keys(x))).replace(base+"/",""));

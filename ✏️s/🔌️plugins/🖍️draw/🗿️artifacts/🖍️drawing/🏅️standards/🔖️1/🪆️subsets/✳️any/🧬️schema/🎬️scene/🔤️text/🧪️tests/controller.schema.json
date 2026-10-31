@@ -1,0 +1,585 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Drawing Scene Caller-Funded Turn Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "owner",
+    "axes",
+    "modes",
+    "validation",
+    "lifecycle",
+    "rules",
+    "cases",
+    "interface",
+    "fixturePolicy",
+    "lifecycleCases",
+    "fixtureOwner"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "owner": {
+      "const": "caller-supplied-finite-turn"
+    },
+    "axes": {
+      "const": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ]
+    },
+    "modes": {
+      "const": [
+        "advance",
+        "close"
+      ]
+    },
+    "validation": {
+      "const": [
+        "closed-shape",
+        "safe-integer-nonnegative",
+        "live-turn",
+        "same-controller",
+        "same-operation",
+        "same-original-grant",
+        "not-reentered",
+        "cpu-separate",
+        "source-contract-before-custody"
+      ]
+    },
+    "lifecycle": {
+      "const": [
+        "validate",
+        "enter",
+        "borrow-remaining-grant",
+        "invoke-once",
+        "fold-retained-once",
+        "fold-cpu-once",
+        "recheck",
+        "leave"
+      ]
+    },
+    "rules": {
+      "const": {
+        "noDefaultAuthority": true,
+        "noGrantFromDemand": true,
+        "sameLedgerToDescendants": true,
+        "consumeActualBeforeError": true,
+        "recordOverrunBeforeRefusal": true,
+        "blockedZeroReturns": true,
+        "closeUsesExplicitFunding": true,
+        "abortDoesNotDiscardOwners": true,
+        "noCumulativeReceiptRefold": true,
+        "noPendingResultEscape": true,
+        "outputCloseUsesDefiningOwner": true
+      }
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "unfunded",
+          "grant": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "receipt": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "cpu": 0,
+          "invoked": false,
+          "retainedFolds": 0,
+          "cpuFolds": 0,
+          "outcome": "blocked",
+          "ownerRetained": true,
+          "demand": [
+            1,
+            8,
+            16,
+            0,
+            2
+          ],
+          "cpuQuantum": 1,
+          "live": true,
+          "sameController": true
+        },
+        {
+          "name": "paid",
+          "grant": [
+            1,
+            8,
+            16,
+            0,
+            2
+          ],
+          "receipt": [
+            1,
+            8,
+            16,
+            0
+          ],
+          "cpu": 1,
+          "invoked": true,
+          "retainedFolds": 1,
+          "cpuFolds": 1,
+          "outcome": "pending",
+          "ownerRetained": true,
+          "demand": [
+            1,
+            8,
+            16,
+            0,
+            2
+          ],
+          "cpuQuantum": 1,
+          "live": true,
+          "sameController": true
+        },
+        {
+          "name": "child-error-after-effects",
+          "grant": [
+            1,
+            8,
+            16,
+            0,
+            2
+          ],
+          "receipt": [
+            1,
+            8,
+            16,
+            0
+          ],
+          "cpu": 1,
+          "invoked": true,
+          "retainedFolds": 1,
+          "cpuFolds": 1,
+          "outcome": "error",
+          "ownerRetained": true,
+          "demand": [
+            1,
+            8,
+            16,
+            0,
+            2
+          ],
+          "cpuQuantum": 1,
+          "live": true,
+          "sameController": true
+        },
+        {
+          "name": "overrun-retained-before-refusal",
+          "grant": [
+            1,
+            8,
+            16,
+            0,
+            2
+          ],
+          "receipt": [
+            1,
+            8,
+            17,
+            0
+          ],
+          "cpu": 1,
+          "invoked": true,
+          "retainedFolds": 1,
+          "cpuFolds": 1,
+          "outcome": "error",
+          "ownerRetained": true,
+          "demand": [
+            1,
+            8,
+            16,
+            0,
+            2
+          ],
+          "cpuQuantum": 1,
+          "live": true,
+          "sameController": true
+        },
+        {
+          "name": "close-release-denied",
+          "grant": [
+            1,
+            0,
+            0,
+            15,
+            1
+          ],
+          "receipt": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "cpu": 0,
+          "invoked": false,
+          "retainedFolds": 0,
+          "cpuFolds": 0,
+          "outcome": "blocked",
+          "ownerRetained": true,
+          "demand": [
+            1,
+            0,
+            0,
+            16,
+            1
+          ],
+          "cpuQuantum": 1,
+          "live": true,
+          "sameController": true
+        },
+        {
+          "name": "close-paid",
+          "grant": [
+            1,
+            0,
+            0,
+            16,
+            1
+          ],
+          "receipt": [
+            1,
+            0,
+            0,
+            16
+          ],
+          "cpu": 1,
+          "invoked": true,
+          "retainedFolds": 1,
+          "cpuFolds": 1,
+          "outcome": "closed",
+          "ownerRetained": false,
+          "demand": [
+            1,
+            0,
+            0,
+            16,
+            1
+          ],
+          "cpuQuantum": 1,
+          "live": true,
+          "sameController": true
+        },
+        {
+          "name": "expired-turn",
+          "grant": [
+            1,
+            8,
+            16,
+            0,
+            2
+          ],
+          "receipt": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "cpu": 0,
+          "invoked": false,
+          "retainedFolds": 0,
+          "cpuFolds": 0,
+          "outcome": "refused",
+          "ownerRetained": true,
+          "demand": [
+            1,
+            8,
+            16,
+            0,
+            2
+          ],
+          "cpuQuantum": 1,
+          "live": false,
+          "sameController": true
+        },
+        {
+          "name": "foreign-controller",
+          "grant": [
+            1,
+            8,
+            16,
+            0,
+            2
+          ],
+          "receipt": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "cpu": 0,
+          "invoked": false,
+          "retainedFolds": 0,
+          "cpuFolds": 0,
+          "outcome": "refused",
+          "ownerRetained": true,
+          "demand": [
+            1,
+            8,
+            16,
+            0,
+            2
+          ],
+          "cpuQuantum": 1,
+          "live": true,
+          "sameController": false
+        }
+      ]
+    },
+    "interface": {
+      "const": {
+        "class": "DrawingSceneWorkController",
+        "binding": [
+          "operation",
+          "source"
+        ],
+        "policy": [
+          "stock",
+          "fuel",
+          "provideTurn",
+          "wait"
+        ],
+        "turnMethods": [
+          "check",
+          "remainingFuel",
+          "retainedGrant",
+          "consumeRetained",
+          "consumeFuel",
+          "shouldYield"
+        ],
+        "ownerMethods": [
+          "nextWorkDemand",
+          "advance",
+          "lastTurnWork",
+          "cancel",
+          "intoRetirement",
+          "retireOutput"
+        ],
+        "helpers": [
+          "runDrawingSceneWorkTurn",
+          "driveDrawingSceneWork",
+          "resumeDrawingSceneWorkClose"
+        ],
+        "errorOwner": "pending"
+      }
+    },
+    "fixturePolicy": {
+      "const": {
+        "stock": [
+          4096,
+          8192,
+          8192,
+          8192,
+          32
+        ],
+        "fuel": 4096,
+        "turn": [
+          1,
+          256,
+          256,
+          256,
+          16
+        ],
+        "quantum": 1
+      }
+    },
+    "lifecycleCases": {
+      "const": [
+        {
+          "name": "retained-fold-refusal-still-folds-cpu",
+          "expect": {
+            "receiptRecorded": true,
+            "cpu": 1,
+            "rejected": true,
+            "causeIdentitiesPreserved": true
+          }
+        },
+        {
+          "name": "final-child-error-has-positive-current-effects",
+          "expect": {
+            "finalCapacity": 8,
+            "cpu": 1,
+            "rejected": true
+          }
+        },
+        {
+          "name": "borrowed-turn-expires",
+          "expect": {
+            "rejected": true
+          }
+        },
+        {
+          "name": "foreign-operation",
+          "expect": {
+            "providerCalls": 0,
+            "bodyCalls": 0,
+            "rejected": true
+          }
+        },
+        {
+          "name": "foreign-source",
+          "expect": {
+            "providerCalls": 0,
+            "bodyCalls": 0,
+            "rejected": true
+          }
+        },
+        {
+          "name": "foreign-original-grant",
+          "expect": {
+            "bodyCalls": 0,
+            "rejected": true
+          }
+        },
+        {
+          "name": "same-controller-reentry",
+          "expect": {
+            "nestedBodyCalls": 0,
+            "rejected": true
+          }
+        },
+        {
+          "name": "provider-rejection",
+          "expect": {
+            "bodyCalls": 0,
+            "rejected": true
+          }
+        },
+        {
+          "name": "provider-abort-before-callback",
+          "expect": {
+            "bodyCalls": 0,
+            "rejected": true
+          }
+        },
+        {
+          "name": "wait-abort",
+          "expect": {
+            "rejected": true
+          }
+        },
+        {
+          "name": "wait-rejection",
+          "expect": {
+            "rejected": true
+          }
+        },
+        {
+          "name": "close-refusal-retains-and-recovers-owner",
+          "expect": {
+            "retained": true,
+            "recovered": true,
+            "outputEscaped": false
+          }
+        },
+        {
+          "name": "partial-close-refusal-retains-and-recovers-owner",
+          "expect": {
+            "retained": true,
+            "recovered": true,
+            "outputEscaped": false
+          }
+        },
+        {
+          "name": "provider-or-wait-failure-retains-paid-owner",
+          "expect": {
+            "retained": true,
+            "recovered": true,
+            "outputEscaped": false
+          }
+        },
+        {
+          "name": "malformed-loan-before-custody",
+          "expect": {
+            "bodyCalls": 0,
+            "rejected": true
+          }
+        },
+        {
+          "name": "individually-valid-loans-exhaust-same-stock",
+          "stock": [
+            3,
+            6,
+            9,
+            12,
+            2
+          ],
+          "loan": [
+            1,
+            2,
+            3,
+            4,
+            1
+          ],
+          "turns": 3,
+          "fuel": 3,
+          "receipt": [
+            3,
+            6,
+            9,
+            12
+          ],
+          "expect": {
+            "bodyCalls": 3,
+            "providerCalls": 4,
+            "rejected": true,
+            "stockReset": false
+          }
+        },
+        {
+          "name": "abort-during-producer-close-retains-original-output-owner",
+          "expect": {
+            "retained": true,
+            "recovered": true,
+            "outputEscaped": false,
+            "stockReset": false,
+            "actualCapacity": 8,
+            "actualRelease": 8
+          }
+        },
+        {
+          "name": "controller-helper-authenticates-before-any-turn-property",
+          "expect": {
+            "propertyReads": 0,
+            "bodyCalls": 0,
+            "rejected": true
+          }
+        }
+      ]
+    },
+    "fixtureOwner": {
+      "const": {
+        "body": "genuine-retained-eight-byte-owner",
+        "admission": {
+          "capacity": 8,
+          "cpu": 1,
+          "semantic": 0
+        },
+        "write": {
+          "copy": 1,
+          "cpu": 1,
+          "semantic": 1
+        },
+        "close": {
+          "headerTurnBeforeRelease": true,
+          "release": 8
+        },
+        "cpu": "defining-issued-turn-only",
+        "sameOriginalStock": true
+      }
+    }
+  }
+}

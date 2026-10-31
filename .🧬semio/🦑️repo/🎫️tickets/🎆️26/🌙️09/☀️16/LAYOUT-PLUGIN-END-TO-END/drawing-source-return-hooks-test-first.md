@@ -1,0 +1,3 @@
+# Source Return Hooks Test First
+
+Closed neutral fixture/schema and a genuine OriginalJobFixtureCaller owning law were authored before source-root hook implementation. The law denies binding before effects, binds under item quantum one, observes the unchanged original lifetime stock and exact one control work unit, then proves cached binding has no renewed authority or CPU. serde_json independently decodes the declared cross-language expected values. Source retirement must retain and close the bound fixed counter after actual loans/claims return. This law is not executed; the mandatory owning gate is semio-framework-job --lib. No Source-ready claim.

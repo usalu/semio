@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Existing Mutable Array Ingress Without Work Authority",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "elementLogicalBytes",
+    "value",
+    "attempt",
+    "operationGrant",
+    "expectedElements",
+    "expectedRejection",
+    "cleanupStock",
+    "cleanupFuel",
+    "cleanupTurn"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "elementLogicalBytes": {
+      "const": 8
+    },
+    "value": {
+      "const": 42
+    },
+    "attempt": {
+      "const": "Array.prototype.push.call"
+    },
+    "operationGrant": {
+      "const": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "expectedElements": {
+      "const": []
+    },
+    "expectedRejection": {
+      "const": true
+    },
+    "cleanupStock": {
+      "const": [
+        64,
+        1024,
+        1024,
+        1024,
+        32
+      ]
+    },
+    "cleanupFuel": {
+      "const": 64
+    },
+    "cleanupTurn": {
+      "const": [
+        1,
+        1024,
+        1024,
+        1024,
+        32
+      ]
+    }
+  }
+}

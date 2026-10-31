@@ -4,19 +4,19 @@ use super::*;
 
 impl TypedJsonCursor {
     pub fn document() -> Self {
-        Self { stack: vec![TypedJsonNode::Document], emitted_nodes: 0, fragment_bytes: None, drawing: None }
+        Self { stack: vec![TypedJsonNode::Document], emitted_nodes: 0, fragment_bytes: None }
     }
 
     pub fn preflight() -> Self {
-        Self { stack: vec![TypedJsonNode::MissingLinks { index: 0, opened: false, emitted: false }], emitted_nodes: 0, fragment_bytes: None, drawing: None }
+        Self { stack: vec![TypedJsonNode::MissingLinks { index: 0, opened: false, emitted: false }], emitted_nodes: 0, fragment_bytes: None }
     }
 
     pub fn manifest() -> Self {
-        Self { stack: vec![TypedJsonNode::Manifest], emitted_nodes: 0, fragment_bytes: None, drawing: None }
+        Self { stack: vec![TypedJsonNode::Manifest], emitted_nodes: 0, fragment_bytes: None }
     }
 
     pub fn validating(node: TypedJsonNode) -> Self {
-        Self { stack: Self::fragment(node).into_iter().rev().collect(), emitted_nodes: 0, fragment_bytes: None, drawing: None }
+        Self { stack: Self::fragment(node).into_iter().rev().collect(), emitted_nodes: 0, fragment_bytes: None }
     }
 
     pub(super) fn static_node(bytes: &'static [u8]) -> TypedJsonNode {
@@ -55,27 +55,7 @@ impl TypedJsonCursor {
         .ok_or_else(|| "layout-export-json-index".into())
     }
 
-    pub(super) fn drawing_scene(&mut self, snapshot: &LayoutSnapshot) -> Result<Arc<VectorScene>, String> {
-        if let Some(scene) = &self.drawing {
-            return Ok(scene.clone());
-        }
-        let scene = Arc::new(semio_s_artifact_layout_layout_model::background_drawing_scene(snapshot).map_err(|error| error.to_string())?.ok_or("layout-export-json-background")?);
-        self.drawing = Some(scene.clone());
-        Ok(scene)
-    }
-
-    pub(super) fn draw_node<'a>(drawing: &'a VectorScene, layer: usize, path: &[usize]) -> Result<&'a VectorNode, String> {
-        let mut node = &drawing.layers.get(layer).ok_or("layout-export-json-draw-layer")?.root;
-        for index in path {
-            node = match node {
-                VectorNode::Group { children, .. } => children.get(*index).ok_or("layout-export-json-draw-child")?,
-                _ => return Err("layout-export-json-draw-path".into()),
-            };
-        }
-        Ok(node)
-    }
-
-    fn resolve_string<'a>(source: &StringSource, snapshot: &'a LayoutSnapshot, drawing: Option<&'a VectorScene>) -> Result<&'a str, String> {
+    fn resolve_string<'a>(source: &StringSource, snapshot: &'a LayoutSnapshot) -> Result<&'a str, String> {
         let missing = || "layout-export-json-string-source".to_string();
         Ok(match source {
             StringSource::DocumentSchema => &snapshot.schema,
@@ -126,22 +106,6 @@ impl TypedJsonCursor {
             StringSource::ChildTargetArtifactKind => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.handle.target.dialect.artifact_kind,
             StringSource::ChildTargetStandard => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.handle.target.dialect.standard,
             StringSource::ChildTargetSubset => &snapshot.background_drawing.as_ref().ok_or_else(missing)?.handle.target.dialect.subset,
-            StringSource::DrawingSchema => &drawing.ok_or_else(missing)?.schema,
-            StringSource::DrawStyleName(index) => &drawing.ok_or_else(missing)?.styles.get(*index).ok_or_else(missing)?.name,
-            StringSource::DrawLayerId(index) => &drawing.ok_or_else(missing)?.layers.get(*index).ok_or_else(missing)?.id,
-            StringSource::DrawLayerName(index) => &drawing.ok_or_else(missing)?.layers.get(*index).ok_or_else(missing)?.name,
-            StringSource::DrawNodeValue { layer, path } => match Self::draw_node(drawing.ok_or_else(missing)?, *layer, path)? {
-                VectorNode::Text { value, .. } => value,
-                _ => return Err(missing()),
-            },
-            StringSource::DrawNodeStyle { layer, path } => match Self::draw_node(drawing.ok_or_else(missing)?, *layer, path)? {
-                VectorNode::Path { style: Some(value), .. } | VectorNode::Text { style: Some(value), .. } => value,
-                _ => return Err(missing()),
-            },
-            StringSource::DrawNodeMime { layer, path } => match Self::draw_node(drawing.ok_or_else(missing)?, *layer, path)? {
-                VectorNode::Image { mime, .. } => mime,
-                _ => return Err(missing()),
-            },
             StringSource::ReferencedTargetArtifactId => &snapshot.referenced_model.as_ref().ok_or_else(missing)?.target.artifact_id,
             StringSource::ReferencedTargetArtifactKind => &snapshot.referenced_model.as_ref().ok_or_else(missing)?.target.dialect.artifact_kind,
             StringSource::ReferencedTargetStandard => &snapshot.referenced_model.as_ref().ok_or_else(missing)?.target.dialect.standard,
@@ -261,8 +225,7 @@ impl TypedJsonCursor {
             TypedJsonNode::String { source, mut cursor } => {
                 self.account_node()?;
                 let maximum = MAX_LAYOUT_EXPORT_STRING_BYTES;
-                let drawing = if source.is_drawing() { Some(self.drawing_scene(snapshot)?) } else { None };
-                let value = Self::resolve_string(&source, snapshot, drawing.as_deref())?;
+                let value = Self::resolve_string(&source, snapshot)?;
                 if value.len() > maximum {
                     return Err("layout-export-json-string-limit".into());
                 }

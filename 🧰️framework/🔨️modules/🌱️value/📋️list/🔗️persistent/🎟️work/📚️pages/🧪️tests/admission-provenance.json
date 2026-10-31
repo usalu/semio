@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "cases": [
+    "unissued-noop-lookalike",
+    "copied-live-loan"
+  ],
+  "rejectedBeforeEffects": true,
+  "untrustedMethodsRead": false,
+  "retainedCapacityBytes": 0,
+  "cpu": 0,
+  "unit": "accounting-token-provenance-not-byte-permission"
+}

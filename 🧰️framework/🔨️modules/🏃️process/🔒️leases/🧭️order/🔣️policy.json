@@ -21,7 +21,8 @@
   },
   "fairness": {
     "queuedWithResourceLeases": true,
-    "writerPreferenceMilliseconds": 120000
+    "writerPreferenceMilliseconds": 120000,
+    "writerPreferenceByPrefix": [{ "prefix": "native-fixed-image:" }]
   },
   "gate": {
     "releaseWhileWaiting": true,
@@ -367,6 +368,10 @@
         },
         {
           "kind": "prefix",
+          "value": "artifact-scratch-private:"
+        },
+        {
+          "kind": "prefix",
           "value": "artifact-capture:"
         }
       ]
@@ -576,6 +581,15 @@
       "reason": {
         "en": "A compile takes the shared writer custody of its image first and the counted cpu units last, only around the compiler child itself: the cpu units are the innermost lease, so a writer holder may wait for cores (they free as compiles finish) while nobody holding cores ever waits for the writer (see the strict wait below).",
         "de": "Ein Compile nimmt zuerst die geteilte Schreiber-Obhut seines Images und zuletzt die gezählten CPU-Einheiten, nur um das Compiler-Kind selbst: die CPU-Einheiten sind die innerste Lease, ein Schreiberhalter darf auf Kerne warten (sie werden mit jedem fertigen Compile frei), während niemand, der Kerne hält, je auf den Schreiber wartet (siehe die strikte Wartepflicht unten)."
+      }
+    },
+    {
+      "from": "artifact",
+      "to": "toolchain",
+      "binding": { "kind": "held-prefix", "fromPrefix": "artifact-scratch-private:" },
+      "reason": {
+        "en": "A private artifact scratch claim is named after the random scratch directory of ONE invocation (`artifact-scratch-private:<sha256 of that directory>`), so no other process ever requests it and a wait on the toolchain (the rustup bootstrap, a configuration view) cannot close a cycle through it. Only the private prefix is exempt: a scratch claim shared between invocations keeps the plain `artifact-scratch:` prefix and still refuses, because there another holder could wait for it while this one waits for the toolchain.",
+        "de": "Ein privater Artefakt-Arbeitsflächen-Anspruch ist nach dem zufälligen Arbeitsverzeichnis GENAU einer Ausführung benannt (`artifact-scratch-private:<sha256 dieses Verzeichnisses>`); kein anderer Prozess fordert ihn je an, daher kann ein Warten auf die Toolchain (der rustup-Bootstrap, eine Konfigurationssicht) keinen Zyklus über ihn schließen. Nur das private Präfix ist ausgenommen: ein zwischen Ausführungen geteilter Arbeitsflächen-Anspruch behält das einfache Präfix `artifact-scratch:` und wird weiterhin abgelehnt, weil dort ein anderer Halter auf ihn warten könnte, während dieser auf die Toolchain wartet."
       }
     },
     {

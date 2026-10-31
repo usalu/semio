@@ -392,3 +392,18 @@ fn a_painted_volume_is_one_create_target_volume() {
         other => panic!("expected one create-target-volume, got {other:?}"),
     }
 }
+
+/// 🪞️ The editor projection is derived once per immutable root: repeated reads and clones share one cached document view and equal the uncached derivation.
+#[test]
+fn the_editor_projection_is_cached_per_root_and_equals_the_uncached_derivation() {
+    use crate::editor::puzzle5d::entities::{default_document, puzzle5d_document_from_snapshot, puzzle5d_editor_projection, puzzle5d_snapshot_from_document};
+    use semio_framework_value::ToValue;
+    let root = Puzzle5dPlaySnapshot::new(puzzle5d_snapshot_from_document(&default_document()).expect("default document admits"));
+    let first = puzzle5d_editor_projection(&root);
+    let cached = root.projection_with(|_| unreachable!("the projection was derived on the first read")) as *const _;
+    let clone = root.clone();
+    assert_eq!(clone.projection_with(|_| unreachable!("a clone shares the cached projection")) as *const _, cached);
+    assert_eq!(puzzle5d_editor_projection(&clone), first);
+    let uncached = semio_framework_pack_json::from_dsl_value(&puzzle5d_document_from_snapshot(root.typed()).expect("projects").to_value());
+    assert_eq!(first, uncached);
+}

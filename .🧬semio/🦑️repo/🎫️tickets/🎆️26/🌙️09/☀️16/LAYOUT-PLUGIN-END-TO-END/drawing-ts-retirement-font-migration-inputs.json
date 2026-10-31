@@ -1,0 +1,22 @@
+[
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+  "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts"
+]

@@ -10,7 +10,7 @@ import type { FramingNode } from "../../🧬️schema/🧮️geometry/📷️fra
 import type { PaintedPathQuery } from "../../🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🟦️.ts";
 import { parseStrokeCap, parseStrokeJoin } from "../../🧬️schema/🖊️stroke/🟦️.ts";
 import type { Matrix } from "../../🧬️schema/🧮️geometry/🟦️.ts";
-import type { DrawingSvgNode } from "../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🟦️.ts";
+import type { DrawingSvgNode } from "../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧬️schema/🟦️.ts";
 
 /** 🔢️ Capture every JSON number below `value` as its Binary64 word; strings, booleans and null stay as authored. */
 export function drawingWords(value: unknown): unknown {

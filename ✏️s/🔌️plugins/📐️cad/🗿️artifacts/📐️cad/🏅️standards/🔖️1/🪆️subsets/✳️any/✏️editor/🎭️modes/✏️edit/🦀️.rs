@@ -580,7 +580,7 @@ pub mod window_transient {
     use semio_s_artifact_cad_cad_transient::{CadWorldWindowTransient, CadWorldWindowTransientMutation};
     use crate::{windows::building, windows::energy, windows::shape, windows::structure_classic};
 
-    semio_framework_plugin::window_transient_owners! {
+    semio_framework_plugin::window_transient_registry! {
         state: CadWorldWindowTransient,
         mutation: CadWorldWindowTransientMutation,
         windows: {

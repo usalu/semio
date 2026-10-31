@@ -34,20 +34,9 @@ impl ArtifactEditor for WriterPlayApp {
     const DIALECT: Dialect = crate::WRITER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
-    /// ⌨️ Writer's typing algebra (design §13.2): a typing run of the prose editor is ONE net `splice-text` — every typed splice
-    /// composes into it (`TextSplice::then`), a run that erased what it typed is empty, a caret that jumped away splits; a
-    /// whole-text delivery (`textEdit`) replaces the run's text.
-    fn typing_fold(net: &[Self::Mutation], next: &[Self::Mutation]) -> semio_framework_plugin::TypingFold<Self::Mutation> {
-        use semio_framework_plugin::{TextSpliceComposition, TypingFold, TEXT_SPLICE_CONTEXT_SCALARS};
-        match (net, next) {
-            ([WriterMutation::SpliceText(run)], [WriterMutation::SpliceText(typed)]) => match run.splice().then(&typed.splice(), TEXT_SPLICE_CONTEXT_SCALARS) {
-                TextSpliceComposition::Composed(splice) => TypingFold::Net(vec![crate::schema::mutations::splice_text(splice)]),
-                TextSpliceComposition::Cancelled => TypingFold::Net(Vec::new()),
-                TextSpliceComposition::Disjoint => TypingFold::Split,
-            },
-            ([WriterMutation::EditText(_)], [WriterMutation::EditText(_)]) => TypingFold::Net(next.to_vec()),
-            _ => TypingFold::Split,
-        }
+    /// ⌨️ Writer composes relative prose edits through its retained original typing producer.
+    fn original_typing_fold() -> semio_framework_plugin::tool_contract::OriginalTypingFoldPolicy<Self::Mutation> {
+        semio_s_artifact_writer_writer_typing_fold::original_typing_fold()
     }
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {

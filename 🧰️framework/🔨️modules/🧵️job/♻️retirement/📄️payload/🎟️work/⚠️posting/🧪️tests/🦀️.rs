@@ -1,0 +1,15 @@
+use semio_framework_job_context::testkit;
+use super::*;
+#[test]
+fn actual_builder_page_return_keeps_real_posting_refusal_at_original_receiver(){
+ let row:serde_json::Value=serde_json::from_str(include_str!("../📐️.json")).unwrap();let s=&row["stock"];let bank=RetainedCloneGrant{maximum_items:s["items"].as_u64().unwrap()as usize,maximum_copy_bytes:s["copyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:s["capacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:s["releaseBytes"].as_u64().unwrap()as usize,maximum_depth:s["depth"].as_u64().unwrap()as usize};let quantum=RetainedCloneGrant{maximum_items:1,..bank};
+ let mut caller=crate::OriginalJobFixtureCaller::admit(crate::OperationId(row["operation"].as_u64().unwrap()),crate::Generation(row["generation"].as_u64().unwrap()),bank,||Some(1),u64::MAX,s["fuel"].as_u64().unwrap());let mut builder=crate::RetainedPayloadBuilder::new(JobPayloadStream::Fault);
+ for _ in 0..s["maximumTurns"].as_u64().unwrap(){if builder.is_initialized(){break;}caller.turn(quantum,|cx|{let turn=builder.advance_initialization(cx);crate::receive_original_retained_work(cx,turn)?;Ok(())}).unwrap();}assert!(builder.is_initialized());for _ in 0..8{if builder.staged_page_len().is_some(){break;}caller.turn(quantum,|cx|{let turn=builder.begin_staged_page_funded(cx);crate::receive_original_retained_work(cx,turn)?;Ok(())}).unwrap();}assert!(builder.staged_page_len().is_some());let backing=builder.staged_backing_identity();assert!(backing.is_some());
+ caller.turn(bank,|cx|{
+  let fuel=cx.fuel_remaining();let turn=builder.close_step_granted(cx.retained_grant());let progress=turn.result.unwrap().progress();assert_eq!(progress.released_bytes,row["pageBytes"].as_u64().unwrap()as usize);assert_eq!(turn.work,row["actualCpu"].as_u64().unwrap());assert_eq!(builder.staged_backing_identity(),None);
+  let failure=testkit::with_retained_receipt_policy(cx,|cx|{cx.narrow_original_work_budget(crate::StepBudget::new(fuel,cx.deadline_us(),RetainedCloneGrant{maximum_release_bytes:0,..cx.retained_grant()}))?;Ok::<_,crate::OriginalTurnFailure>(crate::OriginalWorkFailure::<crate::original_failure_test_support::BodyFailure>::fold(cx,None,progress,turn.work).unwrap_err())})?;
+  assert_eq!(serde_json::json!({"primary":failure.primary().is_some(),"receiptRefusal":failure.receipt_refusal().is_some()}),serde_json::json!({"primary":row["primary"],"receiptRefusal":row["receiptRefusal"]}));assert_eq!(failure.retained_progress(),progress);assert_eq!(fuel-cx.fuel_remaining(),turn.work);assert_eq!(failure.receipt_refusal().unwrap().retained_progress(),progress);
+  crate::original_failure_test_support::close(failure,cx,s["maximumTurns"].as_u64().unwrap()as usize);Ok(())
+ }).unwrap();
+ for _ in 0..s["maximumTurns"].as_u64().unwrap(){if builder.terminal_is_empty(){break;}let demand=builder.retirement_demands().unwrap();caller.turn(quantum,|cx|{crate::close_original_retained_step(cx,demand,|actual|builder.close_step_granted(actual))?;Ok(())}).unwrap();}assert!(builder.terminal_is_empty());drop(builder);caller.retire(bank);
+}

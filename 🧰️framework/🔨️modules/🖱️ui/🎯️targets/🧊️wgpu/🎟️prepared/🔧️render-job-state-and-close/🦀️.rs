@@ -162,7 +162,7 @@ impl PreparedRenderJob {
         }
         if !self.receiver.terminal_is_empty() { return prepared_close_child(self.receiver.close_granted(grant)) }
         if !self.fault_payload.terminal_is_empty() {
-            return self.fault_payload.close_step_granted(grant).map(|step|CloseStep::Pending { progress: step.progress() });
+            return self.fault_payload.close_step_granted(grant).result.map(|step|CloseStep::Pending { progress: step.progress() });
         }
         if self.abandonment_slot != u8::MAX {
             let Some(state) = PREPARED_RENDER_JOB_ABANDONMENT_STATE.get(usize::from(self.abandonment_slot)) else { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original prepared render job abandonment slot is absent")); };

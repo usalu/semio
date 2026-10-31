@@ -15,7 +15,7 @@ import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 import { keyboardEventMatchesOwnedHotkey, parseOwnedHotkeyChords, resolveControlKeybindingRaw, SHELL_KEYBINDINGS, useUiKeybindingsByControlId } from "../../🔨️modules/🕹️control-keybinding-context/🟦️.tsx";
 import { useLabel } from "../🏷️Label/🟦️.tsx";
 import { Dialog, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogTitle } from "../💬️Dialog/🟦️.tsx";
-import { detectShellLocale, uiI18n } from "../../🌐️i18n/🟦️.ts";
+import { requireShellLocale, uiI18n } from "../../🌐️i18n/🟦️.ts";
 import { useShellScopeOptional } from "../🐚️ShellScope/🟦️.tsx";
 import { resolveUiLocalizedText, useUiTerminology } from "../../🔨️modules/🗣️ui-terminology/🟦️.tsx";
 import { GLASS_OVERLAY_BOX_CLASS } from "../../🔨️modules/🎨️chrome-class-names/🟦️.ts";
@@ -58,7 +58,7 @@ export function UIDialog<Arg extends ActionArgDef>({ dialog, seedArgs, notice, c
   const [portalContainer, setPortalContainer] = React.useState<Element | null>(() => shellScope?.portalLayerRef.current ?? null);
   React.useLayoutEffect(() => { setPortalContainer(shellScope?.portalLayerRef.current ?? null); }, [shellScope]);
   const { terminology } = useUiTerminology();
-  const locale = detectShellLocale(shellScope?.i18n.resolvedLanguage ?? uiI18n.resolvedLanguage);
+  const locale = requireShellLocale(shellScope?.i18n.resolvedLanguage ?? uiI18n.resolvedLanguage);
   const text = (value: unknown) => resolveUiLocalizedText(value, terminology, locale);
   const body = text(dialog.body);
   const labelPrefix = React.useId();

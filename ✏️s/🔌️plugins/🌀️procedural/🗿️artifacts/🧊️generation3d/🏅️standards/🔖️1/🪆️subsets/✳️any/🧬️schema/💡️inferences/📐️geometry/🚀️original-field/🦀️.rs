@@ -28,6 +28,7 @@ impl Equality{
  }
 }
 #[derive(Default,semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct State{completed:usize,phase:u8,widget:usize,category:usize,kind:usize,link:usize,probe:usize,duplicate:usize,port:usize,wire:usize,selected_wire:Option<usize>,parent:usize,output:usize,parent_identity:Option<usize>,parents:PagedList<usize,{usize::MAX}>,equality:Equality,values:Option<Outputs>,value:Option<GeometryValue>,key:String,byte:usize,reserved:bool,text_source:Option<(usize,usize)>,insertion:Option<Insert>,construction:WidgetInputsConstruction,inputs:Option<WidgetInputs>,job:Option<OriginalFixedOutputJob>,fault:Option<OriginalWidgetFaultProduction>}
 
 /// 🧳️ One actual erased pending frame; every retained output stays outside ordinary Drop until donated or paid closed.
@@ -112,15 +113,15 @@ impl OriginalGeometryPending{
    12=>{
     let evaluation=parents.get(state.parent).ok_or_else(||invalid("original geometry source parent evaluation disappeared"))?;if state.parent_identity!=Some(Arc::as_ptr(evaluation)as usize){return Err(invalid("original geometry source parent owner identity changed").into())}let value=evaluation.outputs.get_index(state.output).ok_or_else(||invalid("original geometry source output ordinal changed"))?.1;let port=&kind.inputs[state.port];if let Some((value,receipt))=copy_value(port,value,cx)?{state.value=Some(value);post(cx,receipt)?;state.phase=13;}
    }
-   13=>{let port=&kind.inputs[state.port];if inputs::construction::text_event(&mut state.key,&port.name,&mut state.byte,&mut state.reserved,&mut state.text_source,cx)?{state.phase=14;}}
+   13=>{let port=&kind.inputs[state.port];if semio_s_artifact_procedural_3d_geometry_inputs::construction::text_event(&mut state.key,&port.name,&mut state.byte,&mut state.reserved,&mut state.text_source,cx)?{state.phase=14;}}
    14=>{
     let grant=cx.retained_grant();if grant.maximum_copy_bytes<Insert::constructor_copy_bytes()||grant.maximum_capacity_bytes<Insert::constructor_capacity_bytes(){return Ok(())}let map=state.values.take().ok_or_else(||invalid("original geometry input dictionary workspace disappeared"))?;let key=std::mem::take(&mut state.key);let value=state.value.take().ok_or_else(||invalid("original geometry resolved input donor disappeared"))?;
-    match Insert::admit(map,key,value,grant){Ok((insertion,receipt))=>{state.insertion=Some(insertion);state.phase=15;post(cx,receipt)?},Err((error,map,key,value))=>{state.values=Some(map);state.key=key;state.value=Some(value);return Err(OriginalTurnFailure::debit_original(error,cx))}}
+    match {let outcome=Insert::admit(map,key,value,grant);cx.consume_fuel(outcome.work);outcome.result}{Ok((insertion,receipt))=>{state.insertion=Some(insertion);state.phase=15;post(cx,receipt)?},Err((error,map,key,value))=>{state.values=Some(map);state.key=key;state.value=Some(value);return Err(OriginalTurnFailure::debit_original(error,cx))}}
    }
    15=>{
-    let insertion=state.insertion.as_mut().ok_or_else(||invalid("original geometry input insertion disappeared"))?;if insertion.output_ready(){post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.values=insertion.take();insertion.begin_close();state.phase=16;}else{let grant=cx.retained_grant();let step=insertion.advance(RetainedOrderedMapInsertGrant{retirement:grant,comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:1},maximum_moved_items:grant.maximum_items,maximum_moved_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes}).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;let receipt=match step{RetainedOrderedMapInsertStep::Progress(receipt)|RetainedOrderedMapInsertStep::Complete{progress:receipt,..}=>receipt};post(cx,insert_receipt(receipt)?)?;}
+    let insertion=state.insertion.as_mut().ok_or_else(||invalid("original geometry input insertion disappeared"))?;if insertion.output_ready(){post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;state.values=insertion.take();insertion.begin_close();state.phase=16;}else{let grant=cx.retained_grant();let step={let outcome=insertion.advance(RetainedOrderedMapInsertGrant{retirement:grant,comparison:BoundedOrdGrant{maximum_items:1,maximum_bytes:1},maximum_moved_items:grant.maximum_items,maximum_moved_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes});cx.consume_fuel(outcome.work);outcome.result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?};let receipt=match step{RetainedOrderedMapInsertStep::Progress(receipt)|RetainedOrderedMapInsertStep::Complete{progress:receipt,..}=>receipt};post(cx,insert_receipt(receipt)?)?;}
    }
-   16=>{let insertion=state.insertion.as_mut().ok_or_else(||invalid("original geometry input insertion closure disappeared"))?;let receipt=insertion.close_step(cx.retained_grant()).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?.progress();post(cx,receipt)?;if insertion.terminal_is_empty(){state.insertion.take();next_port(state);}}
+   16=>{let insertion=state.insertion.as_mut().ok_or_else(||invalid("original geometry input insertion closure disappeared"))?;let receipt={let outcome=insertion.close_step(cx.retained_grant());cx.consume_fuel(outcome.work);outcome.result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?.progress()};post(cx,receipt)?;if insertion.terminal_is_empty(){state.insertion.take();next_port(state);}}
    17=>{if let Some(inputs)=WidgetInputs::new(key,kind,&mut state.values,&mut state.construction,cx)?{state.inputs=Some(inputs);state.phase=18;}}
    18=>{if let Some(job)=snapshot.computes.start_original(kind,&mut state.inputs,cx)?{state.job=Some(job);state.phase=19;}}
    19=>return step_job(state,&mut self.evaluation,cx),
@@ -136,7 +137,7 @@ fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKin
 fn open(cx:&StepContext<'_>)->bool{let grant=cx.retained_grant();!cx.should_yield()&&!cx.is_cancelled()&&grant.maximum_items>0&&grant.maximum_depth>0}
 fn post(cx:&mut StepContext<'_>,receipt:RetainedCloneProgress)->Result<(),OriginalTurnFailure>{let result=cx.consume_retained(receipt);cx.consume_fuel(1);result.map_err(|error|error.with_retained_progress(receipt).into())}
 fn insert_receipt(receipt:RetainedOrderedMapInsertProgress)->Result<RetainedCloneProgress,ValueError>{receipt.retirement.checked_add(RetainedCloneProgress{copied_items:receipt.moved_items,copied_bytes:receipt.moved_bytes,retained_capacity_bytes:receipt.retained_capacity_bytes,..Default::default()})}
-fn close_owner<T:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<T>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;Ok(())}
+fn close_owner<T:semio_framework_value::retirement::RetireOwned>(owner:&mut ControlledRetirement<T>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;Ok(())}
 
 fn range(port:&Port,number:f64)->Result<(),ValueError>{if !number.is_finite()||port.min.is_some_and(|minimum|if port.exclusive_min{number<=minimum}else{number<minimum})||port.max.is_some_and(|maximum|number>maximum){return Err(invalid("original geometry input number is outside its declared range"))}Ok(())}
 fn component(port:&Port)->Result<SelectionKind,ValueError>{use semio_s_artifact_procedural_3d_model::catalogue::SelectionComponent;match port.selection.as_ref().map(|selection|selection.component){Some(SelectionComponent::Vertex)=>Ok(SelectionKind::Vertex),Some(SelectionComponent::Edge)=>Ok(SelectionKind::Edge),Some(SelectionComponent::Face)=>Ok(SelectionKind::Face),_=>Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original input selection has no fixed component producer"))}}
@@ -152,7 +153,7 @@ fn copy_value(port:&Port,value:&GeometryValue,cx:&StepContext<'_>)->Result<Optio
   (PortType::Vector,GeometryValue::Vector(value))if value.iter().all(|v|v.is_finite())=>GeometryValue::Vector(*value),
   (PortType::Point,GeometryValue::Point(value))if value.iter().all(|v|v.is_finite())=>GeometryValue::Point(*value),
   (PortType::Plane,GeometryValue::Plane(value))if value.origin.iter().chain(value.normal.iter()).all(|v|v.is_finite())=>GeometryValue::Plane(*value),
-  (PortType::Shape,GeometryValue::Shape(value))=>{if port.shape_kinds.as_ref().is_some_and(|kinds|!kinds.contains(&value::shape_kind(value.kind()))){return Err(invalid("original geometry input shape kind is not admitted"))}GeometryValue::Shape(Arc::clone(value))},
+  (PortType::Shape,GeometryValue::Shape(value))=>{if port.shape_kinds.as_ref().is_some_and(|kinds|!kinds.contains(&semio_s_artifact_procedural_3d_geometry_value::shape_kind(value.kind()))){return Err(invalid("original geometry input shape kind is not admitted"))}GeometryValue::Shape(Arc::clone(value))},
   (PortType::Mesh,GeometryValue::Mesh(value))=>GeometryValue::Mesh(Arc::clone(value)),
   _=>return Err(invalid("original geometry connected input has the wrong declared type")),
  };
@@ -168,7 +169,7 @@ fn literal(port:&Port,params:&semio_framework_artifact_flow_flow::neural::Dictio
   return Ok(selection_value(port,id,cx)?.map_or(Literal::Blocked,|(value,receipt)|Literal::Value(value,receipt)))
  }
  if port.list||!matches!(port.port_type,PortType::Number|PortType::Length|PortType::Angle|PortType::Integer|PortType::Boolean|PortType::Vector|PortType::Point|PortType::Plane){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original input literal type has no allocation-free scalar decoder"))}
- let value=if let Some(stored)=params.get(&port.name){inputs::element_literal(port.port_type,stored).ok_or_else(||invalid("original geometry stored literal has the wrong declared type"))?}else if let Some(default)=port.default.as_ref(){inputs::element_default(port.port_type,default).ok_or_else(||invalid("original geometry input default has the wrong declared type"))?}else{return Ok(Literal::Missing)};
+ let value=if let Some(stored)=params.get(&port.name){semio_s_artifact_procedural_3d_geometry_inputs::element_literal(port.port_type,stored).ok_or_else(||invalid("original geometry stored literal has the wrong declared type"))?}else if let Some(default)=port.default.as_ref(){semio_s_artifact_procedural_3d_geometry_inputs::element_default(port.port_type,default).ok_or_else(||invalid("original geometry input default has the wrong declared type"))?}else{return Ok(Literal::Missing)};
  Ok(copy_value(port,&value,cx)?.map_or(Literal::Blocked,|(value,receipt)|Literal::Value(value,receipt)))
 }
 impl InferencePending for OriginalGeometryPending{

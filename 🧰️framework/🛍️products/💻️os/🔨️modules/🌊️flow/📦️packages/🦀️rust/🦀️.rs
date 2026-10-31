@@ -38,7 +38,7 @@ pub use semio_framework_os_flow_drawing::{
     Affine2D, boolean_segments_json, dispose_drawing, DrawingEngine, DrawingHandle, DrawingKernel,
     DrawingKind, DrawingNode, DrawingScene, DrawingStore, export_pdf_json, export_svg_json,
     FillStyle, GradientStop, LineCap, LineJoin, render_scene_json, retain_drawing_handles,
-    SceneNode, StrokeStyle, trace_bitmap_json, with_drawing_kernel,
+    SceneNode, StrokeStyle, with_drawing_kernel,
 };
 
 #[cfg(test)]

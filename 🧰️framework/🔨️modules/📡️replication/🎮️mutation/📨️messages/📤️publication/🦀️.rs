@@ -173,7 +173,7 @@ fn fault(message: &'static str) -> ValueError { ValueError::literal(ValueRefusal
 
 impl ErasedSnapshotRetirement for MutationMessagePublication {
     fn next_demand(&self, _: usize) -> Result<RetirementDemand, ValueError> { self.close_demands() }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Self::close_step(self, grant) }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = Self::close_step(self, grant); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != semio_framework_value::RetainedCloneProgress::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands()?.copy_bytes) }
     fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(self.close_demands()?.capacity_bytes) }
@@ -241,7 +241,7 @@ impl MutationMessagePublicationBatch {
 
 impl ErasedSnapshotRetirement for MutationMessagePublicationBatch {
     fn next_demand(&self, _: usize) -> Result<RetirementDemand, ValueError> { self.close_demands() }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Self::close_step(self, grant) }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = Self::close_step(self, grant); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != semio_framework_value::RetainedCloneProgress::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demands()?.copy_bytes) }
     fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(self.close_demands()?.capacity_bytes) }

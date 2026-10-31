@@ -1,0 +1,3 @@
+# Public Dynamic Test Owner Review
+
+Root read the production mount, public owner, shared protocol, private law, external laws and manifest. The cfg(test) owner uses dev dependencies on the published cursor, original physical allocator, fixture reader and Serde JSON. Private state and selected quote instrumentation remain in Core; shared bounded execution is one physical source. All supplied packet hashes currently match except the concurrent workspace or build-owner files listed in the command preparation output. No runtime acceptance inferred. Both full owning lib gates remain required. Core8 is the next actual canonical source admission; no source boundary override is used.

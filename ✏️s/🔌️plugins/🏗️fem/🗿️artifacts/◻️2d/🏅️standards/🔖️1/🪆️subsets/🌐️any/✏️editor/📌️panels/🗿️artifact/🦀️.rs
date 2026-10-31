@@ -32,8 +32,8 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_fem_material::planar::FemMaterialValue;
-use semio_s_fem_node::planar::FemNodeValue;
+use semio_s_fem_material::planar::FemMaterial;
+use semio_s_fem_node::planar::FemNode;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
@@ -122,8 +122,8 @@ fn dof_symbol(dof: FemDof, labels: &Fem2dLabels) -> &'static str {
     }
 }
 
-pub fn fem2d_node_label(node: &FemNodeValue) -> String {
-    format!("{} · ({}, {})", node.id, fem2d_coordinate(node.x), fem2d_coordinate(node.y))
+pub fn fem2d_node_label(node: &FemNode) -> String {
+    format!("{} · ({}, {})", node.id.as_str(), fem2d_coordinate(node.x), fem2d_coordinate(node.y))
 }
 
 pub fn fem2d_element_label(element: &FemElement, labels: &Fem2dLabels) -> String {
@@ -180,8 +180,8 @@ pub fn fem2d_combination_label(combination: &FemCombination) -> String {
 /// 🧱️ `E` in gigapascals — the unit an engineer reads a stiffness in, never the raw 2.1e11 Pa. The
 /// quantity symbols (`E`, `A`, `Iy`) are ISO notation, identical in every locale, so they are not
 /// label rows: `labels.youngs_modulus` names the same quantity where a row has room to spell it.
-pub fn fem2d_material_label(material: &FemMaterialValue) -> String {
-    format!("{} · E {} GPa", material.name, fem2d_scalar(material.e / 1e9))
+pub fn fem2d_material_label(material: &FemMaterial) -> String {
+    format!("{} · E {} GPa", material.name.as_str(), fem2d_scalar(material.e / 1e9))
 }
 
 pub fn fem2d_section_label(section: &FemSection) -> String {
@@ -233,14 +233,14 @@ fn section_label(noun: &LabelText, count: usize) -> UiAssemblyResult<UiLabel> {
 }
 
 fn has_node(document: &Fem2dSnapshot, id: &str) -> bool {
-    document.nodes.iter().any(|node| node.id == id)
+    document.nodes.iter().any(|node| node.id.as_str() == id)
 }
 
 fn element_is_dangling(document: &Fem2dSnapshot, element: &FemElement) -> bool {
     let (start, end, material_id, section_id) = match element {
         FemElement::Bar { start, end, material_id, section_id, .. } | FemElement::Beam { start, end, material_id, section_id, .. } => (start, end, material_id, section_id),
     };
-    !has_node(document, start) || !has_node(document, end) || !document.materials.iter().any(|material| &material.id == material_id) || !document.sections.iter().any(|section| &section.id == section_id)
+    !has_node(document, start) || !has_node(document, end) || !document.materials.iter().any(|material| material.id.as_str() == material_id.as_str()) || !document.sections.iter().any(|section| &section.id == section_id)
 }
 
 fn load_is_dangling(document: &Fem2dSnapshot, load: &FemLoad) -> bool {
@@ -263,14 +263,16 @@ fn marked_ids(ids: &[String]) -> Vec<String> {
 pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteractionSnapshot, labels: &Fem2dLabels, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let placeholder = ui_label(labels.none.as_str())?;
     let analysis = [fem2d_analysis_description(document, labels)];
+    let nodes: Vec<&FemNode> = document.nodes.iter().collect();
+    let materials: Vec<&FemMaterial> = document.materials.iter().collect();
     PanelTreeBuilder::new(TREE_NAMESPACE)?
         .window_section_or_placeholder(
             windows,
             &format!("{TREE_NAMESPACE}.nodes"),
             Some(section_label(&labels.nodes, document.nodes.len())?),
             true,
-            &document.nodes,
-            |node| entity_row(&node.id, FEM2D_GRANULARITY_NODE, &fem2d_node_label(node), &labels.node, "circle-dot", false),
+            &nodes,
+            |node| entity_row(node.id.as_str(), FEM2D_GRANULARITY_NODE, &fem2d_node_label(node), &labels.node, "circle-dot", false),
             placeholder.clone(),
         )?
         .window_section_or_placeholder(
@@ -289,7 +291,7 @@ pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteract
             true,
             &document.regions,
             |region| {
-                let dimmed = !document.materials.iter().any(|material| material.id == region.material_id);
+                let dimmed = !document.materials.iter().any(|material| material.id.as_str() == region.material_id.as_str());
                 entity_row(&region.id, FEM2D_GRANULARITY_REGION, &fem2d_region_label(region, labels), &labels.region, "square", dimmed)
             },
             placeholder.clone(),
@@ -338,8 +340,8 @@ pub fn build_artifact_tree(document: &Fem2dSnapshot, interaction: &Fem2dInteract
             &format!("{TREE_NAMESPACE}.materials"),
             Some(section_label(&labels.materials, document.materials.len())?),
             false,
-            &document.materials,
-            |material| entity_row(&material.id, FEM2D_GRANULARITY_MATERIAL, &fem2d_material_label(material), &labels.material, "layers", false),
+            &materials,
+            |material| entity_row(material.id.as_str(), FEM2D_GRANULARITY_MATERIAL, &fem2d_material_label(material), &labels.material, "layers", false),
             placeholder.clone(),
         )?
         .window_section_or_placeholder(

@@ -1,0 +1,15 @@
+{
+  "phase": "original-oracle-physical-move-no-execution",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧪️tests/🟦️.ts",
+      "beforeSha256": "68c2b4c08ba4c1f53b1232569b7ccc884cca33a5fef8de73e5910584d813c93a",
+      "sha256": "f423434f14576db1459b420db84808cd12fff1ef49e8570d44a112f4667412d1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧪️tests/🔮️oracle/🟦️.ts",
+      "sha256": "135528bb3295b776b21085c641fe1420618b24d28f48b68c0b2581eaa79c60c3"
+    }
+  ],
+  "preserved": "Exact original Sharp128x SVG geometry/paint strings, averaging and tolerance; checked read-sequence materialization is test-only. Every original test body otherwise remains pending caller migration."
+}

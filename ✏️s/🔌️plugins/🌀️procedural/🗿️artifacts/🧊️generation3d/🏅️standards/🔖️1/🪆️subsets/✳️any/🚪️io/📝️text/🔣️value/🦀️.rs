@@ -1,6 +1,5 @@
 //! 🚪️ IO-owned value representations of generation3d native semantic records.
 
-use semio_framework_value_derive::value_codec;
 use semio_framework_value::DslValue;
 use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayRoot};

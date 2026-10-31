@@ -33,9 +33,9 @@ impl RetainedMutationPreparation<Projection,Operation> for Preparation{
  }
  fn close_step(&mut self,c:RetainedMutationCloseContext<'_,Operation>,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   assert!(self.closing);if !retained_mutation_demand_fits(self.close_demand(c,g.maximum_copy_bytes)?,g){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(g).map(|s|RetainedCloneStep::Progress(s.progress()));}
-  if let Some(s)=self.retirement.begin_granted(&mut self.decision,g)?{return Ok(RetainedCloneStep::Progress(s.progress()));}
-  if let Some(i)=self.inverse_close.as_mut(){let s=i.close_step(c.mutations,g)?;if i.terminal_is_empty(){self.inverse_close=None;}return Ok(RetainedCloneStep::Progress(s.progress()));}
+  if !self.retirement.is_empty(){return self.retirement.step_granted(g).result.map(|s|RetainedCloneStep::Progress(s.progress()));}
+  if let Some(s)=self.retirement.begin_granted(&mut self.decision,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}
+  if let Some(i)=self.inverse_close.as_mut(){let s=i.close_step(c.mutations,g).result?;if i.terminal_is_empty(){self.inverse_close=None;}return Ok(RetainedCloneStep::Progress(s.progress()));}
   if let Some(rows)=self.inverse.take(){return match FactoryVectorRetirement::admit(rows,g){Ok((i,p))=>{self.inverse_close=Some(i);Ok(RetainedCloneStep::Progress(p))},Err((e,rows))=>{*self.inverse=Some(rows);Err(e)}};}
   Ok(RetainedCloneStep::Complete(Default::default()))
  }
@@ -44,8 +44,8 @@ impl RetainedMutationPreparation<Projection,Operation> for Preparation{
 impl Drop for Preparation{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(empty||std::thread::panicking());if empty{unsafe{ManuallyDrop::drop(&mut self.decision);ManuallyDrop::drop(&mut self.inverse);}}}}
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn observe<T>(f:impl FnOnce()->T)->(T,(usize,usize)){let(v,h)=semio_framework_trace::observe_heap_allocations_on_this_thread(f);(v,(h.requested_bytes,h.released_bytes))}
-fn source<T:RetireOwned+Sync+'static>(v:T)->RetainedCloneSource<T>{let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096};match RetainedCloneSource::admit_owned(v,(),g){Ok((s,_))=>s,Err((e,_,_))=>panic!("{e}")}}
-fn close_source<T:RetireOwned+Sync+'static>(s:&mut RetainedCloneSource<T>){let mut turns=0;while !s.terminal_is_empty(){let g=grant(RetirementDemand{copy_bytes:s.next_close_copy_byte_demand().unwrap(),capacity_bytes:s.next_close_capacity_byte_demand(4096).unwrap(),release_bytes:s.next_close_release_byte_demand().unwrap(),depth:s.next_close_depth_demand().unwrap()});s.close_step(g).unwrap();turns+=1;assert!(turns<10000);}}
+fn source<T:RetireOwned+Sync+'static>(v:T)->RetainedCloneSource<T>{let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096};let mut admission=RetainedCloneSource::admission_owned(v,());let mut output=None;for _ in 0..64{if admission.terminal_is_empty(){break}if admission.phase()=="ready"{admission.take_output(&mut output,g).result.unwrap();}else{admission.advance(g).result.unwrap();}}output.expect("staged source admission")}
+fn close_source<T:RetireOwned+Sync+'static>(s:&mut RetainedCloneSource<T>){let mut turns=0;while !s.terminal_is_empty(){let g=grant(RetirementDemand{copy_bytes:s.next_close_copy_byte_demand().unwrap(),capacity_bytes:s.next_close_capacity_byte_demand(4096).unwrap(),release_bytes:s.next_close_release_byte_demand().unwrap(),depth:s.next_close_depth_demand().unwrap()});s.close_step(g).result.unwrap();turns+=1;assert!(turns<10000);}}
 fn close_owner(o:&mut RetainedMutationOwner<Projection,Operation>,c:RetainedMutationCloseContext<'_,Operation>){o.begin_close();let mut turns=0;while !o.terminal_is_empty(){let g=grant(o.close_demand(c,4096).unwrap());let(_,h)=observe(||o.close_step(c,Default::default()).unwrap());assert_eq!(h,(0,0));o.close_step(c,g).unwrap();turns+=1;assert!(turns<10000);}}
 fn close_diff(o:&mut RetainedDiffOwner<Projection,Diff>){o.begin_close();for turn in 0..1000{if o.terminal_is_empty(){return;}let g=grant(o.close_demand(4096).unwrap());let step=o.close_step(g).unwrap();assert!(turn<999,"diff closure stalled: demand={g:?}, receipt={:?}",step.progress());}}
 fn decision(o:&mut RetainedMutationOwner<Projection,Operation>,m:&RetainedCloneSource<Operation>,p:&RetainedCloneSource<Projection>)->Option<Diff>{let mut turns=0;loop{let g=grant(o.decision_demand(m.borrow(),p.borrow(),4096).unwrap());let(s,h)=observe(||decide_retained_mutation(o,m.borrow(),p.borrow(),4096,Default::default()).unwrap());assert_eq!(s.progress(),Default::default());assert_eq!(h,(0,0));let(s,h)=observe(||decide_retained_mutation(o,m.borrow(),p.borrow(),4096,g).unwrap());assert_eq!(h,(s.progress().retained_capacity_bytes,s.progress().released_bytes));match s{RetainedMutationDecisionStep::Progress(_)=>{},RetainedMutationDecisionStep::Admitted(_,d,msg)=>{assert!(msg.is_empty());return Some(d)},RetainedMutationDecisionStep::Refused(_,msg)=>{assert!(msg.is_empty());return None}}turns+=1;assert!(turns<1000);}}
@@ -77,7 +77,7 @@ struct InverseIssuer{
 }
 impl semio_framework_value::ArtifactOwnedValueRetirementFactory<Operation> for InverseIssuer{
  fn retirement_birth_bytes(&self,_:&Operation)->usize{semio_framework_value::owned_retirement_birth_bytes::<Operation>()}
- fn retire_owned(&self,row:Operation,g:RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Operation)>{self.attempts.fetch_add(1,Ordering::SeqCst);self.last_set.store(usize::try_from(row.set).unwrap(),Ordering::SeqCst);if self.refuse.swap(false,Ordering::SeqCst){return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"exact original issuer refuses once"),row));}self.issued.fetch_add(1,Ordering::SeqCst);semio_framework_value::admit_owned_retirement(row,g)}
+ fn retire_owned(&self,row:Operation,g:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Operation)>{self.attempts.fetch_add(1,Ordering::SeqCst);self.last_set.store(usize::try_from(row.set).unwrap(),Ordering::SeqCst);if self.refuse.swap(false,Ordering::SeqCst){return semio_framework_value::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"exact original issuer refuses once"),row)),work:0};}self.issued.fetch_add(1,Ordering::SeqCst);semio_framework_value::admit_owned_retirement(row,g)}
 }
 /// 🏭️ Cancellation after prepared inverse restores its exact row and allocation on original-provider refusal.
 #[test]
@@ -103,11 +103,11 @@ union InverseIssuerSlot{original:ZstInverseOriginal,other:ZstInverseOther}
 thread_local!{static OTHER_INVERSE_CALLS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};}
 impl semio_framework_value::ArtifactOwnedValueRetirementFactory<Operation> for ZstInverseOriginal{
  fn retirement_birth_bytes(&self,_:&Operation)->usize{semio_framework_value::owned_retirement_birth_bytes::<Operation>()}
- fn retire_owned(&self,row:Operation,g:RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Operation)>{semio_framework_value::admit_owned_retirement(row,g)}
+ fn retire_owned(&self,row:Operation,g:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Operation)>{semio_framework_value::admit_owned_retirement(row,g)}
 }
 impl semio_framework_value::ArtifactOwnedValueRetirementFactory<Operation> for ZstInverseOther{
  fn retirement_birth_bytes(&self,_:&Operation)->usize{semio_framework_value::owned_retirement_birth_bytes::<Operation>()}
- fn retire_owned(&self,row:Operation,_:RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Operation)>{OTHER_INVERSE_CALLS.set(OTHER_INVERSE_CALLS.get()+1);Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign zero-sized inverse issuer must not receive original rows"),row))}
+ fn retire_owned(&self,row:Operation,_:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Operation)>{OTHER_INVERSE_CALLS.set(OTHER_INVERSE_CALLS.get()+1);semio_framework_value::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign zero-sized inverse issuer must not receive original rows"),row)),work:0}}
 }
 /// 🔑️ Shared semantic cancellation refuses substituted method-table authority at an exact pending inverse row.
 #[test]

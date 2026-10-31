@@ -7,6 +7,7 @@ if(!new Ajv({strict:false}).compile(schema)(law))throw new Error("typing fixture
 const known=["idle","selectionJump","blur","enter","hidden","apply","otherVerb"];
 const expected=new Map<string,unknown>();
 for(const row of law.cases){
+ if(expected.has(row.name))throw new Error("duplicate typing fixture case "+row.name);
  const db=new Database(":memory:");db.exec("CREATE TABLE typing(window TEXT,tool TEXT,buffer TEXT,leaves TEXT,deadline INTEGER)");
  for(const source of law.rows)db.query("INSERT INTO typing VALUES (?,?,?,?,?)").run(source.window,source.tool,source.buffer,JSON.stringify(source.leaves),source.deadline);
  const control=row.pass==="control",knownCommit=row.typing&&known.includes(row.commit),suppress=control&&knownCommit,all=!control&&!row.typing&&!row.view,rosterActive=control&&row.typing&&(row.commit===null||knownCommit);
@@ -14,14 +15,21 @@ for(const row of law.cases){
  if(JSON.stringify(selected.map(row=>row.window))!==JSON.stringify(row.expected)||suppress!==row.suppress)throw new Error("independent SQLite typing selection differs: "+row.name);
  expected.set(row.name,{windows:selected.map(row=>row.window),leaves:selected.map(row=>JSON.parse(row.leaves)),tools:selected.map(row=>row.tool),suppress});db.close();
 }
-const nativePath=process.argv[2];
-let compared=0;
-if(nativePath){
- for(const line of(await Bun.file(nativePath).text()).split(/\r?\n/)){
+export function compareNativeRecords(log:string):number{
+ const seen=new Set<string>();
+ for(const line of log.split(/\r?\n/)){
   const prefix="[DEBUG] [original-typing] ",at=line.indexOf(prefix);if(at<0)continue;
-  const actual=JSON.parse(line.slice(at+prefix.length)),reference=expected.get(actual.name);if(!reference)throw new Error("unknown native typing record");
-  if(jsonpatch.compare(actual.result,reference as object).length!==0)throw new Error("native typing output differs: "+actual.name);compared++;
+  const actual=JSON.parse(line.slice(at+prefix.length));
+  if(typeof actual.name!=="string"||!expected.has(actual.name))throw new Error("unknown native typing record "+actual.name);
+  if(seen.has(actual.name))throw new Error("duplicate native typing record "+actual.name);
+  if(jsonpatch.compare(actual.result,expected.get(actual.name) as object).length!==0)throw new Error("native typing output differs: "+actual.name);
+  seen.add(actual.name);
  }
- if(compared!==law.cases.length)throw new Error("missing actual native typing records");
+ const missing=[...expected.keys()].filter(name=>!seen.has(name));
+ if(missing.length)throw new Error("missing actual native typing records "+missing.join(", "));
+ return seen.size;
 }
-console.log(JSON.stringify({referenceCases:expected.size,nativeCompared:!!nativePath,nativeRecords:compared}));
+if(import.meta.main){
+ const nativePath=process.argv[2],compared=nativePath?compareNativeRecords(await Bun.file(nativePath).text()):0;
+ console.log(JSON.stringify({referenceCases:expected.size,nativeCompared:!!nativePath,nativeRecords:compared}));
+}

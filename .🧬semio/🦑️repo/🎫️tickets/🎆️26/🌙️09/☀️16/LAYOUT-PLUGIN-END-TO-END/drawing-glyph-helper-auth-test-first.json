@@ -1,0 +1,23 @@
+{
+  "state": "schema-and-genuine-law-authored-before-helper-fix",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🎟️work/🧪️tests/helper-auth.json",
+      "bytes": 270,
+      "sha256": "30d745661b76bce7572b3aa33252b2b3dd4582142047feb03007fa3e234184c1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🎟️work/🧪️tests/helper-auth.schema.json",
+      "bytes": 759,
+      "sha256": "a702b3601f81c55688b5d1e7c57b3a4d6fa800be678761c88bb5ce05e974f162"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🎟️work/🧪️tests/🟦️.ts",
+      "bytes": 12038,
+      "sha256": "6aebbc12a21cb857b1897f3039d487fe0c29017fea96f39b7ed3ebe7f0eb1d20"
+    }
+  ],
+  "preFixOwnerSha256": "6ac3bccc48790e170e9826062f804e4288862f9697312d1f89fdbebd56fd923b",
+  "preservesExistingFiveLawsAndJsonStocks": true,
+  "runtimeExecuted": false
+}

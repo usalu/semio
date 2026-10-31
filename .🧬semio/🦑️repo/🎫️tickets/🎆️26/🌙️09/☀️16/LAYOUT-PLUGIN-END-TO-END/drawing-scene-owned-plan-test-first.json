@@ -1,0 +1,33 @@
+{
+  "state": "schema-and-actual-future-owner-laws-before-production",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/🔣️.json",
+      "bytes": 7633,
+      "sha256": "d3b5e01c69c69d7a067afd98622d9c5b7edf80346a9f1dd2065839a9036d104e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/📐️.json",
+      "bytes": 6066,
+      "sha256": "f2ccfef63115521e270f44e321e9e76875b7e313ed5f9c79e04cdc4c7acafde2"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+      "bytes": 18999,
+      "sha256": "79d84604dd673239e1dedcf22749262b66da3c6ede765438b3b9749d2111f390"
+    }
+  ],
+  "authoredOwningLaws": 6,
+  "runtime": "unexecuted; defining owner module does not yet exist",
+  "primaryAPIs": [
+    "ScenePlanCopyJob(source,{maxWork})",
+    "advance(items,sameLedger)",
+    "lastTurnWork/lastTurnSemanticWork",
+    "result readonly borrow/resultReady",
+    "intoRetirement actual ScenePlanOwner",
+    "ScenePlanOwner.borrow readonly cached sequences",
+    "ScenePlanCloseJob(authenticOwner)",
+    "close advance(items,sameLedger)/nextDemand/terminalIsEmpty"
+  ],
+  "noClaims": "No owning/runtime/strict/Native/VM allocation proof follows authoring."
+}

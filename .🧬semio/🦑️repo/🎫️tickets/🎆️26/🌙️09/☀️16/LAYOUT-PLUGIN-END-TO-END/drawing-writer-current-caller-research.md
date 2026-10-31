@@ -1,0 +1,7 @@
+# Removed Writer Current Caller Research
+
+Bounded firstparty framework Rust source scan (eachfile <=2MiB, excluding namedtestdirectories) observes 13 remaining removedWriter/PageGrant declaration or use lines. This is a literal caller roster, not compiler or complete semantic reachability proof. Existing per-domain public originalSource/loan authority must drive the sole RetainedPayloadBuilder; no aliases/minted Source/defaultCPU or placeholder. Generated exactline roster remains temporary.
+
+NativeIoJob concrete current blockers:removedWriter inread/fullpage/faultstates, mandatorynewInteractiveJob returnclaim argument+InteractiveJobStep result, Result-only closecallbacks stillomitactualwork, bufferedcopycursor resets0eachpoll andcanrepeatprefix. CurrentStepContext alreadyimplements soleBuilder JobPayloadStep usingactualoperationledger. Cleanmigration mustuse retainedbuffer cursor +fundedBuilder phasedinitialization/append/seal/outputtake andactualparentworkposting, samecurrentSource andfault/cancellationcustody. Nativepayloadtesthelper stillcallsobsolete OriginalJobFixtureCaller::admit andBatch admission APIs; real finite FixtureCaller/worker admission mustreplaceit. No NativeIOsource edited yet. All11existingtests/cases remainmandatory; newneutralpipelineprofile willprecedeactualbody.
+
+Mandatorycaller-owned supplied-page API literalcensus nowfinds 2 exactuses underframework;generatedroster recordsall(source/line) foractualretainedfieldmigration. This isread-onlyliteralreachability, notcompiler orcompletecallgraphproof.

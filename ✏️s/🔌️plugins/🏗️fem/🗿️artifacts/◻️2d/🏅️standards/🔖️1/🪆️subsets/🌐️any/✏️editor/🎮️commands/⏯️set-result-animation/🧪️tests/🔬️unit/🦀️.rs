@@ -161,9 +161,9 @@ async fn rearm_effect_addresses_the_window_at_the_frame_delay() {
 /// disagrees with the configuration actually captured, is refused by name.
 #[semio_framework_async_macros::async_test]
 async fn set_result_animation_honours_the_window_a_control_tagged() {
-    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("bundled demo loads"));
     let history = semio_framework_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let doc = ArtifactView::new(&*snapshot, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     let split = ViewModel {

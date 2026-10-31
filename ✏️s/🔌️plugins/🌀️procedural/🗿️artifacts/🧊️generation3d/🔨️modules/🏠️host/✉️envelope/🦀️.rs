@@ -53,7 +53,6 @@ use semio_s_artifact_procedural_3d_host::GENERATION3D_OWNER_BYTES;
 use semio_s_artifact_procedural_3d_host::GENERATION3D_RETAINED_STACK_CAPACITY;
 use semio_s_artifact_procedural_3d_host::generation3d_close_flow_frontier;
 use semio_s_artifact_procedural_3d_host::generation3d_park_flow_strings;
-use semio_s_artifact_procedural_3d_host::generation3d_publication_item_credit;
 
 #[path = "📑️owner-vocabulary/🦀️.rs"]
 mod owner_vocabulary;

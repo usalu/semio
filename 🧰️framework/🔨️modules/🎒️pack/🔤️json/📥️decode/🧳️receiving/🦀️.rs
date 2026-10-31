@@ -1,25 +1,27 @@
 //! 🧳️ Original JSON operation bytes become typed native projections without a cold conversion.
 use crate::{ArtifactCanonicalJsonTree,ArtifactCanonicalJsonTreeCursor,JsonGrammarCursor,JsonMemberPolicy,JsonError};
-use semio_framework_value::{DslValue, RetirementDemand, ValueError, ValueRefusalKind, ArtifactOwnedValueRetirementFactory, FactoryAuthority, retained_clone::{RetainedCloneSource, RetainedOwnedProjection, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits}};
-use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::owned::NativeReceivingOriginal};
+use semio_framework_value::{DslValue, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind, ArtifactOwnedValueRetirementFactory, FactoryAuthority, retained_clone::{RetainedCloneSource, RetainedCloneSourceAdmission, RetainedOwnedProjection, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits}};
+use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::OriginalReceivingPrimary, native_decoding::owned::NativeReceivingOriginal};
 use semio_framework_value_factory::owned::FactoryOwnedSourceAuthority;
 use std::{mem::{ManuallyDrop,size_of},sync::Arc};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
-enum Phase{Header,Parse,Source,Shell,Capture,Birth,Receive,TakeReceived,CloseReceived,Authority,TypedSource,TypedProjection,CanonicalProjection,CanonicalBirth,Canonical,Ready}
+pub enum Phase{Header,Parse,Source,Shell,Receive,TakeReceived,CloseReceived,Authority,TypedSource,TypedProjection,CanonicalProjection,CanonicalBirth,Canonical,Ready}
 
 /// 🛡️ The installed wire projection determines canonical operation bytes; its original decoder ledger remains fixed.
 pub struct OriginalJsonReceiving<M:NativeReceive<DslValue>+Sync>{
- ledger:u64,recipient:Option<u64>,header:&'static[u8],wire:ManuallyDrop<Option<RetainedOwnedProjection<Vec<u8>>>>,
+ ledger:u64,recipient:Option<u64>,header:&'static[u8],pub wire:ManuallyDrop<Option<RetainedOwnedProjection<Vec<u8>>>>,
  parser:ManuallyDrop<Option<JsonGrammarCursor<DslValue>>>,parsed:ManuallyDrop<Option<DslValue>>,
- parsed_source:ManuallyDrop<Option<RetainedCloneSource<DslValue>>>,receiver:ManuallyDrop<Option<NativeReceivingOriginal<DslValue,M>>>,
+ parsed_source:ManuallyDrop<Option<RetainedCloneSource<DslValue>>>,source_admission:ManuallyDrop<Option<RetainedCloneSourceAdmission<DslValue,DslValue>>>,typed_admission:ManuallyDrop<Option<RetainedCloneSourceAdmission<M,FactoryOwnedSourceAuthority<M>>>>,receiver:ManuallyDrop<Option<NativeReceivingOriginal<DslValue,M>>>,
  typed:ManuallyDrop<Option<M>>,authority:ManuallyDrop<Option<FactoryOwnedSourceAuthority<M>>>,typed_source:ManuallyDrop<Option<RetainedCloneSource<M,FactoryOwnedSourceAuthority<M>>>>,
- output:ManuallyDrop<Option<RetainedOwnedProjection<M>>>,canonical_projection:ManuallyDrop<Option<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>>,canonical:ManuallyDrop<Option<ArtifactCanonicalJsonTreeCursor>>,
+ pub output:ManuallyDrop<Option<RetainedOwnedProjection<M>>>,canonical_projection:ManuallyDrop<Option<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>>,canonical:ManuallyDrop<Option<ArtifactCanonicalJsonTreeCursor>>,
  factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,factory_close:Option<FactoryAuthority>,
- error:ManuallyDrop<Option<JsonError>>,retirement:RetainedCloneClose,source:for<'a>fn(&'a M)->&'a dyn ArtifactCanonicalJsonTree,offset:usize,phase:Phase,closing:bool,faulted:bool,taking_owned:bool,
+ error:ManuallyDrop<Option<JsonError>>,retirement:RetainedCloneClose,source:for<'a>fn(&'a M)->&'a dyn ArtifactCanonicalJsonTree,offset:usize,pub phase:Phase,closing:bool,faulted:bool,taking_owned:bool,
 }
+fn refused(failure:OriginalReceivingPrimary)->ValueError{let progress=failure.progress;failure.primary.or(failure.quote_refusal).or(failure.allocation_refusal).unwrap_or_else(||invalid("original JSON native construction refused")).with_retained_progress(progress)}
 fn invalid(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
 fn header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
+fn close_header<T>()->RetirementDemand{let _=std::marker::PhantomData::<T>;RetirementDemand{depth:1,..Default::default()}}
 fn phase(mut d:RetirementDemand)->Result<RetirementDemand,ValueError>{d.copy_bytes=d.copy_bytes.checked_add(size_of::<Phase>()).ok_or_else(||invalid("original JSON receiving extent overflow"))?;Ok(d)}
 impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
  /// 📐️ Captures only original wire custody, codec source and issuer aliases before reading any bytes.
@@ -27,7 +29,7 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
  /// 🎟️ A denied constructor hands the same wire projection back without decoding or materialization.
  pub fn admit(wire:RetainedOwnedProjection<Vec<u8>>,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,header:&'static[u8],source:for<'a>fn(&'a M)->&'a dyn ArtifactCanonicalJsonTree,control:&NativeDecodeControl<'_>,g:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,RetainedOwnedProjection<Vec<u8>>)>{
   let d=Self::constructor_demand();if !retained_clone_grant_admits(g,d){return Err((invalid("original JSON receiving shell was not funded"),wire));}
-  Ok((Self{ledger:control.ledger_identity(),recipient:control.retirement_recipient_identity(),header,wire:ManuallyDrop::new(Some(wire)),parser:ManuallyDrop::new(Some(JsonGrammarCursor::new(JsonMemberPolicy::Reject))),parsed:ManuallyDrop::new(None),parsed_source:ManuallyDrop::new(None),receiver:ManuallyDrop::new(None),typed:ManuallyDrop::new(None),authority:ManuallyDrop::new(None),typed_source:ManuallyDrop::new(None),output:ManuallyDrop::new(None),canonical_projection:ManuallyDrop::new(None),canonical:ManuallyDrop::new(None),factory:ManuallyDrop::new(Some(Arc::clone(factory))),factory_close:None,error:ManuallyDrop::new(None),retirement:Default::default(),source,offset:header.len(),phase:Phase::Header,closing:false,faulted:false,taking_owned:false},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
+  Ok((Self{ledger:control.ledger_identity(),recipient:control.retirement_recipient_identity(),header,wire:ManuallyDrop::new(Some(wire)),parser:ManuallyDrop::new(Some(JsonGrammarCursor::new(JsonMemberPolicy::Reject))),parsed:ManuallyDrop::new(None),parsed_source:ManuallyDrop::new(None),source_admission:ManuallyDrop::new(None),typed_admission:ManuallyDrop::new(None),receiver:ManuallyDrop::new(None),typed:ManuallyDrop::new(None),authority:ManuallyDrop::new(None),typed_source:ManuallyDrop::new(None),output:ManuallyDrop::new(None),canonical_projection:ManuallyDrop::new(None),canonical:ManuallyDrop::new(None),factory:ManuallyDrop::new(Some(Arc::clone(factory))),factory_close:None,error:ManuallyDrop::new(None),retirement:Default::default(),source,offset:header.len(),phase:Phase::Header,closing:false,faulted:false,taking_owned:false},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
  }
  /// 📏️ The next physical frontier is quoted from the same original parser, receiver or canonical source.
  pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
@@ -35,15 +37,13 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   phase(match self.phase{
    Phase::Header=>RetirementDemand{copy_bytes:self.header.len(),depth:1,..Default::default()},
    Phase::Parse=>{let input=self.wire.as_ref().ok_or_else(||invalid("original JSON wire is absent"))?.borrow()?;let mut d=self.parser.as_ref().unwrap().normal_step_demands(input.get().get(self.header.len()..).ok_or_else(||invalid("original JSON wire header is truncated"))?).map_err(|error|ValueError::literal(error.kind(),"original JSON grammar demand refused"))?;d.copy_bytes=d.copy_bytes.checked_add(size_of::<Option<DslValue>>()).ok_or_else(||invalid("original JSON result capture overflow"))?;d},
-   Phase::Source=>{let d=RetainedCloneSource::<DslValue>::owned_constructor_demand::<()>();RetirementDemand{copy_bytes:RetainedCloneSource::<DslValue>::constructor_copy_bytes(),capacity_bytes:d.capacity_bytes,depth:d.depth,..Default::default()}},
-   Phase::Shell=>NativeReceivingOriginal::<DslValue,M>::shell_demand(),
-   Phase::Capture=>self.receiver.as_ref().unwrap().original_capture_demand()?,
-   Phase::Birth=>self.receiver.as_ref().unwrap().receiver_birth_demand()?,
+   Phase::Source=>{let admission=self.source_admission.as_ref().ok_or_else(||invalid("original JSON source admission is absent"))?;if admission.phase()=="ready"{header::<Option<RetainedCloneSource<DslValue>>>()}else{admission.next_demand()?}},
+   Phase::Shell=>header::<Option<NativeReceivingOriginal<DslValue,M>>>(),
    Phase::Receive=>self.receiver.as_ref().unwrap().demands(body)?,
    Phase::TakeReceived=>self.receiver.as_ref().unwrap().take_demand()?,
    Phase::CloseReceived=>if self.receiver.as_ref().unwrap().terminal_is_empty(){header::<Option<NativeReceivingOriginal<DslValue,M>>>()}else{self.receiver.as_ref().unwrap().close_demands(body)?},
    Phase::Authority=>header::<FactoryOwnedSourceAuthority<M>>(),
-   Phase::TypedSource=>{let d=RetainedCloneSource::<M,FactoryOwnedSourceAuthority<M>>::borrowed_constructor_demand::<FactoryOwnedSourceAuthority<M>>();RetirementDemand{copy_bytes:RetainedCloneSource::<M,FactoryOwnedSourceAuthority<M>>::constructor_copy_bytes(),capacity_bytes:d.capacity_bytes,depth:d.depth,..Default::default()}},
+   Phase::TypedSource=>{let admission=self.typed_admission.as_ref().ok_or_else(||invalid("original JSON typed source admission is absent"))?;if admission.phase()=="ready"{header::<Option<RetainedCloneSource<M,FactoryOwnedSourceAuthority<M>>>>()}else{admission.next_demand()?}},
    Phase::TypedProjection|Phase::CanonicalProjection=>RetainedOwnedProjection::<M>::constructor_demand(),
    Phase::CanonicalBirth=>ArtifactCanonicalJsonTreeCursor::constructor_demand(),
    Phase::Canonical=>{let mut d=self.canonical.as_ref().unwrap().next_demand()?;d.copy_bytes=d.copy_bytes.checked_add(64+size_of::<usize>()).ok_or_else(||invalid("original JSON canonical comparison extent overflow"))?;d},
@@ -51,24 +51,23 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   })
  }
  /// ⏯️ Each granted action preserves the same decode ledger and original byte source.
- pub fn advance(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn advance(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->RetainedWorkOutcome{let mut work=0;let result=self.advance_turn(control,body,g,&mut work);RetainedWorkOutcome{result,work}}
+ fn advance_turn(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneStep,ValueError>{
   if control.ledger_identity()!=self.ledger||control.retirement_recipient_identity()!=self.recipient{return Err(invalid("original JSON receiving changed its decoder ledger"));}
-  let d=self.demands(body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}if self.closing{return control.with_retirement(g,|retirement|self.close_step(retirement,g));}
-  control.checkpoint()?;if !matches!(self.phase,Phase::Parse|Phase::Receive){control.admit_turn_capacity(g.maximum_capacity_bytes)?;if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?;}}let child=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:g.maximum_copy_bytes-size_of::<Phase>(),..g};let unit=||RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
+  let d=self.demands(body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}if self.closing{return control.with_retirement(g,|retirement|{let turn=self.close_step(retirement,g);*work=turn.work;turn.result});}
+  control.checkpoint()?;*work=1;if !matches!(self.phase,Phase::Parse|Phase::Receive){control.admit_turn_capacity(g.maximum_capacity_bytes)?;if d.capacity_bytes!=0&&!matches!(self.phase,Phase::Source|Phase::TypedSource){control.charge(d.capacity_bytes)?;}}let child=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:g.maximum_copy_bytes-size_of::<Phase>(),..g};let unit=||RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
   let mut p=match self.phase{
    Phase::Header=>{let input=self.wire.as_ref().unwrap().borrow()?;if input.get().get(..self.header.len())!=Some(self.header){self.faulted=true;return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original JSON operation wire header differs").with_retained_progress(unit()));}self.phase=Phase::Parse;let mut p=unit();p.copied_bytes-=size_of::<Phase>();p},
-   Phase::Parse=>{let input=self.wire.as_ref().unwrap().borrow()?;let parse=self.parser.as_mut().unwrap();let result=parse.step_source(input.get().get(self.header.len()..).ok_or_else(||invalid("original JSON wire header is truncated"))?,1,control,RetainedCloneGrant{maximum_copy_bytes:child.maximum_copy_bytes-size_of::<Option<DslValue>>(),..child},false);let mut p=parse.normal_step_progress();p.copied_bytes=p.copied_bytes.checked_add(size_of::<Option<DslValue>>()).ok_or_else(||invalid("original JSON parser receipt overflow"))?;match result{Ok(Some(value))=>{*self.parsed=Some(value);self.phase=Phase::Source;},Ok(None)=>{},Err(error)=>{let kind=error.kind();*self.error=Some(error);self.faulted=true;p.copied_bytes+=size_of::<Phase>();return Err(ValueError::literal(kind,"original JSON syntax refused").with_retained_progress(p));}}p},
-   Phase::Source=>{let value=self.parsed.take().unwrap();match RetainedCloneSource::admit_owned(value,(),child){Ok((source,p))=>{*self.parsed_source=Some(source);self.phase=Phase::Shell;p},Err((error,value,()))=>{*self.parsed=Some(value);return Err(error);}}},
-   Phase::Shell=>{let(receiver,p)=NativeReceivingOriginal::begin_shell(child)?;*self.receiver=Some(receiver);self.phase=Phase::Capture;p},
-   Phase::Capture=>{let p=self.receiver.as_mut().unwrap().admit_original(&mut self.parsed_source,child)?;self.phase=Phase::Birth;p},
-   Phase::Birth=>{let p=self.receiver.as_mut().unwrap().begin_receiver(child)?;self.phase=Phase::Receive;p},
-   Phase::Receive=>{let owner=self.receiver.as_mut().unwrap();let p=owner.advance(control,body,child)?.progress();if owner.output_ready(){self.phase=Phase::TakeReceived;}p},
-   Phase::TakeReceived=>{let(value,p)=self.receiver.as_mut().unwrap().take(child)?.ok_or_else(||invalid("funded original JSON receiver omitted its output"))?;*self.typed=Some(value);self.receiver.as_mut().unwrap().begin_close();self.phase=Phase::CloseReceived;p},
-   Phase::CloseReceived=>{if self.receiver.as_ref().unwrap().terminal_is_empty(){self.receiver.take();self.phase=Phase::Authority;let mut p=unit();p.copied_bytes-=size_of::<Phase>();p}else{self.receiver.as_mut().unwrap().close_step(child)?.progress()}},
-   Phase::Authority=>{*self.authority=Some(FactoryOwnedSourceAuthority::new(self.typed.take().unwrap(),Arc::clone(self.factory.as_ref().unwrap())));self.phase=Phase::TypedSource;let mut p=unit();p.copied_bytes-=size_of::<Phase>();p},
-   Phase::TypedSource=>{let authority=self.authority.take().unwrap();match RetainedCloneSource::<M,FactoryOwnedSourceAuthority<M>>::admit_borrowed(authority,|original:&FactoryOwnedSourceAuthority<M>|original.get(),child){Ok((source,p))=>{*self.typed_source=Some(source);self.phase=Phase::TypedProjection;p},Err((error,authority))=>{*self.authority=Some(authority);return Err(error);}}},
-   Phase::TypedProjection=>{let(output,p)=self.typed_source.as_ref().unwrap().retain_original(child)?;*self.output=Some(output);self.phase=Phase::CanonicalProjection;p},
-   Phase::CanonicalProjection=>{let(source,p)=self.output.as_ref().unwrap().project(0,self.source,child)?;*self.canonical_projection=Some(source);self.phase=Phase::CanonicalBirth;p},
+   Phase::Parse=>{let input=self.wire.as_ref().unwrap().borrow()?;let parse=self.parser.as_mut().unwrap();let result=parse.step_source(input.get().get(self.header.len()..).ok_or_else(||invalid("original JSON wire header is truncated"))?,1,control,RetainedCloneGrant{maximum_copy_bytes:child.maximum_copy_bytes-size_of::<Option<DslValue>>(),..child},false);*work=parse.last_turn_work();let mut p=parse.normal_step_progress();p.copied_bytes=p.copied_bytes.checked_add(size_of::<Option<DslValue>>()).ok_or_else(||invalid("original JSON parser receipt overflow"))?;match result{Ok(Some(value))=>{*self.source_admission=Some(RetainedCloneSource::<DslValue>::admission_owned(value,()));self.phase=Phase::Source;},Ok(None)=>{},Err(error)=>{let kind=error.kind();*self.error=Some(error);self.faulted=true;p.copied_bytes+=size_of::<Phase>();return Err(ValueError::literal(kind,"original JSON syntax refused").with_retained_progress(p));}}p},
+   Phase::Source=>{let admission=self.source_admission.as_mut().unwrap();if admission.phase()=="ready"{let turn=admission.take_output(&mut self.parsed_source,child);*work=turn.work;let step=turn.result?;if admission.terminal_is_empty(){self.source_admission.take();self.phase=Phase::Shell;}step.progress()}else{let turn=admission.advance(child);*work=turn.work;let p=turn.result?.progress();if p.retained_capacity_bytes!=0{control.charge(p.retained_capacity_bytes)?;}p}},
+   Phase::Shell=>{let source=self.parsed_source.take().ok_or_else(||invalid("original JSON parsed source is absent"))?;*self.receiver=Some(NativeReceivingOriginal::new(source));self.phase=Phase::Receive;let mut p=unit();p.copied_bytes-=size_of::<Phase>();p},
+   Phase::Receive=>{let owner=self.receiver.as_mut().unwrap();let turn=owner.advance(control,body,g);*work=turn.work;let p=turn.result.map_err(refused)?.progress();if owner.output_ready(){self.phase=Phase::TakeReceived;}p},
+   Phase::TakeReceived=>{let turn=self.receiver.as_mut().unwrap().take(child);*work=turn.work;let(value,p)=turn.result?.ok_or_else(||invalid("funded original JSON receiver omitted its output"))?;*self.typed=Some(value);self.receiver.as_mut().unwrap().begin_close();self.phase=Phase::CloseReceived;p},
+   Phase::CloseReceived=>{if self.receiver.as_ref().unwrap().terminal_is_empty(){self.receiver.take();self.phase=Phase::Authority;let mut p=unit();p.copied_bytes-=size_of::<Phase>();p}else{let turn=self.receiver.as_mut().unwrap().close_step(child);*work=turn.work;turn.result?.progress()}},
+   Phase::Authority=>{let authority=FactoryOwnedSourceAuthority::new(self.typed.take().unwrap(),Arc::clone(self.factory.as_ref().unwrap()));*self.typed_admission=Some(RetainedCloneSourceAdmission::new(authority,(),|original:&FactoryOwnedSourceAuthority<M>|original.get()));self.phase=Phase::TypedSource;let mut p=unit();p.copied_bytes-=size_of::<Phase>();p},
+   Phase::TypedSource=>{let admission=self.typed_admission.as_mut().unwrap();if admission.phase()=="ready"{let turn=admission.take_output(&mut self.typed_source,child);*work=turn.work;let step=turn.result?;if admission.terminal_is_empty(){self.typed_admission.take();self.phase=Phase::TypedProjection;}step.progress()}else{let turn=admission.advance(child);*work=turn.work;let p=turn.result?.progress();if p.retained_capacity_bytes!=0{control.charge(p.retained_capacity_bytes)?;}p}},
+   Phase::TypedProjection=>{let turn=self.typed_source.as_ref().unwrap().retain_original(child);*work=turn.work;let(output,p)=turn.result?;*self.output=Some(output);self.phase=Phase::CanonicalProjection;p},
+   Phase::CanonicalProjection=>{let turn=self.output.as_ref().unwrap().project(0,self.source,child);*work=turn.work;let(source,p)=turn.result?;*self.canonical_projection=Some(source);self.phase=Phase::CanonicalBirth;p},
    Phase::CanonicalBirth=>{let source=self.canonical_projection.take().unwrap();match ArtifactCanonicalJsonTreeCursor::admit(source,child){Ok((cursor,p))=>{*self.canonical=Some(cursor);self.phase=Phase::Canonical;p},Err((error,source))=>{*self.canonical_projection=Some(source);return Err(error);}}},
    Phase::Canonical=>{let mut bytes=[0;64];let copy=64+size_of::<usize>();let step=self.canonical.as_mut().unwrap().advance(&mut bytes,RetainedCloneGrant{maximum_copy_bytes:child.maximum_copy_bytes-copy,..child})?;let input=self.wire.as_ref().unwrap().borrow()?;let next=self.offset.checked_add(step.written_bytes).ok_or_else(||invalid("original JSON canonical offset overflow"))?;let equal=input.get().get(self.offset..next)==Some(&bytes[..step.written_bytes]);self.offset=next;let mut p=step.ownership.progress();p.copied_bytes=p.copied_bytes.checked_add(step.written_bytes+size_of::<usize>()).ok_or_else(||invalid("original JSON canonical receipt overflow"))?;if !equal||self.canonical.as_ref().unwrap().is_complete()&&self.offset!=input.get().len(){self.faulted=true;p.copied_bytes+=size_of::<Phase>();return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original JSON operation is not canonically encoded").with_retained_progress(p));}if self.canonical.as_ref().unwrap().is_complete(){self.phase=Phase::Ready;}p},
    Phase::Ready=>return Ok(RetainedCloneStep::Complete(Default::default())),
@@ -76,7 +75,8 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   p.copied_items=p.copied_items.max(1);p.copied_bytes=p.copied_bytes.checked_add(size_of::<Phase>()).ok_or_else(||invalid("original JSON receiving receipt overflow"))?;semio_framework_value::retained_clone::admit_retained_clone_progress(g,p,"original JSON receiving")?;Ok(if self.ready(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})
  }
  /// 📤️ The returned native operation projection keeps its original typed source and issuer alive.
- pub fn take(&mut self,g:RetainedCloneGrant)->Result<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>,ValueError>{if !self.ready(){return Ok(None);}let d=header::<Option<RetainedOwnedProjection<M>>>();if !retained_clone_grant_admits(g,d){return Ok(None);}let output=self.output.take().ok_or_else(||invalid("original JSON receiving output already transferred"))?;self.begin_close();Ok(Some((output,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
+ pub fn take(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>>{let result=self.take_ready(g);let work=u64::from(matches!(result,Ok(Some(_))));RetainedWorkOutcome{result,work}}
+ fn take_ready(&mut self,g:RetainedCloneGrant)->Result<Option<(RetainedOwnedProjection<M>,RetainedCloneProgress)>,ValueError>{if !self.ready(){return Ok(None);}let d=header::<Option<RetainedOwnedProjection<M>>>();if !retained_clone_grant_admits(g,d){return Ok(None);}let output=self.output.take().ok_or_else(||invalid("original JSON receiving output already transferred"))?;self.begin_close();Ok(Some((output,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
  /// 🫴️ The same unique handoff continues after its first funded alias-close step.
  pub fn owned_handoff_pending(&self)->bool{self.taking_owned&&!self.closing&&!self.faulted}
  pub fn ready(&self)->bool{!self.taking_owned&&!self.closing&&!self.faulted&&self.phase==Phase::Ready&&self.output.is_some()}
@@ -92,15 +92,16 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   Err(invalid("original JSON owned handoff lost its unique authority"))
  }
  /// 📤️ Transfers the same uniquely retained native value while retaining its parser, bytes and actual issuer for closure.
- pub fn take_owned_into(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn take_owned_into(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->RetainedWorkOutcome{let mut work=0;let result=self.take_owned_turn(output,control,body,g,&mut work);RetainedWorkOutcome{result,work}}
+ fn take_owned_turn(&mut self,output:&mut Option<M>,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneStep,ValueError>{
   if control.ledger_identity()!=self.ledger||control.retirement_recipient_identity()!=self.recipient{return Err(invalid("original JSON owned handoff changed its decoder ledger"))}if output.is_some(){return Err(invalid("original JSON owned handoff destination is occupied"))}
-  let d=self.take_owned_demands(body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}control.checkpoint()?;control.admit_turn_capacity(g.maximum_capacity_bytes)?;if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?}
+  let d=self.take_owned_demands(body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}control.checkpoint()?;*work=1;control.admit_turn_capacity(g.maximum_capacity_bytes)?;if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?}
   let unit=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()});
   if !self.taking_owned{self.taking_owned=true;if let Some(canonical)=self.canonical.as_mut(){canonical.begin_close()}return Ok(unit())}
   if let Some(canonical)=self.canonical.as_mut(){if canonical.terminal_is_empty(){self.canonical.take();return Ok(unit())}return canonical.advance(&mut[],g).map(|step|step.ownership)}
-  if let Some(projection)=self.output.as_mut(){if projection.terminal_is_empty(){self.output.take();return Ok(unit())}return projection.close_step(g)}
-  if let Some(projection)=self.canonical_projection.as_mut(){if projection.terminal_is_empty(){self.canonical_projection.take();return Ok(unit())}return projection.close_step(g)}
-  if let Some(source)=self.typed_source.as_mut(){if source.terminal_is_empty(){self.typed_source.take();return Ok(unit())}return match source.take_authority(g)?{semio_framework_value::retained_clone::RetainedCloneSourceTake::Pending(p)=>Ok(RetainedCloneStep::Progress(p)),semio_framework_value::retained_clone::RetainedCloneSourceTake::Ready(authority,p)=>{*self.authority=Some(authority);Ok(RetainedCloneStep::Progress(p))}}}
+  if let Some(projection)=self.output.as_mut(){if projection.terminal_is_empty(){self.output.take();return Ok(unit())}let turn=projection.close_step(g);*work=turn.work;return turn.result}
+  if let Some(projection)=self.canonical_projection.as_mut(){if projection.terminal_is_empty(){self.canonical_projection.take();return Ok(unit())}let turn=projection.close_step(g);*work=turn.work;return turn.result}
+  if let Some(source)=self.typed_source.as_mut(){if source.terminal_is_empty(){self.typed_source.take();return Ok(unit())}let turn=source.take_authority(g);*work=turn.work;return match turn.result?{semio_framework_value::retained_clone::RetainedCloneSourceTake::Pending(p)=>Ok(RetainedCloneStep::Progress(p)),semio_framework_value::retained_clone::RetainedCloneSourceTake::Ready(authority,p)=>{*self.authority=Some(authority);Ok(RetainedCloneStep::Progress(p))}}}
   let authority=self.authority.take().ok_or_else(||invalid("original JSON owned handoff requires its unique authority"))?;match authority.take_original(g){Ok((value,factory,mut p))=>{*output=Some(value);self.factory_close=Some(FactoryAuthority::new(factory));self.closing=true;p.copied_bytes+=size_of::<Option<M>>();Ok(RetainedCloneStep::Complete(p))},Err((error,authority))=>{*self.authority=Some(authority);Err(error)}}
  }
 
@@ -116,14 +117,15 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
   Err(invalid("original JSON owned output lost its source authority"))
  }
  /// 📤️ Returns the same received operation and exact installed issuer without a second payload clone.
- pub fn take_original(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->Result<(RetainedCloneStep,Option<(M,Arc<dyn ArtifactOwnedValueRetirementFactory<M>>)>),ValueError>{
-  if control.ledger_identity()!=self.ledger||control.retirement_recipient_identity()!=self.recipient{return Err(invalid("original JSON owned transfer changed its decoder ledger"));}let d=self.take_original_demand(body)?;if !retained_clone_grant_admits(g,d){return Ok((RetainedCloneStep::Progress(Default::default()),None));}control.checkpoint()?;control.admit_turn_capacity(g.maximum_capacity_bytes)?;if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?;}
+ pub fn take_original(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->RetainedWorkOutcome<(RetainedCloneStep,Option<(M,Arc<dyn ArtifactOwnedValueRetirementFactory<M>>)>)>{let mut work=0;let result=self.take_original_turn(control,body,g,&mut work);RetainedWorkOutcome{result,work}}
+ fn take_original_turn(&mut self,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant,work:&mut u64)->Result<(RetainedCloneStep,Option<(M,Arc<dyn ArtifactOwnedValueRetirementFactory<M>>)>),ValueError>{
+  if control.ledger_identity()!=self.ledger||control.retirement_recipient_identity()!=self.recipient{return Err(invalid("original JSON owned transfer changed its decoder ledger"));}let d=self.take_original_demand(body)?;if !retained_clone_grant_admits(g,d){return Ok((RetainedCloneStep::Progress(Default::default()),None));}control.checkpoint()?;*work=1;control.admit_turn_capacity(g.maximum_capacity_bytes)?;if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?;}
   let unit=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()});
   if !self.taking_owned{self.taking_owned=true;if let Some(c)=self.canonical.as_mut(){c.begin_close();}return Ok((unit(),None));}
   if let Some(c)=self.canonical.as_mut(){if c.terminal_is_empty(){self.canonical.take();return Ok((unit(),None));}let s=control.with_retirement(g,|_|c.advance(&mut[],g).map(|s|s.ownership))?;return Ok((RetainedCloneStep::Progress(s.progress()),None));}
-  if let Some(c)=self.canonical_projection.as_mut(){if c.terminal_is_empty(){self.canonical_projection.take();return Ok((unit(),None));}return Ok((RetainedCloneStep::Progress(c.close_step(g)?.progress()),None));}
-  if let Some(c)=self.output.as_mut(){if c.terminal_is_empty(){self.output.take();return Ok((unit(),None));}return Ok((RetainedCloneStep::Progress(c.close_step(g)?.progress()),None));}
-  if let Some(s)=self.typed_source.as_mut(){if s.terminal_is_empty(){self.typed_source.take();return Ok((unit(),None));}let copied=2*size_of::<Option<FactoryOwnedSourceAuthority<M>>>();let step=s.take_authority(RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-copied,..g})?;let mut p=match step{semio_framework_value::retained_clone::RetainedCloneSourceTake::Pending(p)=>p,semio_framework_value::retained_clone::RetainedCloneSourceTake::Ready(a,p)=>{*self.authority=Some(a);p}};p.copied_bytes=p.copied_bytes.checked_add(copied).ok_or_else(||invalid("original JSON source transfer receipt overflow"))?;return Ok((RetainedCloneStep::Progress(p),None));}
+  if let Some(c)=self.canonical_projection.as_mut(){if c.terminal_is_empty(){self.canonical_projection.take();return Ok((unit(),None));}let turn=c.close_step(g);*work=turn.work;return Ok((RetainedCloneStep::Progress(turn.result?.progress()),None));}
+  if let Some(c)=self.output.as_mut(){if c.terminal_is_empty(){self.output.take();return Ok((unit(),None));}let turn=c.close_step(g);*work=turn.work;return Ok((RetainedCloneStep::Progress(turn.result?.progress()),None));}
+  if let Some(s)=self.typed_source.as_mut(){if s.terminal_is_empty(){self.typed_source.take();return Ok((unit(),None));}let copied=2*size_of::<Option<FactoryOwnedSourceAuthority<M>>>();let turn=s.take_authority(RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-copied,..g});*work=turn.work;let step=turn.result?;let mut p=match step{semio_framework_value::retained_clone::RetainedCloneSourceTake::Pending(p)=>p,semio_framework_value::retained_clone::RetainedCloneSourceTake::Ready(a,p)=>{*self.authority=Some(a);p}};p.copied_bytes=p.copied_bytes.checked_add(copied).ok_or_else(||invalid("original JSON source transfer receipt overflow"))?;return Ok((RetainedCloneStep::Progress(p),None));}
   let authority=self.authority.take().ok_or_else(||invalid("original JSON owned authority vanished"))?;match authority.take_original(g){Ok((value,factory,mut p))=>{self.closing=true;self.begin_close();p.copied_bytes=d.copy_bytes;Ok((RetainedCloneStep::Complete(p),Some((value,factory))))},Err((error,authority))=>{*self.authority=Some(authority);Err(error)}}
  }
 
@@ -132,33 +134,61 @@ impl<M:NativeReceive<DslValue>+Sync> OriginalJsonReceiving<M>{
  /// 📪️ Cleanup quotes its defining typed owners instead of retiring payloads through a cold fallback.
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<DslValue>(false,&None,body);}
-  if let Some(canonical)=self.canonical.as_ref(){return if canonical.terminal_is_empty(){Ok(header::<Option<ArtifactCanonicalJsonTreeCursor>>())}else{canonical.next_demand()};}
-  if let Some(receiver)=self.receiver.as_ref(){return if receiver.terminal_is_empty(){Ok(header::<Option<NativeReceivingOriginal<DslValue,M>>>())}else{receiver.close_demands(body)};}
-  if let Some(output)=self.output.as_ref(){return if output.terminal_is_empty(){Ok(header::<Option<RetainedOwnedProjection<M>>>())}else{output.close_demand(body)};}
-  if let Some(output)=self.canonical_projection.as_ref(){return if output.terminal_is_empty(){Ok(header::<Option<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>>())}else{output.close_demand(body)};}
-  if let Some(source)=self.typed_source.as_ref(){return if source.terminal_is_empty(){Ok(header::<Option<RetainedCloneSource<M,FactoryOwnedSourceAuthority<M>>>>())}else{source.next_close_demand(body)};}
-  if let Some(source)=self.parsed_source.as_ref(){return if source.terminal_is_empty(){Ok(header::<Option<RetainedCloneSource<DslValue>>>())}else{source.next_close_demand(body)};}
-  if let Some(wire)=self.wire.as_ref(){return if wire.terminal_is_empty(){Ok(header::<Option<RetainedOwnedProjection<Vec<u8>>>>())}else{wire.close_demand(body)};}
+  if let Some(admission)=self.typed_admission.as_ref(){return admission.next_return_demand();}
+  if let Some(admission)=self.source_admission.as_ref(){return admission.next_return_demand();}
+  if let Some(canonical)=self.canonical.as_ref(){return if canonical.terminal_is_empty(){Ok(close_header::<Option<ArtifactCanonicalJsonTreeCursor>>())}else{canonical.next_demand()};}
+  if let Some(receiver)=self.receiver.as_ref(){return if receiver.terminal_is_empty(){Ok(close_header::<Option<NativeReceivingOriginal<DslValue,M>>>())}else{receiver.close_demands(body)};}
+  if let Some(output)=self.output.as_ref(){return if output.terminal_is_empty(){Ok(close_header::<Option<RetainedOwnedProjection<M>>>())}else{output.close_demand(body)};}
+  if let Some(output)=self.canonical_projection.as_ref(){return if output.terminal_is_empty(){Ok(close_header::<Option<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>>())}else{output.close_demand(body)};}
+  if let Some(source)=self.typed_source.as_ref(){return if source.terminal_is_empty(){Ok(close_header::<Option<RetainedCloneSource<M,FactoryOwnedSourceAuthority<M>>>>())}else{source.next_close_demand(body)};}
+  if let Some(source)=self.parsed_source.as_ref(){return if source.terminal_is_empty(){Ok(close_header::<Option<RetainedCloneSource<DslValue>>>())}else{source.next_close_demand(body)};}
+  if let Some(wire)=self.wire.as_ref(){return if wire.terminal_is_empty(){Ok(close_header::<Option<RetainedOwnedProjection<Vec<u8>>>>())}else{wire.close_demand(body)};}
   macro_rules! owner{($field:ident,$ty:ty)=>{if self.$field.is_some(){return self.retirement.next_owner_demands::<$ty>(true,&None,body);}};}
   owner!(parser,JsonGrammarCursor<DslValue>);owner!(parsed,DslValue);owner!(typed,M);owner!(authority,FactoryOwnedSourceAuthority<M>);owner!(error,JsonError);
-  if let Some(factory)=self.factory_close.as_ref(){return factory.demands(body);}if self.factory.is_some(){return Ok(header::<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>());}Ok(Default::default())
+  if let Some(factory)=self.factory_close.as_ref(){return if factory.terminal_is_empty(){Ok(close_header::<FactoryAuthority>())}else{factory.demands(body)};}if self.factory.is_some(){return Ok(close_header::<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>());}Ok(Default::default())
  }
- pub fn close_step(&mut self,control:&mut dyn semio_framework_value::OriginalRetirementControl,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if control.ledger_identity()!=self.ledger||control.retirement_recipient_identity()!=self.recipient{return Err(invalid("original JSON cleanup changed its decoder ledger"));}if !self.closing{return Err(invalid("original JSON cleanup was not started"));}let d=self.close_demands(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?;}let unit=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()});
-  if !self.retirement.is_empty(){return self.retirement.step_granted(g);}
-  if let Some(canonical)=self.canonical.as_mut(){if canonical.terminal_is_empty(){self.canonical.take();return Ok(unit());}return canonical.advance(&mut[],g).map(|step|step.ownership);}
-  if let Some(receiver)=self.receiver.as_mut(){if receiver.terminal_is_empty(){self.receiver.take();return Ok(unit());}return receiver.close_step(g);}
-  macro_rules! close{($field:ident,$demand:ident)=>{if let Some(owner)=self.$field.as_mut(){if owner.terminal_is_empty(){self.$field.take();return Ok(unit());}return owner.close_step(g);}};}
-  close!(output,close_demand);close!(canonical_projection,close_demand);close!(typed_source,next_close_demand);close!(parsed_source,next_close_demand);close!(wire,close_demand);
-  macro_rules! owned{($field:ident)=>{if let Some(step)=self.retirement.begin_granted(&mut self.$field,g)?{return Ok(step);}};}
-  owned!(parser);owned!(parsed);owned!(typed);owned!(authority);owned!(error);
-  if self.factory_close.is_none(){if let Some(factory)=self.factory.take(){self.factory_close=Some(FactoryAuthority::new(factory));return Ok(unit());}}
-  if let Some(factory)=self.factory_close.as_mut(){let step=factory.step(g)?;if factory.terminal_is_empty(){self.factory_close=None;}return Ok(step);}Ok(RetainedCloneStep::Complete(Default::default()))
+ pub fn close_step(&mut self,control:&mut dyn semio_framework_value::OriginalRetirementControl,g:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+  let mut work=0;
+  let result=(||{
+   if control.ledger_identity()!=self.ledger||control.retirement_recipient_identity()!=self.recipient{return Err(invalid("original JSON cleanup changed its decoder ledger"));}
+   if !self.closing{return Err(invalid("original JSON cleanup was not started"));}
+   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
+   let d=self.close_demands(g.maximum_copy_bytes)?;
+   if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}
+   if d.capacity_bytes!=0{control.charge(d.capacity_bytes)?;}
+   let unit=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()});
+   if !self.retirement.is_empty(){let turn=self.retirement.step_granted(g);work=turn.work;return turn.result;}
+   if let Some(admission)=self.typed_admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,g);if let Some((authority,()))=returned{*self.authority=Some(authority);}if admission.terminal_is_empty(){self.typed_admission.take();}work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+   if let Some(admission)=self.source_admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,g);if let Some((parsed,()))=returned{*self.parsed=Some(parsed);}if admission.terminal_is_empty(){self.source_admission.take();}work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+   if let Some(canonical)=self.canonical.as_mut(){
+    if canonical.terminal_is_empty(){self.canonical.take();work=1;return Ok(unit());}
+    let result=canonical.advance(&mut[],g);work=canonical.last_turn_work();return result.map(|step|step.ownership);
+   }
+   if let Some(receiver)=self.receiver.as_mut(){
+    if receiver.terminal_is_empty(){self.receiver.take();work=1;return Ok(unit());}
+    let turn=receiver.close_step(g);work=turn.work;return turn.result;
+   }
+   macro_rules! close{($field:ident)=>{if let Some(owner)=self.$field.as_mut(){if owner.terminal_is_empty(){self.$field.take();work=1;return Ok(unit());}let turn=owner.close_step(g);work=turn.work;return turn.result;}};}
+   close!(output);close!(canonical_projection);close!(typed_source);close!(parsed_source);close!(wire);
+   macro_rules! owned{($field:ident)=>{if self.$field.is_some(){let turn=self.retirement.begin_granted(&mut self.$field,g);work=turn.work;if let Some(step)=turn.result?{return Ok(step);}}};}
+   owned!(parser);owned!(parsed);owned!(typed);owned!(authority);owned!(error);
+   if self.factory_close.is_none(){if let Some(factory)=self.factory.take(){self.factory_close=Some(FactoryAuthority::new(factory));work=1;return Ok(unit());}}
+   if let Some(factory)=self.factory_close.as_mut(){
+    if factory.terminal_is_empty(){self.factory_close=None;work=1;return Ok(unit());}
+    let turn=factory.step(g);work=turn.work;return turn.result;
+   }
+   Ok(RetainedCloneStep::Complete(Default::default()))
+  })();
+  semio_framework_value::RetainedWorkOutcome{result,work}
  }
- pub fn terminal_is_empty(&self)->bool{self.closing&&self.wire.is_none()&&self.parser.is_none()&&self.parsed.is_none()&&self.parsed_source.is_none()&&self.receiver.is_none()&&self.typed.is_none()&&self.authority.is_none()&&self.typed_source.is_none()&&self.output.is_none()&&self.canonical_projection.is_none()&&self.canonical.is_none()&&self.factory.is_none()&&self.factory_close.is_none()&&self.error.is_none()&&self.retirement.is_empty()}
+ pub fn terminal_is_empty(&self)->bool{self.closing&&self.wire.is_none()&&self.parser.is_none()&&self.parsed.is_none()&&self.parsed_source.is_none()&&self.source_admission.is_none()&&self.typed_admission.is_none()&&self.receiver.is_none()&&self.typed.is_none()&&self.authority.is_none()&&self.typed_source.is_none()&&self.output.is_none()&&self.canonical_projection.is_none()&&self.canonical.is_none()&&self.factory.is_none()&&self.factory_close.is_none()&&self.error.is_none()&&self.retirement.is_empty()}
 }
 impl<M:NativeReceive<DslValue>+Sync> Drop for OriginalJsonReceiving<M>{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original JSON receiving requires funded closure of all source and typed owners");}}
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path="🎟️close/🧪️tests/🦀️.rs"]
+mod close_work_tests;

@@ -1,0 +1,84 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumTextBytes",
+    "phases",
+    "maximumTurns",
+    "stock",
+    "quantumItems",
+    "undergrantHeapBytes",
+    "sharedNullWork",
+    "sameSourcePointer",
+    "scope",
+    "nullFrontiers",
+    "cancellationCuts",
+    "resumeAfterPaidClose"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumTextBytes": {
+      "const": 256
+    },
+    "phases": {
+      "const": [
+        "source",
+        "backing",
+        "text",
+        "shared",
+        "settlement",
+        "complete"
+      ]
+    },
+    "maximumTurns": {
+      "const": 1000
+    },
+    "stock": {
+      "const": {
+        "items": 1000,
+        "copyBytes": 4096,
+        "capacityBytes": 65536,
+        "releaseBytes": 262144,
+        "depth": 64,
+        "work": 1000
+      }
+    },
+    "quantumItems": {
+      "const": 1
+    },
+    "undergrantHeapBytes": {
+      "const": 0
+    },
+    "sharedNullWork": {
+      "const": 1
+    },
+    "sameSourcePointer": {
+      "const": true
+    },
+    "scope": {
+      "const": "finite-physical-actor-domain-stock-not-host-source-proof"
+    },
+    "nullFrontiers": {
+      "const": [
+        "backing",
+        "shared"
+      ]
+    },
+    "cancellationCuts": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "resumeAfterPaidClose": {
+      "const": false
+    }
+  }
+}

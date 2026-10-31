@@ -6,7 +6,7 @@ import{validateJsonSchemaSubset}from"../../../🧬️schema/✅️validator/📦
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 const policy=schema.definitions.Policy.const,messages=schema.definitions.Messages.const;
-const stale=policy.staleMarkers.map(marker=>new RegExp(marker,"u")),missing=policy.missingCrateMarkers.map(marker=>new RegExp(marker,"u"));
+const stale=policy.staleMarkers.map(marker=>new RegExp(marker,"u")),missing=policy.missingCrateMarkers.map(marker=>new RegExp(marker,"u")),absentPath=policy.missingPathManifestMarkers.map(marker=>new RegExp(marker,"u"));
 const digest=(bytes:Uint8Array|string):string=>createHash("sha256").update(bytes).digest("hex");
 const fileDigest=(path:string):string|null=>{try{return digest(readFileSync(path));}catch{return null;}};
 
@@ -42,6 +42,8 @@ const text=(key:keyof typeof messages,language:CargoLockLanguageV1,values:Readon
 export function cargoLockStaleOutputV1(output:string):boolean{return stale.some(pattern=>pattern.test(output));}
 /** 🔒️ Tells whether any failure of a Cargo child, in its message or its streams, is a stale lockfile. */
 export function cargoLockStaleFailureV1(error:unknown):boolean{return cargoLockStaleOutputV1(error instanceof Error?error.message:String(error));}
+/** 🕳️ Names the manifest a path dependency points at when that file does not exist, or null: such a failure is not a missing registry crate and no network access cures it. */
+export function cargoLockMissingPathManifestV1(output:string):string|null{for(const pattern of absentPath){const match=pattern.exec(output);if(match?.[1])return match[1];}return null;}
 /** 🔎️ Names the crate a failed resolution could not find, or null when the failure names none. */
 export function cargoLockMissingCrateV1(output:string):string|null{for(const pattern of missing){const match=pattern.exec(output);if(match?.[1])return match[1];}return null;}
 
@@ -93,7 +95,7 @@ export async function ensureCargoLockV1(request:CargoLockRequestV1,port:CargoLoc
   }catch{}
  };
  const refuse=(crate:string|null,run:CargoLockRunV1):CargoLockRefusedV1=>{
-  const key=crate===null?"failed":request.offline?"unresolvableOffline":"unresolvable",values={workspace,crate:crate??"",detail:detail(run)};
+  const absent=cargoLockMissingPathManifestV1(run.stderr+"\n"+run.stdout),key=absent!==null?"missingPathManifest":crate===null?"failed":request.offline?"unresolvableOffline":"unresolvable",values={workspace,crate:absent??crate??"",detail:detail(run)};
   const stderr=boundedDiagnosticV1(run.stderr),stdout=boundedDiagnosticV1(run.stdout),diagnostic:CargoLockDiagnosticV1=Object.freeze({version:1,status:run.status,stderr,stdout,truncated:stderr!==run.stderr||stdout!==run.stdout});
   return new CargoLockRefusedV1(request.language,crate,{en:text(key,"en",values),de:text(key,"de",values)},diagnostic);
  };
@@ -103,7 +105,7 @@ export async function ensureCargoLockV1(request:CargoLockRequestV1,port:CargoLoc
   port.report(text("refreshing",request.language,{workspace}));
   let update=await port.run(["update","--workspace","--offline","--manifest-path",manifest]);
   if(update.status!==0){
-   const crate=cargoLockMissingCrateV1(update.stderr+"\n"+update.stdout);if(crate===null||request.offline)throw refuse(crate,update);
+   const crate=cargoLockMissingCrateV1(update.stderr+"\n"+update.stdout);if(crate===null||request.offline||cargoLockMissingPathManifestV1(update.stderr+"\n"+update.stdout)!==null)throw refuse(crate,update);
    port.report(text("online",request.language,{workspace,crate}));
    update=await port.run(["update","--workspace","--manifest-path",manifest]);if(update.status!==0)throw refuse(cargoLockMissingCrateV1(update.stderr+"\n"+update.stdout)??crate,update);
   }

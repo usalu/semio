@@ -1,0 +1,25 @@
+{
+  "status": "Authored, unexecuted, not SourceReady",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🦀️.rs",
+      "sha256": "4010de6488b90d145bf4ee819b87b3ab2a5ca10d6c62359a1c0f0b828411ad9d",
+      "bytes": 23815
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "ba7f4f000aa4c5d131e02b01909e3e40f98d401c3c54c1a0df96f3f79064b2d2",
+      "bytes": 15124
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🎟️work/🔣️.json",
+      "sha256": "195aeb3f30ffa56a5c711560eefa754d4be8b2d9d3135b5ad9cd9bbcfab18cc5",
+      "bytes": 457
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🎟️work/📐️.json",
+      "sha256": "9620b6849ebec40938bc60877b38ca53450087add64f0e29966a246f427616ee",
+      "bytes": 283
+    }
+  ]
+}

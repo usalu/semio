@@ -1,0 +1,22 @@
+{
+  "work": {
+    "denied": 0,
+    "sharedProbe": 1,
+    "wrongWitness": 1,
+    "aliasReturn": 1,
+    "cached": 0
+  },
+  "copyBytes": 0,
+  "stock": {
+    "items": 10000,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 128,
+    "maximumTurns": 10000
+  },
+  "cancellation": [
+    false,
+    true
+  ]
+}

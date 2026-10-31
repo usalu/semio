@@ -37,13 +37,11 @@ pub mod standards {
                         }
                         #[path = "../../../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
                         pub mod mutations;
-                        #[path = "../../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
-                        pub mod diff;
+                        pub use semio_s_artifact_demonstrator_playground_schema::standards::v1::subsets::any::io::text::diff;
                     }
                     #[path = "."]
                     pub mod binary {
-                        #[path = "../../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
-                        pub mod diff;
+                        pub use semio_s_artifact_demonstrator_playground_schema::standards::v1::subsets::any::io::binary::diff;
                         #[path = "."]
                         pub mod mutations {
                             #[path = "."]

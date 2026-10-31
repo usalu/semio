@@ -187,7 +187,7 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
 
     fn receive_original_command(&mut self,command:&mut Generation2dCommand,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let Generation2dCommand::FlowEvalResolve(payload)=command else{return Ok(true)};if self.receiver.is_some(){return Ok(true)}let g=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||g.maximum_items==0||g.maximum_depth==0{return Ok(false)}
-        if let Some(fault)=payload.fault.take(){cx.consume_fuel(1);let original=semio_framework_job::OriginalTurnFailure::from(fault);let receipt_refusal=cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}).err();return Err(semio_framework_job::OriginalTurnFailure{receipt_refusal,..original})}
+        if payload.fault.take().is_some(){cx.consume_fuel(1);return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"flow evaluation reported a fault"),cx))}
         if !payload.input_valid{cx.consume_fuel(1);return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original evaluation reply routing input is malformed").with_retained_progress(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}),cx))}
         let output=std::mem::replace(&mut payload.output,semio_framework_value::DslValue::Null);match semio_framework_os_flow::FlowEvaluationReplyReceiver::new(output,cx){Ok(receiver)=>{self.receiver=Some(receiver);Ok(true)},Err((error,source))=>{match source{semio_framework_os_flow::FlowEvaluationReplyIntakeSource::Value(output)=>payload.output=output,semio_framework_os_flow::FlowEvaluationReplyIntakeSource::Receiver(receiver)=>self.receiver=Some(receiver)}Err(error)}}
     }
@@ -265,7 +265,7 @@ fn generation2d_fold_provisional(overlay: &mut Generation2dSnapshot, leaf: Gener
 /// 🔢️ The digest a preview target is evaluated and owed under: the committed document's target digest folded with the
 /// continuous-tool overlay generation, so every tick, release and zero-trace abort of an open press owes ONE fresh
 /// evaluation and an evaluated overlay owes nothing more.
-pub(crate) fn generation2d_preview_digest(target: PreviewEvalTarget, committed: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, provisional_generation: u64) -> u64 {
+pub(crate) fn generation2d_preview_digest(target: PreviewEvalTarget, committed: &Generation2dSnapshot, cfg: &ConfigView<'_, Generation2dConfig>, provisional_generation: u64) -> u64 {
     flow_eval_tick::target_digest(target, committed, cfg) ^ provisional_generation.wrapping_mul(0x9e37_79b9_7f4a_7c15)
 }
 
@@ -286,7 +286,7 @@ pub fn generation2d_flow_eval_hop(
         Generation2dCommand::FlowEvalTick(payload) => {
             let target = generation2d_preview_target(&payload.window_kind_id).ok_or_else(|| Fault::from("generation2d-flow-eval-window-kind-unknown"))?;
             let (emit, publication) = flow_eval_tick::evaluate(&payload.window_id, &payload.window_kind_id, target, doc, cfg, sessions.get_mut(target))?;
-            link.note_evaluated(target, generation2d_preview_digest(target, committed, cfg, provisional_generation));
+            link.note_evaluated(target, generation2d_preview_digest(target, committed.snapshot, cfg, provisional_generation));
             let transient = match (target, publication) {
                 (PreviewEvalTarget::Generation, semio_framework_os_flow::FlowEvalPublication::Changed(preview_text)) => vec![SetGenerationPreview { preview_text }.into()],
                 _ => Vec::new(),

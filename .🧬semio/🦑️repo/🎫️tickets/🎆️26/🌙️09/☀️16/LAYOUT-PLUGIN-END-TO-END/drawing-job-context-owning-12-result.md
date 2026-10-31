@@ -1,0 +1,7 @@
+# Context Owning 12 Complete Scoped Result
+
+Actual outer90669 ended0/native0. The genuine fullalltargets/no-fail-fast/features testkit request executes all35 laws,35 pass,zero failed/ignored/filtered. This includes original Builder6, receiving3, public continuation/source/cancel/retirement20, Source close2, ACK1, full continuation view1, return place1 and empty outcome1. Original rows, source stocks, denial axes, all pointer/projection/heap/oracle assertions and guards remain; the added null-birth law first failed actualCPU0 and now passes actualCPU1 withphysical0.
+
+No Source cap increased: runtime model and genuine public test ownership clear unchanged262144/32/4000. Source loan retirement validates its real stable source identity/clock through the actual returned alias and separate header; no source/budget is created. Fixture corrections distinguish current CPU loans and exact operation deltas from persistent lifetime state. Canonical actual allocator forwards all measured allocations. All temporary successful return-place debug logging removed.
+
+Log 813327 bytes SHA256 bc93ef1d01951592acf3b9e15b527f726f3daae38b6d4d36f54c69b43329f6ef. 887/893 conservative observations match at current; all peer/current attribution and canonical Source totals are retained in generated terminal.json. Docs remain separate; this scoped success does not imply NativeOwned/Worker/NativeIO/Renderer/Host/browser acceptance or complete SourceHost CPU closure.

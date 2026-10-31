@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "text",
+    "maximumTurns",
+    "maximumCpuWork",
+    "stock",
+    "expected"
+  ],
+  "properties": {
+    "text": {
+      "const": "Original alias 🪢"
+    },
+    "maximumTurns": {
+      "const": 4096
+    },
+    "maximumCpuWork": {
+      "const": 128
+    },
+    "stock": {
+      "const": {
+        "maximumItems": 128,
+        "maximumCopyBytes": 65536,
+        "maximumCapacityBytes": 65536,
+        "maximumReleaseBytes": 131072,
+        "maximumDepth": 32
+      }
+    },
+    "expected": {
+      "const": {
+        "deniedWork": 0,
+        "closedWork": 0,
+        "aliasWork": 1
+      }
+    }
+  }
+}

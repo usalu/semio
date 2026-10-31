@@ -10,6 +10,7 @@
 //! generation history come back, not just evaluated geometry.
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_stdio_txt::TxtSnapshot;
+use semio_s_artifact_procedural_3d_io_text as _;
 
 pub fn register() {}
 

@@ -22,17 +22,6 @@ fn text(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)-
 fn sample(word:u32)->usize{if word&0x7f800000==0x7f800000&&word&0x007fffff!=0{32}else{40}}
 fn format(value:u8)->Result<usize>{match value{0=>Ok(4),1..=3=>Ok(5),4|5=>Ok(3),_=>Err(invalid())}}
 fn document_format(value:Option<&str>)->Result<usize>{match value{Some("pcm8")=>Ok(4),Some("pcm16"|"pcm24"|"pcm32")|None=>Ok(5),Some("f32"|"f64")=>Ok(3),_=>Err(invalid())}}
-/// 🎚️ Counts actual binary32 source words without allocating channels or samples.
-pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
- layout(limits)?;control.scoped_stage(|control|{
-  let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}
-  let schema=text(&mut reader,control)?;reader.read_u32_le().map_err(|_|invalid())?;let format=format(reader.read_u8().map_err(|_|invalid())?)?;let mut census=Census{limits,rows:0,bytes:0};census.row(add(add(16,schema)?,format)?)?;
-  let count=native::length(&mut reader)?;census.future(count)?;control.begin_stage(count)?;
-  for _ in 0..count{census.row(24)?;let count=native::length(&mut reader)?;census.future(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{census.row(sample(reader.read_u32_le().map_err(|_|invalid())?))?;control.step()?;}Ok::<_,ValueError>(())})?;control.step()?;}
-  let count=native::length(&mut reader)?;census.future(count)?;control.begin_stage(count)?;for _ in 0..count{census.row(add(add(24,text(&mut reader,control)?)?,text(&mut reader,control)?)?)?;control.step()?;}
-  if reader.remaining()!=0{return Err(invalid())}control.checkpoint()
- })
-}
 /// 📝️ Preserves original lexical u32 and format defaults while measuring complete document cells.
 pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{

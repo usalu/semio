@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "Document Member Reference",
+      "source": {
+        "kind": "document"
+      },
+      "member": {
+        "handle": {
+          "childId": "document-child",
+          "target": {
+            "artifactId": "drawing-document",
+            "dialect": {
+              "artifactKind": "s.draw.drawing",
+              "standard": "1",
+              "subset": "*"
+            }
+          }
+        }
+      },
+      "expectedWire": {
+        "handle": {
+          "childId": "document-child",
+          "target": {
+            "artifactId": "drawing-document",
+            "dialect": {
+              "artifactKind": "s.draw.drawing",
+              "standard": "1",
+              "subset": "*"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Page Unicode And Escapes",
+      "source": {
+        "kind": "page",
+        "index": 0
+      },
+      "member": {
+        "handle": {
+          "childId": "page-Ä😀-\"\\\n",
+          "target": {
+            "artifactId": "drawing-page-Ä😀",
+            "dialect": {
+              "artifactKind": "s.draw.drawing",
+              "standard": "1",
+              "subset": "*"
+            }
+          }
+        }
+      },
+      "expectedWire": {
+        "handle": {
+          "childId": "page-Ä😀-\"\\\n",
+          "target": {
+            "artifactId": "drawing-page-Ä😀",
+            "dialect": {
+              "artifactKind": "s.draw.drawing",
+              "standard": "1",
+              "subset": "*"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Long Escaped Reference Credit",
+      "source": {
+        "kind": "document"
+      },
+      "member": {
+        "handle": {
+          "childId": "drawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\n",
+          "target": {
+            "artifactId": "drawing-long",
+            "dialect": {
+              "artifactKind": "s.draw.drawing",
+              "standard": "1",
+              "subset": "*"
+            }
+          }
+        }
+      },
+      "expectedWire": {
+        "handle": {
+          "childId": "drawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\ndrawing-\"Grüße😀\\\n",
+          "target": {
+            "artifactId": "drawing-long",
+            "dialect": {
+              "artifactKind": "s.draw.drawing",
+              "standard": "1",
+              "subset": "*"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "partialStopAfter": [
+    0,
+    1,
+    5,
+    12
+  ],
+  "invalidMembers": [
+    {
+      "name": "Inline Current Content",
+      "value": {
+        "handle": {
+          "childId": "document-child",
+          "target": {
+            "artifactId": "drawing-document",
+            "dialect": {
+              "artifactKind": "s.draw.drawing",
+              "standard": "1",
+              "subset": "*"
+            }
+          }
+        },
+        "content": {
+          "schema": "drawing.document"
+        }
+      }
+    },
+    {
+      "name": "Unknown Member Field",
+      "value": {
+        "handle": {
+          "childId": "document-child",
+          "target": {
+            "artifactId": "drawing-document",
+            "dialect": {
+              "artifactKind": "s.draw.drawing",
+              "standard": "1",
+              "subset": "*"
+            }
+          }
+        },
+        "unexpected": true
+      }
+    }
+  ],
+  "invalidSources": [
+    {
+      "kind": "document"
+    },
+    {
+      "kind": "page",
+      "index": 0
+    },
+    {
+      "kind": "page",
+      "index": 999
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Funded Original PNG Byte Emission",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "phases",
+    "output",
+    "cases",
+    "rules",
+    "stock",
+    "fuel",
+    "closePhases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "phases": {
+      "const": [
+        "admission",
+        "header",
+        "blocks",
+        "publication",
+        "complete"
+      ]
+    },
+    "output": {
+      "const": "original-retained-bytes"
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "opaque",
+          "width": 1,
+          "height": 1,
+          "rgba": [
+            255,
+            0,
+            0,
+            255
+          ]
+        },
+        {
+          "name": "alpha",
+          "width": 2,
+          "height": 1,
+          "rgba": [
+            0,
+            255,
+            0,
+            128,
+            0,
+            0,
+            255,
+            0
+          ]
+        }
+      ]
+    },
+    "rules": {
+      "const": {
+        "constructorDoesNotAllocateOutput": true,
+        "zeroGrantLeavesFrontier": true,
+        "sameLedgerPerTurn": true,
+        "copyPaidBeforeBlock": true,
+        "outputBorrowRequiresCompletion": true,
+        "outputOwnerMovesOnce": true,
+        "cancelRetainsUnpublishedBytes": true,
+        "releaseDenialHasNoEffect": true,
+        "independentDecoderMatchesRgba": true,
+        "noHeaderByteEstimate": true,
+        "oneActualOperationPerCloseTurn": true,
+        "preparationSemanticZero": true,
+        "explicitActualCpu": true,
+        "sameFiniteStockThroughOutputClose": true,
+        "completedCustodySemanticZero": true,
+        "oneFundedByteMutationPerEmissionTurn": true,
+        "readOnlyActualSettlementPending": true
+      }
+    },
+    "stock": {
+      "const": [
+        1024,
+        131072,
+        131072,
+        131072,
+        64
+      ]
+    },
+    "fuel": {
+      "const": 1024
+    },
+    "closePhases": {
+      "const": [
+        "backing",
+        "header",
+        "complete"
+      ]
+    }
+  }
+}

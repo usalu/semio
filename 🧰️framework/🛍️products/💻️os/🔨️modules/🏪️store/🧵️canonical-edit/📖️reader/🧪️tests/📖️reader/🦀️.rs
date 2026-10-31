@@ -227,9 +227,9 @@ impl SnapshotRetirementFactory<ErrorRoot> for ErrorRootRetirement {
 }
 impl ArtifactOwnedValueRetirementFactory<ErrorRoot> for ErrorRootRetirement {
  fn retirement_birth_bytes(&self,root:&ErrorRoot)->usize {semio_framework_value::factory::OwnedValueRetirementFactory::<ErrorRoot>::default().retirement_birth_bytes(root)}
- fn retire_owned(&self,root:ErrorRoot,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,ErrorRoot)> {
+ fn retire_owned(&self,root:ErrorRoot,grant:RetainedCloneGrant)-> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,ErrorRoot)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,ErrorRoot)> {
   let admitted=semio_framework_value::factory::OwnedValueRetirementFactory::<ErrorRoot>::default().retire_owned(root,grant);if admitted.is_ok(){self.0.fetch_add(1,Ordering::SeqCst);}admitted
- }
+ })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 impl ArtifactCanonicalJsonTree for ErrorLeaf {
  fn canonical_tree_node(&self)->Result<ArtifactCanonicalJsonNode<'_>,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"canonical-reader.fixture-child"))}

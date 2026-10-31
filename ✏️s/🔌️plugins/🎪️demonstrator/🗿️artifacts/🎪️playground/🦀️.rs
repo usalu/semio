@@ -1,7 +1,6 @@
 //! 🎪️ Playground artifact — demonstrator's owned document entity (minimal schema stub).
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

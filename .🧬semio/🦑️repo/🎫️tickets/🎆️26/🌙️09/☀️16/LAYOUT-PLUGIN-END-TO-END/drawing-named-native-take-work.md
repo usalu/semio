@@ -1,0 +1,1 @@
+Canonical NativeReceiver take now full Outcome per Cursor defining contract. Named receiver forwards exact child take work before Result, keeps output custody, own paid terminal handoff work1/headercopy0; denied/cached taken state None0. Named callers/tests still require compiler-guided migration after NativeOwned is ready; no native gate claimed.

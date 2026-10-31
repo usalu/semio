@@ -14,10 +14,10 @@ pub struct RetainedEqualityStep{pub equal:Option<bool>,pub progress:RetainedClon
 /// 🪡️ Typed child cursors retain no borrowed pointers and close all owned frontier allocations explicitly.
 pub trait RetainedEqualityCursor<T:?Sized>:Send+'static{
  fn demand(&self,left:&T,right:&T,body:usize)->Result<RetirementDemand,ValueError>;
- fn advance(&mut self,left:&T,right:&T,grant:RetainedCloneGrant)->Result<RetainedEqualityStep,ValueError>;
+ fn advance(&mut self,left:&T,right:&T,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedEqualityStep>;
  fn begin_close(&mut self);
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>;
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+ fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome;
  fn terminal_is_empty(&self)->bool;
 }
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
@@ -27,11 +27,11 @@ fn scalar(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:
 pub struct RetainedInlineEquality<T>{result:Option<bool>,marker:std::marker::PhantomData<fn()->T>}
 impl<T> RetainedInlineEquality<T>{pub fn new()->Self{Self{result:None,marker:Default::default()}}}
 impl<T:RetainedEqualityElement+Send+Sync+'static> RetainedEqualityCursor<T> for RetainedInlineEquality<T>{
- fn demand(&self,_:&T,_:&T,_:usize)->Result<RetirementDemand,ValueError>{if self.result.is_some(){return Err(invalid("typed inline comparison is settled"));}Ok(scalar(size_of::<T>()*2+size_of::<Self>()*2+size_of::<bool>()))}
- fn advance(&mut self,left:&T,right:&T,g:RetainedCloneGrant)->Result<RetainedEqualityStep,ValueError>{let d=self.demand(left,right,g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedEqualityStep{equal:None,progress:Default::default()});}self.result=Some(T::inline_eq(left,right));Ok(RetainedEqualityStep{equal:self.result,progress:RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}})}
+ fn demand(&self,_:&T,_:&T,_:usize)->Result<RetirementDemand,ValueError>{if self.result.is_some(){return Err(invalid("typed inline comparison is settled"));}Ok(scalar(size_of::<T>()*2))}
+ fn advance(&mut self,left:&T,right:&T,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedEqualityStep>{let mut work=0;let result=(||{if self.result.is_some(){return Ok(RetainedEqualityStep{equal:self.result,progress:Default::default()})}let d=self.demand(left,right,g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedEqualityStep{equal:None,progress:Default::default()});}self.result=Some(T::inline_eq(left,right));work=1;Ok(RetainedEqualityStep{equal:self.result,progress:RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}})})();crate::RetainedWorkOutcome{result,work}}
  fn begin_close(&mut self){}
  fn close_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
- fn close_step(&mut self,_:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Ok(RetainedCloneStep::Complete(Default::default()))}
+ fn close_step(&mut self,_:RetainedCloneGrant)->crate::RetainedWorkOutcome{crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
  fn terminal_is_empty(&self)->bool{true}
 }
 macro_rules! inline{($($ty:ty),*)=>{$(impl RetainedEquality for $ty{
@@ -52,10 +52,10 @@ impl RetainedEquality for String{
 }
 impl RetainedEqualityCursor<String> for RetainedStringEquality{
  fn demand(&self,left:&String,right:&String,body:usize)->Result<RetirementDemand,ValueError>{self.cursor.demand(left.as_bytes(),right.as_bytes(),body)}
- fn advance(&mut self,left:&String,right:&String,g:RetainedCloneGrant)->Result<RetainedEqualityStep,ValueError>{let step=self.cursor.advance(left.as_bytes(),right.as_bytes(),g)?;Ok(RetainedEqualityStep{equal:self.cursor.equal(),progress:step.progress()})}
+ fn advance(&mut self,left:&String,right:&String,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedEqualityStep>{let turn=self.cursor.advance(left.as_bytes(),right.as_bytes(),g);crate::RetainedWorkOutcome{work:turn.work,result:turn.result.map(|step|RetainedEqualityStep{equal:self.cursor.equal(),progress:step.progress()})}}
  fn begin_close(&mut self){}
  fn close_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
- fn close_step(&mut self,_:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Ok(RetainedCloneStep::Complete(Default::default()))}
+ fn close_step(&mut self,_:RetainedCloneGrant)->crate::RetainedWorkOutcome{crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
  fn terminal_is_empty(&self)->bool{true}
 }
 
@@ -68,12 +68,25 @@ impl<T:RetainedEquality> RetainedEqualityOwner<T>{
  pub fn verify(&self,left:RetainedCloneRef<'_,T>,right:RetainedCloneRef<'_,T>)->Result<(),ValueError>{left.check_binding(&self.left)?;right.check_binding(&self.right)?;Ok(())}
  /// ✅️ Inverse preparation must retain the exact original right-side source.
  pub fn verify_original(&self,right:RetainedCloneRef<'_,T>)->Result<(),ValueError>{right.check_binding(&self.right)?;Ok(())}
- fn fixed()->usize{size_of::<Option<RetainedCloneBinding>>()*2+size_of::<Option<bool>>()+size_of::<usize>()*2}
+ fn fixed()->usize{0}
  pub fn demand(&self,left:RetainedCloneRef<'_,T>,right:RetainedCloneRef<'_,T>,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.result.is_some(){return Err(invalid("original typed comparison is closing or settled"));}left.check_binding(&self.left)?;right.check_binding(&self.right)?;if self.left.is_none(){return Ok(scalar(left.binding_copy_bytes()));}if self.right.is_none(){return Ok(scalar(right.binding_copy_bytes()));}let mut d=self.cursor.demand(left.get(),right.get(),body.saturating_sub(Self::fixed()))?;d.copy_bytes+=Self::fixed();d.depth+=1;Ok(d)}
- pub fn advance(&mut self,left:RetainedCloneRef<'_,T>,right:RetainedCloneRef<'_,T>,g:RetainedCloneGrant)->Result<RetainedEqualityStep,ValueError>{let d=self.demand(left,right,g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedEqualityStep{equal:None,progress:Default::default()});}if let Some(p)=left.bind(&mut self.left,g)?{return Ok(RetainedEqualityStep{equal:None,progress:p});}if let Some(p)=right.bind(&mut self.right,g)?{return Ok(RetainedEqualityStep{equal:None,progress:p});}let mut step=self.cursor.advance(left.get(),right.get(),RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-Self::fixed(),maximum_depth:g.maximum_depth-1,..g})?;step.progress.copied_bytes+=Self::fixed();self.result=step.equal;Ok(step)}
+ pub fn advance(&mut self,left:RetainedCloneRef<'_,T>,right:RetainedCloneRef<'_,T>,body:usize,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedEqualityStep>{let mut work=0;let result=(||{
+  if self.closing{return Err(invalid("original typed comparison is closing"))}self.verify(left,right)?;if self.result.is_some(){return Ok(RetainedEqualityStep{equal:self.result,progress:Default::default()})}
+  let d=self.demand(left,right,body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedEqualityStep{equal:None,progress:Default::default()})}
+  if self.left.is_none(){let turn=left.bind(&mut self.left,g);work=turn.work;return turn.result.map(|p|RetainedEqualityStep{equal:None,progress:p.unwrap_or_default()})}
+  if self.right.is_none(){let turn=right.bind(&mut self.right,g);work=turn.work;return turn.result.map(|p|RetainedEqualityStep{equal:None,progress:p.unwrap_or_default()})}
+  let turn=self.cursor.advance(left.get(),right.get(),RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes.min(body)-Self::fixed(),maximum_depth:g.maximum_depth-1,..g});work=turn.work;let mut step=turn.result?;step.progress.copied_bytes+=Self::fixed();self.result=step.equal;Ok(step)
+ })();crate::RetainedWorkOutcome{result,work}}
+
  pub fn begin_close(&mut self){self.closing=true;self.cursor.begin_close();}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid("original typed comparison close has not begun"));}if !self.cursor.terminal_is_empty(){return self.cursor.close_demand(body);}RetainedCloneBinding::close_demand(if self.right.is_some(){&self.right}else{&self.left},body)}
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()));}if !self.cursor.terminal_is_empty(){return self.cursor.close_step(g).map(|step|RetainedCloneStep::Progress(step.progress()));}let step=RetainedCloneBinding::close_one(if self.right.is_some(){&mut self.right}else{&mut self.left},g)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})}
+ pub fn close_step(&mut self,g:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
+  let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+  if !self.cursor.terminal_is_empty(){let turn=self.cursor.close_step(g);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()))}
+  let turn=RetainedCloneBinding::close_one(if self.right.is_some(){&mut self.right}else{&mut self.left},g);work=turn.work;let step=turn.result?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+ })();crate::RetainedWorkOutcome{result,work}}
+
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.cursor.terminal_is_empty()&&self.left.is_none()&&self.right.is_none()}
 }
 impl<T:RetainedEquality> Drop for RetainedEqualityOwner<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.cursor.terminal_is_empty()&&self.left.is_none()&&self.right.is_none(),"original typed equality retains source/frontier custody");}}
@@ -82,14 +95,19 @@ impl<T:RetainedEquality> Drop for RetainedEqualityOwner<T>{fn drop(&mut self){as
 #[path="🎚️record/🦀️.rs"] pub mod record;
 pub use record::{RetainedEqualityFields,RetainedRecordEquality};
 /// 🏗️ Allocates precisely the admitted typed cursor body and reports allocation refusal before moving it.
-pub fn equality_box<T>(value:T)->Result<Box<T>,ValueError>{
- let layout=std::alloc::Layout::new::<T>();
- if layout.size()==0{return Ok(Box::new(value));}
+pub fn equality_box<T>(value:T,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(Box<T>,RetainedCloneProgress)>>{
+ let layout=std::alloc::Layout::new::<T>();let d=RetirementDemand{capacity_bytes:layout.size(),depth:1,..Default::default()};
+ if !retained_clone_grant_admits(grant,d){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}
+ if layout.size()==0{return crate::RetainedWorkOutcome{result:Ok(Some((Box::new(value),RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1}}
  let pointer=unsafe{std::alloc::alloc(layout)} as *mut T;
- if pointer.is_null(){return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"typed equality cursor allocation refused"));}
- unsafe{pointer.write(value);Ok(Box::from_raw(pointer))}
+ if pointer.is_null(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"typed equality cursor allocation refused")),work:1}}
+ unsafe{pointer.write(value);crate::RetainedWorkOutcome{result:Ok(Some((Box::from_raw(pointer),RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()}))),work:1}}
 }
 
 #[cfg(test)] #[path="🧪️tests/🦀️.rs"] mod tests;
 
 #[path="🤝️tuple/🦀️.rs"] mod tuple;
+
+#[cfg(test)]
+#[path="🧪️tests/actual.rs"]
+mod actual_work_tests;

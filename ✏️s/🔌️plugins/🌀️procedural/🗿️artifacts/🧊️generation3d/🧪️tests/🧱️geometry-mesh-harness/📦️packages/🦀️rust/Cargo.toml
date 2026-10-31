@@ -20,7 +20,7 @@ doctest = false
 semio-framework-3d = { workspace = true }
 semio-framework-io-base64 = { path = "../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
+semio-s-artifact-procedural-3d-geometry-compute = { workspace = true, features = ["funded-turns"] }
 semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-oracle-support = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-value = { workspace = true }

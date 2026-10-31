@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "kind": "original-job-continuation-return",
+  "source": {
+    "items": 1000000,
+    "fuel": 1000000,
+    "deadlineUs": 1000000,
+    "copyBytes": 4194304,
+    "capacityBytes": 4194304,
+    "releaseBytes": 8388608,
+    "depth": 128
+  },
+  "callbackQuantum": {
+    "items": 1,
+    "fuel": 1
+  },
+  "returnClaim": {
+    "captureItems": 1,
+    "captureFuel": 1,
+    "receiveItems": 1,
+    "receiveFuel": 1,
+    "copyBytes": 0,
+    "capacityBytes": 0,
+    "releaseBytes": 0,
+    "depth": 1
+  },
+  "claimControl": {
+    "items": 1,
+    "fuel": 1
+  },
+  "capture": {
+    "items": 1,
+    "fuel": 1
+  },
+  "receive": {
+    "items": 1,
+    "fuel": 1
+  },
+  "insertOneCause": {
+    "items": 1,
+    "fuel": 1
+  },
+  "invariants": [
+    "spent+held<=original-source",
+    "current-semantic-view-excludes-held",
+    "body-quantum-never-decremented-for-return",
+    "held-credit-spent-once-or-released-unspent",
+    "no-receive-allocation",
+    "returned-native-and-final-qualification-independent",
+    "no-persistent-producer-return-field",
+    "continuation-is-not-terminal-fault",
+    "same-source-close-before-loan-return"
+  ],
+  "cases": [
+    {
+      "id": "quantum-one-exhausted-child",
+      "bodyItems": 1,
+      "bodyFuel": 1,
+      "bodyNative": true,
+      "qualification": false,
+      "expect": "captured-and-received-from-held-original-credit"
+    },
+    {
+      "id": "readonly-native-zero-child",
+      "bodyItems": 0,
+      "bodyFuel": 0,
+      "bodyNative": true,
+      "qualification": false,
+      "expect": "capture-and-receive-cpu-independent-of-child"
+    },
+    {
+      "id": "dual-native-qualification",
+      "bodyItems": 1,
+      "bodyFuel": 1,
+      "bodyNative": true,
+      "qualification": true,
+      "expect": "both-complete-trees-owned"
+    },
+    {
+      "id": "denied-claim",
+      "bodyItems": 0,
+      "bodyFuel": 0,
+      "bodyNative": false,
+      "qualification": false,
+      "expect": "no-body-no-hold-no-slot-mutation"
+    },
+    {
+      "id": "denied-insertion",
+      "bodyItems": 1,
+      "bodyFuel": 1,
+      "bodyNative": true,
+      "qualification": false,
+      "expect": "same-occupied-return-owner"
+    },
+    {
+      "id": "foreign-receiver",
+      "bodyItems": 1,
+      "bodyFuel": 1,
+      "bodyNative": true,
+      "qualification": false,
+      "expect": "same-owner-returned-no-foreign-slot-mutation"
+    },
+    {
+      "id": "invalid-body-context",
+      "bodyItems": 0,
+      "bodyFuel": 0,
+      "bodyNative": true,
+      "qualification": true,
+      "expect": "original-claim-receives-quarantined-owner"
+    },
+    {
+      "id": "cancel-after-body",
+      "bodyItems": 1,
+      "bodyFuel": 1,
+      "bodyNative": true,
+      "qualification": false,
+      "expect": "receive-original-claim-then-paid-close"
+    },
+    {
+      "id": "normal-copy-success",
+      "bodyItems": 1,
+      "bodyFuel": 1,
+      "bodyNative": false,
+      "qualification": false,
+      "expect": "ordinary-success-unchanged-release-unused-capture-hold"
+    },
+    {
+      "id": "same-source-parent-close",
+      "bodyItems": 1,
+      "bodyFuel": 1,
+      "bodyNative": true,
+      "qualification": true,
+      "expect": "all-causes-frame-source-loan-closed"
+    }
+  ]
+}

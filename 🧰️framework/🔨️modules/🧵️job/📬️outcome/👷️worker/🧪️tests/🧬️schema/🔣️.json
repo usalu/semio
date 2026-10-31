@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operation",
+    "generation",
+    "fault",
+    "stock",
+    "quantum",
+    "maximumSetupTurns",
+    "maximumCloseTurns",
+    "phases",
+    "sameLedger",
+    "foreignEffects",
+    "deniedEffects",
+    "cachedWork",
+    "terminalDropHeap"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operation": {
+      "const": 7544
+    },
+    "generation": {
+      "const": 4
+    },
+    "fault": {
+      "const": "job-session.terminal-fault"
+    },
+    "stock": {
+      "const": {
+        "items": 4096,
+        "copyBytes": 1048576,
+        "capacityBytes": 1048576,
+        "releaseBytes": 1048576,
+        "depth": 64,
+        "fuel": 16384,
+        "deadlineUs": 1000000
+      }
+    },
+    "quantum": {
+      "const": {
+        "items": 1,
+        "fuel": 1
+      }
+    },
+    "maximumSetupTurns": {
+      "const": 512
+    },
+    "maximumCloseTurns": {
+      "const": 512
+    },
+    "phases": {
+      "const": [
+        "actual-source-return-origin",
+        "boxed-fault-header",
+        "phased-bindings",
+        "actual-source-ledger-alias",
+        "actual-source-page-reservation",
+        "fallible-page-backing",
+        "same-page-publication",
+        "fault-byte-copy",
+        "sealed-fault",
+        "paid-native-handoff"
+      ]
+    },
+    "sameLedger": {
+      "const": true
+    },
+    "foreignEffects": {
+      "const": 0
+    },
+    "deniedEffects": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "terminalDropHeap": {
+      "const": [
+        0,
+        0
+      ]
+    }
+  }
+}

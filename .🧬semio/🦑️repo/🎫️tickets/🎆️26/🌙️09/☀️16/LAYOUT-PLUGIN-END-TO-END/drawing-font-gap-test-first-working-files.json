@@ -1,0 +1,23 @@
+{
+  "state": "schema-and-five-owning-laws-authored-before-domain-owner-body",
+  "runtimeExecuted": false,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🎟️work/🧬️schema/🔣️.json",
+      "bytes": 2134,
+      "sha256": "bab84c61222dfce86ef3459988bd557f01c253ac4fa1ad1057a0ea1e05f4600d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 1213,
+      "sha256": "e4867f4b3ca78ca62359616177b36cad5883b9eb545f29314bf8a4a5cb83e62e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🎟️work/🧪️tests/🟦️.ts",
+      "bytes": 9793,
+      "sha256": "7d0458a6a402fd64f62587c32ba82acbf427b678548de6b4d575b739c4032922"
+    }
+  ],
+  "existingGlyphCorpusAndLawsUnchanged": true,
+  "noNativePhysicalWidthClaim": true
+}

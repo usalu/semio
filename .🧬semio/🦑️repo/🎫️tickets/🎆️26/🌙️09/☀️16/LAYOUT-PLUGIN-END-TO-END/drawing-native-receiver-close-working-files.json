@@ -1,0 +1,60 @@
+{
+  "files": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83e\udea1\ufe0ffield/\ud83e\udd80\ufe0f.rs",
+      "before": "9c5c3507515a52d4d13508bf31b0240a7a8129a28e1f843458fe7e7bae6f6a21",
+      "after": "497361546f5183539800d8862452c05b9c7d7634acaa4467235da2431f1b12b3"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83e\uddf3\ufe0foriginal/\ud83e\udd80\ufe0f.rs",
+      "before": "09349ccef21894d3a9cd82696871b707a08cea5d8d5652ec5b2ff391e42bb299",
+      "after": "a9c924e0a0db12388c2bb5388b01084861df085b9351bd9c7e58c4349224c208"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83d\udccb\ufe0flist/\ud83e\udd80\ufe0f.rs",
+      "before": "1faedd3f67e5ed1ab762c9f461b2c1a26d416e791136e79b0c97be74b98b9352",
+      "after": "5d75783c9754ede4463b2a3bf8a1ba558aa629c95a2e7807ab3e6c5b4c79034b"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83d\udd04\ufe0fmap/\ud83e\udd80\ufe0f.rs",
+      "before": "cdd4114e4a8d4cdd2800de6940e5cca7016663c5878be00a69a20d6991d778b7",
+      "after": "6cdd9e3c26a424e57d6314aa623927ce76f6403d3e4e52c65f458ed3bf30fff7"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83c\udf33\ufe0fvalue/\ud83e\udd80\ufe0f.rs",
+      "before": "d24fb46db7ea2541d928d940f738fdd17bbecc660764cc1fab10c83e7b395f72",
+      "after": "48b677722f31ce7446f2d54188d3f3f236a96d0253d129dde3e63818584f93e9"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83c\udf33\ufe0fvalue/\ud83d\udc65\ufe0ftuple/\ud83e\udd80\ufe0f.rs",
+      "before": "dc144b16783ed7e68e6ad99e2dc777509cdb748ca56250b72fd43f9236f75acb",
+      "after": "a7224ae6dca109c98c31254b51c1cf31f75a82d5d99317d30fb2c53099d5c7c2"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83c\udf33\ufe0fvalue/\ud83e\uddf1\ufe0fbulk/\ud83e\udd80\ufe0f.rs",
+      "before": "4a2a2fccdffffb198d97877b4e5f902f2386054cc4bdfc9fb5f0db6532a7f3e7",
+      "after": "3520c0dcec668404fe05d09bfd851c83232df6fd13db95961e579bf146ed3edd"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83d\udd17\ufe0fsealed-shared-receiver/\ud83e\udd80\ufe0f.rs",
+      "before": "5aa2a167f64c39b791f5dc09f4deafc756ce7538f35663290a0edfb347b37136",
+      "after": "5bbca2d03c201602dd89c8e7d0c15e59fe742e713aade756bc6d77777c8beaa9"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83e\uddfa\ufe0fset/\ud83e\udd80\ufe0f.rs",
+      "before": "bb0eda8ff340006252c93db7732cc75f5bd3dd5b09d679bda6c796a9e8f45062",
+      "after": "93775e25de9846db76368361015c0f9e2d2fc50ad3bdbdc3510947272654df23"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83d\uddc2\ufe0fmap/\ud83e\udd80\ufe0f.rs",
+      "before": "a768ef971225ba004d79521c6a5a5bdf79340215dc9049da69b3dfcd7951a212",
+      "after": "19c6373d1acf0813fd27523f91185ebb274899c9bbdb318fa225160e8bc0ee77"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83e\udde9\ufe0frecord/\ud83e\uddf3\ufe0freceiver/\ud83e\udd80\ufe0f.rs",
+      "before": "e522fdab01cd25d03b8ef5e186a8b0a92bc0c981b43975338b17d94f88561ebf",
+      "after": "103729b391a65cce9cfab9595967cceb85c17635e0d83e1a818e912872d63585"
+    }
+  ],
+  "status": "Authored full child close outcome mapping; normal producer counterparts still migrating. Not compiled."
+}

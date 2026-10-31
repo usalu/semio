@@ -66,18 +66,20 @@ pub type JsonParseCursor=JsonGrammarCursor<Value>;
 /// 🖱️ One retained grammar moves admitted semantic cells directly into its declared first-party output.
 pub struct JsonGrammarCursor<V:JsonParsedValue> {
     #[doc(hidden)] pub position: usize, validated_position:usize, #[doc(hidden)] pub limits:JsonReadLimits, #[doc(hidden)] pub policy: JsonMemberPolicy, #[doc(hidden)] pub frames: JsonCandidates<JsonFrame<V>>, #[doc(hidden)] pub lexeme: Option<JsonLexeme>,
-    #[doc(hidden)] pub pending: Option<V>, #[doc(hidden)] pub result: Option<V>, retired: JsonCandidates<V>, obsolete:Option<V>, pub(super) complete: bool, pub(super) normal_step_progress:RetainedCloneProgress,
+    #[doc(hidden)] pub pending: Option<V>, #[doc(hidden)] pub result: Option<V>, retired: JsonCandidates<V>, obsolete:Option<V>, pub(super) complete: bool, pub(super) normal_step_progress:RetainedCloneProgress, normal_step_work:u64,
 }
 
 impl<V:JsonParsedValue> JsonGrammarCursor<V> {
     /// 🌱️ Starts parsing without copying, scanning, or allocating for the source.
-    pub fn new(policy: JsonMemberPolicy) -> Self { Self { position:0, validated_position:0, limits:JsonReadLimits{maximum_bytes:u64::MAX,maximum_allocation_bytes:usize::MAX,maximum_depth:MAX_DEPTH as usize,maximum_items:u64::MAX}, policy, frames:Default::default(), lexeme:None, pending:None, result:None, retired:Default::default(),obsolete:None,complete:false,normal_step_progress:Default::default() } }
+    pub fn new(policy: JsonMemberPolicy) -> Self { Self { position:0, validated_position:0, limits:JsonReadLimits{maximum_bytes:u64::MAX,maximum_allocation_bytes:usize::MAX,maximum_depth:MAX_DEPTH as usize,maximum_items:u64::MAX}, policy, frames:Default::default(), lexeme:None, pending:None, result:None, retired:Default::default(),obsolete:None,complete:false,normal_step_progress:Default::default(),normal_step_work:0 } }
     /// 📍️ Returns the measured source byte offset.
     pub fn position(&self) -> usize { self.position }
     /// 🧭️ Identifies the existing grammar or physical candidate frontier.
     pub fn phase(&self)->&'static str {match &self.lexeme {Some(JsonLexeme::String(scan))=>if scan.writing {"materialize-string"}else {"measure-string"},Some(JsonLexeme::Number(_))=>"number",None=>match self.frames.last(){Some(frame) if frame.state==8=>if frame.object {"materialize-object"}else {"materialize-array"},Some(frame)=>if frame.object {"collect-object"}else {"collect-array"},None=>"grammar"}}}
     /// ⏱️ Advances admitted grammar transitions under this operation's cumulative decode authority.
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_step_progress}
+    /// ⏱️ Actual selected UTF-8 or grammar work remains visible when the operation refuses.
+    pub fn last_turn_work(&self)->u64{self.normal_step_work}
     /// 📏️ Quotes the actual next original semantic or physical frontier before any effect.
     pub fn normal_step_demands<S:JsonReadSource+?Sized>(&self,input:&S)->Result<RetirementDemand,JsonError>{
         if self.validated_position<input.byte_len(){return Ok(RetirementDemand{depth:1,..Default::default()});}
@@ -107,18 +109,21 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
     }
     pub fn step_source<S:JsonReadSource+?Sized>(&mut self,input:&S,maximum_units:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant,known_utf8:bool)->Result<Option<V>,JsonError>{
         self.normal_step_progress=Default::default();
+        self.normal_step_work=0;
         let result=(||{
         for _ in 0..maximum_units{
             let remaining=normal_remaining(grant,self.normal_step_progress)?;let demand=self.normal_step_demands(input)?;
             if !normal_permit(demand,remaining)?{break;}
             control.checkpoint()?;
-            if self.complete{return Ok(self.result.take());}
+            if self.complete{if self.result.is_some(){let work=self.normal_step_work.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON grammar work counter overflow"))?;self.normal_step_progress=self.normal_step_progress.checked_add(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.normal_step_work=work;}return Ok(self.result.take());}
             control.admit_turn_capacity(remaining.maximum_capacity_bytes)?;
+            let next_work=self.normal_step_work.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON grammar work counter overflow"))?;
             let mut receipt=RetainedCloneProgress{copied_items:1,..Default::default()};
             let operation_result=(||{
                 if self.validated_position<input.byte_len(){if known_utf8{self.validated_position=input.byte_len();}else{let character=borrowed_read_source::character(input,self.validated_position)?;self.validated_position+=character.len_utf8();}Ok(())}
                 else{control.scoped_maximum(self.limits.maximum_allocation_bytes,|control|self.advance(input,control,remaining,&mut receipt))}
             })();
+            self.normal_step_work=next_work;
             self.normal_step_progress=self.normal_step_progress.checked_add(receipt)?;
             operation_result?;
             normal_remaining(grant,self.normal_step_progress)?;
@@ -308,10 +313,10 @@ impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::re
 
 fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep;
-        if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.released{return RetirementStep::Complete;}
+        if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.released{return RetirementStep::Complete(0);}
         if let Some(value)=self.values.next_back(){return RetirementStep::Child(value.retirement());}
         if self.remaining>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}
-        let bytes=std::mem::take(&mut self.remaining);unsafe{std::mem::ManuallyDrop::drop(&mut self.values)};self.released=true;if bytes==0{RetirementStep::Complete}else{RetirementStep::Bytes(bytes)}
+        let bytes=std::mem::take(&mut self.remaining);unsafe{std::mem::ManuallyDrop::drop(&mut self.values)};self.released=true;if bytes==0{RetirementStep::Complete(1)}else{RetirementStep::Bytes(bytes)}
     }
     fn terminal_is_empty(&self)->bool{self.released}
     fn next_close_byte_demand(&self)->Option<usize>{Some(if !self.released&&self.values.len()==0{self.remaining}else{0})}
@@ -341,7 +346,7 @@ impl JsonCompletedFrameRetirement {
 impl semio_framework_value::retirement::RetirementCursor for JsonCompletedFrameRetirement {
         fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{release_bytes:self.release_demand(),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
 
-fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.phase==4{return RetirementStep::Complete;}let bytes=self.release_demand();if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}match self.phase{0=>drop(std::mem::replace(&mut self.frame.values,JsonProjectionIterator::new(Vec::new()))),1=>drop(std::mem::replace(&mut self.frame.entries,JsonProjectionIterator::new(Vec::new()))),2=>drop(std::mem::take(&mut self.frame.array)),3=>drop(std::mem::take(&mut self.frame.object)),_=>unreachable!()}self.phase+=1;if bytes==0{RetirementStep::Advanced}else{RetirementStep::Bytes(bytes)}}
+fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}if self.phase==4{return RetirementStep::Complete(0);}let bytes=self.release_demand();if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}match self.phase{0=>drop(std::mem::replace(&mut self.frame.values,JsonProjectionIterator::new(Vec::new()))),1=>drop(std::mem::replace(&mut self.frame.entries,JsonProjectionIterator::new(Vec::new()))),2=>drop(std::mem::take(&mut self.frame.array)),3=>drop(std::mem::take(&mut self.frame.object)),_=>unreachable!()}self.phase+=1;if bytes==0{RetirementStep::Advanced}else{RetirementStep::Bytes(bytes)}}
     fn terminal_is_empty(&self)->bool{self.phase==4}
     fn next_close_byte_demand(&self)->Option<usize>{Some(self.release_demand())}
     fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
@@ -384,7 +389,7 @@ impl JsonValueProjection {
             let mut released_bytes=0;let value=if let Some(retirement)=self.retirement.as_mut(){
                 use semio_framework_value::retirement::{RetirementCursor,RetirementStep};
                 if retirement.terminal_is_empty(){self.retirement=None;}
-                else{match retirement.close_step(remaining){RetirementStep::Failure(error)=>return Err(error),RetirementStep::Bytes(bytes)=>released_bytes=bytes,RetirementStep::Progress(progress)=>released_bytes=progress.released_bytes,RetirementStep::BudgetExhausted=>break,_=>{}}}
+                else{match retirement.close_step(remaining){RetirementStep::Failure(error,_)=>return Err(error),RetirementStep::Bytes(bytes)=>released_bytes=bytes,RetirementStep::Progress(progress,_)=>released_bytes=progress.released_bytes,RetirementStep::BudgetExhausted=>break,_=>{}}}
                 None
             }else{self.advance(1,maximum_bytes,control)?};
             self.normal_step_progress=self.normal_step_progress.checked_add(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:control.owned_bytes()-before,released_bytes})?;normal_remaining(grant,self.normal_step_progress)?;
@@ -429,3 +434,7 @@ impl semio_framework_value::retirement::RetireOwned for JsonValueProjection {
     fn controlled_retirement_supported()->bool{true}
 }
 //#endregion 🔖️Parser
+
+#[cfg(test)]
+#[path="🎟️work/🧪️tests/🦀️.rs"]
+mod actual_work_tests;

@@ -57,6 +57,12 @@ mod normal_refusal_receipt_tests;
 #[path = "../../📥️decode/🔣️string/📦️bytes/🧪️tests/🦀️.rs"]
 mod original_string_byte_tests;
 
+#[path = "📥️receiving/🦀️.rs"]
+mod original_receiving_tests;
+
+#[path = "🧮️owned-bytes/🦀️.rs"]
+mod owned_bytes_laws;
+
 
 #[path = "🧵️operation/🦀️.rs"]
 pub mod native_operation;

@@ -1,0 +1,15 @@
+{
+  "status": "Source-only actual SVG product expansion of all original fourteen rows; original geometry checks retained",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎨️corpus/corpus.test.ts",
+      "beforeSha256": "dfe51ddb1073831131dd6c0eb798cd1c070f94d4906e532d7563339b8507e8f4",
+      "sha256": "7b9e3a2fcd251487471b7f6a7c3782d3a79059002eb96a24212278dda95d424b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🔮️oracle/🟦️.ts",
+      "beforeSha256": "a8f424c1e7b6704af9f08cfc278bcdefca0bd5ab6b0a002099ebe3e2468196fb",
+      "sha256": "81938be90e5c21c72bfd3d823b82358a1a8d78660e825c4adf4323f48bbc44d4"
+    }
+  ]
+}

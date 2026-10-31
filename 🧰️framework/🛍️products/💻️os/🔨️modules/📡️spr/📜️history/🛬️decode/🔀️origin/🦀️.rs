@@ -33,14 +33,14 @@ impl RetainedHistoryOriginPartial{
  fn child_close(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   let d=self.child_demands(g.maximum_copy_bytes)?;if !permits(g,d){return Ok(Default::default())}
   let child=self.retiring.as_mut().unwrap();if child.terminal_is_empty(){drop(self.retiring.take());return Ok(RetainedCloneProgress{released_bytes:d.release_bytes,..metadata()})}
-  let nested=RetainedCloneGrant{maximum_depth:g.maximum_depth-2,..g};let result=child.close_step(nested);
+  let nested=RetainedCloneGrant{maximum_depth:g.maximum_depth-2,..g};let result=child.close_step(nested).result;
   let p=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};if !p.fits(nested){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original origin child exceeded its supplied grant").with_retained_progress(p))}result.map(|_|p)
  }
  fn discard_demands(&self,index:usize)->RetirementDemand{RetirementDemand{capacity_bytes:if self.cells[index].is_some(){owned_retirement_birth_bytes::<DslValue>()}else{0},depth:2,..Default::default()}}
  fn discard(&mut self,index:usize,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   let d=self.discard_demands(index);if !permits(g,d){return Ok(Default::default())}
   let original=self.cells[index].take().unwrap();let nested=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};
-  match admit_owned_retirement(original,nested){Ok((owner,p))=>{*self.retiring=Some(owner);Ok(p)},Err((error,original))=>{self.cells[index]=Some(original);Err(error)}}
+  match admit_owned_retirement(original,nested).result{Ok((owner,p))=>{*self.retiring=Some(owner);Ok(p)},Err((error,original))=>{self.cells[index]=Some(original);Err(error)}}
  }
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.retiring.is_some(){return self.child_demands(body)}

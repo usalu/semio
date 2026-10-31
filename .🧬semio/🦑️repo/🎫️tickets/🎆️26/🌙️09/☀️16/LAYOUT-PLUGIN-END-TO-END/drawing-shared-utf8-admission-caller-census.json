@@ -1,0 +1,217 @@
+{
+  "bounds": {
+    "files": 15000,
+    "bytes": 268435456
+  },
+  "actual": {
+    "files": 9023,
+    "bytes": 97973593
+  },
+  "callers": [
+    {
+      "path": "🧰️framework/🔨️modules/🛠️tool-machine/🫧️scrub/🧵️original/🦀️.rs",
+      "line": 77,
+      "text": "   if owners.key.is_none(){let mut d=semio_framework_value::SharedUtf8::admission_demand();let overhead=2*size_of::<String>()+size_of::<Option<semio_framework_value::SharedUtf8>>();d.copy_bytes+=overhead;if !funds(cx,d){return Ok(false)}let window=std::mem::take(request.window_mut());match semio_framework_value::SharedUtf8::admit(window,RetainedCloneGrant{maximum_copy_bytes:cx.retained_grant().maximum_copy_bytes-overhead,..cx.retained_grant()}){Ok((key,mut p))=>{owners.key=Some(key);p.copied_bytes+=overhead;paid(cx,p)?},Err((error,window))=>{*request.window_mut()=window;return Err(error.into())}}return Ok(false)}"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/🦀️.rs",
+      "line": 86,
+      "text": "   if owners.key.is_none(){let overhead=2*size_of::<String>()+size_of::<Option<SharedUtf8>>();let request=owners.request.as_mut().unwrap();let window=std::mem::take(&mut request.window);match SharedUtf8::admit(window,RetainedCloneGrant{maximum_copy_bytes:cx.retained_grant().maximum_copy_bytes-overhead,..cx.retained_grant()}){Ok((key,mut p))=>{owners.key=Some(key);p.copied_bytes+=overhead;paid(cx,p)?},Err((e,window))=>{request.window=window;return Err(e.into())}}return Ok(false)}"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/🦀️.rs",
+      "line": 132,
+      "text": "        let(owner,mut progress)=semio_framework_value::SharedUtf8::admit(original,grant).unwrap_or_else(|_|unreachable!(\"original actor admission was preflighted\"));"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️shared-utf8/🎟️admission/🧪️tests/🦀️.rs",
+      "line": 6,
+      "text": " let grant=g(left);for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant},RetainedCloneGrant{maximum_capacity_bytes:0,..grant}]{let(turn,heap)=observe(||SharedUtf8::admit(input,denied));assert_eq!(turn.work,0);assert_eq!(heap,(0,0));let(_,returned)=turn.result.unwrap_err();input=returned;assert_eq!(input.as_ptr(),pointer);assert_eq!(serde_json::to_value(&input).unwrap(),f[\"text\"]);}"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️shared-utf8/🎟️admission/🧪️tests/🦀️.rs",
+      "line": 7,
+      "text": " let((turn,attempts),heap)=observe(||refuse(||SharedUtf8::admit(input,g(left))));assert_eq!(attempts,1);assert_eq!(heap,(0,0));assert_eq!(turn.work,1);let(error,returned)=turn.result.unwrap_err();assert_eq!(error.kind,ValueRefusalKind::AllocationFailed);debit(&mut left,&mut fuel,error.retained_progress(),turn.work);input=returned;assert_eq!(input.as_ptr(),pointer);"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️shared-utf8/🎟️admission/🧪️tests/🦀️.rs",
+      "line": 8,
+      "text": " let(turn,heap)=observe(||SharedUtf8::admit(input,g(left)));assert_eq!(turn.work,1);let(owner,p)=turn.result.unwrap();assert_eq!(p.copied_bytes,0);assert_eq!(heap,(p.retained_capacity_bytes,0));debit(&mut left,&mut fuel,p,turn.work);assert_eq!(owner.as_ptr(),pointer);assert_eq!(serde_json::to_value(&owner).unwrap(),f[\"text\"]);assert_eq!(Arc::strong_count(owner.0.as_ref().unwrap()),1);"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️shared-utf8/🧪️tests/🦀️.rs",
+      "line": 30,
+      "text": "  for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_capacity_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,heap)=observe(||SharedUtf8::admit(original,denied));original=result.err().unwrap().1;assert_eq!(original.as_ptr(),pointer);assert_eq!(heap,(0,0));}"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️shared-utf8/🧪️tests/🦀️.rs",
+      "line": 31,
+      "text": "  let(result,heap)=observe(||SharedUtf8::admit(original,grant));let(owner,receipt)=result.map_err(|(error,_)|error).unwrap();assert!(receipt.fits(grant));assert_eq!(receipt.copied_bytes,0);assert_eq!(owner.as_ptr(),pointer);assert_eq!(heap,(receipt.retained_capacity_bytes,0));let mut births=heap.0;let mut released=0;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/🪪️metadata/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 247,
+      "text": "    let (original_actor, _) = semio_framework_value::SharedUtf8::admit(original_text, original_grant).map_err(|(error, _)| error).unwrap();"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🦀️.rs",
+      "line": 356,
+      "text": "            let (author, progress) = SharedUtf8::admit(unsafe { String::from_utf8_unchecked(bytes) }, grant).map_err(|(error, _)| error)?;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📸️checkpoint/🦀️.rs",
+      "line": 111,
+      "text": "    match SharedUtf8::admit(text,grant){"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🧰️ops/🧾️typed-operations/response.rs",
+      "line": 24,
+      "text": "  4=>{let mut d=semio_framework_value::SharedUtf8::admission_demand();d.copy_bytes=2*size_of::<ActionMeta>()+size_of::<String>();let g=cx.retained_grant();if admit_original_construction(cx,&mut self.metadata,construction(d),|_|{let(actor,_)=semio_framework_value::SharedUtf8::admit(self.actor.take().unwrap(),g).unwrap_or_else(|_|unreachable!(\"funded original actor header\"));Ok((ActionMeta{actor,instance_id:self.instance,view_state:self.view.take()},progress(d)))})?{self.phase=5}},5=>return Ok(true),_=>return Err(invalid().into())}Ok(self.phase==5)}"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🎞️command/📥️custody/🛂️manifest/metadata.rs",
+      "line": 36,
+      "text": "   10=>{let mut d=SharedUtf8::admission_demand();d.copy_bytes=2*size_of::<ActionMeta>()+size_of::<String>();if receive(cx,d,|control,g|{control.charge(d.capacity_bytes)?;let text=self.actor.take().unwrap();let(shared,_)=SharedUtf8::admit(text,g).unwrap_or_else(|_|unreachable!());*self.meta=Some(ActionMeta{actor:shared,instance_id,view_state:self.view.take()});self.phase=11;Ok(unit(d))})?{}},_=>return Err(refusal(\"original metadata receiving phase is invalid\"))"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🎭️actor/🦀️.rs",
+      "line": 17,
+      "text": " let(owner,receipt)=SharedUtf8::admit(text,grant).unwrap_or_else(|_|unreachable!(\"original actor quote admitted the exact SharedUtf8 constructor\"));"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/🧵️settlement/🦀️.rs",
+      "line": 31,
+      "text": "   let metadata_capacity=actor_text.capacity()+encoded.capacity();let(actor_owner,actor_progress)=semio_framework_value::SharedUtf8::admit(actor_text,grant).unwrap_or_else(|_|unreachable!(\"original press actor frame was preadmitted\"));let owners=Owners{window:Some(window),tool:Some(tool),actor:Some(protocol::ActorId(actor_owner)),base:Some(encoded),clock:Some(clock),request:None,leaves:Vec::with_capacity(count),gesture:Some(gesture),previous:emit.transaction.take(),output:None,empty:None};"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/⌨️typing/✍️edit/🦀️.rs",
+      "line": 42,
+      "text": "  admit_original_construction(cx,&mut owners.request,construction(d),|_|{let mut text=String::with_capacity(actor.len());text.push_str(actor);let text_capacity=text.capacity();let(actor_owner,actor_progress)=semio_framework_value::SharedUtf8::admit(text,grant).unwrap_or_else(|_|unreachable!(\"original typing actor frame was preadmitted\"));let actual=text_capacity+actor_progress.retained_capacity_bytes;let(TypingTag{window,tool,buffer},clock)=receive();let request=OriginalTypingEditRequest{window,tool,actor:protocol::ActorId(actor_owner),buffer,leaves:std::mem::take(&mut emit.artifact_mutations),clock};self.backing=backing(emit);self.lengths=lengths(emit);self.captured=true;Ok((request,RetainedCloneProgress{retained_capacity_bytes:actual,..receipt(d)}))})?;Ok(self.captured)"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/🏭️factory/🦀️.rs",
+      "line": 23,
+      "text": " fn advance(&mut self,source:OriginalPluginAppSource<'_>,cx:&mut StepContext<'_>,output:&mut Option<PA>)->Result<bool,OriginalTurnFailure>{if !self.binding.matches(cx)||self.closing||output.is_some(){return Err(invalid(\"original native opening changed caller, destination or lifecycle\").into())}if source.definition.dialect.artifact_kind!=A::DIALECT.artifact_kind||source.definition.dialect.standard!=A::DIALECT.standard.0||source.definition.dialect.subset!=A::DIALECT.subset.0||source.definition.io.artifact_schema!=A::DOCUMENT_SCHEMA{return Err(invalid(\"native declaration does not name its actual typed artifact owner\").into())}let grant=cx.retained_grant();let identity=NativeOpeningIdentity{instance_id:source.instance_id,definition:(source.definition.id.as_ptr()as usize,source.definition.id.len()),actor:(source.actor.as_ptr()as usize,source.actor.len()),registration:source.registration as *const dyn semio_framework_plugin_reactor_app::OriginalPluginAppRegistration as *const () as usize,policy:source.policy};if self.source.is_some_and(|held|held!=identity){return Err(invalid(\"native opening changed its registered definition or actual actor source\").into())}if self.source.is_none(){let d=RetirementDemand{copy_bytes:size_of::<Option<NativeOpeningIdentity>>(),depth:1,..Default::default()};let mut done=None;admit_original_construction(cx,&mut done,construction(d),|_|{self.source=Some(identity);Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;return Ok(false)}if self.actor.is_none()&&self.candidate.is_none()&&self.admission.is_none(){if self.actor_text.is_none(){let d=RetirementDemand{copy_bytes:2*size_of::<String>()+source.actor.len(),capacity_bytes:source.actor.len(),depth:1,..Default::default()};admit_original_construction(cx,&mu"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📥️retained/📦️typed-pack-load/🛬️native/🦀️.rs",
+      "line": 62,
+      "text": "   21=>{let d=semio_framework_value::SharedUtf8::admission_demand();self.paid(cx,d,|this,grant|{let original=this.window_id.take().unwrap();match semio_framework_value::SharedUtf8::admit(original,grant){Ok((address,p))=>{this.candidate.as_mut().unwrap().address=Some(ControlledRetirement::new(address).map_err(|(error,_)|error).expect(\"original Window address controlled close\"));this.phase=WindowConfigPackLoadPhase::Ready;this.stage=22;Ok(p)},Err((error,original))=>{*this.window_id=Some(original);Err(error)}}})?;}"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗄️store-owners/🦀️.rs",
+      "line": 269,
+      "text": "        if self.initialized_window.is_some(){let d=semio_framework_value::SharedUtf8::admission_demand();let grant=cx.retained_grant();let mut admitted=None;semio_framework_job::admit_original_construction(cx,&mut admitted,window_construction(d),|_|{let original=self.initialized_window.take().unwrap();match semio_framework_value::SharedUtf8::admit(original,grant){Ok((address,receipt))=>{self.initialized_address=Some(address);Ok(((),receipt))},Err((error,original))=>{self.initialized_window=Some(original);Err(error)}}})?;return Ok(false);}"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/🪟️retained-window-config/🦀️.rs",
+      "line": 25,
+      "text": "        let mut owner=TypedWindowConfigStoreOwner::<Owner>{direct_ingress:ControlledRetirement::new(DirectIngress{mutations:Vec::new(),allocations:Vec::new(),addresses:Vec::new()}).map_err(|(error,_)|error).unwrap(),partitions:WindowRegistry::new(),partition_close_cursor:0,partition_address_retirement:None,actor:Some(protocol::ActorId(semio_framework_value::SharedUtf8::admit(\"window-actor\".to_owned(),grant).unwrap().0)),actor_retirement:None};"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧪️tests/🪟️retained-window-config/🦀️.rs",
+      "line": 31,
+      "text": "            let(actor,_)=semio_framework_value::SharedUtf8::admit(\"window-actor\".to_owned(),grant).unwrap();"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧾️metadata/🦀️.rs",
+      "line": 86,
+      "text": "   8=>{let d=SharedUtf8::admission_demand();control.charge(d.capacity_bytes)?;let original=self.partial.as_mut().unwrap().author_text.take().unwrap();match SharedUtf8::admit(original,child){Ok((owner,p))=>{self.partial.as_mut().unwrap().author_id=Some(owner);self.phase=9;self.publish(g,p)?;return Ok(RetainedHistoryOpMetaStep::Progress)},Err((error,original))=>{self.partial.as_mut().unwrap().author_text=Some(original);return Err(error.into())}}},"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🧵️edit/🦀️.rs",
+      "line": 51,
+      "text": "   4=>{control.charge(SharedUtf8::admission_demand().capacity_bytes)?;let original=self.partial.as_mut().unwrap().actor_text.take().unwrap();match SharedUtf8::admit(original,child){Ok((actor,p))=>{self.partial.as_mut().unwrap().actor=Some(actor);self.phase=5;self.publish(g,p)?;return Ok(RetainedHistoryEditStep::Progress)},Err((error,original))=>{self.partial.as_mut().unwrap().actor_text=Some(original);return Err(error.into())}}},"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/⚔️conflict/🦀️.rs",
+      "line": 48,
+      "text": "   4=>{control.charge(SharedUtf8::admission_demand().capacity_bytes)?;let original=self.partial.as_mut().unwrap().actor_text.take().unwrap();match SharedUtf8::admit(original,child){Ok((actor,p))=>{self.partial.as_mut().unwrap().pending_actor=Some(actor);self.phase=5;self.publish(g,p)?;return Ok(RetainedHistoryConflictStep::Progress)},Err((error,original))=>{self.partial.as_mut().unwrap().actor_text=Some(original);return Err(error)}}},"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️transition/🦀️.rs",
+      "line": 39,
+      "text": "   4=>{control.charge(SharedUtf8::admission_demand().capacity_bytes)?;let original=self.partial.as_mut().unwrap().actor_text.take().unwrap();match SharedUtf8::admit(original,child){Ok((actor,p))=>{self.partial.as_mut().unwrap().actor=Some(actor);self.phase=5;self.publish(g,p)?;return Ok(RetainedHistoryTransitionStep::Progress)},Err((error,original))=>{self.partial.as_mut().unwrap().actor_text=Some(original);return Err(error)}}},"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 284,
+      "text": "        let (admitted,events)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value::SharedUtf8::admit(actor,setup));"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 30,
+      "text": "    let actor = semio_framework_value::SharedUtf8::admit(fixture()[\"openedActor\"].as_str().unwrap().to_string(), semio_framework_value::testing::physical_test_close_grant()).unwrap_or_else(|(error, _)| panic!(\"original fixture actor: {error}\" )).0;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧰️group-outcome-and-store-fixtures/🦀️.rs",
+      "line": 50,
+      "text": "    let actor = semio_framework_value::SharedUtf8::admit(format!(\"map-owner-{role}\"), semio_framework_value::testing::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!(\"funded original actor: {error}\")).0;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🧰️group-outcome-and-store-fixtures/🦀️.rs",
+      "line": 135,
+      "text": "let actor = semio_framework_value::SharedUtf8::admit(format!(\"map-owner-{ordinal}\"), semio_framework_value::testing::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!(\"funded original actor: {error}\")).0;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/📔️fake-journal-and-map-assembly-fixtures/🦀️.rs",
+      "line": 172,
+      "text": "        semio_framework_value::SharedUtf8::admit(format!(\"map-owner-{ordinal}\"), semio_framework_value::testing::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!(\"funded original actor: {error}\")).0,"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📜️history/💧️hydration/🧪️tests/🔬️unit/🦀️.rs",
+      "line": 271,
+      "text": "    let (admitted,source_allocated,source_released)=semio_framework_trace_memory_testing::observe_backing(||semio_framework_value::SharedUtf8::admit(original_text,grant));"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️prepared/🔗️binding/🧪️tests/🦀️.rs",
+      "line": 7,
+      "text": "    let actor=semio_framework_value::SharedUtf8::admit(\"actor\".to_string(),grant()).unwrap_or_else(|_|panic!(\"funded original actor\")).0;"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/🛬️receiving/🪜️cursor/🦀️.rs",
+      "line": 81,
+      "text": "   Task::SharedActor=>{native.charge(SharedUtf8::admission_demand().capacity_bytes)?;let fields=self.fields.as_mut().unwrap();match SharedUtf8::admit(fields.first.take().unwrap(),grant){Ok((actor,progress))=>{fields.actor=Some(actor);self.depth-=1;return Ok(progress)},Err((error,source))=>{fields.first=Some(source);return Err(error)}}},"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/📥️lifted/🧬️owned-schema/🧵️owned-spr-edit-authority-and-history-decoder/🦀️.rs",
+      "line": 108,
+      "text": "                        match semio_framework_value::SharedUtf8::admit(self.strings[1].take().expect(\"original actor text retained\"),child){"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🪪️actor-identity/🧪️tests/🦀️.rs",
+      "line": 8,
+      "text": "  for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..grant},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,heap)=observe(||SharedUtf8::admit(original,denied));let(_,returned)=result.unwrap_err();assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!((returned.as_ptr(),returned.capacity()),(pointer,original_capacity));original=returned;}"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🪪️actor-identity/🧪️tests/🦀️.rs",
+      "line": 9,
+      "text": "  let((owner,receipt),heap)=observe(||SharedUtf8::admit(original,grant).unwrap());assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));let(mut born,mut released)=(heap.requested_bytes,heap.released_bytes);assert_eq!(owner.as_ptr(),pointer);assert_eq!(owner.as_str(),text);assert_eq!(serde_json::to_value(&owner).unwrap(),row[\"text\"]);"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🖥️native/🎭️actor/🔗️actor-hub-link-and-bootstrap/🦀️.rs",
+      "line": 160,
+      "text": "            let(socket_actor,identity_progress)=semio_framework_value::SharedUtf8::admit(std::mem::take(&mut socket.actor_id),actor_identity_grant).unwrap_or_else(|(error,_)|panic!(\"original pre-admitted socket actor invariant: {error}\"));"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🖥️native/🎭️actor/🔗️actor-hub-link-and-bootstrap/🦀️.rs",
+      "line": 403,
+      "text": "        let(original,receipt)=semio_framework_value::SharedUtf8::admit(actor.to_owned(),self.actor_identity_grant).unwrap_or_else(|(error,_)|panic!(\"original fixture actor admission: {error}\"));add_actor_identity_progress(&mut self.actor_identity_progress,receipt);self.socket_actor = Some(original);"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🖥️native/🎭️actor/🔗️actor-hub-link-and-bootstrap/🦀️.rs",
+      "line": 412,
+      "text": "        let(original,receipt)=semio_framework_value::SharedUtf8::admit(actor.to_owned(),self.actor_identity_grant).unwrap_or_else(|(error,_)|panic!(\"original fixture actor admission: {error}\"));add_actor_identity_progress(&mut self.actor_identity_progress,receipt);self.socket_actor = Some(original);"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🌐️wasm/🎭️actor/🎛️wasm-actor-state-status-and-connect/🦀️.rs",
+      "line": 214,
+      "text": "        let(original_actor,receipt)=semio_framework_value::SharedUtf8::admit(std::mem::take(&mut socket.actor_id),self.actor_identity_grant).unwrap_or_else(|(error,_)|panic!(\"original pre-admitted browser actor invariant: {error}\"));"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🗄️stage/📥️lifted/🗄️durable-group/🧵️binding/🧪️tests/🦀️.rs",
+      "line": 13,
+      "text": "    let actor=semio_framework_value::SharedUtf8::admit(fixture[\"actor\"].as_str().unwrap().to_owned(),grant).unwrap_or_else(|_|panic!(\"funded fixture identity\")).0;"
+    }
+  ]
+}

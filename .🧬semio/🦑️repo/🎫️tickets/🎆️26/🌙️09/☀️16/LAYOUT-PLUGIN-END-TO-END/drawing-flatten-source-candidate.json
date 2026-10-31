@@ -1,0 +1,49 @@
+{
+  "state": "held-root-added-independent-reference-not-compiled",
+  "package": "semio-framework-2d-path-flatten",
+  "workspace": "/Users/ueli/Documents/semio/🧰️framework/Cargo.toml",
+  "manifest": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/📦️packages/🦀️rust/Cargo.toml",
+  "cargoOperands": [
+    "-p",
+    "semio-framework-2d-path-flatten",
+    "--lib"
+  ],
+  "features": [],
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🦀️.rs",
+      "sha256": "c1dd05df92f6360ca9d48a2816033dd9005bf5b45f35b5e666787c8c81e5fae3",
+      "bytes": 14523
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "0572f5c3d6b7a21150250af8453346319edb1cc3ef331280616e2285c9305271",
+      "bytes": 1114
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🦀️.rs",
+      "sha256": "d54a11f8867b1496ae0cf8e190278dbe06d23ad28f95221148d8fdf82cd0b3b1",
+      "bytes": 9425
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🦀️.rs",
+      "sha256": "0d79d307b9897c2b67badecab1f9fd12dfa402a3d99ba9eea1eb8b9e31b6f38a",
+      "bytes": 7431
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/📐️.json",
+      "sha256": "5c80ce222ed49774fe2bbb3089a1fa28bd2861329cbfebb54c4dba6a1c20246d",
+      "bytes": 5616
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🔣️.json",
+      "sha256": "d8951ea13181d8b9c88fff4e4d334f65dab3f0b17f6ce41f61b18586d0ab60b3",
+      "bytes": 3457
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "3411b7d29dba297185e8c2326745375da95224f522658ba04498bb9b97c62ba8",
+      "bytes": 7631
+    }
+  ]
+}

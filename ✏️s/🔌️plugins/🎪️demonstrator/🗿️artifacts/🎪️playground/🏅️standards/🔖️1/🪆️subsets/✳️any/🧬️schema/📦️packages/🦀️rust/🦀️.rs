@@ -1,7 +1,6 @@
 //! 🧬️ schema of `semio-s-artifact-demonstrator-playground` — a path-preserving carve of the artifact root mounts.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -59,6 +58,8 @@ pub mod standards {
                     pub mod binary {
                         #[path = "../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs"]
                         pub mod snapshot;
+                        #[path = "../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+                        pub mod diff;
                         #[path = "."]
                         pub mod mutations {
                             #[path = "../../../🚪️io/💾️binary/🧬️mutations/✒️change-schema/🦀️.rs"]
@@ -69,6 +70,8 @@ pub mod standards {
                     pub mod text {
                         #[path = "../../../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
                         pub mod snapshot;
+                        #[path = "../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+                        pub mod diff;
                         #[path = "."]
                         pub mod mutations {
                             #[path = "../../../🚪️io/📝️text/🧬️mutations/✒️change-schema/🦀️.rs"]

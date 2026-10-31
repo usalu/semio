@@ -92,3 +92,19 @@ The expanded strict compile passed before runtime. The old declared-target sessi
 - ✏️s/🔌️plugins/📏️layout/🧪️tests/🔬️typescript-package-commands/portable-oracles.json
 
 The existing behavior aggregate and source-entry manifest were extended. The temporarily overwritten transfer oracle was restored exactly and has an empty focused git diff.
+
+## Current Recheck After Canonical Typing Net
+
+The current exact previously retained 16-file managed Bun command passed **75 tests, zero failures, 313 assertions**, in 28.21 seconds. The exact expanded strict compiler command passed with **exit 0**. These checks depend on portable TypeScript sources and fixtures, not native compiler output. No production or test source edits were needed.
+
+The first current declared repo --service=off run @semio-tech/layout-js:test -- --level=medium attempt failed before tests with a canonical build-owner identity collision. Its actual diagnostic is retained separately in generated/typescript-declared-recheck.log. Root verified and removed only a stale alias registry row sharing the real repo-cache-retirement owner's root and manifest. This registry correction belongs to root, not this verification packet.
+
+After both direct checks terminated, root authorized one declared-route retry to verify the corrected owner registry and actual target. That retry, session 44520, terminated with exit 1 in owned build source admission before the target's tests. The registry collision was cleared; the new refusal concerns the existing persistent Native image publication. No declared-target pass is claimed. The native request remains under Rust's separate original controller; no native job, activation or cache operation was started here.
+
+The exact direct command strings recovered from this report are retained in typescript-recheck-input.json. Current direct output logs are generated/typescript-portable-recheck.log and generated/typescript-strict-recheck.log. Those are direct managed checks; they are not misrepresented as a declared-target receipt.
+
+### Declared Retry Terminal Evidence
+
+The retry failed in inspectPersistentReceiver at native-build/storage/cleanup/command, reporting Exact canonical persistent Native publication required for .cache/b/d. Its validated receipt described filesystemBytes 8588886016 and maximumPhysicalBytes 8589934592, while the current request expected 38653657088 and 38654705664 respectively. The image schema validation returned no errors and its backing device/inode/size matched the existing receipt; this is a persistent publication/request geometry refusal, not a TypeScript test or typecheck failure.
+
+The bounded diagnostic is retained in generated/typescript-declared-retry.log. No image, cache, receipt, lease or source was changed, and no further duplicate check was started. The native request remains under its original Rust controller. Current verification is therefore: direct portable 75/16 passed and expanded strict compile exit 0; both current declared attempts failed before tests, for separately recorded infrastructure reasons.

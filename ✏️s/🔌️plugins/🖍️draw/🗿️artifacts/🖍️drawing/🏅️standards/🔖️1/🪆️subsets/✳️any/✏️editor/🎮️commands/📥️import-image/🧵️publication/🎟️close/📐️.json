@@ -1,0 +1,23 @@
+{
+  "role": "publication",
+  "turns": [
+    {
+      "case": "denied",
+      "work": 0,
+      "items": 0,
+      "copyBytes": 0
+    },
+    {
+      "case": "clear",
+      "work": 1,
+      "items": 1,
+      "copyBytes": 0
+    },
+    {
+      "case": "cached",
+      "work": 0,
+      "items": 0,
+      "copyBytes": 0
+    }
+  ]
+}

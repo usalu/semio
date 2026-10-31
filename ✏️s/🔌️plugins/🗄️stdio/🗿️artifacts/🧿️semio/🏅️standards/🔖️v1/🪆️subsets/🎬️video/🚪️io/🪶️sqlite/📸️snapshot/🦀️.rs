@@ -10,7 +10,7 @@ mod reconstruction;
 mod semantic;
 /// 🔢️ Formats canonical unsigned timestamp cells in fixed borrowed stack storage.
 fn decimal(mut value:u64,buffer:&mut[u8;20])->&str{let mut at=buffer.len();loop{at-=1;buffer[at]=b'0'+(value%10)as u8;value/=10;if value==0{break}}std::str::from_utf8(&buffer[at..]).expect("decimal ASCII")}
-/// 🎬️ Emits every authored stream and sample cell through one controlled row writer.
+/// 📤️ Emits every authored stream and sample cell through one controlled row writer.
 pub fn visit_rows(snapshot:&SemioVideoSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
 out.insert_key("semio_video_document",1,&[Cell::Text(&snapshot.schema)])?;
 for(ordinal,stream)in snapshot.streams.iter().enumerate(){let id=out.insert("semio_video_stream",&[Cell::Integer(1),Cell::Integer(integer(ordinal)?),Cell::Text(kind(stream.kind)),Cell::Text(&stream.codec),Cell::Integer(i64::from(stream.width)),Cell::Integer(i64::from(stream.height)),Cell::Integer(stream.rate.num),Cell::Integer(stream.rate.den)])?;for(ordinal,sample)in stream.samples.iter().enumerate(){let mut digits=[0u8;20];let pts=decimal(sample.pts,&mut digits);out.insert("semio_video_sample",&[Cell::Integer(id),Cell::Integer(integer(ordinal)?),Cell::Text(pts),Cell::Integer(i64::from(sample.key)),Cell::Blob(&sample.data)])?;}}Ok(())
@@ -18,7 +18,6 @@ for(ordinal,stream)in snapshot.streams.iter().enumerate(){let id=out.insert("sem
 /// 🫳️ Admits all actual typed cells before native forecast or output allocation.
 pub(crate)fn admit_values(snapshot:&SemioVideoSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
 pub(crate)fn admit_layout(limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
-pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
 pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
 fn integer(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|error|ValueError::new(ValueRefusalKind::WorkLimit,error.to_string()))}
 fn identity(row:&SqliteRow,columns:usize)->Result<(),ValueError>{if row.rowid<=0||row.integer(0)?!=row.rowid||row.values.len()!=columns{Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio video row identity or columns"))}else{Ok(())}}
@@ -52,7 +51,7 @@ impl SemioVideoSnapshot {
 semantic::layout(control.limits())?;semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::projection::project_rows_owned(Self::SQLITE_SCHEMA,control,|out|visit_rows(self,out))
 }
 
-    /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
+    /// 🔤️ Restores the owned typed subset inside its independently declared relational composition.
     pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{reconstruction::reconstruct(database,control,declared_schema)}
 }
 

@@ -1,0 +1,32 @@
+{
+  "operation": 99210,
+  "foreignOperation": 99212,
+  "childOperation": 99211,
+  "generation": 7,
+  "work": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "deniedWork": 0,
+  "cachedWork": 0,
+  "copyBytes": 0,
+  "stock": {
+    "items": 10000,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 128,
+    "fuel": 10000,
+    "maximumTurns": 10000
+  }
+}

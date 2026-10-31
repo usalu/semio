@@ -138,6 +138,11 @@ mod tests {
     use super::*;
 
     #[test]
+    fn embedded_resource_equals_the_neutral_json() {
+        declaration::pack_law::assert_catalog_matches_json(ifc4x3_catalog(), include_str!("🔣️.json"));
+    }
+
+    #[test]
     fn official_declarations_and_derived_positions() {
         let catalog = ifc4x3_catalog();
         assert_eq!(catalog.entities.len(), 876);

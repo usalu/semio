@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "stock": [
+    2048,
+    131072,
+    131072,
+    131072,
+    64
+  ],
+  "fuel": 2048,
+  "turn": [
+    1,
+    131072,
+    131072,
+    131072,
+    64
+  ],
+  "cases": [
+    {
+      "name": "ascii",
+      "text": "ab",
+      "expected": "ab"
+    },
+    {
+      "name": "hangul-pair",
+      "text": "가",
+      "expected": "가"
+    },
+    {
+      "name": "hangul-triple",
+      "text": "각",
+      "expected": "각"
+    }
+  ],
+  "rules": {
+    "sameFiniteStock": true,
+    "preparationSemanticZero": true,
+    "sameLedger": true,
+    "fixedHangulHeader": true,
+    "actualCpuIndependent": true,
+    "reference": "system-icu-nfc",
+    "closeReleaseConserved": true
+  }
+}

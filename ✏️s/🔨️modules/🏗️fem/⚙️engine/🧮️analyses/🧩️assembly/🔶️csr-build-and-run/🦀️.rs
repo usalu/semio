@@ -70,40 +70,47 @@ impl AssemblyJob<'_> {
             return NumericalRun::Yield;
         }
         context.consume_fuel(1);
+        if let Some((kind, publication)) = self.publication.as_mut() {
+            let kind = *kind;
+            return match publication.advance(&mut self.desk.lent, context) {
+                Ok(false) => NumericalRun::Yield,
+                Ok(true) => {
+                    self.publication = None;
+                    let Some(payload) = self.desk.lent.take() else { return NumericalRun::Fault };
+                    match kind {
+                        AssemblyPublicationKind::Checkpoint => self.desk.lend_checkpoint(payload, self.state.element_cursor as u64),
+                        AssemblyPublicationKind::Preview => {
+                            self.state.preview_cursor = self.state.element_cursor;
+                            self.desk.lend_preview(payload)
+                        }
+                        AssemblyPublicationKind::Complete => self.desk.lend_complete(payload),
+                    }
+                }
+                Err(_) => NumericalRun::Fault,
+            };
+        }
         if self.state.checkpoint_due {
             self.state.checkpoint_due = false;
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
                 return NumericalRun::Yield;
             }
-            let bytes = self.checkpoint_bytes();
-            return match context.payload_from_bytes(JobPayloadStream::CheckpointState, &bytes) {
-                Ok(state) => self.desk.lend_checkpoint(state, self.state.element_cursor as u64),
-                Err(_) => NumericalRun::Fault,
-            };
+            self.publication = Some((AssemblyPublicationKind::Checkpoint, NumericalBytesPublication::new(JobPayloadStream::CheckpointState, self.checkpoint_bytes())));
+            return NumericalRun::Yield;
         }
         if self.state.preview_due {
             self.state.preview_due = false;
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
                 return NumericalRun::Yield;
             }
-            let bytes = encode_value(&self.preview());
-            return match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
-                Ok(preview) => {
-                    self.state.preview_cursor = self.state.element_cursor;
-                    self.desk.lend_preview(preview)
-                }
-                Err(_) => NumericalRun::Fault,
-            };
+            self.publication = Some((AssemblyPublicationKind::Preview, NumericalBytesPublication::new(JobPayloadStream::Preview, encode_value(&self.preview()))));
+            return NumericalRun::Yield;
         }
         if self.state.stage == AssemblyJobStage::Complete {
             if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) {
                 return NumericalRun::Complete;
             }
-            let bytes = encode_value(&self.preview());
-            return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
-                Ok(output) => self.desk.lend_complete(output),
-                Err(_) => NumericalRun::Fault,
-            };
+            self.publication = Some((AssemblyPublicationKind::Complete, NumericalBytesPublication::new(JobPayloadStream::CommitOutput, encode_value(&self.preview()))));
+            return NumericalRun::Yield;
         }
         match self.state.stage {
             AssemblyJobStage::ElementTriplets => {
@@ -145,21 +152,21 @@ impl AssemblyJob<'_> {
         }
         if self.state.preview_due {
             self.state.preview_due = false;
-            let bytes = encode_value(&self.preview());
-            match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
-                Ok(preview) => {
-                    self.state.preview_cursor = self.state.element_cursor;
-                    self.desk.lend_preview(preview)
-                }
-                Err(_) => NumericalRun::Fault,
-            }
+            self.publication = Some((AssemblyPublicationKind::Preview, NumericalBytesPublication::new(JobPayloadStream::Preview, encode_value(&self.preview()))));
+            NumericalRun::Yield
         } else {
             NumericalRun::Yield
         }
     }
 
     fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
-        self.desk.retirement_demands().transpose()
+        if let Some(demand) = self.desk.retirement_demands() {
+            return demand.map(Some);
+        }
+        if let Some(demand) = self.publication.as_ref().and_then(|(_, publication)| publication.close_demand()) {
+            return demand.map(Some);
+        }
+        Ok(None)
     }
 
     fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
@@ -168,16 +175,8 @@ impl AssemblyJob<'_> {
 }
 
 impl InteractiveJob for AssemblyJob<'_> {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
-        if self.desk.retire_due(cx, self.operation) {
-            self.desk.retire_delivered(cx)?;
-            return Ok(None);
-        }
-        let run = match self.desk.take_pending() {
-            Some(run) => run,
-            None => self.run(cx),
-        };
-        Ok(self.desk.admit(cx, run)?)
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, _: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> {
+        InteractiveJobStep::from_callback(self.step_plain(cx))
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
@@ -200,7 +199,21 @@ impl InteractiveJob for AssemblyJob<'_> {
     fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.depth) }
 
     fn terminal_is_empty(&self) -> bool {
-        self.close_lane > 11 && self.desk.terminal_is_empty()
+        self.close_lane > 11 && self.desk.terminal_is_empty() && self.publication.is_none()
+    }
+}
+
+impl NumericalStep for AssemblyJob<'_> {
+    fn step_plain<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
+        if self.desk.retire_due(cx, self.operation) {
+            self.desk.retire_delivered(cx)?;
+            return Ok(None);
+        }
+        let run = match self.desk.take_pending() {
+            Some(run) => run,
+            None => self.run(cx),
+        };
+        Ok(self.desk.admit(cx, run)?)
     }
 }
 
@@ -215,9 +228,18 @@ impl AssemblyJob<'_> {
         if !numerical_close_gate(grant, frontier) {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
-        let step = match self.desk.close_step(grant) {
-            Some(step) => step?,
-            None => numerical_ladder_turn(self.close_retained_step(grant.maximum_release_bytes)),
+        let step = if let Some(step) = self.desk.close_step(grant) {
+            step?
+        } else if let Some(step) = self.publication.as_mut().and_then(|(_, publication)| publication.close_step(grant)) {
+            let step = step?;
+            if self.publication.as_ref().is_some_and(|(_, publication)| publication.close_demand().is_none()) {
+                self.publication = None;
+            }
+            step
+        } else if self.publication.take().is_some() {
+            InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }
+        } else {
+            numerical_ladder_turn(self.close_retained_step(grant.maximum_release_bytes))
         };
         step.admit(grant, self.terminal_is_empty())
     }

@@ -1,0 +1,58 @@
+{
+  "state": "design-only-no-source-edits",
+  "package": "semio-s-artifact-layout-layout-model-validation-tests",
+  "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/🧪️tests/🦀️.rs",
+  "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/🧪️tests/📦️packages/🦀️rust/Cargo.toml",
+  "workspaceRelative": "../../../../../../../../../..",
+  "existingTests": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/🧪️tests.rs",
+  "existingFixture": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✅️validation/🔣️.json",
+  "removeMountFrom": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/🦀️.rs",
+  "mountExact": "#[cfg(test)]#[path=\"🧪️tests.rs\"]mod tests;",
+  "sourceBeforeSha256": "253dc2033a57e59beaf190c3aa88887a53b998ac59dec234c2b4337a28454e69",
+  "publicImports": [
+    "semio_s_artifact_layout_layout_model::{snapshot,validation}",
+    "semio_s_artifact_layout_layout_model::validation::retained::LayoutValidationCursor",
+    "semio_framework_value::retained_clone::RetainedCloneGrant",
+    "semio_s_artifact_layout_layout_model::validation::graph::*",
+    "semio_s_artifact_layout_layout_model::{Frame,LayoutRect,TextStyleRun,DrawingSourceAddress,LayoutDrawingMember}",
+    "semio_s_artifact_layout_layout_model::drawing_member::source::reference::LAYOUT_DRAWING_REFERENCE_LENDER",
+    "semio_framework_plugin::app::vector_read::ChildVectorReferenceLenderV1"
+  ],
+  "dependencies": [
+    "semio-s-artifact-layout-layout-model",
+    "semio-framework-value",
+    "semio-framework-pack-json",
+    "serde_json",
+    "semio-framework-plugin",
+    "semio-framework-io-ports",
+    "semio-framework-value-testing-allocator"
+  ],
+  "testFunctions": [
+    "neutral_graph_laws_match_the_owned_test_only_oracle",
+    "exact_original_identity_and_cancellation_remain_paired",
+    "virtual_final_thread_predecessor_is_checked_through_the_same_original_graph_program",
+    "actual_parent_member_handles_are_lent_only_after_the_original_quote_is_funded"
+  ],
+  "preserveCurrent17": true,
+  "extractionModules": [
+    {
+      "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/🦀️.rs",
+      "existingTest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/🧪️tests.rs",
+      "rootSha256": "253dc2033a57e59beaf190c3aa88887a53b998ac59dec234c2b4337a28454e69",
+      "testSha256": "ba55ef0642133982677a5d671b753e90dd6c226c0aba8b8bff9160aa88e540b3"
+    },
+    {
+      "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/👁️graph/🦀️.rs",
+      "existingTest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/👁️graph/🧪️tests.rs",
+      "rootSha256": "aecb3594782a3df933997280978cf5da288a87a0415ce56e03ecab5899786b0a",
+      "testSha256": "d79e516e7962e61f1b6894b865211d71b5c0f30a1dd65684c1b585fc5894e494"
+    },
+    {
+      "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/📖️source/🧷️reference/🦀️.rs",
+      "existingTest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/📖️source/🧷️reference/🧪️tests.rs",
+      "rootSha256": "a7871fc6cfd9ed21ea9d563a71561bf8f547856128013a3f0ab5be59529b8f4d",
+      "testSha256": "c71493060be52b1e7bc5c86ebb9a6f593c267e1ad74df65fda20be5ec2666965"
+    }
+  ],
+  "correction": "Retained-only initial estimate superseded: all three model fixture users must move to remove fixture from model cfg(test)."
+}

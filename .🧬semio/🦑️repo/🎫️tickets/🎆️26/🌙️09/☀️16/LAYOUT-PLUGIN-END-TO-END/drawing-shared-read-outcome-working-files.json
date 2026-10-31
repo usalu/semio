@@ -1,0 +1,72 @@
+{
+  "scope": "Exact26 SharedRead Context2 production diagnostics",
+  "state": "source-authored-uncompiled",
+  "runtimeAttempts": 0,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️authority/🦀️.rs",
+      "beforeSha256": "7fd4b7cac4401f6b33daf7796bf3486c81b831d02a8cdc1f152904d8316d0ea4",
+      "sha256": "ab769bc53ba32e1a1cc9b032c9fe037457a1e12f8166a4bc64e8b88660386da5",
+      "bytes": 8123
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️lease/🦀️.rs",
+      "beforeSha256": "152690d9529c78f9b6b20d18f8d263bcda7a3713f9ebaf5b2e1df6ad6d86c233",
+      "sha256": "d70589e71b36ee92a29afc9d22adf09b0baf6e135408c9294a326236b4af65a9",
+      "bytes": 7990
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🦀️.rs",
+      "beforeSha256": "ca3a35173d4f578c0c89c89584e458ba4d76de1214608b64ecbb1f6d1a77fb69",
+      "sha256": "6ad9d744a8ac8afafaef448a33d91d6ce1a610937de7fe8a792e0ab55f02419c",
+      "bytes": 20937
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🧬️clone/🦀️.rs",
+      "beforeSha256": "a48c3b903efcecc87e907c8a259e5da3031c082161f5fbfc89efe591a6e69ed7",
+      "sha256": "a4e8eae5485d5f58a5fdf7960f925bd0f3551ac91d471f1872601f1ee2a4f5c0",
+      "bytes": 4906
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🎟️work/case.json",
+      "beforeSha256": null,
+      "sha256": "488a279e3cb0cf8263816c41558f69f3161b1c21de4b44d3633279c92b5470a1",
+      "bytes": 685
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🎟️work/case.schema.json",
+      "beforeSha256": null,
+      "sha256": "fa9d40a2e9d617666f1ce71d352555869535f16f6dfa829d39ffa5859aaac01f",
+      "bytes": 1613
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🎟️work/🧪️tests/🦀️.rs",
+      "beforeSha256": null,
+      "sha256": "8a92e10ae6fe17d6e3cc6a2d867cbcb0b8336cc7b32d8aa181cbdcd4d85d38cc",
+      "bytes": 6031
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "beforeSha256": "2d3d3b14825051c26f3b4933cb0976eca134e7209c6e2a2347a605881877b2f8",
+      "sha256": "b014d6b79f82096c5c382668b1e4f03c563f31aa51966bf198e772119980acec",
+      "bytes": 3334
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🧪️tests/🦀️.rs",
+      "beforeSha256": null,
+      "sha256": "2902f876692364a1bf7ac9844adae0f4f9919497188b590233bb211f13404df3",
+      "bytes": 24833
+    }
+  ],
+  "newOwningDoor": "semio-framework-value --all-targets --features=testkit",
+  "newLawTarget": "value-read-work",
+  "knownBroaderBlockers": [
+    "Ordinary registry Result constructor still has combined infallible Box+Arc birth.",
+    "Erased-frame Result constructor still Box::new; canonical staged fallible birth remains required.",
+    "Higher SharedRead normal callers need full-outcome source/close handmigration at actual compile boundaries.",
+    "Old source handback and ordinary input births still have Result-only CPU contracts; old owning tests preserve these cases but do not claim complete birth/normal-handoff funding."
+  ],
+  "oldOwningLawTarget": "value-read",
+  "oldOwningLawCount": 6,
+  "oldLawCasesAndNamesPreserved": true
+}

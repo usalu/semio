@@ -158,7 +158,7 @@ pub mod context {
     }
 }
 
-use crate::unit_tests::context::{app, close, gis2d_app_manifest_for_tests, render, Gis2dApp};
+use crate::unit_tests::context::{app, close, gis2d_app_manifest_for_tests, render, Gis2dApp, Gis2dTestApp};
 use semio_framework_plugin::{ContextMenuRequest, PluginApp, VcsArtifactApp};
 
 #[test]
@@ -212,39 +212,33 @@ async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_o
             None,
         )
         .expect("GIS Map one-item publication admits its exact factory");
-    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES };
+    let mut receiving_fixture = semio_framework_os_store_testing_prelude::FixtureStoreReceiving::new(semio_framework_value::testing::physical_test_close_grant());
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 16_384, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 262_144, maximum_depth: 4096 };
     let mut published = false;
     for _ in 0..64 {
-        match store.advance_apply_batch(&mut publication, grant).expect("GIS Map candidate transfer turn") {
-            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_) => {
+        match receiving_fixture.receive(|receiving| store.advance_apply_batch(&mut publication, 4096, grant, receiving)).expect("GIS Map candidate transfer turn") {
+            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(..) => {
                 published = true;
                 break;
             }
             store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked => panic!("GIS Map one-item preparation blocked after admitting its exact candidate"),
-            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Progress(_) => {}
+            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationRefused => panic!("GIS Map one-item preparation refused its exact candidate"),
+            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Progress(_) | store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(..) => {}
             store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::AwaitingAck(_) => panic!("GIS Map one-item preparation reached ACK without exposing its exact publication receipt"),
             store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Complete => panic!("GIS Map one-item preparation completed before publishing its exact candidate"),
         }
     }
     assert!(published, "GIS Map one-item preparation must publish after one semantic-candidate turn and one exact transfer turn");
     assert!(publication.acknowledge());
-    for _ in 0..64 {
-        if matches!(publication.close_step(grant).expect("GIS Map publication close"), store::SnapshotRetirementStep::Complete) {
+    let close = semio_framework_value::testing::physical_test_close_grant();
+    for _ in 0..4096 {
+        if matches!(publication.close_step(close).expect("GIS Map publication close"), semio_framework_value::RetainedCloneStep::Complete(_)) {
             break;
         }
     }
     assert!(publication.terminal_is_empty());
     drop(publication);
-    let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<GisMapSnapshot, GisMapMutation>::new();
-    let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
-    for _ in 0..100_000 {
-        let demand = semio_framework_plugin::ArtifactOwnedDisposer::retirement_demands(&disposer, &store, page).expect("GIS Map preparation-law Store quotes its close turn");
-        let close = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes.max(page), maximum_depth: demand.depth.max(1) };
-        if matches!(semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, close).expect("GIS Map preparation-law Store close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
-            break;
-        }
-    }
-    assert!(semio_framework_plugin::ArtifactOwnedDisposer::terminal_is_empty(&disposer, &store));
+    semio_framework_os_store_testing_doubles::close_test_store(&mut store);
 }
 
 /// 🧾️ LAW: every parent snapshot this crate can hand a live document replacement projects into the
@@ -297,17 +291,13 @@ fn gis_map_envelope_wire() -> Vec<u8> {
     let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-live-load", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut retirement = semio_s_artifact_gis_gismap_gis2d::host::owned::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
-        match retirement.close_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS fixture envelope retirement") {
-            store::SnapshotRetirementStep::Complete => {
+        match retirement.close_step(semio_framework_value::testing::physical_test_close_grant()).expect("GIS fixture envelope retirement") {
+            semio_framework_value::RetainedCloneStep::Complete(_) => {
                 assert!(retirement.terminal_is_empty());
                 drop(retirement);
                 return wire;
             }
-            store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
-                assert!(released_items <= 1);
-                assert!(released_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
-            }
-            store::SnapshotRetirementStep::Blocked => panic!("unshared GIS fixture envelope retirement blocked"),
+            semio_framework_value::RetainedCloneStep::Progress(_) => {}
         }
     }
     panic!("GIS fixture envelope retirement did not reach terminal")
@@ -342,7 +332,7 @@ async fn drive_gis_map_live_load(app: &mut Gis2dTestApp, handle: semio_framework
             return last;
         }
         app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one GIS live maintenance turn");
-        let _ = semio_framework_job_worker::pump_worker_job_retirements(8, 1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES);
+        let _ = semio_framework_job_worker::pump_worker_job_retirements(8, app.1.cx());
         last = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("GIS live load advancement after maintenance");
         if !matches!(last, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Pending | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Progress) {
             return last;
@@ -462,7 +452,7 @@ async fn patch_routes_empty_route_ids_round_trips_text_and_binary() {
 #[semio_framework_async_macros::async_test]
 async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
     semio_framework_plugin::artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<Gis2dPlayApp>>(gis2d_app_manifest_for_tests).await;
-    assert!(Gis2dPlayApp::command_from_action("noSuchAction", None, None).is_err());
+    assert!(Gis2dPlayApp::command_from_action("noSuchAction", &mut None, &mut None).is_err());
 }
 //#endregion 🔖️CommandSurface
 

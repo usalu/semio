@@ -1,0 +1,68 @@
+[
+  {
+    "id": "unchanged-eight-gib-backing-new-envelope",
+    "authored": 8588886016,
+    "requested": 38653657088,
+    "backing": 8588886016,
+    "allocated": 8588886016,
+    "physical": 38654705664,
+    "identity": true,
+    "custody": true,
+    "accept": true
+  },
+  {
+    "id": "current-envelope",
+    "authored": 38653657088,
+    "requested": 38653657088,
+    "backing": 8588886016,
+    "allocated": 8588886016,
+    "physical": 38654705664,
+    "identity": true,
+    "custody": true,
+    "accept": true
+  },
+  {
+    "id": "backing-over-quota",
+    "authored": 8,
+    "requested": 36,
+    "backing": 40,
+    "allocated": 40,
+    "physical": 36,
+    "identity": true,
+    "custody": true,
+    "accept": false
+  },
+  {
+    "id": "allocated-over-quota",
+    "authored": 8,
+    "requested": 36,
+    "backing": 8,
+    "allocated": 40,
+    "physical": 36,
+    "identity": true,
+    "custody": true,
+    "accept": false
+  },
+  {
+    "id": "foreign-receipt",
+    "authored": 8,
+    "requested": 36,
+    "backing": 8,
+    "allocated": 8,
+    "physical": 36,
+    "identity": false,
+    "custody": true,
+    "accept": false
+  },
+  {
+    "id": "lost-custody",
+    "authored": 8,
+    "requested": 36,
+    "backing": 8,
+    "allocated": 8,
+    "physical": 36,
+    "identity": true,
+    "custody": false,
+    "accept": false
+  }
+]

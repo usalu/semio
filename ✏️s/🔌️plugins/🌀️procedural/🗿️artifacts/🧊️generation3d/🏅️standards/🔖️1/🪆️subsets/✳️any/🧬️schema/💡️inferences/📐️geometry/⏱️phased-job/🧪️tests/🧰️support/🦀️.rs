@@ -4,7 +4,8 @@
 
 #![allow(dead_code)]
 
-pub use semio_s_artifact_procedural_3d_geometry_oracle_support as base;
+pub use semio_s_artifact_procedural_3d_geometry_compute::testing::step_with_fuel;
+use semio_s_artifact_procedural_3d_geometry_oracle_support as base;
 
 use semio_s_artifact_procedural_3d_model::catalogue::Catalogue;
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
@@ -154,7 +155,7 @@ fn corner(transfer: &MeshTransfer, index: u32) -> [f64; 3] {
     [transfer.position[at] as f64, transfer.position[at + 1] as f64, transfer.position[at + 2] as f64]
 }
 
-/// 📏️ Measures a tessellation.
+/// 🌀️ Measures a tessellation.
 pub fn measures(transfer: &MeshTransfer) -> Measures {
     let mut result = Measures { volume: 0.0, area: 0.0, min: [f64::INFINITY; 3], max: [f64::NEG_INFINITY; 3], triangles: transfer.index.len() / 3 };
     for triangle in transfer.index.chunks_exact(3) {
@@ -186,7 +187,7 @@ pub fn tessellate(shape: &ShapeValue, deflection: f64) -> MeshTransfer {
     shape.tessellate(deflection).unwrap_or_else(|error| panic!("tessellation: {error}"))
 }
 
-/// 🧊️ The kernel's own volume and area of a shape; a compound sums its members.
+/// 🔶️ The kernel's own volume and area of a shape; a compound sums its members.
 pub fn kernel_measures(shape: &ShapeValue) -> (Option<f64>, Option<f64>) {
     let mut session = KernelSession::new();
     let imported = session.import(shape).expect("import");
@@ -300,7 +301,7 @@ pub fn check_shape(name: &str, shape: &ShapeValue, expected: &Value, tolerance: 
     Ok(())
 }
 
-/// 🔎️ Checks a text output: `equals`, `prefix`, `contains` (all of), `lines` (count of lines starting with a prefix), `bytes` (length after base64 decoding) and `decodedPrefix`.
+/// ☑️ Checks a text output: `equals`, `prefix`, `contains` (all of), `lines` (count of lines starting with a prefix), `bytes` (length after base64 decoding) and `decodedPrefix`.
 pub fn check_text(name: &str, found: &str, expected: &Value) -> Result<(), String> {
     if let Some(wanted) = expected["equals"].as_str() {
         if found != wanted {
@@ -411,7 +412,7 @@ pub fn slices(mut job: Box<dyn WidgetJob>, fuel: usize) -> (usize, WidgetEvaluat
     let mut working = 0;
     let mut last = 0.0f32;
     for _ in 0..1_000_000 {
-        match job.step(fuel) {
+        match step_with_fuel(&mut *job, fuel) {
             WidgetStep::Working { progress } => {
                 assert!((0.0..=1.0).contains(&progress), "progress {progress} outside 0..=1");
                 assert!(progress + 1e-6 >= last, "progress went back from {last} to {progress}");
@@ -492,7 +493,7 @@ pub fn refresh(catalogue: &'static Catalogue, path: &str, text: &str, entries: &
     std::fs::write(path, written).expect("fixture written");
 }
 
-/// ✍️ Whether the run refreshes the fixtures instead of comparing against them.
+/// 🪑️ Whether the run refreshes the fixtures instead of comparing against them.
 pub fn writing() -> bool {
     std::env::var_os("GEN3D_WRITE_FIXTURES").is_some()
 }

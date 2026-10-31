@@ -1,0 +1,11 @@
+{
+  "state": "source-review-positive-transfer-law-authored-no-runtime",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🏭️message/🧪️tests/🦀️.rs",
+      "beforeSha256": "065c84d3da38016220b15d8378d02eb945c273af3ef815a198ea7deff1215b9a",
+      "sha256": "9f29264675ce885230fa5bb1ca29308376fe1910a3f6ecd50c2c9eebd1f8e807"
+    }
+  ],
+  "report": "drawing-diagnostic-message-root-review.md"
+}

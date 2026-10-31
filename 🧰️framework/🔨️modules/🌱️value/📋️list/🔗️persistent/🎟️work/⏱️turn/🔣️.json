@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "elementBytes",
+    "values",
+    "capacityBytes",
+    "copyBytes",
+    "message"
+  ],
+  "properties": {
+    "elementBytes": {
+      "const": 8
+    },
+    "values": {
+      "const": 17
+    },
+    "capacityBytes": {
+      "const": 136
+    },
+    "copyBytes": {
+      "const": 8
+    },
+    "message": {
+      "const": "Retained close source probe failed"
+    }
+  }
+}

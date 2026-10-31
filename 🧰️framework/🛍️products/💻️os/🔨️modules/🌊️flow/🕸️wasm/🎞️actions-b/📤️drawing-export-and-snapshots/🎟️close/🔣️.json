@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "stock",
+    "turn",
+    "operation",
+    "expected",
+    "input",
+    "encodedOutputCloseCpu"
+  ],
+  "properties": {
+    "operation": {
+      "const": 2599
+    },
+    "expected": {
+      "const": {
+        "paidCloseCpu": true,
+        "deniedCloseCpu": 0
+      }
+    },
+    "input": {
+      "type": "object"
+    },
+    "stock": {
+      "type": "object"
+    },
+    "turn": {
+      "type": "object"
+    },
+    "encodedOutputCloseCpu": {
+      "const": true
+    }
+  }
+}

@@ -32,13 +32,14 @@ semio-framework-os-pack = { path = "../../../../🎒️pack/📦️packages/🦀
 semio-framework-os-store-envelope = { path = "../../../✉️envelope/📦️packages/🦀️rust" }
 semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 web-sys = { version = "0.3.98", features = ["Window", "Storage", "console", "WebSocket", "MessageEvent", "CloseEvent", "BinaryType", "Request", "RequestInit", "Response", "Headers"] }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
 serde_json = "1.0.140"

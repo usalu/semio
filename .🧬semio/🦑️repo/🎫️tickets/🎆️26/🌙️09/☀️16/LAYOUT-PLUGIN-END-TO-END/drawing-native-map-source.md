@@ -1,0 +1,5 @@
+# Native Map Source
+
+Normal map advance now returns full outcomes and preserves exact actual child work before errors. String admission writes its genuine retained key slot through NativeDecodeControl.admit_string; SharedOwner null restores the original key/value before actual receipt folding. UpdateCursor is retained inline rather than allocated behind raw Box::new. Cursor storage births use its defining controlled outcome; child close/residual admission fold real work and actual cumulative capacity. Metadata phases, UTF8 retained key copies, live child demands and ready publication are separated. Fixed header/custody moves copy0; real key payload fragments retain their byte quotes.
+
+A closed fixture and genuine finite-bank heap/null/all-axis/duplicate-key/UTF8/cancel-prefix/BTreeMap law preceded body work. Nothing ran. NativeSet, recursive bulk, derived producers, default producers and Persistent builder normal stages still block NativeOwned compilation. Old map tests additionally require genuine wallet/API migration; no SourceReady claim.

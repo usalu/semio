@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "state": "proposal-not-canonical-not-executed",
+  "pageElements": 16,
+  "elementLogicalBytes": 8,
+  "proposedDirectoryReferenceLogicalBytes": 8,
+  "referenceMeaning": "schema-declared-logical-owner-reference-not-v8-pointer-size",
+  "fixtures": [
+    {
+      "name": "one-page-identities",
+      "elements": [
+        11,
+        22,
+        33
+      ]
+    },
+    {
+      "name": "first-directory-growth",
+      "range": {
+        "start": 0,
+        "count": 17
+      }
+    },
+    {
+      "name": "next-directory-level",
+      "range": {
+        "start": 0,
+        "count": 257
+      }
+    }
+  ],
+  "laws": [
+    "five-axis-denied-no-body",
+    "actual-elements-in-actual-backing",
+    "bounded-real-growth",
+    "nested-held-absolute-quote",
+    "cancel-each-private-body-phase",
+    "hostile-intrinsic-mutations-refused",
+    "cached-and-header-no-epoch",
+    "same-stock-full-retirement",
+    "stale-observation-refused"
+  ],
+  "oracle": "independent-sqlite-ordered-elements-and-body-birth-release-join"
+}

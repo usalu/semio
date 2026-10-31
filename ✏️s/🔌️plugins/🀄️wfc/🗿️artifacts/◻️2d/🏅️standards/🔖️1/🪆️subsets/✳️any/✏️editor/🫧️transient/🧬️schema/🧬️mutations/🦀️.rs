@@ -9,7 +9,7 @@ pub use set_solve::SetSolve;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[mutations(snapshot = Wfc2dTransient, diff = Wfc2dTransientDiff, schema = "wfc.wfc2d.transient", reference = Wfc2dTransient, reference_diff = Wfc2dTransientDiff)]
+#[mutations(snapshot = Wfc2dTransient, diff = Wfc2dTransientDiff, schema = "wfc.wfc2d.transient", reference = Wfc2dTransient, reference_diff = Wfc2dTransientDiff, retained)]
 pub enum Wfc2dTransientMutation {
     #[dsl(key = "set-solve")]
     SetSolve(SetSolve),
@@ -27,6 +27,9 @@ pub struct Wfc2dTransientDiff {
     pub assignments: Option<Vec<Wfc2dAssignment>>,
     pub contradiction: Option<bool>,
 }
+
+protocol::retained_row_patch!(pub retained_fields for Wfc2dTransientDiff => Wfc2dTransient { assignments: Vec<Wfc2dAssignment>, contradiction: bool });
+protocol::retained_patch_diff!(Wfc2dTransientDiff => Wfc2dTransient);
 
 impl protocol::DiffAlgebra<Wfc2dTransient> for Wfc2dTransientDiff {
     fn is_empty(&self) -> bool {

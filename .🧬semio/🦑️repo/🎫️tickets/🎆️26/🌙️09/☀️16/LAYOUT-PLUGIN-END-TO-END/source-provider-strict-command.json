@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "cwd": "/Users/ueli/Documents/semio",
+  "command": "SEMIO_BUILD_MODE=prototype SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-pressure/strict' TMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-pressure/strict/tmp' TMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-pressure/strict/tmp' TEMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-pressure/strict/tmp' TEMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-pressure/strict/tmp' repo --service=off tools exec bun -- '/Users/ueli/Documents/semio/node_modules/typescript/bin/tsc' --noEmit --strict --noUncheckedIndexedAccess --skipLibCheck --resolveJsonModule --esModuleInterop --target ESNext --module preserve --moduleResolution bundler --allowImportingTsExtensions --types bun '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts' '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/🟦️.ts' '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/pressure.test.ts' > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-pressure/provider-strict.log' 2>&1",
+  "roots": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/pressure.test.ts"
+  ],
+  "flags": [
+    "--noEmit",
+    "--strict",
+    "--noUncheckedIndexedAccess",
+    "--skipLibCheck",
+    "--resolveJsonModule",
+    "--esModuleInterop",
+    "--target",
+    "ESNext",
+    "--module",
+    "preserve",
+    "--moduleResolution",
+    "bundler",
+    "--allowImportingTsExtensions",
+    "--types",
+    "bun"
+  ],
+  "admission": "normal-managed",
+  "sourceAppliedSha256": "8ee863aafb7e32e6d28798133e4973eccf63b9118bfd18b9e7d8e57e4875e200"
+}

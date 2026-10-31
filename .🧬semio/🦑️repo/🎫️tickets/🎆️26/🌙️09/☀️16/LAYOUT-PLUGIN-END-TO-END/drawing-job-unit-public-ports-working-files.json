@@ -1,0 +1,26 @@
+{
+  "before": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83e\udd80\ufe0f.rs",
+      "sha256": "9b610ded38ff1c3b8f2ce07ef01b589e28a1a11533384a28a71daa9e6f345e3b",
+      "bytes": 501
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83c\udfed\ufe0fconstruction/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "52b09c014db808e08c45be0d2996f63436cbf54e3c915f7d7e78739138b71ef2",
+      "bytes": 7435
+    }
+  ],
+  "files": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83e\udd80\ufe0f.rs",
+      "sha256": "dbdb4fd523ac37fcdf956dd70460ef9f67807188088bef6a4247319682e145b2",
+      "bytes": 557
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83c\udfed\ufe0fconstruction/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "1c29c4a51c6a9e937978629b32db652218d4897eaac7fd26a5e21e6d727f46e3",
+      "bytes": 7501
+    }
+  ]
+}

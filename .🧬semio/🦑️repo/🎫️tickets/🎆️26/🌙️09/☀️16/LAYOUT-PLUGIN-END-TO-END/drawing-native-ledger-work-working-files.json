@@ -1,0 +1,18 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🦀️.rs",
+    "sha256": "eea1a8580cf8231f6935d277948ce3e338791abdc1a95743c08cf2195c707442"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/actual.json",
+    "sha256": "a188273cbc281aa0757d1f890abd17220f64ba0139df2626e010e39a41d5c1ec"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/actual.schema.json",
+    "sha256": "211f769174d1c9ad4ef2b896c4ed72f6c41873b829c3600d876ecd233cc92300"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🦀️.rs",
+    "sha256": "f1798e283f25383e7f481bfdd75573f4837ccea8c185748ac3b2467b9bdb9347"
+  }
+]

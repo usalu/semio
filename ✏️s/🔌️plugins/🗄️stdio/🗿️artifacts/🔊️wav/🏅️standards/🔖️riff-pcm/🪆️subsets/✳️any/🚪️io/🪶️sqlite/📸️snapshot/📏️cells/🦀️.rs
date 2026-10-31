@@ -37,7 +37,7 @@ pub(super)fn admit_record(source:&R,limits:SqliteDatabaseLimits,n:&mut N<'_>)->R
   let chunks=items(field(source,5)?)?;
   for value in chunks{
    let chunk=record(value)?;shape(chunk,3)?;let _=scalar::<u8>(field(chunk,2)?,n)?;c.row("wav_other_chunk",add(32,text(field(chunk,0)?,n)?)?,n)?;
-   let F::Bytes64(bytes)=field(chunk,1)?else{return Err(invalid("WAV chunk requires literal octets"))};for _ in bytes{c.row("wav_other_chunk_byte",32,n)?;}
+   let F::Bytes64(bytes)=field(chunk,1)?else{return Err(invalid("WAV chunk requires literal octets"))};for _ in bytes.iter(){c.row("wav_other_chunk_byte",32,n)?;}
   }
   for value in items(field(source,6)?)?{
    let value=record(value)?;if value.fields.len()>2||value.fields.keys().any(|id|![1,2].contains(id)){return Err(invalid("WAV chunk reference contains an unknown field"))}

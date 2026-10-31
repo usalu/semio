@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "rootNames": [
+    "i",
+    "p",
+    "r"
+  ],
+  "expectedRootOrder": [
+    "p",
+    "i",
+    "r"
+  ],
+  "cuts": [
+    {
+      "id": "complete",
+      "after": null,
+      "remaining": []
+    },
+    {
+      "id": "after-payload",
+      "after": 1,
+      "remaining": [
+        "i",
+        "r"
+      ]
+    },
+    {
+      "id": "after-intent",
+      "after": 2,
+      "remaining": [
+        "r"
+      ]
+    },
+    {
+      "id": "after-receipt",
+      "after": 3,
+      "remaining": []
+    }
+  ]
+}

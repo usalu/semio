@@ -1,0 +1,14 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🎨️sampling/↗️affine/🟦️.ts",
+      "beforeSha256": "b505632e16ace9ad28febe84fcda357f1dc831be7c8a1c65b9ca0b3422f475fb",
+      "sha256": "08dbee90e6bf59dd86f01f2b3f091f76489abb6ea48886c9d4098492e449d075"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts",
+      "beforeSha256": "1895a81a4392a2c17a870e7f727a981e01d5a64d5de806844c0ed7dd0ad60037",
+      "sha256": "8692bd178739930545ad0d2727f7cb204b6f0da5fa625ccd61a20d78a782126d"
+    }
+  ]
+}

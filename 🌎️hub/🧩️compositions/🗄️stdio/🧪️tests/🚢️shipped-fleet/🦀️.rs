@@ -37,7 +37,7 @@ fn coordinate(dialect: &semio_framework::ArtifactDialect) -> String {
 
 fn describe<PA: PluginApp>(bundle: Result<Plugin<PA>, PluginAssemblyError>) -> PackageDescriptor {
     let runtime = PluginRuntime::<PA>::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
-    let bundle = bundle.unwrap_or_else(|error| panic!("[DEBUG] outward component assembly rejected: {error:?}"));
+    let bundle = bundle.unwrap_or_else(|error| panic!("outward component assembly rejected: {error:?}"));
     install_plugin_bundle_result(&runtime, Ok(bundle));
     let bytes = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::describe::describe_plugin(&runtime));
     semio_framework_value::FromValue::from_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).expect("descriptor bytes")).expect("strict descriptor")
@@ -46,7 +46,7 @@ fn describe<PA: PluginApp>(bundle: Result<Plugin<PA>, PluginAssemblyError>) -> P
 /// 📦️ The stdio component and its nine family components.
 const PACKAGE_IDS: [&str; 10] = ["stdio", "stdio-image", "stdio-media", "stdio-cad", "stdio-bim", "stdio-mesh", "stdio-pdf", "stdio-office", "stdio-semio", "stdio-binary"];
 
-/// 🧾️ Assembles and describes one stdio package by id.
+/// 🎁️ Assembles and describes one stdio package by id.
 fn shipped(id: &'static str) -> ShippedPackage {
     let (manifest, descriptor) = match id {
         "stdio" => (include_str!("../../🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio::plugin())),
@@ -64,7 +64,7 @@ fn shipped(id: &'static str) -> ShippedPackage {
     ShippedPackage { id, manifest, descriptor }
 }
 
-/// 📦️ Every stdio package, each assembled and described once per process.
+/// 🌀️ Every stdio package, each assembled and described once per process.
 fn packages() -> &'static [ShippedPackage] {
     static PACKAGES: OnceLock<Vec<ShippedPackage>> = OnceLock::new();
     PACKAGES.get_or_init(|| PACKAGE_IDS.into_iter().map(shipped).collect())
@@ -101,7 +101,7 @@ fn activated_kinds(descriptor: &PackageDescriptor) -> BTreeSet<String> {
         .collect()
 }
 
-/// 🛡️ LAW: each package registers exactly its playground-declared editors plus one viewer per shipped dialect, stays
+/// ⚖️ LAW: each package registers exactly its playground-declared editors plus one viewer per shipped dialect, stays
 /// under [`SHIPPED_APP_CEILING`], and every family depends on exactly `stdio` — so widening a component is a declared,
 /// reviewed change of its playground rows, never a feature edit that silently ships another package's fleet.
 #[test]
@@ -152,7 +152,7 @@ fn the_stdio_packages_ship_every_stdio_app_exactly_once() {
     }
 }
 
-/// 🎬️ LAW: every stdio artifact kind is opened by exactly one package — the one shipping its apps activates on it, and
+/// 🏷️ LAW: every stdio artifact kind is opened by exactly one package — the one shipping its apps activates on it, and
 /// no other package does — so the catalog's `on-artifact-kind:` rows resolve every stdio document to the package that
 /// can open every one of its subsets.
 #[test]
@@ -276,7 +276,7 @@ fn requirement_is_live(requirement: &ArtifactRuntimeCapabilityRequirement) -> bo
     }
 }
 
-/// 🧪️ The environment variable naming the one package [`package_contract_probe`] assembles in its child process.
+/// 🩺️ The environment variable naming the one package [`package_contract_probe`] assembles in its child process.
 const CONTRACT_PROBE_PACKAGE: &str = "SEMIO_STDIO_CONTRACT_PROBE_PACKAGE";
 
 /// 🔗️ LAW (e): in every stdio package's own process — assembled alone, as its wasm guest is — every registered artifact's
@@ -298,7 +298,7 @@ fn every_registered_snapshot_contract_resolves_in_each_package_process() {
     assert!(failures.is_empty(), "{} of {} packages fail:\n{}", failures.len(), PACKAGE_IDS.len(), failures.join("\n"));
 }
 
-/// 🔬️ The child half of LAW (e): assembles only the package [`CONTRACT_PROBE_PACKAGE`] names and compiles the snapshot
+/// 👶️ The child half of LAW (e): assembles only the package [`CONTRACT_PROBE_PACKAGE`] names and compiles the snapshot
 /// contract of every artifact schema registered in this process — owned and hosted alike.
 #[test]
 #[ignore = "the child process of every_registered_snapshot_contract_resolves_in_each_package_process"]
@@ -315,7 +315,7 @@ fn package_contract_probe() {
     assert!(unresolved.is_empty(), "{id} alone registers {} unresolvable snapshot contracts: {unresolved:#?}", unresolved.len());
 }
 
-/// 🏠️ LAW (describe side of hosting, p15): every stdio FAMILY package owns no artifact kind and its descriptor hosts every
+/// 🪪️ LAW (describe side of hosting, p15): every stdio FAMILY package owns no artifact kind and its descriptor hosts every
 /// kind it opens, each hosted row a document codec its owner's runtime declaration declares (kind × codec schema), so a trusted
 /// catalog routes the owner's documents to the family's editors and binds the owner's codec; every row names its owner `stdio`
 /// explicitly; the owner `stdio` hosts nothing.
@@ -391,7 +391,7 @@ async fn sqlite_snapshot_primary_declared_owner_census() {
     assert!(failures.is_empty(), "{} declared Snapshot owner refusals:\n{}", failures.len(), failures.join("\n"));
 }
 
-/// 🔗️ Every authored Runtime dialect retains its actual concrete owner in the installed codec and both SQLite routes.
+/// 🏃️ Every authored Runtime dialect retains its actual concrete owner in the installed codec and both SQLite routes.
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_primary_declared_binding_census() {
     use semio_framework_os_kernel::io::io_mechanism::{io_route, native_snapshot_sqlite_schema, preflight_native_snapshots, NativeSnapshotRegistration};
@@ -533,7 +533,7 @@ async fn sqlite_snapshot_primary_declared_binding_census() {
     }
     assert!(failures.is_empty(), "{} installed binding refusals:\n{}", failures.len(), failures.join("\n"));
 }
-/// 🪶️ Independently reads every domain row of one actual exported SQLite file.
+/// ➖️ Independently reads every domain row of one actual exported SQLite file.
 fn primary_snapshot_physical_rows(bytes: &[u8]) -> serde_json::Value {
     use std::io::Write;
     use std::process::{Command, Stdio};

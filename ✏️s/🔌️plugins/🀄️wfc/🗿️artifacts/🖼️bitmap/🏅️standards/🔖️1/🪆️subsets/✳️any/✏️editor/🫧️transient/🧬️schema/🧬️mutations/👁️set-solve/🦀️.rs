@@ -1,8 +1,8 @@
 //! 👁️ Replaces the app-local solve cache shared by the bitmap editor's output window.
 
-use crate::editor::bitmap::transient::component::mutations::{BitmapTransient, BitmapTransientDiff, BitmapTransientText};
+use crate::editor::bitmap::transient::component::mutations::{BitmapTransient, BitmapTransientDiff};
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "set-solve")]
 #[mutation_leaf(contract = ::protocol)]
@@ -34,7 +34,7 @@ where
 {
     fn diff(&self, base: &BitmapTransient) -> protocol::MutationOutcome<BitmapTransientDiff> {
         let diff = BitmapTransientDiff {
-            output_pixels: (base.output_pixels != self.output_pixels).then(|| BitmapTransientText { value: self.output_pixels.clone() }),
+            output_pixels: (base.output_pixels != self.output_pixels).then(|| self.output_pixels.clone()),
             contradiction: (base.contradiction != self.contradiction).then_some(self.contradiction),
             output_width: (base.output_width != self.output_width).then_some(self.output_width),
             output_height: (base.output_height != self.output_height).then_some(self.output_height),
@@ -51,3 +51,5 @@ where
     })())
 }
 }
+
+protocol::retained_set_record!(SetSolve => BitmapTransient, BitmapTransientDiff, BitmapTransientMutation { authored: SetSolve = |leaf| leaf, patch: |value: SetSolve| BitmapTransientDiff { output_pixels: Some(value.output_pixels), contradiction: Some(value.contradiction), output_width: Some(value.output_width), output_height: Some(value.output_height) }, inverse: |root: BitmapTransient| SetSolve { output_pixels: root.output_pixels, contradiction: root.contradiction, output_width: root.output_width, output_height: root.output_height }.into() });

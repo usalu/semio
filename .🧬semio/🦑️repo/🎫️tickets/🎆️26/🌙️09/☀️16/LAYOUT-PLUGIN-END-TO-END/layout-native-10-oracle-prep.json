@@ -1,0 +1,168 @@
+{
+  "version": 1,
+  "authority": false,
+  "state": "prepared-only-unexecuted",
+  "rootReleaseRequired": true,
+  "nativeInput": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/layout-native-10-command.json",
+  "nativeInputSha256": "f1c896be757e42c442b8763ca20ebd0a7e45410d20f76bbb9d9f07ee5cc17530",
+  "nativeLog": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/native.log",
+  "commands": [
+    {
+      "kind": "media4actualrecords",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "python",
+        "--",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/media-handoff-oracle.py",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/native.log"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/1",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/1/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/1/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/1/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/1/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/1/result.log",
+      "state": "prepared-only-no-attempt",
+      "cwd": "/Users/ueli/Documents/semio",
+      "attemptsExecuted": 0,
+      "executionAuthorized": false,
+      "session": null
+    },
+    {
+      "kind": "sdkActor6actualrecords",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "bun",
+        "--",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/sdk-actor-admission-oracle.ts",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/native.log"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/2",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/2/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/2/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/2/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/2/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/2/result.log",
+      "state": "prepared-only-no-attempt",
+      "cwd": "/Users/ueli/Documents/semio",
+      "attemptsExecuted": 0,
+      "executionAuthorized": false,
+      "session": null
+    },
+    {
+      "kind": "owned6actualsummaries-and-allturns",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "bun",
+        "--",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.ts",
+        "--native",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/native.log"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/3",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/3/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/3/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/3/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/3/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-10/oracles/3/result.log",
+      "state": "prepared-only-no-attempt",
+      "cwd": "/Users/ueli/Documents/semio",
+      "attemptsExecuted": 0,
+      "executionAuthorized": false,
+      "session": null
+    }
+  ],
+  "ownedCheckerHarness": {
+    "original": 79183,
+    "exitCode": 0,
+    "counts": {
+      "pass": 31,
+      "fail": 0,
+      "assertions": 65
+    },
+    "receipt": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/owned-validation-oracle/frontier-green/terminal.json",
+    "receiptSha256": "8f1a14a08339a253af0f1851be084df38945abb4bc94629f96de322b0d7efe31",
+    "nativeCompared": false,
+    "currentInputs": [
+      {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.ts",
+        "sha256": "88ade6339da94db8c9c217fdce51322ccef3ef3e13b2308bc76d5129449c0b32",
+        "currentSha256": "88ade6339da94db8c9c217fdce51322ccef3ef3e13b2308bc76d5129449c0b32",
+        "matchesFinalHarness": true
+      },
+      {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.test.ts",
+        "sha256": "dab58101dc0c2c0b5ae6a740fb0c79e71f9fcbd50a2814069ad3bb5fefd92c1f",
+        "currentSha256": "dab58101dc0c2c0b5ae6a740fb0c79e71f9fcbd50a2814069ad3bb5fefd92c1f",
+        "matchesFinalHarness": true
+      },
+      {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.schema.json",
+        "sha256": "2fef90d2866b377d214b26e1b9110ef7df9d64d7abf233954bdfb2eb21d78d39",
+        "currentSha256": "2fef90d2866b377d214b26e1b9110ef7df9d64d7abf233954bdfb2eb21d78d39",
+        "matchesFinalHarness": true
+      },
+      {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle-mutants.json",
+        "sha256": "7ab6172319e311c2d9c49f18661937cd22c8abc430e78e9c645f7647fd040842",
+        "currentSha256": "7ab6172319e311c2d9c49f18661937cd22c8abc430e78e9c645f7647fd040842",
+        "matchesFinalHarness": true
+      },
+      {
+        "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🧪️tests/🔣️.json",
+        "sha256": "c2108c2f7247ad81357f0ec9ffe6cc89b6a52a30d9a51d6a62be9ad24e47f897",
+        "currentSha256": "c2108c2f7247ad81357f0ec9ffe6cc89b6a52a30d9a51d6a62be9ad24e47f897",
+        "matchesFinalHarness": true
+      },
+      {
+        "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🧪️tests/📐️.json",
+        "sha256": "fa56ac205d298c8930cc6b45778d84a09695e10d143415826ea90b0830a29f09",
+        "currentSha256": "fa56ac205d298c8930cc6b45778d84a09695e10d143415826ea90b0830a29f09",
+        "matchesFinalHarness": true
+      },
+      {
+        "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✅️validation/🔣️.json",
+        "sha256": "6d80a7c91eb1dba8512875d8e7d2096c9abdf8d40d710f137a209fb34595bdf9",
+        "currentSha256": "6d80a7c91eb1dba8512875d8e7d2096c9abdf8d40d710f137a209fb34595bdf9",
+        "matchesFinalHarness": true
+      },
+      {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-emitter-fixture.json",
+        "sha256": "0d62d4b2f184082e5ee64c6ac6f5531b39fd6bac6beb85200c44aac16d9a67c6",
+        "currentSha256": "0d62d4b2f184082e5ee64c6ac6f5531b39fd6bac6beb85200c44aac16d9a67c6",
+        "matchesFinalHarness": true
+      },
+      {
+        "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-frontier-mutants.json",
+        "sha256": "cd70e255db46d77e4f6ff939f50d745581ee37d1a41547f55d418e9327ad7ee1",
+        "currentSha256": "cd70e255db46d77e4f6ff939f50d745581ee37d1a41547f55d418e9327ad7ee1",
+        "matchesFinalHarness": true
+      }
+    ],
+    "allCurrentMatch": true
+  },
+  "nativeOwnerSession": null,
+  "cwd": "/Users/ueli/Documents/semio",
+  "executionAuthorized": false,
+  "attemptsExecuted": 0,
+  "nativeInputSeal": "Exact finalized prepared input; full19 plus standard --keep-going/--no-fail-fast diagnostic flags; no execution authority",
+  "previousNative9Releases": "closed-unused-no-inherited-authority"
+}

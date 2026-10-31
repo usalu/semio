@@ -1,0 +1,5 @@
+# Public Original Source Close Laws
+
+Context owning4 progressed beyond parent close but still refuses before compiler at inherited-child law2368 bytes with2139 bytes remaining. Its original source policies are unchanged. Parent and loan close laws are genuine public ownership contracts: stable identities, exact paid close ordering, denied zero work, preserved clock identity and complete cached return. They now mount once as a declared integration target using the same physical files. Their neutral banks, every original actualWork row, all grants and bounds are unchanged.
+
+The parent law observes its actual lending status through a read-only query. The loan law already has a public source/clock query and genuine validate_context port, replacing only direct private observations. Existing genuine foundational birth constructors now use their full current result envelope; this close law does not claim aggregate Host/Source funding for preborn fixture roots. No error, actual close-work row or physical receipt is weakened.

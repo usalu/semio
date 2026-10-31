@@ -1,0 +1,30 @@
+{
+  "state": "authored-uncompiled",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🦀️.rs",
+      "sha256": "3946196c843c96c1060eca5f820f70fb6c9801147790da495b06f6bfe1b8acc9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "69ec6775e889603f67ae6b030012190d47c1b244e558f7f58716aa6690d356e1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🎟️alias/🧪️tests/🦀️.rs",
+      "sha256": "5ba296303843920386bf197e99bcc242a1f22047ef66905c075e6703c89d0d8a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🎟️root/🧪️tests/actual.json",
+      "sha256": "204eb138f9f6f89e731ac421251bc9df924c4777eebebdd7749b256096ebc71a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🎟️root/🧪️tests/actual.schema.json",
+      "sha256": "390e935f06c3ee242c14641f07853c764fadf8db8e1bc56cbde596b15ade3b34"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🎟️root/🧪️tests/actual.rs",
+      "sha256": "50045bac94f5aa6227395d31864204f54f92b61d89d9011738c4304fee7314a9"
+    }
+  ],
+  "runtime": "none"
+}

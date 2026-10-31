@@ -1,0 +1,7 @@
+# OriginalSlot Staged Source Integration
+
+The read owner retains genuine SourceAdmission through birth, alias, payload/lease allocation and internal publication. An internal-ready admission now performs one funded output transfer into the retained read-owner Source before ordinary source/original return; cancellation no longer calls return_inputs on already-published custody. First return now quotes and pays its own item/depth/CPU1 flag-control turn (zero copy/capacity/release), then child work on later calls. Cached/denied views remain zero; no wrapper/default CPU or new authority.
+
+The original six law names and all business/foreign/pointer/issuer cases survive. Former prefix2 means actually published-with-reader under the same row-scaled guard; two new defining laws cover every partial Source cut0..5 and exact first-return control/denial/cached/drop behavior. The new cases use one finite existing4096-item/CPU,16MiB currencies/depth128 profile; no max or loop raise. Original old demand-derived cases remain honestly scoped, not upgraded into a whole Host/stock proof by assertion.
+
+Return-control production before SHA a94b6d351dfb28a120e3913b7da2308bdc286df30863520c535a1162821aa53a; after SHA 018aa17c7dbd90be3e3eae09ccf2f7c9eb4c489e9926fa8e6d703b3f40423d57. Both neutral/law seals precede their corresponding body hunks. No Cargo was run during Root/Cursor holds. Owning8/Core27 are next coordinated diagnostics, not yet acceptance.

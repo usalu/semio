@@ -1,0 +1,3 @@
+# Persistent Normal Caller Census
+
+Source-only Python traversal through repo inspected 36675 Rust files under framework and plugins, pruning declared generated/dependency directories and refusing beyond60000 files. It found 33 owner-token files; full line/symbol metadata is in drawing-persistent-normal-caller-roster.json. This is a lexical call map, not a compiler or type/macro completeness proof. Production direct callers must forward the actual full outcome before matching results; no unit CPU or receipt fallback is accepted. Existing tests retain their actual values/stock/geometry or cardinality cuts while APIs migrate.

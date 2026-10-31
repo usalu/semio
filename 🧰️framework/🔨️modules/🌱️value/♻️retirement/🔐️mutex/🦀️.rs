@@ -10,7 +10,7 @@ impl<T:RetireOwned> RetireOwned for std::sync::Mutex<T>{
 }
 impl<T:RetireOwned> RetirementCursor for Cursor<T>{
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.owner.next_demand(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.owner.step(grant){Ok(step)if step.progress()==RetainedCloneProgress::default()&&self.owner.terminal_is_empty()=>RetirementStep::Complete,Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.owner.step(grant){Ok(step)if step.progress()==RetainedCloneProgress::default()&&self.owner.terminal_is_empty()=>RetirementStep::Complete(self.owner.last_turn_work()),Ok(step)=>RetirementStep::Progress(step.progress(),self.owner.last_turn_work()),Err(error)=>RetirementStep::Failure(error,self.owner.last_turn_work())}}
  fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.owner.next_copy_byte_demand()}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.owner.next_capacity_byte_demand(body).ok()}

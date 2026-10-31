@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "maximumTurns",
+    "outcomes",
+    "acknowledgeWork",
+    "removeWork",
+    "deniedWork",
+    "cachedWork",
+    "acknowledgeHeap",
+    "sourceIdentityUnchanged",
+    "rearmDoesNotAllocate",
+    "sameFiniteBank"
+  ],
+  "properties": {
+    "source": {
+      "const": {
+        "items": 4096,
+        "copyBytes": 1048576,
+        "capacityBytes": 1048576,
+        "releaseBytes": 1048576,
+        "depth": 64,
+        "fuel": 16384,
+        "deadlineUs": 8000
+      }
+    },
+    "maximumTurns": {
+      "const": 64
+    },
+    "outcomes": {
+      "const": 3
+    },
+    "acknowledgeWork": {
+      "const": 1
+    },
+    "removeWork": {
+      "const": 1
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "acknowledgeHeap": {
+      "const": 0
+    },
+    "sourceIdentityUnchanged": {
+      "const": true
+    },
+    "rearmDoesNotAllocate": {
+      "const": true
+    },
+    "sameFiniteBank": {
+      "const": true
+    }
+  }
+}

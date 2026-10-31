@@ -1,6 +1,5 @@
 //! 🌐️ Canonical Value traits encode the actual downward immutable ordered producer.
 use crate::ordered::*;
-use crate::retained_clone::RetainedCloneGrant;
 //#region 🔁️Value
 /// 🌱️ First-party replacement for the `#[cfg(test)]`-only `Serialize`/`Deserialize` above — see
 /// that region's doc. Written against `super::ToValue`/`FromValue` (a RELATIVE path) rather than
@@ -18,9 +17,6 @@ impl<V: super::ToValue> super::ToValue for OrderedMap<V> {
     }
 }
 impl<V: super::FromValue> super::FromValue for OrderedMap<V> {
-    fn from_value_controlled(value: &crate::DslValue, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, crate::ValueError> { native_controlled::decode(value, control) }
-    fn default_value_controlled(control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, crate::ValueError> { native_controlled::empty(control) }
-    fn retire_decoded(self) { native_controlled::retire(self) }
     fn from_value(value: super::DslValue) -> Result<Self, super::ValueError> {
         let super::DslValue::Object(fields) = value else {
             return Err(super::ValueError::new(crate::ValueRefusalKind::InvalidValue, format!("expected an ordered string-keyed object, found {value:?}")));

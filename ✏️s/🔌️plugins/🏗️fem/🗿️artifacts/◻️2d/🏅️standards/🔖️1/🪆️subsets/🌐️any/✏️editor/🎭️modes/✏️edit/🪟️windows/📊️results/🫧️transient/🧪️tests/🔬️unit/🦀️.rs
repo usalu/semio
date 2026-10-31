@@ -90,12 +90,14 @@ fn clock_publication_and_retirement_obey_tiny_grants() {
         let before: FemResultsWindowTransient = serde_json::from_value(row["before"].clone()).unwrap();
         let after: FemResultsWindowTransient = serde_json::from_value(row["after"].clone()).unwrap();
         let mut store = store::TransientStore::<_, FemResultsWindowTransientMutation>::new(before);
+        let mut allow = |_| true;
+        let mut receiving = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(65536, &mut allow);
         let mut publication = store.begin_publish_one_leased(semio_framework_job::OperationId(1), 0, SetPlaybackClock { clock: after.clock }.into(), owners.preparation.as_ref(), owners.state_retirement.clone()).unwrap();
         let zero = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
-        assert!(matches!(store.advance_publish_one(&mut publication, zero).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked));
+        assert!(matches!(store.advance_publish_one(&mut publication, zero, &mut receiving).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked));
         let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
         for _ in 0..8 {
-            if matches!(store.advance_publish_one(&mut publication, grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_, _)) {
+            if matches!(store.advance_publish_one(&mut publication, grant, &mut receiving).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_, _)) {
                 break;
             }
         }

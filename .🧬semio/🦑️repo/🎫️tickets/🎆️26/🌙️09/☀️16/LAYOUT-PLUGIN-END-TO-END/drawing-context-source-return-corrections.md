@@ -1,0 +1,7 @@
+# Actual Context Runtime Corrections After Owning 9
+
+The original real source and return laws now execute. SourceLoan retains the immutable actual initiating source identity through alias return and validates retirement against the same incoming real parent and clock. The previous getter dereferenced an empty sealed alias during its distinct terminal header clear. Live source_identity still refuses after the actual alias returns; no stale shared payload is read and no new Source is issued. SourceChild closing now uses that defining retirement witness after its upstream alias returns, preserving its own origin/parent checks. Original foreign rejection and close sequences remain.
+
+The genuine new null-birth law measured child-ledger CPU0 against actual allocator attempt1. Child admission now stores any actual ledger output first and forwards the exact full child outcome/work through the canonical receiver before Result, including Err and denied0. There is no hardcoded CPU or inferred receipt-to-work price.
+
+Two laws had selected ../../parent fixtures instead of their adjacent defining ../ fixture. The actual original loan and posting fixtures contain the intended fuel/three close rows and posting fields; lookup is corrected without changing data, stocks or assertions. The outstanding-return law asserted actual CPU1 under a physical item1 grant but had never issued that CPU loan. It now explicitly narrows the same context to one existing CPU unit, preserving that exact original assertion and bank. All original bounds remain unchanged.

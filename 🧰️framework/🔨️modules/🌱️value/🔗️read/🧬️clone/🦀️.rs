@@ -9,8 +9,8 @@ unsafe impl<T:RetireOwned+Sync> Sync for OriginalReadSource<T>{}
 impl<T:RetireOwned+Sync> OriginalReadSource<T>{
  pub(super) fn new(read:ReadLease<T>)->Self{Self{read:ManuallyDrop::new(Some(read))}}
  pub fn get(&self)->&T{self.read.as_ref().expect("original read already transferred").get()}
- pub(super) fn take_refused(&mut self)->ReadLease<T>{self.read.take().expect("refused original read remains owned")}
- pub fn into_read(mut self,grant:RetainedCloneGrant)->Result<(ReadLease<T>,RetainedCloneProgress),(ValueError,Self)>{if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<ReadLease<T>>()||grant.maximum_depth==0{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original read handoff is not funded"),self));}let read=self.read.take().expect("original read already transferred");Ok((read,RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<ReadLease<T>>(),..Default::default()}))}
+ pub fn return_read(&mut self,output:&mut Option<ReadLease<T>>,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{if output.is_some(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original read output place is occupied")),work:0}}if self.read.is_none(){return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(Default::default())),work:0}}if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Progress(Default::default())),work:0}}*output=self.read.take();crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+
 }
 impl<T:RetireOwned+Sync> Drop for OriginalReadSource<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.read.is_none(),"original standalone read still requires its actual registry issuer");if self.read.is_none(){unsafe{ManuallyDrop::drop(&mut self.read);}}}}
 
@@ -20,8 +20,8 @@ unsafe impl<T:RetireOwned+Sync> Sync for OriginalErasedReadSource<T>{}
 impl<T:RetireOwned+Sync> OriginalErasedReadSource<T>{
  pub(super) fn new(read:ErasedReadLease)->Self{Self{read:ManuallyDrop::new(Some(read)),marker:std::marker::PhantomData}}
  pub fn get(&self)->&T{self.read.as_ref().and_then(|read|read.get::<T>()).expect("original erased source type changed")}
- pub(super) fn take_refused(&mut self)->ErasedReadLease{self.read.take().expect("refused original erased read remains owned")}
- pub fn into_read(mut self,grant:RetainedCloneGrant)->Result<(ErasedReadLease,RetainedCloneProgress),(ValueError,Self)>{if grant.maximum_items==0||grant.maximum_copy_bytes<size_of::<ErasedReadLease>()||grant.maximum_depth==0{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original erased read handoff is not funded"),self));}let read=self.read.take().expect("original erased read already transferred");Ok((read,RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<ErasedReadLease>(),..Default::default()}))}
+ pub fn return_read(&mut self,output:&mut Option<ErasedReadLease>,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{if output.is_some(){return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original erased read output place is occupied")),work:0}}if self.read.is_none(){return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(Default::default())),work:0}}if grant.maximum_items==0||grant.maximum_depth==0{return crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Progress(Default::default())),work:0}}*output=self.read.take();crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+
 }
 impl<T:RetireOwned+Sync> Drop for OriginalErasedReadSource<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.read.is_none(),"original erased standalone read still requires its actual registry issuer");if self.read.is_none(){unsafe{ManuallyDrop::drop(&mut self.read);}}}}
 
@@ -29,7 +29,7 @@ struct Cursor<S:Send+'static>{original:ManuallyDrop<S>}
 fn unsupported()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"standalone read registry graph still exposes raw Arc/Weak authority; original read remains retained")}
 impl<S:Send+'static> RetirementCursor for Cursor<S>{
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Err(unsupported())}
- fn close_step(&mut self,_grant:RetainedCloneGrant)->RetirementStep{RetirementStep::Failure(unsupported())}
+ fn close_step(&mut self,_grant:RetainedCloneGrant)->RetirementStep{RetirementStep::Failure(unsupported(),0)}
  fn terminal_is_empty(&self)->bool{false}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Err(unsupported())}
  fn next_birth_bytes(&self,_body:usize)->Option<usize>{None}

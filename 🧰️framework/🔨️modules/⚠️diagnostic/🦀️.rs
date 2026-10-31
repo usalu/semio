@@ -953,3 +953,7 @@ pub use fault_wire_cursor::FaultWireCursor;
 #[cfg(test)]
 #[path="📤️wire/👣️cursor/🧪️tests/🦀️.rs"]
 mod fault_wire_cursor_tests;
+
+#[path="🏭️message/🦀️.rs"]
+mod message_construction;
+pub use message_construction::FaultMessageOwner;

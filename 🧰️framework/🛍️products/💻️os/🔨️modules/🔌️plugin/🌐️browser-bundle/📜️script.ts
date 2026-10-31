@@ -16,6 +16,7 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { browserWasiInterfaces } from "./🌐️wasi/🟦️.ts";
 import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES as browserActorMaximumBytes } from "../../../../../📦️packages/🟦️typescript/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
+import { browserActorModuleSource } from "./🧩️actor-module/🟦️.ts";
 import { readStableBuildFile } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🟦️.ts";
 import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️authoring/🟦️.ts";
 import { isMainModuleV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏁️main/🟦️.ts";
@@ -204,7 +205,7 @@ export function browserActorImportAdmissionV1(component: Uint8Array): BrowserAct
 
 type BrowserActorCodegenManifest = Readonly<{ version: "1.34.0"; runtime: "bun@1.4.2"; importInterfaces: readonly string[]; files: readonly string[] }>;
 
-/** 🛂️ Admits exact canonical generated-file and interface names independently of the codegen subprocess. */
+/** 🚪️ Admits exact canonical generated-file and interface names independently of the codegen subprocess. */
 export function parseBrowserActorCodegenManifest(value: unknown): BrowserActorCodegenManifest {
   const denied = (): never => { throw new Error("browser actor artifact: invalid generated manifest"); };
   if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).sort().join(",") !== "files,importInterfaces,runtime,version") return denied();
@@ -368,7 +369,7 @@ export async function captureBrowserCodegenSources(entrypoint: string, roots: re
   return Object.freeze({ source: result.source, inputs: Object.freeze(result.inputs), physicalInputs: Object.freeze(result.physicalInputs) });
 }
 
-/** 🧬️ Closes the public browser compiler entry with its two component cores in one private build directory. */
+/** 🎯️ Closes the public browser compiler entry with its two component cores in one private build directory. */
 export async function buildBrowserCodegenModule(evidence: string, check: () => void, invocation: ScriptInvocation, phase:CompilerAdmissionControl): Promise<Readonly<{ path: string; sha256: string; byteLength: number; inputs: readonly BrowserCodegenSourceDigest[]; cores: readonly BrowserCodegenSourceDigest[]; physicalInputs:readonly BrowserActorPhysicalInputV1[] }>> {
   check();
   const entrypoint = fileURLToPath(import.meta.resolve("@bytecodealliance/jco/component"));
@@ -640,69 +641,7 @@ export async function closedBrowserActorBundleFromRuntime(source: string, cores:
   validateAsyncTaskReturnLift(source);
   const component = await closedBrowserComponentFactory(source, cores, control);
   const imports = names.map(name => `${JSON.stringify(name)}: ${browserWasiInterfaces.includes(name) ? `wasi.imports[${JSON.stringify(name)}]` : `host.${known[name as keyof typeof known]}`}`).join(",");
-  const contents = `import { createBrowserHostActivation } from "semio:actor-host";
-import { createBrowserWasiActivation } from "semio:actor-wasi";
-${component}
-export async function activate(identity, port, control = {}) {
-  const host = createBrowserHostActivation(identity, port, control.signal);
-  let component, wasi, closeOnExit = () => {};
-  try {
-    if (${wasiRequired}) {
-      if (typeof WebAssembly.Suspending !== "function" || typeof WebAssembly.promising !== "function") throw new Error("browser actor bundle: JSPI unavailable");
-      if (!port.wasi || typeof port.wasi.nowNs !== "function" || typeof port.wasi.wallNs !== "function" || typeof port.wasi.write !== "function") throw new Error("browser actor bundle: WASI port required");
-      wasi = createBrowserWasiActivation({ nowNs: () => port.wasi.nowNs(), wallNs: () => port.wasi.wallNs(), write: (channel, bytes) => port.wasi.write(channel, bytes), exit(status) { closeOnExit(); port.wasi.exit?.(status); } }, control.signal);
-    }
-    component = await instantiateFreshComponent({${imports}}, control);
-  }
-  catch (error) {
-    const results = await Promise.allSettled([Promise.resolve().then(() => host.close()), Promise.resolve().then(() => wasi?.close())]);
-    const errors = results.flatMap(result => result.status === "rejected" ? [result.reason] : []);
-    if (errors.length) throw new AggregateError([error, ...errors], "browser actor bundle: activation and retirement failed");
-    throw error;
-  }
-  const active = new Set();
-  let phase = "open", closing;
-  const close = () => {
-    if (closing) return closing;
-    phase = "closing";
-    control.signal?.removeEventListener("abort", onAbort);
-    closing = Promise.resolve().then(async () => {
-      try {
-        const results = await Promise.allSettled([Promise.resolve().then(() => host.close()), Promise.resolve().then(() => wasi?.close()), ...active]);
-        const errors = results.slice(0, 2).flatMap(result => result.status === "rejected" ? [result.reason] : []);
-        if (errors.length) throw new AggregateError(errors, "browser actor bundle: retirement failed");
-      } finally { component = null; phase = "closed"; }
-    });
-    closing.catch(() => {});
-    return closing;
-  };
-  closeOnExit = () => { void close(); };
-  const onAbort = () => { void close(); };
-  control.signal?.addEventListener("abort", onAbort, { once: true });
-  if (control.signal?.aborted) { await close(); throw new Error("browser actor bundle: cancelled"); }
-  const invoke = async (path, args) => {
-    if (phase !== "open") throw new Error("browser actor bundle: closed");
-    if (!Array.isArray(path) || path.length < 1 || path.length > 2 || path.some(name => typeof name !== "string" || name.length > 256) || !Array.isArray(args) || args.length > 64) throw new Error("browser actor bundle: invalid invocation");
-    if (active.size >= 32) throw new Error("browser actor bundle: invocation capacity");
-    let owner = component;
-    if (path.length === 2) {
-      if (!Object.hasOwn(owner, path[0])) throw new Error("browser actor bundle: unknown interface");
-      owner = owner[path[0]];
-    }
-    const name = path[path.length - 1];
-    if (!owner || !Object.hasOwn(owner, name) || typeof owner[name] !== "function") throw new Error("browser actor bundle: unknown operation");
-    const operation = Promise.resolve().then(() => {
-      if (phase !== "open") throw new Error("browser actor bundle: closed");
-      return owner[name](...args);
-    });
-    active.add(operation);
-    try { return await operation; }
-    catch (error) { throw host.invocationFailure(error); }
-    finally { active.delete(operation); }
-  };
-  return Object.freeze({ invoke, close, progress: () => Object.freeze({ phase, activeInvocations: active.size }), resolveEffect: host.resolveEffect, rejectEffect: host.rejectEffect });
-}
-`;
+  const contents = browserActorModuleSource(component, imports, wasiRequired);
   if (control.cancelled?.()) throw new Error("browser actor bundle: cancelled");
   const result = await ownedBrowserBundleWorker({ version: 1, kind: "actor", mode: readNativeCallerAuthorityV1(invocation.capabilities).original.buildMode, contents, runtime: { host: new TextDecoder().decode(runtime.get("host")!.bytes), wasi: new TextDecoder().decode(runtime.get("wasi")!.bytes) } }, () => { if (control.cancelled?.()) throw new Error("browser actor bundle: cancelled"); }, invocation,compiler);
   if (result.loadedRuntime !== 2) throw new Error("browser actor bundle: runtime snapshot coverage");
@@ -717,7 +656,7 @@ export async function activate(identity, port, control = {}) {
   return output;
 }
 
-/** 🧊️ Closes a JCO instantiation function over exact immutable core bytes, preserving per-call guest state. */
+/** 🧳️ Closes a JCO instantiation function over exact immutable core bytes, preserving per-call guest state. */
 export async function closedBrowserComponentFactory(source: string, cores: readonly BrowserComponentCore[], control: BrowserComponentFactoryControl = {}): Promise<string> {
   const check = () => { if (control.cancelled?.()) throw new Error("browser component factory: cancelled"); };
   check();
@@ -869,7 +808,7 @@ async function instantiateFreshComponent(imports, control = {}) {
 `;
 }
 
-/** 🧬️ The exact bag handed to `createBrowserBundleTests` — `typeof` of the live bindings, so it cannot drift. */
+/** 🔤️ The exact bag handed to `createBrowserBundleTests` — `typeof` of the live bindings, so it cannot drift. */
 export type BrowserBundleTestDependencies = Readonly<{
   readonly browserActorAsyncImports: typeof browserActorAsyncImports;
   readonly browserActorImportAdmissionV1: typeof browserActorImportAdmissionV1;

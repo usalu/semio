@@ -1,0 +1,7 @@
+STATUS: flow-drawing trace port DONE (by fwfix at 21:06); verification BLOCKED by the peer's unfinished 2d-booleans/paths port (not mine, no edit made).
+
+- `🖍️drawing/🧱️kernel-impl/🦀️.rs` `trace_paths` already drives `semio_framework_2d::trace::{BitmapTraceInput, BitmapTraceJob}` (owned `Vec<u8>` mask, `advance(4096, ledger)`, no-progress guard, `into_retirement` drain). The only remaining flow-drawing error (`&[u8]: RetireOwned`, wasm check w10) was fixed by `.to_vec()` at 21:06. No `trace_bitmap_paths` remains anywhere in framework Rust sources.
+- No other removed-name callers found in flow-drawing (it only uses `trace::*` and `booleans::boolean_paths`).
+- Checks (root `Cargo.toml` workspace, `1030-tools/p2dflow/run.sh`): n4 `test --lib -p semio-framework-os-flow-drawing` fails only upstream in `semio-framework-2d-booleans` (4 errors in `◻️2d/🔀️booleans/🛤️paths/🦀️.rs` lines 43/50: `child.advance(1, work)`, `last_turn_work`, `last_turn_semantic_work`, `BooleanJob::settlement_pending` — the peer's paths code is ported, `BooleanJob` in `booleans/🦀️.rs` is not). Earlier transients (path-flatten `failure` field, tiny-skia workspace inheritance) were peer-fixed.
+- Not yet run: flow-drawing lib tests, wasm check. Re-run `1030-tools/p2dflow/run.sh <n> test --no-fail-fast --lib -p semio-framework-os-flow-drawing` (and wasm via fwfix both.sh) once the peer finishes BooleanJob and is quiet >=15 min.
+- Edits inside ◻️2d: none.

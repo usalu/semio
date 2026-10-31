@@ -1,0 +1,754 @@
+{
+  "request": {
+    "version": 1,
+    "purpose": "current-publication",
+    "initialState": "mounted",
+    "receiptSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "directory": {
+      "dev": "1",
+      "ino": "9"
+    },
+    "backing": {
+      "dev": "1",
+      "ino": "2",
+      "size": 154,
+      "allocatedBytes": 154
+    },
+    "root": {
+      "dev": "1",
+      "ino": "6"
+    }
+  },
+  "transition": {
+    "version": 1,
+    "purpose": "current-directory-envelope-publication",
+    "prepared": {
+      "version": 1,
+      "platform": "posix",
+      "parent": {
+        "dev": "1",
+        "ino": "9",
+        "mode": "16832",
+        "size": "160",
+        "nlink": "6",
+        "mtimeNs": "1",
+        "ctimeNs": "1"
+      },
+      "name": "fixed.dir",
+      "stage": {
+        "name": ".b1234abc",
+        "identity": {
+          "dev": "1",
+          "ino": "3",
+          "mode": "33152",
+          "size": "156",
+          "nlink": "1",
+          "mtimeNs": "1",
+          "ctimeNs": "1"
+        },
+        "sha256": "067602bc87a93d534555afd1d85dab7b98706f860b7db58945343b1f559a8170"
+      },
+      "prior": {
+        "identity": {
+          "dev": "1",
+          "ino": "2",
+          "mode": "33152",
+          "size": "154",
+          "nlink": "1",
+          "mtimeNs": "1",
+          "ctimeNs": "1"
+        },
+        "sha256": "9b8906f799ef7184574ac3c8e4ac33da2ed0cff2ac2bdaac390adb1b6e5eb021"
+      },
+      "retainedName": ".b1234abc",
+      "names": [
+        ".publication",
+        "fixed.dir",
+        "image.json",
+        "m",
+        "v"
+      ],
+      "authority": false,
+      "windows": null
+    },
+    "before": {
+      "identity": {
+        "dev": "1",
+        "ino": "2",
+        "mode": "33152",
+        "size": "154",
+        "nlink": "1",
+        "mtimeNs": "1",
+        "ctimeNs": "1"
+      },
+      "sha256": "9b8906f799ef7184574ac3c8e4ac33da2ed0cff2ac2bdaac390adb1b6e5eb021",
+      "value": {
+        "version": 1,
+        "kind": "directory-partition",
+        "filesystemBytes": 8588886016,
+        "maximumPhysicalBytes": 8589934592,
+        "underlying": {
+          "dev": "1",
+          "ino": "5",
+          "mode": 16832
+        }
+      }
+    },
+    "after": {
+      "identity": {
+        "dev": "1",
+        "ino": "3",
+        "mode": "33152",
+        "size": "156",
+        "nlink": "1",
+        "mtimeNs": "1",
+        "ctimeNs": "1"
+      },
+      "sha256": "067602bc87a93d534555afd1d85dab7b98706f860b7db58945343b1f559a8170",
+      "value": {
+        "version": 1,
+        "kind": "directory-partition",
+        "filesystemBytes": 38653657088,
+        "maximumPhysicalBytes": 38654705664,
+        "underlying": {
+          "dev": "1",
+          "ino": "5",
+          "mode": 16832
+        }
+      }
+    },
+    "nextReceiptSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "volume": {
+      "dev": "1",
+      "ino": "6",
+      "mode": 16832
+    },
+    "witness": {
+      "version": 1,
+      "digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "files": 2,
+      "directories": 1,
+      "links": 0,
+      "sockets": 0,
+      "bytes": "42",
+      "journalSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "applicationSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "service": null
+    },
+    "authority": false
+  },
+  "cases": [
+    {
+      "id": "prepared-before-anchor",
+      "anchor": "old",
+      "stage": "new",
+      "retained": null,
+      "receipt": "old",
+      "mapping": "inactive",
+      "expected": "publish-anchor"
+    },
+    {
+      "id": "new-anchor-old-receipt",
+      "anchor": "new",
+      "stage": "old",
+      "retained": null,
+      "receipt": "old",
+      "mapping": "inactive",
+      "expected": "publish-receipt"
+    },
+    {
+      "id": "new-receipt-inactive",
+      "anchor": "new",
+      "stage": "old",
+      "retained": null,
+      "receipt": "new",
+      "mapping": "inactive",
+      "expected": "attach"
+    },
+    {
+      "id": "new-receipt-attached",
+      "anchor": "new",
+      "stage": "old",
+      "retained": null,
+      "receipt": "new",
+      "mapping": "attached",
+      "expected": "qualify"
+    },
+    {
+      "id": "foreign-receipt",
+      "anchor": "new",
+      "stage": "old",
+      "retained": null,
+      "receipt": "foreign",
+      "mapping": "inactive",
+      "expected": null
+    },
+    {
+      "id": "receipt-before-anchor",
+      "anchor": "old",
+      "stage": "new",
+      "retained": null,
+      "receipt": "new",
+      "mapping": "inactive",
+      "expected": null
+    },
+    {
+      "id": "lost-retained-anchor",
+      "anchor": "new",
+      "stage": null,
+      "retained": null,
+      "receipt": "new",
+      "mapping": "attached",
+      "expected": null
+    },
+    {
+      "id": "pending-swap",
+      "anchor": "new",
+      "stage": "old",
+      "retained": null,
+      "receipt": "new",
+      "mapping": "attached",
+      "pendingSwap": true,
+      "expected": null
+    },
+    {
+      "id": "wrong-volume",
+      "anchor": "new",
+      "stage": "old",
+      "retained": null,
+      "receipt": "new",
+      "mapping": "foreign",
+      "expected": null
+    },
+    {
+      "id": "windows-before-displacement",
+      "platform": "windows",
+      "anchor": "old",
+      "stage": "new",
+      "retained": null,
+      "receipt": "old",
+      "mapping": "inactive",
+      "expected": "publish-anchor"
+    },
+    {
+      "id": "windows-displaced",
+      "platform": "windows",
+      "anchor": null,
+      "stage": "new",
+      "retained": "old",
+      "receipt": "old",
+      "mapping": "inactive",
+      "expected": "recover-anchor"
+    },
+    {
+      "id": "windows-published",
+      "platform": "windows",
+      "anchor": "new",
+      "stage": null,
+      "retained": "old",
+      "receipt": "old",
+      "mapping": "inactive",
+      "expected": "publish-receipt"
+    },
+    {
+      "id": "windows-qualify",
+      "platform": "windows",
+      "anchor": "new",
+      "stage": null,
+      "retained": "old",
+      "receipt": "new",
+      "mapping": "attached",
+      "expected": "qualify"
+    },
+    {
+      "id": "windows-foreign-retained",
+      "platform": "windows",
+      "anchor": "new",
+      "stage": null,
+      "retained": "new",
+      "receipt": "new",
+      "mapping": "attached",
+      "expected": null
+    }
+  ],
+  "preparation": {
+    "version": 1,
+    "purpose": "prepare-current-directory-envelope",
+    "before": {
+      "identity": {
+        "dev": "1",
+        "ino": "2",
+        "mode": "33152",
+        "size": "154",
+        "nlink": "1",
+        "mtimeNs": "1",
+        "ctimeNs": "1"
+      },
+      "sha256": "9b8906f799ef7184574ac3c8e4ac33da2ed0cff2ac2bdaac390adb1b6e5eb021",
+      "value": {
+        "version": 1,
+        "kind": "directory-partition",
+        "filesystemBytes": 8588886016,
+        "maximumPhysicalBytes": 8589934592,
+        "underlying": {
+          "dev": "1",
+          "ino": "5",
+          "mode": 16832
+        }
+      }
+    },
+    "target": {
+      "version": 1,
+      "kind": "directory-partition",
+      "filesystemBytes": 38653657088,
+      "maximumPhysicalBytes": 38654705664,
+      "underlying": {
+        "dev": "1",
+        "ino": "5",
+        "mode": 16832
+      }
+    },
+    "planned": {
+      "platform": "posix",
+      "parent": {
+        "dev": "1",
+        "ino": "9",
+        "mode": "16832",
+        "size": "160",
+        "nlink": "5",
+        "mtimeNs": "1",
+        "ctimeNs": "1"
+      },
+      "name": "fixed.dir",
+      "retainedName": ".b1234abc",
+      "names": [
+        ".publication",
+        "fixed.dir",
+        "image.json",
+        "m",
+        "v"
+      ],
+      "authority": false,
+      "stage": ".b1234abc",
+      "windows": null
+    },
+    "volume": {
+      "dev": "1",
+      "ino": "6",
+      "mode": 16832
+    },
+    "witness": {
+      "version": 1,
+      "digest": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "files": 2,
+      "directories": 1,
+      "links": 0,
+      "sockets": 0,
+      "bytes": "42",
+      "journalSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "applicationSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "service": null
+    },
+    "authority": false
+  },
+  "unpreparedCases": [
+    {
+      "id": "empty-reserved-stage",
+      "mode": "empty",
+      "accepted": true
+    },
+    {
+      "id": "partial-reserved-stage",
+      "mode": "partial",
+      "accepted": true
+    },
+    {
+      "id": "complete-reserved-stage",
+      "mode": "complete",
+      "accepted": true
+    },
+    {
+      "id": "foreign-bytes",
+      "mode": "foreign-bytes",
+      "accepted": false
+    },
+    {
+      "id": "suffix",
+      "mode": "suffix",
+      "accepted": false
+    },
+    {
+      "id": "role",
+      "mode": "role",
+      "accepted": false
+    },
+    {
+      "id": "hardlink",
+      "mode": "hardlink",
+      "accepted": false
+    },
+    {
+      "id": "directory",
+      "mode": "directory",
+      "accepted": false
+    },
+    {
+      "id": "mode",
+      "mode": "mode",
+      "accepted": false
+    },
+    {
+      "id": "device",
+      "mode": "device",
+      "accepted": false
+    },
+    {
+      "id": "parent",
+      "mode": "parent",
+      "accepted": false
+    },
+    {
+      "id": "alias",
+      "mode": "alias",
+      "accepted": false
+    },
+    {
+      "id": "declaration",
+      "mode": "declaration",
+      "accepted": false
+    },
+    {
+      "id": "receipt",
+      "mode": "receipt",
+      "accepted": false
+    },
+    {
+      "id": "anchor",
+      "mode": "anchor",
+      "accepted": false
+    },
+    {
+      "id": "root",
+      "mode": "root",
+      "accepted": false
+    },
+    {
+      "id": "roster",
+      "mode": "roster",
+      "accepted": false
+    },
+    {
+      "id": "pending",
+      "mode": "pending",
+      "accepted": false
+    },
+    {
+      "id": "extra",
+      "mode": "extra",
+      "accepted": false
+    }
+  ],
+  "initialMetadata": {
+    "platform": "linux",
+    "declaration": {
+      "filesystemBytes": 38653657088,
+      "maximumPhysicalBytes": 38654705664
+    },
+    "parent": {
+      "dev": "1",
+      "ino": "9",
+      "mode": "16832",
+      "size": "160",
+      "nlink": "5",
+      "mtimeNs": "1",
+      "ctimeNs": "1"
+    },
+    "anchor": {
+      "identity": {
+        "dev": "1",
+        "ino": "2",
+        "mode": "33152",
+        "size": "154",
+        "nlink": "1",
+        "mtimeNs": "1",
+        "ctimeNs": "1"
+      },
+      "sha256": "9b8906f799ef7184574ac3c8e4ac33da2ed0cff2ac2bdaac390adb1b6e5eb021",
+      "value": {
+        "version": 1,
+        "kind": "directory-partition",
+        "filesystemBytes": 8588886016,
+        "maximumPhysicalBytes": 8589934592,
+        "underlying": {
+          "dev": "1",
+          "ino": "5",
+          "mode": 16832
+        }
+      }
+    },
+    "receipt": {
+      "version": 1,
+      "platform": "linux",
+      "dev": 1,
+      "ino": 2,
+      "size": 154,
+      "filesystemBytes": 8588886016,
+      "maximumPhysicalBytes": 8589934592,
+      "mountDirectory": {
+        "dev": "1",
+        "ino": "5",
+        "mode": 16832
+      }
+    },
+    "root": {
+      "dev": "1",
+      "ino": "6",
+      "mode": 16832
+    },
+    "volume": {
+      "dev": "1",
+      "ino": "5",
+      "mode": 16832
+    },
+    "names": [
+      ".publication",
+      "fixed.dir",
+      "image.json",
+      "m",
+      "v"
+    ],
+    "namespace": {
+      "identity": {
+        "dev": "1",
+        "ino": "10",
+        "mode": "16832",
+        "size": "160",
+        "nlink": "2",
+        "mtimeNs": "1",
+        "ctimeNs": "1"
+      },
+      "entries": [
+        {
+          "name": "intent.json",
+          "kind": "file",
+          "identity": {
+            "dev": "1",
+            "ino": "11",
+            "mode": "33152",
+            "size": "20",
+            "nlink": "1",
+            "mtimeNs": "1",
+            "ctimeNs": "1"
+          }
+        }
+      ]
+    },
+    "pendingSwap": false,
+    "marker": null,
+    "receiptSha256": "6c9acff7587a3c8144a397367073bf9d96dfba3fed0d17759b472ccd8cb92cd0"
+  },
+  "initialCases": [
+    {
+      "id": "complete",
+      "accepted": true
+    },
+    {
+      "id": "empty",
+      "accepted": true
+    },
+    {
+      "id": "two-known",
+      "accepted": true
+    },
+    {
+      "id": "extra-base",
+      "accepted": false
+    },
+    {
+      "id": "anchor-stage",
+      "accepted": false
+    },
+    {
+      "id": "intent-stage",
+      "accepted": false
+    },
+    {
+      "id": "unknown-namespace",
+      "accepted": false
+    },
+    {
+      "id": "directory-entry",
+      "accepted": false
+    },
+    {
+      "id": "symlink-entry",
+      "accepted": false
+    },
+    {
+      "id": "hardlink",
+      "accepted": false
+    },
+    {
+      "id": "oversize",
+      "accepted": false
+    },
+    {
+      "id": "permissions",
+      "accepted": false
+    },
+    {
+      "id": "namespace-kind",
+      "accepted": false
+    },
+    {
+      "id": "namespace-mode",
+      "accepted": false
+    },
+    {
+      "id": "anchor-hash",
+      "accepted": false
+    },
+    {
+      "id": "receipt-anchor",
+      "accepted": false
+    },
+    {
+      "id": "receipt-envelope",
+      "accepted": false
+    },
+    {
+      "id": "receipt-underlay",
+      "accepted": false
+    },
+    {
+      "id": "foreign-platform",
+      "accepted": false
+    },
+    {
+      "id": "mapping",
+      "accepted": false
+    },
+    {
+      "id": "alias-volume",
+      "accepted": false
+    },
+    {
+      "id": "parent-device",
+      "accepted": false
+    },
+    {
+      "id": "shrink-declaration",
+      "accepted": false
+    },
+    {
+      "id": "pending",
+      "accepted": false
+    },
+    {
+      "id": "duplicate-namespace",
+      "accepted": false
+    }
+  ],
+  "wireWindows": {
+    "volumeSerial": "18446744073709551615",
+    "attributes": 4294967295,
+    "security": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "streams": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "parentFileId": "99999999999999999999999999999999",
+    "priorFileId": "88888888888888888888888888888888",
+    "stageFileId": "77777777777777777777777777777777",
+    "retainedName": ".b5678abc"
+  },
+  "baselineNamespaceCases": [
+    {
+      "id": "one",
+      "accepted": true
+    },
+    {
+      "id": "two-agree",
+      "accepted": true
+    },
+    {
+      "id": "partial-other",
+      "accepted": true
+    },
+    {
+      "id": "unknown-name",
+      "accepted": false
+    },
+    {
+      "id": "disagree-witness",
+      "accepted": false
+    },
+    {
+      "id": "no-complete",
+      "accepted": false
+    },
+    {
+      "id": "prepared-record",
+      "accepted": false
+    },
+    {
+      "id": "three",
+      "accepted": false
+    },
+    {
+      "id": "disagree-platform",
+      "accepted": false
+    },
+    {
+      "id": "foreign-context",
+      "accepted": false
+    }
+  ],
+  "initialRecoveryCases": [
+    {
+      "id": "marker",
+      "expected": "observed-marker"
+    },
+    {
+      "id": "opaque-old",
+      "expected": "opaque-predecessor"
+    },
+    {
+      "id": "opaque-partial",
+      "expected": "opaque-predecessor"
+    },
+    {
+      "id": "marker-missing-lf",
+      "expected": "refuse"
+    },
+    {
+      "id": "unknown-suffix",
+      "expected": "refuse"
+    },
+    {
+      "id": "known-witness-suffix",
+      "expected": "refuse"
+    },
+    {
+      "id": "partial-witness-suffix",
+      "expected": "refuse"
+    },
+    {
+      "id": "extra-lf",
+      "expected": "refuse"
+    },
+    {
+      "id": "extra-field",
+      "expected": "refuse"
+    },
+    {
+      "id": "foreign-prepared-first",
+      "expected": "refuse"
+    },
+    {
+      "id": "marker-equal-current",
+      "expected": "observed-marker"
+    },
+    {
+      "id": "unknown-suffix-equal-current",
+      "expected": "refuse"
+    }
+  ]
+}

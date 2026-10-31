@@ -1,0 +1,3 @@
+# Child Inherited Budget Test First
+
+Closed neutral fixture/schema and an actual OriginalJobFixtureCaller/ready-child law precede the public context guard. Child-owned unused return state cannot seed authority from caller-supplied numbers. Public own-context opening must refuse; genuine with_context relends the same parent mutable budget as Borrowed and leaves the child bank unbound. The same fixed stock pays actual child/source admission and closure. serde_json independently pins route flags. A wrapper made from a real strong upstream source loan may still borrow that SAME original gate; it is not a new child budget. Job --lib is mandatory, unexecuted.

@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo/native-directory-envelope-integration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "before",
+    "after",
+    "payload",
+    "cases",
+    "witnessCases"
+  ],
+  "properties": {
+    "before": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesystemBytes",
+        "maximumPhysicalBytes"
+      ],
+      "properties": {
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        }
+      }
+    },
+    "after": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesystemBytes",
+        "maximumPhysicalBytes"
+      ],
+      "properties": {
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        }
+      }
+    },
+    "payload": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "cut",
+          "pending"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z-]+$"
+          },
+          "cut": {
+            "enum": [
+              null,
+              "observed",
+              "witnessed",
+              "staged",
+              "published",
+              "attached",
+              "verified"
+            ]
+          },
+          "pending": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "witnessCases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "mode",
+          "accepted"
+        ],
+        "properties": {
+          "mode": {
+            "enum": [
+              "actual",
+              "copied",
+              "foreign-control",
+              "foreign-root"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "owner": "rust",
+  "state": "source-ready-joint-quiescence-composition-and-strict-green",
+  "files": [
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🌐️platform/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/receipt-funding.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/receipt-funding.schema.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/reader-quiescence.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/reader-quiescence.schema.json"
+  ],
+  "reports": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/artifact-owner-lifecycle.md"
+  ],
+  "sourcePathMaximum": 162,
+  "runtimeJob": {
+    "session": 51879,
+    "normalManagedAdmission": true,
+    "log": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/artifact-receipt/native-receipt-focused.log",
+    "state": "terminal",
+    "exitCode": 0,
+    "tests": 7,
+    "failures": 0,
+    "assertions": 306
+  },
+  "strict": {
+    "owner": "dependency_layout",
+    "session": 55159,
+    "state": "terminal",
+    "exitCode": 0,
+    "roots": 4,
+    "log": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/producer-reader-strict.log"
+  },
+  "quiescence": {
+    "productionChanges": false,
+    "session": 18113,
+    "state": "terminal",
+    "normalManagedAdmission": true,
+    "log": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/artifact-receipt/native-reader-quiescence.log",
+    "exitCode": 0,
+    "tests": 8,
+    "assertions": 427,
+    "failures": 0
+  },
+  "jointComposition": {
+    "session": 50554,
+    "state": "terminal",
+    "normalManagedAdmission": true,
+    "log": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/artifact-receipt/native-reader-caller-composition.log",
+    "nativeProductionChanges": false,
+    "exitCode": 0,
+    "tests": 8,
+    "failures": 0,
+    "assertions": 591
+  }
+}

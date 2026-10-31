@@ -1,0 +1,19 @@
+{
+  "captured": {
+    "path": "🧰️framework/Cargo.toml",
+    "bytes": 124804,
+    "sha256": "0593f5522cbd8c0ad7b51737923bd1182494d4fe87c0ac85ccdb2423d70c8c14",
+    "utf16PathUnits": 51
+  },
+  "currentBytes": 124804,
+  "currentSha256": "715b33625bbb3e206d5f9f76cc73590bd58bbdfb0fcaa79cccdc05e5dbf712f4",
+  "currentLine": 877,
+  "excludeStartLine": 425,
+  "excludeEndLine": 1028,
+  "candidatePositions": 602,
+  "exactOldHashMatchesAtLines": [
+    874
+  ],
+  "changedLinePath": "\"🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧿️original/📦️packages/🦀️rust\",",
+  "sourceMutated": false
+}

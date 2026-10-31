@@ -354,7 +354,7 @@ impl semio_framework_job::InteractiveJob for ToyWaitJob{
  toy_port_job_close!();
 }
 
-/// 🧸️ The toy run or revalidate job a request describes: it continues from the request's checkpoint.
+/// 🏃️ The toy run or revalidate job a request describes: it continues from the request's checkpoint.
 #[doc(hidden)]
 pub fn toy_run_job(request: ToolRunJobRequest<'_, ToyRunApp>) -> ToyRunJob {
     let done = request.checkpoint.and_then(|bytes| bytes.try_into().ok()).map_or(0, u32::from_le_bytes);
@@ -380,7 +380,7 @@ pub fn toy_run_job(request: ToolRunJobRequest<'_, ToyRunApp>) -> ToyRunJob {
     }
 }
 
-/// 🪟️ The toy world window's config: the same one-field document as the app config.
+/// 🌍️ The toy world window's config: the same one-field document as the app config.
 #[doc(hidden)]
 pub struct ToyWorldWindowConfig;
 
@@ -537,23 +537,23 @@ impl ArtifactApp for ToyRunApp {
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(mutation_fixture::no_state::presence_store_disposer())
+        Some(crate::mutation_fixture_no_state::presence_store_disposer())
     }
 
     fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(mutation_fixture::no_state::transient_store_disposer())
+        Some(crate::mutation_fixture_no_state::transient_store_disposer())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(mutation_fixture::no_state::presence_peer_retirement_factory())
+        Some(crate::mutation_fixture_no_state::presence_peer_retirement_factory())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(mutation_fixture::no_state::presence_local_root_retirement_factory())
+        Some(crate::mutation_fixture_no_state::presence_local_root_retirement_factory())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(mutation_fixture::no_state::transient_local_root_retirement_factory())
+        Some(crate::mutation_fixture_no_state::transient_local_root_retirement_factory())
     }
 }
 //#endregion 🧸️ToyRunApp

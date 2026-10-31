@@ -1,0 +1,25 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs",
+      "sha256": "44dd505c53ee9d9e986adc8286b5881a417085fa2a4f545a84330b8407a5291a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🦀️.rs",
+      "sha256": "bbb9d122c6a7a2fbfc902f710d31f375c975ea4f56c3461c6225f1ddb5398abc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🦀️.rs",
+      "sha256": "c466602df3977a713ed59ac09705477ff20618ba3079b49f91afd88f84e73179"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🧪️tests/🦀️.rs",
+      "sha256": "99c1b225725a48edeabdaf629f4395e953cb1b94c98ee1c942601b4e27e2877b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "a14c50de734887d1d8d8cb3b7b2a82d43e0eb5d87bdb247a07bbadc2957b1a0d"
+    }
+  ],
+  "state": "authored custody extraction; both unfiltered owning gates required"
+}

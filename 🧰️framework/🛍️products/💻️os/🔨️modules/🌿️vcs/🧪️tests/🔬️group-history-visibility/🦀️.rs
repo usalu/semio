@@ -7,7 +7,7 @@ fn observed(ledger: &ArtifactHistoryLedger<i32>) -> serde_json::Value {
 
 #[test]
 fn retained_group_history_switches_every_direct_reader_at_one_decision() {
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧪️group-history.json")).expect("group history fixture");
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧪️group-history.json")).expect("group history fixture");
     let mut first = ArtifactHistoryLedger::new();
     let mut second = ArtifactHistoryLedger::new();
     first.try_push(0).expect("first seed");
@@ -83,7 +83,7 @@ fn retained_group_history_abort_transfers_one_exact_owner_and_rejects_foreign_de
 #[test]
 fn original_history_ledger_retires_slot_visibility_before_whole_pages() {
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🧬️schema/📸️paged-history-ledger/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🧬️schema/📸️paged-history-ledger/🔣️.json")).unwrap();
     let count = fixture["pushes"].as_u64().unwrap() as usize;
     let mut publisher = ArtifactGroupVisibilityOwner::new();
     let view = publisher.view();

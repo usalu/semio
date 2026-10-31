@@ -1,0 +1,65 @@
+{
+  "scope": "Current touched source only, not complete dependency or ownership seal",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs",
+      "bytes": 57554,
+      "sha256": "092e5292e6c198a5bc0c62cec46c72fc0a5cf753b2e33f32af1330491150308b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🛬️receiving/🧪️tests/🦀️.rs",
+      "bytes": 14454,
+      "sha256": "ff69b305d641ba860f540459b5737d40623690c294b3b53cdb8662b52bd254b2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🛬️receiving/🎟️work/case.json",
+      "bytes": 263,
+      "sha256": "ad03430c8560e4e13b75262650296891f9f7187dd48291ed18522ae15956f687"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🛬️receiving/🎟️work/case.schema.json",
+      "bytes": 751,
+      "sha256": "d60d056a1266a4c45c07b1fde123768503e61dfad7731200603899a9905d38e3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/🦀️.rs",
+      "bytes": 14420,
+      "sha256": "8b0be88a8e4aa5ca49939cedb319d6d0f9c6053b53c103635557692208682ce1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/🎟️transport/🧪️tests/🦀️.rs",
+      "bytes": 4729,
+      "sha256": "1fe99a54ae4169eef61553ff874e0b12e28866ba9d19be0c1f26f5c2224ab59d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 2755,
+      "sha256": "f7c85dfea8f448a25edd34ed0cec97eb1a6133107258ed9b8e72ee5fbd952455"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/🎟️work/🧪️tests/case.json",
+      "bytes": 356,
+      "sha256": "8b0e6c81c36f98a06cf8f4928973338081e703d3350cf447dc79b83559f23ce9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/🎟️work/🧪️tests/case.schema.json",
+      "bytes": 916,
+      "sha256": "9dd9dbbabab0e39ea8ea83392ab5c5ce98b533b57f18791d98a46bced977c6e5"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/🏭️factory/🦀️.rs",
+      "bytes": 15744,
+      "sha256": "ea085fb5d02ad0d53ef2a31e096de0c3baf26bfff663d5b350acae4bb6b65fd0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗄️store-owners/🦀️.rs",
+      "bytes": 72252,
+      "sha256": "3948f605f86d5bda531504684c4595fa1bdefc826a8aeca0437170801e7c3d2a"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📥️retained/📦️typed-pack-load/🛬️native/🦀️.rs",
+      "bytes": 52979,
+      "sha256": "1c32e2516cb92b6ae002ea90af62c935c177810255041390e0c4cd435f4043c5"
+    }
+  ]
+}

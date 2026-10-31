@@ -349,6 +349,15 @@
           "name": null,
           "count": "unsafe",
           "reason": "count"
+        },
+        {
+          "id": "observed-dependency-babel-path",
+          "platform": "posix",
+          "root": "/source/checkout/workspace0/.cache/b/d/m",
+          "current": "/source/checkout/workspace0/.cache/b/d/m/j/023faac68681e8bd6e2f/node_modules/.bun/@babel+plugin-bugfix-safari-id-destructuring-collision-in-function-expression@7.29.7+497cea1c68b2b111/node_modules/@babel",
+          "name": "plugin-bugfix-safari-id-destructuring-collision-in-function-expression",
+          "count": 3,
+          "reason": "path"
         }
       ]
     },
@@ -2718,6 +2727,13 @@
             "eofReads": 0
           }
         ]
+      }
+    },
+    "LogicalEntryNameDiagnosticPolicy": {
+      "const": {
+        "version": 1,
+        "prefix": "Closed logical publication metadata name required: ",
+        "maximumEncodedBytes": 4096
       }
     }
   }

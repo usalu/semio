@@ -10,7 +10,7 @@ use {semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQua
 use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
-/// 📦️ Emits placement companions and each independent persisted child through one writer.
+/// 📤️ Emits placement companions and each independent persisted child through one writer.
 pub fn visit_rows(snapshot:&SemioObjectSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  snapshot.validate().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;let t=snapshot.transform;
  out.insert_key_float("semio_object_document",1,&[Cell::Text(&snapshot.schema),Cell::Real(t.translation.x),Cell::Real(t.translation.y),Cell::Real(t.translation.z),Cell::Real(t.rotation.x),Cell::Real(t.rotation.y),Cell::Real(t.rotation.z),Cell::Real(t.rotation.w),Cell::Real(t.scale.x),Cell::Real(t.scale.y),Cell::Real(t.scale.z)],float_columns("semio_object_document"))?;
@@ -19,7 +19,6 @@ pub fn visit_rows(snapshot:&SemioObjectSnapshot,out:&mut RowWriter<'_,'_>)->Resu
 /// 🫳️ Admits every typed relational cell before native forecast or allocation.
 pub(crate)fn admit_values(snapshot:&SemioObjectSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
 pub(crate)fn admit_layout(limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
-pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
 pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
 
 fn identity<'a>(row:impl std::borrow::Borrow<SqliteRow<'a>>,columns:usize)->Result<(),ValueError>{let row=*row.borrow();if row.rowid<=0||row.integer(0)?!=row.rowid||row.values.len()!=columns{Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio object row identity or columns"))}else{Ok(())}}
@@ -53,7 +52,7 @@ impl SemioObjectSnapshot {
 semantic::layout(control.limits())?;semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::projection::project_rows_owned(Self::SQLITE_SCHEMA,control,|out|visit_rows(self,out))
 }
 
-    /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
+    /// 🔤️ Restores the owned typed subset inside its independently declared relational composition.
     pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{reconstruction::reconstruct(database,control,declared_schema)}
 }
 

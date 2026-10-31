@@ -1,0 +1,13 @@
+{
+  "deniedWork": 0,
+  "admissionWork": 1,
+  "cachedWork": 0,
+  "stock": {
+    "items": 10000,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 128,
+    "maximumTurns": 10000
+  }
+}

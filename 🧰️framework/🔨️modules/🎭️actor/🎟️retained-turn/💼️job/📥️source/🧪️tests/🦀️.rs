@@ -28,3 +28,15 @@ fn original_job_source_keeps_actual_source_and_absolute_deadline_without_refill(
 
 fn returned(input:RetainedTurnInput,spent:RetainedCloneProgress,work:u64)->RetainedTurnInput{let receipt=input.return_original(spent,work).unwrap();RetainedTurnInput{epoch:input.epoch+1,grant:receipt.remaining,work:crate::OriginalActorTurnWork{fuel:receipt.remaining_fuel,..input.work},..input}}
 fn context<'a>(parent:&'a OriginalCallerSourceParent,input:RetainedTurnInput,policy:RetainedCloneGrant,sequence:&'a mut u64,spent:&'a mut RetainedCloneProgress)->StepContext<'a>{let mut cx=parent.borrow_context(StepBudget::new(input.work.fuel,input.work.absolute_deadline_us,input.grant),semio_framework_job::logical_now_us,sequence,spent).unwrap();cx.bind_original_clock_binding(input.work.clock_binding).unwrap();cx.bind_original_source_epoch(input.epoch).unwrap();cx.narrow_original_work_budget(StepBudget::new(input.work.fuel.min(7),input.work.absolute_deadline_us,policy)).unwrap();cx}
+
+#[test]
+fn original_job_output_page_bound_matches_its_schema_and_narrows_only_the_copy_axis(){
+ let schema:serde_json::Value=serde_json::from_str(include_str!("../../📄️output-page/🧬️schema/🔣️.json")).unwrap();
+ assert_eq!(schema["properties"]["outputPageBytes"]["const"].as_u64().unwrap() as usize,OriginalJobBudget::OUTPUT_PAGE_BYTES);
+ let grant=RetainedCloneGrant{maximum_items:9,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:8};
+ let input=RetainedTurnInput{operation:1,generation:1,epoch:1,work:crate::OriginalActorTurnWork{clock_binding:1,absolute_deadline_us:9,fuel:9},grant};
+ let budget=OriginalJobBudget{input,retained_policy:grant,fuel:9,deadline_us:9,cancelled:false};
+ assert_eq!(budget.for_output_page().retained_policy,RetainedCloneGrant{maximum_copy_bytes:OriginalJobBudget::OUTPUT_PAGE_BYTES,..grant});
+ let small=OriginalJobBudget{retained_policy:RetainedCloneGrant{maximum_copy_bytes:5,..grant},..budget};
+ assert_eq!(small.for_output_page(),small);
+}

@@ -1,0 +1,16 @@
+{
+  "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+  "beforeSha256": "d9ce297f89f6ef10f1923e7cf9fefc5661b44e837431e833a43359b405cad8b1",
+  "afterSha256": "d7ed8c629eb04cc2cc2855bda0ace716fe1f13349eb37fa17e4cf3e992061178",
+  "inverseWholeFile": "d9ce297f89f6ef10f1923e7cf9fefc5661b44e837431e833a43359b405cad8b1",
+  "edits": [
+    {
+      "before": "export function parseDrawingFill(value:unknown,at=\"$\"):DrawingFill {return ownedAttributes({fill:value},at).fill!;}",
+      "after": "export function parseDrawingFill(value:unknown,at=\"$\"):DrawingFill {const parsed=ownedAttributes({fill:value},at).fill;if(parsed===null||parsed===undefined)return drawingDrawingArtifactGuardReject(at,\"expected a non-null fill value\");return parsed;}"
+    },
+    {
+      "before": "export function parseDrawingStroke(value:unknown,at=\"$\"):DrawingStroke {return ownedAttributes({stroke:value},at).stroke!;}",
+      "after": "export function parseDrawingStroke(value:unknown,at=\"$\"):DrawingStroke {const parsed=ownedAttributes({stroke:value},at).stroke;if(parsed===null||parsed===undefined)return drawingDrawingArtifactGuardReject(at,\"expected a non-null stroke value\");return parsed;}"
+    }
+  ]
+}

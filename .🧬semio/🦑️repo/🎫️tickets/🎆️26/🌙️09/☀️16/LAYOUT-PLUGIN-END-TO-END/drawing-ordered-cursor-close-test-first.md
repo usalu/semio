@@ -1,0 +1,3 @@
+# Ordered Cursor Close Test First
+
+Closed neutral update/lookup close CPU fixture/schema and actual cursor owning law were authored before adding mandatory counters. The same explicit finite stock per real cursor pays original shared key birth and all close effects; actual allocator observations validate releases. Denied and cached close reset to zero, real metadata and nested retirement work are observed independently of domain step variants. serde_json validates original key bytes and BTreeMap independently validates the empty input collection. Ordered --lib is mandatory, unexecuted. Root owns typed retirement adapters; no whole Native proof is claimed.

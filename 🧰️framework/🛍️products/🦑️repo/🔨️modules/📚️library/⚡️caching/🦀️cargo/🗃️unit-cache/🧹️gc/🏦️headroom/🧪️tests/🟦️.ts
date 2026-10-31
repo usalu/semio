@@ -7,7 +7,7 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import componentSchema from "../🧬️schema/🔣️.json";
 import {UNIT_CACHE_POLICY_V1} from "../../../🔏️key/🟦️.ts";
 import {planGcV1,type GcInputV1} from "../../🟦️.ts";
-import {HEADROOM_POLICY_V1 as policy,admitImageHeadroomV1,decideHeadroomV1,headroomEstimateV1,headroomFloorBytesV1,headroomOutstandingV1,headroomQuantileV1,headroomTextV1,readHeadroomHistoryV1,readHeadroomLedgerV1,recordHeadroomSampleV1,type HeadroomHistoryV1,type HeadroomInputV1,type HeadroomRowV1} from "../🟦️.ts";
+import {HEADROOM_POLICY_V1 as policy,admitImageHeadroomV1,decideHeadroomV1,headroomEstimateV1,headroomFloorBytesV1,headroomOutstandingV1,headroomPriorV1,headroomQuantileV1,headroomTextV1,readHeadroomHistoryV1,readHeadroomLedgerV1,recordHeadroomSampleV1,type HeadroomHistoryV1,type HeadroomInputV1,type HeadroomRowV1} from "../🟦️.ts";
 
 const GIB=1024**3,volume=48*GIB,layout=UNIT_CACHE_POLICY_V1.layout;
 const ajv=new Ajv({strict:true});ajv.addSchema(componentSchema,"headroom.json");
@@ -18,10 +18,12 @@ const noSleep=(milliseconds:number,signal?:AbortSignal):Promise<void>=>new Promi
 test("the fixture is closed and every vector equals the independent Python oracle",()=>{
  const validate=ajv.compile({$ref:"headroom.json#/definitions/Vectors"});expect(validate(fixture),JSON.stringify(validate.errors)).toBe(true);
  for(const vector of fixture.floors)expect(headroomFloorBytesV1(vector.volumeBytes),vector.name).toBe(vector.expected);
+ for(const vector of fixture.priors)expect(headroomPriorV1(vector.classes,vector.temperature as "warm"|"cold") as unknown,vector.name).toEqual(vector.expected);
  for(const vector of fixture.quantiles)expect(headroomQuantileV1(vector.values,vector.basisPoints),vector.name).toBe(vector.expected);
  for(const vector of fixture.estimates)expect(headroomEstimateV1(vector.input.history as HeadroomHistoryV1,vector.input.classes,vector.input.prior,vector.input.volumeBytes) as unknown,vector.name).toEqual(vector.expected);
  for(const vector of fixture.outstanding)expect(headroomOutstandingV1(vector.input.row as HeadroomRowV1,vector.input.nowMs),vector.name).toBe(vector.expected);
  for(const vector of fixture.decisions)expect(decideHeadroomV1(vector.input as HeadroomInputV1) as unknown,vector.name).toEqual(vector.expected);
+ expect(python(fixture.priors.map(vector=>({kind:"prior",input:{classes:vector.classes,temperature:vector.temperature}})))).toEqual(fixture.priors.map(vector=>vector.expected));
  expect(python(fixture.floors.map(vector=>({kind:"floor",input:vector.volumeBytes})))).toEqual(fixture.floors.map(vector=>vector.expected));
  expect(python(fixture.quantiles.map(vector=>({kind:"quantile",input:{values:vector.values,basisPoints:vector.basisPoints}})))).toEqual(fixture.quantiles.map(vector=>vector.expected));
  expect(python(fixture.estimates.map(vector=>({kind:"estimate",input:vector.input})))).toEqual(fixture.estimates.map(vector=>vector.expected));
@@ -63,6 +65,16 @@ test("a command is admitted at once when the image has room, holds a record whil
   await third.release();
   const warm=await admitImageHeadroomV1({...base,temperature:"warm"});expect(warm.reservedBytes).toBe(policy.prior.warm.bytes);await warm.release();
   const history=readHeadroomHistoryV1(join(root,layout.headroom));expect(Object.keys(history.classes).sort()).toEqual(base.classes.map(name=>name+"#cold").sort());expect(history.classes["cargo/check#cold"]!.map(row=>row.bytes)).toEqual([2*GIB,2*GIB]);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("a component build reserves its own larger prior, bounded by the share of the image, while a cargo command keeps the general one",async()=>{
+ const root=scratch();
+ try{
+  const base={root,capacityBytes:volume,temperature:"cold" as const,label:"c",language:"en" as const,report:()=>{},measure:()=>({volumeBytes:volume,freeBytes:40*GIB}),sleep:noSleep};
+  const component=await admitImageHeadroomV1({...base,classes:["component","component/abc"]});
+  const prior=(policy.classPriors as readonly {prefix:string;cold:{bytes:number}}[]).find(row=>row.prefix==="component")!.cold.bytes;expect(prior,"the component prior follows the learned wasm check history (p90 5.2 GiB), not the old 8 GiB guess").toBeLessThan(6*1024**3);expect(component.reservedBytes).toBe(Math.min(prior,Math.floor(volume*policy.maximumShareBasisPoints/10000)));await component.release();
+  const cargo=await admitImageHeadroomV1({...base,classes:["cargo/check"]});expect(cargo.reservedBytes).toBe(policy.prior.cold.bytes);await cargo.release();
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 
@@ -164,4 +176,20 @@ test("a demand frees the oldest idle lanes and cold objects beyond the water mar
  expect(planGcV1({...input,demandBytes:70},{...relaxed,casProtectedShare:0.05}).removeObjects).toEqual(["d1"]);
  expect(planGcV1({...input,demandBytes:70},{...relaxed,casProtectedShare:0.1}).removeObjects).toEqual([]);
  expect(planGcV1({...input,demandBytes:10**6},relaxed).removeLanes).not.toContain("live");
+});
+
+test("a running row that outlived its ramp by the stranded grace no longer blocks the alone admission, and agrees with the independent model",()=>{
+ const row=(admittedMs:number)=>({id:"stuck",state:"running" as const,reservedBytes:4*GIB,rampMilliseconds:60_000,arrivedMs:0,admittedMs}),at=10_000_000,grace=policy.strandedGraceMilliseconds,
+ input=(admittedMs:number)=>({freeBytes:GIB,volumeBytes:volume,nowMs:at,request:{id:"r",reservedBytes:4*GIB,arrivedMs:at},rows:[row(admittedMs)],reclaimed:true}),inputs=[input(at-60_000-grace),input(at-60_000-grace-1)],expected=python(inputs.map(value=>({kind:"decision",input:value})));
+ inputs.forEach((value,index)=>expect(decideHeadroomV1(value) as unknown).toEqual(expected[index]));
+ expect([decideHeadroomV1(inputs[0]!).verdict,decideHeadroomV1(inputs[1]!).verdict]).toEqual(["wait","admit"]);
+});
+
+test("a release learns under the temperature of the lane the command actually ran in",async()=>{
+ const root=scratch();
+ try{
+  const base={root,capacityBytes:volume,classes:["cargo/check"],temperature:"warm" as const,label:"abc",language:"en" as const,report:()=>{},measure:()=>({volumeBytes:volume,freeBytes:20*GIB}),sleep:noSleep},lease=await admitImageHeadroomV1(base);
+  await lease.release(()=>GIB,"cold");
+  expect(Object.keys(readHeadroomHistoryV1(join(root,"h")).classes)).toEqual(["cargo/check#cold"]);
+ }finally{rmSync(root,{recursive:true,force:true});}
 });

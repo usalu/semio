@@ -41,13 +41,13 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
         if self.phase>=4{return self.finish(envelope,runtime,owners,cx);}
         if self.phase==0&&self.terminal_is_empty()&&!runtime.supersessions.is_empty(){
             let original=envelope.vcs.edits.get(edit).ok_or_else(||invalid("native effective initialization edit absent"))?;
-            let selected=super::native_digest::with_operation_identity::<P,M,_>(original,mutation,|id|Ok(runtime.supersessions.get(id).map(|value|matches!(value.replacement,semio_framework_os_spr::InputReplacement::Withdrawn))))?;
+            let selected=native_digest::with_operation_identity::<P,M,_>(original,mutation,|id|Ok(runtime.supersessions.get(id).map(|value|matches!(value.replacement,semio_framework_os_spr::InputReplacement::Withdrawn))))?;
             if selected==Some(true){let mut completed=false;Self::physical(cx,RetirementDemand{copy_bytes:256,depth:1,..Default::default()},|_|{completed=true;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:256,..Default::default()})})?;return Ok(completed)}
             if selected==Some(false){let quote=demand::<semio_framework_os_store_operation_wire::OriginalReplacementReceiving<M>>();Self::physical(cx,quote,|_|{self.replacement=Default::default();self.replacement_key=Some((edit,mutation));self.phase=1;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:quote.copy_bytes,..Default::default()})})?;return Ok(false)}
         }
         if self.replacement_key.is_some()&&self.owner.is_none()&&self.input.is_none(){
             let original=envelope.vcs.edits.get(edit).ok_or_else(||invalid("native replacement original edit absent"))?;let factory=owners.mutation_retirement.as_ref().ok_or_else(||invalid("native replacement original mutation issuer absent"))?;
-            let result=super::native_digest::with_operation_identity::<P,M,_>(original,mutation,|id|{let row=runtime.supersessions.get_mut(id).ok_or_else(||invalid("native replacement original supersession absent"))?;if let semio_framework_os_spr::InputReplacement::Input{schema,..}=&row.replacement{if schema!=&envelope.schema{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"native replacement schema differs from its original artifact"))}}Ok(self.replacement.advance(&mut row.replacement,&owners.operation_wire,factory,cx))})?;
+            let result=native_digest::with_operation_identity::<P,M,_>(original,mutation,|id|{let row=runtime.supersessions.get_mut(id).ok_or_else(||invalid("native replacement original supersession absent"))?;if let semio_framework_os_spr::InputReplacement::Input{schema,..}=&row.replacement{if schema!=&envelope.schema{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"native replacement schema differs from its original artifact"))}}Ok(self.replacement.advance(&mut row.replacement,&owners.operation_wire,factory,cx))})?;
             match result{Ok(true)=>{if let Err(error)=self.replacement.take_input(&mut self.input,cx){self.failure=Some(error)}},Ok(false)=>{},Err(error)=>self.failure=Some(error)}return Ok(false);
         }
         if self.replacement_key.is_none()&&self.issuer.is_none(){
@@ -142,7 +142,7 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
         }
         if let Some((edit,mutation))=self.replacement_key{
             let original=envelope.vcs.edits.get(edit).ok_or_else(||invalid("closing native replacement edit absent"))?;
-            let result=super::native_digest::with_operation_identity::<P,M,_>(original,mutation,|id|{let row=runtime.supersessions.get_mut(id).ok_or_else(||invalid("closing original supersession absent"))?;Ok(self.replacement.close(&mut row.replacement,cx))})?;
+            let result=native_digest::with_operation_identity::<P,M,_>(original,mutation,|id|{let row=runtime.supersessions.get_mut(id).ok_or_else(||invalid("closing original supersession absent"))?;Ok(self.replacement.close(&mut row.replacement,cx))})?;
             match result{Ok(true)=>{let quote=demand::<Option<(usize,usize)>>();Self::physical(cx,quote,|_|{self.replacement_key=None;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:quote.copy_bytes,..Default::default()})})?;},Ok(false)=>{},Err(error)=>self.failure=Some(error)}return Ok(false);
         }
         if let Some(history)=self.history.as_mut(){

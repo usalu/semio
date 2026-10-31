@@ -1,0 +1,47 @@
+{
+  "state": "authored-uncompiled-parent-callers-pending",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🦀️.rs",
+      "sha256": "868111714b0a6b26e6c6adaaac4d2b5ad1a4a34801fd9ea6080ed3a2c39bf7ab"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🦀️.rs",
+      "sha256": "6d04b0cb3e85812f2516d9581d7f5c56719fcdce5bff56b5145d96bd1dcc2096"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "0b3bb9979b0824206b5e11574080eb8e166c41f38f15280c47b7b1527a812bce"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🦀️.rs",
+      "sha256": "64abc0335460a89d464acc2aa58841c2590bc607f377afc5e92a15ca954c36f7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🦀️.rs",
+      "sha256": "f220473def309b5ea489b2a1dc8349b4786444fcafeada3b59c93aaac8ed66d2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🦀️.rs",
+      "sha256": "139498422a682e6bd7b28ffc2910f453db8d1cbac4830ebe549d2831c8e0c12a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🦀️.rs",
+      "sha256": "6525d30e084a3a162312805549ab2b397a037517b5f61a578270d1ad69dfaa13"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🦀️.rs",
+      "sha256": "6f8025ec3e4c7b4acf0b932f8450aba7bd8c734f54857efca6c9c459db70b967"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🦀️.rs",
+      "sha256": "52e0e6d4b074fa4ec36aef283c900a87c766b66e4dcb3017a6bdd289381bfe9c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🦀️.rs",
+      "sha256": "c2578b621dfea858fa8fa0f4369f891e0b325f020d9d2ff52c8c5db5e5cc5a5d"
+    }
+  ],
+  "runtime": "none",
+  "open": "Old owning laws and external firstparty consumers require mandatory Outcome/coordinate/key-provider/staged-output migration. NativeOwned/Persistent complete-source gates still pending."
+}

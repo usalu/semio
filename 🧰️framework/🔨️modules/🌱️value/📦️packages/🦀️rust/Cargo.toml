@@ -23,9 +23,11 @@ name = "semio_framework_value"
 path = "🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["semio-framework-value-read/testkit"]
 
 [dependencies]
+semio-framework-value-read = { path = "../../🔗️read/📦️packages/🦀️rust" }
+semio-framework-value-sort = { path = "../../📶️sort/📦️packages/🦀️rust" }
 semio-framework-value-retained-map = { path="../../🧬️retained-clone/🗺️ordered-map/📦️packages/🦀️rust" }
 semio-framework-value-retained-clone = { path="../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-intrinsic = { path="../../🌳️intrinsic/📦️packages/🦀️rust" }
@@ -69,9 +71,7 @@ name = "value-paged-receiving"
 path = "../../📦️paged/🛬️receive/🧪️tests/🦀️.rs"
 
 [[test]]
-name = "value-sort"
-path = "../../📶️sort/🧪️tests/🦀️.rs"
-
-[[test]]
 name = "value-scratch"
 path = "../../🔑️hashed/🧮️scratch/🧪️tests/🦀️.rs"
+
+

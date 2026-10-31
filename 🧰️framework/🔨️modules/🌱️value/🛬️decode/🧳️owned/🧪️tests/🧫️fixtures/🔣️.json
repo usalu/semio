@@ -1,36 +1,157 @@
 {
-  "before": {
-    "id": "row1",
-    "name": "Original structural row",
-    "value": 42
-  },
-  "expected": {
-    "id": "row1",
-    "name": "Original structural row",
-    "value": 42
-  },
-  "refusals": [
-    "items",
-    "copy",
-    "capacity",
-    "release",
-    "depth"
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "before",
+    "expected",
+    "refusals",
+    "foreignSourceAccepted",
+    "coldConstructionRequired",
+    "refusedEntries",
+    "callbackRefusalAt",
+    "stock",
+    "ownershipCopyBytes",
+    "scalarCopyBytes",
+    "deniedWork",
+    "ownedTransferWork",
+    "pureInitializerHeapBytes"
   ],
-  "foreignSourceAccepted": false,
-  "coldConstructionRequired": false,
-  "refusedEntries": [
-    [
-      "id",
-      "row1"
-    ],
-    [
-      "id",
-      "row2"
-    ],
-    [
-      "value",
-      42
-    ]
-  ],
-  "callbackRefusalAt": "after-first-seal"
+  "properties": {
+    "before": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer"
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "value": {
+          "type": "integer"
+        }
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "items",
+          "copy",
+          "capacity",
+          "release",
+          "depth"
+        ]
+      },
+      "minItems": 5,
+      "maxItems": 5
+    },
+    "foreignSourceAccepted": {
+      "const": false
+    },
+    "coldConstructionRequired": {
+      "const": false
+    },
+    "refusedEntries": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "string"
+          },
+          {
+            "type": [
+              "string",
+              "integer"
+            ]
+          }
+        ],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "callbackRefusalAt": {
+      "const": "after-first-seal"
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "fuel",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "ownershipCopyBytes": {
+      "const": 0
+    },
+    "scalarCopyBytes": {
+      "const": 8
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "ownedTransferWork": {
+      "const": 1
+    },
+    "pureInitializerHeapBytes": {
+      "const": 0
+    }
+  }
 }

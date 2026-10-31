@@ -1,0 +1,7 @@
+/** 🔮️ Sharp independently renders the original curves and the actual funded contour polylines. */
+import sharp from "sharp";
+import {pathSegmentsToSvgD} from "../../../../../../🟦️.ts";
+async function coverage(d,transform,size,scale){const [width,height]=size,svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+width*scale+'" height="'+height*scale+'" viewBox="0 0 '+width+' '+height+'"><path transform="matrix('+transform.join(" ")+')" d="'+d+'" fill="red"/></svg>',pixels=await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer(),output=new Uint8Array(width*height);for(let at=0;at<output.length;at++){let sum=0;const x=at%width,y=Math.floor(at/width);for(let dy=0;dy<scale;dy++)for(let dx=0;dx<scale;dx++)sum+=pixels[((y*scale+dy)*width*scale+x*scale+dx)*4+3];output[at]=Math.round(sum/(scale*scale));}return output;}
+export function originalPath(segments){const values=Array.from({length:segments.length},(_,at)=>{const value=segments.at(at);if(value===undefined)throw Error("Original oracle segment absent");return value;});return pathSegmentsToSvgD(values);}
+export function originalCoverage(segments,transform,size,scale){return coverage(originalPath(segments),transform,size,scale);}
+export function actualCoverage(contours,transform,size,scale){const d=contours.map(contour=>contour.points.map((point,at)=>(at===0?"M":"L")+point[0]+" "+point[1]).join(" ")+(contour.closed?" Z":"")).join(" ");return coverage(d,transform,size,scale);}

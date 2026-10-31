@@ -1,0 +1,3 @@
+# Defining Tool Read Work
+
+Original owner1 compiler errors are preserved. Added the neutral three-role read-work forwarding contract before the production edit. All nine public scrub/typing/gesture read wrappers now directly return the defining Slot outcome; missing-slot checks report zero work, and original owned error/result and actual child work stay intact. Defining original read/transfer/scrub laws, heap oracle and all original stocks and guards remain. The known fixed u64 row transfer law has one explicitly selected metadata action under the real constructor callback, not a generic callback fee. Tests will forward actual child outcomes through the original Source context. No SourceHost or whole native UI acceptance is claimed.

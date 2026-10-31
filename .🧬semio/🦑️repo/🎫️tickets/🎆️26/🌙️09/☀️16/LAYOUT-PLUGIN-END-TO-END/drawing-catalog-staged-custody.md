@@ -1,0 +1,7 @@
+# Catalog Staged Child Custody
+
+The defining neutral fixture/schema and genuine shipped-asset test were authored before the exact intoRetirement repair. It loads authentic builtin source bytes, reaches actual completed-work publication, cancels across five nearby settlement cuts and carries one finite stock through work and all close callbacks. Independent SQLite subtraction verifies actual retained allocations are all released. No private fake producer state, missing-font substitution, per-turn stock renewal or zero-test selection is used. The test has not run.
+
+The exact shared hunk captures moved.job in a scalar staged owner before clearing moved. It advances that genuine cursor with the same ledger and propagates actual child lastTurnWork in finally. Positive child final work yields; scalar custody clear is a separate item/depth/CPU turn with zero invented payload bytes. It does not route a cursor through retireRetainedWorkMatcher, which has no cursor semantics. Dep confirmed the face output owns only borrowed original byte storage plus scalar metadata; its defining table backing remains in the genuine staged child cursor, while parent face slots close separately. All producer fields/steps/imports are Dep-owned and were preserved.
+
+Core/turn are stable and held for Root admission/normalizer gate preparation. Raw array helper closure remains a known separate blocker. Packet: drawing-catalog-staged-custody-files.json.

@@ -57,7 +57,7 @@ impl<T:semio_framework_value::retirement::RetireOwned> Owned<T>{
  pub fn take(mut self)->T{self.value.take().expect("live Semio native owner")}
 }
 impl<T:semio_framework_value::retirement::RetireOwned> Drop for Owned<T>{
- fn drop(&mut self){if let Some(value)=self.value.take(){let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:usize::MAX,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX};let (mut cursor,_)=semio_framework_value::retirement::admit_owned_retirement(value,grant).unwrap_or_else(|(error,_)|panic!("cold Semio native retirement refused: {error:?}"));while !cursor.terminal_is_empty(){cursor.close_step(grant).expect("valid Semio native retirement cursor");}}}
+ fn drop(&mut self){if let Some(value)=self.value.take(){let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:usize::MAX,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX};let (mut cursor,_)=semio_framework_value::retirement::admit_owned_retirement(value,grant).result.unwrap_or_else(|(error,_)|panic!("cold Semio native retirement refused: {error:?}"));while !cursor.terminal_is_empty(){cursor.close_step(grant).result.expect("valid Semio native retirement cursor");}}}
 }
 
 pub fn float32(value:&str,control:&mut NativeDecodeControl<'_>)->Result<f32,ValueError>{control.scoped_stage(|control|{control.begin_stage(value.len())?;for _ in value.bytes(){control.step()?;}if let Some(word)=value.strip_prefix("nan32_"){if word.len()!=8||!word.bytes().all(|byte|byte.is_ascii_hexdigit()){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native binary32 NaN word"))}let bits=u32::from_str_radix(word,16).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native binary32 NaN word"))?;if bits&0x7f800000!=0x7f800000||bits&0x7fffff==0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio native binary32 word has non-NaN class"))}return Ok(f32::from_bits(bits))}value.parse::<f32>().map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio native binary32 number"))})}
@@ -132,3 +132,23 @@ pub fn text_list_into<T>(output:&mut Vec<T>,value:&str,control:&mut NativeDecode
 
 #[path="🫙️workspace/🦀️.rs"]
 pub mod workspace;
+/// 🎁️ Receives a record-pack body into its typed owner under the caller's decode control and database limits.
+pub fn record_binary_into<S:crate::SemioRecordPack>(output:&mut S,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{*output=S::from_record_binary(body,control,limits)?;Ok(())}
+/// 📏️ Narrows the pack decode ceilings to the caller's database limits, so file, allocation and per-collection item ceilings hold before any typed value exists.
+pub fn record_decode_options(limits:SqliteDatabaseLimits)->store::os_store::PackDecodeOptions{let mut options=store::os_store::PackDecodeOptions::default();let pack=&mut options.limits;pack.max_file_len=pack.max_file_len.min(u64::try_from(limits.max_file_bytes).unwrap_or(u64::MAX));pack.max_total_alloc=pack.max_total_alloc.min(u64::try_from(limits.max_allocation_bytes).unwrap_or(u64::MAX));pack.max_items=pack.max_items.min(u64::try_from(limits.max_rows).unwrap_or(u64::MAX));options}
+/// 🧮️ Counts every entity record of a decoded record document against the caller's row ceiling, cancellably, before typed construction allocates.
+pub fn admit_record_rows(record:&semio_framework_dsl_record::RecordValue,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
+ control.scoped_stage(|control|{control.begin_stage(0)?;let mut total=0;entities(&mut total,1,limits)?;record_rows(record,control,limits,&mut total)})
+}
+fn record_rows(record:&semio_framework_dsl_record::RecordValue,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,total:&mut usize)->Result<(),ValueError>{for value in record.fields.values(){field_rows(value,control,limits,total)?}Ok(())}
+fn field_rows(value:&semio_framework_dsl_record::FieldValue,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,total:&mut usize)->Result<(),ValueError>{
+ use semio_framework_dsl_record::FieldValue;control.step()?;
+ match value{
+  FieldValue::Record(record)=>{entities(total,1,limits)?;record_rows(record,control,limits,total)},
+  FieldValue::Block(inner)=>field_rows(inner,control,limits,total),
+  FieldValue::List(items)|FieldValue::Tuple(items)=>{for item in items{field_rows(item,control,limits,total)?}Ok(())},
+  FieldValue::Map(entries)=>{for(_,item)in entries{field_rows(item,control,limits,total)?}Ok(())},
+  FieldValue::Statements(entries)=>{for(_,record)in entries{entities(total,1,limits)?;record_rows(record,control,limits,total)?}Ok(())},
+  _=>Ok(())
+ }
+}

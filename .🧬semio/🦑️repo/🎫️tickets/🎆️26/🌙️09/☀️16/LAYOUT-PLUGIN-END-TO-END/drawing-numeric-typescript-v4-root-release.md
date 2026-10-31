@@ -1,0 +1,3 @@
+# Numeric V4 Root Test Release
+
+Root authorizes exactly ONE normal managed Bun seven-law request using v4 SHA **42e8637ea2b46402692dd0c12620196d67e71a4c9989a0d8f53ed563f7ceb34d** after strict95515 actual test-binding errors. Reversing exactly5 parameter arrays in memory reconstructs the ENTIRE executed v3 test hash. Other17 inputs, SQL/assertions/cases/stock/fuel/library/profile/timeouts remain identical. All18 current captured. New green-2/strict-green logs preserve prior actual behavioralRED/BunGREEN/strictRED evidence. Strict is separately conditional on terminal test0 and unchanged18 inputs, sequential. Core/numeric closure frozen; disjoint native/Font/Drawing work continues. No Root runtime is live before launch.

@@ -1,0 +1,21 @@
+{
+  "state": "closed-hostile-cases-authored-before-defining-authenticator",
+  "runtimeExecuted": false,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.json",
+      "bytes": 260,
+      "sha256": "d029a747c15246fe0a9f6e4843679ece0d4f9800b0aa8b69deb1f54d31a53265"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.schema.json",
+      "bytes": 784,
+      "sha256": "4ce202cb11f6b1755832e2575a8e0013be0bbd0c22ea084c12c9b0c4dcdea14a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/admission-provenance.test.ts",
+      "bytes": 1160,
+      "sha256": "4f015a9477184e519eace8324295fa0a9f3815a219ec4b618cb7a15539eeeee7"
+    }
+  ]
+}

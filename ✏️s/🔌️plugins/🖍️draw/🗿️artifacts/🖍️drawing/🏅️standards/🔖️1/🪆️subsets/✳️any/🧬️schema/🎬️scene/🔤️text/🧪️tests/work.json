@@ -1,0 +1,168 @@
+{
+  "version": 1,
+  "maximumTurns": 2000000,
+  "quantum": 1,
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "cancelPhases": [
+    "nodes",
+    "unicode",
+    "fonts",
+    "run",
+    "geometryAdmission",
+    "geometry",
+    "publishing",
+    "complete"
+  ],
+  "exhaustionWork": 1,
+  "sameLedgerCalls": 2,
+  "rules": {
+    "deniedReceipt": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "deniedHeap": [
+      0,
+      0
+    ],
+    "paidReceiptFits": true,
+    "heapMatchesReceipt": true,
+    "originalSourceIdentity": true,
+    "partialOutputForbidden": true,
+    "controlledClose": true,
+    "receiptFoldedOnceBeforeError": true,
+    "cpuSeparateChargedOnce": true,
+    "blockedReturnsWithoutSpin": true,
+    "geometryAndHeaderFunded": true
+  },
+  "closeDeniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "admissionVectors": [
+    {
+      "name": "paid",
+      "grant": [
+        1,
+        8,
+        16,
+        4,
+        2
+      ],
+      "demand": [
+        1,
+        8,
+        16,
+        4,
+        2
+      ],
+      "admitted": true
+    },
+    {
+      "name": "items",
+      "grant": [
+        0,
+        8,
+        16,
+        4,
+        2
+      ],
+      "demand": [
+        1,
+        8,
+        16,
+        4,
+        2
+      ],
+      "admitted": false
+    },
+    {
+      "name": "copy",
+      "grant": [
+        1,
+        7,
+        16,
+        4,
+        2
+      ],
+      "demand": [
+        1,
+        8,
+        16,
+        4,
+        2
+      ],
+      "admitted": false
+    },
+    {
+      "name": "capacity",
+      "grant": [
+        1,
+        8,
+        15,
+        4,
+        2
+      ],
+      "demand": [
+        1,
+        8,
+        16,
+        4,
+        2
+      ],
+      "admitted": false
+    },
+    {
+      "name": "release",
+      "grant": [
+        1,
+        8,
+        16,
+        3,
+        2
+      ],
+      "demand": [
+        1,
+        8,
+        16,
+        4,
+        2
+      ],
+      "admitted": false
+    },
+    {
+      "name": "depth",
+      "grant": [
+        1,
+        8,
+        16,
+        4,
+        1
+      ],
+      "demand": [
+        1,
+        8,
+        16,
+        4,
+        2
+      ],
+      "admitted": false
+    }
+  ],
+  "zeroAuthorityPublic": {
+    "work": 0,
+    "nodes": 0,
+    "phase": "nodes",
+    "done": false,
+    "sameContentOwner": true
+  }
+}

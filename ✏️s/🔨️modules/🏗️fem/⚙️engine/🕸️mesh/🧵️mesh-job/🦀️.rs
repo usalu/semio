@@ -168,7 +168,8 @@ pub struct MeshJob {
     pub(super) point_index: Vec<((u64, u64), u32)>,
     pub(super) refinement_steps: usize,
     pub(super) validation_hole_cursor: usize,
-    pub(super) publication_writer: Option<RetainedJobPayloadWriter>,
+    pub(super) publication_writer: NumericalPayloadSlot,
+    pub(super) finished_payload: Option<RetainedJobPayload>,
     pub(super) publication_kind: Option<MeshPublicationKind>,
     pub(super) publication_cursor: MeshPayloadCursor,
     publication_sequence: u64,
@@ -260,6 +261,7 @@ impl MeshJob {
             refinement_steps: 0,
             validation_hole_cursor: 0,
             publication_writer: None,
+            finished_payload: None,
             publication_kind: None,
             publication_cursor: MeshPayloadCursor { stage: MeshPayloadStage::Magic, point: 0, coordinate: 0, triangle: 0, index: 0 },
             publication_sequence: 0,
@@ -600,8 +602,8 @@ impl MeshJob {
         Ok(false)
     }
 
-    fn advance_mesh_payload(&mut self) -> Result<bool, JobPayloadAdmissionFault> {
-        let writer = self.publication_writer.as_mut().ok_or(JobPayloadAdmissionFault::WriterSealed)?;
+    fn advance_mesh_payload(&mut self, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
+        let writer = self.publication_writer.as_deref_mut().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "mesh publication writer is absent"))?;
         let mut scalar = [0; 8];
         let length = match self.publication_cursor.stage {
             MeshPayloadStage::Magic => {
@@ -647,11 +649,9 @@ impl MeshJob {
             MeshPayloadStage::CommitPage | MeshPayloadStage::Done => None,
         };
         if let Some(length) = length {
-            if writer.staged_page_remaining() < length {
-                writer.commit_staged_page()?;
+            if !write_numerical_entry(writer, &scalar[..length], context)? {
                 return Ok(false);
             }
-            writer.write_staged(&scalar[..length])?;
         }
         self.publication_cursor.stage = match self.publication_cursor.stage {
             MeshPayloadStage::Magic => MeshPayloadStage::Tier,
@@ -691,7 +691,9 @@ impl MeshJob {
                 }
             }
             MeshPayloadStage::CommitPage => {
-                writer.commit_staged_page()?;
+                if !numerical_commit_page(writer, context)? {
+                    return Ok(false);
+                }
                 MeshPayloadStage::Done
             }
             MeshPayloadStage::Done => MeshPayloadStage::Done,
@@ -716,27 +718,27 @@ impl MeshJob {
         if self.publication_kind != Some(kind) {
             return Err(());
         }
-        if self.publication_writer.is_none() {
+        if self.publication_writer.as_ref().is_none_or(|writer| !writer.is_initialized()) {
             let stream = match kind {
                 MeshPublicationKind::Preview => JobPayloadStream::Preview,
                 MeshPublicationKind::Checkpoint => JobPayloadStream::CheckpointState,
                 MeshPublicationKind::Complete => JobPayloadStream::CommitOutput,
             };
-            self.publication_writer = Some(RetainedJobPayloadWriter::new(stream));
+            numerical_open_writer(&mut self.publication_writer, stream, context).map_err(|_| ())?;
             return Ok(false);
         }
-        let writer = self.publication_writer.as_mut().ok_or(())?;
+        let writer = self.publication_writer.as_deref_mut().ok_or(())?;
         if writer.staged_page_len().is_none() && self.publication_cursor.stage != MeshPayloadStage::Done {
-            writer.begin_staged_page(context).map_err(|_| ())?;
+            numerical_begin_page(writer, context).map_err(|_| ())?;
             return Ok(false);
         }
-        if !self.advance_mesh_payload().map_err(|_| ())? {
+        if self.publication_cursor.stage != MeshPayloadStage::Done && !self.advance_mesh_payload(context).map_err(|_| ())? {
             return Ok(false);
         }
-        let writer = self.publication_writer.take().ok_or(())?;
-        let payload = writer.finish().map_err(|writer| {
-            self.publication_writer = Some(writer);
-        })?;
+        if !numerical_finish_writer(&mut self.publication_writer, &mut self.finished_payload, context).map_err(|_| ())? {
+            return Ok(false);
+        }
+        let payload = self.finished_payload.take().ok_or(())?;
         self.publication_kind = None;
         self.lent = Some(MeshLent { payload });
         Ok(true)

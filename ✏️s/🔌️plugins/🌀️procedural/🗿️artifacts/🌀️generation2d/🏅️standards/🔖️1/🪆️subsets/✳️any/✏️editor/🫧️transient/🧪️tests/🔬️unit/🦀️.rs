@@ -22,3 +22,11 @@ fn preview_state_matches_language_neutral_json_oracle() {
     let binary = typed.encode_pack();
     assert_eq!(Generation2dTransient::decode_pack(&binary).expect("binary round trip"), typed);
 }
+
+#[test]
+fn abandoned_unprepared_set_field_leaf_drops_without_custody_or_panic() {
+    type Leaf = <SetGenerationPreview as protocol::RetainedMutationLeaf<Generation2dTransient, Generation2dTransientMutation>>::Preparation;
+    let leaf = <Leaf as protocol::RetainedMutationLeafPreparation<Generation2dTransient, Generation2dTransientMutation, SetGenerationPreview>>::new();
+    assert!(protocol::RetainedMutationLeafPreparation::<Generation2dTransient, Generation2dTransientMutation, SetGenerationPreview>::terminal_is_empty(&leaf));
+    drop(leaf);
+}

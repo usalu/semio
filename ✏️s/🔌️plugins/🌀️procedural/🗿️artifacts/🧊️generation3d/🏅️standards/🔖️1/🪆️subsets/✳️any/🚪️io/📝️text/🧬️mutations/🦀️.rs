@@ -27,21 +27,21 @@ use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
 use semio_s_artifact_procedural_3d_mut_document::update_camera::UpdateCamera;
 use semio_s_artifact_procedural_3d_mut_synapses::update_synapse::UpdateSynapse;
 use semio_s_artifact_procedural_3d_mut_widgets::update_widget::UpdateWidget;
-use crate::snapshot::camera_from_dsl;
-use crate::snapshot::camera_to_dsl;
-use crate::snapshot::form_generation_from_dsl;
-use crate::snapshot::form_generation_to_dsl;
-use crate::snapshot::layout_from_dsl;
-use crate::snapshot::layout_to_dsl;
-use crate::snapshot::synapse_from_dsl;
-use crate::snapshot::synapse_to_dsl;
-use crate::snapshot::widget_from_dsl;
-use crate::snapshot::widget_to_dsl;
-use crate::snapshot::CameraJsonDsl;
-use crate::snapshot::FormGenerationDsl;
-use crate::snapshot::SynapseSpecDsl;
-use crate::snapshot::WidgetDsl;
-use crate::snapshot::WidgetLayoutDsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::camera_from_dsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::camera_to_dsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::form_generation_from_dsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::form_generation_to_dsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::layout_from_dsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::layout_to_dsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::synapse_from_dsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::synapse_to_dsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::widget_from_dsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::widget_to_dsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::CameraJsonDsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::FormGenerationDsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::SynapseSpecDsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::WidgetDsl;
+use semio_s_artifact_procedural_3d_model::dsl_mirror::WidgetLayoutDsl;
 use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_mut_widgets::change_slider_value::ChangeSliderValue;
 use semio_s_artifact_procedural_3d_mut_transforms::drag_transforms::DragTransforms;
@@ -122,7 +122,7 @@ pub enum Generation3dOperationDsl {
     ChangeGenerationPreview { text: Option<String> },
 }
 
-/// ⚡️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
+/// 🧬️ P6 handcrafted OpText/OpBinary (derive no longer emits these traits).
 impl protocol::OpText for Generation3dOperationDsl {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
@@ -197,7 +197,7 @@ pub fn generation3d_operation_from_dsl(operation: Generation3dOperationDsl) -> R
     })
 }
 
-/// ⚡️ `Generation3dMutation`'s compact single-line op encoding — derive-engine grammar via
+/// 🌀️ `Generation3dMutation`'s compact single-line op encoding — derive-engine grammar via
 /// `Generation3dOperationDsl`; `parse_op`/`print_op` convert at the boundary.
 impl protocol::OpText for Generation3dMutation {
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {

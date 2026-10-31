@@ -67,23 +67,23 @@ fn the_incremental_residency_assembles_byte_identically_to_the_whole_set_encode(
     for scene_snapshot in [CONCRETE_FOREST_EXAMPLE_SNAPSHOT.clone(), NAKAGIN_EXAMPLE_SNAPSHOT.clone()] {
         let mut residency = semio_s_artifact_puzzle_3d_editor_session::Puzzle3dInstanceResidency::default();
         residency.refresh(&scene_snapshot, &std::collections::BTreeSet::new(), &[]);
-        assert_eq!(residency.instances_json(), main::world_instances_geometry_json(&scene_snapshot), "a cold residency matches the whole-set encode");
+        assert_eq!(residency.instances_json(), world_instances_geometry_json(&scene_snapshot), "a cold residency matches the whole-set encode");
         let mut edited = scene_snapshot.clone();
         if let Some(object) = edited.objects.first_mut() {
             object.origin[2] += 3.25;
             object.hidden = !object.hidden;
         }
         residency.refresh(&edited, &std::collections::BTreeSet::new(), &[]);
-        assert_eq!(residency.instances_json(), main::world_instances_geometry_json(&edited), "an incrementally updated residency matches the whole-set encode");
+        assert_eq!(residency.instances_json(), world_instances_geometry_json(&edited), "an incrementally updated residency matches the whole-set encode");
         let mut shortened = edited.clone();
         shortened.objects.pop();
         residency.refresh(&shortened, &std::collections::BTreeSet::new(), &[]);
-        assert_eq!(residency.instances_json(), main::world_instances_geometry_json(&shortened), "a removal matches the whole-set encode");
+        assert_eq!(residency.instances_json(), world_instances_geometry_json(&shortened), "a removal matches the whole-set encode");
         assert_eq!(residency.removed_ids().len(), 1, "and the removal is named in the delta");
         let mut grown = shortened.clone();
         grown.objects.push(edited.objects.last().expect("an object to re-add").clone());
         residency.refresh(&grown, &std::collections::BTreeSet::new(), &[]);
-        assert_eq!(residency.instances_json(), main::world_instances_geometry_json(&grown), "an addition matches the whole-set encode");
+        assert_eq!(residency.instances_json(), world_instances_geometry_json(&grown), "an addition matches the whole-set encode");
     }
 }
 

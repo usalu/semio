@@ -1,6 +1,6 @@
 //! 🫙️ Original typed native prefix remains in its admitted caller-returned workspace.
 use std::mem::ManuallyDrop;
-use semio_framework_value::{ErasedSnapshotRetirement,ValueError,ValueRefusalKind};
+use semio_framework_value::{ErasedSnapshotRetirement,RetainedWorkOutcome,ValueError,ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::RetirementDemand;
@@ -17,8 +17,8 @@ store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.or
 }
 }
 impl<T:RetireOwned>ErasedSnapshotRetirement for Workspace<T>{
-fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))}
+fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())),work:0}}
 if self.active.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active,grant)}
 store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.original,&mut self.active,grant)
 }

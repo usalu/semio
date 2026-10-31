@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "members",
+    "expected",
+    "stock",
+    "rules"
+  ],
+  "properties": {
+    "members": {
+      "const": [
+        "z",
+        "a",
+        "m",
+        "a"
+      ]
+    },
+    "expected": {
+      "const": [
+        "a",
+        "m",
+        "z"
+      ]
+    },
+    "stock": {
+      "const": {
+        "items": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 64,
+        "fuel": 100000,
+        "maximumTurns": 100000
+      }
+    },
+    "rules": {
+      "const": {
+        "stagedNativeReceiver": true,
+        "sameFiniteStock": true,
+        "noSynchronousControlledFallback": true,
+        "independentBTreeSet": true,
+        "allPositiveDenialAxes": true,
+        "genuineNullRetrySameStock": true,
+        "childCompletionDoesNotPublishParent": true
+      }
+    }
+  }
+}

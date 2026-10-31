@@ -1,0 +1,12 @@
+/** 🎯️ Nullable attribute fields do not weaken standalone nonnullable value parsers. */
+import {test,expect} from "bun:test";
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
+import {binary64} from "@semio-tech/framework/value/ieee754";
+import {parseDrawingFill,parseDrawingStroke,parseDrawingLayerNode,drawingDrawingArtifactGuardRefusal} from "../../../🟦️.ts";
+import artifact from "../../../🔣️.json";
+import originals from "../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🔣️.json";
+import law from "./📐️.json";
+import schema from "./🔣️.json";
+function lift(value:unknown):unknown{return typeof value==="number"?binary64(value):Array.isArray(value)?value.map(lift):value&&typeof value==="object"?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,lift(item)])):value;}
+test("standalone canonical paint helpers refuse null and missing while attribute null remains explicit",()=>{expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const ajv=new Ajv({strict:true}).addVocabulary(["x-semio-ui","x-semio-state"]);addFormats(ajv,["double"]);const fill=ajv.compile({$defs:artifact.$defs,$ref:"#/$defs/FillStyle"}),stroke=ajv.compile({$defs:artifact.$defs,$ref:"#/$defs/StrokeStyle"}),base=originals[0]?.document.layers[0];if(base===undefined)throw Error("Original authored source absent");for(const row of law.cases){const value="value"in row?row.value:undefined,admit=row.field==="fill"?fill:stroke;expect(admit(value)).toBe(row.valid);const invoke=()=>row.field==="fill"?parseDrawingFill(lift(value),row.at):parseDrawingStroke(lift(value),row.at);if(!row.valid){let caught:unknown;try{invoke();}catch(error){caught=error;}expect(caught).toBeInstanceOf(drawingDrawingArtifactGuardRefusal);if(!(caught instanceof drawingDrawingArtifactGuardRefusal))throw Error("Canonical typed paint refusal absent");expect(caught.at).toBe(row.at);expect(caught.why.length).toBeGreaterThan(0);continue;}const actual=invoke(),attrs=parseDrawingLayerNode(lift({...base,attributes:{fillRule:"nonzero",[row.field]:value}})).attributes,expected=row.field==="fill"?attrs.fill:attrs.stroke;if(expected===null||expected===undefined)throw Error("Nonnull canonical paint result absent");expect(actual).toEqual(expected);}const none=parseDrawingLayerNode(lift({...base,attributes:{fillRule:"nonzero",fill:null,stroke:null}})).attributes;expect(none.fill).toBeNull();expect(none.stroke).toBeNull();});

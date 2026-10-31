@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumPages": {
+      "const": 256
+    },
+    "headerInitializationTurns": {
+      "const": 1
+    },
+    "oldInitializationGuard": {
+      "const": 257
+    },
+    "emptyLivePages": {
+      "const": 0
+    },
+    "birthCopyBytes": {
+      "const": 0
+    },
+    "headerHeap": {
+      "const": [
+        0,
+        0
+      ]
+    },
+    "pageCases": {
+      "const": [
+        0,
+        1,
+        2,
+        255,
+        256
+      ]
+    },
+    "overflowPage": {
+      "const": 257
+    },
+    "sourceStockItems": {
+      "const": 256
+    },
+    "singlePageLifetimeMustFit": {
+      "const": true
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "depth",
+        "release"
+      ]
+    },
+    "custody": {
+      "const": {
+        "pendingReservation": true,
+        "stagedAndIncoming": true,
+        "transferAliasBeforePop": true,
+        "indices": "dense-prefix-original-last",
+        "backingPointerUnchanged": true
+      }
+    },
+    "cancelCuts": {
+      "const": [
+        "cold",
+        "header",
+        "reservation",
+        "allocated",
+        "staged",
+        "committed",
+        "sealed",
+        "transferred"
+      ]
+    },
+    "terminalDropHeap": {
+      "const": [
+        0,
+        0
+      ]
+    }
+  },
+  "required": [
+    "version",
+    "maximumPages",
+    "headerInitializationTurns",
+    "oldInitializationGuard",
+    "emptyLivePages",
+    "birthCopyBytes",
+    "headerHeap",
+    "pageCases",
+    "overflowPage",
+    "sourceStockItems",
+    "singlePageLifetimeMustFit",
+    "deniedAxes",
+    "custody",
+    "cancelCuts",
+    "terminalDropHeap"
+  ],
+  "additionalProperties": false
+}

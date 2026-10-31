@@ -121,6 +121,7 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub publication_ownership_progress: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     pub original_retirement_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     pub actor_capture: Option<ControlledRetirement<semio_framework_value::SharedUtf8>>,
+    pub actor_capture_pending:semio_framework_plugin_mounted_owner::actor_capture::ActorCapture,
     pub publication_attempt: u8,
     pub ui_pending: bool,
     pub progress: Option<u64>,
@@ -150,7 +151,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  pub fn original_frame_release_demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Box<Self>>(),release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
  /// 📐️ Fresh boxed placement writes the fixed header once and moves original field headers.
  pub fn original_emission_birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+2*size_of::<semio_framework_plugin_job::original_emission::OriginalEmissionInput<A>>()+size_of::<semio_framework_job::OriginalCallerSourceLoan>()+size_of::<semio_framework_job::OriginalSourceBinding>()+2*size_of::<Box<Self>>()+size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
- pub fn lease_retirement_ready(&self)->bool{self.stage==MountedTypedCommandFullOperationStage::Retiring&&self.session.is_none()&&self.producer_request.is_none()&&self.producer_request_retirement.is_none()&&self.session_rejected.is_none()&&!self.worker_semantic_pending&&!self.worker_outcome_pending&&self.worker_fault_capture.is_none()&&self.publication.is_none()&&self.publication_retirement.is_none()&&self.pending_artifact_publication.is_none()&&self.pending_stream_abort.is_none()&&!self.pending_publication_outcome.pending()&&self.pending_child_publication.is_none()&&self.owned_child_group.is_none()&&self.captured_child_content.is_none()&&self.result_page.is_none()&&self.pending_window_config_receipt.is_none()&&self.raw_input.is_none()&&self.output_chunks.is_none()&&self.output_retirement.is_none()&&self.reserved_producer.is_none()&&self.completion.is_none()&&self.completion_retirement.is_none()&&self.meta.view_state.is_none()&&self.original_emission_caller.is_none()&&self.window_config_authority.is_none()&&self.window_transient_authority.is_none()&&self.actor_capture.is_none()&&self.verb.capacity()==0&&!self.meta.actor.has_owner()&&self.retained_close_fault.is_none()&&(self.cancellation_lease.is_some()||self.cancellation_retirement.is_some())}
+ pub fn lease_retirement_ready(&self)->bool{self.stage==MountedTypedCommandFullOperationStage::Retiring&&self.session.is_none()&&self.producer_request.is_none()&&self.producer_request_retirement.is_none()&&self.session_rejected.is_none()&&!self.worker_semantic_pending&&!self.worker_outcome_pending&&self.worker_fault_capture.is_none()&&self.publication.is_none()&&self.publication_retirement.is_none()&&self.pending_artifact_publication.is_none()&&self.pending_stream_abort.is_none()&&!self.pending_publication_outcome.pending()&&self.pending_child_publication.is_none()&&self.owned_child_group.is_none()&&self.captured_child_content.is_none()&&self.result_page.is_none()&&self.pending_window_config_receipt.is_none()&&self.raw_input.is_none()&&self.output_chunks.is_none()&&self.output_retirement.is_none()&&self.reserved_producer.is_none()&&self.completion.is_none()&&self.completion_retirement.is_none()&&self.meta.view_state.is_none()&&self.original_emission_caller.is_none()&&self.window_config_authority.is_none()&&self.window_transient_authority.is_none()&&self.actor_capture.is_none()&&self.actor_capture_pending.terminal_is_empty()&&self.verb.capacity()==0&&!self.meta.actor.has_owner()&&self.retained_close_fault.is_none()&&(self.cancellation_lease.is_some()||self.cancellation_retirement.is_some())}
  pub fn lease_retirement_demands(&self,canonical:&ToolCancellationHandle,body:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.cancellation_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<ToolCancellationLeaseRetirement>(),depth:1,..Default::default()})}else{owner.retirement_demands(canonical,body)};}Ok(RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<ToolCancellationLeaseRetirement>(),depth:1,..Default::default()})}
  pub fn lease_retirement_step(&mut self,canonical:&ToolCancellationHandle,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let demand=self.lease_retirement_demands(canonical,grant.maximum_copy_bytes)?;if !plugin_grant_funds(demand,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -183,13 +184,9 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     }
 
     /// 🎭️ Yields the actual actor capture receipt before admitting any durable mutation input.
-    pub fn admit_actor_capture(&mut self,grant:RetainedCloneGrant)->Result<bool,Fault>{
-        if self.actor_capture.is_some(){return Ok(false);}
-        if let Some(receipt)=semio_framework_plugin_mounted_owner::actor_capture::admit_actor_capture(&mut self.actor_capture,&self.meta.actor,grant).map_err(|error|plugin_sdk_fault(error.to_string()))?{
-            assert!(self.publication_ownership_progress.is_none(),"mounted actor cannot overwrite its original unreturned receipt");
-            self.publication_ownership_progress=Some((grant,receipt));
-        }
-        Ok(true)
+    pub fn admit_actor_capture(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if self.actor_capture.is_some()&&self.actor_capture_pending.terminal_is_empty(){return Ok(false)}
+        cx.with_retained_loan(grant,|same|{if same.should_yield()||same.is_cancelled(){return Ok(true)}let turn=self.actor_capture_pending.advance(&self.meta.actor,&mut self.actor_capture,same.retained_grant());semio_framework_job::receive_original_retained_work(same,turn)?;Ok(true)})
     }
 
     /// 🧮️ Records what the store answered for ONE publication unit. The checkpoint carries the
@@ -222,10 +219,11 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         let contract=self.contract.ok_or_else(||plugin_sdk_fault("typed operation worker requires its admitted execution contract"))?;
         if self.original_producer_pending(){return self.retire_original_producer(grant);}
         if let Some(rejected)=self.session_rejected.as_mut(){
+            if rejected.terminal_is_empty()&&self.session.is_some(){let before=cx.retained_progress();semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::retire_empty(&mut self.session_rejected,cx)?;return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));}
             if rejected.admission_pending()&&!cx.is_cancelled()&&!self.user_cancel_requested&&!self.terminal_seen{
                 let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"plugin_framework_reserved_route",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:contract.max_work_units_per_step,step_budget_us:u64::from(contract.max_step_micros)};
                 let before=cx.retained_progress();
-                if let Some(session)=rejected.admit_pending(config,cx)?{self.session=Some(session);drop(self.session_rejected.take());}
+                rejected.admit_pending(config,&mut self.session,cx)?;
                 let after=cx.retained_progress();
                 return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}));
             }
@@ -255,9 +253,8 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             return Ok(step);
         }
         if self.worker_outcome_pending{
-            let step=session.acknowledge_checked_out_outcome(grant);
-            if matches!(step,RetainedCloneStep::Complete(_)){self.worker_outcome_pending=false;self.worker_resume_pending=true;}
-            return Ok(PluginLifecycleStep::retained(step,false));
+            if session.acknowledge_checked_out_outcome(cx)?{self.worker_outcome_pending=false;self.worker_resume_pending=true;}
+            return Ok(PluginLifecycleStep::Progress(Default::default()));
         }
         if self.worker_resume_pending{
             if self.terminal_seen{session.begin_close();}else if session.resume().is_err(){return Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation outcome handback awaits its original worker session"});}
@@ -673,7 +670,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             && self.publication_retirement.is_none()
             && self.output_retirement.is_none()
             && self.cancellation_lease.is_none() && self.cancellation_retirement.is_none() && self.pending_window_config_receipt.is_none()
-            && self.actor_capture.is_none()
+            && self.actor_capture.is_none()&&self.actor_capture_pending.terminal_is_empty()
             && self.verb.capacity() == 0
             && !self.meta.actor.has_owner()
             && self.meta.view_state.is_none()

@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "authority": "same-explicit-ledger-private-issued-accounting-loan",
+  "stockSource": "existing-domain-neutral-pages-fixture",
+  "rules": {
+    "noDefaultOrNumericBridge": true,
+    "allOriginalFixtureStockAndAssertionsPreserved": true,
+    "unissuedBeforePropertiesAndFaultCapture": true,
+    "actualCpuBeforeEveryError": true,
+    "sameLedgerHoldSurvivesFreshGenuineLoan": true,
+    "privateActualRowsNotExposedAsMutableIterable": true,
+    "payloadCloseAndRowClearSeparateTurns": true,
+    "fixedFaultHeaderClearCopyZero": true,
+    "deniedCachedZero": true,
+    "appendRelativeDepthIncludesOwnLedgerEnter": true
+  },
+  "cases": [
+    {
+      "name": "unissued-and-expired-entry",
+      "propertyReads": 0
+    },
+    {
+      "name": "actual-admission-append-and-closed-cached-cpu"
+    },
+    {
+      "name": "same-ledger-held-slot-fresh-loan"
+    },
+    {
+      "name": "current-positive-failing-admission"
+    },
+    {
+      "name": "existing-full-order-cancel-child-receipt-matrix"
+    }
+  ]
+}

@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "meanings": {
+    "semantic": "completed-or-failed-source-step",
+    "cpu": "actual-bounded-owner-work",
+    "physicalEpoch": "evidence-only-not-currency"
+  },
+  "stock": [
+    256,
+    65536,
+    65536,
+    65536,
+    64
+  ],
+  "fuel": 256,
+  "turn": [
+    1,
+    65536,
+    65536,
+    65536,
+    64
+  ],
+  "source": {
+    "bytes": 82,
+    "sfnt": 65536,
+    "tables": 1,
+    "tag": 1751474532,
+    "offset": 28,
+    "length": 54
+  },
+  "limits": {
+    "maxFontBytes": 1024,
+    "maxTables": 16,
+    "maxGlyphs": 65536,
+    "maxPoints": 1048576,
+    "maxContours": 65536,
+    "maxComponents": 262144,
+    "maxDepth": 32,
+    "maxSegments": 65536,
+    "maxWork": 64
+  },
+  "cases": [
+    {
+      "name": "zero-authority",
+      "semantic": 0,
+      "cpu": 0,
+      "capacityPositive": false
+    },
+    {
+      "name": "paid-table-preparation",
+      "semantic": 0,
+      "cpu": 1,
+      "capacityPositive": true
+    },
+    {
+      "name": "malformed-source",
+      "semantic": 1,
+      "cpu": 1,
+      "accepted": false,
+      "referenceAccepted": false
+    },
+    {
+      "name": "semantic-limit-refusal",
+      "semantic": 0,
+      "cpu": 0,
+      "capacityPositive": false
+    },
+    {
+      "name": "unicode-source-admission",
+      "semantic": 1,
+      "cpu": 1,
+      "capacityPositive": false
+    },
+    {
+      "name": "line-break-admission",
+      "semantic": 1,
+      "cpu": 1,
+      "capacityPositive": false
+    },
+    {
+      "name": "line-break-paid-cell-preparation",
+      "semantic": 0,
+      "cpu": 1,
+      "capacityPositive": true
+    },
+    {
+      "name": "grapheme-paid-publication",
+      "semantic": 0,
+      "cpu": 1,
+      "capacityPositive": true
+    },
+    {
+      "name": "exact-ceiling-unicode-publication",
+      "semantic": 0,
+      "cpu": 1,
+      "capacityPositive": false
+    },
+    {
+      "name": "real-child-exact-ceiling-denied-publication",
+      "semantic": 0,
+      "cpu": 1,
+      "capacityPositive": true
+    }
+  ],
+  "rules": {
+    "noReceiptItemsInference": true,
+    "childGettersRequired": true,
+    "sameLedger": true,
+    "sameOriginalStock": true,
+    "freshLedgerPerTurn": true,
+    "noOutputBeforeComplete": true,
+    "completedCustodySemanticZero": true,
+    "exactCeilingCustodyMaySettle": true,
+    "actualSettlementPendingReadOnly": true,
+    "realChildSemanticDeltaOnce": true
+  },
+  "unicode": {
+    "bytes": 88,
+    "magic": 1430471760,
+    "version": 1048576,
+    "ranges": 1,
+    "rangeAt": 64,
+    "followingAt": 88,
+    "lastScalar": 1114111,
+    "exactSemanticCeiling": 3
+  },
+  "lineBreak": {
+    "bytes": 36,
+    "magic": 1431061067,
+    "version": 1048576,
+    "width": 12,
+    "count": 1,
+    "first": 0,
+    "last": 1114111,
+    "kind": 2,
+    "text": "abc",
+    "expected": [
+      {
+        "at": 3,
+        "mandatory": true
+      }
+    ]
+  },
+  "grapheme": {
+    "text": "ab",
+    "source": [
+      {
+        "scalar": 97
+      },
+      {
+        "scalar": 98
+      }
+    ],
+    "expected": [
+      {
+        "start": 0,
+        "end": 1
+      },
+      {
+        "start": 1,
+        "end": 2
+      }
+    ]
+  },
+  "quanta": [
+    1,
+    3
+  ]
+}

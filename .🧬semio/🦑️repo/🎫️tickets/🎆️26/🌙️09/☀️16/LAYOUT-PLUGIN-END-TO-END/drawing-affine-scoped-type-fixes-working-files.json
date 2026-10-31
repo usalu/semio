@@ -1,0 +1,14 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/owned.test.ts",
+      "beforeSha256": "5ac86abf833cca6c7f13a9969016f0253c48f806982d9e68ef5b1c9206c83366",
+      "sha256": "99ce2ee620f0238b980b045a10f183c46d6a1560f6452995c70fb9afa22ed588"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🔭️oracles/🟦️.ts",
+      "beforeSha256": "a5667f492a218cb5968b8778f6c3f109393296d70a519331c5c278dbb5f27ad2",
+      "sha256": "fc6a8689ea4acee1e79b63cf351df7d7e06dc96000d567d7837f2b4a09e45391"
+    }
+  ]
+}

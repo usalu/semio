@@ -1,0 +1,59 @@
+{
+  "bodies": [
+    1,
+    7,
+    4096
+  ],
+  "cases": [
+    "utf8",
+    "vector-u16",
+    "array-u8"
+  ],
+  "maximumTurns": 100000,
+  "stock": {
+    "items": 100000,
+    "copy": 16777216,
+    "capacity": 16777216,
+    "release": 16777216,
+    "depth": 128
+  },
+  "sameBank": true,
+  "sameOriginalPointer": true,
+  "deniedItemsWork": 0,
+  "sameCloneOracle": true,
+  "sameSerdeOracle": true,
+  "closeSourceCursorOutput": true,
+  "existingPublicLaws": [
+    "bulk_vector_clone_equals_the_clone_oracle_for_every_bitwise_element_shape",
+    "non_bitwise_vector_clones_keep_the_per_element_path",
+    "derived_bitwise_structs_clone_in_pages_and_plain_structs_stay_elementwise",
+    "bulk_run_elements_obeys_every_grant_axis"
+  ],
+  "bitwiseFamilies": [
+    "u16-fixture-counts",
+    "u32-70000",
+    "u64-9000",
+    "u8-300000",
+    "i128-4000",
+    "f64-5000",
+    "bool-20000",
+    "char-9000",
+    "array4-30000",
+    "array2x3-9000",
+    "unit-fixture-count",
+    "u16-empty"
+  ],
+  "nonBitwiseFamilies": [
+    "string-40",
+    "bytes-16",
+    "option-u32-64"
+  ],
+  "derivedCases": {
+    "texels": 5000,
+    "plain": 40,
+    "bitwiseArray": 3,
+    "exactPageTurns": true,
+    "exactCopiedBytes": true
+  },
+  "pureGrantCases": "all original bulk fixture grantCases plus explicit items/copy/width/page/zero-sized axes"
+}

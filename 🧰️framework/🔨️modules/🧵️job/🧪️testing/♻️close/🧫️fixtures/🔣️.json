@@ -1,0 +1,15 @@
+{
+  "contract": "framework.job.test.original-close-lifetime",
+  "stock": [
+    20000,
+    16777216,
+    16777216,
+    16777216,
+    128
+  ],
+  "fuel": 100000,
+  "clockUs": 1,
+  "deadlineUs": 12345,
+  "freshSourcePerTurn": false,
+  "scope": "test-owned-preexisting-input-close; no Host admission claim"
+}

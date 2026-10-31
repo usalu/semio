@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "stock",
+    "fuel",
+    "clockUs",
+    "deadlineUs",
+    "freshSourcePerTurn",
+    "scope"
+  ],
+  "properties": {
+    "contract": {
+      "const": "framework.job.test.original-close-lifetime"
+    },
+    "stock": {
+      "const": [
+        20000,
+        16777216,
+        16777216,
+        16777216,
+        128
+      ]
+    },
+    "fuel": {
+      "const": 100000
+    },
+    "clockUs": {
+      "const": 1
+    },
+    "deadlineUs": {
+      "const": 12345
+    },
+    "freshSourcePerTurn": {
+      "const": false
+    },
+    "scope": {
+      "const": "test-owned-preexisting-input-close; no Host admission claim"
+    }
+  }
+}

@@ -17,6 +17,10 @@ pub struct OriginalJobSource{pub job:u64,pub kind:String,pub input:Option<Vec<u8
 pub struct OriginalJobBudget{pub input:RetainedTurnInput,pub retained_policy:RetainedCloneGrant,pub fuel:u64,pub deadline_us:u64,pub cancelled:bool}
 impl OriginalJobBudget{
  pub fn borrow_original(input:RetainedTurnInput,cx:&StepContext<'_>)->Result<Self,ValueError>{input.validate()?;cx.original_source_parent()?;if input.work.clock_binding!=cx.original_clock_binding().ok_or_else(||refusal("original job loan lacks its issuer clock binding"))?||input.work.absolute_deadline_us!=cx.original_absolute_deadline_us()||input.work.fuel>cx.original_total_fuel_remaining(){return Err(refusal("original job loan changed its original clock deadline or renewed total work"))}if (input.operation,input.generation)!=(cx.operation().0,cx.generation().0){return Err(refusal("original job budget belongs to another caller"))}let grant=cx.retained_grant();if grant.maximum_items>input.grant.maximum_items||grant.maximum_copy_bytes>input.grant.maximum_copy_bytes||grant.maximum_capacity_bytes>input.grant.maximum_capacity_bytes||grant.maximum_release_bytes>input.grant.maximum_release_bytes||grant.maximum_depth>input.grant.maximum_depth{return Err(refusal("original job budget exceeds the issuing turn"))}Ok(Self{input,retained_policy:grant,fuel:cx.fuel_remaining(),deadline_us:cx.deadline_us(),cancelled:cx.is_cancelled()})}
+ /// 📄️ The copy bound one output-page crossing is granted, from `💼️job/📄️output-page/🧬️schema/🔣️.json`.
+ pub const OUTPUT_PAGE_BYTES:usize=16384;
+ /// 📃️ Narrows only the copy axis of this crossing so the guest pages its output by what the host grants; the funding loan still settles the real spend.
+ pub fn for_output_page(self)->Self{Self{retained_policy:RetainedCloneGrant{maximum_copy_bytes:self.retained_policy.maximum_copy_bytes.min(Self::OUTPUT_PAGE_BYTES),..self.retained_policy},..self}}
  pub fn step_budget(self)->semio_framework_job::StepBudget{semio_framework_job::StepBudget::new(self.fuel,self.deadline_us,self.retained_policy)}
 }
 

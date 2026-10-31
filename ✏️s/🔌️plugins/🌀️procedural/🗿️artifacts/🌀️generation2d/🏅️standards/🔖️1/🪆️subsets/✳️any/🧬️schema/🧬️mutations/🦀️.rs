@@ -20,6 +20,10 @@ extern crate self as semio_s_artifact_procedural_2d_mutations;
 use semio_s_artifact_procedural_2d_model::diff::Generation2dDiff;
 use semio_s_artifact_procedural_2d_model::widget_id;
 use semio_s_artifact_procedural_2d_model::snapshot::Generation2dSnapshot;
+pub use semio_s_artifact_procedural_2d_mut_document::{change_schema, update_camera};
+pub use semio_s_artifact_procedural_2d_mut_generations::{change_generation_value, delete_generation, rename_generation, select_generation};
+pub use semio_s_artifact_procedural_2d_mut_synapses::{connect_synapse, disconnect_synapse, replace_synapse};
+pub use semio_s_artifact_procedural_2d_mut_widgets::{change_slider_value, clear_widget_layout, create_widget, delete_widget, move_nodes, move_widget, replace_widget};
 use protocol::{ColdMutation, Mutation};
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_os_flow::FlowHost;
@@ -218,3 +222,9 @@ pub fn host_reorganize(host: &mut FlowHost, options_json: &str) -> Result<Vec<cr
 
 #[path = "../../../../../../🌉️apply/🦀️.rs"]
 pub mod central_apply;
+
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+pub mod text;
+
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+pub mod binary;

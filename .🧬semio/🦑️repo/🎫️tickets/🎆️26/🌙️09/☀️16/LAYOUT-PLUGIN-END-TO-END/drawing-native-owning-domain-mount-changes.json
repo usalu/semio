@@ -1,0 +1,53 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/📦️box/🦀️.rs",
+      "before": "85906a621616f92e37dba2a50558623fdf3c3e10484fd4a4cd7ba62e5e94daf5",
+      "after": "4475b851bacbeb39c53d9c6bf24a7ea70417638c3e280e560816d81bd44a6527",
+      "removedMount": "#[cfg(test)]#[path=\"🧪️tests/🦀️.rs\"]mod tests;",
+      "lawSourceUnchanged": true,
+      "inverseVerified": true,
+      "inverseInsertionByteOffset": 6135,
+      "inverseMountSuffix": "\n"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🦀️.rs",
+      "before": "d089942d630f093e69eedf936a5890626bb4ae8a2a3530067f44a0abf5247cb5",
+      "after": "36b33b7afa37d507f028da8db3df61435b34ca35087c5a358feecdb90fd45955",
+      "removedMount": "#[cfg(test)]#[path=\"🧪️tests/🦀️.rs\"]mod tests;",
+      "lawSourceUnchanged": true,
+      "inverseVerified": true,
+      "inverseInsertionByteOffset": 6688,
+      "inverseMountSuffix": ""
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/🧪️tests/📖️public/🦀️.rs",
+      "before": "b6bc792a202bbb086d525ec2328cc58a09b125ca35b84a5f8e39409af76a28e1",
+      "after": "71a0b7adbbc696d8fc969255a3ae5d1fb2e12c6af9cb80ddbd30a796cc0db29c",
+      "removedMount": "#[path=\"../../../🔄️map/🧪️tests/🦀️.rs\"]mod mapping;",
+      "lawSourceUnchanged": true,
+      "inverseVerified": true,
+      "inverseInsertionByteOffset": 1222,
+      "inverseMountSuffix": "\n"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/Cargo.toml",
+      "before": "4f9565212c1ea670eeb10bee8bfa09edd201202952f70d0b5cb2250040a1be73",
+      "after": "f0b188119140d97d93bd897f5b78c9c20846cbb92f9fe78f4374da785d15d95c",
+      "inverseVerified": true,
+      "addedTargets": [
+        "native_mapping",
+        "native_sequence"
+      ],
+      "preservedTargets": [
+        "record_source",
+        "set_receiving",
+        "native_work",
+        "native_fields"
+      ]
+    }
+  ],
+  "capsUnchanged": true,
+  "sameOwningPackage": true,
+  "allTargetsAndDocsRequired": true
+}

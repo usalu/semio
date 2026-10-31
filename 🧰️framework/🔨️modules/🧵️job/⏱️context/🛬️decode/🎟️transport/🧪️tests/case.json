@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "code": 71,
+  "receivingMismatch": [
+    false,
+    true
+  ],
+  "bodyTransferWork": 1,
+  "bodyTransferItems": 1,
+  "sameOwnedPointer": true,
+  "transportHeap": [
+    0,
+    0
+  ],
+  "releaseBytes": 1,
+  "scope": "opaque-primary-receiver-transport-not-native-algorithm-birth"
+}

@@ -36,7 +36,15 @@
     "consumingOriginalActorIssuer",
     "actorReceiptRejoinedBeforePolling",
     "originalIssuerRetainedWithReply",
-    "borrowedSourceLoanCancellation"
+    "borrowedSourceLoanCancellation",
+    "partialAdmissionRetainedOnPostingRefusal",
+    "sameOriginalPaidPartialClose",
+    "minimumDelegationItems",
+    "minimumDelegationFuel",
+    "issuerRetainedDuringAdmission",
+    "admissionFailureCausesIndependent",
+    "actorAdmissionReturnsOwnedPending",
+    "sourceAliasOwnsReturnedHeader"
   ],
   "properties": {
     "version": {
@@ -77,20 +85,20 @@
     },
     "admissionReceipt": {
       "const": [
-        1,
+        2,
         0,
         0,
         0
       ]
     },
     "ownedFuel": {
-      "const": 6
+      "const": 5
     },
     "guestWork": {
       "const": 2
     },
     "remainingFuel": {
-      "const": 4
+      "const": 3
     },
     "guestReceipt": {
       "const": [
@@ -170,6 +178,30 @@
       "const": true
     },
     "borrowedSourceLoanCancellation": {
+      "const": true
+    },
+    "partialAdmissionRetainedOnPostingRefusal": {
+      "const": true
+    },
+    "sameOriginalPaidPartialClose": {
+      "const": true
+    },
+    "minimumDelegationItems": {
+      "const": 2
+    },
+    "minimumDelegationFuel": {
+      "const": 2
+    },
+    "issuerRetainedDuringAdmission": {
+      "const": true
+    },
+    "admissionFailureCausesIndependent": {
+      "const": true
+    },
+    "actorAdmissionReturnsOwnedPending": {
+      "const": true
+    },
+    "sourceAliasOwnsReturnedHeader": {
       "const": true
     }
   }

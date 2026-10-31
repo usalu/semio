@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native Decoder Recipient Actual Close Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grant",
+    "expected"
+  ],
+  "properties": {
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "const": 1
+        },
+        "maximumCopyBytes": {
+          "const": 0
+        },
+        "maximumCapacityBytes": {
+          "const": 0
+        },
+        "maximumReleaseBytes": {
+          "const": 0
+        },
+        "maximumDepth": {
+          "const": 1
+        }
+      }
+    },
+    "expected": {
+      "const": [
+        {
+          "label": "deniedItems",
+          "work": 0,
+          "copiedItems": 0,
+          "reserved": true
+        },
+        {
+          "label": "deniedDepth",
+          "work": 0,
+          "copiedItems": 0,
+          "reserved": true
+        },
+        {
+          "label": "paidClear",
+          "work": 1,
+          "copiedItems": 1,
+          "reserved": false
+        },
+        {
+          "label": "cachedComplete",
+          "work": 0,
+          "copiedItems": 0,
+          "reserved": false
+        }
+      ]
+    }
+  }
+}

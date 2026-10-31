@@ -24,7 +24,7 @@ impl<T:RetainedClone+Send+Sync> RetainedSealedField<T>{
  pub fn advance(&mut self,source:RetainedCloneRef<'_,T>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let d=self.demand(source,body)?;if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}let mut p=receipt(d);
   match self.phase{
-   0=>{p=add(source.bind(&mut self.binding,child(g,1))?.ok_or_else(invalid)?,1)?;self.phase=1;},
+   0=>{p=add(source.bind(&mut self.binding,child(g,1)).result?.ok_or_else(invalid)?,1)?;self.phase=1;},
    1=>{self.preparation=Some(Box::new(RetainedFieldPreparation::default()));self.phase=2;},
    2=>{let prepared=self.preparation.as_mut().ok_or_else(invalid)?;if prepared.value().is_some(){let extra=2*size_of::<Option<T>>()+1;let(value,progress)=prepared.take(child(g,extra)).map_err(|e|tag(e,extra))?;*self.raw=value;prepared.begin_close();self.phase=3;p=add(progress,extra)?;}else{p=add(prepared.advance(source,body.saturating_sub(1),child(g,1)).map_err(|e|tag(e,1))?.progress(),1)?;}},
    3=>{let prepared=self.preparation.as_mut().ok_or_else(invalid)?;if prepared.terminal_is_empty(){self.phase=4;}else{p=add(prepared.close_step(child(g,1)).map_err(|e|tag(e,1))?.progress(),1)?;}},
@@ -44,7 +44,7 @@ impl<T:RetainedClone+Send+Sync> RetainedSealedField<T>{
  pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let d=self.close_demand(g.maximum_copy_bytes)?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}
   if let Some(p)=self.preparation.as_mut(){if p.terminal_is_empty(){drop(self.preparation.take());return Ok(RetainedCloneStep::Progress(receipt(d)));}return p.close_step(g).map(|s|RetainedCloneStep::Progress(s.progress()));}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(g).map(|s|RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.raw,g)?{return Ok(RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.output,g)?{return Ok(RetainedCloneStep::Progress(s.progress()));}let s=RetainedCloneBinding::close_one(&mut self.binding,g)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(s.progress())}else{RetainedCloneStep::Progress(s.progress())})
+  if !self.retirement.is_empty(){return self.retirement.step_granted(g).result.map(|s|RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.raw,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}if let Some(s)=self.retirement.begin_granted(&mut self.output,g).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}let s=RetainedCloneBinding::close_one(&mut self.binding,g)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(s.progress())}else{RetainedCloneStep::Progress(s.progress())})
  }
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.preparation.is_none()&&self.raw.is_none()&&self.output.is_none()&&self.retirement.is_empty()}
 }

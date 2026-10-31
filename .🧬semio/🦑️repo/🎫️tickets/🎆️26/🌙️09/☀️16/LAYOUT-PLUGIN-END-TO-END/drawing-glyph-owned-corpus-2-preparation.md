@@ -1,0 +1,5 @@
+# BigInt-Safe Original Glyph Successor
+
+Root released exactly the two test snapshot/deep comparison expressions after independent review of the first actual26/14 and strict0/all166 hashes. The corpus test now structuredClone snapshots the actual authored layer values (including canonical BigInt words) and deep-compares those same layers; original layers/assets reference identity assertions are unchanged. No JSON coercion/BigInt hook, production/geometry/style/input/stock/quanta change. Entire prior corpus law reconstructs to230f0ac03b16a589f1575225db203dae5a452dadcc0d366a575d5f15cfa1855d.
+
+Fresh successor command captures166 physical inputs/394 edges/zero unresolved, expected40 and sequential strict13, same actual registrations, dedicated-2 outputs/all5env. Exactly164 common files are unchanged, one law changes and the importer is dedicated. Original14 full product raster/export/pick and remaining16 caller acceptance are still open; this pair is actual owned glyph geometry scope. First failure area remains immutable.

@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "authority": "same-explicit-ledger-issued-neutral-runtime-no-fabricated-turn",
+  "rules": {
+    "allOriginalFlowAndAddressedAndLabelCasesPreserved": true,
+    "sameUtf8OffsetsAndGoldenOrigins": true,
+    "noRawUtf8TemporaryArray": true,
+    "actualCpuAndSemanticDeltaIndependent": true,
+    "childDeltaPostedOnceBeforeErrors": true,
+    "realRegionRowsAndSourceRangeWrites": true,
+    "sameOriginalLimitsAndStock": true,
+    "emptyResultUsesGenuineZeroCapacityBuffers": true,
+    "retirementLiveLoansAndNoReplacementArrays": true,
+    "cachedReplayBoundGlyphsPlusTwo": true
+  },
+  "representation": {
+    "regionRowBytes": 128,
+    "planRowBytes": 24,
+    "frameRowBytes": 56,
+    "frameSourceWriteBytes": 8,
+    "firstRangeWriteBytes": 40,
+    "rangeEndWriteBytes": 8,
+    "emptyOutputHeaderBytes": 40,
+    "emptyGlyphBytes": 88,
+    "emptySegmentBytes": 64,
+    "emptyLineBytes": 80
+  },
+  "cases": [
+    {
+      "name": "denied-item-depth-zero-cpu-and-receipt"
+    },
+    {
+      "name": "actual-child-semantic-delta-and-original-geometry"
+    },
+    {
+      "name": "utf8-mismatch-current-error-and-close"
+    },
+    {
+      "name": "addressed-arbitrary-order-cached-replay"
+    },
+    {
+      "name": "empty-overset-and-label-genuine-output"
+    },
+    {
+      "name": "partial-child-and-row-cancellation"
+    }
+  ]
+}

@@ -10,14 +10,15 @@ impl<T:Send+Sync+'static> RetainedClone for SealedShared<T>{type Cursor=SharedCl
 impl<T:Send+Sync+'static> RetainedCloneCursor<SealedShared<T>> for SharedCloneCursor<T>{
     fn output_ready(&self)->bool{!self.state.closing&&!self.state.spent&&self.state.admitted&&self.state.output.is_some()}
  fn advance_demands(&self,source:RetainedCloneRef<'_,SealedShared<T>>,_body:usize)->Result<RetirementDemand,ValueError>{if self.state.closing||self.state.spent||self.state.output.is_some()&&!self.state.admitted{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original shared clone is closing or spent"));}if let Some(demand)=source.binding_demand(&self.state.source)?{return Ok(demand);}Ok(RetirementDemand{depth:1,..Default::default()})}
- fn advance(&mut self,source:RetainedCloneRef<'_,SealedShared<T>>,body: usize, grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ fn advance(&mut self,source:RetainedCloneRef<'_,SealedShared<T>>,body: usize, grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
   let demand=self.advance_demands(source,body)?;if !super::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let state=&mut *self.state;
-  if let Some(progress)=source.bind(&mut state.source,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
+  if let Some(progress)={let turn=source.bind(&mut state.source,grant);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
   if state.output.is_some(){return Ok(RetainedCloneStep::Complete(Default::default()));}
-  let(output,progress)=source.get().try_duplicate(grant)?;state.output=Some(output);let progress=super::admit_retained_clone_progress(grant,progress,"original shared alias clone")?;state.admitted=true;Ok(RetainedCloneStep::Complete(progress))
- }
- fn take(&mut self)->Option<SealedShared<T>>{if !self.output_ready(){return None;}let output=self.state.output.take();if output.is_some(){self.state.spent=true;}output}
+  if source.get().terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original shared alias was already transferred"))}let turn=source.get().try_duplicate(grant);work+=turn.work;let(output,progress)=turn.result?;state.output=Some(output);let progress=super::admit_retained_clone_progress(grant,progress,"original shared alias clone")?;state.admitted=true;Ok(RetainedCloneStep::Complete(progress))
+ })();crate::RetainedWorkOutcome{result,work}}
+ fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
+    fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(SealedShared<T>,crate::RetainedCloneProgress)>>{if !self.output_ready(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=crate::retained_clone::take_retained_clone_output(&mut self.state.output,grant);if matches!(&turn.result,Ok(Some(_))){self.state.spent = true;}turn}
  fn begin_close(&mut self)->bool{if self.state.closing{return false;}self.state.closing=true;true}
  fn terminal_is_empty(&self)->bool{self.state.closing&&self.state.output.is_none()&&self.state.source.is_none()&&self.state.close.is_empty()}
  fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{self.state.close.next_copy_with_binding(&self.state.source)}
@@ -26,20 +27,20 @@ impl<T:Send+Sync+'static> RetainedCloneCursor<SealedShared<T>> for SharedCloneCu
  fn next_close_depth_demand(&self)->Result<usize,ValueError>{self.state.close.next_owner_depth_with_binding(self.state.output.is_some(),&self.state.source)}
   fn close_started(&self)->bool{self.state.closing}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.state.closing{return Ok(Default::default());}self.state.close.next_owner_demands::<SealedShared<T>>(self.state.output.is_some(),&self.state.source,body)}
-fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
   if !self.state.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original shared clone requires closing intent"));}
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   let demand=self.close_demands(grant.maximum_copy_bytes)?;if !super::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  let state=&mut *self.state;let step=if !state.close.is_empty(){state.close.step_granted(grant)?}else if let Some(step)=state.close.begin_granted(&mut state.output,grant)?{step}else{super::close_retained_binding(&mut state.source,grant)?};
+  let state=&mut *self.state;let step=if !state.close.is_empty(){{let turn=state.close.step_granted(grant);work+=turn.work;turn.result}?}else if let Some(step)={let turn=state.close.begin_granted(&mut state.output,grant);work+=turn.work;turn.result}?{step}else{{let turn=super::close_retained_binding(&mut state.source,grant);work+=turn.work;turn.result}?};
   super::admit_retained_clone_close(grant,step,self.terminal_is_empty(),"original shared clone closure")
- }
+ })();crate::RetainedWorkOutcome{result,work}}
 }
 impl<T:Send+Sync+'static> Drop for SharedCloneCursor<T>{fn drop(&mut self){if self.state.output.is_none()&&self.state.source.is_none()&&self.state.close.is_empty(){unsafe{ManuallyDrop::drop(&mut self.state)}}else if !std::thread::panicking(){panic!("original shared clone retains unpublished output or source binding")}}}
 
 struct SharedCloneRetirement<T:Send+Sync+'static>{cursor:ManuallyDrop<SharedCloneCursor<T>>}
 impl<T:Send+Sync+'static> RetirementCursor for SharedCloneRetirement<T>{
   fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.cursor.close_demands(body)}
-fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.cursor.close_step(grant){Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)}}
+fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let turn=self.cursor.close_step(grant);match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
  fn terminal_is_empty(&self)->bool{self.cursor.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.cursor.next_close_copy_byte_demand()}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.cursor.next_close_capacity_byte_demand(body).ok()}

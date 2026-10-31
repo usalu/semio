@@ -22,20 +22,7 @@ impl Census{
 fn text(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)->Result<usize>{Ok(control.borrow_text(native::bytes(reader)?)?.len())}
 /// 🔣️ Uses the common fixed scalar validator without allocating forecast text.
 fn hex(value:&str,control:&mut NativeDecodeControl<'_>)->Result<usize>{native::hex_text_extent(value,control)}
-fn binary_kind(value:u8)->Result<usize>{match value{0|2|3=>Ok(4),1=>Ok(6),_=>Err(invalid())}}
 fn document_kind(value:&str)->Result<usize>{match value{"b"|"c"|"l"=>Ok(4),"i"=>Ok(6),_=>Err(invalid())}}
-/// 📦️ Counts the actual binary run and mark source while leaving typed parsing its original stage.
-pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
- layout(limits)?;control.scoped_stage(|control|{
-  let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}
-  let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,text(&mut reader,control)?)?)?;let count=native::length(&mut reader)?;census.future(count)?;
-  control.begin_stage(count)?;for _ in 0..count{
-   let bytes=add(add(24,text(&mut reader,control)?)?,text(&mut reader,control)?)?;census.row(bytes)?;let count=native::length(&mut reader)?;census.future(count)?;
-   control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let kind=binary_kind(reader.read_u8().map_err(|_|invalid())?)?;census.row(add(add(24,kind)?,text(&mut reader,control)?)?)?;control.step()?;}Ok::<_,ValueError>(())})?;control.step()?;
-  }
-  if reader.remaining()!=0{return Err(invalid())}control.checkpoint()
- })
-}
 /// 📃️ Counts required schema and optional run-list syntax without copying hexadecimal text.
 pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{

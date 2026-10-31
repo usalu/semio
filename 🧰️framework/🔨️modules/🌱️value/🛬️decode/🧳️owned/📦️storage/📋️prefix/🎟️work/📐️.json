@@ -1,0 +1,34 @@
+{
+  "stock": {
+    "items": 10000,
+    "fuel": 10000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64
+  },
+  "cases": [
+    {
+      "capacity": 0,
+      "values": []
+    },
+    {
+      "capacity": 3,
+      "values": [
+        17,
+        23,
+        31
+      ]
+    },
+    {
+      "capacity": 4097,
+      "values": "unitRows"
+    }
+  ],
+  "ownerMoveCopyBytes": 0,
+  "deniedWork": 0,
+  "mutationWork": 1,
+  "cachedWork": 0,
+  "ownedPushCopyBytes": 0,
+  "ownedText": "prefix🧳"
+}

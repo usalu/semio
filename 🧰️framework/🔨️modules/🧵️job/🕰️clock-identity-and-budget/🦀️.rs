@@ -1,6 +1,10 @@
-//! 🕰️ Clock, identity and budget: the synchronous poll, the cancel tokens, the millisecond and microsecond clocks, the revision and operation identities, the commit validation and the step budget with its lane constants. See [`super`].
+//! 🕰️ Clock, identity and budget: the synchronous poll, the cancel tokens, the millisecond and microsecond clocks, the revision and operation identities, the commit validation and the step budget with its lane constants. The owning job context consumes these scalar values.
 
-use super::*;
+use std::future::Future;
+use std::task::{Context,Poll,Waker};
+use semio_framework_async::CancelToken;
+use semio_framework_trace::{OperationId,Generation};
+use semio_framework_value_retained_clone::RetainedCloneGrant;
 
 //#region 🔁️SyncPoll
 /// 🔁️ Polls `fut` exactly once with a no-op waker and returns its output, panicking on `Pending` —
@@ -8,9 +12,9 @@ use super::*;
 /// [`CancelToken`] op is a pure atomic read/write with no real suspension point) and why it is NOT
 /// [`semio_framework_async::block_on`] (no parking, no loop, and callable from `step()` itself, which
 /// `block_on` explicitly forbids). Private: every public crossing of this seam goes through a named
-/// method ([`StepContext::is_cancelled`], [`JobScope::root`], …) so a future upstream change that
+/// method (`StepContext::is_cancelled`, `JobScope::root`, …) so a future upstream change that
 /// actually introduces suspension fails loudly here instead of silently spinning.
-pub(super) fn poll_ready_now<F: Future>(fut: F) -> F::Output {
+fn poll_ready_now<F: Future>(fut: F) -> F::Output {
     let mut fut = std::pin::pin!(fut);
     let waker = Waker::noop();
     let mut cx = Context::from_waker(waker);
@@ -61,7 +65,7 @@ pub fn microseconds_from_milliseconds(milliseconds: f64) -> Option<u64> {
 
 //#region 🪪️Identity
 /// 🧬️ Opaque authoritative-document-revision identity an [`Operation`] is based on — bumped by the
-/// model-actor on every committed mutation. A [`CommitCandidate`] is only [`CommitValidation::Accepted`]
+/// model-actor on every committed mutation. A `CommitCandidate` is only [`CommitValidation::Accepted`]
 /// while both this AND the operation's [`Generation`] still match the live document; see
 /// [`validate_commit`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -88,7 +92,7 @@ impl Operation {
     }
 
     /// 🔢️ The next preview sequence number, advancing the cursor — one call per
-    /// [`StepOutcome::PreviewReady`] a job for this operation emits.
+    /// `StepOutcome::PreviewReady` a job for this operation emits.
     pub fn next_preview_sequence(&mut self) -> Result<u64, JobSequenceExhausted> {
         let sequence = self.preview_sequence;
         self.preview_sequence = self.preview_sequence.checked_add(1).ok_or(JobSequenceExhausted::Preview)?;
@@ -105,7 +109,7 @@ pub enum JobSequenceExhausted {
     Wake,
 }
 
-/// ✔️ Result of [`validate_commit`]: whether a [`CommitCandidate`]'s base revision/generation still
+/// ✔️ Result of [`validate_commit`]: whether a `CommitCandidate`'s base revision/generation still
 /// match the live document, or the live values it was found stale against — a stale candidate must be
 /// explicitly rebased or discarded by the caller, NEVER silently applied (design ticket's governing
 /// commit-validation rule).
@@ -116,7 +120,7 @@ pub enum CommitValidation {
 }
 
 /// ✅️ Checks `op`'s base revision and generation against the document's current `live_revision`/
-/// `live_generation` — the ONLY gate a [`CommitCandidate`] passes through before it may be applied.
+/// `live_generation` — the ONLY gate a `CommitCandidate` passes through before it may be applied.
 pub fn validate_commit(op: &Operation, live_revision: RevisionId, live_generation: Generation) -> CommitValidation {
     if op.base_revision == live_revision && op.generation == live_generation { CommitValidation::Accepted } else { CommitValidation::Stale { live_revision, live_generation } }
 }
@@ -124,7 +128,7 @@ pub fn validate_commit(op: &Operation, live_revision: RevisionId, live_generatio
 
 //#region ⛽️Budget
 /// ⛽️ Two-bound step budget: a fuel counter (job-defined instruction-equivalent units, decremented via
-/// [`StepContext::consume_fuel`]) AND an absolute wall-clock `deadline_us` — design doc Decision 3.
+/// `StepContext::consume_fuel`) AND an absolute wall-clock `deadline_us` — design doc Decision 3.
 /// `deadline_us` is ABSOLUTE (`now_us() + slice`), not a remaining duration, so a job never has to
 /// re-derive wall-clock math from a countdown.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

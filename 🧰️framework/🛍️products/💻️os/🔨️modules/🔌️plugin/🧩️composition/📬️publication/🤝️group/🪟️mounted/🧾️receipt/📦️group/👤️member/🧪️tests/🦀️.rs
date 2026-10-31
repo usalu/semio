@@ -20,6 +20,8 @@ impl store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication 
     fn retry(&mut self) -> bool { false }
     fn acknowledge(&mut self) -> bool { false }
     fn begin_close(&mut self) {}
+    fn admit_original_origins(&mut self, _: &mut Option<std::collections::VecDeque<protocol::MutationOrigin>>, _: RetainedCloneGrant) -> Result<store::RetainedCloneStep, ValueError> { Ok(store::RetainedCloneStep::Progress(Default::default())) }
+    fn close_original_step(&mut self, _: &mut semio_framework_value::OriginalRetirementCloseLoan<'_>, _: RetainedCloneGrant) -> Result<store::RetainedCloneStep, ValueError> { Ok(store::RetainedCloneStep::Progress(Default::default())) }
     fn close_step(&mut self, _: RetainedCloneGrant) -> Result<store::RetainedCloneStep, ValueError> { Ok(store::RetainedCloneStep::Progress(Default::default())) }
     fn terminal_is_empty(&self) -> bool { false }
 }

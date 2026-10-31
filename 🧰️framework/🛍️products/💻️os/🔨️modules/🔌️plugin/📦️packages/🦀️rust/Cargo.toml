@@ -143,6 +143,7 @@ semio-framework-plugin-actor-host = { path = "../../🌐host/📦️packages/�
 semio-framework-plugin-identity = { path = "../../🪪️identity/📦️packages/🦀️rust" }
 semio-framework-plugin-interaction = { path = "../../🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config = { path = "../../🪟️window/🎚️config/📦️packages/🦀️rust" }
+semio-framework-plugin-window-config-original = { path = "../../🪟️window/🎚️config/🧿️original/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../♻️cancellation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-transient = { path = "../../🪟️window/📦️packages/🦀️rust" }
 semio-framework-plugin-window-kits = { path = "../../🪟️window-kits/📦️packages/🦀️rust" }
@@ -192,7 +193,6 @@ semio-framework-plugin-instance-commands = { path = "../../🧵️instance/🧷�
 semio-framework-plugin-instance-typed-ops = { path = "../../🧵️instance/🧾️typed-operations/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-render = { path = "../../🧵️instance/🖼️render/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-dispatch = { path = "../../🧵️instance/📨️dispatch/📦️packages/🦀️rust" }
-semio-framework-plugin-testing-caller = { path = "../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-ladders = { path = "../../🪜️maintenance-ladder/📦️packages/🦀️rust" }
 semio-framework-plugin-time-travel-turns = { path = "../../⏪️time-travel/🧵️instance/📦️packages/🦀️rust" }
 semio-framework-plugin-tool-run-turns = { path = "../../⏯️tool-run/🧵️instance/📦️packages/🦀️rust" }
@@ -208,6 +208,7 @@ semio-framework-plugin-testing-acceptance = { path = "../../🧪️tests/🧪️
 semio-framework-plugin-reactor-wit-bridge = { path = "../../⚛️reactor/🧬️wit-bridge/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-plugin-testing-caller = { path = "../../🧪️testing/🎟️caller/📦️packages/🦀️rust" }
 semio-framework-value-registry = { path = "../../../../../../🔨️modules/🌱️value/📋️registry/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-surface = { path = "../../🧵️instance/🛬️lifted/🌳️tree/📦️packages/🦀️rust" }
 semio-framework-plugin-surface-fixture = { path = "../../🧪️tests/🪟️surface-fixture/📦️packages/🦀️rust" }

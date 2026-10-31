@@ -14,7 +14,7 @@ fn viewer_is_structurally_read_only_and_localized() {
 #[test]
 fn the_viewer_renders_the_model_run_period_in_both_languages() {
     let model = crate::model::Model::default();
-    let text = text(render(&model));
+    let text = text(render(&model.run_period));
     assert!(text.contains("energy-viewer-run-period"));
     assert!(text.contains("Simulationszeitraum"));
     assert!(text.contains("never change the document"));

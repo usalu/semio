@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "Open After Delayed Mirror Replacement",
+      "initial": {
+        "expanded": "false"
+      },
+      "replacement": {
+        "expanded": "true"
+      },
+      "after": 450,
+      "expected": {
+        "expanded": "true"
+      }
+    },
+    {
+      "name": "Selected Option Appears With Reopened Mirror",
+      "initial": {
+        "expanded": "false",
+        "selected": null
+      },
+      "replacement": {
+        "expanded": "true",
+        "selected": "true"
+      },
+      "after": 850,
+      "expected": {
+        "expanded": "true",
+        "selected": "true"
+      }
+    },
+    {
+      "name": "Escape Retires Expanded Mirror",
+      "initial": {
+        "expanded": "true"
+      },
+      "replacement": {
+        "expanded": "false"
+      },
+      "after": 600,
+      "expected": {
+        "expanded": "false"
+      }
+    },
+    {
+      "name": "No Publication Times Out",
+      "initial": {
+        "expanded": "false"
+      },
+      "replacement": null,
+      "after": 450,
+      "expected": {
+        "expanded": "true"
+      },
+      "timeout": true
+    }
+  ]
+}

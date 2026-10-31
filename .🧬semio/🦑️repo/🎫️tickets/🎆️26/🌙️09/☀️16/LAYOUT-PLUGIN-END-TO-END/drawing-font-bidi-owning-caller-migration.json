@@ -1,0 +1,9 @@
+{
+  "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🟦️.ts",
+  "before": "2c03b800357fe3adf684bbd19de67ff4cf825df2b45c6d98855e2e8a1cccb695",
+  "sha256": "d0cd4ab7cee3d8a30ca4dc2f3376fc454ca0764ede8e09219949ed00866acd3f",
+  "bytes": 5273,
+  "preservedLawCount": 3,
+  "preservedExpectCallSites": 21,
+  "changes": "Only actual owned Buffer get/Array.from read sites; fixtures, directions, quanta, original source identity/cancel assertions and timeout unchanged."
+}

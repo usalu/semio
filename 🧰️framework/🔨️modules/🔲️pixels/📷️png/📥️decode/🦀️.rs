@@ -25,18 +25,11 @@ impl semio_framework_value::retirement::RetireOwned for PngInflater {
  fn controlled_retirement_supported()->bool{true}
 }
 impl semio_framework_value::retirement::RetirementCursor for PngInflaterRetirement {
-    fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let Some(owner)=self.owner.as_ref()else{return Ok(Default::default())};let release=owner.next_retained_release_allocation_bytes();Ok(semio_framework_value::RetirementDemand{copy_bytes:if release.is_some(){0}else{size_of::<PngInflater>()},release_bytes:release.unwrap_or(0),depth:1,..Default::default()})}
-
- fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
-  use semio_framework_value::retirement::RetirementStep;
-  let Some(owner)=self.owner.as_mut() else{return RetirementStep::Complete;};
-  let copy=if owner.next_retained_release_allocation_bytes().is_some(){0}else{size_of::<PngInflater>()};if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return RetirementStep::BudgetExhausted;}
-  if owner.retained_terminal_is_empty(){self.owner=None;return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()});}
-  match owner.close_retained_step(grant.maximum_items,grant.maximum_release_bytes){semio_framework_deflate::RetainedInflateCloseStep::Complete=>RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}),semio_framework_deflate::RetainedInflateCloseStep::Pending {released_items,released_bytes}=>{if released_items==0&&released_bytes==0{RetirementStep::BudgetExhausted}else{RetirementStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:copy,released_bytes,..Default::default()})}}}
- }
+ fn next_demand(&self,_body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(self.owner.as_ref().map_or(Default::default(),|owner|if owner.retained_terminal_is_empty(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{owner.retained_retirement_demands()}))}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;let Some(owner)=self.owner.as_mut()else{return RetirementStep::Complete(0);};let d=if owner.retained_terminal_is_empty(){semio_framework_value::RetirementDemand{depth:1,..Default::default()}}else{owner.retained_retirement_demands()};if grant.maximum_items==0||grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes||grant.maximum_depth<d.depth{return RetirementStep::BudgetExhausted;}if owner.retained_terminal_is_empty(){self.owner=None;return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1);}let step=owner.close_retained_step(grant.maximum_items,grant.maximum_release_bytes);let work=owner.last_retained_close_work();if work==0{return RetirementStep::BudgetExhausted;}let released=match step{semio_framework_deflate::RetainedInflateCloseStep::Complete=>0,semio_framework_deflate::RetainedInflateCloseStep::Pending{released_bytes,..}=>released_bytes};RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()},work)}
  fn terminal_is_empty(&self)->bool{self.owner.is_none()}
  fn next_close_byte_demand(&self)->Option<usize>{Some(self.owner.as_ref().and_then(|owner|owner.next_retained_release_allocation_bytes()).unwrap_or(0))}
- fn next_work_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.owner.as_ref().map_or(0,|owner|if owner.next_retained_release_allocation_bytes().is_some(){0}else{size_of::<PngInflater>()}))}
+ fn next_work_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
  fn next_birth_bytes(&self,_maximum_bytes:usize)->Option<usize>{Some(0)}
  fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }
@@ -206,3 +199,7 @@ pub mod testkit {
         super::invalid(v)
     }
 }
+
+#[cfg(test)]
+#[path="♻️close/🧪️tests/🦀️.rs"]
+mod inflater_retirement_work_tests;

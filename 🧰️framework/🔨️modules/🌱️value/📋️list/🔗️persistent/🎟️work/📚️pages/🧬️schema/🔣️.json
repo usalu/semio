@@ -1,0 +1,149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Genuine Logical Retained Page Storage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "unit",
+    "pageElements",
+    "directoryReferenceLogicalBytes",
+    "v8AllocationClaim",
+    "stock",
+    "fuel",
+    "turn",
+    "elementLogicalBytes",
+    "cases",
+    "denied",
+    "cuts",
+    "rules",
+    "oracle",
+    "mutations"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "unit": {
+      "const": "declared-logical-element-and-owner-reference-rows"
+    },
+    "pageElements": {
+      "const": 16
+    },
+    "directoryReferenceLogicalBytes": {
+      "const": 8
+    },
+    "v8AllocationClaim": {
+      "const": false
+    },
+    "stock": {
+      "const": [
+        8192,
+        262144,
+        262144,
+        262144,
+        64
+      ]
+    },
+    "fuel": {
+      "const": 8192
+    },
+    "turn": {
+      "const": [
+        1,
+        8192,
+        8192,
+        8192,
+        64
+      ]
+    },
+    "elementLogicalBytes": {
+      "const": 8
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "empty-no-storage",
+          "values": []
+        },
+        {
+          "name": "one-page-identities",
+          "values": [
+            11,
+            22,
+            33
+          ]
+        },
+        {
+          "name": "first-directory-growth",
+          "range": {
+            "start": 0,
+            "count": 17
+          }
+        },
+        {
+          "name": "next-directory-level",
+          "range": {
+            "start": 0,
+            "count": 257
+          }
+        }
+      ]
+    },
+    "denied": {
+      "const": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ]
+    },
+    "cuts": {
+      "const": [
+        "element-body-birth",
+        "directory-body-birth",
+        "owner-reference-publication",
+        "element-publication"
+      ]
+    },
+    "rules": {
+      "const": {
+        "actualElementStorage": true,
+        "noParallelArray": true,
+        "noTokenBackingFacade": true,
+        "sameFiniteStockThroughClose": true,
+        "existingHeaderCopyZero": true,
+        "newReferenceRowLogicalBytes": 8,
+        "bodyOnlyPhysicalEpoch": true,
+        "cachedQueriesNoEffect": true,
+        "privatePartialBodiesRetained": true,
+        "rawIntrinsicMutationRefused": true,
+        "inputElementIdentityPreserved": true,
+        "readViewDoesNotRetainRetiredArray": true,
+        "staleBackingReadRefused": true,
+        "logicalNotV8OrGc": true,
+        "publishedUndefinedDistinctFromVacancy": true
+      }
+    },
+    "oracle": {
+      "const": "independent-sqlite-ordered-values-and-observed-body-birth-release"
+    },
+    "mutations": {
+      "const": {
+        "input": [
+          11,
+          22,
+          33
+        ],
+        "write": {
+          "index": 1,
+          "value": 44
+        },
+        "pop": true,
+        "deniedUnchanged": true,
+        "perStoreLogicalCopy": 8
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+Actual outer1/native101: a one-site scalar demand substitution in the Owner fix referenced missing body variable; no tests executed. Corrected scalar site to its unchanged grant-based fixed demand; Owner keeps explicitbody.

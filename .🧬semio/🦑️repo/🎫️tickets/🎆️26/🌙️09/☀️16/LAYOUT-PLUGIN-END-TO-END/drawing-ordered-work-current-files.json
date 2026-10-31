@@ -1,0 +1,70 @@
+{
+  "scope": "Current owning Ordered files; main Retirement/typed-retirement work belongs Root, not blanket attribution or proof. No runtime.",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs",
+      "sha256": "0a4b7ab201dd405d93eff04e6a4949f095fefed01626efcddad7f9437513c6d2",
+      "bytes": 47777
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔗️immutable-alias/🦀️.rs",
+      "sha256": "b0f6259afa93a30b396636c64953143da546b531dde59d587ec96f3b3eff7a82",
+      "bytes": 4077
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🦀️.rs",
+      "sha256": "3839f5a6970421b9ed353401cb1c775bce7a2339094bb28606c023d682a18a9b",
+      "bytes": 11385
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🎮️update/🎬️plan/🦀️.rs",
+      "sha256": "6f820ace0fda0bd7c51d13f958ebe00f0bab5016dfd477f7a289187565dc8a9b",
+      "bytes": 6517
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔗️immutable-alias/🎟️work/🔣️.json",
+      "sha256": "d2ff5b3f4be63aac80646d86761b9da151bb5333925e65b55dd2f6398956a01c",
+      "bytes": 796
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔗️immutable-alias/🎟️work/📐️.json",
+      "sha256": "f447eab85daaa21d25d585735a41e6f52158dd6cd7202fea60f6d68e30df352c",
+      "bytes": 319
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔗️immutable-alias/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "62b48b48e5880c444c650a0ccc8bead85e46896a32693578a7e983fef45d6619",
+      "bytes": 3530
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🎮️update/🎟️work/🔣️.json",
+      "sha256": "4f5fe7d589fc357070f10a6f9cc905fd74753be7ac90d1df9fbcabf342fc7fdf",
+      "bytes": 1762
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🎮️update/🎟️work/📐️.json",
+      "sha256": "7fd9908f7fc84714012ad57cbafeb66104fd942c4875e4ea20a0af9d8073a009",
+      "bytes": 974
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🎮️update/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "cbc5373d471bbf68332ead801e25217160caacd79280450a5278ece1e787cafb",
+      "bytes": 4788
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/⏱️cursor-work/🔣️.json",
+      "sha256": "41fd6ba8922d39172ed0d3aeab943e67cedf60f9e34a6485ac8309d139076442",
+      "bytes": 781
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/⏱️cursor-work/📐️.json",
+      "sha256": "b7904c9fbbd3d3fa08520460fe5fdc1302faba99874d686babba113562f09a5d",
+      "bytes": 333
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/⏱️cursor-work/🧪️tests/🦀️.rs",
+      "sha256": "caa5f55d0c8855544d224246b541f6eb674e034b10dd42127cbc6f2d2e008634",
+      "bytes": 3443
+    }
+  ]
+}

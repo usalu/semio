@@ -1,0 +1,96 @@
+{
+  "authority": false,
+  "state": "prepared-only-unexecuted",
+  "launchAuthorized": false,
+  "attemptsExecuted": 0,
+  "session": null,
+  "cwd": "/Users/ueli/Documents/semio",
+  "argv": [
+    "repo",
+    "--service=off",
+    "tools",
+    "exec",
+    "bun",
+    "--",
+    "test",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-neutral-work.test.ts"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-neutral-work",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-neutral-work/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-neutral-work/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-neutral-work/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-neutral-work/tmp"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-neutral-work/test.log",
+  "inputs": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-neutral-work.test.ts",
+      "bytes": 1977,
+      "sha256": "8e36732874f1aea1be70649d39e6fd16d3f2a7c72ab0801951ddfa2aebcbf5ef",
+      "utf16PathUnits": 126
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "bytes": 13238,
+      "sha256": "989e0d8e660d4270c6c0d6322489ac5963190a10509517570ecb57036119d639",
+      "utf16PathUnits": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🔣️.json",
+      "bytes": 2185,
+      "sha256": "fc83b23f80dae09c5d63f21ad61c3ff8adc48c7f84a6446121ca8930375f434b",
+      "utf16PathUnits": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🟦️.ts",
+      "bytes": 5107,
+      "sha256": "1a254e2d34a6657cd92aa77973525af239775eaefa6165ffad71b61e4fc1c960",
+      "utf16PathUnits": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 578,
+      "sha256": "bd0d51af47303fd799ff64a63395142dc659f4c4cd59494d782a102b9eb6353c",
+      "utf16PathUnits": 120
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🔣️.json",
+      "bytes": 1108,
+      "sha256": "57838f80ed2ab8942f58d867ad91bd77002463ad8cf095b454cd2c17a854c58f",
+      "utf16PathUnits": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/📐️.json",
+      "bytes": 1731,
+      "sha256": "ccdc94dca18c9d3874c833406589117120ec70cb01df18b6381bd2db4c526f3e",
+      "utf16PathUnits": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "bytes": 2577,
+      "sha256": "5c50e7fb936ffd67087afa1c969291663aefd22fb5039d7304303683a15dab9b",
+      "utf16PathUnits": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+      "bytes": 3782,
+      "sha256": "05391a8636147f644c7e3ddca99a57cc6c6a000490cc9041ce6d2c85c6ff56ec",
+      "utf16PathUnits": 115
+    },
+    {
+      "path": "package.json",
+      "bytes": 21673,
+      "sha256": "9605466756ffe292a2e5c425e8beec9cda9b60967cadccc33fef9d20c617f98b",
+      "utf16PathUnits": 40
+    },
+    {
+      "path": "bun.lock",
+      "bytes": 603865,
+      "sha256": "b27bdace86f04889c66e59f5227d0bdef7568b22c550798705d3c911d1c88faf",
+      "utf16PathUnits": 36
+    }
+  ],
+  "nativeOrFullClosureClaim": false
+}

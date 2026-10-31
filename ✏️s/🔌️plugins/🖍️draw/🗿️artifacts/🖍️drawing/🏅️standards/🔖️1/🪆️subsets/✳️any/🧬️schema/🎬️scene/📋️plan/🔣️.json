@@ -1,0 +1,26 @@
+{
+  "contract": "semio.drawing.scene.plan-ownership.v1",
+  "owner": "scenePlan",
+  "values": [
+    "DocumentSceneLimits",
+    "DocumentSceneContent",
+    "DocumentSceneNode",
+    "DocumentScenePlan",
+    "DocumentSceneProgress",
+    "DocumentSceneMessage",
+    "DocumentSceneError",
+    "RasterSceneAsset"
+  ],
+  "consumers": [
+    "preparation",
+    "text",
+    "raster",
+    "boolean",
+    "trace",
+    "view"
+  ],
+  "semanticShapeUnchanged": true,
+  "sourceByteBoundary": 262144,
+  "externalRuntimeDependencies": false,
+  "unchangedNeutralFailureLaw": "⚠️failure/🧪️tests/🧫️fixtures/🔣️.json"
+}

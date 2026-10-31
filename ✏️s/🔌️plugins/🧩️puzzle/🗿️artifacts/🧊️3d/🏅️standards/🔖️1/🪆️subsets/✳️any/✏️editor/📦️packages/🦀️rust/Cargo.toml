@@ -80,6 +80,7 @@ semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-scene = { workspace = true }
 semio-s-artifact-puzzle-3d-commands-runtime = { workspace = true }
 semio-s-artifact-puzzle-3d-host = { workspace = true }
+semio-s-artifact-puzzle-3d-editor-session = { workspace = true, features = ["testkit"] }
 semio-s-artifact-puzzle-3d-model = { workspace = true, features = ["testing"] }
 semio-s-artifact-puzzle-3d-mutations = { workspace = true, features = ["testing"] }
 semio-s-artifact-puzzle-3d-mutations-catalog = { workspace = true, features = ["testing"] }

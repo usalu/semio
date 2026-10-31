@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "headerCopyBytes": 0,
+  "headerCapacityBytes": 0,
+  "headerWork": 1,
+  "deniedWork": 0,
+  "cachedWork": 0,
+  "logicalMoveCopyBytes": 0,
+  "logicalMoveWork": 1,
+  "nullAllocationWork": 1,
+  "nullAllocationCapacityBytes": 0,
+  "physicalAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "source": {
+    "items": 1,
+    "copyBytes": 4096,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 128
+  },
+  "workUnits": 100000
+}

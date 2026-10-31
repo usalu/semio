@@ -3,7 +3,7 @@ use super::*;
 use std::mem::ManuallyDrop;
 use semio_framework_value::RetainedCloneStep;
 use semio_framework_job::{StepContext,OriginalTurnFailure,OriginalSourceBinding,OriginalConstructionDemand,admit_original_construction};
-use semio_framework_plugin_window_config::OriginalWindowAddressCopy;
+use semio_framework_plugin_window_config_original::OriginalWindowAddressCopy;
 /// 🪟️ The source stores no cloned ViewModel or roster and owns every partially captured read until paid closure.
 pub struct OriginalWindowTransientCapture{binding:Option<OriginalSourceBinding>,decoder:Option<(u64,u64)>,body:usize,view:usize,selection:semio_framework::ViewModelWindowSelection,address:OriginalWindowAddressCopy,authority:ManuallyDrop<Option<WindowTransientAuthority>>,close:semio_framework_value::retained_clone::RetainedCloneClose,ready:bool}
 impl OriginalWindowTransientCapture{

@@ -21,13 +21,13 @@ macro_rules! fields{($patch:ty=>$row:ty,$count:expr; $($index:literal=>$field:id
  }
 };}
 fields!(ParagraphStylePatch=>ParagraphStyle,7;0=>name:String=>set name,1=>font_family:String=>set font_family,2=>font_size:f64=>set font_size,3=>font_weight:u32=>set font_weight,4=>leading:f64=>set leading,5=>tracking:f64=>set tracking,6=>alignment:String=>set alignment);
-fields!(CharacterStylePatch=>CharacterStyle,7;0=>name:Option<String>=>set name,1=>font_family:Option<String>=>set font_family,2=>font_size:Option<f64>=>set font_size,3=>font_weight:Option<u32>=>set font_weight,4=>italic:Option<bool>=>set italic,5=>color:Option<[f32;4]>=>set color,6=>tracking:Option<f64>=>set tracking);
+fields!(CharacterStylePatch=>CharacterStyle,7;0=>name:Option<String> =>set name,1=>font_family:Option<String> =>set font_family,2=>font_size:Option<f64> =>set font_size,3=>font_weight:Option<u32> =>set font_weight,4=>italic:Option<bool> =>set italic,5=>color:Option<[f32;4]> =>set color,6=>tracking:Option<f64> =>set tracking);
 fields!(ParentPagePatch=>ParentPage,3;0=>name:String=>set name,1=>width:f64=>set width,2=>height:f64=>set height);
-fields!(SpreadPatch=>Spread,2;0=>name:String=>set name,1=>page_ids:Vec<String>=>set page_ids);
-fields!(ImageLinkPatch=>ImageLink,5;0=>path:String=>set path,1=>width:u32=>set width,2=>height:u32=>set height,3=>dpi:u32=>set dpi,4=>color_profile:Option<String>=>set color_profile);
+fields!(SpreadPatch=>Spread,2;0=>name:String=>set name,1=>page_ids:Vec<String> =>set page_ids);
+fields!(ImageLinkPatch=>ImageLink,5;0=>path:String=>set path,1=>width:u32=>set width,2=>height:u32=>set height,3=>dpi:u32=>set dpi,4=>color_profile:Option<String> =>set color_profile);
 fields!(LayerPatch=>Layer,3;0=>name:String=>set name,1=>visible:bool=>set visible,2=>locked:bool=>set locked);
 fields!(TextStoryPatch=>TextStory,1;0=>content:String=>set content);
-fields!(PagePatch=>Page,12;0=>name:String=>set name,1=>spread_id:String=>set spread_id,2=>width:f64=>set width,3=>height:f64=>set height,4=>margin_top:f64=>set margins.top,5=>margin_right:f64=>set margins.right,6=>margin_bottom:f64=>set margins.bottom,7=>margin_left:f64=>set margins.left,8=>columns_count:u32=>set columns.count,9=>columns_gutter:f64=>set columns.gutter,10=>parent_page_id:Option<String>=>set parent_page_id,11=>background_drawing:Option<semio_s_artifact_layout_layout_model::LayoutDrawingMember>=>set background_drawing);
+fields!(PagePatch=>Page,12;0=>name:String=>set name,1=>spread_id:String=>set spread_id,2=>width:f64=>set width,3=>height:f64=>set height,4=>margin_top:f64=>set margins.top,5=>margin_right:f64=>set margins.right,6=>margin_bottom:f64=>set margins.bottom,7=>margin_left:f64=>set margins.left,8=>columns_count:u32=>set columns.count,9=>columns_gutter:f64=>set columns.gutter,10=>parent_page_id:Option<String> =>set parent_page_id,11=>background_drawing:Option<semio_s_artifact_layout_layout_model::LayoutDrawingMember> =>set background_drawing);
 fields!(GridPatch=>GridSettings,3;0=>baseline_grid:f64=>set baseline_grid,1=>baseline_offset:f64=>set baseline_offset,2=>snap_to_baseline:bool=>set snap_to_baseline);
 fn bounds(row:&mut Frame)->&mut LayoutBounds{match row{Frame::Rect{bounds,..}|Frame::Text{bounds,..}|Frame::Image{bounds,..}=>bounds}}
 impl OwnedPatch<Frame> for FramePatch{

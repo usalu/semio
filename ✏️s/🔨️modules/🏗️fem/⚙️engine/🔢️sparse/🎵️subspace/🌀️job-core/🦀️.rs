@@ -294,11 +294,11 @@ impl SubspaceWork {
 pub struct SubspaceIterationJob {
     pub(super) operation: Operation,
     pub(super) state: SubspaceCheckpoint,
-    pub(super) preview_writer: Option<RetainedJobPayloadWriter>,
+    pub(super) preview_writer: NumericalPayloadSlot,
     pub(super) preview_page_cursor: usize,
-    pub(super) terminal_writer: Option<RetainedJobPayloadWriter>,
+    pub(super) terminal_writer: NumericalPayloadSlot,
     pub(super) terminal_page_cursor: usize,
-    pub(super) checkpoint_writer: Option<RetainedJobPayloadWriter>,
+    pub(super) checkpoint_writer: NumericalPayloadSlot,
     pub(super) checkpoint_cursor: NumericalPageCursor,
     pub(super) desk: NumericalOutcomeDesk,
     pub(super) terminal_published: bool,
@@ -464,7 +464,7 @@ impl SubspaceIterationJob {
         (self.state.iteration, self.state.max_iter, residual, self.state.converged)
     }
 
-    pub(super) fn advance_work_checkpoint_entry(work: &SubspaceWork, cursor: &mut NumericalPageCursor, writer: &mut RetainedJobPayloadWriter, base: u16, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
+    pub(super) fn advance_work_checkpoint_entry(work: &SubspaceWork, cursor: &mut NumericalPageCursor, writer: &mut RetainedPayloadBuilder, base: u16, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
         Ok(match cursor.field - base {
             0 => {
                 let values = work.checkpoint_control();
@@ -485,7 +485,7 @@ impl SubspaceIterationJob {
         })
     }
 
-    pub(super) fn advance_checkpoint_entry(state: &SubspaceCheckpoint, cursor: &mut NumericalPageCursor, writer: &mut RetainedJobPayloadWriter, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
+    pub(super) fn advance_checkpoint_entry(state: &SubspaceCheckpoint, cursor: &mut NumericalPageCursor, writer: &mut RetainedPayloadBuilder, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
         if advance_numerical_page_header(writer, b"FEMSCP1\0", 12, *cursor, context)? {
             return Ok(false);
         }
@@ -530,18 +530,15 @@ impl SubspaceIterationJob {
             10 => advance_paged_f64_owner(writer, &state.residuals, cursor, context)?,
             field if (11..=22).contains(&field) => Self::advance_work_checkpoint_entry(&state.work, cursor, writer, 11, context)?,            23 => {
                 if cursor.owner == 0 {
-                    writer.write_staged(&(state.retiring_work.is_some() as u64).to_le_bytes())?;
-                    cursor.owner = 1;
+                    if write_numerical_entry(writer, &(state.retiring_work.is_some() as u64).to_le_bytes(), context)? { cursor.owner = 1; }
                     false
                 } else if let Some(work) = state.retiring_work.as_ref() {
                     let values = work.checkpoint_control();
                     if cursor.owner == 1 {
-                        writer.write_staged(&(values.len() as u64).to_le_bytes())?;
-                        cursor.owner = 2;
+                        if write_numerical_entry(writer, &(values.len() as u64).to_le_bytes(), context)? { cursor.owner = 2; }
                         false
                     } else if let Some(value) = values.get(cursor.item) {
-                        writer.write_staged(&value.to_le_bytes())?;
-                        cursor.item += 1;
+                        if write_numerical_entry(writer, &value.to_le_bytes(), context)? { cursor.item += 1; }
                         false
                     } else {
                         true
@@ -557,7 +554,7 @@ impl SubspaceIterationJob {
             _ => return Ok(true),
         };
         if complete {
-            if !writer.commit_staged_page_funded(context, size_of::<NumericalPageCursor>() + 3 * size_of::<usize>())? { return Ok(false); }
+            if !numerical_commit_page(writer, context)? { return Ok(false); }
             cursor.item = 0;
             cursor.owner = 0;
             cursor.field = match cursor.field {

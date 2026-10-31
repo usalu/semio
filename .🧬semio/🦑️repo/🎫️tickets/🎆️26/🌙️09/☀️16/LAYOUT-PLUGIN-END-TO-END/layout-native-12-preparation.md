@@ -1,0 +1,3 @@
+# Layout Native 12
+
+Freshly verified all19 package names and exact literal router order against current source, original --lib/testkit/--no-fail-fast/no-test-filter argv and canonical nested Layout workspace. Current router, workspace and previous setter/collection syntax source hashes are recorded in the authored command packet. The actual repository compiler supplies bounded current Source admission. Previous Native11 is terminal, so no duplicate live request exists. This launches one current original integration request; no selected tests, actual native records or actual-log oracle pass is claimed by preparation. Dedicated artifact/temp/log paths remain inside this ticket, with no custom cache/profile/stock changes.

@@ -113,7 +113,7 @@
         "capacityBytes": {
           "type": "integer",
           "minimum": 33554432,
-          "maximum": 68719476736
+          "maximum": 103080263680
         },
         "maximumArtifactBytes": {
           "type": "integer",
@@ -123,7 +123,7 @@
         "maximumLogicalBytes": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 68719476736
+          "maximum": 103080263680
         }
       }
     },
@@ -207,7 +207,7 @@
         "needBytes": {
           "type": "integer",
           "minimum": 1048576,
-          "maximum": 68719476736
+          "maximum": 103080263680
         },
         "headroomPercent": {
           "type": "integer",
@@ -227,7 +227,7 @@
         "maximumBytes": {
           "type": "integer",
           "minimum": 33554432,
-          "maximum": 68719476736
+          "maximum": 103080263680
         },
         "automatic": {
           "description": "Whether a command that finds the image quiescent (nobody holds it, a non-waiting exclusive try succeeds) and still below its pressure floor recreates it at the elastic size; the graph, compiler and products images qualify (all hold only derived data; `repo run repo-cache-reset:cache-reset-<graph|rust|products>` is the on-demand step).",

@@ -184,11 +184,11 @@ impl ArtifactOwnedValueRetirementFactory<MapMutation> for MapRetirementFactory {
     fn retirement_birth_bytes(&self, _value: &MapMutation) -> usize {
         semio_framework_value::retirement::owned_retirement_birth_bytes::<MapMutation>()
     }
-    fn retire_owned(&self, value: MapMutation, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, MapMutation)> {
+    fn retire_owned(&self, value: MapMutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, MapMutation)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, MapMutation)> {
         let MapMutation::ReplaceMap(MapBody { lifetime, .. }) = &value;
         assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst), 0);
         semio_framework_value::retirement::admit_owned_retirement(value, grant)
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 impl semio_framework_value::retirement::RetireOwned for MapLifetime {
     fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {

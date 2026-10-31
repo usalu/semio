@@ -58,6 +58,8 @@ serde_json = { workspace = true }
 semio-s-artifact-stdio-step = { workspace = true }
 
 [dev-dependencies]
+semio-framework = { workspace = true }
+semio-framework-job = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

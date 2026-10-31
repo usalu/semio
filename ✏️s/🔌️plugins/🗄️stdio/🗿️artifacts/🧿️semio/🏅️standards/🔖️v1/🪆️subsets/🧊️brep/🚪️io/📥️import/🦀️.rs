@@ -2,7 +2,6 @@
 //! `CONVERSION` that registers and declares their composer rows.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as store;
 
@@ -60,7 +59,7 @@ pub mod dwg {
         }
     }
 
-    /// 📥️ Imports a DWG mesh into the BREP artifact's kernel.
+    /// 🕸️ Imports a DWG mesh into the BREP artifact's kernel.
     pub fn import(kernel: &mut dyn BrepKernel, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
         kernel.import_mesh(data, tolerance, &DwgImporter)
     }

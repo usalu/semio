@@ -13,7 +13,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>):
   await registerE2eSourceScopeTests(vitest, repoRoot);
   registerBrowserCancellationTestsV1((name,body)=>it(name,body), repoRoot);
   const cargoPath = join(repoRoot, "🌎️hub/🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust/Cargo.toml");
-  const cargo = readFileSync(cargoPath, "utf8");
+  const cargo = readFileSync(cargoPath, "utf8").split(/^\[dev-dependencies\]/m)[0] ?? "";
 
   describe("demonstratorCompileClosure", () => {
     it("does not link whole puzzle, procedural, or gis plugin composition crates", () => {

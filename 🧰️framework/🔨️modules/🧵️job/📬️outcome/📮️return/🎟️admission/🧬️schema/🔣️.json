@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "stages",
+    "actualWork",
+    "quantumItems",
+    "quantumFuel",
+    "deniedWork",
+    "cachedWork",
+    "copyBytes",
+    "source",
+    "refusedHandoffRetainsOutput",
+    "partialDropReturnsSlot",
+    "bindingRetainedUntilVacancy"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "stages": {
+      "const": [
+        "callerSlot",
+        "sourceAlias",
+        "callerHandoff"
+      ]
+    },
+    "actualWork": {
+      "const": [
+        1,
+        1,
+        1
+      ]
+    },
+    "quantumItems": {
+      "const": 1
+    },
+    "quantumFuel": {
+      "const": 1
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "copyBytes": {
+      "const": 0
+    },
+    "source": {
+      "const": {
+        "items": 4096,
+        "copyBytes": 1048576,
+        "capacityBytes": 1048576,
+        "releaseBytes": 1048576,
+        "depth": 64,
+        "fuel": 16384,
+        "deadlineUs": 1000000
+      }
+    },
+    "refusedHandoffRetainsOutput": {
+      "const": true
+    },
+    "partialDropReturnsSlot": {
+      "const": true
+    },
+    "bindingRetainedUntilVacancy": {
+      "const": true
+    }
+  }
+}

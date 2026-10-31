@@ -1,0 +1,9 @@
+{
+  "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🟦️.ts",
+  "before": "d0cd4ab7cee3d8a30ca4dc2f3376fc454ca0764ede8e09219949ed00866acd3f",
+  "sha256": "a56b089d2f57db5820e7db436c4319675f6af6d2730c0a2274cb8a5833290a67",
+  "wholePriorReconstructed": "d0cd4ab7cee3d8a30ca4dc2f3376fc454ca0764ede8e09219949ed00866acd3f",
+  "changes": "Exactly two foreign bidi-js Uint8Array level reads (visible-level map and mirror odd-level bitcheck) restored to [index]; firstparty Buffer get sites unchanged.",
+  "preservedExpectCallSites": 21,
+  "runtimeExecuted": false
+}

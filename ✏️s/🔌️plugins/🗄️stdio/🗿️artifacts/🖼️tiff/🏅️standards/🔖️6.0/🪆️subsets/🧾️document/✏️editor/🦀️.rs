@@ -125,10 +125,10 @@ fn tiff_any_editor_retained_extent(command: &TiffAnyEditCommand, _snapshot: &Tif
 }
 pub fn tiff_any_editor_retained_reduce(command: &TiffAnyEditCommand, snapshot: &TiffSnapshot, _config: &TiffEditorConfig, _history: &semio_framework_plugin::HistoryView, _interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<TiffAnyEditor>>>, _operation: &AppOperationContext) -> Result<Emit<TiffMutation, TiffEditorConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        TiffAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { config_mutations: vec![TiffEditorConfigMutation::SetSelectedIfd { selected_ifd: 0 }], effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiff_any_editor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)], ..Default::default() }),
+        TiffAnyEditCommand::SetActiveExample { example_id } => Ok(Emit { config_mutations: vec![TiffEditorConfigMutation::select_ifd(0)], effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiff_any_editor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)], ..Default::default() }),
         TiffAnyEditCommand::SelectIfd { ifd_index } => {
             if *ifd_index >= snapshot.ifds.len() { return Err(tiff_any_editor_edit_fault("stdio.tiff.ifd-out-of-range", format!("image page {ifd_index} is outside 0..{}", snapshot.ifds.len()))); }
-            Ok(Emit { config_mutations: vec![TiffEditorConfigMutation::SetSelectedIfd { selected_ifd: *ifd_index }], ..Default::default() })
+            Ok(Emit { config_mutations: vec![TiffEditorConfigMutation::select_ifd(*ifd_index)], ..Default::default() })
         }
         _ => Err(Fault::from("stdio-example-retained-route-mismatch")),
     }
@@ -268,7 +268,7 @@ impl ArtifactEditor for TiffAnyEditor {
         match command {
             TiffAnyEditCommand::EditSnapshot { event } => <Self as editing::SnapshotEditingEditor>::snapshot_edit_emit(event, _doc.snapshot),
             TiffAnyEditCommand::SetActiveExample { example_id } => Ok(Emit {
-                config_mutations: vec![TiffEditorConfigMutation::SetSelectedIfd { selected_ifd: 0 }],
+                config_mutations: vec![TiffEditorConfigMutation::select_ifd(0)],
                 effects: vec![semio_s_artifact_stdio_contract::load_example_effect(&tiff_any_editor_example_snapshot(example_id), STDIO_TIFF_DOCUMENT_SCHEMA)],
                 ..Default::default()
             }),

@@ -1,0 +1,3 @@
+# Explicit Font Producer Historical Removal
+
+The exact TS owner packet documents our canonical relocation from Font/work/producer to domain-neutral Persistent/work/producer, with original removed SHA d5804e1d21c567322861b32238216e8c113a1af0711379f6004e1e0b8e8d3c1f and explicit movedTo. The inventory previously read removed statuses only in separate removed/entries arrays, overlooking this same explicit status in files. The collector now recognizes status=removed in files as well. No source deletion, compatibility facade or peer attribution is introduced; this corrects the audit representation only.

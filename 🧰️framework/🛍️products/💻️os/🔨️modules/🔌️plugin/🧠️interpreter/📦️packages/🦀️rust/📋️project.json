@@ -24,57 +24,6 @@
     "family:os-plugin"
   ],
   "targets": {
-    "test-poll-input-source": {
-      "metadata": {
-        "semio": {
-          "execution": {
-            "version": 1,
-            "kind": "source"
-          }
-        }
-      },
-      "executor": "repo:script",
-      "inputs": [
-        "default",
-        "^default",
-        "testEnv",
-        "reads",
-        "cargoToolchain"
-      ],
-      "outputs": [],
-      "cache": true,
-      "dependsOn": [],
-      "options": {
-        "command": "repo 📜️script.ts test-poll-input-source",
-        "cwd": "{projectRoot}"
-      }
-    },
-    "test-poll-input-native": {
-      "metadata": {
-        "semio": {
-          "execution": {
-            "version": 1,
-            "kind": "native",
-            "scope": "test"
-          }
-        }
-      },
-      "executor": "repo:script",
-      "inputs": [
-        "default",
-        "^default",
-        "testEnv",
-        "reads",
-        "cargoToolchain"
-      ],
-      "outputs": [],
-      "cache": true,
-      "dependsOn": [],
-      "options": {
-        "command": "repo 📜️script.ts test-poll-input-native",
-        "cwd": "{projectRoot}"
-      }
-    },
     "test-job-exports-native": {
       "metadata": {
         "semio": {

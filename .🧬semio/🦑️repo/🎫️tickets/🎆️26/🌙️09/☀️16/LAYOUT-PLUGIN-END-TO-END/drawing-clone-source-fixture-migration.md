@@ -1,0 +1,9 @@
+# Genuine Source Fixture Owner Migration
+
+The existing semio-framework-value-clone-source-testing owner and its public FixtureSource<T>, Deref and FixtureSourceBirth::from_owner API are retained. Its actual body now drives the canonical staged admission, keeps the completed Source, and carries a single finite physical/CPU bank through birth and Drop closure. Direct work is debited before Result on success and error; every heap event equals its receipt. No synchronous production Source adapter was introduced.
+
+The finite values are the already-existing Source constructor-work neutral profile (1,048,576 item/CPU,16MiB copy/capacity,32MiB release,depth256), now applied explicitly to this fixture. This is not identical to the old helper's demand-derived physical authority. The original Work::new row-scaled16,778,496-turn and16-idle guards remain unchanged in close and also bound staged birth. No authored loop/profile maximum was increased.
+
+The original selected-close private law is preserved verbatim. One additional owning law checks that every stock literal equals the neutral profile, actual six-control staged birth preserves the input pointer and serde_json value, close releases source backing plus original input capacity, cached closure spends zero and terminal Drop has heap zero. Both laws are authored, unrun.
+
+Restoration provenance is explicitly limited: HEAD baseline3816B/SHA00acb6a2bd4b036b893eca4ebba584be96f31bd419805f3e87e46ddaa491e9c1 was verified by Git blob identity before writing, but prior Core captures prove a3890B working version/SHAbcdc7bf3ff23502f5df51bcaf292d3ae43ce29bbd145f05dbed3d85e54a1b707 whose74-byte delta is unrecovered. The migration is a current defining implementation reviewed against the known baseline/API/laws; it is not exact restoration of unknown working bytes. Existing fixture consumer owning gates remain mandatory. No SourceReady or Host/Original proof is claimed from this test-only fixture convenience.

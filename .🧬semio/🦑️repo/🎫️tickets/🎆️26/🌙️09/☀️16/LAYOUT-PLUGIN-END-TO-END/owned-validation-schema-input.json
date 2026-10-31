@@ -1,0 +1,21 @@
+{
+  "state": "schema-and-neutral-authored-before-production-repair",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🔣️.json",
+      "sha256": "dc7b047bfff83fe596b11c99f2f271ac2ef3d27a3441ce84ea0a6dd6e537972c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🟦️.ts",
+      "sha256": "0a12c2db4063847f3d7577a333bc81a81845c301e057d24ec7ff0046febd8677"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🧪️tests/🔣️.json",
+      "sha256": "e7f6bfc2124c090b39eb9bb668626a6fbde91796076494c194d4eac4ab4395e6"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🧪️tests/📐️.json",
+      "sha256": "dcd16ed5f20dc95bc7668cd5b88a70113c8126fb617aadceeef4c3aa9b00440f"
+    }
+  ]
+}

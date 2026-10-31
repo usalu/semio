@@ -1,5 +1,5 @@
 //! 🫴️ Retains original decoder ownership until physical drain.
-use crate::{ErasedSnapshotRetirement,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress}};
+use crate::{ErasedSnapshotRetirement,RetainedWorkOutcome,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress}};
 use std::mem::ManuallyDrop;
 static RECIPIENT_IDS:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(1);
 #[path="♻️retirement/🦀️.rs"]
@@ -22,22 +22,34 @@ impl NativeDecodeRetirementRecipient{
     pub fn with_reserved_owner<T,E:From<ValueError>>(&mut self,operation:impl FnOnce()->(Result<T,E>,Option<Box<dyn ErasedSnapshotRetirement>>))->Result<T,E>{self.reserve().map_err(E::from)?;let(result,owner)=operation();self.settle(owner);result}
 }
 impl ErasedSnapshotRetirement for NativeDecodeRetirementRecipient{
- fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if original.retirement_recipient_identity()!=Some(self.identity){return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"decoder cleanup changed its original recipient"))}let d=self.next_demand(grant.maximum_copy_bytes)?;if !crate::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if self.reserved{self.reserved=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}crate::close_factory_ticket_original(&mut self.owner,original,grant)}
+ fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+  if original.retirement_recipient_identity()!=Some(self.identity){return RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"decoder cleanup changed its original recipient")),work:0}}
+  if self.reserved{return self.close_step(grant)}
+  crate::close_factory_ticket_original(&mut self.owner,original,grant)
+ }
  fn requires_original_control(&self)->bool{self.owner.as_ref().is_some_and(|owner|owner.requires_original_control())}
- fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{if self.reserved{return self.close_step(grant);}semio_framework_value_retirement::close_factory_ticket_controlled(&mut self.owner,grant,control)}
- fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if self.reserved{Ok(crate::RetirementDemand{depth:1,..Default::default()})}else{self.owner.as_ref().map_or(Ok(Default::default()),|owner|crate::factory_ticket_demands(owner,body))}}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if !self.terminal_is_empty()&&grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"decoder return slot close requires admitted depth"));}
-        if grant.maximum_release_bytes<self.next_release_byte_demand()?{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if grant.maximum_copy_bytes<self.next_copy_byte_demand()?||grant.maximum_capacity_bytes<self.next_capacity_byte_demand(grant.maximum_copy_bytes)?{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if self.reserved{self.reserved=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
-        crate::close_factory_ticket(&mut self.owner,grant)
-    }
-    fn terminal_is_empty(&self)->bool{!self.reserved&&self.owner.is_none()}
-    fn next_copy_byte_demand(&self)->Result<usize,ValueError>{if self.reserved{return Ok(0)}self.owner.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.copy_bytes))}
-    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{if self.reserved{return Ok(0)}self.owner.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,copy)?.capacity_bytes))}
-    fn next_release_byte_demand(&self)->Result<usize,ValueError>{if self.reserved{return Ok(0)}self.owner.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.release_bytes))}
-    fn next_depth_demand(&self)->Result<usize,ValueError>{if self.reserved{return Ok(1)}self.owner.as_ref().map_or(Ok(0),|owner|Ok(crate::factory_ticket_demands(owner,0)?.depth))}
+ fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl)->RetainedWorkOutcome{
+  if self.reserved{return self.close_step(grant)}
+  semio_framework_value_retirement::close_factory_ticket_controlled(&mut self.owner,grant,control)
+ }
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{
+  if self.reserved{Ok(crate::RetirementDemand{depth:1,..Default::default()})}else{self.owner.as_ref().map_or(Ok(Default::default()),|owner|crate::factory_ticket_demands(owner,body))}
+ }
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+  if !self.reserved{return crate::close_factory_ticket(&mut self.owner,grant)}
+  if grant.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  if grant.maximum_depth==0{return RetainedWorkOutcome{result:Err(ValueError::literal(crate::ValueRefusalKind::DepthLimit,"native return slot close requires admitted depth")),work:0}}
+  self.reserved=false;
+  RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
+ }
+ fn terminal_is_empty(&self)->bool{!self.reserved&&self.owner.is_none()}
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.next_demand(0).map(|d|d.copy_bytes)}
+ fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{self.next_demand(copy).map(|d|d.capacity_bytes)}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{self.next_demand(0).map(|d|d.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{self.next_demand(0).map(|d|d.depth)}
 }
 impl Drop for NativeDecodeRetirementRecipient{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"decoder recipient retains returned physical ownership");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owner);}}}}
+
+#[cfg(test)]
+#[path="🎟️work/🧪️tests/🦀️.rs"]
+mod actual_work_tests;

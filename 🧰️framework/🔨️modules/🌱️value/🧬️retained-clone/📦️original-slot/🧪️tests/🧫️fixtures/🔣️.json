@@ -14,7 +14,21 @@
     "capturedIssuerRetiresPayload": true,
     "stepsPerPayloadByte": 256,
     "fixedSteps": 1024,
-    "owningProjection": true
+    "owningProjection": true,
+    "readBirthStates": [
+      {
+        "prefix": 0,
+        "state": "cold"
+      },
+      {
+        "prefix": 1,
+        "state": "captured"
+      },
+      {
+        "prefix": 2,
+        "state": "published"
+      }
+    ]
   },
   "cases": [
     {

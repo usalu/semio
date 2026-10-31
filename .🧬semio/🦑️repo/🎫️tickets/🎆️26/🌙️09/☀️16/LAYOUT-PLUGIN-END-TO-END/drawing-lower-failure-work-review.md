@@ -1,0 +1,7 @@
+# Lower Failure Work Classification
+
+Root's defining-source review found that success booleans alone cannot classify a failed allocation probe versus a failed semantic validation. A physical reservation failure must keep its actual CPU/receipt while adding zero semantic algorithm work; malformed source validation must add its actual failed semantic step once. The existing owned invalid-input laws now explicitly require CPU1/semantic1 before cached CPU0/semantic0. These assertions precede the narrow classifier repair.
+
+The repair will use an explicit per-step semantic error witness at real validation sites. Pure reserve/copy/retirement/publication errors must not infer semantic work from Result::Err, retained receipt totals, child entry or CPU. Actual lower child counters remain authoritative and are folded once. No allocator simulation, authority, cap or scheduling change is introduced. Actual owning tests remain pending.
+
+The narrow Source repair is authored for Coverage, PreparedFill and PathRaster: completed algorithm steps use explicit success outcomes, failed semantic validations set an actual step witness, and pure admission/close/publication failures remain semantic0. Child errors still fold original child CPU/semantic first. PathRaster segment/contour payload preparation is semantic0. Pixel masks with no coverage advance an actual no-copy algorithm probe; covered pixels preflight all four actual output writes before sampling, including explicit zero output when alpha is zero, avoiding unreported sampling CPU after a denied write. No test ran.

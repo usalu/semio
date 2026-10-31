@@ -1,0 +1,11 @@
+# TypeScript Numeric Root Review
+
+Root read the actual NumericIndex and NumericPages defining bodies, seven registered laws, same-stock/CPU fixture, closed shared cases/outcomes, neutral ledger/counter/bytes and budget interface scope. Source review covers exclusive index borrow, scalar search/link/AVL phases, real original page reservation, replacement/removal value identity, guarded actual row publication, cancellation, page release, actual error-side CPU and expiring work witness. No runtime result is inferred.
+
+NumericPages.popCopy actually overwrites the whole retained row with its defined empty row via Object.assign. Its existing128-byte retained-row write quote is appropriate. Existing pointer/root/AVL/fixed control bookkeeping does not fabricate per-field copied bytes. These are defining portable scalar-capacity units; no VM-header/GC heap equivalence is claimed.
+
+The actual seven laws register bun:test calls and compare actual insert/remove state with independent SQLite, closed Ajv2020 cases/outcomes, all positive independent advance axes, release conservation, input identity and exclusive borrow, paid preparation semantic0/CPU1, cached completion0/0, and exact failing-close cause/CPU. One finite explicit wallet and fuel are consumed across fresh per-turn ledgers; grant fields only decrease. No budget is derived from item scheduling.
+
+The old preparation is unlaunched and stale because its owner made a completion-predicate typing correction before any release. Version2 captures all15 current first-party inputs plus actual .test.ts importer and package/lock,18 total. Entry imports actual seven test registrations, avoiding filename-discovery ambiguity; strict retains its exact three actual roots. No source case/profile/timeout change or weakened assertion. Cursor/Dep froze the selected18 closure; disjoint Font/Drawing work continues. Native demand-unit fixes stay outside TS freeze until both numeric checks finish.
+
+Root will authorize one normal Bun test first after final18-hash verification. Strict is conditional on terminal test outcome and unchanged inputs, separately sequenced. Full core/Font/Drawing and all native/Layout19/setup/browser gates remain mandatory. Native diagnostic is held until its changing lower value/core closure stabilizes.

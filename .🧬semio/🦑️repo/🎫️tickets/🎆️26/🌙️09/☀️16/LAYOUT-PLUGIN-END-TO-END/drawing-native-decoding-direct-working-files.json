@@ -1,0 +1,45 @@
+{
+  "scope": "Exact eight authored native-decoding direct owner files. Root captures full lower input closure; this is not transitive completeness or runtime proof.",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🦀️.rs",
+      "bytes": 11930,
+      "sha256": "d943d73d272644ca0f5167395df56a6f4ef401b62a9679ba7dbdafe464fadf0a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🎟️work/📐️.json",
+      "bytes": 338,
+      "sha256": "8c23f9d0fadaf7297c38c55e46197ddbb9a7331ff14b0fcaaa7f51f886aa21df"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🎟️work/🔣️.json",
+      "bytes": 824,
+      "sha256": "7c9590543ffc6b8dff52807b2027114b4e8756427e22132ce29c02c0788b2443"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 4004,
+      "sha256": "1c4671b7ae336b7c4617e04335f898ae557d6eacb5a2baf8c10384011524076c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/📦️backing/🦀️.rs",
+      "bytes": 5755,
+      "sha256": "6078a58acef03886faa0b4e383067c0a7b354c880d8048948b09295750e8dffd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/📦️backing/📐️.json",
+      "bytes": 334,
+      "sha256": "3d131d58d5469c5dc19b19c8456c16b997029f420bb6c21be62eaf8ce77ad655"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/📦️backing/🔣️.json",
+      "bytes": 852,
+      "sha256": "64eb58c0663fe0dddbdcb5f69cc6972d6ce69760cad993ed3e7b650d7048ab7b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/📦️backing/🧪️tests/🦀️.rs",
+      "bytes": 3721,
+      "sha256": "03f2fa7e708c40278f6b2fa32472ef6ec51f8ba1b3da71ee1cb5b77830af6993"
+    }
+  ]
+}

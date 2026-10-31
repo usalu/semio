@@ -34,7 +34,26 @@ pub(super) struct BoxedOwner<T:RetireOwned>{original:Option<BoxOriginal<T>>}
 impl<T:RetireOwned> BoxedOwner<T>{pub(super) fn new(original:Box<T>)->Self{Self{original:Some(BoxOriginal::from_original(original))}}}
 impl<T:RetireOwned> RetirementCursor for BoxedOwner<T>{
  fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{let Some(original)=self.original.as_ref()else{return Ok(Default::default())};if !original.is_initialized(){return Ok(RetirementDemand{release_bytes:BoxOriginal::<T>::allocation_bytes(),depth:1,..Default::default()})}let value=original.get();if let Some(demand)=value.boxed_original_demands()?{return Ok(demand)}Ok(RetirementDemand{copy_bytes:2*size_of::<T>(),capacity_bytes:value.retirement_birth_bytes().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original boxed value has no typed retirement birth"))?,depth:1,..Default::default()})}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let demand=match self.next_demand(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error)};if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}let Some(original)=self.original.as_mut()else{return RetirementStep::Complete};if !original.is_initialized(){let progress=unsafe{original.release_empty(grant)};self.original=None;return RetirementStep::Progress(progress)}if match original.get().boxed_original_demands(){Ok(demand)=>demand.is_some(),Err(error)=>return RetirementStep::Failure(error)}{return match T::boxed_original_retirement(&mut self.original,grant){Ok(Some((cursor,progress)))=>RetirementStep::ChildProgress(cursor,progress),Ok(None)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error)}}let value=unsafe{original.take_whole()};let cursor=value.retirement();RetirementStep::ChildProgress(cursor,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()})}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
+  let demand=match self.next_demand(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return RetirementStep::Failure(error,0)};
+  if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}
+  let Some(original)=self.original.as_mut()else{return RetirementStep::Complete(0)};
+  if !original.is_initialized(){
+   let p=unsafe{original.release_empty(grant)};self.original=None;
+   return RetirementStep::Progress(p,1)
+  }
+  let specialized=match original.get().boxed_original_demands(){Ok(d)=>d.is_some(),Err(error)=>return RetirementStep::Failure(error,0)};
+  if specialized{
+   let turn=T::boxed_original_retirement(&mut self.original,grant);
+   return match turn.result{
+    Ok(Some((cursor,p)))=>RetirementStep::ChildProgress(cursor,p,turn.work),
+    Ok(None)=>RetirementStep::Progress(Default::default(),turn.work),
+    Err(error)=>RetirementStep::Failure(error,turn.work)
+   }
+  }
+  let value=unsafe{original.take_whole()};let cursor=value.retirement();
+  RetirementStep::ChildProgress(cursor,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()},1)
+ }
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.copy_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.next_demand(body).ok().map(|demand|demand.capacity_bytes)}

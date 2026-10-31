@@ -206,7 +206,7 @@ fn semio_value_from_json(value: &serde_json::Value) -> semio_s_artifact_stdio_se
     }
 }
 
-/// 🌉 Inverse of [`semio_value_from_json`] — real reconstruction, not a stub. `Bytes`/`Ref` degrade
+/// 🪵️ Inverse of [`semio_value_from_json`] — real reconstruction, not a stub. `Bytes`/`Ref` degrade
 /// honestly (documented above) since `Model` never produces either.
 fn json_from_semio_value(value: &semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue) -> serde_json::Value {
     use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
@@ -223,7 +223,7 @@ fn json_from_semio_value(value: &semio_s_artifact_stdio_semio_value_model::schem
     }
 }
 
-/// 🌉 REAL bidirectional converter: the whole `Model` <-> one `s.stdio.semio.value` tree — the SOLE
+/// 🌳️ REAL bidirectional converter: the whole `Model` <-> one `s.stdio.semio.value` tree — the SOLE
 /// lossless source of truth for this artifact's persisted content.
 pub fn energy_structure_from_model(model: &Model) -> semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot {
     use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot;
@@ -232,14 +232,14 @@ pub fn energy_structure_from_model(model: &Model) -> semio_s_artifact_stdio_semi
     SemioValueSnapshot { schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root: semio_value_from_json(&value), nodes: Vec::new() }
 }
 
-/// 🌉 Inverse of [`energy_structure_from_model`]. Falls back to `Model::default()` if `structure`'s
+/// 🔋️ Inverse of [`energy_structure_from_model`]. Falls back to `Model::default()` if `structure`'s
 /// root doesn't decode into a full `Model` (e.g. a foreign composer wrote a partial/foreign tree) —
 /// documented, honest degradation, never a panic, matching the recipe's converter-honesty rule.
 pub fn energy_model_from_structure(structure: &semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValueSnapshot) -> Model {
     serde_json::from_value(json_from_semio_value(&structure.root)).unwrap_or_default()
 }
 
-/// 🌉 REAL, DERIVED converter: one `s.stdio.semio.table` row per `Zone` (`id`/`name`/`volumeM3`/
+/// 📊️ REAL, DERIVED converter: one `s.stdio.semio.table` row per `Zone` (`id`/`name`/`volumeM3`/
 /// `multiplier`/`conditioned`/`partOfTotalFloorArea`) — a non-authoritative convenience projection,
 /// always regenerated alongside `structure` from the SAME model (never an independent source, so
 /// the two never diverge). `energy_model_from_structure` alone is authoritative on read; this table
@@ -287,7 +287,7 @@ pub fn energy_structure_content(snapshot: &EnergyModelSnapshot) -> semio_s_artif
     energy_structure_from_model(&snapshot.model)
 }
 
-/// 🔎️ Twin of [`energy_structure_content`] for the `zones` child.
+/// 🏛️ Twin of [`energy_structure_content`] for the `zones` child.
 pub fn energy_zones_content(snapshot: &EnergyModelSnapshot) -> semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot {
     energy_zones_table_from_model(&snapshot.model)
 }
@@ -317,7 +317,7 @@ pub fn energy_children_from_model(_model: &Model) -> (EnergyStructureChild, Ener
     (store::os_store::artifact_child::ArtifactChild::new(structure.artifact_id.clone(), structure), store::os_store::artifact_child::ArtifactChild::new(zones.artifact_id.clone(), zones))
 }
 
-/// 🔎️ Compatibility value accessor for artifact editing and inference. Mounted simulation never
+/// ♿️ Compatibility value accessor for artifact editing and inference. Mounted simulation never
 /// calls this whole-owner clone; it captures incrementally from an exact `SnapshotRead` lease.
 pub fn energy_model(snapshot: &EnergyModelSnapshot) -> Model {
     snapshot.model.clone()
@@ -327,8 +327,13 @@ pub fn energy_model(snapshot: &EnergyModelSnapshot) -> Model {
 /// constructor replacing the old `model_json: String` struct literal now that `structure`/`zones`
 /// are composed child handles, not a plain field.
 pub fn energy_snapshot_with_state(schema: impl Into<String>, model: &Model, referenced_model: Option<store::ArtifactLink>) -> EnergyModelSnapshot {
-    let (structure, zones) = energy_children_from_model(model);
-    EnergyModelSnapshot { schema: schema.into(), model: model.clone(), structure, zones, referenced_model, weather_link: None }
+    energy_snapshot_owning(schema, model.clone(), referenced_model)
+}
+
+/// 🚚️ Builds the explicit reference snapshot around an already owned model, so one projection costs one model copy.
+pub fn energy_snapshot_owning(schema: impl Into<String>, model: Model, referenced_model: Option<store::ArtifactLink>) -> EnergyModelSnapshot {
+    let (structure, zones) = energy_children_from_model(&model);
+    EnergyModelSnapshot { schema: schema.into(), model, structure, zones, referenced_model, weather_link: None }
 }
 //#endregion 🔖️RetainedArtifactState
 
@@ -351,7 +356,7 @@ pub fn energy_genesis_child_pack(snapshot: &EnergyModelSnapshot, slot: &str, chi
     None
 }
 
-/// 🧬️ The bounded projection of this snapshot's two child handles, as both surfaces hand it to the
+/// 📽️ The bounded projection of this snapshot's two child handles, as both surfaces hand it to the
 /// framework (`ArtifactEditor::child_restore_projection` / `ArtifactViewer::child_restore_projection`).
 pub fn energy_child_restore_projection(snapshot: &EnergyModelSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_diagnostic::Fault> {
     semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_diagnostic::Fault::from(format!("energy model child projection failed: {error}")))
@@ -389,13 +394,13 @@ pub struct EnergyModelLinkSlots {
 }
 
 impl EnergyModelLinkSlots {
-    /// 🔗️ The slots as a snapshot currently holds them — what re-opening the same document keeps.
+    /// 🧲️ The slots as a snapshot currently holds them — what re-opening the same document keeps.
     pub fn of(snapshot: &EnergyModelSnapshot) -> Self {
         Self { referenced_model: snapshot.referenced_model.clone(), weather_link: snapshot.weather_link.clone() }
     }
 }
 
-/// 📸️ A genesis snapshot for a whole-document load: the model plus whichever link slots the caller
+/// 📄️ A genesis snapshot for a whole-document load: the model plus whichever link slots the caller
 /// carries over. `energy_snapshot_with_state` cannot express the weather slot, so every whole-load
 /// site goes through this instead of setting the field back up by hand.
 pub fn energy_snapshot_with_links(model: &Model, links: &EnergyModelLinkSlots) -> EnergyModelSnapshot {
@@ -428,7 +433,7 @@ pub fn artifact_kind() -> semio_framework_manifest_media::ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 
 //#region 🧬️Facet
-/// 🧬️ The snapshot facet's five handcrafted language leaves, owned here beside the snapshot they describe; the
+/// 🙂️ The snapshot facet's five handcrafted language leaves, owned here beside the snapshot they describe; the
 /// artifact schema descriptor (`semio_s_artifact_energy_model_schema`) assembles them.
 pub const FACET: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves {
     rust: include_str!("../🦀️.rs"),

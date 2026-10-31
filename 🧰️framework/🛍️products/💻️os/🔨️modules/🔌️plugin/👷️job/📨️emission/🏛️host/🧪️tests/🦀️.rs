@@ -11,14 +11,14 @@ fn caller()->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationI
 fn turn<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,g:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->T{
     let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(g,decoder,run));let progress=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));result.unwrap()
 }
-fn close(mut source:Option<Box<OriginalHostConfiguration<String>>>,mut output:Option<String>,caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){
+fn close(mut source:Option<Box<OriginalHostConfiguration<String>>>,mut output:Option<String>,mut caller:OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){
     let g=grant();for step in 0..1000000{
         if source.is_none(){break}
-        turn(caller,decoder,g,|cx|cx.with_original_retirement(|cx|{
+        turn(&mut caller,decoder,g,|cx|cx.with_original_retirement(|cx|{
             if source.as_ref().unwrap().terminal_is_empty(){let d=OriginalHostConfiguration::<String>::release_demands();close_original_retained_step(cx,d,|_|{drop(source.take());Ok(RetainedCloneStep::Complete(receipt(d)))})?;}else{source.as_mut().unwrap().close_step(cx)?;}Ok(())
         }));assert!(step<999999,"native host owner close stalled");
     }
-    if let Some(value)=output.as_ref(){let d=RetirementDemand{copy_bytes:size_of::<Option<String>>(),release_bytes:value.capacity(),depth:1,..Default::default()};turn(caller,decoder,g,|cx|cx.with_original_retirement(|cx|{close_original_retained_step(cx,d,|_|{drop(output.take());Ok(RetainedCloneStep::Complete(receipt(d)))})?;Ok(())}));}
+    if let Some(value)=output.as_ref(){let d=RetirementDemand{copy_bytes:size_of::<Option<String>>(),release_bytes:value.capacity(),depth:1,..Default::default()};turn(&mut caller,decoder,g,|cx|cx.with_original_retirement(|cx|{close_original_retained_step(cx,d,|_|{drop(output.take());Ok(RetainedCloneStep::Complete(receipt(d)))})?;Ok(())}));}
     while !decoder.terminal_is_empty(){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(32768)?;close_original_retained_step(cx,d,|grant|decoder.close_step(grant))?;Ok(())})));let progress=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));result.unwrap();}caller.retire(g);
 }
 #[test]
@@ -30,7 +30,7 @@ fn original_host_configuration_matches_all_neutral_policies_with_actual_native_c
         turn(&mut caller,&mut decoder,grant(),|cx|{assert!(OriginalHostConfiguration::admit(declaration,&mut args,cx,&mut source)?);Ok(())});assert!(args.is_none());
         let mut foreign=OriginalJobDecodeOwner::empty();turn(&mut caller,&mut foreign,grant(),|cx|{assert!(source.as_mut().unwrap().advance(cx).is_err());Ok(())});assert!(foreign.terminal_is_empty());
         for step in 0..1000000{if source.as_ref().unwrap().ready(){break}turn(&mut caller,&mut decoder,RetainedCloneGrant{maximum_items:0,..grant()},|cx|{assert!(!source.as_mut().unwrap().advance(cx)?);Ok(())});assert_eq!(caller.receipt(),RetainedCloneProgress::default());turn(&mut caller,&mut decoder,grant(),|cx|source.as_mut().unwrap().advance(cx));assert!(step<999999,"native host source stalled at {}",case["name"]);}
-        let mut output=None;turn(&mut caller,&mut decoder,grant(),|cx|{assert!(source.as_mut().unwrap().take_into(&mut output,cx)?);Ok(())});assert_eq!(output.as_deref(),case["expected"].as_str(),"{}",case["name"]);println!("[DEBUG] [host-configuration] {}",serde_json::json!({"name":case["name"],"output":output.as_ref().unwrap()}));close(source,output,&mut caller,&mut decoder);
+        let mut output=None;turn(&mut caller,&mut decoder,grant(),|cx|{assert!(source.as_mut().unwrap().take_into(&mut output,cx)?);Ok(())});assert_eq!(output.as_deref(),case["expected"].as_str(),"{}",case["name"]);close(source,output,caller,&mut decoder);
     }
 }
 #[test]
@@ -38,6 +38,6 @@ fn original_host_configuration_cancellation_keeps_all_accepted_source_owners_unt
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let text=fixture["cases"].as_array().unwrap().iter().find(|case|case["name"]=="process-addressed-host-order").unwrap()["input"].as_str().unwrap();
     for cut in [0,1,3,7,31,127,511]{
         let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut args=Some(DslValue::object([("json".to_owned(),DslValue::String(text.to_owned()))]));let mut source=None;turn(&mut caller,&mut decoder,grant(),|cx|{OriginalHostConfiguration::admit(&PROCESS,&mut args,cx,&mut source)?;Ok(())});
-        for _ in 0..cut{if source.as_ref().unwrap().ready(){break}turn(&mut caller,&mut decoder,grant(),|cx|source.as_mut().unwrap().advance(cx));}caller.cancel().cancel_now();close(source,None,&mut caller,&mut decoder);
+        for _ in 0..cut{if source.as_ref().unwrap().ready(){break}turn(&mut caller,&mut decoder,grant(),|cx|source.as_mut().unwrap().advance(cx));}caller.cancel().cancel_now();close(source,None,caller,&mut decoder);
     }
 }

@@ -1,0 +1,25 @@
+{
+  "files": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83d\udce6\ufe0fstorage/\ud83e\udd80\ufe0f.rs",
+      "sha256": "861e6e574c3a146fc17923b945430ec0edba4b89b73b655b886e3b374a676b88"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83d\udce6\ufe0fstorage/\ud83d\udcd0\ufe0f.json",
+      "sha256": "2ee385f4ae1575aa1a62e45f1945f38878e45b8f9f58aeb4277ea66dee97c99e"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83d\udce6\ufe0fstorage/\ud83d\udd23\ufe0f.json",
+      "sha256": "b8456da1f9c1bdaf691cff3db64635604000b53a12d86751ea644d00f47aba0f"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83d\udce6\ufe0fstorage/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "526676c7c1ffff26b09d58ea69d912e48bc3ab9493da380adeef7ee2af61a0de"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83e\udd80\ufe0f.rs",
+      "sha256": "0e6a3b5cf498330dc3cf550479beda75d57afdd9255a86ba40fe004413476c78"
+    }
+  ],
+  "status": "Authored genuine typed allocation owner; parent/initializer migration not yet landed. No runtime."
+}

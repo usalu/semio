@@ -83,7 +83,8 @@ pub fn admit_original_tool_construction_scoped<O>(context:&mut StepContext<'_>,o
     semio_framework_job::admit_original_construction(context,output,semio_framework_job::OriginalConstructionDemand{items:demand.items,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},|control|{
         let identity=OriginalToolJobIdentity{source};
         let mut scope=OriginalToolConstructionScope::loan(control,identity,demand.physical());
-        construct(&mut scope)
+        let result = construct(&mut scope);
+        semio_framework_value::RetainedWorkOutcome { work: u64::from(result.is_ok()), result }
     })
 }
 

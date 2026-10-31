@@ -38,6 +38,10 @@
       "en": "[verify dependencies] list ecosystem must be 'all' or one of {ecosystems}.",
       "de": "[verify dependencies] das Listen-Ökosystem muss 'all' oder eines von {ecosystems} sein."
     },
+    "verify.testkit-leaks": {
+      "en": "[verify dependencies] {count} production manifest line(s) enable a testkit outside [dev-dependencies] — move them to [dev-dependencies]; a testkit in a normal dependency table leaks the fixture caller into production crates.",
+      "de": "[verify dependencies] {count} Produktions-Manifestzeile(n) aktivieren ein Testkit ausserhalb von [dev-dependencies] — nach [dev-dependencies] verschieben; ein Testkit in einer normalen Abhängigkeitstabelle schleust den Fixture-Aufrufer in Produktions-Crates."
+    },
     "verify.new-dependencies": {
       "en": "[verify dependencies] {count} new third-party dependenc(y/ies) — approve deliberately with 'repo ./📜️script.ts verify dependencies write-baseline', or remove the dependency.",
       "de": "[verify dependencies] {count} neue Drittanbieter-Abhängigkeit(en) — bewusst freigeben mit 'repo ./📜️script.ts verify dependencies write-baseline' oder die Abhängigkeit entfernen."

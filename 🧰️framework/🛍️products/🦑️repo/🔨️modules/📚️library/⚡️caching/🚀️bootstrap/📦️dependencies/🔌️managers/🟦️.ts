@@ -208,10 +208,10 @@ export function generationKeyV1(manager:PackageManagerV1,input:Readonly<{root:st
  for(const row of input.material)hash.update(JSON.stringify([row.path,row.bytes.length])).update(row.bytes);
  return hash.digest("hex");
 }
-/** 🥾️ Derives the bootstrap receipt key from the manager's declared manifest fields, its runtime identity and the lock bytes. */
+/** 🥾️ Derives the bootstrap receipt key from the declared recipe, manifest fields, runtime and lock bytes. */
 export function bootstrapKeyV1(manager:PackageManagerV1,input:Readonly<{manifest:Readonly<Record<string,unknown>>;host:HostPortV1;lock:Uint8Array}>):string{
  const fields=manager.descriptor.manifestIdentity.bootstrapFields.map(name=>input.manifest[name]);
- return createHash("sha256").update(JSON.stringify([...fields,manager.runtimeIdentity(input.host),input.host.platform,input.host.arch])).update(input.lock).digest("hex");
+ return createHash("sha256").update(JSON.stringify([manager.recipe(),...fields,manager.runtimeIdentity(input.host),input.host.platform,input.host.arch])).update(input.lock).digest("hex");
 }
 /** 📍️ Names where one generation lives: the ecosystem's directory plus the shortened key. */
 export const generationLocationV1=(manager:PackageManagerV1,key:string):string=>manager.generationDirectory()+"/"+key.slice(0,protocol.generationNameUnits);

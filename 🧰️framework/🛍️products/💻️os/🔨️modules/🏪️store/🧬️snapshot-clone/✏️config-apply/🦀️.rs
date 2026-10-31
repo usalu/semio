@@ -82,7 +82,7 @@ impl<S, M: ConfigApplyMutation<S>> ConfigApplyCursor<S, M> {
             RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }
         } else {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = cursor.close_step(child)?;
+            let step = cursor.close_step(child).result?;
             admit_retained_clone_close(child, step, cursor.terminal_is_empty(), "config apply mutation clone close")?.progress()
         };
         if cursor.terminal_is_empty() { *self.clone = None; }
@@ -111,7 +111,7 @@ where S: RetainedClone, M: ConfigApplyMutation<S> {
             ApplyStage::Clone => {
                 let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
                 let cursor = self.clone.as_mut().ok_or_else(|| refusal("config apply lost its mutation clone cursor"))?;
-                let step = cursor.advance(mutation, body, child)?;
+                let step = cursor.advance(mutation, body, child).result?;
                 let progress = admit_retained_clone_progress(child, step.progress(), "config apply mutation clone")?;
                 if matches!(step, RetainedCloneStep::Complete(_)) { self.stage = ApplyStage::Take; }
                 progress
@@ -120,7 +120,7 @@ where S: RetainedClone, M: ConfigApplyMutation<S> {
                 let copy = size_of::<M>() * 2;
                 if grant.maximum_copy_bytes < copy { return Ok(RetainedCloneEditStep::Progress(Default::default())); }
                 let cursor = self.clone.as_mut().ok_or_else(|| refusal("config apply lost its mutation clone cursor"))?;
-                let owned = cursor.take().ok_or_else(|| refusal("config apply mutation clone completed without its owner"))?;
+                let owned = cursor.take(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }).result?.map(|(value, _)| value).ok_or_else(|| refusal("config apply mutation clone completed without its owner"))?;
                 self.custody.original_mut().0 = Some(owned);
                 let _ = cursor.begin_close();
                 self.stage = ApplyStage::CloseClone;

@@ -153,7 +153,7 @@ fn subset(value:&crate::schema::snapshot::SemioSubsetSnapshot,w:&mut Writer<'_,'
  S::Brep(v)=>semio_s_artifact_stdio_semio_brep::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Mesh(v)=>semio_s_artifact_stdio_semio_mesh::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Model(v)=>semio_s_artifact_stdio_semio_model::io::sqlite::snapshot::native_encoding::fields(v,w,e),
- S::Value(v)=>semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_encoding::fields(v,w),
+ S::Value(v)=>semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Document(v)=>semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Cad(v)=>semio_s_artifact_stdio_semio_cad::io::sqlite::snapshot::native_encoding::fields(v,w,e),
  S::Drawing(v)=>semio_s_artifact_stdio_semio_drawing::io::sqlite::snapshot::native_encoding::fields(v,w,e),

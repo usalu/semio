@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-value-sort"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Bounded original index sorting with portable cursor snapshots and caller-owned comparisons and swaps."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-sort"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value_sort"
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+
+[[test]]
+name = "value-sort"
+path = "../../🧪️tests/🦀️.rs"

@@ -14,7 +14,7 @@ use super::*;
 async fn a_fresh_session_config_names_the_example_its_document_was_seeded_from() {
     assert_eq!(Puzzle3dConfig::default().active_example_id, PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "the shared config default must name the example `initial_snapshot` seeds");
     assert_eq!(Puzzle3dRuntime::default().active_example_id, PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "the runtime projection default must agree with the config default");
-    let omitted = <Puzzle3dConfig as pack::snapshot::ArtifactDsl>::parse_dsl("{}").expect("a config record that omits every field decodes");
+    let omitted = <Puzzle3dConfig as protocol::snapshot::ArtifactDsl>::parse_dsl("{}").expect("a config record that omits every field decodes");
     assert_eq!(omitted.active_example_id, PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "a record that omits the field must decode to the seeded example, never to the blank id");
 
     let mut app = app().await;
@@ -44,11 +44,11 @@ fn set_active_example_chunks_by_kind_and_emits_one_uncoalesced_edit() {
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample command decodes");
     let mut work = original.construct(Puzzle3dSetActiveExampleWork::original_birth_demands().unwrap(), |scope| Puzzle3dSetActiveExampleWork::from_original_construction(scope));
-    let extent = work.extent(&command, &snapshot, &interaction, None).expect("nakagin example fits the fixed bounded work envelope");
+    let extent = <Puzzle3dSetActiveExampleWork as semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Puzzle3dPlayApp>>>::extent(&work, &command, &snapshot, &interaction, None).expect("nakagin example fits the fixed bounded work envelope");
     let mut progress_steps = 0usize;
     let emit = loop {
         assert!(progress_steps <= extent + 8, "setActiveExample work did not reach Complete within its own declared extent");
-        match semio_s_plugin_puzzle_retained::testing::step(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
+        match semio_s_plugin_puzzle_retained::testing::step::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Pending { .. } => continue,
             PuzzleCommandWorkStep::Progress { .. } => progress_steps += 1,
             PuzzleCommandWorkStep::Complete(emit) => break emit,
@@ -173,7 +173,7 @@ fn set_active_example_history_is_one_set_active_example_row() {
     let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample command decodes");
     let mut work = original.construct(Puzzle3dSetActiveExampleWork::original_birth_demands().unwrap(), |scope| Puzzle3dSetActiveExampleWork::from_original_construction(scope));
     let emit = loop {
-        match semio_s_plugin_puzzle_retained::testing::step(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
+        match semio_s_plugin_puzzle_retained::testing::step::<EditorApp<Puzzle3dPlayApp>, _>(&mut original, &mut work, &command, &snapshot, &config, &interaction, &hover, None).expect("bounded step") {
             PuzzleCommandWorkStep::Progress { .. } | PuzzleCommandWorkStep::Pending { .. } => {}
             PuzzleCommandWorkStep::Complete(emit) => break emit,
             PuzzleCommandWorkStep::Download(_) => panic!("this work must publish a store emission, never a segmented download"),

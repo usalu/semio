@@ -84,11 +84,11 @@ pub trait MapInferenceProposalBindingV1: Send + Sync {
 /// require of their parameters.
 pub trait ComposedMapCommitBindingV1: Sized + Send + Sync + 'static {
     type ParentSnapshot: ArtifactPack + ArtifactStoreSnapshot + Clone + PartialEq + ToValue + FromValue + Send + Sync + 'static;
-    type ParentMutation: Mutation<Self::ParentSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
+    type ParentMutation: Mutation<Self::ParentSnapshot> + semio_framework_os_kernel::os_spr::ColdMutation<Self::ParentSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
     type DrawingSnapshot: ArtifactPack + ArtifactStoreSnapshot + Clone + PartialEq + ToValue + FromValue + Send + Sync + 'static;
-    type DrawingMutation: Mutation<Self::DrawingSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
+    type DrawingMutation: Mutation<Self::DrawingSnapshot> + semio_framework_os_kernel::os_spr::ColdMutation<Self::DrawingSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
     type ValueSnapshot: ArtifactPack + ArtifactStoreSnapshot + Clone + PartialEq + ToValue + FromValue + Send + Sync + 'static;
-    type ValueMutation: Mutation<Self::ValueSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
+    type ValueMutation: Mutation<Self::ValueSnapshot> + semio_framework_os_kernel::os_spr::ColdMutation<Self::ValueSnapshot> + OpBinary + OpText + Clone + ToValue + FromValue + Send + Sync + 'static;
 
     /// 🎯️ The exact member ids a fixed-three undo requires, in stable-member order.
     const COMMIT_MEMBERS: [&'static str; 2];
@@ -98,7 +98,7 @@ pub trait ComposedMapCommitBindingV1: Sized + Send + Sync + 'static {
     /// 🧬️ Derives the drawing and value members the parent determines.
     fn derived_members(parent: &Self::ParentSnapshot) -> (Self::DrawingSnapshot, Self::ValueSnapshot);
     /// 🏗️ Materializes the three member Stores of one parent under the exact actor.
-    fn member_stores(parent_id: &str, parent: Self::ParentSnapshot, actor: &str) -> ComposedMapMemberStoresV1<Self>;
+    fn member_stores(parent_id: &str, parent: Self::ParentSnapshot, actor: &str) -> Result<ComposedMapMemberStoresV1<Self>, MapBindingRefusalV1>;
     /// 🏃️ Runs the native executable once and builds the approval work from its canonical result.
     fn executed_approval_work(pack: &[u8], job_id: &str, budget: &WireArtifactInferenceBudget) -> Result<(Self::ParentSnapshot, ComposedMapWorkV1<Self>), MapBindingRefusalV1>;
     /// 🧱️ Builds the approval work of one decoded parent directly.

@@ -41,18 +41,6 @@ use semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_apply_
 #[cfg(any(test, feature = "testkit"))]
 use semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_retire_mutations_cold;
 
-#[path = "🪪️publication-leases/🦀️.rs"]
-mod publication_leases;
-pub use publication_leases::*;
-
-#[path = "🧮️publication-credits/🦀️.rs"]
-mod publication_credits;
-pub use publication_credits::*;
-
-#[path = "🎭️publication-hostile/🦀️.rs"]
-mod publication_hostile;
-pub use publication_hostile::*;
-
 #[path = "📨️envelope-decode-authorities/🦀️.rs"]
 mod envelope_decode_authorities;
 pub use envelope_decode_authorities::*;

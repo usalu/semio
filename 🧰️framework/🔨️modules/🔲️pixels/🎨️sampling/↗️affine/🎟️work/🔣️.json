@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "axes",
+    "pixelBytes",
+    "setupSemanticWork",
+    "stock"
+  ],
+  "properties": {
+    "axes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "pixelBytes": {
+      "const": 4
+    },
+    "setupSemanticWork": {
+      "const": 0
+    },
+    "stock": {
+      "type": "object"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with {type:'json'};
 
 export type Thesis = Readonly<{
   language: "en" | "de";

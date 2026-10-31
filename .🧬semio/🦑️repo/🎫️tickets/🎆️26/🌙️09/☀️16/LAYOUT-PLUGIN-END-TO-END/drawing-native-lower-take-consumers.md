@@ -1,0 +1,3 @@
+# Native Lower Take Consumers
+
+Root defining grant-shaped RetainedCloneCursor and RetainedFieldCursor take contract is now forwarded directly. NativeStringReceiver delegates the actual child take quote/outcome with no copied header estimate or inferred work. NativeIntrinsicSharedField first retains the genuine returned T in raw before folding its actual child receipt/work through the existing decoder; a posting refusal therefore leaves that owner resident. Its ready phase quotes the defining take demand. Persistent immutable test wallet consumes the actual cursor quote and full outcome, replacing its former hardcoded transfer1/header receipt. No runtime/compilation was run; owning tests and transitive callsites still need current gates.

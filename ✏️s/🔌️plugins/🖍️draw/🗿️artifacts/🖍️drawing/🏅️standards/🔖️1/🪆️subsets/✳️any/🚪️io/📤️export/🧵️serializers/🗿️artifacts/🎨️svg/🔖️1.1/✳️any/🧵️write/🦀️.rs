@@ -20,7 +20,7 @@ impl RetireOwned for SvgWriteJob{
  fn retirement_birth_bytes(&self)->Option<usize>{self.owners.retirement_birth_bytes()}
  fn controlled_retirement_supported()->bool{true}
 }
-semio_framework_2d::physical_work_retirement!(SvgWriteRetirement,SvgWriteJob,String,|value:&str|value.to_owned());
+semio_framework_2d::physical_work_retirement!(SvgWriteRetirement,SvgWriteJob);
 fn escaped(out:&mut Fragment,at:&mut usize,value:&str)->Result<bool,std::fmt::Error>{let Some(c)=value.get(*at..).and_then(|value|value.chars().next())else{*at=0;return Ok(true);};if matches!(c,'\u{0}'..='\u{8}'|'\u{b}'|'\u{c}'|'\u{e}'..='\u{1f}'|'\u{fffe}'|'\u{ffff}'){return Err(std::fmt::Error);}*at+=c.len_utf8();match c{'&'=>out.write_str("&amp;")?,'"'=>out.write_str("&quot;")?,'<'=>out.write_str("&lt;")?,'>'=>out.write_str("&gt;")?,_=>out.write_char(c)?};Ok(false)}
 fn rgb(out:&mut Fragment,color:&[f64;4])->std::fmt::Result{write!(out,"rgb({},{},{})",color[0]*255.0,color[1]*255.0,color[2]*255.0)}
 fn blend(value:&str)->&str{match value{"colorDodge"=>"color-dodge","colorBurn"=>"color-burn","hardLight"=>"hard-light","softLight"=>"soft-light",_=>value}}

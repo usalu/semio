@@ -1,0 +1,7 @@
+# Genuine Native Path Domain Owner
+
+NativePathSet and NativeModifiedSet now belong to one actual product runtime owner, semio-framework-os-services-native-paths, mounting the same single physical row body. NativeIO explicitly consumes those canonical types. Runtime depends only on first-party ControlContract and NativeStorage; Trace and serde_json are test-only. No Job, Value facade, CloneSource or Retirement backedge is introduced. Root workspace member/dependency, project and build owner are registered with unchanged 262144/32/4000 limits.
+
+The single original row law and closed corpus remain mounted once with the production body; all data, original pointers, overflow, meaningful grant denial, physical receipts, source bank and paid original close assertions remain. No source copy, unpriced push or fake grant exists. This model owner can be compiled and tested independently while the unrelated shared source admission API is in development. It is not a NativeIO, worker, Host, Renderer, or whole Source-funding certificate; all original eleven NativeIO cases and their genuine host path remain required.
+
+The first registered Bun metadata preparation failed before Cargo because the Root workspace lacked the new owner's explicit ControlContract inherited dependency key. The canonical Root table now declares that genuine existing first-party package. The original failure log remains immutable; no test/compiler/Source admission was attempted. A second metadata observation is required before any owning run.

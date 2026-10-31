@@ -1,0 +1,3 @@
+# Completed Export Work Settlement
+
+The SVG closed contract and exact-ceiling law were authored before changing the shared-fragment consumer settlement predicate. The existing original quanta and one finite stock are unchanged. PDF already had its corresponding exact-ceiling owning law before its new body. Both predicates admit only an actual finished fragment backing/header close, consumed byte-borrow header clear, completed arc row handoff, existing completed stop-row cleanup, or final output publication. No new formatting/path/byte algorithm step becomes valid at the semantic maximum. Public semantic steps remain separate from actual CPU and physical receipts. These Source changes remain unexecuted and part of the future affected SVG/PDF gate.

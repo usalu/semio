@@ -41,6 +41,3 @@ mod load_tests;
 #[cfg(test)]
 #[path = "examples-tests.rs"]
 mod examples_tests;
-#[cfg(test)]
-#[path = "probe-tests.rs"]
-mod probe_tests;

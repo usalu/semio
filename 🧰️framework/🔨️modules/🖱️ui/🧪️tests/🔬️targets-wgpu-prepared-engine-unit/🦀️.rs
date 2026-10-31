@@ -22,6 +22,8 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
         Ok(gpu) => gpu,
         Err(error) => { assert!(error.starts_with("offscreen adapter:"), "{error}");  return; }
     };
+
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let reference = tiny_skia::Pixmap::new(width, height).unwrap();
     let rgba: [u8; 4] = serde_json::from_value(law["rgba"].clone()).unwrap();
     assert!(reference.data().chunks_exact(4).all(|pixel| pixel == rgba));
@@ -101,7 +103,7 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
             let mut packet_closed = false;
             for _ in 0..limit { if close_packet_step(&mut packet) { packet_closed = true; break; } }
             assert!(packet_closed);
-            for _ in 0..limit { if close_job_step(&mut job) { break; } }
+            for _ in 0..limit { if close_job_step(&mut job,&mut close_caller) { break; } }
             assert!(job.terminal_is_empty());
             answers.push((rendered, missing, drawn_version, version_law["missing"].as_bool().unwrap()));
         }
@@ -122,6 +124,8 @@ fn original_zero_index_geometry_submits_without_fabricated_surface_or_missing_me
     assert!(gpu.mesh_table_terminal_is_empty());
     for _ in 0..limit { if gpu.close_raster_table_step().unwrap() { break; } }
     assert!(gpu.raster_table_terminal_is_empty());
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }
 
 /// 🖥️ LAW: grid uniforms stay in logical scene units at every device scale; only the
@@ -151,6 +155,7 @@ fn procedural_grid_uniforms_are_dpr_invariant_while_viewport_and_scissor_scale_p
 #[test]
 fn a_scene_pass_is_prepared_between_the_ui_scalars_authored_around_it() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🌌️prepared-scene-ui-stacking/🔣️.json")).expect("neutral scene/UI stacking fixture");
     let steps = fixture["steps"].as_array().expect("authored stacking steps");
     let mut draw = DrawList::default();
@@ -203,13 +208,16 @@ fn a_scene_pass_is_prepared_between_the_ui_scalars_authored_around_it() {
     }
     let expected = fixture["expectedOrder"].as_array().expect("expected order").iter().map(|id| id.as_str().expect("expected id").to_string()).collect::<Vec<_>>();
     while !close_packet_step(&mut packet) {}
-    while !close_job_step(&mut job) {}
+    while !close_job_step(&mut job,&mut close_caller) {}
     assert_eq!(order, expected, "an opaque pane authored after World must remain after that exact scene pass in prepared commands");
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
 fn an_inline_overlay_follows_its_layer_scene_and_precedes_the_following_layer() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🪜️prepared-scene-overlay-stacking/🔣️.json")).expect("neutral scene/overlay stacking fixture");
     let steps = fixture["steps"].as_array().expect("source stacking steps");
     let mut draw = DrawList::default();
@@ -280,13 +288,16 @@ fn an_inline_overlay_follows_its_layer_scene_and_precedes_the_following_layer() 
     }
     let expected = expected.iter().map(|id| id.as_str().expect("expected id").to_string()).collect::<Vec<_>>();
     while !close_packet_step(&mut packet) {}
-    while !close_job_step(&mut job) {}
+    while !close_job_step(&mut job,&mut close_caller) {}
     assert_eq!(order, expected, "an inline overlay follows its own layer's scene but stays behind a later covering layer");
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
 fn prepared_glass_and_foreground_follow_authored_partial_and_nested_stacking() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🪟️prepared-glass-stacking/🔣️.json")).expect("neutral glass stacking fixture");
     let steps = fixture["steps"].as_array().expect("authored steps");
     let mut draw = DrawList::default();
@@ -349,6 +360,8 @@ fn prepared_glass_and_foreground_follow_authored_partial_and_nested_stacking() {
     }
     let expected = fixture["expectedOrder"].as_array().unwrap().iter().map(|id| id.as_str().unwrap().to_string()).collect::<Vec<_>>();
     while !close_packet_step(&mut packet) {}
-    while !close_job_step(&mut job) {}
+    while !close_job_step(&mut job,&mut close_caller) {}
     assert_eq!(order, expected, "a partial popup covers earlier panel text, and resumed parent content follows nested content");
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }

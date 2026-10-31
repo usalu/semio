@@ -32,7 +32,6 @@ semio-framework-os-kernel-db-io-registry = { path = "../../../📇️io-registry
 semio-framework-os-kernel-db-policy = { path = "../../../../🎚️policy/📦️packages/🦀️rust" }
 semio-framework-os-kernel-db-durability = { path = "../../../../💾️durability/📦️packages/🦀️rust", optional = true }
 semio-framework-async = { workspace = true }
-semio-framework-async-testkit = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust" }
 semio-framework-pack = { workspace = true }
 

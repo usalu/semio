@@ -9,6 +9,7 @@ use semio_s_artifact_procedural_3d_brep_curve::refusal;
 use semio_s_artifact_procedural_3d_phased_job::cancelled_fault;
 use semio_s_artifact_procedural_3d_phased_job::Flow;
 use semio_s_artifact_procedural_3d_phased_job::Pipeline;
+use semio_s_artifact_procedural_3d_geometry_compute::{fuel_budget, settle, StepContext, StepFault};
 use semio_s_artifact_procedural_3d_phased_job::Work;
 use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
@@ -155,7 +156,7 @@ impl Fold {
         Ok(())
     }
 
-    fn advance(&mut self, work: &mut Work, fuel: usize) -> Result<Flow, WidgetFault> {
+    fn advance(&mut self, work: &mut Work, cx: &mut StepContext<'_>) -> Result<Flow, StepFault> {
         if !self.planned {
             self.plan(work)?;
         }
@@ -173,20 +174,25 @@ impl Fold {
             let Some((running, into)) = self.running.as_mut() else { continue };
             let into = *into;
             let outcome = match running {
-                Running::Combine(job) => match work.session.brep().step_boolean_job_sync(job, fuel).map_err(|error| boolean_fault(&error))? {
+                Running::Combine(job) => match work.session.brep().step_boolean_job_sync(job, cx)? {
                     BrepBooleanStep::Working(step) => Outcome::Working(progress(step.units_done, step.units_total)),
                     BrepBooleanStep::Ready(handle) => Outcome::Ready(Some(handle)),
-                    BrepBooleanStep::Cancelled(_) => return Err(cancelled_fault()),
+                    BrepBooleanStep::Cancelled(_) => return Err(cancelled_fault().into()),
                 },
-                Running::CutAll(job) => match work.session.brep().step_operation_job_sync(job, fuel).map_err(|error| boolean_fault(&error))? {
-                    BrepOperationStep::Working(step) => Outcome::Working(progress(step.done, step.total)),
-                    BrepOperationStep::Ready(handles) => Outcome::Ready(handles.into_iter().next()),
-                    BrepOperationStep::Cancelled(_) => return Err(cancelled_fault()),
-                },
+                Running::CutAll(job) => {
+                    let budget = fuel_budget(cx);
+                    let step = work.session.brep().step_operation_job_sync(job, budget).map_err(|error| boolean_fault(&error))?;
+                    settle(cx, budget, matches!(step, BrepOperationStep::Working(_)));
+                    match step {
+                        BrepOperationStep::Working(step) => Outcome::Working(progress(step.done, step.total)),
+                        BrepOperationStep::Ready(handles) => Outcome::Ready(handles.into_iter().next()),
+                        BrepOperationStep::Cancelled(_) => return Err(cancelled_fault().into()),
+                    }
+                }
             };
             match outcome {
                 Outcome::Working(inner) => return Ok(Flow::Working((finished as f32 + inner) / self.total.max(1) as f32)),
-                Outcome::Ready(None) => return Err(refusal("boolean-empty", "The operation left no solid.", "Die Operation hat keinen Körper übrig gelassen.")),
+                Outcome::Ready(None) => return Err(refusal("boolean-empty", "The operation left no solid.", "Die Operation hat keinen Körper übrig gelassen.").into()),
                 Outcome::Ready(Some(handle)) => {
                     self.registers[into] = Some(handle);
                     self.running = None;
@@ -205,7 +211,7 @@ fn combine(kind: &Kind, inputs: &WidgetInputs, op: BooleanOp) -> Box<dyn WidgetJ
     guarded(kind, || {
         let (a, b) = (inputs.shape("a")?.clone(), inputs.shape("b")?.clone());
         let mut fold = Fold::new(vec!["a", "b"], Finale::Combine(op));
-        Ok(Pipeline::new(kind).import(&a).import(&b).step(move |work, fuel| fold.advance(work, fuel)).exported("shape"))
+        Ok(Pipeline::new(kind).import(&a).import(&b).step(move |work, cx| fold.advance(work, cx)).exported("shape"))
     })
 }
 
@@ -232,7 +238,7 @@ fn compound_cut(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
         ports.extend(tools.iter().map(|_| "tools"));
         let mut fold = Fold::new(ports, Finale::CutAll);
         let pipeline = tools.iter().fold(Pipeline::new(kind).import(&target), |pipeline, tool| pipeline.import(tool));
-        Ok(pipeline.step(move |work, fuel| fold.advance(work, fuel)).exported("shape"))
+        Ok(pipeline.step(move |work, cx| fold.advance(work, cx)).exported("shape"))
     })
 }
 

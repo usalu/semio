@@ -1,0 +1,25 @@
+{
+  "state": "authored-before-defining-writer-change-unexecuted",
+  "inputs": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/⛽️staged-projection/writer-actual.json",
+      "sha256": "38d43966468901617d52b43660253b096176e331425af2bdfa2eb700da8431e2",
+      "bytes": 498
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/⛽️staged-projection/writer-actual.schema.json",
+      "sha256": "285fd163d1d73f24e97f22909dfe5bc076d9f21ca6bd3cf80f744a5c5ba0e5b1",
+      "bytes": 1203
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/⛽️staged-projection/writer-actual.rs",
+      "sha256": "9e531db92d2d019b91b5bfe6b745337ae4c5c2b08acfeaee3d2951492222de7a",
+      "bytes": 3318
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/⛽️staged-projection/🦀️.rs",
+      "sha256": "6e8378e968e9359248a039e30c418913b45303ee42edcb11a3b5c11abb2ee828",
+      "bytes": 13448
+    }
+  ]
+}

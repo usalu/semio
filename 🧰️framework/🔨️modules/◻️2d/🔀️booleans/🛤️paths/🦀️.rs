@@ -2,9 +2,7 @@
 use super::{BooleanError,BooleanFillRule,BooleanInput,BooleanJob,BooleanOperand,BooleanOperation,BooleanProgress,BooleanRetirement};
 use semio_framework_2d_engine::{PathSegment,Vec2};
 use semio_framework_2d_path_flatten::{FlatContour,PathFlattenError,PathFlattenInput,PathFlattenJob,PathFlattenProgress,PathFlattenRetirement};
-use semio_framework_2d_retire::WorkRetirementProgress;
-use std::collections::VecDeque;
-pub type PathBooleanRetirementProgress=WorkRetirementProgress;
+use semio_framework_value::{work::RetainedWorkLedger,RetirementDemand};
 #[derive(Clone,Debug)]
 #[derive(semio_framework_value::RetireOwned)]
 pub struct PathBooleanOperand{pub segments:Vec<PathSegment>,pub transform:[f64;6],pub tolerance:f64,pub fill_rule:BooleanFillRule}
@@ -16,75 +14,48 @@ pub enum PathBooleanPhase{Admitting,Flattening,Transforming,Boolean,Complete}
 impl PathBooleanPhase{pub fn as_str(self)->&'static str{match self{Self::Admitting=>"admitting",Self::Flattening=>"flattening",Self::Transforming=>"transforming",Self::Boolean=>"boolean",Self::Complete=>"complete"}}}
 #[derive(Clone,Copy,Debug)]
 pub struct PathBooleanProgress{pub phase:PathBooleanPhase,pub operands:usize,pub source_segments:usize,pub points:usize,pub work:u64,pub flatten:Option<PathFlattenProgress>,pub boolean:Option<BooleanProgress>,pub done:bool}
-#[derive(semio_framework_value::RetireOwned)]
-struct Current{source:VecDeque<PathSegment>,transform:[f64;6],tolerance:f64,fill_rule:BooleanFillRule}
 fn flatten_error(error:PathFlattenError)->BooleanError{match error{PathFlattenError::Invalid(message)=>BooleanError::Invalid(message),PathFlattenError::Incomplete=>BooleanError::Incomplete,PathFlattenError::Cancelled=>BooleanError::Cancelled}}
 fn config(input:&PathBooleanInput,operands:Vec<BooleanOperand>)->BooleanInput{BooleanInput{operation:input.operation,operands,epsilon:input.epsilon,max_edges:input.max_edges,max_parameters:input.max_parameters,max_atomic_edges:input.max_atomic_edges,max_segments:input.max_segments,max_work:input.max_work}}
-/// ⏱️ Admits paths, flattens in world tolerance and transforms one point per grant.
+#[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
+enum Refused{Point(Vec2),Contour(Vec<Vec2>),Operand(BooleanOperand),Local(Vec<FlatContour>),Flatten(PathFlattenRetirement)}
+macro_rules! refused{($type:ty,$variant:ident)=>{impl From<$type> for Refused{fn from(value:$type)->Self{Self::$variant(value)}}};}
+refused!(Vec2,Point);refused!(Vec<Vec2>,Contour);refused!(BooleanOperand,Operand);refused!(Vec<FlatContour>,Local);refused!(PathFlattenRetirement,Flatten);
+fn slot<T>(values:&mut Vec<T>,limit:usize,work:&mut RetainedWorkLedger)->Result<bool,BooleanError>{if values.len()>=limit{return Err(BooleanError::Invalid("Boolean paths exceed retained frontier budget"));}if values.len()==values.capacity(){let target=values.capacity().saturating_mul(2).max(1).min(limit);if !work.reserve_vec(values,target).map_err(BooleanError::Invalid)?{return Ok(false);}}work.vec_slot(values).map_err(BooleanError::Invalid)}
+fn push<T:Into<Refused>>(values:&mut Vec<T>,value:T,work:&mut RetainedWorkLedger,refused:&mut Option<Refused>)->Result<(),BooleanError>{match work.vec_push(values,value){Ok(())=>Ok(()),Err((message,value))=>{*refused=Some(value.into());Err(BooleanError::Invalid(message))}}}
+/// ⏱️ The original path operands stay resident while funded children publish world-space contours.
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
 pub struct PathBooleanJob{
- input:PathBooleanInput,source:VecDeque<PathBooleanOperand>,phase:PathBooleanPhase,work:u64,operands:usize,source_segments:usize,points:usize,
- current:Option<Current>,admitted:Vec<PathSegment>,local:VecDeque<FlatContour>,contour:Option<VecDeque<Vec2>>,world:Vec<Vec<Vec2>>,prepared:Vec<BooleanOperand>,
- retired_sources:Vec<VecDeque<PathSegment>>,retired_locals:Vec<VecDeque<FlatContour>>,retired_contours:Vec<VecDeque<Vec2>>,flat_retirements:Vec<PathFlattenRetirement>,flat_retirement:Option<PathFlattenRetirement>,boolean_retirement:Option<BooleanRetirement>,retained:Vec<BooleanOperand>,
- flatten:Option<PathFlattenJob>,flat_progress:Option<PathFlattenProgress>,boolean:Option<BooleanJob>,boolean_progress:Option<BooleanProgress>,output:Vec<PathSegment>,cancelled:bool,failure:Option<BooleanError>,
+ input:PathBooleanInput,phase:PathBooleanPhase,work:u64,operands:usize,source_segments:usize,points:usize,current:Option<usize>,contour:usize,point:usize,
+ local:Vec<FlatContour>,world:Vec<Vec<Vec2>>,prepared:Vec<BooleanOperand>,retired_locals:Vec<Vec<FlatContour>>,flat_retirements:Vec<PathFlattenRetirement>,flat_retirement:Option<PathFlattenRetirement>,boolean_retirement:Option<BooleanRetirement>,retained:Vec<BooleanOperand>,
+ flatten:Option<PathFlattenJob>,flat_progress:Option<PathFlattenProgress>,boolean:Option<BooleanJob>,boolean_progress:Option<BooleanProgress>,output:Vec<PathSegment>,cancelled:bool,failure:Option<BooleanError>,refused:Option<Refused>,pending:RetirementDemand,last_turn_work:u64,last_turn_semantic_work:u64,child_cpu:u64,child_semantic:u64,step_prepared:bool,
 }
 impl PathBooleanJob{
- pub fn new(mut input:PathBooleanInput)->Result<Self,BooleanError>{
-  if input.operands.is_empty()||input.operands.len()>1024{return Err(BooleanError::Invalid("Invalid boolean path operands"));}
-  let mut check=BooleanJob::new(config(&input,vec![BooleanOperand{contours:Vec::new(),fill_rule:BooleanFillRule::Nonzero}]))?;check.cancel();let source=std::mem::take(&mut input.operands).into();
-  Ok(Self{input,source,phase:PathBooleanPhase::Admitting,work:0,operands:0,source_segments:0,points:0,current:None,admitted:Vec::new(),local:Vec::new().into(),contour:None,world:Vec::new(),prepared:Vec::new(),retired_sources:Vec::new(),retired_locals:Vec::new(),retired_contours:Vec::new(),flat_retirements:Vec::new(),flat_retirement:None,boolean_retirement:None,retained:Vec::new(),flatten:None,flat_progress:None,boolean:None,boolean_progress:None,output:Vec::new(),cancelled:false,failure:None})
- }
- fn step(&mut self)->Result<(),BooleanError>{
-  match self.phase{
-   PathBooleanPhase::Admitting=>{
-    if self.current.is_none(){
-     if let Some(operand)=self.source.pop_front(){
-      self.current=Some(Current{source:operand.segments.into(),transform:operand.transform,tolerance:operand.tolerance,fill_rule:operand.fill_rule});let current=self.current.as_ref().unwrap();
-      if current.source.len()>65536||!current.transform.into_iter().all(|n|n.is_finite()&&n.abs()<=1e9)||!current.tolerance.is_finite()||!(1e-6..=16.0).contains(&current.tolerance){return Err(BooleanError::Invalid("Invalid boolean path operand"));}return Ok(());
-     }
-     self.boolean=Some(BooleanJob::new(config(&self.input,std::mem::take(&mut self.prepared)))?);self.phase=PathBooleanPhase::Boolean;return Ok(());
-    }
-    let current=self.current.as_mut().unwrap();if let Some(segment)=current.source.pop_front(){if self.source_segments>=self.input.max_edges{return Err(BooleanError::Invalid("Boolean paths exceed source segment budget"));}self.admitted.push(segment);self.source_segments+=1;return Ok(());}
-    self.flatten=Some(PathFlattenJob::new(PathFlattenInput{segments:std::mem::take(&mut self.admitted),transform:current.transform,tolerance:current.tolerance}).map_err(flatten_error)?);self.phase=PathBooleanPhase::Flattening;
-   }
-   PathBooleanPhase::Flattening=>{
-
-    let p=self.flatten.as_mut().unwrap().advance(1).map_err(flatten_error)?;self.flat_progress=Some(p);if self.points+p.points>self.input.max_edges{return Err(BooleanError::Invalid("Boolean paths exceed flattened point budget"));}
-    if p.done{let(close,output)=self.flatten.take().unwrap().into_retirement();self.retired_locals.push(std::mem::replace(&mut self.local,output.unwrap().into()));if let Some(previous)=self.flat_retirement.replace(close){self.flat_retirements.push(previous);}self.phase=PathBooleanPhase::Transforming;}
-   }
-   PathBooleanPhase::Transforming=>{
-    if let Some(points)=self.contour.as_mut(){
-     if let Some(p)=points.pop_front(){let m=self.current.as_ref().unwrap().transform;let q=[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];if !q.into_iter().all(|n|n.is_finite()&&n.abs()<=1e9){return Err(BooleanError::Invalid("Boolean world point exceeds coordinate budget"));}if self.points>=self.input.max_edges{return Err(BooleanError::Invalid("Boolean paths exceed flattened point budget"));}self.world.last_mut().unwrap().push(q);self.points+=1;return Ok(());}self.retired_contours.push(self.contour.take().unwrap());return Ok(());
-    }
-    if let Some(contour)=self.local.pop_front(){self.world.push(Vec::new());self.contour=Some(contour.points.into());return Ok(());}
-    let current=self.current.take().unwrap();self.retired_sources.push(current.source);self.prepared.push(BooleanOperand{contours:std::mem::take(&mut self.world),fill_rule:current.fill_rule});self.operands+=1;self.phase=PathBooleanPhase::Admitting;
-   }
-   PathBooleanPhase::Boolean=>{
-
-
-    let p=self.boolean.as_mut().unwrap().advance(1)?;self.boolean_progress=Some(p);if p.done{let(close,operands,output)=self.boolean.take().unwrap().into_retirement();self.output=output.unwrap();self.retained=operands;self.boolean_retirement=Some(close);self.phase=PathBooleanPhase::Complete;}
-   }
-   PathBooleanPhase::Complete=>{}
-  }Ok(())
- }
- pub fn advance(&mut self,budget:usize)->Result<PathBooleanProgress,BooleanError>{
-  if budget==0||budget as u128>9_007_199_254_740_991{return Err(BooleanError::Invalid("Invalid boolean path work grant"));}if self.cancelled{return Err(BooleanError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}
-  for _ in 0..budget{if self.phase==PathBooleanPhase::Complete{break;}let result=if self.work>=self.input.max_work{Err(BooleanError::Invalid("Boolean paths exceed work budget"))}else{self.step()};if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}self.work+=1;}
-  Ok(PathBooleanProgress{phase:self.phase,operands:self.operands,source_segments:self.source_segments,points:self.points,work:self.work,flatten:self.flat_progress,boolean:self.boolean_progress,done:self.phase==PathBooleanPhase::Complete})
- }
+ pub fn new(input:PathBooleanInput)->Self{let failure=if input.operands.is_empty()||input.operands.len()>1024{Some(BooleanError::Invalid("Invalid boolean path operands"))}else{BooleanJob::validate_limits(input.epsilon,input.max_edges,input.max_parameters,input.max_atomic_edges,input.max_segments,input.max_work).err()};Self{input,phase:PathBooleanPhase::Admitting,work:0,operands:0,source_segments:0,points:0,current:None,contour:0,point:0,local:Vec::new(),world:Vec::new(),prepared:Vec::new(),retired_locals:Vec::new(),flat_retirements:Vec::new(),flat_retirement:None,boolean_retirement:None,retained:Vec::new(),flatten:None,flat_progress:None,boolean:None,boolean_progress:None,output:Vec::new(),cancelled:false,failure,refused:None,pending:RetirementDemand{depth:1,..Default::default()},last_turn_work:0,last_turn_semantic_work:0,child_cpu:0,child_semantic:0,step_prepared:false}}
+ fn step(&mut self,work:&mut RetainedWorkLedger)->Result<bool,BooleanError>{match self.phase{
+  PathBooleanPhase::Admitting=>{
+   if self.current.is_none(){if let Some(operand)=self.input.operands.get(self.operands){self.current=Some(self.operands);if operand.segments.len()>65536||!operand.transform.into_iter().all(|n|n.is_finite()&&n.abs()<=1e9)||!operand.tolerance.is_finite()||!(1e-6..=16.0).contains(&operand.tolerance){return Err(BooleanError::Invalid("Invalid boolean path operand"));}let count=self.source_segments.checked_add(operand.segments.len()).ok_or(BooleanError::Invalid("Boolean paths exceed source segment budget"))?;if count>self.input.max_edges{return Err(BooleanError::Invalid("Boolean paths exceed source segment budget"));}self.source_segments=count;return Ok(true);}self.boolean=Some(BooleanJob::new(config(&self.input,std::mem::take(&mut self.prepared))));self.phase=PathBooleanPhase::Boolean;self.step_prepared=true;return Ok(false);}
+   let operand=&mut self.input.operands[self.current.unwrap()];self.flatten=Some(PathFlattenJob::new(PathFlattenInput{segments:std::mem::take(&mut operand.segments),transform:operand.transform,tolerance:operand.tolerance}));self.phase=PathBooleanPhase::Flattening;self.step_prepared=true;return Ok(false);
+  }
+  PathBooleanPhase::Flattening=>{if self.flatten.as_ref().unwrap().result().is_ok(){if self.local.capacity()>0&&!slot(&mut self.retired_locals,1024,work)?{return Ok(false);}if self.flat_retirement.is_some()&&!slot(&mut self.flat_retirements,1024,work)?{return Ok(false);}let(close,output)=self.flatten.take().unwrap().into_retirement();if self.local.capacity()>0{push(&mut self.retired_locals,std::mem::take(&mut self.local),work,&mut self.refused)?;}self.local=output.unwrap();if let Some(previous)=self.flat_retirement.replace(close){push(&mut self.flat_retirements,previous,work,&mut self.refused)?;}self.contour=0;self.point=0;self.phase=PathBooleanPhase::Transforming;self.step_prepared=true;return Ok(false);}let child=self.flatten.as_mut().unwrap();let result=child.advance(1,work);self.child_cpu=child.last_turn_work();self.child_semantic=child.last_turn_semantic_work();let progress=result.map_err(flatten_error)?;self.flat_progress=Some(progress);if self.points+progress.points>self.input.max_edges{return Err(BooleanError::Invalid("Boolean paths exceed flattened point budget"));}return Ok(false);}
+  PathBooleanPhase::Transforming=>{if let Some(contour)=self.local.get(self.contour){if self.point==0{if !slot(&mut self.world,65536,work)?{return Ok(false);}push(&mut self.world,Vec::new(),work,&mut self.refused)?;self.point=1;self.step_prepared=true;return Ok(false);}else if self.point<=contour.points.len(){let p=contour.points[self.point-1];let m=self.input.operands[self.current.unwrap()].transform;let q=[m[0]*p[0]+m[2]*p[1]+m[4],m[1]*p[0]+m[3]*p[1]+m[5]];if !q.into_iter().all(|n|n.is_finite()&&n.abs()<=1e9){return Err(BooleanError::Invalid("Boolean world point exceeds coordinate budget"));}if self.points>=self.input.max_edges{return Err(BooleanError::Invalid("Boolean paths exceed flattened point budget"));}let target=self.world.last_mut().unwrap();if !slot(target,self.input.max_edges,work)?{return Ok(false);}push(target,q,work,&mut self.refused)?;self.points+=1;self.point+=1;}else{self.contour+=1;self.point=0;self.step_prepared=true;return Ok(false);}}else{if !slot(&mut self.prepared,1024,work)?{return Ok(false);}let fill_rule=self.input.operands[self.current.unwrap()].fill_rule;push(&mut self.prepared,BooleanOperand{contours:std::mem::take(&mut self.world),fill_rule},work,&mut self.refused)?;self.current=None;self.operands+=1;self.phase=PathBooleanPhase::Admitting;self.step_prepared=true;return Ok(false);}}
+  PathBooleanPhase::Boolean=>{if self.boolean.as_ref().unwrap().result().is_ok(){let(close,operands,output)=self.boolean.take().unwrap().into_retirement();self.output=output.unwrap();self.retained=operands;self.boolean_retirement=Some(close);self.phase=PathBooleanPhase::Complete;self.step_prepared=true;return Ok(false);}let child=self.boolean.as_mut().unwrap();let result=child.advance(1,work);self.child_cpu=child.last_turn_work();self.child_semantic=child.last_turn_semantic_work();self.boolean_progress=Some(result?);return Ok(false);}
+  PathBooleanPhase::Complete=>return Ok(false),
+ }Ok(true)}
+ pub fn next_work_demand(&self)->RetirementDemand{self.pending}
+ pub fn last_turn_work(&self)->u64{self.last_turn_work}
+ pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
+ pub fn failure_pending(&self)->bool{self.failure.is_some()||self.flatten.as_ref().is_some_and(PathFlattenJob::failure_pending)||self.boolean.as_ref().is_some_and(BooleanJob::failure_pending)}
+ pub fn settlement_pending(&self)->bool{match self.phase{PathBooleanPhase::Flattening=>self.flatten.as_ref().is_some_and(PathFlattenJob::settlement_pending),PathBooleanPhase::Boolean=>self.boolean.as_ref().is_some_and(BooleanJob::settlement_pending),PathBooleanPhase::Transforming=>self.local.get(self.contour).is_none_or(|contour|self.point>contour.points.len()),PathBooleanPhase::Complete=>true,PathBooleanPhase::Admitting=>self.current.is_some()||self.operands>=self.input.operands.len()}}
+ pub fn advance(&mut self,budget:usize,work:&mut RetainedWorkLedger)->Result<PathBooleanProgress,BooleanError>{self.last_turn_work=0;self.last_turn_semantic_work=0;if budget==0||budget as u128>9_007_199_254_740_991{return Err(BooleanError::Invalid("Invalid boolean path work grant"));}if self.cancelled{return Err(BooleanError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}if !work.admits_absolute(self.pending){work.require_absolute(self.pending);return Ok(self.progress());}for _ in 0..budget{if self.phase==PathBooleanPhase::Complete{break;}let Some(root)=work.enter()else{self.pending=work.next_demand();break;};let before=work.receipt();let settling=self.failure_pending();self.child_cpu=0;self.child_semantic=0;self.step_prepared=false;let exhausted=self.work>=self.input.max_work&&!settling&&!self.settlement_pending();let result=if exhausted{Err(BooleanError::Invalid("Boolean paths exceed work budget"))}else{self.step(work)};let semantic=if settling||exhausted{0}else if self.child_semantic>0{self.child_semantic}else{u64::from(matches!(result,Ok(true))||result.is_err())};let cpu=self.child_cpu.max(u64::from(work.receipt()!=before||semantic>0||self.step_prepared||result.is_err()));if cpu>0{work.note_source(root);}work.exit();self.pending=work.next_demand();self.work+=semantic;self.last_turn_work+=cpu;self.last_turn_semantic_work+=semantic;if let Err(error)=result{self.failure=Some(error.clone());return Err(error);}if work.blocked()||cpu==0{break;}}Ok(self.progress())}
+ fn progress(&self)->PathBooleanProgress{PathBooleanProgress{phase:self.phase,operands:self.operands,source_segments:self.source_segments,points:self.points,work:self.work,flatten:self.flat_progress,boolean:self.boolean_progress,done:self.phase==PathBooleanPhase::Complete}}
  pub fn result(&self)->Result<&[PathSegment],BooleanError>{if self.cancelled{return Err(BooleanError::Cancelled);}if let Some(error)=&self.failure{return Err(error.clone());}if self.phase!=PathBooleanPhase::Complete{return Err(BooleanError::Incomplete);}Ok(&self.output)}
- pub fn into_result(mut self)->Result<Vec<PathSegment>,BooleanError>{let status=self.result().map(|_|());let output=if status.is_ok(){std::mem::take(&mut self.output)}else{Vec::new()};let(mut close,_)=self.into_retirement();while !close.advance(4096)?.done{}status.map(|_|output)}
- /// 🧹️ Move valid output and compose interrupted children without eager destruction.
- pub fn into_retirement(mut self)->(PathBooleanRetirement,Option<Vec<PathSegment>>){
-  if let Some(job)=self.flatten.take(){let(close,output)=job.into_retirement();if let Some(previous)=self.flat_retirement.replace(close){self.flat_retirements.push(previous);}if let Some(output)=output{self.retired_locals.push(std::mem::replace(&mut self.local,output.into()));}}
-  if let Some(job)=self.boolean.take(){let(close,operands,output)=job.into_retirement();self.boolean_retirement=Some(close);self.retained=operands;if let Some(output)=output{self.output=output;}}
-  let output=if self.phase==PathBooleanPhase::Complete&&!self.cancelled&&self.failure.is_none(){Some(std::mem::take(&mut self.output))}else{None};self.cancelled=true;
-  (PathBooleanRetirement::new(self),output)
- }
+ /// 🧹️ Active children, original input and retained backing move inline before funded physical close.
+ pub fn into_retirement(mut self)->(PathBooleanRetirement,Option<Vec<PathSegment>>){let output=if self.phase==PathBooleanPhase::Complete&&!self.cancelled&&self.failure.is_none(){Some(std::mem::take(&mut self.output))}else{None};self.cancelled=true;(PathBooleanRetirement::new(self),output)}
  pub fn cancel(&mut self){self.cancelled=true;}
 }
-semio_framework_2d_retire::physical_work_retirement!(PathBooleanRetirement,PathBooleanJob,BooleanError,|_:&str|BooleanError::Invalid("Boolean path physical close refused"));
+semio_framework_2d_retire::physical_work_retirement!(PathBooleanRetirement,PathBooleanJob);
 semio_framework_value::artifact_retire_leaf!(PathBooleanPhase,PathBooleanProgress);
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

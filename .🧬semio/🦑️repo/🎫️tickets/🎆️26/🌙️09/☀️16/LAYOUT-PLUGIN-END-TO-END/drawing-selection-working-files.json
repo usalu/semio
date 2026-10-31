@@ -1,0 +1,41 @@
+{
+  "state": "source-only-awaiting-combined-review-no-native",
+  "manifests": [
+    {
+      "manifest": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "7a818ba4dd36155b3d6911793650ca635d898c9f2a72b1c04febf0fdc621d2f1"
+    },
+    {
+      "manifest": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "783fefe5feb7cf591e72fade43bd01fc91eba70167a63cdc88a612076b053486"
+    }
+  ],
+  "changes": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/🪆️references/🧪️tests/🦀️.rs",
+      "beforeSha256": "7f1ea2e5d505e8a2ba6c1bffcebdfe83cf25d848267f5a2670263790ed79041f",
+      "afterSha256": "432290203c438cf03f0ab180bc06c17d1eff566db5b477916da9eb0f8930bc29",
+      "change": "Import actual retirement trait; test logic unchanged."
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🌱️birth/📤️transfer/🧪️tests/🦀️.rs",
+      "beforeSha256": "bc1f3c5d43272578578e55e9e7063e404085498ee88e3c992054ab13ff25c2f5",
+      "afterSha256": "63bd2483d83ba63bf17e98d7c9fda579e1dabb4c4516838670763ec198ef9f3a",
+      "fixture": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🌱️birth/🧪️tests/🧫️fixtures/🔣️.json",
+      "fixtureSha256": "e1d28660dffe53600803790a21642c3ce9469daada202976474924626578d1e5",
+      "change": "Correct existing shared neutral fixture include; test assertions unchanged."
+    },
+    {
+      "state": "applied-root-authorized-no-runtime",
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/📜️script.ts",
+      "beforeSha256": "fcb4db54e0c6fccd5dfd0c01c1604d22a8fb033d7985ed0832b7d331eb09ab11",
+      "old": "\"semio-s-artifact-layout-layout-editor\"], commands: router",
+      "new": "\"semio-s-artifact-layout-layout-editor\", \"semio-s-artifact-layout-layout-model\", \"semio-s-artifact-layout-layout-engine-json\"], commands: router",
+      "afterSha256": "c87bc43f699f8053a1b7cae84f19e7f50663ff9fe6a8ca2bb37e9c980c90af15"
+    }
+  ],
+  "reports": [
+    "drawing-law-selection.md"
+  ],
+  "preparedCommand": "layout-native-4-command.json"
+}

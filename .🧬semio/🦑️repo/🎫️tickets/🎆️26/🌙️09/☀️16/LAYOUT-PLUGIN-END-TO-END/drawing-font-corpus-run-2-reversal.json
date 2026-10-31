@@ -1,0 +1,12 @@
+{
+  "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧪️tests/🟦️.ts",
+  "before": "bce221d4600465c60bc32f170cddf293a7f66077dcbbb09fec18640dabdecb2e",
+  "after": "44cefe4fa6361ed8d9b3452555c19dec56214f801dc27121e5fa1a4ea9629f7c",
+  "reconstructedWholeBefore": "bce221d4600465c60bc32f170cddf293a7f66077dcbbb09fec18640dabdecb2e",
+  "exactRuntimeOperandsRetained": true,
+  "erasedOnlyGeneric": true,
+  "predecessorCommandSha256": "1479ffeaf4664b4f0996de28fe2abb1352bbf9ab53cee08ca6e617d42f7d89c5",
+  "newCommandSha256": "cb998752e06b6ee86a91a295ab96a6c3d325d2f4af5e5a265f79703e057e23df",
+  "unchangedOtherSourceBodies": 92,
+  "newImporterSameContent": true
+}

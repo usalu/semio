@@ -87,7 +87,7 @@ fn energy_model_view_extent(_command: &EnergyModelViewCommand, _snapshot: &Energ
     Some(1)
 }
 
-/// 👁️ The one reducer the viewer's single tool runs. `InteractiveJobClassification::Migrated` is the
+/// 📉️ The one reducer the viewer's single tool runs. `InteractiveJobClassification::Migrated` is the
 /// only UI-dispatchable classification and a `Migrated` verb without an exact app-owned reducer is
 /// refused with `interactive-job.missing-owned-reducer` — so this function existing is precisely what
 /// makes the read-only window's orbit survive.
@@ -216,7 +216,7 @@ impl ArtifactViewer for EnergyModelViewer {
         command_from_action(action, args)
     }
 
-    /// 👁️ Structurally read-only. `ViewEmit` has no window-config lane at all, so the ONE verb this
+    /// 🪟️ Structurally read-only. `ViewEmit` has no window-config lane at all, so the ONE verb this
     /// viewer owns cannot be served here — `setCamera` is `InteractiveJobClassification::Migrated`
     /// and therefore travels the RETAINED route ([`energy_model_view_reduce`]), whose `Emit` does
     /// carry `window_config_mutations`. This arm exists so that route's absence is a loud refusal
@@ -275,7 +275,7 @@ impl ArtifactViewer for EnergyModelViewer {
         let node = match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot)?,
             zones::BODY_KEY => zones::render(doc.snapshot)?,
-            simulation::BODY_KEY => simulation::render(&doc.snapshot.model),
+            simulation::BODY_KEY => simulation::render(doc.snapshot.model.read().run_period),
             model_window::BODY_KEY => model_window::render_with_camera(&doc.snapshot.model.read(), model_window::config::current(cfg))?,
             _ => {
                 semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.viewer.render", "the unknown-body label could not be assembled"))?

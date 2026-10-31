@@ -1,0 +1,3 @@
+# Numeric Strict Root Release
+
+Actual v3 normal Bun test is terminal0:7pass/633assertions/135ms; actual direct exec yielded no resumable session (chunk9945ac). Log1004bytes SHA60767330a4f544f01bdc2828fe3ca703217b2fafdf55f7fbbaaacbea526046ae. All18 pre/post/current hashes match. Root now releases exactly ONE sequential normal strict3 command retained in v3 SHA2c9373c6f9d0bd898702493912f266973252ed43fc2a2396fbb369f7395a6fc4. Same captured closure frozen until strict terminal/posthash. No other runtime is live. This is scoped numeric proof only, not whole Drawing/core/native/Layout/publication/browser acceptance. Actual prior34851 RED remains immutable.

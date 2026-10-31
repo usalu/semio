@@ -1,4 +1,5 @@
 import{dirname}from"node:path";
+import{applyNativeStorageFundingEventV1,requireNativeStorageFundingStateV1}from"../💰️funding/🔁️replacement/📋️model/🟦️.ts";
 import{types}from"node:util";
 import{compileJsonSchemaSubset,validateJsonSchemaSubset}from"../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import declaredSchema from"../🧬️schema/🔣️.json" with{type:"json"};
@@ -16,12 +17,16 @@ const namespaceProtocol=Object.freeze({...schema.definitions.NamespaceProtocol.c
 export type NativeStoragePolicyV1=Readonly<{version:1;root:string;leaseDirectory:string;capacityBytes:number;maximumWorkspaceBytes:number;maximumArtifactBytes:number}>;
 
 /** 🧮️ Retains conservative charge through publication, cancellation and physical retirement. */
-export type NativeStorageAllocationV1=Readonly<{namespace?:NativeStorageNamespaceReceiptV1;child?:NativeStorageChildRequestV1;id:string;owner:string;kind:"compiler-workspace"|"compiler-state"|"persistent-state"|"artifact-publication"|"artifact-restore";bytes:number;phase:"reserved"|"committed"|"retiring"}>;
+export type NativeStorageFundingPredecessorV1=Readonly<{id:string;owner:string;kind:"artifact-publication";bytes:number;phase:"committed"}>;
+/** 🧾️ Retains the old commitment while a separately issued delta is pending or records its atomic settlement. */
+export type NativeStorageFundingAssociationV1=Readonly<{version:1;phase:"reserved"|"settled";predecessor:NativeStorageFundingPredecessorV1;targetBytes:number;contextSha256:string}>;
+/** 💰️ Counts actual committed funding and a distinct reserved replacement delta without an uncharged gap. */
+export type NativeStorageAllocationV1=Readonly<{funding?:NativeStorageFundingAssociationV1;namespace?:NativeStorageNamespaceReceiptV1;child?:NativeStorageChildRequestV1;id:string;owner:string;kind:"compiler-workspace"|"compiler-state"|"persistent-state"|"artifact-publication"|"artifact-restore";bytes:number;phase:"reserved"|"committed"|"retiring"}>;
 
 /** 📂️ Records observed directory DATA inside an existing child charge; it issues no ownership. */
 export type NativeStorageNamespaceIdentityV1=Readonly<{dev:string;ino:string;mode:number}>;
 
-/** 🧾️ Binds finite namespace metadata to exact parent and created inode DATA. */
+/** 🪢️ Binds finite namespace metadata to exact parent and created inode DATA. */
 export type NativeStorageNamespaceReceiptV1=Readonly<{directory:string;bytes:65536;parent:NativeStorageNamespaceIdentityV1;entry:NativeStorageNamespaceIdentityV1}>;
 
 /** 🌱️ Records the exact closed child request funded by this parent allocation; DATA alone issues no child. */
@@ -34,10 +39,12 @@ export type NativeStorageChildDeclarationV1=Pick<NativeStorageChildRequestV1,"di
 export type NativeStorageStateV1=Readonly<{version:1;sequence:number;allocations:readonly NativeStorageAllocationV1[]}>;
 
 /** 🪞️ Copies validated ordinary journal DATA into detached immutable rows without granting Native custody. */
-export function snapshotNativeStorageStateV1(state:NativeStorageStateV1):NativeStorageStateV1{return Object.freeze({...state,allocations:Object.freeze(state.allocations.map(row=>Object.freeze({...row,...(row.child?{child:Object.freeze({...row.child})}:{}),...(row.namespace?{namespace:Object.freeze({...row.namespace,parent:Object.freeze({...row.namespace.parent}),entry:Object.freeze({...row.namespace.entry})})}:{})})))});}
+export function snapshotNativeStorageStateV1(state:NativeStorageStateV1):NativeStorageStateV1{return Object.freeze({...state,allocations:Object.freeze(state.allocations.map(row=>Object.freeze({...row,...(row.funding?{funding:Object.freeze({...row.funding,predecessor:Object.freeze({...row.funding.predecessor})})}:{}),...(row.child?{child:Object.freeze({...row.child})}:{}),...(row.namespace?{namespace:Object.freeze({...row.namespace,parent:Object.freeze({...row.namespace.parent}),entry:Object.freeze({...row.namespace.entry})})}:{})})))});}
 
 /** 📨️ Records allocation custody changes; retirement follows physical release, never a PID timeout. */
-export type NativeStorageEventV1=Readonly<{type:"reserved";allocation:NativeStorageAllocationV1}>|Readonly<{type:"committed"|"retiring"|"retired";id:string}>|Readonly<{type:"checkpoint";state:NativeStorageStateV1}>|Readonly<{type:"namespace-created";id:string;namespace:NativeStorageNamespaceReceiptV1}>|Readonly<{type:"rebudgeted";expectedSequence:number;allocation:NativeStorageAllocationV1;bytes:number}>;
+export type NativeStorageFundingEventV1=Readonly<{type:"funding-reserved"|"funding-settled"|"funding-aborted";expectedSequence:number;allocation:NativeStorageAllocationV1}>;
+/** 📱️ Applies ordinary events or a separately issued funding replacement. */
+export type NativeStorageEventV1=NativeStorageFundingEventV1|Readonly<{type:"reserved";allocation:NativeStorageAllocationV1}>|Readonly<{type:"committed"|"retiring"|"retired";id:string}>|Readonly<{type:"checkpoint";state:NativeStorageStateV1}>|Readonly<{type:"namespace-created";id:string;namespace:NativeStorageNamespaceReceiptV1}>|Readonly<{type:"rebudgeted";expectedSequence:number;allocation:NativeStorageAllocationV1;bytes:number}>;
 
 /** 📉️ Binds a shrink to the entire current allocation and journal sequence. */
 export type NativeStorageRebudgetRequestV1=Readonly<{version:1;expectedSequence:number;allocation:NativeStorageAllocationV1;bytes:number}>;
@@ -53,24 +60,26 @@ export function nativeStorageUsedBytesV1(state:NativeStorageStateV1):number{retu
 
 /** 🛂️ Applies one custody event only when the complete conservative allocation fits. */
 export function nativeStorageEventV1(state:NativeStorageStateV1,event:NativeStorageEventV1,capacityBytes:number):NativeStorageStateV1{
- admit("State",state);admit("Event",event);for(const row of[...state.allocations,...(event.type==="reserved"?[event.allocation]:event.type==="checkpoint"?event.state.allocations:[])])if(row.namespace&&(!row.child||row.kind!=="compiler-state"||row.namespace.entry.dev!==row.namespace.parent.dev||dirname(row.child.directory)!==row.namespace.directory||row.bytes-row.child.maximumPhysicalBytes<row.namespace.bytes+namespaceProtocol.minimumChildMetadataBytes))throw Error("Finite original namespace allocation required");for(const row of[...state.allocations,...((event.type==="reserved"||event.type==="rebudgeted")?[event.allocation]:event.type==="checkpoint"?event.state.allocations:[])])if(row.child&&(row.kind!=="compiler-state"||row.child.allocation!==row.id||row.child.maximumPhysicalBytes>=row.bytes))throw Error("Exact child funding allocation association required");if(state.allocations.some(row=>row.kind==="persistent-state"&&row.phase==="retiring")||event.type==="checkpoint"&&event.state.allocations.some(row=>row.kind==="persistent-state"&&row.phase==="retiring"))throw Error("Persistent state cannot be retired");if(!Number.isSafeInteger(capacityBytes)||capacityBytes<1)throw Error("Invalid native storage capacity");
- if(event.type==="checkpoint"){if(state.sequence!==0||state.allocations.length)throw Error("Native storage checkpoint must begin the journal");admit("State",event.state);if(nativeStorageUsedBytesV1(event.state)>capacityBytes||new Set(event.state.allocations.map(row=>row.id)).size!==event.state.allocations.length)throw Error("Invalid native storage checkpoint capacity");return event.state;}
- const allocations=[...state.allocations];
+ admit("State",state);admit("Event",event);requireNativeStorageFundingStateV1(state.allocations);if(event.type==="reserved"&&event.allocation.funding||event.type==="rebudgeted"&&(event.allocation.funding||state.allocations.find(row=>row.id===event.allocation.id)?.funding)||event.type==="committed"&&state.allocations.find(row=>row.id===event.id)?.funding)throw Error("Only the native replacement issuer creates funding associations");for(const row of[...state.allocations,...(event.type==="reserved"?[event.allocation]:event.type==="checkpoint"?event.state.allocations:[])])if(row.namespace&&(!row.child||row.kind!=="compiler-state"||row.namespace.entry.dev!==row.namespace.parent.dev||dirname(row.child.directory)!==row.namespace.directory||row.bytes-row.child.maximumPhysicalBytes<row.namespace.bytes+namespaceProtocol.minimumChildMetadataBytes))throw Error("Finite original namespace allocation required");for(const row of[...state.allocations,...((event.type==="reserved"||event.type==="rebudgeted")?[event.allocation]:event.type==="checkpoint"?event.state.allocations:[])])if(row.child&&(row.kind!=="compiler-state"||row.child.allocation!==row.id||row.child.maximumPhysicalBytes>=row.bytes))throw Error("Exact child funding allocation association required");if(state.allocations.some(row=>row.kind==="persistent-state"&&row.phase==="retiring")||event.type==="checkpoint"&&event.state.allocations.some(row=>row.kind==="persistent-state"&&row.phase==="retiring"))throw Error("Persistent state cannot be retired");if(!Number.isSafeInteger(capacityBytes)||capacityBytes<1)throw Error("Invalid native storage capacity");
+ if(event.type==="checkpoint"){if(state.sequence!==0||state.allocations.length)throw Error("Native storage checkpoint must begin the journal");admit("State",event.state);if(nativeStorageUsedBytesV1(event.state)>capacityBytes||new Set(event.state.allocations.map(row=>row.id)).size!==event.state.allocations.length)throw Error("Invalid native storage checkpoint capacity");requireNativeStorageFundingStateV1(event.state.allocations);return event.state;}
+ let allocations=[...state.allocations];
  if(nativeStorageUsedBytesV1(state)>capacityBytes||new Set(allocations.map(row=>row.id)).size!==allocations.length)throw Error("Invalid native storage capacity state");
- if(event.type==="reserved"){
+ if(event.type==="funding-reserved"||event.type==="funding-settled"||event.type==="funding-aborted"){
+  allocations=[...applyNativeStorageFundingEventV1(state,event,capacityBytes)];
+ }else if(event.type==="reserved"){
   if(event.allocation.namespace||event.allocation.phase!=="reserved"||allocations.some(row=>row.id===event.allocation.id||!!row.child&&!!event.allocation.child&&row.child.directory===event.allocation.child.directory))throw Error("Native storage reservation identity already held");
   if(event.allocation.bytes>capacityBytes-nativeStorageUsedBytesV1(state))throw Error("Native storage capacity exhausted");allocations.push(event.allocation);
  }else if(event.type==="namespace-created"){
   const index=allocations.findIndex(row=>row.id===event.id),allocation=allocations[index];if(!allocation||allocation.phase!=="reserved"||allocation.namespace||!allocation.child||allocation.kind!=="compiler-state"||dirname(allocation.child.directory)!==event.namespace.directory||event.namespace.entry.dev!==event.namespace.parent.dev||allocation.bytes-allocation.child.maximumPhysicalBytes<event.namespace.bytes+namespaceProtocol.minimumChildMetadataBytes||allocations.some(row=>row.namespace?.directory===event.namespace.directory))throw Error("Exact charged new namespace event required");allocations[index]={...allocation,namespace:Object.freeze({...event.namespace,parent:Object.freeze({...event.namespace.parent}),entry:Object.freeze({...event.namespace.entry})})};
  }else if(event.type==="rebudgeted"){
   const index=allocations.findIndex(row=>row.id===event.allocation.id),allocation=allocations[index];if(!allocation||state.sequence!==event.expectedSequence||allocation.phase!=="committed"||allocation.kind!=="artifact-publication"||event.bytes>=allocation.bytes||(["id","owner","kind","bytes","phase"]as const).some(key=>allocation[key]!==event.allocation[key]))throw Error("Exact committed native rebudget predecessor required");allocations[index]={...allocation,bytes:event.bytes};
- }else{
+ }else if(event.type==="committed"||event.type==="retiring"||event.type==="retired"){
   const index=allocations.findIndex(row=>row.id===event.id),allocation=allocations[index];if(!allocation)throw Error("Native storage allocation not held");
   if(allocation.kind==="persistent-state"&&(event.type==="retiring"||event.type==="retired"))throw Error("Persistent state cannot be retired");
   if(event.type==="retired"){if(allocation.phase!=="retiring")throw Error("Native storage physical retirement required");allocations.splice(index,1);}
   else{if(event.type==="committed"&&allocation.phase!=="reserved"||event.type==="retiring"&&allocation.phase==="retiring")throw Error("Invalid native storage custody transition");allocations[index]={...allocation,phase:event.type};}
- }
- if(!Number.isSafeInteger(state.sequence+1))throw Error("Native storage sequence overflow");return{version:1,sequence:state.sequence+1,allocations};
+ }else throw Error("Closed native storage transition required");
+ requireNativeStorageFundingStateV1(allocations);if(!Number.isSafeInteger(state.sequence+1))throw Error("Native storage sequence overflow");return{version:1,sequence:state.sequence+1,allocations};
 }
 
 const journalProjectionRequestContract=compileJsonSchemaSubset(schema.definitions.JournalProjectionRequest,schema);

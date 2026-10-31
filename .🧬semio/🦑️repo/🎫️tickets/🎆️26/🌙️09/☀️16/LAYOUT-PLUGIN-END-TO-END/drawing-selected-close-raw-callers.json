@@ -1,0 +1,279 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🦀️.rs",
+    "calls": [
+      {
+        "line": 193,
+        "source": "let step = {let turn=self.key_cursor.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 218,
+        "source": "let step = {let turn=self.value_cursor.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 270,
+        "source": "let step = {let turn=self.key_cursor.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 275,
+        "source": "let step = {let turn=self.value_cursor.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🦀️.rs",
+    "calls": [
+      {
+        "line": 111,
+        "source": "let step = {let turn=child.close_step(nested);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 162,
+        "source": "if !child.terminal_is_empty() { let step = {let turn=child.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, child.terminal_is_empty(), \"retained child close\")?.progress())); }"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs",
+    "calls": [
+      {
+        "line": 67,
+        "source": "match selected{Ok(Some(grant))=>self.close_step(grant),Ok(None)=>RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0},Err(error)=>RetainedWorkOutcome{result:Err(error),work:0}}"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🎁️option-cursor/🦀️.rs",
+    "calls": [
+      {
+        "line": 54,
+        "source": "let step = {let turn=self.child.close_step(grant);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 112,
+        "source": "let turn=self.child.close_step(grant);work+=turn.work;let step=turn.result?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.child.terminal_is_empty(), \"retained child close\")?.progress()));"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🗃️box-cursor/🦀️.rs",
+    "calls": [
+      {
+        "line": 47,
+        "source": "let step = {let turn=child.close_step(grant);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 129,
+        "source": "if !child.terminal_is_empty() { let turn=child.close_step(grant);work+=turn.work;let step=turn.result?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), \"retained child close\")?.progress())); }"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧱️tuple-cursors/🦀️.rs",
+    "calls": [
+      {
+        "line": 51,
+        "source": "let step = {let turn=self.$child.close_step(grant);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 115,
+        "source": "let turn=self.$child.close_step(grant);work+=turn.work;let step=turn.result?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.$child.terminal_is_empty(), \"retained child close\")?.progress()));"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs",
+    "calls": [
+      {
+        "line": 61,
+        "source": "let step = {let turn=child.close_step(nested);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 118,
+        "source": "if !child.terminal_is_empty() { let nested = nested_retained_clone_grant(grant)?; let turn=child.close_step(nested);work+=turn.work;let step=turn.result?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(nested,step,child.terminal_is_empty(),\"array child close\")?.progress())); }"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs",
+    "calls": [
+      {
+        "line": 98,
+        "source": "let step = {let turn=child.close_step(remaining);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 187,
+        "source": "if !child.terminal_is_empty() { let turn=child.close_step(grant);work+=turn.work;let step=turn.result?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, child.terminal_is_empty(), \"retained child close\")?.progress())); }"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🦀️.rs",
+    "calls": [
+      {
+        "line": 107,
+        "source": "if !child.terminal_is_empty(){let step={let turn=child.close_step(RetainedCloneGrant {maximum_depth:grant.maximum_depth-1,..grant});work+=turn.work;turn.result}?;return Ok(RetainedCloneStep::Progress(step.progress()));}"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs",
+    "calls": [
+      {
+        "line": 239,
+        "source": "let step = {let turn=self.inner.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 282,
+        "source": "if !self.inner.terminal_is_empty() { let step = {let turn=self.inner.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), \"retained child close\")?.progress())); }"
+      },
+      {
+        "line": 467,
+        "source": "let step = {let turn=self.inner.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 510,
+        "source": "if !self.inner.terminal_is_empty() { let step = {let turn=self.inner.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?; return Ok(RetainedCloneStep::Progress(super::admit_retained_clone_close(grant, step, self.inner.terminal_is_empty(), \"retained child close\")?.progress())); }"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🦀️.rs",
+    "calls": [
+      {
+        "line": 136,
+        "source": "fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let turn=self.0.close_step(grant);match turn.result{Err(error)=>RetirementStep::Failure(error,turn.work),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work)}}"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/🦀️.rs",
+    "calls": [
+      {
+        "line": 8,
+        "source": "impl<T:RetireOwned+Sync> FixtureSource<T>{fn drain(&mut self){let mut work=work::Work::new();while !self.0.terminal_is_empty(){let demand=self.0.next_close_demand(4096).unwrap();let grant=selected_grant(demand);assert_eq!(self.0.next_close_demand(grant.maximum_copy_bytes).unwrap(),demand,\"fixture source close quote must remain selected by its exact grant\");let(step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||self.0.close_step(grant));assert!(step.work<=1);let progress=step.result.unwrap().progress();assert!(progress.fits(grant));assert_eq!(heap,(progress.retained_capacity_bytes,progress.released_bytes));let idle=progress==Default::default()&&!self.0.terminal_is_empty()&&self.0.next_close_demand(4096).unwrap()==demand;work.observe(idle);}}}"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs",
+    "calls": [
+      {
+        "line": 82,
+        "source": "pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{self.source.close_step(grant)}"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔎️lookup-cursor/🦀️.rs",
+    "calls": [
+      {
+        "line": 42,
+        "source": "comparison.begin_close();let step=comparison.close_step(retirement)?;"
+      },
+      {
+        "line": 88,
+        "source": "let step=c.close_step(child)?;"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➕️insert-cursor/🦀️.rs",
+    "calls": [
+      {
+        "line": 150,
+        "source": "if !state.lookup.terminal_is_empty(){let step=state.lookup.close_step(grant.retirement)?;return Ok(RetainedOrderedMapInsertStep::Progress(RetainedOrderedMapInsertProgress{retirement:step.progress(),..Default::default()}));}"
+      },
+      {
+        "line": 358,
+        "source": "if !state.lookup.terminal_is_empty(){state.lookup.begin_close();return state.lookup.close_step(grant);}"
+      },
+      {
+        "line": 366,
+        "source": "state.lookup_lease.close_step(grant)"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➖️remove/🦀️.rs",
+    "calls": [
+      {
+        "line": 40,
+        "source": "1=>{if !s.lookup.terminal_is_empty(){progress.retirement=s.lookup.close_step(grant.retirement)?.progress();}else{let demand=s.lease.next_take_demands(grant.retirement.maximum_copy_bytes)?;if grant.retirement.maximum_items==0||demand.copy_bytes>grant.retirement.maximum_copy_bytes||demand.capacity_bytes>grant.retirement.maximum_capacity_bytes||demand.release_bytes>grant.retirement.maximum_release_bytes||demand.depth>grant.retirement.maximum_depth{return Ok(RetainedOrderedMapRemoveStep::Progress(Default::default()))}match s.lease.take_authority(grant.retirement)?{super::super::RetainedCloneSourceTake::Pending(retirement)=>progress.retirement=retirement,super::super::RetainedCloneSourceTake::Ready(RemoveWorkspace{map,key},retirement)=>{s.map=Some(map);s.key=Some(key);s.phase=if s.found{2}else{5};progress.retirement=retirement;}}}}"
+      },
+      {
+        "line": 69,
+        "source": "if !s.lookup.terminal_is_empty(){return s.lookup.close_step(grant)}if !s.close.is_empty(){return s.close.step_granted(grant)}"
+      },
+      {
+        "line": 70,
+        "source": "if let Some(step)=s.close.begin_granted(&mut s.key,grant)?{return Ok(step)}if let Some(step)=s.close.begin_granted(&mut s.removed,grant)?{return Ok(step)}if let Some(step)=s.close.begin_granted(&mut s.page,grant)?{return Ok(step)}if let Some(step)=s.close.begin_granted(&mut s.map,grant)?{return Ok(step)}s.lease.close_step(grant)"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/♻️retirement/🦀️.rs",
+    "calls": [
+      {
+        "line": 31,
+        "source": "fn close(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{self.close_step(grant)}"
+      },
+      {
+        "line": 47,
+        "source": "fn close(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{self.close_step(grant)}"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs",
+    "calls": [
+      {
+        "line": 169,
+        "source": "let step = {let turn=self.key_cursor.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 192,
+        "source": "let step = {let turn=self.value_cursor.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 243,
+        "source": "let step = {let turn=self.key_cursor.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;"
+      },
+      {
+        "line": 248,
+        "source": "let step = {let turn=self.value_cursor.close_step(super::nested_retained_clone_grant(grant)?);work+=turn.work;turn.result}?;"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️field/🦀️.rs",
+    "calls": [
+      {
+        "line": 41,
+        "source": "if !child.terminal_is_empty() { let nested=nested_retained_clone_grant(grant)?;let step={let turn=child.close_step(nested);work+=turn.work;turn.result}?;return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(nested,step,child.terminal_is_empty(),\"field original child close\")?.progress())); }"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs",
+    "calls": [
+      {
+        "line": 42,
+        "source": "fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let turn=self.cursor.close_step(grant);match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧳️owner/🦀️.rs",
+    "calls": [
+      {
+        "line": 14,
+        "source": "pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.closing{self.cursor.begin_close();self.closing=true;work+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}{let turn=self.cursor.close_step(grant);work+=turn.work;turn.result}})();crate::RetainedWorkOutcome{result,work}}"
+      },
+      {
+        "line": 20,
+        "source": "fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.owner.closing&&self.owner.terminal_is_empty(){return RetirementStep::Complete(0)}let turn=self.owner.close_step(grant);match turn.result{Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}"
+      }
+    ]
+  }
+]

@@ -1,3 +1,4 @@
+use semio_s_artifact_procedural_3d_geometry_compute::testing::step_with_fuel;
 use super::*;
 use semio_s_artifact_procedural_3d_geometry_compute::StartFn;
 use serde_json::{json, Value};
@@ -43,7 +44,7 @@ fn a_boolean_that_needs_the_kernels_job_is_advanced_in_slices_and_equals_the_who
     let mut job = start_of("analysis.interference")(kind, support::inputs_of(kind, &case));
     let mut slices = 0;
     let stepped = loop {
-        match job.step(1) {
+        match step_with_fuel(&mut *job, 1) {
             WidgetStep::Working { progress } => {
                 assert!((0.0..1.0).contains(&progress));
                 slices += 1;
@@ -60,10 +61,10 @@ fn cancelling_an_interference_job_mid_run_ends_it_with_a_cancelled_fault() {
     let case = case_named("a cylinder and a box interfere in a circular segment");
     let kind = support::kind_of(catalogue(), "analysis.interference");
     let mut job = start_of("analysis.interference")(kind, support::inputs_of(kind, &case));
-    assert!(matches!(job.step(1), WidgetStep::Working { .. }));
+    assert!(matches!(step_with_fuel(&mut *job, 1), WidgetStep::Working { .. }));
     job.cancel();
     job.cancel();
-    let WidgetStep::Done(evaluation) = job.step(1) else { panic!("a cancelled job answers Done") };
+    let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 1) else { panic!("a cancelled job answers Done") };
     assert_eq!(evaluation.fault.expect("a fault").code, "generation3d.geometry.cancelled");
     assert!(evaluation.outputs.is_empty());
 }

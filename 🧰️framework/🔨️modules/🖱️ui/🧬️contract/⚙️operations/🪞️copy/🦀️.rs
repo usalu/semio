@@ -49,7 +49,7 @@ impl UiComponentCopy {
     }
     /// 🎟️ Admits only the next backing allocation; no initialized payload bytes share this turn.
     pub fn reserve_next(&mut self, allocation: usize) -> Result<UiComponentCopyProgress, PagedListAllocationError> {
-        let requested = self.next_allocation_bytes().map_err(|refusal| PagedListAllocationError { allocated_bytes: 0, kind: refusal.kind, reason: refusal.reason })?;
+        let requested = self.next_allocation_bytes().map_err(|refusal| PagedListAllocationError { work: 0, allocated_bytes: 0, kind: refusal.kind, reason: refusal.reason })?;
         if requested == 0 || allocation < requested {
             return Ok(Default::default());
         }

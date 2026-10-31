@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "repeatedDenials",
+    "heldElementBytes",
+    "expectedEffectsOnDenied",
+    "absoluteUnits"
+  ],
+  "properties": {
+    "repeatedDenials": {
+      "const": 3
+    },
+    "heldElementBytes": {
+      "const": 8
+    },
+    "expectedEffectsOnDenied": {
+      "const": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    "absoluteUnits": {
+      "const": true
+    }
+  }
+}

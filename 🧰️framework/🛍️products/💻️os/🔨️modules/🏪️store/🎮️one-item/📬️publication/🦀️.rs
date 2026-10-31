@@ -153,7 +153,7 @@ impl ArtifactStoreOneItemLiveAuthority {
     pub fn actor(&self) -> &str {
         &self.actor
     }
-    pub fn admit_actor_lease(&self,grant:RetainedCloneGrant)->Result<(semio_framework_value::SharedUtf8,RetainedCloneProgress),ValueError>{self.actor.admit_clone(grant)}
+    pub fn admit_actor_lease(&self,grant:RetainedCloneGrant)->Result<(semio_framework_value::SharedUtf8,RetainedCloneProgress),ValueError>{self.actor.admit_clone(grant).result}
 
     /// 🪪️ The globally unique identity of the edit this authority publishes — content-addressed
     /// over the actor, the sequence and the HLC tick the Store minted, so two replicas' edits never
@@ -529,7 +529,7 @@ impl<P: Send + Sync, Mutation: Send + 'static> ArtifactStoreBatchItemAuthority<P
     }
 
     fn input_retirement_birth_bytes(&self, input: &Mutation) -> usize { self.retirement.retirement_birth_bytes(input) }
-    fn retire_input(&self, input: Mutation, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Mutation)> { self.retirement.retire_owned(input, grant) }
+    fn retire_input(&self, input: Mutation, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Mutation)> { self.retirement.retire_owned(input, grant).result }
     fn into_retirement_authorities(self) -> [Option<semio_framework_value::FactoryAuthority>; 2] {
         let preparation: Arc<dyn semio_framework_value::FactoryRetirement> = self.preparation;
         let retirement: Arc<dyn semio_framework_value::FactoryRetirement> = self.retirement;
@@ -552,7 +552,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreWireRetirement {
     fn next_capacity_byte_demand(&self, _body: usize) -> Result<usize, ValueError> { Ok(0) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.schema.as_ref().map(|value| value.capacity()).or_else(|| self.bytes.as_ref().map(|value| value.capacity())).unwrap_or(0)) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(!self.terminal_is_empty())) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -562,7 +562,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreWireRetirement {
         if self.schema.is_some() { self.schema = None; } else { self.bytes = None; }
         let receipt = RetainedCloneProgress { copied_items: 1, released_bytes: release, ..Default::default() };
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(receipt) } else { RetainedCloneStep::Progress(receipt) })
-    }
+    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { self.schema.is_none() && self.bytes.is_none() }
 }
 
@@ -678,7 +678,7 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
                 Err((error, original)) => { self.inputs = original; Err(error) },
             };
         }
-        if self.active_input.is_some() { return artifact_retirement_box_close_step(&mut self.active_input, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active_input.is_some() { return artifact_retirement_box_close_step(&mut self.active_input, child).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(input) = self.inputs.pop_front() {
             return match self.authority.as_ref().expect("original batch input authority").retire_input(input, child) {
                 Ok((owner, progress)) => { self.active_input = Some(owner); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "batch input constructor changed its receipt")); } Ok(RetainedCloneStep::Progress(progress)) },
@@ -695,7 +695,7 @@ impl<P: Send, Mutation, A: ArtifactStoreBatchItemAuthority<P, Mutation>> Artifac
         }
         if let Some(slot) = self.authority_close.iter_mut().find(|slot| slot.is_some()) {
             let authority = slot.as_mut().unwrap();
-            let step = authority.step(child)?;
+            let step = authority.step(child).result?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, authority.terminal_is_empty(), "batch source authority")?;
             if authority.terminal_is_empty() { *slot = None; }
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });

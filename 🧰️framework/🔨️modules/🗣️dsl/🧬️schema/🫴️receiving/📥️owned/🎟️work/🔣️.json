@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "stock",
+    "body",
+    "maximumTurns",
+    "sourceAdmissionTurns",
+    "ownershipCopyBytes",
+    "deniedWork",
+    "cachedWork",
+    "directWork",
+    "cases",
+    "laws",
+    "headerConstructorCalls",
+    "closedHeaderDropCalls"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.dsl-owned-receiving-work/v1"
+    },
+    "stock": {
+      "const": {
+        "items": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 64,
+        "fuel": 100000
+      }
+    },
+    "body": {
+      "const": 4096
+    },
+    "maximumTurns": {
+      "const": 10000
+    },
+    "sourceAdmissionTurns": {
+      "const": 4096
+    },
+    "ownershipCopyBytes": {
+      "const": 0
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "directWork": {
+      "const": 1
+    },
+    "cases": {
+      "const": [
+        {
+          "id": "scalar",
+          "input": 7,
+          "expected": 7
+        },
+        {
+          "id": "intrinsic",
+          "input": {
+            "label": "original intrinsic β",
+            "values": [
+              1,
+              2,
+              4294967295
+            ]
+          },
+          "expected": {
+            "label": "original intrinsic β",
+            "values": [
+              1,
+              2,
+              4294967295
+            ]
+          }
+        },
+        {
+          "id": "refused",
+          "input": {
+            "label": false,
+            "values": [
+              1,
+              2
+            ]
+          },
+          "accepted": false
+        }
+      ]
+    },
+    "laws": {
+      "const": [
+        "one-finite-bank-through-source-output-and-close",
+        "all-positive-axis-denial-before-effect",
+        "actual-child-cpu-before-error",
+        "lossless-native-primary-quote-allocation-causes",
+        "paid-raw-header-before-pure-initializer",
+        "closed-header-release-does-not-call-drop",
+        "scalar-payload-copy-separate-from-owned-move",
+        "bounded-array-elements-no-whole-default-or-map-callback",
+        "independent-serde-output"
+      ]
+    },
+    "headerConstructorCalls": {
+      "const": 1
+    },
+    "closedHeaderDropCalls": {
+      "const": 0
+    }
+  }
+}

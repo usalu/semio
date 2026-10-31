@@ -97,7 +97,7 @@ pub fn fem3d_transform_targets(doc: &Fem3dSnapshot, selection_ids: &[String]) ->
         }
     }
     Fem3dTransformTargets {
-        node_ids: doc.nodes.iter().filter(|node| nodes.contains(node.id.as_str())).map(|node| node.id.clone()).collect(),
+        node_ids: doc.nodes.iter().filter(|node| nodes.contains(node.id.as_str())).map(|node| node.id.as_str().to_owned()).collect(),
         solid_ids: doc.solids.iter().filter(|solid| solids.contains(solid.id.as_str())).map(|solid| solid.id.clone()).collect(),
     }
 }

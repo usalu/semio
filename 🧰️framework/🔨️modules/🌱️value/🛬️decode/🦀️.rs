@@ -2,6 +2,9 @@
 use crate::{ValueError, ValueRefusalKind, ErasedSnapshotRetirement};
 #[path="🔭️observer/🦀️.rs"]
 mod observer;
+#[path="🎟️work/🦀️.rs"]
+mod work;
+pub use work::NativeDecodeWorkRecipient;
 #[path="📏️maximum/🦀️.rs"]
 mod maximum;
 #[path="🛂️allocation/🦀️.rs"]
@@ -26,13 +29,13 @@ pub use retirement_loan::{NativeRetirementDecodeControl,NativeDecodeCloseControl
 pub struct NativeDecodeProgress { pub completed:usize, pub total:usize, pub owned_bytes:usize }
 
 /// 🧵️ An opaque consuming receipt retains this operation's admission across callback lifetimes.
-pub struct NativeDecodeContinuation { ledger:u64, receiving:bool, maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, stage:u64 }
+pub struct NativeDecodeContinuation { actual_work:u64, ledger:u64, receiving:bool, maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, stage:u64 }
 
 static LEDGERS:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(1);
 fn next_ledger()->u64{LEDGERS.try_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|ledger|ledger.checked_add(1)).expect("native decode ledger identity space exhausted")}
 
 /// 🧮️ One caller-owned budget persists from input scanning through final typed construction.
-pub struct NativeDecodeControl<'a> { ledger:u64, scope_maximum:Option<usize>, construction:Option<&'a mut dyn NativeDecodeConstructionRecipient>, allocation:allocation::Binding<'a>, receiving:bool, retirement:Option<&'a mut NativeDecodeRetirementRecipient>, maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, started:bool, stage:u64, depth:usize, callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool }
+pub struct NativeDecodeControl<'a> { work:work::Work<'a>, ledger:u64, scope_maximum:Option<usize>, construction:Option<&'a mut dyn NativeDecodeConstructionRecipient>, allocation:allocation::Binding<'a>, receiving:bool, retirement:Option<&'a mut NativeDecodeRetirementRecipient>, maximum_bytes:usize, owned_bytes:usize, completed:usize, total:usize, started:bool, stage:u64, depth:usize, callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool }
 struct StageScope<'owner,'control>{control:&'owner mut NativeDecodeControl<'control>,parent:(usize,usize,bool,u64)}
 impl Drop for StageScope<'_, '_>{fn drop(&mut self){if self.control.stage!=self.parent.3{self.control.completed=self.parent.0;self.control.total=self.parent.1;self.control.started=self.parent.2;self.control.stage=self.parent.3;}}}
 
@@ -54,7 +57,7 @@ impl<'a> NativeDecodeControl<'a> {
     /// 👓️ Reports the original return slot without moving its pending physical owner.
     pub fn has_retirement_owner(&self)->bool{self.retirement.as_ref().is_some_and(|recipient|recipient.has_owner())}
     /// ♻️ Drains one original return turn after forwarding its exact physical capacity demand.
-    pub fn close_retirement_recipient(&mut self,grant:crate::retained_clone::RetainedCloneGrant)->Result<crate::retained_clone::RetainedCloneStep,ValueError>{self.with_retirement(grant,|original|original.close_retirement_recipient(grant))}
+    pub fn close_retirement_recipient(&mut self,grant:crate::retained_clone::RetainedCloneGrant)->crate::RetainedWorkOutcome{match self.with_retirement(grant,|original|Ok(original.close_retirement_recipient(grant))){Ok(turn)=>turn,Err(error)=>crate::RetainedWorkOutcome{result:Err(error),work:0}}}
 
     /// 🆕️ Installs one explicit caller recipient before any retained decoder ownership is created.
     pub fn install_retirement_recipient(&mut self,recipient:&'a mut NativeDecodeRetirementRecipient)->Result<(),ValueError>{
@@ -78,17 +81,17 @@ impl<'a> NativeDecodeControl<'a> {
         self.continuation()
     }
     fn continuation(&self)->Result<NativeDecodeContinuation,ValueError>{
-        if self.depth!=0||self.owned_bytes>self.maximum_bytes||(self.total!=0&&self.completed>self.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation lacks valid cumulative accounting"));}
-        Ok(NativeDecodeContinuation{ledger:self.ledger,receiving:self.receiving,maximum_bytes:self.maximum_bytes,owned_bytes:self.owned_bytes,completed:self.completed,total:self.total,stage:self.stage})
+        if self.work.recipient.is_some()||self.work.reserved!=0||self.depth!=0||self.owned_bytes>self.maximum_bytes||(self.total!=0&&self.completed>self.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation lacks valid cumulative accounting"));}
+        Ok(NativeDecodeContinuation{actual_work:self.work.actual,ledger:self.ledger,receiving:self.receiving,maximum_bytes:self.maximum_bytes,owned_bytes:self.owned_bytes,completed:self.completed,total:self.total,stage:self.stage})
     }
     /// ▶️ Rebinds a moved operation receipt to the current hop's cancellation callback.
     pub fn resume(receipt:NativeDecodeContinuation,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Result<Self,ValueError>{
         if receipt.owned_bytes>receipt.maximum_bytes||(receipt.total!=0&&receipt.completed>receipt.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native decode continuation has invalid cumulative accounting"));}
-        Ok(Self{ledger:receipt.ledger,scope_maximum:None,construction:None,allocation:allocation::Binding::Local,receiving:receipt.receiving,retirement:None,maximum_bytes:receipt.maximum_bytes,owned_bytes:receipt.owned_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback})
+        Ok(Self{work:work::Work::empty(receipt.actual_work),ledger:receipt.ledger,scope_maximum:None,construction:None,allocation:allocation::Binding::Local,receiving:receipt.receiving,retirement:None,maximum_bytes:receipt.maximum_bytes,owned_bytes:receipt.owned_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback})
     }
 
     /// 🚦️ Binds the explicit allocation ceiling and cancellation callback.
-    pub fn new(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self { Self{ledger:next_ledger(),scope_maximum:None,construction:None,allocation:allocation::Binding::Local,receiving:false,retirement:None,maximum_bytes,owned_bytes:0,completed:0,total:0,started:false,stage:0,depth:0,callback} }
+    pub fn new(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeDecodeProgress)->bool)->Self { Self{work:work::Work::empty(0),ledger:next_ledger(),scope_maximum:None,construction:None,allocation:allocation::Binding::Local,receiving:false,retirement:None,maximum_bytes,owned_bytes:0,completed:0,total:0,started:false,stage:0,depth:0,callback} }
     /// 🪆️ Bounds recursive typed construction independently of physical input parsing.
     pub fn scoped_depth<T,E:From<ValueError>>(&mut self,maximum:usize,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{
         if self.depth>=maximum{return Err(E::from(ValueError::literal(ValueRefusalKind::DepthLimit, "native typed construction exceeds depth limit")))}

@@ -40,7 +40,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if let Some(pending)=mounted.pending_artifact_publication.as_mut(){pending.begin_close();}
             return Err(plugin_sdk_fault("typed-operation pending publication rejected a stale immutable document root").into());
         }
-        if mounted.pending_artifact_publication.is_none() && matches!(mounted.publication.as_ref(),Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))if !emit.artifact_mutations.is_empty()||!emit.config_mutations.is_empty()||!emit.draft_mutations.is_empty()||!emit.window_config_mutations.is_empty()) && mounted.admit_actor_capture(retained)? {return Ok(());}
+        if mounted.pending_artifact_publication.is_none() && matches!(mounted.publication.as_ref(),Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))if !emit.artifact_mutations.is_empty()||!emit.config_mutations.is_empty()||!emit.draft_mutations.is_empty()||!emit.window_config_mutations.is_empty()) && mounted.admit_actor_capture(retained,cx)? {return Ok(());}
         if let Some(pending) = mounted.pending_artifact_publication.as_mut() {
             let grant=store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(retained);
             let (pending_lane, _) = pending.lane();

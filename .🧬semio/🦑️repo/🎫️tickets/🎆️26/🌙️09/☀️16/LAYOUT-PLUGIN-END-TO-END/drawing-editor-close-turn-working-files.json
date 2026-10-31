@@ -1,0 +1,176 @@
+{
+  "status": "Authored, uncompiled; shared generic owners and normal/lifecycle/store callers still open",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️publication/🎟️close/📐️.json",
+      "sha256": "5c6cff3da70728eaf5f2293ee7ca48fffb2c9ca9e39d952fed9c46a33339b344",
+      "bytes": 323
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️publication/🎟️close/🔣️.json",
+      "sha256": "391ab773f0ba4650b30446bf9398628b7b769fd29efd88efcc2d3accebd5379f",
+      "bytes": 985
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️publication/🎟️close/🧪️tests/🦀️.rs",
+      "sha256": "5ac4b31855ec47c93f40c8ce4e56bb769f4375271ae36851918363d05e33a180",
+      "bytes": 1166
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️import-image/🧵️publication/🦀️.rs",
+      "sha256": "082d2ee732fb49f859c382832ab4850c21277aed1d6bffae26214ed34372e193",
+      "bytes": 16763
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "ac6153929c52fb924bc2ab2d2e4371a979201c11349ba2faab948bfecb4645f1",
+      "bytes": 3776
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️completion/🎟️close/👷️preview/📐️.json",
+      "sha256": "8dc1c96c965e7d52f63ce6f9894290cedea6edad07d78333efc0549fba792f33",
+      "bytes": 230
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️completion/🎟️close/👷️preview/🔣️.json",
+      "sha256": "7656e80c6e3aab6d63d8467e82af11d7b1113016cb955585e5d1838462270358",
+      "bytes": 584
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️completion/🎟️close/📐️.json",
+      "sha256": "48ea25610e06ba03e2b0f699f0a3341cf0dec5d7023f66a082313876b36907de",
+      "bytes": 322
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️completion/🎟️close/📥️admit/📐️.json",
+      "sha256": "d37fe747f088d8b175e4d76e3ec493572b2306aa26d1c66ee41e1c1224b7e8ef",
+      "bytes": 296
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️completion/🎟️close/📥️admit/🔣️.json",
+      "sha256": "4febaaa50a0718ff957f950860f1ee56b7d510dc76a5dd044a481c2159284bc5",
+      "bytes": 673
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️completion/🎟️close/🔣️.json",
+      "sha256": "d35bfea0a8e61567acb4e28ad9f118e6991064b4e97c1105ef45d6dd5438a500",
+      "bytes": 984
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️completion/🎟️close/🧪️tests/🦀️.rs",
+      "sha256": "de45a30d7097ce4f5c337c6a4bbd7dd9ce476020d94d40fd0539fa66a2a179db",
+      "bytes": 5530
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️completion/🦀️.rs",
+      "sha256": "79159615b530cac05cf488c8f149b57b24ca7f6278be28dedafab92ca2dc2781",
+      "bytes": 9038
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖥️play-app/🦀️.rs",
+      "sha256": "36d7f5bdad58bc10d8e4c0964430aa5517b5c74921815d7523302b85088377a8",
+      "bytes": 22075
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/♻️close/📐️.json",
+      "sha256": "ce57489573e70804303d95a7da363e68a558074e9c965e74c5b46080a74d9ae5",
+      "bytes": 463
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/♻️close/🔣️.json",
+      "sha256": "e31c07a0ad769e76460e8745c38fbb8da5f230e82d0a6c102c8500834eaa7f37",
+      "bytes": 1027
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/♻️close/🧪️tests/🦀️.rs",
+      "sha256": "bb3866caa1d178975a42c0d5576d24e02949b2a5361e1a2efae075a44c9fd4b8",
+      "bytes": 1623
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+      "sha256": "32453fdc1ed133e28af52f9921d02c6e0d0341066e84ed536b92f4eff3d54f93",
+      "bytes": 14120
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🎟️close/📐️.json",
+      "sha256": "564ffa31539998e0f1abd1ba11141db6b29c37c513c09789698c71ce405fcef2",
+      "bytes": 249
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🎟️close/🔣️.json",
+      "sha256": "5acd1aca3b6385e3d3d5face434c9eb3a8ebc0a4b45e57c4e526a42be3de005e",
+      "bytes": 645
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🎟️close/🧪️tests/🦀️.rs",
+      "sha256": "e35e8d7690b4f2bccf7151328ecae50d18552ebe7cdf9125d169464230446ef2",
+      "bytes": 2893
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🦀️.rs",
+      "sha256": "bf9e59590eddbb677f1198d2a4078e73579f8981a2bcf5f17d37c70ae716e3c0",
+      "bytes": 28444
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🫳️borrowed/🦀️.rs",
+      "sha256": "52aaf15d4cb4f4a20d898f3d268cb28a849b37644e27c46a30148b570b69253a",
+      "bytes": 10073
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧮️parser-and-grammar-cursor/🎟️work/📐️.json",
+      "sha256": "7bbfc243076e9abb0ddc7d11b1d499042ea43e0d0bb7678d6dca24b1e6eee384",
+      "bytes": 512
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧮️parser-and-grammar-cursor/🎟️work/🔣️.json",
+      "sha256": "47e4d1d8a6c369a4e927e0bb191870848a23cd7583ab2d0d830aca1b10cabf8c",
+      "bytes": 951
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧮️parser-and-grammar-cursor/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "c573571f159ca772dc73678db96ca164c079b8d5ba03bdd8d814a9880080517f",
+      "bytes": 1468
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧮️parser-and-grammar-cursor/🦀️.rs",
+      "sha256": "2932d2b141082a441f19416fd45918803aa26bd4f3f5f63d8cadbc79c9b9ea72",
+      "bytes": 43290
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🦀️.rs",
+      "sha256": "80e739c91d37058709d6ab483369ba0d01f54734d5df5f92d9a5244cecd62366",
+      "bytes": 64550
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🎛️artifact-app-trait/🦀️.rs",
+      "sha256": "5ed1663ff2ee44405db9b78cb715602dac3879ecc477fe4dc3767b2b7da3e352",
+      "bytes": 60133
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🛬️lifted/♻️retirement/🦀️.rs",
+      "sha256": "a91ce008b99a951c409fb1cb520d9186c6ae98ffe7e90ce347abdfcb7737fe0c",
+      "bytes": 9454
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/✏️artifact-editor-trait/🦀️.rs",
+      "sha256": "3a340c1fe622acf77d4b7e6816de298accfbb848642c9c3a7aa7c0847997b40b",
+      "bytes": 37687
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/👁️artifact-viewer-trait/🦀️.rs",
+      "sha256": "f576dcebc65d6d3649e29176a3ae4d54d4dfa14268e088edd72135fbbf253d9e",
+      "bytes": 27273
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/📖️viewer-app/🦀️.rs",
+      "sha256": "3793ac668015d8bcc07783e30e9d625e3ec60feda2315191372572e3627bb933",
+      "bytes": 18644
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🪟️surface/🖊️editor-app/🦀️.rs",
+      "sha256": "7dad5a737e5b1c6bd35283f06cc0b9d82a6ad4d229430a3252fb69e96d8bb59f",
+      "bytes": 23785
+    }
+  ],
+  "canonicalOutcome": "RetainedWorkOutcome; no old alias"
+}

@@ -1,5 +1,5 @@
 /** 🏭️ Current typed worker admission retains original roots and pumps one funded mounted turn. */
-import schema from "./📐️.json";
+import schema from "./📐️.json"with{type:"json"};
 import {toolJobOriginalWorkerPumpScopeExact} from "./🧱️scope/🟦️.ts";
 import {toolJobProductionSource,toolJobRustBlock} from "../../📋️inventory/🟦️.ts";
 const compact=(s:string)=>s.replace(/\s+/g,"");

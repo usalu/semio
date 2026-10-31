@@ -1,5 +1,5 @@
 import {win32} from "node:path";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json" with {type:'json'};
 
 const policy=schema.$defs.Policy.const;
 const spelling=(value:string)=>{

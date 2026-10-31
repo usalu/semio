@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source",
+    "quantumItems",
+    "quantumFuel",
+    "maximumTurns",
+    "heldReturnItems",
+    "heldReturnFuel",
+    "boundSourceWork",
+    "claimWork",
+    "actualCapturedReturnWork",
+    "actualReceivingWork",
+    "unusedCloseWork",
+    "cases",
+    "foreignReceiveEffects",
+    "busyReceiveEffects",
+    "renewedStock",
+    "capacityBytes",
+    "copyBytes",
+    "heldClaimsKeepSourceBorrowable"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "const": {
+        "items": 4096,
+        "copyBytes": 1048576,
+        "capacityBytes": 1048576,
+        "releaseBytes": 1048576,
+        "depth": 64,
+        "fuel": 16384,
+        "deadlineUs": 1000000
+      }
+    },
+    "quantumItems": {
+      "const": 1
+    },
+    "quantumFuel": {
+      "const": 1
+    },
+    "maximumTurns": {
+      "const": 32
+    },
+    "heldReturnItems": {
+      "const": 2
+    },
+    "heldReturnFuel": {
+      "const": 2
+    },
+    "boundSourceWork": {
+      "const": 1
+    },
+    "claimWork": {
+      "const": 1
+    },
+    "actualCapturedReturnWork": {
+      "const": 1
+    },
+    "actualReceivingWork": {
+      "const": 1
+    },
+    "unusedCloseWork": {
+      "const": 1
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "returned",
+          "recordReturn": true,
+          "cancel": false,
+          "finalDebit": 4
+        },
+        {
+          "name": "cancelled-return",
+          "recordReturn": true,
+          "cancel": true,
+          "finalDebit": 4
+        },
+        {
+          "name": "cancelled-unused",
+          "recordReturn": false,
+          "cancel": true,
+          "finalDebit": 3
+        }
+      ]
+    },
+    "foreignReceiveEffects": {
+      "const": 0
+    },
+    "busyReceiveEffects": {
+      "const": 0
+    },
+    "renewedStock": {
+      "const": false
+    },
+    "capacityBytes": {
+      "const": 0
+    },
+    "copyBytes": {
+      "const": 0
+    },
+    "heldClaimsKeepSourceBorrowable": {
+      "const": true
+    }
+  }
+}

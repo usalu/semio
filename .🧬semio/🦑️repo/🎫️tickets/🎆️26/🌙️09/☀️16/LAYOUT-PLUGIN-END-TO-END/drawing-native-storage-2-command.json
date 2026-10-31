@@ -1,0 +1,41 @@
+{
+  "state": "PREP ONLY; Root review/release required; no test launched",
+  "program": "repo",
+  "arguments": [
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "🧰️framework/Cargo.toml",
+    "-p",
+    "semio-framework-value-native-storage",
+    "--all-targets",
+    "--",
+    "--nocapture"
+  ],
+  "cwd": "/Users/ueli/Documents/semio",
+  "environment": {
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-storage-2",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-storage-2",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-storage-2",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-storage-2",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-storage-2",
+    "SEMIO_BUILD_MODE": "prototype"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-storage-2/test.log",
+  "inputPacket": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-native-storage-2-inputs.json",
+  "inputPacketSha256": "8cccf720109f66c5ea39af281d81a5b7d519b3bdb0cb7b686590c7d79a492bca",
+  "sourceSnapshotLimitations": [
+    "All declared cfg/optional path dependencies and source branches are conservatively observed, not resolved compiler features.",
+    "Only selected-root dev dependencies are selected; dependency package test modules are conservatively extra source observations, not executed suites.",
+    "Literal fixture macros resolve relative to their actual owning Cargo manifest; literal include macros resolve relative to their source file.",
+    "Inline module directory contexts, computed paths/proc-macro output and registry/git/patch resolution remain owned by canonical Cargo Source/dependency admission; unresolved literals are explicit, never silently counted resolved."
+  ],
+  "expectedOwningLaws": 5,
+  "newRuntimeDependencies": "only first-party ControlContract; retirement+allocator+Serde are owning-test dependencies",
+  "changes": "Case/law first owned push copy0 +actual String body identity; null kind AllocationFailed. Original banks/data/cuts retained. Same canonical all-target owner.",
+  "priorResult": "drawing-native-storage-1-result.md"
+}

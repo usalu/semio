@@ -1,0 +1,7 @@
+# Root Actual Review of Initial Outline Gate
+
+Root independently read actual logs/terminal receipts, checked both log digests and all17 pre/test-post/strict-post/current inputs. The real owning run executes4 laws:2 pass,2 fail,1384 assertions,112ms, outer1. Cancellation and exact semantic-ceiling laws pass. Strict4 ends outer2 with one test-only type diagnostic; production roots have no diagnostic. This gate is not accepted.
+
+The zero-copy initial offer is not a genuine denial:the actual first body birth quotes copy0,capacity16*240,depth3 and performs paid work1. The law must retain true item/cap/depth birth denials, then verify paid copy0 preparation and a genuine next-link copy8 underfill0. Stocks/fuel stay exact. Independent OpenType curve discrepancy is contour cyclic start/implicit closure and signed zero; retain the production algorithm and compare exact directed line/quadratic edges under cyclic start normalization only. No reversal, rounding, curve approximation or relaxed coordinates; hostile changed-control/endpoint/orientation assertions must pin oracle strength. Closed neutral oracle cases precede its implementation.
+
+Root releases17 only for these precise test/schema/type fixes and fresh capture. Both old logs/importer stay retained. The next packet selects every original law plus a new genuine hostile-oracle law, with identical catalog policy/stocks/limits and fresh normal+strict gates. No producer/cap/semantic-limit change is authorized by this review.

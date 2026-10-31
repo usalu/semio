@@ -728,7 +728,7 @@ impl<A:ArtifactApp> semio_framework_job::InteractiveJob for ChildEmissionPreview
         use semio_framework_job::InteractiveJobCloseStep as Step;
         if !self.closing||cx.should_yield(){return Ok(Step::Blocked);}
         let demand=self.close_owned_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_owned_turn(grant).map(RetainedCloneStep::Progress))?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let turn=self.close_owned_turn(grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}})?;
         Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.copy_bytes)}
@@ -749,18 +749,25 @@ impl<A:ArtifactApp> ChildEmissionPreviewJob<A>{
         if let Some(owner)=self.completion_retirement.as_ref(){return Ok(owner.next_demand(copy)?);}
         Ok(RetirementDemand{depth:usize::from(self.completion.is_some()),..Default::default()})
     }
-    pub fn close_owned_turn(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-        let demand=self.close_owned_demands(grant.maximum_copy_bytes)?;
-        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Default::default());}
-        if !self.fault_publication.terminal_is_empty(){return self.fault_publication.close_step(grant).map(|step|step.progress());}
-        if self.retirement.is_some(){return Ok(semio_framework_value::close_factory_ticket(&mut self.retirement,grant)?.progress());}
-        if self.retirement_payload.is_some(){return match A::admit_completion_retirement(&mut self.retirement_payload,grant)?{Some((ticket,progress))=>{self.retirement=Some(ticket);Ok(progress)},None=>Ok(Default::default())};}
-        if let Some(original)=self.retirement_fault.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((ticket,progress))=>{self.retirement=Some(ticket);Ok(progress)},Err((error,original))=>{self.retirement_fault=Some(original);Err(error)}};}
-        if let Some(original)=self.rejection.take(){self.retirement_payload=Some(ArtifactToolCompletionValue::Emit(original.emit.map_err(ArtifactCompletionFault::new),original.ephemeral));self.retirement_fault=Some(original.fault);return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()});}
-        if self.emit.is_some()||self.ephemeral.is_some(){self.retirement_payload=Some(ArtifactToolCompletionValue::Emit(Ok(self.emit.take().unwrap_or_default()),self.ephemeral.take().unwrap_or_default()));return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()});}
-        if let Some(owner)=self.completion_retirement.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){self.completion_retirement.take();}return Ok(step.progress());}
-        if let Some(original)=self.completion.take(){return match ControlledRetirement::new(original){Ok(owner)=>{self.completion_retirement=Some(owner);Ok(RetainedCloneProgress{copied_items:1,..Default::default()})},Err((error,original))=>{self.completion=Some(original);Err(error)}};}
-        Ok(Default::default())
+    pub fn close_owned_turn(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress>{
+        let mut work=0;
+        let result=(||{
+            let demand=self.close_owned_demands(grant.maximum_copy_bytes)?;
+            if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Default::default());}
+            if !self.fault_publication.terminal_is_empty(){let turn=self.fault_publication.close_step(grant);work=turn.work;return turn.result.map(|step|step.progress());}
+            if self.retirement.is_some(){let turn=semio_framework_value::close_factory_ticket(&mut self.retirement,grant);work=turn.work;return turn.result.map(|step|step.progress());}
+            if self.retirement_payload.is_some(){let turn=A::admit_completion_retirement(&mut self.retirement_payload,grant);work=turn.work;return match turn.result?{Some((ticket,progress))=>{self.retirement=Some(ticket);Ok(progress)},None=>Ok(Default::default())};}
+            if let Some(original)=self.retirement_fault.take(){let turn=semio_framework_value::retirement::admit_owned_retirement(original,grant);work=turn.work;return match turn.result{Ok((ticket,progress))=>{self.retirement=Some(ticket);Ok(progress)},Err((error,original))=>{self.retirement_fault=Some(original);Err(error)}};}
+            if let Some(original)=self.rejection.take(){self.retirement_payload=Some(ArtifactToolCompletionValue::Emit(original.emit.map_err(ArtifactCompletionFault::new),original.ephemeral));self.retirement_fault=Some(original.fault);work=1;return Ok(RetainedCloneProgress{copied_items:1,..Default::default()});}
+            if self.emit.is_some()||self.ephemeral.is_some(){self.retirement_payload=Some(ArtifactToolCompletionValue::Emit(Ok(self.emit.take().unwrap_or_default()),self.ephemeral.take().unwrap_or_default()));work=1;return Ok(RetainedCloneProgress{copied_items:1,..Default::default()});}
+            if let Some(owner)=self.completion_retirement.as_mut(){
+                if owner.terminal_is_empty(){self.completion_retirement.take();work=1;return Ok(RetainedCloneProgress{copied_items:1,..Default::default()});}
+                let result=owner.step(grant);work=owner.last_turn_work();return result.map(|step|step.progress());
+            }
+            if let Some(original)=self.completion.take(){let result=ControlledRetirement::new(original);work=1;return match result{Ok(owner)=>{self.completion_retirement=Some(owner);Ok(RetainedCloneProgress{copied_items:1,..Default::default()})},Err((error,original))=>{self.completion=Some(original);Err(error)}};}
+            Ok(Default::default())
+        })();
+        semio_framework_value::RetainedWorkOutcome{result,work}
     }
 }
 
@@ -859,9 +866,10 @@ pub fn drive_agent_lane_preview<J:semio_framework_job::InteractiveJob+'static>(o
         owner.close_step(cx)?;
         if !owner.terminal_is_empty()||cx.should_yield()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(None)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return owner.verdict.take().unwrap_or(Ok(owner.steps)).map(Some)
     }
-    if let Some(pending)=owner.pending.as_mut(){if let Some(session)=pending.admit_pending_batch(owner.config,cx)?{owner.session=Some(session);owner.pending.take();}return Ok(None)}
+    if owner.pending.as_ref().is_some_and(|pending|pending.terminal_is_empty()){semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::retire_empty(&mut owner.pending,cx)?;return Ok(None)}
+    if let Some(pending)=owner.pending.as_mut(){pending.admit_pending_batch(owner.config,&mut owner.session,cx)?;return Ok(None)}
     let session=owner.session.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview continuation lost its admitted producer"))?;
-    if owner.acknowledgement_pending{let step=session.acknowledge_outcome(cx.retained_grant());cx.consume_retained(step.progress())?;if matches!(step,RetainedCloneStep::Complete(_)){owner.acknowledgement_pending=false;owner.resume_pending=true;}return Ok(None)}
+    if owner.acknowledgement_pending{if session.acknowledge_outcome(cx)?{let grant=cx.retained_grant();if !cx.retirement_should_yield()&&grant.maximum_items>0&&grant.maximum_depth>0{owner.acknowledgement_pending=false;owner.resume_pending=true;semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome::<_,semio_framework_value::ValueError>{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1})?;}}return Ok(None)}
     if owner.resume_pending{session.resume().map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"preview continuation could not return its original outcome"))?;owner.resume_pending=false;return Ok(None)}
     match session.step_on_original_caller(cx){Ok(Poll::Outcome|Poll::Terminal)=>{},Ok(_)=>return Ok(None),Err(failure)=>{owner.begin_close();return Err(failure)}}
     if !session.checkout_outcome(){return Ok(None)}

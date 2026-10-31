@@ -1,4 +1,31 @@
 use super::*;
+
+/// 📥️ A persistent snapshot that retires through its controlled owner when the law is done.
+struct Doc(Option<Fem2dSnapshot>);
+
+impl Doc {
+    fn new(snapshot: Fem2dSnapshot) -> Self {
+        Self(Some(snapshot))
+    }
+}
+
+impl std::ops::Deref for Doc {
+    type Target = Fem2dSnapshot;
+    fn deref(&self) -> &Fem2dSnapshot {
+        self.0.as_ref().expect("snapshot present")
+    }
+}
+
+impl Drop for Doc {
+    fn drop(&mut self) {
+        let Some(snapshot) = self.0.take() else { return };
+        let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::new(snapshot).ok().expect("controlled retirement admits the snapshot");
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 10_000_000, maximum_copy_bytes: 256 * 1048576, maximum_capacity_bytes: 256 * 1048576, maximum_release_bytes: 256 * 1048576, maximum_depth: 128 };
+        while !owner.terminal_is_empty() {
+            owner.step(grant).expect("funded retirement step");
+        }
+    }
+}
 use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_SELECT_DIRECT;
 
 /// 📊️ One results scene rendered straight off a document and a window configuration.
@@ -8,36 +35,36 @@ use semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::canv
 /// render law needs neither — `render` is a pure function of the snapshot, the display, the window
 /// configuration and the interaction snapshot.
 fn results_scene(doc: &Fem2dSnapshot, display: &ResultDisplay, window: &config::Fem2dResultsWindowConfig) -> Canvas2dScene {
-    let node = render(doc, display, &Viewport2d::default(), window, &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("fixture surface admission");
+    let node = render(doc, display, &Viewport2d::default(), window, &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("fixture surface admission");
     let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
     semio_framework_ui_scene::decode(props).expect("decode canvas scene")
 }
 
-fn demo() -> Fem2dSnapshot {
-    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
+fn demo() -> Doc {
+    Doc::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("bundled demo loads"))
 }
 
 #[semio_framework_async_macros::async_test]
 async fn renders_fem2d_results_scene() {
-    let node = render(&demo(), &ResultDisplay { source_id: None, mode: DisplayMode::Static }, &Viewport2d::default(), &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("fixture surface admission");
+    let node = render(&demo(), &ResultDisplay { source_id: None, mode: DisplayMode::Static }, &Viewport2d::default(), &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("fixture surface admission");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection");
     assert!(json.contains("canvas-2d"), "{json}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn results_window_surfaces_solver_error_without_panicking_2d() {
-    let empty = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
-    let node = render(&empty, &ResultDisplay { source_id: None, mode: DisplayMode::Static }, &Viewport2d::default(), &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("a refused analysis still admits a surface");
+    let empty = Doc::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
+    let node = render(&empty, &ResultDisplay { source_id: None, mode: DisplayMode::Static }, &Viewport2d::default(), &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("a refused analysis still admits a surface");
     let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection");
     assert!(!json.is_empty(), "a document the solver refuses surfaces its message instead of panicking");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
-    let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot();
+    let doc = Doc::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
     let display = ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) };
     let camera = Viewport2d::default();
-    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&doc, &display, &camera, &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("fixture surface admission"))).expect("fixture projection");
+    let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&doc, &display, &camera, &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("fixture surface admission"))).expect("fixture projection");
     assert!(json.contains("No load case defined"), "{json}");
 }
 
@@ -134,10 +161,10 @@ use semio_s_fem_app_surface::FemResultsAnimation;
 use semio_s_fem_app_surface::FemWaveform;
 
 fn animated_scene(animation: FemResultsAnimation, mode: DisplayMode) -> Canvas2dScene {
-    let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let doc = demo();
     let window = config::Fem2dResultsWindowConfig { animation, ..config::Fem2dResultsWindowConfig::default() };
     let display = ResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap()), mode };
-    let node = render(&doc, &display, &Viewport2d::default(), &window, &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("fixture surface admission");
+    let node = render(&doc, &display, &Viewport2d::default(), &window, &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels::NATIVE_EN).expect("fixture surface admission");
     let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
     semio_framework_ui_scene::decode(props).expect("decode canvas scene")
 }
@@ -199,7 +226,7 @@ async fn results_window_mode_shapes_carry_the_transport_caption_while_playing() 
 /// revision drops the old entry instead of growing a second one.
 #[semio_framework_async_macros::async_test]
 async fn results_cache_solves_one_revision_once_and_evicts_the_previous() {
-    let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let doc = demo();
     reset_results_cache();
     let key = Some((7_u32, [1_u8; 32]));
     for _ in 0..30 {

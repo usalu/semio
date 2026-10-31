@@ -1,0 +1,14 @@
+[
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udeec\ufe0freceiving/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "beforeSha256": "ee861eb364370c0f825fd7af6434223ff4ac8dd57e02452e5fa7228515d73e59",
+    "afterSha256": "156a9968c331a0c45c4c1f7d9cbef79f1283a366928bfe6325534110923439a9",
+    "bytes": 12788
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udcec\ufe0foutcome/\ud83d\udce6\ufe0fbuilder/\ud83c\udf9f\ufe0fwork/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "beforeSha256": "76325a357886eb488bd18381ff1b84ed344b7d75c40f15c4149c39efa9e6a27b",
+    "afterSha256": "81da466612ccdc6826a9516c0db74b74353c0679d1591fc8add6857917d5c42c",
+    "bytes": 21927
+  }
+]

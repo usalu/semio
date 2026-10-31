@@ -1,0 +1,59 @@
+{
+  "cases": [
+    {
+      "name": "live",
+      "expired": false,
+      "cancelled": false,
+      "sameLease": true,
+      "samePin": true,
+      "expected": {
+        "body": true,
+        "release": true
+      }
+    },
+    {
+      "name": "expired",
+      "expired": true,
+      "cancelled": false,
+      "sameLease": true,
+      "samePin": true,
+      "expected": {
+        "body": false,
+        "release": true
+      }
+    },
+    {
+      "name": "cancelled",
+      "expired": false,
+      "cancelled": true,
+      "sameLease": true,
+      "samePin": true,
+      "expected": {
+        "body": false,
+        "release": true
+      }
+    },
+    {
+      "name": "copied-token",
+      "expired": false,
+      "cancelled": false,
+      "sameLease": false,
+      "samePin": true,
+      "expected": {
+        "body": false,
+        "release": false
+      }
+    },
+    {
+      "name": "foreign-pin",
+      "expired": false,
+      "cancelled": false,
+      "sameLease": true,
+      "samePin": false,
+      "expected": {
+        "body": false,
+        "release": false
+      }
+    }
+  ]
+}

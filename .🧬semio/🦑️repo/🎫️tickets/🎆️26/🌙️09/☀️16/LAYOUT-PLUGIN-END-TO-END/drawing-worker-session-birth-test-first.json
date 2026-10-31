@@ -1,0 +1,17 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️session-admission/case.json",
+    "bytes": 747,
+    "sha256": "ee66a41eee9f2aed08ae699261c972595d0443f352008e27e73004e9a96512d9"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️session-admission/case.schema.json",
+    "bytes": 1453,
+    "sha256": "4f61091647dd3c441fc07fda563f32c93107538219c54dc697c1e2ef169462ff"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️session-admission/🧪️tests/🦀️.rs",
+    "bytes": 9070,
+    "sha256": "5d4180abf98284a1a2fd169c81d1b4fb8526ff1f7e9cff395e88aeac5b497421"
+  }
+]

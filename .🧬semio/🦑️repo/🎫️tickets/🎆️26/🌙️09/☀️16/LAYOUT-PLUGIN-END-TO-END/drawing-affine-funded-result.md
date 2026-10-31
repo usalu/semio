@@ -1,0 +1,3 @@
+# Funded Affine first actual slice
+
+Normal owning session 49025 exited 0: eight pass, zero fail, 71,927 assertions. All original twenty-one vectors and independent references passed across quanta; denials and cancellation retained the same finite bank. Strict session 17501 exited 2 with two test-only diagnostics: JSON phase string matcher typing and a possibly undefined polygon-clipping ring in the existing independent test tool. No production diagnostics. All twenty-three inputs match pre, test post, strict post and current. Exact logs and hashes are in generated/drawing-affine-funded/receipt.json. This first result is immutable; the full original owner and production caller migration remain open.

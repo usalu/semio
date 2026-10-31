@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "arms": {
+      "const": [
+        "outcome",
+        "continuation"
+      ]
+    },
+    "foreignReceive": {
+      "const": {
+        "work": 0,
+        "heap": [
+          0,
+          0
+        ],
+        "retained": true
+      }
+    },
+    "sameSourceReceive": {
+      "const": {
+        "retained": false
+      }
+    },
+    "terminalDropHeap": {
+      "const": [
+        0,
+        0
+      ]
+    }
+  },
+  "required": [
+    "version",
+    "arms",
+    "foreignReceive",
+    "sameSourceReceive",
+    "terminalDropHeap"
+  ],
+  "additionalProperties": false
+}

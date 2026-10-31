@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Numeric Work Outcome Separation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "outcomes",
+    "rules",
+    "stock",
+    "fuel",
+    "turn"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "outcomes": {
+      "const": [
+        {
+          "name": "paid-preparation",
+          "semantic": 0,
+          "cpu": 1,
+          "capacityPositive": true
+        },
+        {
+          "name": "cached-completion",
+          "semantic": 0,
+          "cpu": 0,
+          "capacityPositive": false
+        }
+      ]
+    },
+    "rules": {
+      "const": {
+        "sameFiniteStock": true,
+        "noLedgerRenewal": true,
+        "cpuIndependentOfItemReceipt": true,
+        "inlineMetadataCopyBytes": 0,
+        "newRowCopyBytes": 128
+      }
+    },
+    "stock": {
+      "const": [
+        4096,
+        65536,
+        65536,
+        65536,
+        64
+      ]
+    },
+    "fuel": {
+      "const": 4096
+    },
+    "turn": {
+      "const": [
+        1,
+        65536,
+        65536,
+        65536,
+        64
+      ]
+    }
+  }
+}

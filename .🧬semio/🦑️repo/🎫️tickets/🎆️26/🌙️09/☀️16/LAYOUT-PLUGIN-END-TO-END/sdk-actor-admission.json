@@ -1,0 +1,16 @@
+{
+  "actor": "fixture-港😀",
+  "turnItems": 1,
+  "cases": [
+    {
+      "name": "press",
+      "baselineCapacity": 128,
+      "frameCapacity": 40
+    },
+    {
+      "name": "typing",
+      "baselineCapacity": 0,
+      "frameCapacity": 40
+    }
+  ]
+}

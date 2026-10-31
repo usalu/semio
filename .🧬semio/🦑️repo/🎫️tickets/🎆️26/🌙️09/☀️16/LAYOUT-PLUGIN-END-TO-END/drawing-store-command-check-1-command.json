@@ -1,0 +1,31 @@
+{
+  "purpose": "unheld production compiler diagnostic; direct owner observations only, no full selected closure/source fit claim",
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "check",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/Cargo.toml",
+    "-p",
+    "semio-framework-os-store-command",
+    "--lib"
+  ],
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "5bf9029566eabb23f6663d1649b5b51ffff91517f0abe2fe471a2640428ae9bd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/🛬️receiving/🪜️cursor/🦀️.rs",
+      "sha256": "f14e0009d10371da00598c483e1a03eceaab82f5eab2fa73149280d57c77b262"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/💾️binary/🦀️.rs",
+      "sha256": "0966e73fcda28d4269200bbf946b1c05cd017648c8ad2607aa8850e8716de78d"
+    }
+  ]
+}

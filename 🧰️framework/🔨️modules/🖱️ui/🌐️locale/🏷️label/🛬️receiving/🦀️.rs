@@ -12,6 +12,5 @@ impl NativeReceiveMap<NativeLabelTerminologies> for LocalizedLabel{
 }
 impl<I:NativeValueSource+?Sized> NativeReceive<I> for LocalizedLabel{
  type Receiver=NativeMappedReceiver<I,NativeLabelTerminologies,Self>;
- fn receive_birth_demand()->semio_framework_value::RetirementDemand{Self::Receiver::birth().expect("localized label has one fixed original terminology ancestor")}
- fn begin_receive(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::Receiver,semio_framework_value::RetainedCloneProgress),ValueError>{Self::Receiver::begin(grant)}
+ fn receiver()->Self::Receiver{NativeMappedReceiver::new()}
 }

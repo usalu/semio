@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:trace:existing-api-zero-work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sourceCase",
+    "quantum",
+    "grant",
+    "expected",
+    "rules"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "sourceCase": {
+      "const": "single pixel"
+    },
+    "quantum": {
+      "const": 1
+    },
+    "grant": {
+      "const": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 0,
+        "maximumCapacityBytes": 0,
+        "maximumReleaseBytes": 0,
+        "maximumDepth": 0
+      }
+    },
+    "expected": {
+      "const": {
+        "work": 0,
+        "edges": 0
+      }
+    },
+    "rules": {
+      "const": {
+        "existingApiBeforeNewMethods": true,
+        "originalMaskBorrowUnchanged": true,
+        "primaryAndCleanupErrorsRetained": true,
+        "notHostSourceAuthority": true
+      }
+    }
+  }
+}

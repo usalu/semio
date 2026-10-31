@@ -1,0 +1,74 @@
+{
+  "state": "test-first-authored-not-run-no-production-edit",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️original/🦀️.rs",
+      "sha256": "06151b6e2a1471368138241c0c8b466b5cf48a3437c8aa31403398752d98c2bb",
+      "bytes": 8148
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️original/🔣️.json",
+      "sha256": "8474a846da6e0dbcd1a1cc85c41475918c47257b222d681cddd9be0badb7db2b",
+      "bytes": 893
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️original/📐️.json",
+      "sha256": "383890645112c78e3fd15493c360cd0ee24ed3a24c1823a7cf8c808f13eb7744",
+      "bytes": 2117
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧪️tests/🥣️companion/🦀️.rs",
+      "sha256": "ca019c04c51b3d6cffa81727af2fd894551a702970bd8a6d458984de6d1d3cf7",
+      "bytes": 2624
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "fa6b1b1c64e828f840fe79a823e03d9cb5b792bb7c7ebcbe1471fec9a9aab05a",
+      "bytes": 1965
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧪️tests/🎟️font/🦀️.rs",
+      "sha256": "0bd1517308b51e7a24867b2e211187b9968283fcae1ecca8f1fcdfeef9772485",
+      "bytes": 6426
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧪️tests/🦀️.rs",
+      "sha256": "aa3f463b31bb4a570f79fcc26872cccb51db90e39cc8d70e9bb396090134688a",
+      "bytes": 16879
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "fc617df767c474e4cc6b08dff77b3d9f57ef86a93fb88d164f5e4ddf73a7ee74",
+      "bytes": 2349
+    }
+  ],
+  "nativeTests": [
+    "original_vector_font_turn_posts_actual_receipt_and_cpu_once_on_success_error_and_block",
+    "original_export_blocked_font_reservation_returns_to_the_same_caller"
+  ],
+  "newNeutralCases": 2,
+  "genuineIssuer": "OriginalJobFixtureCaller + OriginalJobDecodeOwner",
+  "productionEdits": false,
+  "semanticRuns": 0,
+  "mounts": {
+    "scene": "existing scene-tests companion",
+    "export": "Drawing io cfg(test) owned serializer tests"
+  },
+  "existingTestBodyException": "canonical RetireOwned trait qualification only; no assertion/grant changes",
+  "finalErrorWitness": {
+    "case": "native-boundary-neutral-error",
+    "actualTurnOnly": true,
+    "positive": [
+      "copiedItems",
+      "cpu"
+    ],
+    "heapEqualsReceipt": true,
+    "exactMessage": true,
+    "errorOwnership": "No allocation requirement; preserve category/message, choose genuine funded payload ownership during implementation."
+  },
+  "heapChecks": {
+    "allMeasuredScopesRejectOverflow": true,
+    "emptyClosingDropZeroEffects": true,
+    "emptyProducerDropZeroEffects": true
+  }
+}

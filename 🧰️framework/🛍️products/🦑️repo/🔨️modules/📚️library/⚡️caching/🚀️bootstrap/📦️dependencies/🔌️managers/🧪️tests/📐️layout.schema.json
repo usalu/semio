@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "linker",
+    "recipeVersion",
+    "maximumPathUnits",
+    "package",
+    "resolution",
+    "generation",
+    "roots",
+    "bootstrapIncludesRecipe"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "linker": {
+      "const": "hoisted"
+    },
+    "recipeVersion": {
+      "const": 7
+    },
+    "maximumPathUnits": {
+      "const": 256
+    },
+    "package": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 214
+    },
+    "resolution": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "generation": {
+      "type": "string",
+      "pattern": "^j/[a-f0-9]{20}$"
+    },
+    "roots": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "platform",
+          "root",
+          "flatUnits",
+          "isolatedUnits"
+        ],
+        "properties": {
+          "platform": {
+            "enum": [
+              "darwin",
+              "linux",
+              "win32"
+            ]
+          },
+          "root": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "flatUnits": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256
+          },
+          "isolatedUnits": {
+            "type": "integer",
+            "minimum": 257,
+            "maximum": 512
+          }
+        }
+      }
+    },
+    "bootstrapIncludesRecipe": {
+      "const": true
+    }
+  }
+}

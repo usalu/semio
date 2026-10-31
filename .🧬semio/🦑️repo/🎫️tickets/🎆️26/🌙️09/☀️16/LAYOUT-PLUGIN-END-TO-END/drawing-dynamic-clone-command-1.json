@@ -1,0 +1,464 @@
+{
+  "state": "first unfiltered public dynamic clone test owner invocation",
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/Cargo.toml",
+    "-p",
+    "semio-framework-value-dynamic-clone-tests",
+    "--lib"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/dynamic-clone1",
+    "TMPDIR": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/dynamic-clone1/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/dynamic-clone1/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/dynamic-clone1/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/dynamic-clone1/tmp"
+  },
+  "files": [
+    {
+      "path": "\ud83d\udccb\ufe0fbuild-owners.json",
+      "sha256": "a1204d54c68e22dfb2adef479a4ce4a7b991b730f0b4dcffb599560ab886236e"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/Cargo.toml",
+      "sha256": "865173c2c46ce9b648bcba9b12b002f5a7482c191762c3d8aa0972b48d95aa55"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udce6\ufe0foriginal/\ud83e\udd80\ufe0f.rs",
+      "sha256": "f8ea305513019d5c9e0f1961c239c2a9d0121434bf8bb7d1d93a0491b6a1602a"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83c\udf9f\ufe0fwork/\ud83e\uddea\ufe0ftests/alias.json",
+      "sha256": "08a86048a6e7da22cabce51ae45f851cca6a46e0f1ed7c3c1178d8d2cb2d8921"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83c\udf9f\ufe0fwork/\ud83e\uddea\ufe0ftests/alias.schema.json",
+      "sha256": "4a952b65bb58a62dc0fc5b8180c080edd2efa4a04b9db24f54f8c45a58254d92"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83c\udf9f\ufe0fwork/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "70f591ef192f6fbcc7f159703aa17711f6a077920537fbf693292a59493e9083"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83c\udf9f\ufe0fwork/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "fd80d6a717d0e337df2beff572c306f107749d1bae752b7b783a9f82d0a89775"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83c\udf9f\ufe0fwork/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "eb478e402f697c5a5b295a0a41cd56c1ec0fb1b52b841c1b55e04f2630dd4ea0"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/Cargo.toml",
+      "sha256": "1c004b0d84541b7ed6104ee0cb4d519d825dd350c6031c0f8300ede25ea812af"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83d\udccb\ufe0fproject.json",
+      "sha256": "a4db1fdc4b71f5c16b93f28035b6c0a8d92bfd70e947ddb607d01f1c5dc82a29"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83d\ude9a\ufe0ffrontier/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "4ed3e45067d96e6bcbdc4f7de1d1ebae86b3b7a8bfa3b9e28b4ce4d6685f799e"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83d\ude9a\ufe0ffrontier/\ud83e\uddea\ufe0ftests/\ud83e\udd52\ufe0f.feature",
+      "sha256": "9dc5207dc1e421801e98e274c8162c07c1573037567ea8a8cf997e8351b3ee75"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83d\ude9a\ufe0ffrontier/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "dc2b5219fbb811add6cdefac4b51410e94695d53dedb0957d255a0afb32164c7"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83d\ude9a\ufe0ffrontier/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "3f54ef9645b882c5f8e63be1f3468e90c9fee481f0f815d8708bf472b234c03c"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83d\ude9a\ufe0ffrontier/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "329602de5dadbbda1bea6d10db07a5824de24159c94bdbfd3f99eb7aac585043"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83e\udd80\ufe0f.rs",
+      "sha256": "914936367822183c90b70314905ef05b2bd0189c94f05746aa2be0fb39798753"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "f39b10cf5be1d96d79e8739ef5d6fc2537f11dc02d5831d6b9f82f4d2e591826"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "424c5d5cb0308feda7bfb18027d2a7ce74795cf629ceed514235c28c0e623c33"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "7d7ffea7f9ac5e05582ec94cf177f817a3b23ac6d4cf95c43db2eb70f5967cc4"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83d\udd12\ufe0fsealed/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "012c54e838ca8da6fea5f194846d8aec8fd9682cc6f4af41b3c0c322c2c4fca6"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\u267b\ufe0fclose/\ud83c\udf9f\ufe0fdemand/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "b70d0952151275d518c1ab05fed2e55ca4d5e60961d86b0dd21b51a29b47bdbc"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\u267b\ufe0fclose/\ud83c\udf9f\ufe0fdemand/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "1882a1385e9e74196ba903685405f637798989aa3961b89efc3f601f72486363"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\u267b\ufe0fclose/\ud83c\udf9f\ufe0fdemand/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "fd794981ed18c5bc8e52c20bda03268048a5b4018cbbb3a9ea91bc5db1699dff"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\u267b\ufe0fclose/\ud83c\udf9f\ufe0fdemand/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "d0d3f543b9c5729d25f362d4f4945f53fbd9c689085ae491e2faf66a28ddb47a"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\u267b\ufe0fclose/\ud83c\udf9f\ufe0fdemand/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0fowner/\ud83e\udd80\ufe0f.rs",
+      "sha256": "161f36743ab66ac4b702b0353e5fc8d2c56a02eae033422f42979c44102c251a"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\u267b\ufe0fclose/\ud83c\udf9f\ufe0fdemand/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "6a3000efc30c5f57d0c83d6519dcf5d78865d508b6cfdcc0dc1c3a607f3a73fa"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\u267b\ufe0fclose/\ud83e\udd80\ufe0f.rs",
+      "sha256": "80c31d9c2587f27dead61564e6a307992db1aab68058bbbbde80353a4b284919"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\u267b\ufe0fclose/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "728fc8c5ab2c2166b17dfa449af43e4e394501e0919db8693e633638e1709a1b"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83c\udf31\ufe0fdynamic/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/Cargo.toml",
+      "sha256": "d65195581c314aad4fc5d923f5970e8f3b9a6def99a4589ab7e8f4479fc48381"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83c\udf31\ufe0fdynamic/\ud83e\udd80\ufe0f.rs",
+      "sha256": "6c6a1d3f1b65867dbe5bd2ab2a01462796fd3ab7f39d569b428444931b92c3c4"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83c\udf31\ufe0fdynamic/\ud83e\uddea\ufe0ftests/owner.rs",
+      "sha256": "67ef97c1cb09d5209f3f3e2d20aecb9422266c2a54bd4a68df6a35d326b20e12"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83c\udf31\ufe0fdynamic/\ud83e\uddea\ufe0ftests/private.rs",
+      "sha256": "61913f2f54ea2d4519a5528eca0beb299ba53e51f3fbfb38540441ded1b0b1ea"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83c\udf31\ufe0fdynamic/\ud83e\uddea\ufe0ftests/protocol.rs",
+      "sha256": "03f0d36b27faa33211e5c65ec9846b3f3dfb95bda76080f40708df6a5c2b2759"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83c\udf31\ufe0fdynamic/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "110f12253e659eafe0b7c099f719a8cc70c3953d667d7a05d40fad87d485acac"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83c\udf31\ufe0fdynamic/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/selected.json",
+      "sha256": "846f31871999052bb2bd919268903a637ab0d64926b7971177f4ad22b99460fd"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83c\udf31\ufe0fdynamic/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/selected.schema.json",
+      "sha256": "6a4d5797fc7c4ea8fdad1adb2f0459d379553934f7ade5c1b908592c47c7a7fd"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83c\udf31\ufe0fdynamic/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "daa9f7d6d62d5d89aa5145d3c1345a5ce604b2c2b8a78e8611dac692745cd2da"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udccb\ufe0ffield/\ud83e\udd80\ufe0f.rs",
+      "sha256": "56ca1c3acf92db2a8acb9c1002c5b91ffdbe8ef50782640cda681c1489d9091b"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udccb\ufe0fpaged-list/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+      "sha256": "4e7c50120a73a81512141c8a0d38cdd3c5c15b1c4961fbef2150e2820c6e1c09"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udccb\ufe0fpaged-list/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udce6\ufe0fcopy/\ud83d\udd23\ufe0f.json",
+      "sha256": "077879646bcc6bc28b6227b26e03bff93904a9930e0632aa2c59b00b82b3423e"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udccb\ufe0fpaged-list/\ud83e\uddea\ufe0ftests/\ud83e\uddec\ufe0fschema/\u267b\ufe0fspent-close.json",
+      "sha256": "35e56e522174447b87faa16a14a9b0c8676be395caddd06229673c32b2f680fe"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83c\udf9f\ufe0fwork/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "b348b56dca90b8e4003a4f1864198750d4a78fcc43254db8001321663fdc2846"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83c\udf9f\ufe0fwork/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "5f598d1086b6e8cd47a13f933d3afa65f035bdb8e7b6bdabe3a2a2b089fd745b"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83c\udf9f\ufe0fwork/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "389c6d5541ca2789905115d2f6a2c7d22ef694c6876faeda153a755bae8b160e"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/Cargo.toml",
+      "sha256": "48d39d600a3cc7847fa2979b01daf5741174c686d1a3f5fbdb89af530da404e4"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83d\udccb\ufe0fproject.json",
+      "sha256": "ab7b73e271f353bd7a30f4780e65b08df977cee0ae38f9177df9cf23e5d5f285"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83e\udd80\ufe0f.rs",
+      "sha256": "ffbbd5bb9f08ad43cc7ed18e312f035b6cd32c323220d860d60f55e591fc491b"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "833f5f6d213bdeb7e37fa77735f2990d1e317c0f675cc5486dfcea8f6f36afab"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\udd80\ufe0f.rs",
+      "sha256": "210ee46a9589a7857adbe93a3a372a0abf5f2cb11c9c5017ea233e8d12b6ba16"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftesting/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/Cargo.toml",
+      "sha256": "0cfc2d57fea808b2dcdf84f875c33941f00e23bee97ac6175d5c3c293851e45d"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftesting/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83d\udccb\ufe0fproject.json",
+      "sha256": "0d9af2172567f7283377cb734c8366933ad38e4e00939f21c1a74cbf0d4c8199"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftesting/\ud83e\udd80\ufe0f.rs",
+      "sha256": "bcdc7bf3ff23502f5df51bcaf292d3ae43ce29bbd145f05dbed3d85e54a1b707"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83c\udf9f\ufe0fheader/\ud83e\udd80\ufe0f.rs",
+      "sha256": "dcda611a2ea7e3b7eb41fc5653af71d263236008b96ff73854e805cee0072a27"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83c\udfed\ufe0ffactory/\ud83e\udd80\ufe0f.rs",
+      "sha256": "880bf9374c3dad5f0924e62e010621841222f3f1f86292a79682f7d1c6a791db"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83d\udccc\ufe0fretain/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "9e79bbab80b6b4082dae410cc29d5baea44622dd9cb336730a50ec3edbee46da"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83d\udccc\ufe0fretain/\ud83e\udd80\ufe0f.rs",
+      "sha256": "882e3026ac8fccf62431dc6f5b88c23db4f09d91d26367db9804b21a5ad74ac1"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83d\udccc\ufe0fretain/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "a8f595a534c9341764e9c5b301bf52bc7eac6b694be8ec48e6ea144cf3cd7e4b"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83d\udccc\ufe0fretain/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "7095d471ab549e4b7bc4835c6537bcf336172a50732edcfb21c6f85cfc3315a1"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fcustody/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "18a37b60aba151a6f7cd527fcc0c1b880834df52a0e40be7ce9d96eb6a8d3235"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fcustody/\ud83e\udd52\ufe0f.feature",
+      "sha256": "60d70bfebac108ba91b815b5b303f867175bb1c9b6d7c444e2d2bac9ad64e4c7"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fcustody/\ud83e\udd80\ufe0f.rs",
+      "sha256": "3fb76c22a2a7efc450ebb7103e67ef9a3f3f947909bf99a757a5ee9249066875"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fquery/\ud83e\udd80\ufe0f.rs",
+      "sha256": "d08645c1e7ed25335811eeb48927bc1b99d8495b2cc71a45ec2aa19940521422"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83d\udd2c\ufe0funit/\ud83e\udd80\ufe0f.rs",
+      "sha256": "cdac0d69d85034c0d8ab6762fa3e8068ee1bc6f1fc4857181fa46afe2389c8af"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83c\udf9f\ufe0fheader.json",
+      "sha256": "202cfa370319ed6e27620539566434c3f8396fd346405c759cd9b990d7f70a3d"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83c\udf9f\ufe0fowned-birth/\ud83d\udd23\ufe0f.json",
+      "sha256": "6f19973d91e4d5ac77751a7b6e6e804e210e9799d961de16bcf461893b1a0c80"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd10\ufe0fcustody.json",
+      "sha256": "7eb9f84e0e0f4caac9f9a6f4377c55ab258b239ea43b6003c2c28140337bd18d"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "290c8840375aeb6e8faef1c2b98b781f4891c90ceca8028f06bdd5f1b57abcc9"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddec\ufe0fschema/\ud83c\udf9f\ufe0fheader.json",
+      "sha256": "ca4f4247a2ab73a913b3b8f152430ce9f63212c336aa34cf92bdc496586c7826"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddec\ufe0fschema/\ud83c\udf9f\ufe0fowned-birth/\ud83d\udd23\ufe0f.json",
+      "sha256": "89d227d8fc3de53eb30199baa6cbd06a09237ce807ac90edda06d205696aeb2a"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddec\ufe0fschema/\ud83c\udf9f\ufe0fterminal-ticket.json",
+      "sha256": "5b0545636be5be8a71b227f4c171a8a384e8cdff19ced9fb6fd33dcef9252b1c"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\udd17\ufe0fsource/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "520e2056e0fda1f00146343ee08138637ff27803f1e957612c4f307bc7502f47"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83d\ude9a\ufe0fbulk-vec/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "5873f4b039ed1315e52d64425cb938eb810ce7406ea8f483911db2f4c784a130"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83c\udf81\ufe0foption-cursor/\ud83e\udd80\ufe0f.rs",
+      "sha256": "4fd362c70438cfed915866cc454d42dd07a908a33076ef3cb73369b5052ba890"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83c\udf9f\ufe0fwork/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "6448293252d69096a20113699b12fa66a08101a9dc38a3ca65818117e1dea46a"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udcda\ufe0fvec-cursor/\ud83e\udd80\ufe0f.rs",
+      "sha256": "091db56b854e192ce2f15e04750d30b531cdb47b374de3aeddf608d3f77beb2b"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udcdc\ufe0fclone-and-cursor-traits/\ud83e\udd80\ufe0f.rs",
+      "sha256": "4865023358421de27a3dceeea40f7e2abcd1ea17cd2578c8fa6bde67a35f4e66"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/Cargo.toml",
+      "sha256": "d4dd2d31ed48d0e7ccf122670aa607ddf7ff7cd1b1f2e88dd80ab4750dbc2734"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83d\udccb\ufe0fproject.json",
+      "sha256": "54ee243c5dbd6f7ff8f56a36bcea3c1faf722ac228de09ae7697d1b708c81abd"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/\ud83e\udd80\ufe0f.rs",
+      "sha256": "2ca299d3d5858015bc4616f7368b962fb51b33254114b588bf06eaacd846a94f"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udd17\ufe0falias/\ud83e\udd80\ufe0f.rs",
+      "sha256": "07cc03b269467ef40e8eb98359c9fefb1b4adc89561dfdf0d2b727df6b5c2cfd"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udd22\ufe0fscalar-cursor/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "ec86aa99ac0331b93de41d04dd48a0692ec6df6b8d3d0b2602dcd31a1125859f"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udd22\ufe0fscalar-cursor/\ud83e\udd80\ufe0f.rs",
+      "sha256": "050b4cd4132dea6a1f960f0251d2e1c4eff58a0eb341c6ef634ae141c08ae76a"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udd24\ufe0fstring-cursor/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "c0dba7594cde88721afb93375323cd5201f6b9d951c559f04f2138dbee0b06b3"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udd24\ufe0fstring-cursor/\ud83e\udd80\ufe0f.rs",
+      "sha256": "c4351d297dfd2684a0be572a852b1725aff1548e0ef44e197a26aa3f0f208beb"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udd24\ufe0fstring-cursor/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "a46cebf5227e89b35d0ec4178c8aebe1961bcd9c890770ae4a12463a12ccf21f"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udd24\ufe0fstring-cursor/\ud83e\uddea\ufe0ftests/\ud83e\udd52\ufe0f.feature",
+      "sha256": "9136dbcf6a5feedbc026912256fa03218287f9acf12a9e0deb048bd152434105"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udd24\ufe0fstring-cursor/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "45fe7b25e544cb06aecbb1ea21b80222c813fc1cc3ea6fdceb0ce27b352c6b6f"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udd24\ufe0fstring-cursor/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "81ec43903e40a3e22cb96976359bdfcaa1d96990f6a6815ff1724ea65410c0c4"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udd24\ufe0fstring-cursor/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "c520e7d45a668c1d1833974c119e8f447bc1df6f43202da151136a5ac5263a7c"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\uddc3\ufe0fbox-cursor/\ud83e\udd80\ufe0f.rs",
+      "sha256": "38d285b567ac2cb26f2a1f11bb6bcde6b8cc8c1b35926370d6010c4efdc7bccf"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "f95f594023d47fb96d34fdeca253a26e35f75ab1872ab9a30b3fe65f0fb7780a"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83e\udd80\ufe0f.rs",
+      "sha256": "76cdddff28fb4ab4da440662f3387642dee6656b3429f8423fe7346fd534da85"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83e\uddea\ufe0ftests/\u267b\ufe0fclose/\ud83c\udfaf\ufe0fdispatch/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "0d73d41b5e401a5b38f01c30660c5da818c8abc9bfab6be1ad0c7222e25ac4a8"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83e\uddea\ufe0ftests/\u267b\ufe0fclose/\ud83c\udfaf\ufe0fdispatch/\ud83e\udd80\ufe0f.rs",
+      "sha256": "4e539dc8fb6cb516bb0dae9d792da5c77b7be9264a7cd23e8368c1f0b17eb423"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83e\uddea\ufe0ftests/\u267b\ufe0fclose/\ud83c\udfaf\ufe0fdispatch/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "e8f074b44407a8b874e5bdae1d9f292b64698d5717c0c0b729cb763559050328"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83e\uddea\ufe0ftests/\u267b\ufe0fclose/\ud83c\udfaf\ufe0fdispatch/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "6478c5acba5c66001ce3d07a3659d287473d20bf787109f11c960d11e62a854f"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83e\uddea\ufe0ftests/\u267b\ufe0fclose/\ud83e\udd80\ufe0f.rs",
+      "sha256": "3b0769478c2b8bd9b6c44c5ede11ce2707b66b7d9f85fca9eb71acfe87f1638b"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "de5a3754e318649cae014680bd88e47b562047932e3db327614fa0ce8d36b61b"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83e\uddee\ufe0farray-cursor/\ud83e\udd80\ufe0f.rs",
+      "sha256": "e650b7c03e10a73bded90300569094444ccb3a7f0fa102f690c19b830341ece1"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddec\ufe0fcontract/\ud83e\uddf1\ufe0ftuple-cursors/\ud83e\udd80\ufe0f.rs",
+      "sha256": "b2d8df12e5a15768c570b728b707765d0b552be5d1d3b9a8b9da486b79636925"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddee\ufe0fscalar/\ud83e\uddea\ufe0ftests/\ud83c\udf10\ufe0flifecycle/\ud83e\udd80\ufe0f.rs",
+      "sha256": "1f861df8ed724d11f69e14fb37b87e29c6d9ec44e3f74561f8f4f839c7fd7b8f"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddee\ufe0fscalar/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "sha256": "f0612f5707acdd68589537887f9c80d8871f98cd338276b80d0620a8dfc75ddd"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddee\ufe0fscalar/\ud83e\uddea\ufe0ftests/\ud83e\udd52\ufe0f.feature",
+      "sha256": "cea9142474d89b219b29dca48ad1feee7c2501a1a42c63d4ca17cc6705ed00e3"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddee\ufe0fscalar/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "8d93dd686b32784f062abc11f3a4a31d0ef5e0517cde33ab5185c390a6e32eff"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddee\ufe0fscalar/\ud83e\uddea\ufe0ftests/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+      "sha256": "3b5352572bff0edf6107dae617f500fd7fc979ab95cc7a2acd3342fb4a4bc112"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddee\ufe0fscalar/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+      "sha256": "958609e3df4a0d470aa7dfff16a933cfbe0eb6bf6886b796bb6b1a47fa0fa85b"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddf3\ufe0fowner/\ud83e\udd80\ufe0f.rs",
+      "sha256": "32a9bb68eb41efa7ae35d1593d9ad7be3092eb34facb25370ce96407c36bd34f"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddfa\ufe0fstd-collections/\ud83e\uddea\ufe0ftests/\ud83c\udfaf\ufe0fdispatch/\ud83e\udd80\ufe0f.rs",
+      "sha256": "f1e189e82820ce388a5b2370802c3603310c1e10ae4ef92c57fb0124bae37d4a"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddec\ufe0fretained-clone/\ud83e\uddfa\ufe0fstd-collections/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+      "sha256": "101710a508328da0e90b784762648e46f955c2a8c082fc51c78d6971f1449ddf"
+    }
+  ],
+  "scope": "Complete published public dynamic clone lifecycle and selected/raw/cached close laws, existing physical allocator and Serde oracle."
+}

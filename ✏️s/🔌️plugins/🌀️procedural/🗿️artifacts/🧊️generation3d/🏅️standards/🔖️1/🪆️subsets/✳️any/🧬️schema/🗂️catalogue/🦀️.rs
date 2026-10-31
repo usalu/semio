@@ -11,7 +11,8 @@ fn is_false(value: &bool) -> bool {
 }
 
 /// 🗣️ A user-facing string in every supported language, English first and German second.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(deny_unknown_fields)]
 pub struct Localized {
     pub en: String,
     pub de: String,
@@ -28,7 +29,8 @@ impl Localized {
 }
 
 /// 🏷️ The fidelity of a kind: the kernel's operation quality for B-Rep kinds, the mesh fidelity for mesh kinds.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "kebab-case")]
 pub enum Quality {
     ExactAnalytic,
     ExactNumerical,
@@ -39,7 +41,8 @@ pub enum Quality {
 }
 
 /// 🔌️ The value type a port carries.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "kebab-case")]
 pub enum PortType {
     Number,
     Integer,
@@ -66,7 +69,8 @@ impl PortType {
 }
 
 /// 🧱️ The topological kind of a B-Rep shape.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "kebab-case")]
 pub enum ShapeKind {
     Solid,
     Shell,
@@ -80,7 +84,8 @@ pub enum ShapeKind {
 }
 
 /// 🎯️ The element type a selection port refers to; `Mode` follows the enum port named by `mode_from`.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "kebab-case")]
 pub enum SelectionComponent {
     Face,
     Edge,
@@ -89,7 +94,8 @@ pub enum SelectionComponent {
 }
 
 /// 🧲️ The sub-elements a selection port holds, taken from the shape or mesh on its source port.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Selection {
     pub component: SelectionComponent,
     pub source: String,
@@ -98,36 +104,43 @@ pub struct Selection {
 }
 
 /// 🔘️ One choice of an enum port.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(deny_unknown_fields)]
 pub struct EnumOption {
     pub value: String,
     pub label: Localized,
 }
 
-/// 🔌️ One input or output of a widget kind, with everything an inspector control needs.
-#[derive(Clone, Debug, PartialEq)]
+/// ⌨️ One input or output of a widget kind, with everything an inspector control needs.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Port {
     pub name: String,
     pub label: Localized,
     pub description: Localized,
+    #[value(rename = "type")]
     pub port_type: PortType,
     pub shape_kinds: Option<Vec<ShapeKind>>,
     pub selection: Option<Selection>,
+    #[value(default, skip_serializing_if = "is_false")]
     pub list: bool,
     pub min_items: Option<u32>,
     pub max_items: Option<u32>,
     pub default: Option<DslValue>,
     pub min: Option<f64>,
+    #[value(default, skip_serializing_if = "is_false")]
     pub exclusive_min: bool,
     pub max: Option<f64>,
     pub step: Option<f64>,
     pub unit: Option<String>,
     pub options: Option<Vec<EnumOption>>,
+    #[value(default, skip_serializing_if = "is_false")]
     pub optional: bool,
 }
 
 /// 👆️ The component a viewport pick delivers to a port.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "kebab-case")]
 pub enum PickComponent {
     Shape,
     Mesh,
@@ -136,15 +149,17 @@ pub enum PickComponent {
     Vertex,
 }
 
-/// 👆️ A picked component that seeds a port when the kind is applied to the pick.
-#[derive(Clone, Debug, PartialEq)]
+/// ⛏️ A picked component that seeds a port when the kind is applied to the pick.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(deny_unknown_fields)]
 pub struct Pick {
     pub component: PickComponent,
     pub port: String,
 }
 
 /// 🧭️ The gumball motion that drives a port.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "kebab-case")]
 pub enum GumballMotion {
     Translate,
     Rotate,
@@ -152,13 +167,15 @@ pub enum GumballMotion {
 }
 
 /// 📏️ The reference direction of a scalar translate motion.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "kebab-case")]
 pub enum Along {
     Normal,
 }
 
-/// 🧭️ A gumball motion mapped to the port it drives, with the ports that fix its axis and origin.
-#[derive(Clone, Debug, PartialEq)]
+/// 🍬️ A gumball motion mapped to the port it drives, with the ports that fix its axis and origin.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Gumball {
     pub motion: GumballMotion,
     pub port: String,
@@ -168,14 +185,18 @@ pub struct Gumball {
 }
 
 /// 🕹️ How a kind reacts to viewport picks and gumball motions.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(deny_unknown_fields)]
 pub struct Interaction {
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub pick: Vec<Pick>,
+    #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub gumball: Vec<Gumball>,
 }
 
 /// 🧩️ One geometry widget kind: its identity, texts, typed ports, fidelity and interaction hints.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Kind {
     pub id: String,
     pub category: String,
@@ -190,29 +211,30 @@ pub struct Kind {
 }
 
 impl Kind {
-    /// 🔌️ The input port with this name.
+    /// 📛️ The input port with this name.
     pub fn input(&self, name: &str) -> Option<&Port> {
         self.inputs.iter().find(|port| port.name == name)
     }
 
-    /// 🔌️ The output port with this name.
+    /// 🌀️ The output port with this name.
     pub fn output(&self, name: &str) -> Option<&Port> {
         self.outputs.iter().find(|port| port.name == name)
     }
 
-    /// 👆️ The pick hints, empty when the kind declares none.
+    /// 🫙️ The pick hints, empty when the kind declares none.
     pub fn picks(&self) -> &[Pick] {
         self.interaction.as_ref().map_or(&[], |interaction| &interaction.pick)
     }
 
-    /// 🧭️ The gumball hints, empty when the kind declares none.
+    /// 🌁️ The gumball hints, empty when the kind declares none.
     pub fn gumballs(&self) -> &[Gumball] {
         self.interaction.as_ref().map_or(&[], |interaction| &interaction.gumball)
     }
 }
 
-/// 🗂️ A palette category with its sort position and texts.
-#[derive(Clone, Debug, PartialEq)]
+/// ↕️ A palette category with its sort position and texts.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(deny_unknown_fields)]
 pub struct Category {
     pub id: String,
     pub emoji: String,
@@ -222,7 +244,8 @@ pub struct Category {
 }
 
 /// 📄️ One category file: the category and every kind it owns.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(deny_unknown_fields)]
 pub struct CategoryFile {
     pub category: Category,
     pub kinds: Vec<Kind>,
@@ -265,27 +288,27 @@ impl Catalogue {
         Ok(Self { categories: categories.into_iter().map(|(_, file)| file).collect(), index })
     }
 
-    /// 🗂️ The category files in palette order.
+    /// 🌂️ The category files in palette order.
     pub fn categories(&self) -> &[CategoryFile] {
         &self.categories
     }
 
-    /// 🗂️ The category with this id.
+    /// 🪪️ The category with this id.
     pub fn category(&self, id: &str) -> Option<&CategoryFile> {
         self.categories.iter().find(|file| file.category.id == id)
     }
 
-    /// 🧩️ Every kind in palette order.
+    /// 🌃️ Every kind in palette order.
     pub fn kinds(&self) -> impl Iterator<Item = &Kind> {
         self.categories.iter().flat_map(|file| file.kinds.iter())
     }
 
-    /// 🧩️ The kind with this id.
+    /// 🌄️ The kind with this id.
     pub fn kind(&self, id: &str) -> Option<&Kind> {
         self.index.get(id).map(|&(category, kind)| &self.categories[category].kinds[kind])
     }
 
-    /// 🔌️ The input or output port `name` of the kind `id`; inputs win when both exist.
+    /// 🌅️ The input or output port `name` of the kind `id`; inputs win when both exist.
     pub fn port(&self, id: &str, name: &str) -> Option<&Port> {
         let kind = self.kind(id)?;
         kind.input(name).or_else(|| kind.output(name))
@@ -574,7 +597,7 @@ fn check_kind(findings: &mut Vec<Finding>, file: &CategoryFile, kind: &Kind) {
     check_interaction(findings, kind);
 }
 
-/// 🔎️ Checks the catalogue laws the JSON schema cannot express: ids, texts, defaults within bounds, enum options, selection sources, interaction targets and unique emojis. An empty answer means the files are sound.
+/// ☑️ Checks the catalogue laws the JSON schema cannot express: ids, texts, defaults within bounds, enum options, selection sources, interaction targets and unique emojis. An empty answer means the files are sound.
 pub fn check(files: &[CategoryFile]) -> Vec<Finding> {
     let mut findings = Vec::new();
     let mut kind_ids: Vec<&str> = Vec::new();
@@ -603,7 +626,7 @@ pub fn check(files: &[CategoryFile]) -> Vec<Finding> {
 }
 
 impl Catalogue {
-    /// 🔎️ The findings of [`check`] over this catalogue's category files.
+    /// 🔦️ The findings of [`check`] over this catalogue's category files.
     pub fn findings(&self) -> Vec<Finding> {
         check(&self.categories)
     }

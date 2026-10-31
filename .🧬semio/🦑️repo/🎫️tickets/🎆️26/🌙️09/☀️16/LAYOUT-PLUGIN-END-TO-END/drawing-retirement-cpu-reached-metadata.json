@@ -1,0 +1,558 @@
+{
+  "scope": "API usage observation in previously captured literal files only; not a compiler closure or Source admission census",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/⚖️result/🦀️.rs",
+      "lines": [
+        32,
+        33,
+        36,
+        40,
+        41
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/⚖️result/🧪️tests/🦀️.rs",
+      "lines": [
+        11
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🌱️dynamic/🦀️.rs",
+      "lines": [
+        18
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🍃️leaf/🧪️tests/🦀️.rs",
+      "lines": [
+        5
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️tickets/🎯️selection/🦀️.rs",
+      "lines": [
+        17,
+        19
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️tickets/🦀️.rs",
+      "lines": [
+        18
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+      "lines": [
+        60,
+        233,
+        239,
+        241,
+        246,
+        247,
+        286,
+        287,
+        288
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🦀️.rs",
+      "lines": [
+        73
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️boxed/🦀️.rs",
+      "lines": [
+        27,
+        49,
+        61
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🦀️.rs",
+      "lines": [
+        46,
+        89
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧪️tests/🦀️.rs",
+      "lines": [
+        39,
+        51
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🚼️construction/🦀️.rs",
+      "lines": [
+        43
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🚼️construction/🧪️tests/🦀️.rs",
+      "lines": [
+        32
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs",
+      "lines": [
+        179,
+        191
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧪️tests/🦀️.rs",
+      "lines": [
+        23,
+        25,
+        27,
+        59,
+        98,
+        131,
+        136,
+        143,
+        148
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🦀️.rs",
+      "lines": [
+        54
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️box/🦀️.rs",
+      "lines": [
+        37
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️bytes/🧪️tests/🦀️.rs",
+      "lines": [
+        8
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🦀️.rs",
+      "lines": [
+        13
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🧪️tests/🦀️.rs",
+      "lines": [
+        26
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🏭️factory/🦀️.rs",
+      "lines": [
+        60
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🏭️factory/🧪️tests/🦀️.rs",
+      "lines": [
+        9,
+        11,
+        13
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🚚️frontier/🧪️tests/🦀️.rs",
+      "lines": [
+        12,
+        18,
+        27,
+        28,
+        36,
+        56
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs",
+      "lines": [
+        121,
+        124,
+        125,
+        127,
+        128,
+        130,
+        135
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🦀️.rs",
+      "lines": [
+        51,
+        78
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs",
+      "lines": [
+        109,
+        179,
+        236,
+        277,
+        303,
+        328,
+        351,
+        371,
+        404,
+        440,
+        441,
+        442,
+        444,
+        486,
+        511,
+        564,
+        588,
+        589,
+        590,
+        591,
+        620,
+        621,
+        622,
+        679,
+        697,
+        760
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs",
+      "lines": [
+        83,
+        88
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧬️clone/🦀️.rs",
+      "lines": [
+        62
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs",
+      "lines": [
+        36,
+        42,
+        473,
+        474,
+        475,
+        482,
+        502,
+        524,
+        546,
+        557,
+        558,
+        566,
+        569,
+        576,
+        577,
+        582,
+        585,
+        594,
+        597,
+        601,
+        604
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️shared-utf8/🧬️clone/🦀️.rs",
+      "lines": [
+        42
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📣️publication/🌳️root/♻️retirement/🦀️.rs",
+      "lines": [
+        21
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+      "lines": [
+        121
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/🦀️.rs",
+      "lines": [
+        39,
+        49
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔗️read/🦀️.rs",
+      "lines": [
+        103,
+        107
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔗️read/🧬️clone/🦀️.rs",
+      "lines": [
+        32
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️authority/🦀️.rs",
+      "lines": [
+        55,
+        71
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️lease/🦀️.rs",
+      "lines": [
+        49,
+        72
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/♻️retirement/🦀️.rs",
+      "lines": [
+        49,
+        51,
+        54,
+        91,
+        95
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🚦️native/🦀️.rs",
+      "lines": [
+        8,
+        20
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs",
+      "lines": [
+        314,
+        317,
+        326,
+        461,
+        464,
+        467,
+        567,
+        569,
+        571,
+        575,
+        585,
+        586,
+        596,
+        603
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧪️tests/🗂️ordered/🦀️.rs",
+      "lines": [
+        202,
+        243,
+        245,
+        259,
+        261,
+        288,
+        290,
+        504,
+        505,
+        542,
+        544,
+        572,
+        573,
+        592
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🦀️.rs",
+      "lines": [
+        34
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🧪️tests/🧺️set/🦀️.rs",
+      "lines": [
+        20,
+        31,
+        33,
+        48
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🛂️allocation/🧪️tests/🦀️.rs",
+      "lines": [
+        63
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🦀️.rs",
+      "lines": [
+        28
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🫴️recipient/🦀️.rs",
+      "lines": [
+        14,
+        22
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🦀️.rs",
+      "lines": [
+        22
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🦀️.rs",
+      "lines": [
+        32
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/♻️retirement/🦀️.rs",
+      "lines": [
+        15,
+        16
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🦀️.rs",
+      "lines": [
+        24,
+        25,
+        27,
+        35
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🧫️owner/🦀️.rs",
+      "lines": [
+        5
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🦀️.rs",
+      "lines": [
+        87,
+        88
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🔬️unit/🦀️.rs",
+      "lines": [
+        48,
+        50
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/♻️retirement/🦀️.rs",
+      "lines": [
+        18,
+        28
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs",
+      "lines": [
+        42
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🦀️.rs",
+      "lines": [
+        24,
+        130
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️query/🦀️.rs",
+      "lines": [
+        23
+      ],
+      "test": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/♻️retirement/🦀️.rs",
+      "lines": [
+        16
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs",
+      "lines": [
+        117
+      ],
+      "test": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧳️owner/🦀️.rs",
+      "lines": [
+        20
+      ],
+      "test": false
+    }
+  ]
+}

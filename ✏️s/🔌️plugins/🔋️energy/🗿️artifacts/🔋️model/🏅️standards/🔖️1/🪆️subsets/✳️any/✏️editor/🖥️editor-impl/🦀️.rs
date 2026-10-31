@@ -29,8 +29,8 @@ impl ArtifactEditor for EnergyModelEditor {
     const DIALECT: Dialect = MODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;
 
-    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::tool_contract::ArtifactBoundedFirstStepProof> {
-        ENERGY_MODEL_RETAINED_TOOL_IDS.iter().map(|tool| semio_framework_plugin::tool_contract::ArtifactBoundedFirstStepProof::new::<EditorApp<EnergyModelEditor>>(
+    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        ENERGY_MODEL_RETAINED_TOOL_IDS.iter().map(|tool| semio_framework_plugin::ArtifactBoundedFirstStepProof::new::<EditorApp<EnergyModelEditor>>(
             "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
             "s.energy.model@1/*#editor", "EnergyModelCommandJobFactory", tool, "energy.model", energy_model_contract(),
         ).with_factory_type::<EditorApp<EnergyModelEditor>, EnergyModelCommandJobFactory>()).collect()
@@ -47,7 +47,7 @@ impl ArtifactEditor for EnergyModelEditor {
         registry.register(EnergyModelCommandJobFactory::new(&controller))
     }
 
-    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{Some(&editor_commands::ENERGY_ORIGINAL_ACTION_FACTORY)}
+    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin::ArtifactOriginalCommandProducerFactory<Self::Command>>{Some(&editor_commands::ENERGY_ORIGINAL_ACTION_FACTORY)}
 
     fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original tool producer request is absent"))?;
@@ -180,7 +180,7 @@ impl ArtifactEditor for EnergyModelEditor {
         }
 }
 
-/// 🎨️ The one body dispatch both render entry points share, so the plain and the request-context
+/// 🧍️ The one body dispatch both render entry points share, so the plain and the request-context
 /// routes can never diverge.
 fn render_body(
     body_key: &str,
@@ -192,7 +192,7 @@ fn render_body(
     let node = match body_key {
         structure::BODY_KEY => structure::render(doc.snapshot)?,
         zones::BODY_KEY => zones::render(doc.snapshot)?,
-        simulation::BODY_KEY => simulation::render(doc.original_tool_run(), cfg.snapshot, &doc.snapshot.model, doc.snapshot.weather_link.as_ref(), view_state.locale),
+        simulation::BODY_KEY => simulation::render(doc.original_tool_run(), cfg.snapshot, doc.snapshot.model.read().run_period, doc.snapshot.weather_link.get().as_ref(), view_state.locale),
         model_window::BODY_KEY => {
             let energy=doc.original_tool_run().filter(|run|run.tool_id==crate::editor_edit::tools::simulation::TOOL_ID).and_then(|run|run.payload).and_then(crate::editor_results::indexed::IndexedEnergyResults::new);
             model_window::render_indexed(&doc.snapshot.model.read(),interaction,energy.as_ref(),crate::editor_config::result_field(cfg.snapshot),view_state.locale,model_window::config::current(cfg))?

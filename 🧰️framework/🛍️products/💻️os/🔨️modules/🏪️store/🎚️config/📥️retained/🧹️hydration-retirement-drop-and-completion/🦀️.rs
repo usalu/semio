@@ -73,7 +73,7 @@ where
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.retirement_demands(copy).map(|demand| demand.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.retirement_demands(0).map(|demand| demand.release_bytes) }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { self.retirement_demands(0).map(|demand| demand.depth) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_close}};
         use semio_framework_value::retirement::controlled::admit_typed_controlled_retirement;
         let empty = RetainedCloneProgress::default();
@@ -252,7 +252,7 @@ where
         admit_retained_clone_close(child, step, terminal, "original config catalog")?;
         if terminal { drop(self.owners.take()); self.terminal = true; }
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
-    }
+    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
 
     fn terminal_is_empty(&self) -> bool {
         self.terminal

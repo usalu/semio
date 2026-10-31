@@ -26,6 +26,8 @@ path = "🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-framework-value-native-storage = { path = "../../📦️storage/📦️packages/🦀️rust" }
+semio-framework-value-native-default = { path = "../../📥️default/📦️packages/🦀️rust" }
 semio-framework-value-ordered = { path = "../../../../🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-intrinsic = { path = "../../../../🌳️intrinsic/📦️packages/🦀️rust" }
@@ -43,5 +45,29 @@ serde_json = { workspace = true }
 serde = { workspace = true }
 
 [[test]]
+name = "record_source"
+path = "../../🧩️record/🧪️tests/🦀️.rs"
+
+[[test]]
 name = "set_receiving"
 path = "../../🧺️set/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "native_work"
+path = "../../🎟️work/🧪️tests/📖️public/🦀️.rs"
+
+[[test]]
+name = "native_fields"
+path = "../../🧪️tests/📖️public/🦀️.rs"
+
+[[test]]
+name = "native_mapping"
+path = "../../🔄️map/🧪️tests/📖️public/🦀️.rs"
+
+[[test]]
+name = "native_sequence"
+path = "../../🌳️value/👥️tuple/🧪️tests/📖️public/🦀️.rs"
+
+[[test]]
+name = "native_shared"
+path = "../../🔗️sealed-shared-receiver/🧪️tests/📖️public/🦀️.rs"

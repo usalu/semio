@@ -24,6 +24,7 @@ semio-framework-ui-locale = { path = "../../../../../../../../../../../🧰️fr
 semio-framework-schema-registry = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-2d-compute = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-deflate = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
 semio-framework-async = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

@@ -1,0 +1,9 @@
+# Native Coverage Defining Funding Source
+
+After the recorded closed contract and actual owning laws, Root authored canonical allocation-free new(ownedInput)->Self and same-ledger advance with absolute demand, separate actual CPU/semantic completion, cached typed failure, cancellation and inline controlled retirement. Validation and mask/area initialization are resumable. Actual mask zeroing, area writes/reset, edge/event/position/index/active/copy storage, sort-target preparation and merge writes are funded before effects. Vec growth is geometric within unchanged fixed geometry limits.
+
+Merge-sort target backing is reused through a resident scratch owner; successful sorting no longer drops an ungranted scratch Vec. Transfers move both original source and scratch custody explicitly without cloning payload or fabricating header-copy bytes. The raster math/event ordering/winding/integration code is preserved.
+
+All prior tests/cases/assertions must be hand-migrated to the canonical API and same finite wallet; actual AffineImage and PathRaster callers must pass the same ledger. No into_result or allocating numeric constructor convenience remains. Existing phase and output/refusal/cancel/retirement semantics remain required. This file is Source-authored only: no Source-fit, compiler or runtime claim. Coverage schema/tests preceded production; PathRaster/PreparedFill and broader lower closure remain unfinished.
+
+Pixels owning tests use their actual custom System allocator observer, through the shared Wallet observer-injection interface; no empty Trace observation is substituted. Its existing observation signature is preserved while allocator counters now record overflow and assert it after the actual measured body. The first-party trace devdependency supports the shared helper only; actual Pixels measurement remains its own observer. No runtime library was added and no tests ran.

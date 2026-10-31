@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "sameBankForSourcesComparisonAndClose",
+    "quoteBodyBytes",
+    "maximumTurns",
+    "caseValuesUnchanged"
+  ],
+  "properties": {
+    "stock": {
+      "const": {
+        "items": 4096,
+        "copy": 16777216,
+        "capacity": 16777216,
+        "release": 16777216,
+        "depth": 128
+      }
+    },
+    "sameBankForSourcesComparisonAndClose": {
+      "const": true
+    },
+    "quoteBodyBytes": {
+      "const": 257
+    },
+    "maximumTurns": {
+      "const": 10000
+    },
+    "caseValuesUnchanged": {
+      "const": true
+    }
+  }
+}

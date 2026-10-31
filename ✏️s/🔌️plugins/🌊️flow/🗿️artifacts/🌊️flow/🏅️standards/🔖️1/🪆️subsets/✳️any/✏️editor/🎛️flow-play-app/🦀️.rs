@@ -96,11 +96,11 @@ impl ArtifactEditor for FlowPlayApp {
     }
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
-        let mut proofs = FlowDirectStoreJobFactoryProofs::bounded_first_step_tool_proofs();
-        proofs.extend(FlowHostEffectJobFactoryProofs::bounded_first_step_tool_proofs());
-        proofs.extend(FlowChildGroupJobFactoryProofs::bounded_first_step_tool_proofs());
-        proofs.extend(FlowGraphOperationJobFactoryProofs::bounded_first_step_tool_proofs());
-        proofs.extend(FlowContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
+        let mut proofs = FlowDirectStoreJobFactoryProofs::proofs();
+        proofs.extend(FlowHostEffectJobFactoryProofs::proofs());
+        proofs.extend(FlowChildGroupJobFactoryProofs::proofs());
+        proofs.extend(FlowGraphOperationJobFactoryProofs::proofs());
+        proofs.extend(FlowContributionsJobFactoryProofs::proofs());
         proofs
     }
 
@@ -148,15 +148,15 @@ impl ArtifactEditor for FlowPlayApp {
                     FLOW_GRAPH_OPERATION_CAPACITY.work_items()
                 } else {
                     FLOW_STORE_MAX_MUTATION_ITEMS
-                }, false, |request| if FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
-                Box::new(FlowContributionsWork::new(request.instance_operation_owner))
+                }, false, |request| -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>>> { if FLOW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id) {
+                Box::new(FlowContributionsWork::new(request.instance_operation_owner.clone()))
             } else if FLOW_CHILD_GROUP_TOOL_IDS.contains(&tool_id) {
-                Box::new(FlowChildGroupWork::new(tool_id, request.instance_operation_owner))
+                Box::new(FlowChildGroupWork::new(tool_id, request.instance_operation_owner.clone()))
             } else if FLOW_GRAPH_OPERATION_TOOL_IDS.contains(&tool_id) {
-                Box::new(FlowGraphOperationWork::new(tool_id, request.instance_operation_owner))
+                Box::new(FlowGraphOperationWork::new(tool_id, request.instance_operation_owner.clone()))
             } else {
                 Box::new(FlowDirectStoreWork::new(tool_id))
-            });
+            } });
         }
         flow_build_host_only_job(request, output, cx)
     }
@@ -352,7 +352,7 @@ impl ArtifactEditor for FlowPlayApp {
     /// `transient read registry is busy or exhausted` in ~3 s and the shell down with it, measured on
     /// :6016 (ticket 26/09/18 §5.3). Latches of windows that have left the roster are dropped here,
     /// because a detached window's latch can never be discharged by a hop.
-    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
+    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin::ArtifactPendingView<'_, FlowSnapshot>, cfg: &ConfigView<'_, NoConfig>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<Effect> {
         let windows: Vec<(String, String)> = view
             .map(|view| view.window_instances.iter().filter(|window| window.window_kind_id == FLOW_PLAY_WINDOW_MAIN).map(|window| (window.id.clone(), window.window_kind_id.clone())).collect())
             .unwrap_or_default();
@@ -388,7 +388,7 @@ impl ArtifactEditor for FlowPlayApp {
             FLOW_PLAY_BODY_GENERATE_FORM => form::render(snapshot, &config, &transient, labels).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_ARTIFACT => document_panel::render(snapshot, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
-            FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(snapshot, &config, &mut session, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree),
+            FLOW_PLAY_BODY_CATALOGUE => catalogue_panel::render(&config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree),
             FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_INSPECTOR)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         };
@@ -424,7 +424,7 @@ impl ArtifactEditor for FlowPlayApp {
                     FLOW_PLAY_BODY_GENERATE_PREVIEW => preview::render(&transient).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_ARTIFACT => document_panel::render(&composed, flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_ARTIFACT)).map(semio_framework_plugin::built_to_component_tree),
                     FLOW_PLAY_BODY_CATALOGUE => {
-                        catalogue_panel::render(&composed, &config, session, flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree)
+                        catalogue_panel::render(&config, flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_CATALOGUE)).map(semio_framework_plugin::built_to_component_tree)
                     }
                     FLOW_PLAY_BODY_INSPECTOR => inspection_panel::render(flow_play_labels(view_state), &semio_framework_plugin::TreeWindows::for_body(view_state, FLOW_PLAY_BODY_INSPECTOR)).map(semio_framework_plugin::built_to_component_tree),
                     _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),

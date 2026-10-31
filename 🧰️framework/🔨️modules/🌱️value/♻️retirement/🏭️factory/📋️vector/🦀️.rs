@@ -44,10 +44,8 @@ impl<T: Send + 'static> FactoryVectorRetirement<T> {
     /// 📏️ Quotes one next row capture, exact provider birth, child close or paid backing release.
     pub fn demands(&self, factory: &dyn ArtifactOwnedValueRetirementFactory<T>, maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> {
         self.check_issuer(factory)?;
-        let capture=if self.issuer.is_none()&&!self.terminal_is_empty(){FactoryIssuerIdentity::<T>::capture_copy_bytes()}else{0};
-        let mut demand=self.owner_demands(factory,maximum_copy_bytes.saturating_sub(capture))?;
-        demand.copy_bytes=demand.copy_bytes.checked_add(capture).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"original issuer capture extent overflow"))?;
-        Ok(demand)
+        if self.issuer.is_none()&&!self.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:FactoryIssuerIdentity::<T>::capture_copy_bytes(),depth:1,..Default::default()})}
+        self.owner_demands(factory,maximum_copy_bytes)
     }
 
     fn owner_demands(&self, factory: &dyn ArtifactOwnedValueRetirementFactory<T>, maximum_copy_bytes: usize) -> Result<RetirementDemand, ValueError> {
@@ -64,16 +62,16 @@ impl<T: Send + 'static> FactoryVectorRetirement<T> {
     }
 
     /// 🪜️ Reads original row order once, restores provider refusals and releases only empty paid backing.
-    pub fn close_step(&mut self, factory: &dyn ArtifactOwnedValueRetirementFactory<T>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, factory: &dyn ArtifactOwnedValueRetirementFactory<T>, grant: RetainedCloneGrant) ->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
         let demand = self.demands(factory, grant.maximum_copy_bytes)?;
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if !fits(demand, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if self.issuer.is_none(){self.issuer=Some(FactoryIssuerIdentity::capture(factory));}
+        if self.issuer.is_none(){self.issuer=Some(FactoryIssuerIdentity::capture(factory));work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active.is_some() { return close_factory_ticket(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { let turn=close_factory_ticket(&mut self.active,child);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress())); }
         if let Some(row) = self.pending.take() {
             let child = RetainedCloneGrant { maximum_copy_bytes: child.maximum_copy_bytes - demand.copy_bytes, ..child };
-            return match factory.retire_owned(row, child) {
+            let turn=factory.retire_owned(row,child);work=turn.work;return match turn.result {
                 Ok((active, mut progress)) => {
                     *self.active = Some(active);
                     progress.copied_bytes = progress.copied_bytes.checked_add(demand.copy_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::WorkLimit,"original vector provider copy receipt overflow"))?;
@@ -91,12 +89,12 @@ impl<T: Send + 'static> FactoryVectorRetirement<T> {
         }
         let remaining = self.remaining.as_mut().expect("original vector backing retained");
         if let Some(row) = remaining.next() {
-            *self.pending = Some(row);
+            *self.pending = Some(row);work=1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
-        drop(self.remaining.take());
+        drop(self.remaining.take());work=1;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: self.allocation_bytes, ..Default::default() }))
-    }
+    })();crate::RetainedWorkOutcome{result,work}}
 
     /// 🫙️ No hidden iterator capacity, original row or child ticket remains at terminal.
     pub fn terminal_is_empty(&self) -> bool { self.remaining.is_none() && self.pending.is_none() && self.active.is_none() }

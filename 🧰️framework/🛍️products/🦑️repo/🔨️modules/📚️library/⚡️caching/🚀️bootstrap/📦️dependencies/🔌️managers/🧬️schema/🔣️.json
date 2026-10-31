@@ -51,6 +51,7 @@
           "material"
         ],
         "bootstrapKeyShape": [
+          "recipe",
           "fields",
           "runtime",
           "platform",

@@ -1,3 +1,4 @@
+use semio_s_artifact_procedural_3d_geometry_compute::testing::step_with_fuel;
 use super::*;
 use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
 use semio_s_artifact_procedural_3d_geometry_value::PlaneValue;
@@ -65,9 +66,9 @@ fn cancelling_a_split_midway_ends_in_the_cancelled_fault() {
     let values = BTreeMap::from([("solid".to_string(), GeometryValue::Shape(cube(2.0))), ("plane".to_string(), GeometryValue::Plane(PlaneValue { origin: [1.0, 0.0, 0.0], normal: [1.0, 0.0, 0.0] }))]);
     let entry = COMPUTES.iter().find(|entry| entry.id == kind.id).expect("registered");
     let mut job = (entry.start)(kind, WidgetInputs::new_cold("w", kind, values));
-    assert!(matches!(job.step(1), WidgetStep::Working { .. }));
+    assert!(matches!(step_with_fuel(&mut *job, 1), WidgetStep::Working { .. }));
     job.cancel();
-    let WidgetStep::Done(evaluation) = job.step(1) else { panic!("finished") };
+    let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 1) else { panic!("finished") };
     assert_eq!(evaluation.fault.expect("fault").code, "generation3d.geometry.cancelled");
 }
 

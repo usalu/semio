@@ -106,8 +106,5 @@ fn topological_sort(nodes: Vec<String>, edges: Vec<(String, String)>) -> LayoutT
 }
 //#endregion 🔖️Compute
 
-#[cfg(test)]
-//#region 🧪️Tests
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests

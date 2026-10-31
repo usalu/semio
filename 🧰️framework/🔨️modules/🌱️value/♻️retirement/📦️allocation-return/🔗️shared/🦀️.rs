@@ -1,0 +1,21 @@
+//! 🔗️ Fallible shared storage reports actual allocator attempts and preserves refused input.
+pub use std::sync::Arc as SharedAllocation;
+use std::sync::Arc;
+use semio_framework_value_control_contract::{RetainedCloneGrant,RetainedCloneProgress,RetainedWorkOutcome,ValueError,ValueRefusalKind};
+
+/// 📏️ Measures the standard shared allocation including its aligned strong and weak counters.
+pub fn shared_allocation_bytes<T>()->usize{std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<T>()).expect("shared allocation layout").0.pad_to_align().size()}
+
+/// 🧰️ Allocates one genuine shared header and returns the exact original input on refusal.
+pub fn admit_shared_allocation<T>(value:T,grant:RetainedCloneGrant)->RetainedWorkOutcome<(SharedAllocation<T>,RetainedCloneProgress),(ValueError,T)>{
+ let kind=if grant.maximum_items==0{Some(ValueRefusalKind::WorkLimit)}else if grant.maximum_depth==0{Some(ValueRefusalKind::DepthLimit)}else if grant.maximum_capacity_bytes<shared_allocation_bytes::<T>(){Some(ValueRefusalKind::OwnershipLimit)}else{None};
+ if let Some(kind)=kind{return RetainedWorkOutcome{result:Err((ValueError::literal(kind,"shared allocation birth is not funded"),value)),work:0}}
+ let mut storage=match Arc::<T>::try_new_uninit(){Ok(storage)=>storage,Err(_)=>return RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::AllocationFailed,"shared allocation failed"),value)),work:1}};
+ Arc::get_mut(&mut storage).expect("new shared storage is unique").write(value);
+ let owner=unsafe{storage.assume_init()};
+ RetainedWorkOutcome{result:Ok((owner,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:shared_allocation_bytes::<T>(),..Default::default()})),work:1}
+}
+
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

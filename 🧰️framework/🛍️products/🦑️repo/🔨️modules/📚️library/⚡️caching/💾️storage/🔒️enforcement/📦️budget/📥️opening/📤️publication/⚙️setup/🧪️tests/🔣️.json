@@ -1,0 +1,338 @@
+{
+  "version": 1,
+  "preparation": [
+    {
+      "id": "actual-data-purpose",
+      "change": "none",
+      "accept": true
+    },
+    {
+      "id": "caller-target-bytes",
+      "change": "targetBytes",
+      "accept": false
+    },
+    {
+      "id": "ordinary-sync-purpose",
+      "change": "purpose",
+      "accept": false
+    },
+    {
+      "id": "parent-wait",
+      "change": "wait",
+      "accept": false
+    },
+    {
+      "id": "caller-funding-row",
+      "change": "allocation",
+      "accept": false
+    },
+    {
+      "id": "copied-authority-field",
+      "change": "authority",
+      "accept": false
+    }
+  ],
+  "recovery": [
+    {
+      "id": "current-envelope-old-charge",
+      "envelope": "current",
+      "intent": false,
+      "funding": "old",
+      "publication": false,
+      "reconcile": true
+    },
+    {
+      "id": "current-envelope-pending",
+      "envelope": "current",
+      "intent": true,
+      "funding": "current",
+      "publication": true,
+      "reconcile": true
+    },
+    {
+      "id": "current-envelope-reserved",
+      "envelope": "current",
+      "intent": false,
+      "funding": "reserved",
+      "publication": false,
+      "reconcile": true
+    },
+    {
+      "id": "current-settled-marker-old",
+      "envelope": "current",
+      "intent": false,
+      "funding": "settled-marker-old",
+      "publication": false,
+      "reconcile": true
+    },
+    {
+      "id": "current-fully-funded",
+      "envelope": "current",
+      "intent": false,
+      "funding": "current",
+      "publication": false,
+      "reconcile": false
+    },
+    {
+      "id": "old-envelope-old-charge",
+      "envelope": "old",
+      "intent": false,
+      "funding": "old",
+      "publication": true,
+      "reconcile": true
+    }
+  ],
+  "markers": [
+    {
+      "id": "actual-marker",
+      "change": "none",
+      "accept": true
+    },
+    {
+      "id": "foreign-owner",
+      "change": "owner",
+      "accept": false
+    },
+    {
+      "id": "caller-authority",
+      "change": "authority",
+      "accept": false
+    },
+    {
+      "id": "fractional-funding",
+      "change": "bytes",
+      "accept": false
+    },
+    {
+      "id": "extra-prototype",
+      "change": "__proto__",
+      "accept": false
+    }
+  ],
+  "resume": [
+    {
+      "id": "all-absent",
+      "roots": [
+        false,
+        false
+      ],
+      "ready": [
+        false,
+        false
+      ],
+      "mode": "fresh"
+    },
+    {
+      "id": "staging-cut",
+      "roots": [
+        true,
+        false
+      ],
+      "ready": [
+        false,
+        false
+      ],
+      "mode": "unready"
+    },
+    {
+      "id": "all-staged-no-ready",
+      "roots": [
+        true,
+        true
+      ],
+      "ready": [
+        false,
+        false
+      ],
+      "mode": "unready"
+    },
+    {
+      "id": "partial-ready-cut",
+      "roots": [
+        true,
+        true
+      ],
+      "ready": [
+        true,
+        false
+      ],
+      "mode": "ready"
+    },
+    {
+      "id": "all-ready-partial-alias-cut",
+      "roots": [
+        true,
+        true
+      ],
+      "ready": [
+        true,
+        true
+      ],
+      "mode": "ready"
+    }
+  ],
+  "markerPublication": [
+    {
+      "id": "prepared-before-target-mutation",
+      "phase": "prepared",
+      "target": "prior",
+      "retained": "stage",
+      "accept": true
+    },
+    {
+      "id": "new-target-before-retained-cleanup",
+      "phase": "prepared",
+      "target": "current",
+      "retained": "stage",
+      "accept": true
+    },
+    {
+      "id": "windows-old-displaced",
+      "phase": "prepared",
+      "target": "absent",
+      "retained": "reserved-name",
+      "accept": true
+    },
+    {
+      "id": "foreign-backing-intent",
+      "phase": "foreign-backing",
+      "target": "current",
+      "retained": "stage",
+      "accept": false
+    },
+    {
+      "id": "copied-stage-inode",
+      "phase": "copied-stage",
+      "target": "current",
+      "retained": "stage",
+      "accept": false
+    },
+    {
+      "id": "unrelated-root",
+      "phase": "foreign-root",
+      "target": "prior",
+      "retained": "stage",
+      "accept": false
+    },
+    {
+      "id": "unprepared-unknown-stage",
+      "phase": "no-intent",
+      "target": "prior",
+      "retained": "unknown",
+      "accept": false
+    }
+  ],
+  "intentCodec": [
+    {
+      "id": "actual-settled-event",
+      "change": "none",
+      "accept": true
+    },
+    {
+      "id": "reserved-association",
+      "change": "phase",
+      "accept": false
+    },
+    {
+      "id": "undercharged-settled-event",
+      "change": "bytes",
+      "accept": false
+    },
+    {
+      "id": "foreign-owner",
+      "change": "owner",
+      "accept": false
+    },
+    {
+      "id": "unbound-prior-marker",
+      "change": "context",
+      "accept": false
+    },
+    {
+      "id": "wrong-prepared-content",
+      "change": "sha256",
+      "accept": false
+    },
+    {
+      "id": "data-claims-authority",
+      "change": "authority",
+      "accept": false
+    }
+  ],
+  "fundingReadiness": [
+    {
+      "presence": "absent",
+      "accept": true
+    },
+    {
+      "presence": "present",
+      "accept": false
+    },
+    {
+      "presence": "unreadable",
+      "accept": false
+    }
+  ],
+  "markerJournal": [
+    {
+      "id": "durable-reservation-before-stage",
+      "change": "baseline",
+      "accept": true
+    },
+    {
+      "id": "prepared-after-durable-reservation",
+      "change": "prepared",
+      "accept": true
+    },
+    {
+      "id": "complete-reservation-unprepared-stage",
+      "change": "unprepared-stage",
+      "accept": true
+    },
+    {
+      "id": "foreign-stage-name",
+      "change": "foreign-plan",
+      "accept": false
+    },
+    {
+      "id": "foreign-allocation-association",
+      "change": "foreign-allocation",
+      "accept": false
+    },
+    {
+      "id": "foreign-prior-cas",
+      "change": "foreign-prior",
+      "accept": false
+    },
+    {
+      "id": "unknown-third-record",
+      "change": "extra-record",
+      "accept": false
+    },
+    {
+      "id": "partial-prepared-record-retained",
+      "change": "partial-record",
+      "accept": false
+    }
+  ],
+  "initializationDispatch": [
+    {
+      "id": "proved-current-empty-uses-existing-allocator",
+      "current": true,
+      "pending": false,
+      "accept": true
+    },
+    {
+      "id": "stale-empty-is-not-current-initializer",
+      "current": false,
+      "pending": false,
+      "accept": false
+    },
+    {
+      "id": "pending-empty-needs-canonical-owner",
+      "current": true,
+      "pending": true,
+      "accept": false
+    }
+  ]
+}

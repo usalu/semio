@@ -1,8 +1,8 @@
 //! ✅️ The analysis.check widget computes: validity and watertightness of a shape, its topology counts, the interference of two solids and the quality of a mesh.
 //!
 //! A check answers with facts, never with a repaired shape: every finding the kernel reports is carried in the `report` text. The interference
-//! of two solids runs the kernel's exact intersection as a stepped job (one operand pair at a time, the boolean advanced with the fuel it is
-//! granted); the other checks are staged units over the shape's own arena, so no check touches a kernel session it does not need.
+//! of two solids runs the kernel's exact intersection as a stepped job (one operand pair at a time, the boolean advanced under the caller's
+//! `StepContext`); the other checks are staged units over the shape's own arena, so no check touches a kernel session it does not need.
 //!
 //! 🔗️ [Euler characteristic](https://en.wikipedia.org/wiki/Euler_characteristic) · [Manifold](https://en.wikipedia.org/wiki/Manifold) · [Watertight mesh](https://en.wikipedia.org/wiki/Polygon_mesh)
 #![allow(clippy::result_large_err)]
@@ -19,6 +19,7 @@ use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
 use semio_s_artifact_procedural_3d_geometry_compute::KernelSession;
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
+use semio_s_artifact_procedural_3d_geometry_compute::{spend, unfunded, OriginalTurnFailure, StepContext, StepFault};
 use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
 use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
 use semio_s_artifact_procedural_3d_geometry_value::outputs;
@@ -189,19 +190,18 @@ impl Interference {
         Ok(Stage::Pairs { pairs, next: 0, running: None, results: Vec::new(), floor })
     }
 
-    /// 🔀️ Starts or advances the intersection of the next pair with `grant` units; a pair with no common volume counts as done.
-    fn intersect(&mut self, pairs: Vec<(GeometryHandle, GeometryHandle)>, mut next: usize, mut running: Option<BrepBooleanJob>, mut results: Vec<GeometryHandle>, floor: f64, grant: usize) -> Result<Advance, WidgetFault> {
+    /// 🔀️ Starts or advances the intersection of the next pair under `cx`; a pair with no common volume counts as done.
+    fn intersect(&mut self, pairs: Vec<(GeometryHandle, GeometryHandle)>, mut next: usize, mut running: Option<BrepBooleanJob>, mut results: Vec<GeometryHandle>, floor: f64, cx: &mut StepContext<'_>) -> Result<Advance, StepFault> {
         let Some((a, b)) = pairs.get(next).cloned() else { return Ok(Advance::Continue(Stage::Conclude { results, floor })) };
         let outcome = match running.take() {
-            Some(mut job) => match self.session.brep().step_boolean_job_sync(&mut job, grant).map_err(|error| kernel_fault(&error)) {
-                Ok(BrepBooleanStep::Working(progress)) => {
+            Some(mut job) => match self.session.brep().step_boolean_job_sync(&mut job, cx)? {
+                BrepBooleanStep::Working(progress) => {
                     let fraction = progress.units_done as f32 / progress.units_total.max(1) as f32;
                     let stage = Stage::Pairs { pairs, next, running: Some(job), results, floor };
                     return Ok(Advance::Pending(stage, (next as f32 + fraction.min(1.0)) / (next + 1) as f32));
                 }
-                Ok(BrepBooleanStep::Ready(handle)) => Ok(Some(handle)),
-                Ok(BrepBooleanStep::Cancelled(_)) => return Err(cancelled()),
-                Err(fault) => Err(fault),
+                BrepBooleanStep::Ready(handle) => Ok(Some(handle)),
+                BrepBooleanStep::Cancelled(_) => return Err(cancelled().into()),
             },
             None => match self.session.brep().boolean_job_sync(&a, &b, BooleanOp::Intersect).map_err(|error| kernel_fault(&error)) {
                 Ok(BrepBooleanAdmission::Answered(handle)) => Ok(Some(handle)),
@@ -215,7 +215,7 @@ impl Interference {
             Ok(Some(handle)) => results.push(handle),
             Ok(None) => {}
             Err(fault) if is_empty_intersection(&fault) => {}
-            Err(fault) => return Err(fault),
+            Err(fault) => return Err(fault.into()),
         }
         next += 1;
         Ok(Advance::Continue(Stage::Pairs { pairs, next, running: None, results, floor }))
@@ -234,42 +234,45 @@ impl Interference {
                 [single] => single.clone(),
                 many => self.session.brep().compound_sync(many).map_err(|error| kernel_fault(&error))?,
             };
-            found.insert("shape".to_string(), GeometryValue::shape(self.session.export(&handle)?));
+            found.cold_insert("shape".to_string(), GeometryValue::shape(self.session.export(&handle)?));
         }
         Ok(found)
     }
 
-    fn advance(&mut self, stage: Stage, grant: usize) -> Result<Advance, WidgetFault> {
+    fn advance(&mut self, stage: Stage, cx: &mut StepContext<'_>) -> Result<Advance, StepFault> {
         match stage {
-            Stage::Import => self.import().map(Advance::Continue),
-            Stage::Pairs { pairs, next, running, results, floor } => self.intersect(pairs, next, running, results, floor, grant),
-            Stage::Conclude { results, floor } => self.conclude(results, floor).map(Advance::Finished),
-            Stage::Gone => Err(lost_state()),
+            Stage::Import => Ok(self.import().map(Advance::Continue)?),
+            Stage::Pairs { pairs, next, running, results, floor } => self.intersect(pairs, next, running, results, floor, cx),
+            Stage::Conclude { results, floor } => Ok(self.conclude(results, floor).map(Advance::Finished)?),
+            Stage::Gone => Err(lost_state().into()),
         }
     }
 }
 
 impl WidgetJob for Interference {
-    fn step(&mut self, fuel: usize) -> WidgetStep {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> Result<Option<WidgetStep>, OriginalTurnFailure> {
         if let Some(evaluation) = &self.finished {
-            return WidgetStep::Done(evaluation.clone());
+            return Ok(Some(WidgetStep::Done(evaluation.clone())));
         }
-        let mut budget = fuel.max(1);
+        if unfunded(cx) {
+            return Ok(None);
+        }
         loop {
             let stage = std::mem::replace(&mut self.stage, Stage::Gone);
-            let outcome = catch_unwind(AssertUnwindSafe(|| self.advance(stage, budget))).unwrap_or_else(|_| Err(panicked()));
+            let outcome = catch_unwind(AssertUnwindSafe(|| self.advance(stage, cx))).unwrap_or_else(|_| Err(panicked().into()));
             match outcome {
-                Err(fault) => return self.end(Err(fault)),
-                Ok(Advance::Finished(found)) => return self.end(Ok(found)),
+                Err(StepFault::Turn(failure)) => return Err(failure),
+                Err(StepFault::Widget(fault)) => return Ok(Some(self.end(Err(fault)))),
+                Ok(Advance::Finished(found)) => return Ok(Some(self.end(Ok(found)))),
                 Ok(Advance::Pending(stage, progress)) => {
                     self.stage = stage;
-                    return WidgetStep::Working { progress: progress.clamp(0.0, 0.999) };
+                    return Ok(Some(WidgetStep::Working { progress: progress.clamp(0.0, 0.999) }));
                 }
                 Ok(Advance::Continue(stage)) => {
                     self.stage = stage;
-                    budget -= 1;
-                    if budget == 0 {
-                        return WidgetStep::Working { progress: 0.0 };
+                    spend(cx, 1);
+                    if cx.should_yield() {
+                        return Ok(Some(WidgetStep::Working { progress: 0.0 }));
                     }
                 }
             }
@@ -359,7 +362,7 @@ fn mesh_quality(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
                 ("maximum", GeometryValue::Point(bounds.max)),
             ]);
             if let Some(mass) = report.mass {
-                found.insert("volume".to_string(), GeometryValue::Number(mass.volume));
+                found.cold_insert("volume".to_string(), GeometryValue::Number(mass.volume));
             }
             Ok((found, quality))
         },

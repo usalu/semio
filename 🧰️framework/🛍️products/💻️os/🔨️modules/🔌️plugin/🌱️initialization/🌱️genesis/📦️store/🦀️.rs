@@ -5,6 +5,8 @@ pub struct OriginalStoreSlot<P: store::StoreState,M: store::StoreMutationFor<P>>
 impl<P: store::StoreState,M: store::StoreMutationFor<P>> OriginalStoreSlot<P,M>{
  pub fn from_original(owner:Box<store::ArtifactStore<P,M>>)->Self{Self{owner:ManuallyDrop::new(Some(owner))}}
  pub fn terminal_is_empty(&self)->bool{self.owner.is_none()}
+ /// 🔒️ A slot whose paid shell closure already released its owner has nothing left to drain; a live owner answers for its own store close.
+ pub fn close_owned_store_terminal_is_empty(&self)->bool{self.owner.as_deref().is_none_or(|owner|owner.close_owned_store_terminal_is_empty())}
  pub fn into_original(mut self)->Box<store::ArtifactStore<P,M>>{self.owner.take().expect("original Store slot was already handed off or closed")}
  pub fn box_close_demands(&self)->RetirementDemand{if self.owner.is_some(){RetirementDemand{copy_bytes:size_of::<Option<Box<store::ArtifactStore<P,M>>>>(),release_bytes:size_of::<store::ArtifactStore<P,M>>(),depth:1,..Default::default()}}else{Default::default()}}
 }

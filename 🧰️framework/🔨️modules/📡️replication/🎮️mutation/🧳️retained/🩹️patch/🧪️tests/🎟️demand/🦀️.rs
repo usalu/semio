@@ -14,7 +14,7 @@ impl RetireOwned for QuotePatch{
 }
 impl RetirementCursor for QuoteCursor{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{VISITS.fetch_add(1,Ordering::Relaxed);BODY.store(body,Ordering::Relaxed);Ok(RetirementDemand{copy_bytes:if self.value.is_some(){2*size_of::<QuotePatch>()}else{0},depth:usize::from(self.value.is_some()),..Default::default()})}
- fn close_step(&mut self,g:RetainedCloneGrant)->RetirementStep{let d=self.next_demand(g.maximum_copy_bytes).unwrap();if !retained_mutation_demand_fits(d,g){return RetirementStep::BudgetExhausted;}self.value.take();RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})}
+ fn close_step(&mut self,g:RetainedCloneGrant)->RetirementStep{let d=self.next_demand(g.maximum_copy_bytes).unwrap();if !retained_mutation_demand_fits(d,g){return RetirementStep::BudgetExhausted;}self.value.take();RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()},1)}
  fn terminal_is_empty(&self)->bool{self.value.is_none()}
  fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }

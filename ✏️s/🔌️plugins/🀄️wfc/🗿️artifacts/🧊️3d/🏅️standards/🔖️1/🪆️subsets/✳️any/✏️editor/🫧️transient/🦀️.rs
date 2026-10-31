@@ -5,7 +5,7 @@
 
 //#region 🔖️Transient
 /// 🏁 One solved slot — the transient's own row type, deliberately not the document's.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default)]
 pub struct Wfc3dAssignment {
@@ -15,7 +15,7 @@ pub struct Wfc3dAssignment {
 
 /// 🫧️ `Wfc3dEditor::Transient` — the inferred assignment in the document's own slot order, plus the
 /// contradiction verdict the preview banner reads.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "wfc3dtransient")]
 #[artifact(id = "wfc.wfc3d.transient")]
@@ -106,3 +106,10 @@ pub use mutations::*;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
+
+impl semio_framework_value_snapshot_projection::SnapshotProjection for Wfc3dTransient {
+    type Output = Self;
+    type Projection = semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
+    fn projection_birth_demand() -> semio_framework_value::RetirementDemand { Self::Projection::birth_demand() }
+    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_value::ValueError> { Self::Projection::begin(grant) }
+}

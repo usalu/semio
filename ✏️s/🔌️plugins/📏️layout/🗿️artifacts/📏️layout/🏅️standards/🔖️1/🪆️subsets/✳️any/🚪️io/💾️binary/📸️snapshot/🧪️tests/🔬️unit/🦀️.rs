@@ -60,6 +60,7 @@ async fn pack_round_trips_overrides_frame_flags_and_absent_print_target() {
                 Frame::Rect { id: "frame-locked".into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: Some(true), visible: Some(false), fill: None, stroke: None },
                 Frame::Rect { id: "frame-unlocked".into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: Some(false), visible: Some(true), fill: None, stroke: None },
             ],
+            background_drawing: None,
             overrides: vec![
                 PageOverride { object_id: "frame-locked".into(), bounds: Some(LayoutBounds { x: 1.0, y: 2.0, width: 3.0, height: 4.0, rotation: 5.0 }), visible: Some(true), locked: Some(false) },
                 PageOverride { object_id: "frame-unlocked".into(), bounds: None, visible: None, locked: None },
@@ -78,8 +79,15 @@ async fn pack_schema_identity_carries_the_background_drawing_child_and_model_lin
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let mut document = dsl::parse_dsl(dsl::LAYOUT_SAMPLE_TEXT).expect("parse sample layout fixture");
-    semio_framework_io_ports::testkit::bind(&crate::LAYOUT_BACKGROUND_DRAWING);
-    document.background_drawing = Some(crate::background_drawing_child_handle("dxf", &semio_framework_io_ports::testkit::scene_content(&Default::default())));
+    let initial = String::from("separate original Drawing payload");
+    let original = initial.as_ptr();
+    let birth = crate::LayoutDrawingBirth {
+        source: crate::drawing_member::LayoutDrawingBirthSource::Document,
+        member: crate::LayoutDrawingMember { handle: store::os_store::artifact_child::ArtifactChild::new("drawing-child".into(), semio_framework_artifact_reference::ArtifactRef::parse_uri("drawing-1!s.draw.drawing@1/*").expect("Drawing member reference")) },
+        initial,
+    };
+    document.background_drawing = Some(birth.member.clone());
     document.referenced_model = Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("plan-1!s.architect.model@1/*").expect("uri"), pin: store::LinkPin::Checkpoint { id: "cp-1".into() }, role: "model".into() });
     store::os_store::test_support::assert_pack_schema_identity(&document);
+    assert_eq!(birth.initial.as_ptr(), original);
 }

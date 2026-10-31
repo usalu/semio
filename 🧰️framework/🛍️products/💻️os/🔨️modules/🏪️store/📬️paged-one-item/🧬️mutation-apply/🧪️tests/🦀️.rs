@@ -507,7 +507,7 @@ fn paged_preparation_preserves_original_admitted_diagnostics_until_typed_retirem
     }
 }
 
-/// ♻️ A provider receipt refusal keeps every returned inverse in its exact installed issuer custody.
+/// 🌀️ A provider receipt refusal keeps every returned inverse in its exact installed issuer custody.
 #[test]
 fn paged_invalid_edit_receipt_retires_returned_inverse_with_original_issuer() {
     use paged::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory};
@@ -543,6 +543,9 @@ fn paged_invalid_edit_receipt_retires_returned_inverse_with_original_issuer() {
 
 #[path="../../🧪️tests/🔗️source-custody/🦀️.rs"]
 mod source_custody;
+
+#[path="../../🧪️tests/❄️cold-replay/🦀️.rs"]
+mod cold_replay;
 
 #[path="🧳️semantics/🦀️.rs"] mod retained_semantics;
 

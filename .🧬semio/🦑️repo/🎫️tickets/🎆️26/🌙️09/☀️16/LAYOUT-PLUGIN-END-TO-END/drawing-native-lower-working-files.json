@@ -1,0 +1,86 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🎟️work/📐️.json",
+    "bytes": 503,
+    "sha256": "e918dc6dca436c369d0e641fa666c07cc588249091e1d0118bf71cfa657fbad2",
+    "utf16PathUnits": 82
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🎟️work/🔣️.json",
+    "bytes": 1274,
+    "sha256": "bf53691317e9b9cc87c1647c4112f0bd3253623689d9376ed7daaf5a1e7f0ede",
+    "utf16PathUnits": 82
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🎟️work/🧪️tests/🦀️.rs",
+    "bytes": 4644,
+    "sha256": "6c80055d1b8c81c4e8e0ba3c9019104b68dbcd73eb9b730293b7318ea33eff24",
+    "utf16PathUnits": 89
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/📦️packages/🦀️rust/Cargo.toml",
+    "bytes": 1079,
+    "sha256": "4a0a8d1d772f77947339a6a63af4e96e808ef15b8eb9eab1d53ba14699fd4a5b",
+    "utf16PathUnits": 96
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🦀️.rs",
+    "bytes": 25238,
+    "sha256": "1a288d1e4075d4456a23506edc9f04e5beb3629a127858c9c690f42c09dadf21",
+    "utf16PathUnits": 72
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🧪️tests/🦀️.rs",
+    "bytes": 11376,
+    "sha256": "67df2d180b39cf65967885dd05075f36b95bc21b98ecd45fd73ff3683ad7bfca",
+    "utf16PathUnits": 81
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️packages/🦀️rust/🦀️.rs",
+    "bytes": 1744,
+    "sha256": "9f6a011ce2a3418bc62a4cb9a443e62ad29fe6a4c4f9d9cbe254a7e7b8731607",
+    "utf16PathUnits": 100
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+    "bytes": 3028,
+    "sha256": "582d03c9d2e657568e7f2d0b6a9a601032dbd17fe6aa18127bf5eeb746b1cf71",
+    "utf16PathUnits": 87
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/📐️.json",
+    "bytes": 461,
+    "sha256": "83517067e64b93293fe2404e3c212b7787d3a74c5e4639f3655afdcf2240b7f8",
+    "utf16PathUnits": 110
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🔣️.json",
+    "bytes": 865,
+    "sha256": "5efd5cfa53a46331a48c1eabbdfd8190b251de0a01c22340d21b697ace99bd4b",
+    "utf16PathUnits": 110
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🦀️.rs",
+    "bytes": 9732,
+    "sha256": "bae5678ed8ed4770f204a16adde252082820083fa129c61b2e3748955f3a86ca",
+    "utf16PathUnits": 108
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🦀️.rs",
+    "bytes": 5458,
+    "sha256": "8def458a41cf3115db7f71d30cc37454033f242bbd6d6735a1475682b60e718f",
+    "utf16PathUnits": 117
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🦀️.rs",
+    "bytes": 11326,
+    "sha256": "7b8628fcd85e2fb563465b6cf1ebda600bfb2d4023b53788be2ea26842e35b45",
+    "utf16PathUnits": 100
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧪️tests/🥣️companion/🧮️numeric-scratch/🦀️.rs",
+    "bytes": 310,
+    "sha256": "7dc67124e5de0c32d560aa8d4e37ab8a58d048a78409892cb765a23951c51760",
+    "utf16PathUnits": 108
+  }
+]

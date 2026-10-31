@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "mutants": [
+    "missing-summary",
+    "duplicate-summary",
+    "foreign-summary",
+    "missing-turn",
+    "duplicate-turn",
+    "foreign-turn",
+    "ordinal-gap",
+    "close-before-work",
+    "undergrant-admitted",
+    "dirty-denial",
+    "heap-mismatch",
+    "capacity-summary",
+    "release-conservation",
+    "close-order",
+    "cancel-completed",
+    "semantic-validity",
+    "identity-false",
+    "reads-after-close",
+    "turn-count",
+    "relocation-count",
+    "unfinished-close",
+    "program-birth",
+    "unknown-field"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "scope": "disjoint scalar/cluster producer migration",
+  "sourceReady": false,
+  "runtimeVerified": false,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "sha256": "f39c8dd265579993c0137659b97e469a172ba507e5cdd8ad4e0aef50c41e1e9b",
+      "bytes": 6885,
+      "attribution": "producer/advance/control fields ours; existing retirement body Cursor preserved except explicit scalar Hangul fixed-header replacement",
+      "state": "source-authored-not-verified"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+      "sha256": "bcb2a57664091e4f4b34f6312729e97201184fac83509d7475a17fae55ff267c",
+      "bytes": 7338,
+      "attribution": "producer/advance/control fields ours; existing retirement body Cursor preserved except explicit scalar Hangul fixed-header replacement",
+      "state": "source-authored-not-verified"
+    }
+  ]
+}

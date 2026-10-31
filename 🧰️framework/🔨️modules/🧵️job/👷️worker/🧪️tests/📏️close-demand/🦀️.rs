@@ -9,7 +9,7 @@ struct PhysicalDemandJob {
 }
 
 impl InteractiveJob for PhysicalDemandJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure> {JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{InteractiveJobStep::from_callback(JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from))}
     fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture requires original yielded descriptor"))}}
     fn begin_close(&mut self) { self.closing = true; }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
@@ -38,7 +38,7 @@ fn worker_close_demand_queries_preserve_exact_physical_grants() {
         let job = PhysicalDemandJob { backing: Some(backing), calls: Arc::clone(&calls), closing: false };
         let source=crate::component::TEST_RETAINED_POLICY;let mut issuer=OriginalJobFixtureCaller::admit(OperationId(98_100),Generation(11),WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);
         let params = BatchJobParams { operation: OperationId(98_100), generation: Generation(11), cancel: issuer.admit_alias(source), config: BatchDriveConfig { retained:crate::component::TEST_RETAINED_POLICY, site: "test.close-demand", stage: InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 1_000 }, now_us: logical_now_us };
-        let mut session = admit_original_fixture_owner!(issuer,WorkerJobSession,job, params).unwrap_or_else(|_| panic!("close demand session admission"));
+        let mut session = admit_original_fixture_owner!(issuer,WorkerJobSession,job, params);
         session.begin_close();
         let scaffold_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:admission,maximum_depth:64};
         for _ in 0..16 {

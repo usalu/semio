@@ -1,0 +1,24 @@
+{
+  "accepted": true,
+  "owning": {
+    "pass": 6,
+    "fail": 0,
+    "assertions": 434,
+    "milliseconds": 101,
+    "outerExit": 0
+  },
+  "strict": {
+    "roots": 5,
+    "outerExit": 0,
+    "diagnostics": 0
+  },
+  "inputs": 23,
+  "literalEdges": 54,
+  "preBothTerminalCurrentExact": true,
+  "commandSha256": "4bc0f0992fd9aa9e9ac50a22455224fb483ee29cd9332a0a2d79e19d0f44ee5c",
+  "logs": {
+    "test": "505eec47f9befd36a2abba51de53f7ec83a27b38164508f65003e622076e0f62",
+    "strict": "a44a146233cf9dc52b9b61ea3c793059ec8c2a73f128262259056d71d033e55c"
+  },
+  "scope": "Actual6 glyph gap/output custody laws including helper entry provenance +canonical strict5 workspace/actualtests/scalar/cluster. Original finite wallet/SQL output and every denial/cancel/sole-owner transfer retained. Wider Run/Outline/Context/Drawing unproved."
+}

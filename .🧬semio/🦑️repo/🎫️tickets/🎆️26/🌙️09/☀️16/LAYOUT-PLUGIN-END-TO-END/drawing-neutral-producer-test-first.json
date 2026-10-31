@@ -1,0 +1,22 @@
+{
+  "state": "schema-direct-laws-before-extraction",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🧪️tests/🔣️.json",
+      "sha256": "984041ccfcfb3ee087ae6951af0238a566d6898d9e9623b3949b6e055fb5ba9e",
+      "bytes": 1529
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🧪️tests/📐️.json",
+      "sha256": "d1268ab627791203f09f1b227fc3f14a631a36accf6ee1cfe98c1d5b13dd769c",
+      "bytes": 982
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "sha256": "fb948dfad563d59b82f4d80b8d9bf13b5c741687d304c3a5e3ef7adb20ac3914",
+      "bytes": 6170
+    }
+  ],
+  "actual": "unexecuted; neutral module not authored yet",
+  "purpose": "Extract existing generic Font producer outcome helper for domain-neutral Scene/2d use without duplication/font dependency or legacy aliases."
+}

@@ -233,7 +233,7 @@ fn hub_tail_envelope(value: &serde_json::Value) -> protocol::MutationEnvelope {
     protocol::MutationEnvelope {
         mutation_id: protocol::MutationId(text(&value["mutation_id"])),
         document_id: protocol::ArtifactId(text(&value["document_id"])),
-        actor: protocol::ActorId(text(&value["actor"])),
+        actor: protocol::ActorId(text(&value["actor"]).into()),
         dependencies: value["dependencies"].as_array().expect("hub tail dependencies").iter().map(|id| protocol::MutationId(text(id))).collect(),
         observed: value["observed"].as_str().map(|id| protocol::MutationId(id.to_string())),
         target: value["target"].as_array().expect("hub tail target").iter().map(text).collect(),

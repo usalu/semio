@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "source": {
+    "items": 4096,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 64,
+    "fuel": 16384,
+    "deadlineUs": 1000000
+  },
+  "quantumItems": 1,
+  "quantumFuel": 1,
+  "maximumTurns": 32,
+  "heldReturnItems": 2,
+  "heldReturnFuel": 2,
+  "boundSourceWork": 1,
+  "claimWork": 1,
+  "actualCapturedReturnWork": 1,
+  "actualReceivingWork": 1,
+  "unusedCloseWork": 1,
+  "cases": [
+    {
+      "name": "returned",
+      "recordReturn": true,
+      "cancel": false,
+      "finalDebit": 4
+    },
+    {
+      "name": "cancelled-return",
+      "recordReturn": true,
+      "cancel": true,
+      "finalDebit": 4
+    },
+    {
+      "name": "cancelled-unused",
+      "recordReturn": false,
+      "cancel": true,
+      "finalDebit": 3
+    }
+  ],
+  "foreignReceiveEffects": 0,
+  "busyReceiveEffects": 0,
+  "renewedStock": false,
+  "capacityBytes": 0,
+  "copyBytes": 0,
+  "heldClaimsKeepSourceBorrowable": true
+}

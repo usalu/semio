@@ -1,0 +1,16 @@
+{
+  "state": "read-only-source-observation-no-admission",
+  "scope": "Layout any Rust sources only",
+  "findings": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "fe6ef87975d803d8bca708442601a0f17f93fee97efcbbfa066fc7f36bd26fd4",
+      "line": 47
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "4ce24a4dd97c1ed8ae937311de4a80aa90a5bac441033582bea5ce6a77c70739",
+      "line": 34
+    }
+  ]
+}

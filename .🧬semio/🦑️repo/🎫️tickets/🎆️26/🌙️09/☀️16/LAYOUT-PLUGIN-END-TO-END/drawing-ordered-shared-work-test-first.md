@@ -1,0 +1,3 @@
+# Ordered Shared Work Test First
+
+Closed neutral fixture/schema and a real SharedOwner constructor/release law were authored before full outcomes. It uses the actual first-party allocator null injection, exact original String buffer identity, serde_json output, observed Arc request/release, all positive birth axes denied before effects and one monotonically debited physical/CPU stock through original payload cleanup. It does not issue an Original Job or claim a whole Native caller proof. Existing backend/Sealed proofs remain separately scoped. Ordered --lib is mandatory and unexecuted for this source change. Root owns the main ordered retirement adapters and will consume the exact child outcome.

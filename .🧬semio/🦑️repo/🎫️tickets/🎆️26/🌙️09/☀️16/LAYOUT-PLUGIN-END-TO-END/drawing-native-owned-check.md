@@ -1,0 +1,17 @@
+# Native Owned Production Diagnostic
+
+Root explicitly released one canonical NativeOwned check --lib after actual lower Core production check3 passed. This is an unheld coordinated diagnostic, no owning tests/source seal/acceptance claim. All logs and five temp/artifact paths are ticket-owned. Actual terminal output will determine admission/compiler status; no caps, budgets or cases changed.
+
+Actual first diagnostic session85753 terminated outer1/native101 after real compiler admission. Exactly three upstream errors: two Root-owned SnapshotProjection cursor.take adapters; one missing FromValue trait import for existing Ordered encoding cleanup. No NativeOwned compilation or tests occurred. The missing import is now added in the defining Ordered source; Root owns lossless full take projection. No retry launched. Log 307739B SHA087ffe3563340a537e1197ee4f2cb68318386749090070941e02a9b8626cc0a8.
+
+Second released actual production diagnostic7193 terminal outer1/native101: first projection/Ordered errors resolved, two Persistent ImmutableRootCloneCursor mandatory funded take/take_demand errors remain upstream. NativeOwned itself has still not reached admission/compiler. No tests. Actual log 310120B SHAbc8f5a0d438dae21eb65d1cc25fd2127f3ca648164adee1be5bd69c6d270a5f4. No auto-retry.
+
+Third actual diagnostic6094 terminal outer1/native101 reached NativeOwned source admission/compiler. Six errors in SealedShared receiver obsolete schema forwarding and child take adapter; canonical forwarding/work fixes authored afterward. No tests. Actual log 349502B SHAbe0043eaddfbb8a7fbec581c37bc50f15edcf9f80fe8c58834349ba76fcd0231.
+
+Fourth actual diagnostic72441 terminal outer0/native0, canonical NativeOwned production check --lib. Actual compiler Finished prototype in0.83s,39 warnings; log342676B SHAea7bd334dc61157bfa00fe13702461e84cee7ec76f95b2c98e5ad2996e4cfd60. This verifies generic source/API wiring only. No owning tests, generated record/enum instantiation laws, full held transitive source seal, OS DAG compilation or end-to-end Native/Drawing/Layout acceptance. No automatic repeat.
+
+First unfiltered owning --lib76384 terminal outer1 BEFORE compiler/tests: actual32-file Source boundary at bulk/work/data1608B,31021 bytes remaining. Preserved quotas/cases. Public laws moved to same-package integration target afterward; all future owning checks must include --all-targets, with required docs separate. Actual log SHA8247b8dcd986b210d99b8e0c0d6045fd6dcfceed5170aa3c73f0665cdf11744a.
+
+Second owning attempt86272 used ALL-targets and again refused unchanged32-file Source boundary before compiler, at map/tests.rs8865B with11225bytes remaining. Further genuinely public physical law mounts now give native_work18 and native_fields6; private production-state tests remain --lib. No cases dropped, no quotas changed. Actual log SHAd0bfbb3fdeb8114497be2bdf180400229a87ee70fdac080c58c57ce96b19d687.
+
+Third ALL-target owning49363 refused unchanged32-file Source before compiler at production Set11447B versus7239bytes remaining and no file slots. Public24 relocation retained laws but actual production/private owner aggregate requires a genuine runtime-domain split. Root approved lower NativeDefault/typed storage owners, preserving NativeReceive/stdimpl orphan ownership, all profiles/cases/targets and all caps. Actual log SHA3803b36c61af08735262f7e64aaecff33ea72cc2378e9452986f55c4d3532559.

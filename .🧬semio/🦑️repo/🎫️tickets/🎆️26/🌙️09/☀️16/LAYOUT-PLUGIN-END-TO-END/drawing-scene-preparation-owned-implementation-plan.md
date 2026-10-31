@@ -1,0 +1,15 @@
+# Genuine Scene Preparation Implementation
+
+The actual existing-API diagnostic now establishes work1 under zero authority (separate from the first immutable decoder failure). Six genuine owning laws and the closed original17/quanta contract are authored before production: actual runtime-issued turns/finite same bank, independent SQLite original expected plans and Matrix3 transforms, every original phase cancellation, repeated positive-axis denials including release, positive current failing write CPU/cause, exact semantic limit and same-bank close. The common existing Catalog-backed finite stock and original preparation limits are not increased. The proposed explicit maximumWork argument is a semantic bound, not byte or CPU authority; real callers supply their existing enclosing algorithm maximumWork, while owning laws use the already established1000000 semantic policy.
+
+## Defining body
+
+Replace DocumentSceneJob raw arrays/maps/sets with a genuine producer using the same RetainedWorkProducerRuntime/issued loans as Text. Build directly into the canonical Scene body's real node112/asset32/resource24 pages; do not first allocate an unpriced complete draft or tag a raw plan as owned. Introduce the builder at the defining Scene owner module so private custody can be transferred only by that builder, not by a public adopt/raw-storage constructor. Borrow authored layers, asset samples and byte sources; mutate only genuine produced backing. Produced RGBA uses actual RetainedWorkBytes kept in the same private close stack, while the existing Scene copy path continues borrowing caller pixel bytes unchanged.
+
+## Traversal and ordering
+
+Stage actual frame/search/key/cycle cells in priced RetainedWorkBuffers. Preserve original sorted asset-ID order through a bounded funded ordering phase; OriginalIndexedRecord only offers insertion order, so replacing sort by entries silently is incorrect. Every actual comparison/probe commits its own CPU; fixed existing control-header moves are copy0. Actual new rows/payload writes are copy-funded, and physical-effect epoch is never used as a CPU substitute. Preserve all authored primitive formulas, affine multiplication, paths/paint/reference checks and the existing semantic phase order; allocation/custody-only preparation remains semantic0. Complete child deltas post once even if later row publication blocks.
+
+## Close and actual callers
+
+Private staged child/body/RGBA owners remain recoverable on denied advance, source/slot errors, cancellation and final publication. Fold each actual current error's receipt and CPU before surfacing it; cached queries/denials have actual0. At exact semantic maximum, permit only genuine completed-work settlement. The genuine public output is ScenePlanOwner and its borrow is ScenePlanRead; the vector/Text/trace/Boolean/raster/export routes must hand-migrate to that actual owned protocol, without numeric compatibility or fake authority. All original17 laws/invalid/ancestry/retirement and original fourteen glyph vector/raster/SVG/PDF/Sharp/pick cases remain mandatory and are not covered by the preliminary six-law packet.

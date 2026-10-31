@@ -1,0 +1,48 @@
+{
+  "outer": 82239,
+  "exit": 1,
+  "nativeExit": 101,
+  "observedTests": 10,
+  "passed": 8,
+  "failed": 2,
+  "logBytes": 577226,
+  "logSha256": "57050eddb80f2cbe2ccb3cc02c1ee7b519826bb48067bc4dc9cddd3e5b83866d",
+  "inputs": 863,
+  "exact": 858,
+  "drift": [
+    {
+      "path": "🧰️framework/Cargo.lock",
+      "before": "f86c50cf9d7399f569bdd84e32a34e47e782286be76520081ff59963c7eb6efb",
+      "after": "845aeb74025267bc15fc5dbe6477b562b0d616e32d1d0fbcce6e4fa771a59066",
+      "exact": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧬️retirement/🦀️.rs",
+      "before": "7f002a9a80aa06b01e1d8d827c29a2efdbea434f08a20165b40d4381dacdfef1",
+      "after": "32201507d4438a41aef38ce6f8a489f4684c0f3eb9991518c7a09d2f2cb78d7c",
+      "exact": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/protocol.rs",
+      "before": "9f150b4f0e120c9884bbe88266a91a30a8f277f9dae543eda2674e4d239f7696",
+      "after": "3503badc20adda79976c7f7e6116af3b403397e84900750e0c904fb7f9c70a1c",
+      "exact": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛬️receive/🧪️tests/🦀️.rs",
+      "before": "e83864f7e38f7c5420f4006d3435f9d6fd9e6df616428e7500662990e0ac9c01",
+      "after": "f6b0545d1f239ad4980111ed97066a270b5538f2b832332128923b5529999afd",
+      "exact": false
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🦀️.rs",
+      "before": "6ed57c819810c408b8655ea24b78f4cff38521c93c035db13264a9f5c825b606",
+      "after": "413388a7975b7e2d33abced8e186125ac1838c2eddb2e421053dd6804c020873",
+      "exact": false
+    }
+  ],
+  "frontier": [
+    "[DEBUG] original failure retirement blocked at copy1 demandOk(RetirementDemand { copy_bytes: 48, capacity_bytes: 24, release_bytes: 0, depth: 2 }) work0",
+    "[DEBUG] original failure retirement blocked at copy1 demandOk(RetirementDemand { copy_bytes: 48, capacity_bytes: 24, release_bytes: 0, depth: 2 }) work0"
+  ]
+}

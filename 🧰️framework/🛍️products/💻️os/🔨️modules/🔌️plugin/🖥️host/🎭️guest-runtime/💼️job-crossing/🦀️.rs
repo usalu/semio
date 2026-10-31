@@ -47,6 +47,11 @@ impl JobFunds {
         Ok(JobCrossing { budget: OriginalJobBudget { input: self.input, retained_policy: self.loan.retained_policy, fuel: self.loan.work_fuel, deadline_us, cancelled: false }, execution: OriginalGuestExecutionBudget { input: self.input, fuel: self.instruction_fuel, deadline_us } })
     }
 
+    fn output_crossing(&self) -> Result<JobCrossing, ValueError> {
+        let crossing = self.crossing()?;
+        Ok(JobCrossing { budget: crossing.budget.for_output_page(), ..crossing })
+    }
+
     fn settle(&mut self, progress: RetainedCloneProgress, work: u64) -> Result<(), ValueError> {
         let spent = self.spent.checked_add(progress)?;
         let total = self.work.checked_add(work).ok_or_else(|| refused("original job work counter overflows"))?;
@@ -87,6 +92,8 @@ fn refused(message: &'static str) -> ValueError {
 }
 
 impl GuestRuntimes {
+    const PENDING_PAGES: u32 = 1024;
+
     /// 📥️ Admits `kind` and `input` as guest job `job`.
     pub async fn start_job_funded(&self, inst: &mut GuestInstance, funds: &mut JobFunds, job: u64, kind: String, input: Vec<u8>) -> Result<(), TurnFault> {
         let crossing = funds.crossing().map_err(identity_turn_fault)?;
@@ -122,8 +129,9 @@ impl GuestRuntimes {
 
     async fn collect_job_output(&self, inst: &mut GuestInstance, funds: &mut JobFunds, job: u64, expected: u64) -> Result<Vec<u8>, TurnFault> {
         let mut bytes = Vec::new();
+        let mut pending = 0;
         loop {
-            let crossing = funds.crossing().map_err(identity_turn_fault)?;
+            let crossing = funds.output_crossing().map_err(identity_turn_fault)?;
             let call = self.read_job_output(inst, job, crossing.budget, crossing.execution).await;
             let reply = funds.settle_call(crossing, call, |reply| (reply.spent, reply.work_units_spent, reply.refusal))?;
             let Some(chunk) = reply.chunk else { break };
@@ -137,7 +145,13 @@ impl GuestRuntimes {
             if chunk.output_closed {
                 break;
             }
-            if !offered {
+            if offered {
+                pending = 0;
+            } else {
+                pending += 1;
+                if pending <= Self::PENDING_PAGES {
+                    continue;
+                }
                 return Err(TurnFault::Trapped(format!("guest job {job} output stalled without a page or a close")));
             }
         }

@@ -34,61 +34,48 @@ macro_rules! retained_clone_tuple {
 
         impl<$($type: RetainedClone),+> RetainedCloneCursor<($($type,)+)> for $cursor<$($type),+> {
     fn output_ready(&self)->bool{!self.closing&&!self.spent&&self.output.is_some()}
-            fn advance_demands(&self,source:RetainedCloneRef<'_,($($type,)+)>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"tuple original clone is closing or spent"))}if self.output.is_some(){return Ok(Default::default())}match self.phase{$($index=>if self.draining{clone_cursor_close_demand::<$type>(&self.$child,body)}else{self.$child.advance_demands(source.project($index+1,|value|&value.$index),body)},)+_=>Ok(crate::RetirementDemand{depth:1,..Default::default()})}}
+            fn advance_demands(&self,source:RetainedCloneRef<'_,($($type,)+)>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"tuple original clone is closing or spent"))}if self.output.is_some(){return Ok(Default::default())}match self.phase{$($index=>if self.draining{clone_cursor_close_demand::<$type>(&self.$child,body)}else if self.$child.output_ready(){self.$child.take_demand()}else{self.$child.advance_demands(source.project($index+1,|value|&value.$index),body)},)+_=>Ok(crate::RetirementDemand{depth:1,..Default::default()})}}
 
-            fn advance(&mut self, source: RetainedCloneRef<'_, ($($type,)+)>, body: usize, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
-                if self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone cursor is closing")); }
-                if self.spent { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone cursor is spent")); }
+            fn advance(&mut self, source: RetainedCloneRef<'_, ($($type,)+)>, body: usize, grant: RetainedCloneGrant) ->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+                if self.closing { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone cursor is closing")); }
+                if self.spent { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone cursor is spent")); }
                 if !retained_clone_grant_admits(grant,self.advance_demands(source,body)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
                 if self.output.is_some() { return Ok(RetainedCloneStep::Complete(Default::default())); }
                 if grant.maximum_items == 0 && grant.maximum_copy_bytes == 0 && grant.maximum_capacity_bytes == 0 && grant.maximum_release_bytes == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if let Some(progress)=source.bind(&mut self.source,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
+        if let Some(progress)={let turn=source.bind(&mut self.source,grant);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(progress));}
                 if self.draining {
                     match self.phase {
                         $($index => {
                             if !self.$child.terminal_is_empty() {
                                 if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                                let step = self.$child.close_step(grant)?;
+                                let step = {let turn=self.$child.close_step(grant);work+=turn.work;turn.result}?;
                     return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.$child.terminal_is_empty(), "retained tuple child scaffold close")?.progress()));
                             }
                             if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                            self.draining = false;
+                            self.draining = false;work+=1;
                             self.phase += 1;
                             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
                         },)+
-                        _ => return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple drain state is invalid")),
+                        _ => return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained tuple drain state is invalid")),
                     }
                 }
                 match self.phase {
-                    $($index => match self.$child.advance(source.project($index + 1, |value| &value.$index),body, grant)? {
-                        RetainedCloneStep::Progress(progress) => Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant, progress, "retained tuple child")?)),
-                        RetainedCloneStep::Complete(progress) => {
-                            let progress = admit_retained_clone_progress(grant, progress, "retained tuple child")?;
-                            if progress.copied_items >= grant.maximum_items {
-                                return Ok(RetainedCloneStep::Progress(progress));
-                            }
-                            self.$value = Some(self.$child.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple child completed without an owner"))?);
-                            let _ = self.$child.begin_close();self.child_closing[$index]=true;
-                            self.draining = true;
-                            Ok(RetainedCloneStep::Progress(progress.checked_add(RetainedCloneProgress { copied_items: 1, ..Default::default() })?))
-                        }
+                    $($index => {
+                     if self.$child.output_ready(){let turn=self.$child.take(grant);work+=turn.work;let Some((value,p))=turn.result?else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.$value=Some(value);self.$child.begin_close();self.child_closing[$index]=true;self.draining=true;return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant,p,"tuple child output handoff")?))}
+                     let turn=self.$child.advance(source.project($index+1,|value|&value.$index),body,grant);work+=turn.work;Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant,turn.result?.progress(),"retained tuple child")?))
                     },)+
                     $count => {
                         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                        self.output = Some(($(self.$value.take().ok_or_else(|| crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple owner is missing"))?,)+));
+                        work+=1;self.output = Some(($(self.$value.take().ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained tuple owner is missing"))?,)+));
                         self.phase += 1;
                         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
                     }
-                    _ => Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone state is invalid")),
+                    _ => Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "retained tuple clone state is invalid")),
                 }
-            }
+            })();crate::RetainedWorkOutcome{result,work}}
 
-            fn take(&mut self) -> Option<($($type,)+)> {
-                if !self.output_ready(){return None;}
-                let output = self.output.take();
-                if output.is_some() { self.spent = true; }
-                output
-            }
+            fn take_demand(&self)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::retained_clone::retained_clone_take_demand())}
+    fn take(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(($($type,)+),RetainedCloneProgress)>>{if !self.output_ready(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}let turn=crate::retained_clone::take_retained_clone_output(&mut self.output,grant);if matches!(&turn.result,Ok(Some(_))){self.spent = true;}turn}
 
             fn begin_close(&mut self) -> bool {
                 if self.closing { return false; }
@@ -106,19 +93,19 @@ macro_rules! retained_clone_tuple {
                 self.close.next_owner_demands::<($($type,)+)>(self.output.is_some(),&self.source,body)
             }
 
-            fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, crate::ValueError> {
+            fn close_step(&mut self, grant: RetainedCloneGrant) ->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
                 if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-                if !self.closing { return Err(crate::ValueError::new(crate::ValueRefusalKind::InvariantViolated, "tuple must begin close before granted retirement")); }
+                if !self.closing { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated, "tuple must begin close before granted retirement")); }
                 if !retained_clone_grant_admits(grant,self.close_demands(grant.maximum_copy_bytes)?){return Ok(RetainedCloneStep::Progress(Default::default()));}
                 $(if !self.$child.terminal_is_empty() {
-                    if !self.child_closing[$index] {self.$child.begin_close();self.child_closing[$index]=true; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
-                    let step = self.$child.close_step(grant)?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.$child.terminal_is_empty(), "retained child close")?.progress()));
+                    if !self.child_closing[$index] {self.$child.begin_close();self.child_closing[$index]=true;work+=1; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })); }
+                    let turn=self.$child.close_step(grant);work+=turn.work;let step=turn.result?; return Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant, step, self.$child.terminal_is_empty(), "retained child close")?.progress()));
                 })+
-                if !self.close.is_empty() { return self.close.step_granted(grant); }
-                $(if let Some(step) = self.close.begin_granted(&mut self.$value, grant)? { return Ok(step); })+
-                if let Some(step) = self.close.begin_granted(&mut self.output, grant)? { return Ok(step); }
-                close_retained_binding(&mut self.source, grant)
-            }
+                if !self.close.is_empty() { let turn=self.close.step_granted(grant);work+=turn.work;return turn.result; }
+                $({let turn=self.close.begin_granted(&mut self.$value, grant);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}})+
+                {let turn=self.close.begin_granted(&mut self.output, grant);work+=turn.work;if let Some(step)=turn.result?{return Ok(step)}}
+                {let turn=close_retained_binding(&mut self.source, grant);work+=turn.work;turn.result}
+            })();crate::RetainedWorkOutcome{result,work}}
 
             fn next_close_depth_demand(&self)->Result<usize,crate::ValueError>{if !self.closing {return Ok(0);} $(if !self.$child.terminal_is_empty(){return self.$child.next_close_depth_demand();})+ self.close.next_owner_depth_with_binding(self.output.is_some()$(||self.$value.is_some())+,&self.source)}
     fn next_close_copy_byte_demand(&self) -> Result<usize, crate::ValueError> {

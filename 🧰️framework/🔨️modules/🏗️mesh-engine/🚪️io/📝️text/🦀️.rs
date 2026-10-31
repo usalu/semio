@@ -71,7 +71,7 @@ fn admit_source_retirement<T:pack::value::retirement::RetireOwned>(slot:&mut Opt
     let bytes=pack::value::retirement::owned_retirement_birth_bytes::<T>();
     if grant.maximum_items==0||grant.maximum_capacity_bytes<bytes{return Ok(RetainedCloneProgress::default());}
     let original=value.take().ok_or("mesh retirement lost its original owner")?;
-    match pack::value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{*slot=Some(owner);Ok(progress)},Err((error,original))=>{*value=Some(original);Err(error.to_string())}}
+    match pack::value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{*slot=Some(owner);Ok(progress)},Err((error,original))=>{*value=Some(original);Err(error.to_string())}}
 }
 
 fn mesh_source_decode_admission(control:&semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,demand:pack::value::RetirementDemand)->Result<(),String>{
@@ -110,7 +110,7 @@ impl PolygonSourcePreparation {
         let waiting=|retirement|PolygonSourceStep{source:None,retirement};
         if text.len()>16_000_000{return Err("mesh input exceeds 16 MB".into());}
         if grant.maximum_units==0{return Ok(waiting(Default::default()));}
-        if self.retirement.is_some(){let closed=pack::value::close_factory_ticket(&mut self.retirement,grant.retirement).map_err(|error|error.to_string())?;return Ok(waiting(closed.progress()));}
+        if self.retirement.is_some(){let closed=pack::value::close_factory_ticket(&mut self.retirement,grant.retirement).result.map_err(|error|error.to_string())?;return Ok(waiting(closed.progress()));}
         if self.stage==1&&self.parser.is_some(){return Ok(waiting(admit_source_retirement(&mut self.retirement,&mut self.parser,grant.retirement)?));}
         if self.stage==2&&self.projection.is_some(){return Ok(waiting(admit_source_retirement(&mut self.retirement,&mut self.projection,grant.retirement)?));}
         if self.stage==10&&!self.garbage.is_empty(){let bytes=pack::value::retirement::owned_retirement_birth_bytes::<Vec<pack::value::DslValue>>();if grant.retirement.maximum_items==0||grant.retirement.maximum_capacity_bytes<bytes{return Ok(waiting(Default::default()));}let mut original=Some(std::mem::take(&mut self.garbage));let admitted=admit_source_retirement(&mut self.retirement,&mut original,grant.retirement);if let Some(original)=original{self.garbage=original;}return admitted.map(waiting);}

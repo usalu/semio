@@ -1,0 +1,15 @@
+{
+  "authority": false,
+  "command": "SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/z' TMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/z' TMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/z' TEMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/z' TEMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/z' repo --service=off tools exec bun -- test '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/lease-zero.test.ts' > '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/lease-zero-cold.log' 2>&1",
+  "cwd": "/Users/ueli/Documents/semio",
+  "admission": "normal managed repo tools exec",
+  "exitCode": 0,
+  "testsPassed": 4,
+  "testsFailed": 0,
+  "assertions": 13,
+  "issuer": "existing declareBuildTestEnvelopeV1 / withBuildTestInvocationV1",
+  "scope": "actual unit-test Original and real isolated public resource lease/kernel SQLite; not Native maintenance grant",
+  "productionSourceEdited": false,
+  "log": "🗑️generated/lease-zero-cold.log",
+  "logSha256": "4da7044e9a7efc3b3b51db2a3c128e3b1e4e05da0ce4cf4836fb6a9f11f8b36a"
+}

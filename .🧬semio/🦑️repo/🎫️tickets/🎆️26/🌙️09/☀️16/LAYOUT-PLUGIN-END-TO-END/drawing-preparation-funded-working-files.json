@@ -1,0 +1,20 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🦀️.rs",
+    "bytes": 80465,
+    "sha256": "adc1d3b54df3d92dd214c2e78f03fa08d03510830728092e5f7d3c4f6681cf1e",
+    "utf16PathUnits": 146
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/🦀️.rs",
+    "bytes": 12966,
+    "sha256": "b39baea4f1a422fb49a763094261aa1347ead91cc0d0807ec23116143287753a",
+    "utf16PathUnits": 87
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/🧪️tests/🦀️.rs",
+    "bytes": 9259,
+    "sha256": "2edcc36c588e2eba1c36876891d663647d6ee836ca31691d88e93f6f5bdcfcf0",
+    "utf16PathUnits": 96
+  }
+]

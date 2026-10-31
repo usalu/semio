@@ -1,0 +1,195 @@
+[
+  {
+    "id": "stale",
+    "receipt": "stale",
+    "publish": "ok",
+    "events": [
+      "authenticate",
+      "read",
+      "pending",
+      "funding-observe",
+      "parent",
+      "prepare",
+      "retire",
+      "publish",
+      "reconcile",
+      "reader"
+    ],
+    "pending": "absent",
+    "funding": "old"
+  },
+  {
+    "id": "current",
+    "receipt": "current",
+    "publish": "ok",
+    "events": [
+      "authenticate",
+      "read",
+      "pending",
+      "funding-observe",
+      "parent",
+      "prepare",
+      "retire",
+      "reconcile",
+      "reader"
+    ],
+    "pending": "absent",
+    "funding": "current"
+  },
+  {
+    "id": "new",
+    "receipt": "absent",
+    "publish": "ok",
+    "events": [
+      "authenticate",
+      "read",
+      "reader"
+    ],
+    "pending": "absent",
+    "funding": "current"
+  },
+  {
+    "id": "busy",
+    "receipt": "stale",
+    "publish": "refuse",
+    "events": [
+      "authenticate",
+      "read",
+      "pending",
+      "funding-observe",
+      "parent",
+      "prepare",
+      "retire",
+      "publish"
+    ],
+    "pending": "absent",
+    "funding": "old"
+  },
+  {
+    "id": "unreadable",
+    "receipt": "unreadable",
+    "publish": "ok",
+    "events": [
+      "authenticate",
+      "read"
+    ],
+    "pending": "absent",
+    "funding": "current"
+  },
+  {
+    "id": "foreign-purpose",
+    "receipt": "stale",
+    "publish": "ok",
+    "events": [
+      "authenticate"
+    ],
+    "pending": "absent",
+    "funding": "old"
+  },
+  {
+    "id": "current-envelope-pending-namespace",
+    "receipt": "current",
+    "pending": "present",
+    "publish": "ok",
+    "events": [
+      "authenticate",
+      "read",
+      "pending",
+      "funding-observe",
+      "parent",
+      "prepare",
+      "retire",
+      "publish",
+      "reconcile",
+      "reader"
+    ],
+    "funding": "current"
+  },
+  {
+    "id": "current-envelope-unknown-pending-state",
+    "receipt": "current",
+    "pending": "present",
+    "publish": "refuse",
+    "events": [
+      "authenticate",
+      "read",
+      "pending",
+      "funding-observe",
+      "parent",
+      "prepare",
+      "retire",
+      "publish"
+    ],
+    "funding": "current"
+  },
+  {
+    "id": "current-envelope-unreadable-pending",
+    "receipt": "current",
+    "pending": "unreadable",
+    "publish": "ok",
+    "events": [
+      "authenticate",
+      "read",
+      "pending"
+    ],
+    "funding": "current"
+  },
+  {
+    "id": "current-envelope-old-charge-after-publication-crash",
+    "receipt": "current",
+    "pending": "absent",
+    "funding": "old",
+    "publish": "ok",
+    "events": [
+      "authenticate",
+      "read",
+      "pending",
+      "funding-observe",
+      "parent",
+      "prepare",
+      "retire",
+      "reconcile",
+      "reader"
+    ]
+  },
+  {
+    "id": "current-envelope-reserve-interruption",
+    "receipt": "current",
+    "pending": "absent",
+    "funding": "reserved",
+    "publish": "ok",
+    "events": [
+      "authenticate",
+      "read",
+      "pending",
+      "funding-observe",
+      "reconcile",
+      "funding-observe",
+      "parent",
+      "prepare",
+      "retire",
+      "reconcile",
+      "reader"
+    ]
+  },
+  {
+    "id": "current-envelope-settlement-before-marker",
+    "receipt": "current",
+    "pending": "absent",
+    "funding": "settled-marker-old",
+    "publish": "ok",
+    "events": [
+      "authenticate",
+      "read",
+      "pending",
+      "funding-observe",
+      "reconcile",
+      "funding-observe",
+      "parent",
+      "prepare",
+      "retire",
+      "reconcile",
+      "reader"
+    ]
+  }
+]

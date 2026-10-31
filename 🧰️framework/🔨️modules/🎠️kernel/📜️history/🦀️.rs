@@ -434,7 +434,7 @@ pub struct FaultNotice {
 /// 🏢️ Framework-owned EN/DE notices of the refusal codes any app raises under a framework namespace (`app.command.*`,
 /// `mutation.*`, design §20.12) and of the host's guest admission (`plugin.channel-mismatch`, `{guest}`/`{host}`) — a shell tells them with the fault's own severity, before the app's own table. Fixture
 /// `🧫️fixtures/🧫️framework-notices/🔣️.json`; TS twin `FRAMEWORK_FAULT_NOTICE_LABELS`.
-pub const FRAMEWORK_FAULT_NOTICE_LABELS: [(&str, &str, &str); 87] = [
+pub const FRAMEWORK_FAULT_NOTICE_LABELS: [(&str, &str, &str); 96] = [
     ("app.command.unsupported", "This action is not available here.", "Diese Aktion ist hier nicht verfügbar."),
     ("app.command.invalid", "This action is not valid.", "Diese Aktion ist ungültig."),
     ("app.command.invalid-args", "The action's input is not valid.", "Die Eingabe der Aktion ist ungültig."),
@@ -505,6 +505,15 @@ pub const FRAMEWORK_FAULT_NOTICE_LABELS: [(&str, &str, &str); 87] = [
     ("interactive-job.catalog-authority", "A tool of this app is registered without its full authority.", "Ein Werkzeug dieser App ist ohne seine vollständige Berechtigung registriert."),
     ("interactive-job.catalog-incomplete", "A command of this app lacks its registered editing step.", "Einem Befehl dieser App fehlt sein registrierter Bearbeitungsschritt."),
     ("interactive-job.child-emission-retirement-refused", "A change to a part could not be released cleanly — try again.", "Eine Änderung an einem Teil konnte nicht sauber freigegeben werden — erneut versuchen."),
+    ("interactive-job.task-resume-command", "A background task answered with an action this app does not know.", "Eine Hintergrundaufgabe hat mit einer Aktion geantwortet, die diese App nicht kennt."),
+    ("interactive-job.task-resume-queue", "Too many background-task results are waiting to be applied — try again in a moment.", "Zu viele Ergebnisse von Hintergrundaufgaben warten auf ihre Anwendung — gleich erneut versuchen."),
+    ("interactive-job.task-resume-delivery", "The result of a background task could not be applied.", "Das Ergebnis einer Hintergrundaufgabe konnte nicht angewendet werden."),
+    ("interactive-job.admission-capacity", "Too many operations are running at once — try again in a moment.", "Es laufen zu viele Vorgänge gleichzeitig — gleich erneut versuchen."),
+    ("interactive-job.publication-stalled", "The result of an operation could not be shown in time — try again.", "Das Ergebnis eines Vorgangs ließ sich nicht rechtzeitig anzeigen — erneut versuchen."),
+    ("interactive-job.stale", "The document changed while this action was being applied — try again.", "Das Dokument hat sich beim Anwenden dieser Aktion geändert — erneut versuchen."),
+    ("interactive-job.media-output-limit", "The exported file is too large.", "Die exportierte Datei ist zu groß."),
+    ("artifact-envelope.ingress-saturated", "Too many documents are being processed at once — try again in a moment.", "Es werden zu viele Dokumente gleichzeitig verarbeitet — gleich erneut versuchen."),
+    ("artifact-envelope.stale-publication", "The document changed before its result could be shown — try again.", "Das Dokument hat sich geändert, bevor sein Ergebnis angezeigt werden konnte — erneut versuchen."),
     ("plugin.document-load.unavailable", "This app cannot load or save whole documents.", "Diese App kann keine ganzen Dokumente laden oder speichern."),
     ("plugin.document-load.too-many-members", "The document has {count} parts, but at most {maximum} can be loaded.", "Das Dokument hat {count} Teile, es lassen sich aber höchstens {maximum} laden."),
     ("plugin.document-load.too-large", "The document is {bytes} bytes large, but at most {maximum} bytes can be loaded.", "Das Dokument ist {bytes} Bytes groß, es lassen sich aber höchstens {maximum} Bytes laden."),

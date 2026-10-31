@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operations",
+    "sourceCreated",
+    "grantRenewal",
+    "callbackWorkInferred",
+    "errorOwnership",
+    "concreteImplementation",
+    "owningCorpus",
+    "limitsChanged"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operations": {
+      "const": [
+        "validate-original-source",
+        "borrow-current-and-lifetime-grants",
+        "borrow-current-and-lifetime-cpu",
+        "post-exact-effects",
+        "post-actual-cpu",
+        "lend-same-retained-context",
+        "lend-same-work-context"
+      ]
+    },
+    "sourceCreated": {
+      "const": false
+    },
+    "grantRenewal": {
+      "const": false
+    },
+    "callbackWorkInferred": {
+      "const": false
+    },
+    "errorOwnership": {
+      "const": "complete-original"
+    },
+    "concreteImplementation": {
+      "const": "StepContext"
+    },
+    "owningCorpus": {
+      "const": [
+        "domain-reservation",
+        "original-work-failure",
+        "original-closure-failure",
+        "original-turn-failure"
+      ]
+    },
+    "limitsChanged": {
+      "const": false
+    }
+  }
+}

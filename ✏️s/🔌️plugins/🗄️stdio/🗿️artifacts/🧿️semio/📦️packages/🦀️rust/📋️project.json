@@ -203,6 +203,24 @@
         }
       }
     },
+    "verify-record-document": {
+      "executor": "repo:script",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts verify record-document",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "workspaceCommand": [
+            "verify",
+            "record-document"
+          ]
+        }
+      }
+    },
     "composition-prepare": {
       "executor": "repo:script",
       "cache": false,

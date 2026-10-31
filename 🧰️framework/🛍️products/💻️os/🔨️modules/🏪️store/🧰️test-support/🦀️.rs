@@ -359,7 +359,16 @@ where
     assert_eq!(&parsed, operation, "op-text round trip diverged; printed: {printed:?}");
 }
 
-pub use semio_framework_value::testing::assert_wire_witness;
+/// 📡️ Asserts a committed language-agnostic wire witness (`…/🧾️wire-witness/🦠️mutation/🔣️.json`) IS the canonical Rust wire of its operation: `FromValue` decodes it and `ToValue` re-encodes exactly the committed JSON under the independent `serde_json` oracle (key order free, number spelling exact).
+pub fn assert_wire_witness<Op>(witness: &str) -> Op
+where
+    Op: semio_framework_value::FromValue + semio_framework_value::ToValue,
+{
+    let committed: serde_json::Value = serde_json::from_str(witness).unwrap_or_else(|error| panic!("wire witness is not JSON: {error}\n{witness}"));
+    let operation = Op::from_value(committed.clone().into()).unwrap_or_else(|error| panic!("wire witness does not decode: {error}\n{witness}"));
+    assert_eq!(serde_json::Value::from(operation.to_value()), committed, "wire witness is not the canonical Rust wire");
+    operation
+}
 
 /// 🧊️ Cold twin of [`assert_op_line_round_trip`] for an operation that REJECTS a bare drop —
 /// one carrying an `OrderedMap` root or a retirement ladder (`🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs:81`),
@@ -572,14 +581,14 @@ impl<P: Send + Sync + 'static> SnapshotRetirementFactory<P> for RoundTripValueRe
 struct RoundTripValueRetirement<T>(Option<T>);
 
 impl<T: Send> ErasedSnapshotRetirement for RoundTripValueRetirement<T> {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.0.is_none() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "plain test retirement requires admitted depth")); }
         drop(self.0.take());
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }))
-    }
+    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { self.0.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, ValueError> { Ok(0) }
@@ -593,9 +602,9 @@ struct RoundTripValueRetirementFactory;
 impl<T: Send + 'static> ArtifactOwnedValueRetirementFactory<T> for RoundTripValueRetirementFactory {
     fn retirement_birth_bytes(&self, _value: &T) -> usize { size_of::<RoundTripValueRetirement<T>>() }
 
-    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, T)> {
+    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, T)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, T)> {
         admit_artifact_retirement(value, grant, |value| RoundTripValueRetirement(Some(value)))
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 /// 🧪️ Drives one erased retirement to its terminal-empty witness, granting each independent axis exactly its quoted demand.

@@ -150,7 +150,7 @@ impl MountedLayoutJob {
         use semio_framework_job::{InteractiveJobCloseStep as Step,RetainedCloneProgress};
         let empty=RetainedCloneProgress::default();if !self.close_requested{return Ok(Step::Blocked)}if self.terminal_is_empty(){return Ok(Step::Complete{progress:empty})}
         if grant.maximum_items==0{return Ok(Step::Pending{progress:empty})}
-        if !self.fault_payload.terminal_is_empty(){return match self.fault_payload.close_step_granted(grant){Ok(step)=>Ok(Step::Pending{progress:step.progress()}),Err(error)=>Err(error)}}
+        if !self.fault_payload.terminal_is_empty(){return match self.fault_payload.close_step_granted(grant).result{Ok(step)=>Ok(Step::Pending{progress:step.progress()}),Err(error)=>Err(error)}}
         let bytes=match self.next_close_release_bytes(){Ok(bytes)=>bytes,Err(error)=>return Err(error)};
         let depth=self.next_close_depth()?;if bytes>grant.maximum_release_bytes||grant.maximum_depth<depth{return Ok(Step::Pending{progress:empty})}
         if self.rejected_result.take().is_some()||self.rejected_line.take().is_some()||self.rejected_glyph.take().is_some()||self.rejected_preview.take().is_some()||self.rejected_run.take().is_some()||self.rejected_walk.take().is_some()||self.rejected_node.take().is_some(){return Ok(Step::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
@@ -244,8 +244,8 @@ impl MountedLayoutFault {
 }
 
 impl semio_framework_job::InteractiveJob for MountedLayoutJob {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        self.worker_one(cx).map_err(semio_framework_job::OriginalTurnFailure::from)
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.worker_one(cx).map_err(semio_framework_job::OriginalTurnFailure::from))
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {

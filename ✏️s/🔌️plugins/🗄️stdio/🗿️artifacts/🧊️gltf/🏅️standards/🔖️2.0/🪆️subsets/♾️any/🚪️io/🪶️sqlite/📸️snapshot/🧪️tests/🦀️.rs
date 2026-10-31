@@ -511,7 +511,7 @@ fn sqlite_snapshot_gltf_genuine_native_output_preserves_paid_full_word_state() {
                 events.push(p);
                 true
             };
-            let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut accept, limits), native_owner)).unwrap();
+            let payload = semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut accept, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, control, native_owner))).unwrap();
             assert!(events.iter().any(|p| p.phase == SqliteSnapshotPhase::EncodeNative && p.total > 0 && p.completed == p.total));
             let actual = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| GltfSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
             assert_eq!(actual.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), expected);
@@ -529,15 +529,15 @@ fn sqlite_snapshot_gltf_genuine_native_output_rejects_limits_and_cancels_during_
     snapshot.document.asset.generator = Some(work["textUnit"].as_str().unwrap().repeat(work["repeat"].as_u64().unwrap() as usize));
     let limits = SqliteDatabaseLimits::default();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
+        let payload = semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut |_| true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, control, native_owner))).unwrap();
         assert!(match payload {
             store::io::IoPayload::Binary(v) => !v.is_empty(),
             store::io::IoPayload::Text(v) => !v.is_empty(),
         });
         for limits in [SqliteDatabaseLimits { max_value_bytes: work["refusedBytes"].as_u64().unwrap() as usize, ..limits }, SqliteDatabaseLimits { max_file_bytes: 1, ..limits }] {
-            assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).is_err());
+            assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut |_| true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, control, native_owner))).is_err());
         }
-        assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| false, limits), native_owner)).is_err());
+        assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut |_| false, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, control, native_owner))).is_err());
         let mut reached = false;
         let mut progress = |p: store::sqlite_snapshot::SqliteSnapshotProgress| {
             if p.phase == SqliteSnapshotPhase::EncodeNative && p.total >= 65536 && p.completed >= 65536 && p.completed < p.total {
@@ -547,7 +547,7 @@ fn sqlite_snapshot_gltf_genuine_native_output_rejects_limits_and_cancels_during_
                 true
             }
         };
-        assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut progress, limits), native_owner)).is_err());
+        assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut progress, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, control, native_owner))).is_err());
         assert!(reached);
     }
     GltfSnapshot::retire_sqlite_snapshot(snapshot);

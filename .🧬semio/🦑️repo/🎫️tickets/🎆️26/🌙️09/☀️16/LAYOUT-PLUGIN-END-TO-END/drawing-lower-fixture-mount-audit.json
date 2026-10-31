@@ -1,0 +1,173 @@
+{
+  "state": "bounded-literal-metadata-only-not-source-fit",
+  "observations": [
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🧹️retirement/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🧹️retirement/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "include_str!",
+      "specifier": "../../🎟️work/🧫️fixtures/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🎟️work/🧫️fixtures/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "include_str!",
+      "specifier": "../../🎟️work/🧫️fixtures/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🎟️work/🧫️fixtures/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🧹️retirement/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🧹️retirement/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🧹️flatten/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🧹️flatten/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🧹️stroke/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🧹️stroke/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🧹️stroke/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🧹️stroke/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🧹️coverage/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧮️geometry/📷️raster/🧹️coverage/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "include_str!",
+      "specifier": "../../🎟️work/🧫️fixtures/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🎟️work/🧫️fixtures/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "include_str!",
+      "specifier": "../../../../🔤️text/🧪️tests/🎟️original/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️original/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/📝️text/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/📝️text/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "fixture_text!",
+      "specifier": "../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/🧹️retirement/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/🧹️retirement/🔣️.json",
+      "exists": true
+    },
+    {
+      "source": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+      "kind": "include_str!",
+      "specifier": "../../🎟️work/🏁️settlement/🧫️fixtures/🔣️.json",
+      "target": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎟️work/🏁️settlement/🧫️fixtures/🔣️.json",
+      "exists": true
+    }
+  ]
+}

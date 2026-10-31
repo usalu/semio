@@ -1,27 +1,13 @@
 //! 🧬️ Fem2d diff schema — positional keyed deltas (framework `protocol::list_delta`) over the artifact.
 
 use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
-use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
-use crate::standards::v1::subsets::any::schema::structure::FemCombination;
-use crate::standards::v1::subsets::any::schema::structure::FemElement;
-use crate::standards::v1::subsets::any::schema::structure::FemLoad;
-use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
 use semio_s_fem_material::planar::FemMaterialValue;
 use semio_s_fem_node::planar::FemNodeValue;
-use crate::standards::v1::subsets::any::schema::structure::FemRegion;
-use crate::standards::v1::subsets::any::schema::structure::FemSection;
-use crate::standards::v1::subsets::any::schema::structure::FemSupport;
-use crate::standards::v1::subsets::any::schema::structure::element_id;
-use crate::standards::v1::subsets::any::schema::structure::load_id;
+use crate::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemCombination, FemElement, FemLoad, FemLoadCase, FemRegion, FemSection, FemSupport, element_id, load_id};
 use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use protocol::list_delta::RowPatch;
-use protocol::ApplyCapability;
-use protocol::{ColdDiffAlgebra, DiffAlgebra};
-use protocol::MutationApplyError;
-use protocol::MutationApplyResult;
-use protocol::MutationDiff;
-use protocol::ColdMutationDiff;
+use protocol::{ApplyCapability, ColdDiffAlgebra, ColdMutationDiff, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
@@ -114,7 +100,7 @@ pub struct Fem2dElementsModification {
     pub patch: Fem2dElementPatch,
 }
 
-/// 🧩 Positional keyed delta of the `elements` list.
+/// 🗝️ Positional keyed delta of the `elements` list.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dElementsDelta {
@@ -147,7 +133,7 @@ impl Fem2dElementsDelta {
         }
     }
 
-    /// ➖️ The delta that removes the row `id` found at `index` of the base list.
+    /// 🧹️ The delta that removes the row `id` found at `index` of the base list.
     pub fn removal_by_id(id: impl Into<String>, index: usize) -> Self {
         Self::from_parts(protocol::list_delta::Parts::removal_by_id(id.into(), index))
     }
@@ -157,7 +143,7 @@ impl Fem2dElementsDelta {
         self.clone().into_parts().commit_onto(base, capability)
     }
 
-    /// ➕️ Composes `self` with the delta `later` applied after it.
+    /// 📱️ Composes `self` with the delta `later` applied after it.
     pub fn absorb(&mut self, later: Self) {
         let mut parts = std::mem::take(self).into_parts();
         parts.absorb(later.into_parts());
@@ -176,7 +162,7 @@ impl Fem2dElementsDelta {
 }
 
 protocol::list_delta! {
-    /// 🧩 Positional keyed rows of the `regions` list.
+    /// 🧾️ Positional keyed rows of the `regions` list.
     pub Fem2dRegionsDelta {
         removal: Fem2dRegionRemoval,
         insertion: Fem2dRegionInsertion,
@@ -189,7 +175,7 @@ protocol::list_delta! {
 }
 
 protocol::list_delta! {
-    /// 🧩 Positional keyed rows of the `materials` list.
+    /// 📋️ Positional keyed rows of the `materials` list.
     pub Fem2dMaterialsDelta {
         removal: Fem2dMaterialRemoval,
         insertion: Fem2dMaterialInsertion,
@@ -203,7 +189,7 @@ protocol::list_delta! {
 }
 
 protocol::list_delta! {
-    /// 🧩 Positional keyed rows of the `sections` list.
+    /// 🌀️ Positional keyed rows of the `sections` list.
     pub Fem2dSectionsDelta {
         removal: Fem2dSectionRemoval,
         insertion: Fem2dSectionInsertion,
@@ -216,7 +202,7 @@ protocol::list_delta! {
 }
 
 protocol::list_delta! {
-    /// 🧩 Positional keyed rows of the `supports` list.
+    /// 🌁️ Positional keyed rows of the `supports` list.
     pub Fem2dSupportsDelta {
         removal: Fem2dSupportRemoval,
         insertion: Fem2dSupportInsertion,
@@ -229,7 +215,7 @@ protocol::list_delta! {
 }
 
 protocol::list_delta! {
-    /// 🧩 Positional keyed rows of the `load_cases` list.
+    /// 📤️ Positional keyed rows of the `load_cases` list.
     pub Fem2dLoadCasesDelta {
         removal: Fem2dLoadCaseRemoval,
         insertion: Fem2dLoadCaseInsertion,
@@ -241,7 +227,7 @@ protocol::list_delta! {
     }
 }
 
-/// 🩹 Owned-field patch of one load case: a rename, a self-weight switch and/or keyed load rows.
+/// 🌾️ Owned-field patch of one load case: a rename, a self-weight switch and/or keyed load rows.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dLoadCasePatch {
@@ -257,7 +243,7 @@ impl protocol::list_delta::Keyed for FemLoad {
     }
 }
 
-/// ➖️ One `loads` row removed, with the base index the inverse reinserts it at.
+/// 🏋️ One `loads` row removed, with the base index the inverse reinserts it at.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dLoadRemoval {
@@ -265,7 +251,7 @@ pub struct Fem2dLoadRemoval {
     pub index: usize,
 }
 
-/// ➕️ One `loads` row inserted at its index in the resulting list.
+/// 📥️ One `loads` row inserted at its index in the resulting list.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dLoadInsertion {
@@ -274,7 +260,7 @@ pub struct Fem2dLoadInsertion {
     pub row: FemLoad,
 }
 
-/// ↕️ One `loads` row moved from its base index to its index in the resulting list.
+/// 🚚️ One `loads` row moved from its base index to its index in the resulting list.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dLoadRelocation {
@@ -283,7 +269,7 @@ pub struct Fem2dLoadRelocation {
     pub to: usize,
 }
 
-/// 🩹 One modified `loads` row (whole-row replacement).
+/// 🔄️ One modified `loads` row (whole-row replacement).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct Fem2dLoadsModification {
@@ -291,7 +277,7 @@ pub struct Fem2dLoadsModification {
     pub patch: Fem2dLoadPatch,
 }
 
-/// 🧩 Positional keyed delta of the `loads` list.
+/// 🌂️ Positional keyed delta of the `loads` list.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Fem2dLoadsDelta {
@@ -324,36 +310,36 @@ impl Fem2dLoadsDelta {
         }
     }
 
-    /// ➖️ The delta that removes the row `id` found at `index` of the base list.
+    /// 🏆️ The delta that removes the row `id` found at `index` of the base list.
     pub fn removal_by_id(id: impl Into<String>, index: usize) -> Self {
         Self::from_parts(protocol::list_delta::Parts::removal_by_id(id.into(), index))
     }
 
-    /// ✍️ The list this delta turns `base` into; reached only from the diff's own `apply`, under the central applier's capability.
+    /// 🔟️ The list this delta turns `base` into; reached only from the diff's own `apply`, under the central applier's capability.
     pub fn commit_onto(&self, base: &Vec<FemLoad>, capability: ApplyCapability) -> Result<Vec<FemLoad>, protocol::list_delta::ApplyError> {
         self.clone().into_parts().commit_onto(base, capability)
     }
 
-    /// ➕️ Composes `self` with the delta `later` applied after it.
+    /// 🌃️ Composes `self` with the delta `later` applied after it.
     pub fn absorb(&mut self, later: Self) {
         let mut parts = std::mem::take(self).into_parts();
         parts.absorb(later.into_parts());
         *self = Self::from_parts(parts);
     }
 
-    /// 🔁️ The negative delta over `base`, read row by row.
+    /// 🌄️ The negative delta over `base`, read row by row.
     pub fn inverse(&self, base: &Vec<FemLoad>) -> Self {
         Self::from_parts(self.clone().into_parts().inverse(base))
     }
 
-    /// 🕳️ Whether the delta changes nothing.
+    /// 🌅️ Whether the delta changes nothing.
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.inserted.is_empty() && self.moved.is_empty() && self.modified.iter().all(|entry| RowPatch::<FemLoad>::is_empty(&entry.patch))
     }
 }
 
 protocol::list_delta! {
-    /// 🧩 Positional keyed rows of the `combinations` list.
+    /// 🌆️ Positional keyed rows of the `combinations` list.
     pub Fem2dCombinationsDelta {
         removal: Fem2dCombinationRemoval,
         insertion: Fem2dCombinationInsertion,
@@ -401,7 +387,7 @@ protocol::list_delta! {
         key: case_id
     }
 }
-/// 🧩️ Combination names and independently keyed terms have separate ownership.
+/// 📛️ Combination names and independently keyed terms have separate ownership.
 #[derive(Clone,Debug,Default,PartialEq,ToValue,FromValue,semio_framework_dsl_record_derive::DslRecord,semio_framework_value::RetireOwned)]
 #[value(rename_all="camelCase",default,deny_unknown_fields)]
 pub struct Fem2dCombinationPatch {
@@ -422,9 +408,9 @@ impl RowPatch<FemCombination> for Fem2dCombinationPatch {
     fn is_empty(&self)->bool{self.name.is_none()&&self.terms.as_ref().is_none_or(|terms|terms.is_empty())}
 }
 impl Fem2dCombinationPatch {
-    /// 🔁️ Explicit replacement owns the name and every term in its live base.
+    /// 💚️ Explicit replacement owns the name and every term in its live base.
     pub fn replacement(base:&FemCombination,row:&FemCombination)->Self{Self{name:Some(row.name.clone()),terms:Some(Self::replacing_terms(&base.terms,&row.terms))}}
-    /// 🔗️ Builds exact keyed term intent from an explicit whole-list or whole-map replacement.
+    /// 🏗️ Builds exact keyed term intent from an explicit whole-list or whole-map replacement.
     pub fn replacing_terms(base:&Vec<crate::standards::v1::subsets::any::schema::structure::FemCombinationTerm>,rows:&Vec<crate::standards::v1::subsets::any::schema::structure::FemCombinationTerm>)->Fem2dCombinationTermsDelta{
                 Fem2dCombinationTermsDelta {
             removed: base.iter().enumerate().map(|(index,row)| Fem2dCombinationTermRemoval { id: row.case_id.clone(), index }).collect(),
@@ -470,18 +456,18 @@ impl RowPatch<FemMaterialValue> for Fem2dMaterialPatch {
 }
 
 impl Fem2dMaterialPatch {
-    /// 🧱️ Explicit whole-record replacement owns every mutable material field.
+    /// 🌡️ Explicit whole-record replacement owns every mutable material field.
     pub fn replacement(material: &FemMaterialValue) -> Self {
         Self { name: Some(material.name.clone()), e: Some(material.e), nu: Some(material.nu), rho: Some(material.rho) }
     }
 
-    /// 🩹️ Reads a candidate for validation without changing the live projection.
+    /// ✔️ Reads a candidate for validation without changing the live projection.
     pub fn candidate(&self, base: &FemMaterialValue) -> FemMaterialValue {
         FemMaterialValue { id: base.id.clone(), name: self.name.clone().unwrap_or_else(|| base.name.clone()), e: self.e.unwrap_or(base.e), nu: self.nu.unwrap_or(base.nu), rho: self.rho.unwrap_or(base.rho) }
     }
 }
 
-/// 🧩️ Sparse node setters retain independent field intent through replay and inversion.
+/// 🔵️ Sparse node setters retain independent field intent through replay and inversion.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -509,7 +495,7 @@ impl RowPatch<FemNodeValue> for Fem2dNodePatch {
 }
 
 impl Fem2dNodePatch {
-    /// 🔁️ Explicit replacement owns every mutable node field.
+    /// 🏞️ Explicit replacement owns every mutable node field.
     pub fn replacement(row: &FemNodeValue) -> Self {
         Self { x: Some(row.x), y: Some(row.y) }
     }
@@ -520,7 +506,7 @@ impl Fem2dNodePatch {
 }
 
 
-/// 🧩️ Sparse section setters retain independent field intent through replay and inversion.
+/// 🌇️ Sparse section setters retain independent field intent through replay and inversion.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -552,17 +538,17 @@ impl RowPatch<FemSection> for Fem2dSectionPatch {
 }
 
 impl Fem2dSectionPatch {
-    /// 🔁️ Explicit replacement owns every mutable section field.
+    /// 🌈️ Explicit replacement owns every mutable section field.
     pub fn replacement(row: &FemSection) -> Self {
         Self { name: Some(row.name.clone()), area: Some(row.area), iy: Some(row.iy) }
     }
-    /// 🔎️ Reads a complete validation candidate without mutating a projection.
+    /// 🗂️ Reads a complete validation candidate without mutating a projection.
     pub fn candidate(&self, base: &FemSection) -> FemSection {
         FemSection { id: base.id.clone(), name: self.name.clone().unwrap_or_else(|| base.name.clone()), area: self.area.unwrap_or(base.area), iy: self.iy.unwrap_or(base.iy) }
     }
 }
 
-/// 🧩️ Sparse region fields preserve independent event intent.
+/// 📣️ Sparse region fields preserve independent event intent.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -602,13 +588,13 @@ impl RowPatch<FemRegion> for Fem2dRegionPatch {
     fn is_empty(&self) -> bool { self.name.is_none() && self.outline.is_none() && self.holes.is_none() && self.thickness.is_none() && self.material_id.is_none() && self.mesh_size.is_none() }
 }
 impl Fem2dRegionPatch {
-    /// 🔁️ An explicit replacement authors all mutable fields.
+    /// 🌉️ An explicit replacement authors all mutable fields.
     pub fn replacement(row: &FemRegion) -> Self { Self { name: Some(row.name.clone()), outline: Some(row.outline.clone()), holes: Some(row.holes.clone()), thickness: Some(row.thickness.clone()), material_id: Some(row.material_id.clone()), mesh_size: Some(row.mesh_size.clone()) } }
-    /// 🔎️ Builds the current validation candidate.
+    /// 🌊️ Builds the current validation candidate.
     pub fn candidate(&self, base: &FemRegion) -> FemRegion { FemRegion { id: base.id.clone(), name: self.name.clone().unwrap_or_else(|| base.name.clone()), outline: self.outline.clone().unwrap_or_else(|| base.outline.clone()), holes: self.holes.clone().unwrap_or_else(|| base.holes.clone()), thickness: self.thickness.clone().unwrap_or_else(|| base.thickness.clone()), material_id: self.material_id.clone().unwrap_or_else(|| base.material_id.clone()), mesh_size: self.mesh_size.clone().unwrap_or_else(|| base.mesh_size.clone()) } }
 }
 
-/// 🧩️ Support intent owns a node reference, a whole set, or individual DOF memberships.
+/// 🔖️ Support intent owns a node reference, a whole set, or individual DOF memberships.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -653,12 +639,12 @@ impl Fem2dSupportPatch {
         if let Some(value) = self.rz { fixed.retain(|entry| *entry != crate::standards::v1::subsets::any::schema::structure::FemDof::Rz); if value { fixed.push(crate::standards::v1::subsets::any::schema::structure::FemDof::Rz); } }
         crate::standards::v1::subsets::any::schema::structure::FemDof::ALL.into_iter().filter(|candidate| fixed.contains(candidate)).collect()
     }
-    /// 🔁️ A replacement authors the node and whole restraint set.
+    /// 🌋️ A replacement authors the node and whole restraint set.
     pub fn replacement(row: &FemSupport) -> Self { Self { node_id: Some(row.node_id.clone()), fixed: Some(row.fixed.clone()), ..Default::default() } }
-    /// 🔎️ Reads current fields before semantic validation.
+    /// 🌌️ Reads current fields before semantic validation.
     pub fn candidate(&self, base: &FemSupport) -> FemSupport { FemSupport { id: base.id.clone(), node_id: self.node_id.clone().unwrap_or_else(|| base.node_id.clone()), fixed: self.memberships(&base.fixed) } }
 }
-/// 🧩️ Member field intent preserves the current variant and omitted sibling references.
+/// 🧑️ Member field intent preserves the current variant and omitted sibling references.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -688,7 +674,7 @@ impl RowPatch<FemElement> for Fem2dElementPatch {
     fn is_empty(&self) -> bool { self.kind.is_none() && self.start.is_none() && self.end.is_none() && self.material_id.is_none() && self.section_id.is_none() }
 }
 impl Fem2dElementPatch {
-    /// 🔁️ Replacement authors all mutable properties and the variant.
+    /// 🎭️ Replacement authors all mutable properties and the variant.
     pub fn replacement(row: &FemElement) -> Self {
         let (start, end, material_id, section_id, kind) = match row {
             FemElement::Bar { start, end, material_id, section_id, .. } => (start, end, material_id, section_id, "bar"),
@@ -698,7 +684,7 @@ impl Fem2dElementPatch {
 
         patch
     }
-    /// 🔎️ Common fields stay live and a newly created frame starts with zero roll.
+    /// 🤲️ Common fields stay live and a newly created frame starts with zero roll.
     pub fn candidate(&self, base: &FemElement) -> Result<FemElement, MutationApplyError> {
         let (id, start, end, material_id, section_id, kind) = match base {
             FemElement::Bar { id, start, end, material_id, section_id } => (id, start, end, material_id, section_id, "bar"),
@@ -713,7 +699,7 @@ impl Fem2dElementPatch {
         }
     }
 }
-/// 🧩️ Typed load fields use their variant tag as a replay precondition.
+/// 🔤️ Typed load fields use their variant tag as a replay precondition.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", deny_unknown_fields)]
@@ -766,19 +752,19 @@ impl RowPatch<FemLoad> for Fem2dLoadPatch {
     } }
 }
 impl Fem2dLoadPatch {
-    /// 🧬️ Starts an empty patch in the current load's admissible variant.
+    /// ▶️ Starts an empty patch in the current load's admissible variant.
     pub fn empty_for(row: &FemLoad) -> Self { match row {
             FemLoad::Nodal { .. } => Self::Nodal { node_id: None, dof: None, value: None },
             FemLoad::MemberUdl { .. } => Self::MemberUdl { element_id: None, wx: None, wy: None },
             FemLoad::Area { .. } => Self::Area { pressure: None, region_id: None },
     } }
-    /// 🔁️ A replacement owns every field in the specified variant.
+    /// 🌍️ A replacement owns every field in the specified variant.
     pub fn replacement(row: &FemLoad) -> Self { match row {
             FemLoad::Nodal { node_id, dof, value, .. } => Self::Nodal { node_id: Some(node_id.clone()), dof: Some(dof.clone()), value: Some(value.clone()) },
             FemLoad::MemberUdl { element_id, wx, wy, .. } => Self::MemberUdl { element_id: Some(element_id.clone()), wx: Some(wx.clone()), wy: Some(wy.clone()) },
             FemLoad::Area { pressure, region_id, .. } => Self::Area { pressure: Some(pressure.clone()), region_id: Some(region_id.clone()) },
     } }
-    /// 🔎️ Reads sparse fields only when the current variant still matches.
+    /// 🌎️ Reads sparse fields only when the current variant still matches.
     pub fn candidate(&self, row: &FemLoad) -> Result<FemLoad, MutationApplyError> { match (self, row) {
             (Self::Nodal { node_id, dof, value }, FemLoad::Nodal { id, node_id: base_node_id, dof: base_dof, value: base_value }) => Ok(FemLoad::Nodal { id: id.clone(), node_id: node_id.clone().unwrap_or_else(|| base_node_id.clone()), dof: dof.clone().unwrap_or_else(|| base_dof.clone()), value: value.clone().unwrap_or_else(|| base_value.clone()) }),
             (Self::MemberUdl { element_id, wx, wy }, FemLoad::MemberUdl { id, element_id: base_element_id, wx: base_wx, wy: base_wy }) => Ok(FemLoad::MemberUdl { id: id.clone(), element_id: element_id.clone().unwrap_or_else(|| base_element_id.clone()), wx: wx.clone().unwrap_or_else(|| base_wx.clone()), wy: wy.clone().unwrap_or_else(|| base_wy.clone()) }),
@@ -928,10 +914,6 @@ protocol::retained_row_patch!(pub retained_material_fields for Fem2dMaterialPatc
 protocol::retained_row_patch!(pub retained_node_fields for Fem2dNodePatch => FemNodeValue {x:f64,y:f64});
 protocol::retained_row_patch!(pub retained_section_fields for Fem2dSectionPatch => FemSection {name:String,area:f64,iy:f64});
 protocol::retained_row_patch!(pub retained_region_fields for Fem2dRegionPatch => FemRegion {name:String,outline:Vec<[f64;2]>,holes:Vec<Vec<[f64;2]>>,thickness:f64,material_id:String,mesh_size:f64});
-
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
 impl DiffAlgebra<Fem2dSnapshotValue> for Fem2dDiff {fn is_empty(&self)->bool{<Self as DiffAlgebra<Fem2dSnapshot>>::is_empty(self)}}
 impl MutationDiff<Fem2dSnapshotValue> for Fem2dDiff {}

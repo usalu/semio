@@ -1,0 +1,368 @@
+{
+  "cwd": "/Users/ueli/Documents/semio",
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/Cargo.toml",
+    "-p",
+    "semio-framework-os-services-native-paths",
+    "--doc",
+    "--",
+    "--nocapture"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-paths-docs-1",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-paths-docs-1/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-paths-docs-1/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-paths-docs-1/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-paths-docs-1/tmp"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-paths-docs-1/native.log",
+  "expectedDocCases": 0,
+  "scope": "NativePaths docs only, preceding owning1 is separate; conservative56 lock refresh is explicit",
+  "pre": [
+    {
+      "path": ".cargo/config.toml",
+      "bytes": 5289,
+      "sha256": "f89b00359d23322ceb5609f8f1656db7892700ab2343ec309b51a503587f9381",
+      "utf16PathUnits": 46
+    },
+    {
+      "path": "Cargo.lock",
+      "bytes": 744632,
+      "sha256": "10009cccf47a78c787a1b31d426218b18f753a214142983cce48eb66321fe34e",
+      "utf16PathUnits": 38
+    },
+    {
+      "path": "Cargo.toml",
+      "bytes": 129166,
+      "sha256": "0e13d6e93724e6b59c7ef05f32e14d96835e9c36b96f1eb7401e126be0c6ecef",
+      "utf16PathUnits": 38
+    },
+    {
+      "path": "rust-toolchain.toml",
+      "bytes": 165,
+      "sha256": "9dcece5e7ef6f9522160838201b29e57af801c0afca85755c50ef85771e9bee9",
+      "utf16PathUnits": 47
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🏁️tail/🦀️.rs",
+      "bytes": 2039,
+      "sha256": "d4eff3ba69d88a7c90e21ec01fb36e35633d4199ba33d0bdd535aae42026d8c3",
+      "utf16PathUnits": 82
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🏁️tail/🧪️tests/🏁️tail/🦀️.rs",
+      "bytes": 5525,
+      "sha256": "fd54e87b2c2cbe3ddd322f16b03eb3ffdc057bb46326838299c0c615b0148d64",
+      "utf16PathUnits": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🏁️tail/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 2462,
+      "sha256": "34af46ef3efe177c47517bcd724301f89ebcebe5b2858ed27587529c0c5bc5be",
+      "utf16PathUnits": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧪️tests/🔬️standalone/🦀️.rs",
+      "bytes": 1498,
+      "sha256": "01df047329df89f1cf48056eaa57af9084e3f1bb33347abf5d4b16341d3c492a",
+      "utf16PathUnits": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧪️tests/🧪️contention/🦀️.rs",
+      "bytes": 9827,
+      "sha256": "8166867847fcb40c2afe119eafc12f3fbcb7e012cc67b8cad51cea346e31771a",
+      "utf16PathUnits": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧪️tests/🧫️fixtures/🧪️contention/🔣️.json",
+      "bytes": 2144,
+      "sha256": "95b70e06770b9b295c570026effeca2e282fcdd5d1706fd4f1a058cc502a4e60",
+      "utf16PathUnits": 111
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🐕️timers-and-watchdog/🦀️.rs",
+      "bytes": 8758,
+      "sha256": "236d969e123d395c0a749b9597db526dd736f0ba9a367d9a53b7a22a501f51f0",
+      "utf16PathUnits": 89
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📈️percentile/🔐️gate/🦀️.rs",
+      "bytes": 1158,
+      "sha256": "076980fbe9d3b227636d13ecc254e627ad8022a2294dfc9c2ef351b30732c303",
+      "utf16PathUnits": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📈️percentile/🔐️gate/🧪️tests/🦀️.rs",
+      "bytes": 2098,
+      "sha256": "cd3be2f79295ea5edba2aded81e8f0086ee9dbbf4b226adc346782293f8e723b",
+      "utf16PathUnits": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📈️percentile/🔐️gate/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 237,
+      "sha256": "04341acb0fb9b298436aa5579d6032b3cf5b42b7ccda266f287027da71a68ed2",
+      "utf16PathUnits": 111
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📊️sample-rings-and-sites/🦀️.rs",
+      "bytes": 5966,
+      "sha256": "5f9869fe6ca289d153e8ffbd8a462f4d07cf6ade8bc493eefdd5516c6af7cce9",
+      "utf16PathUnits": 92
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📏️ceilings-and-diagnostics/🦀️.rs",
+      "bytes": 5820,
+      "sha256": "0ce39b090370a4124d8515a349629d3fd47b70d6be1f6e7333cd461d7348a40f",
+      "utf16PathUnits": 94
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📒️overrun-ledger/🦀️.rs",
+      "bytes": 5400,
+      "sha256": "302b9adcaf8f3d2fa4465e5cb672894625a77cb03cbc6acb26698fe29ee66a90",
+      "utf16PathUnits": 84
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📝️record/🦀️.rs",
+      "bytes": 26389,
+      "sha256": "d16aceafe4944038de3b08c2e58c0639f2db671653787eeb518993f0cf51e130",
+      "utf16PathUnits": 76
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📝️record/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 14235,
+      "sha256": "f40a1cd2f38414a03f034f6623bd169e59c224f2417572b7539d63bda559d325",
+      "utf16PathUnits": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📝️record/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 3011,
+      "sha256": "af4d5d2d821fc0e808a787e07b910d27ee6f9ad9be9bacca1415ba01d26ba6a7",
+      "utf16PathUnits": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📝️record/🧬️schema/🔣️.json",
+      "bytes": 2063,
+      "sha256": "3360e13ce097693b3ee9af6acdceb126a47841ce3eac014a113c3cfd3edcda9e",
+      "utf16PathUnits": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1160,
+      "sha256": "4b4d9c0b10588fe34fa55d51d3c911f9921a02d2f7fe76f189483ebe348acfb8",
+      "utf16PathUnits": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 432,
+      "sha256": "c0a3c4faee63223dd0dba8e51a2bf87df9ad6b2b951cd31562e7b8034dd7a250",
+      "utf16PathUnits": 86
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🕰️clock/🦀️.rs",
+      "bytes": 2639,
+      "sha256": "9eb81a09131e615121f9c4307cf2f5cabde00522d06295250ae3144848f9c6f4",
+      "utf16PathUnits": 75
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🛰️operations-and-trace/🦀️.rs",
+      "bytes": 8874,
+      "sha256": "a61c74efe10820517d7514ce8e17674038d447b5e8a9132e724923d5e55ef4fb",
+      "utf16PathUnits": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🦀️.rs",
+      "bytes": 6153,
+      "sha256": "066165d3acff43956eadbf7d21f20ce7d2d69cdad78b22343b74ad8dc76cb06d",
+      "utf16PathUnits": 66
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 6317,
+      "sha256": "c75474da6cbc3f5c202a996aa1d9424f5f0d104b19b216047fb3f01c9017d2c5",
+      "utf16PathUnits": 83
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧪️tests/🧫️fixtures/🛰️span-vocabulary/🔣️.json",
+      "bytes": 1688,
+      "sha256": "a38d0f6f9b7019e1ddd9e4f2a62516d7f7b2d3002a6b8eb563000e8ac35830ef",
+      "utf16PathUnits": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🦀️.rs",
+      "bytes": 13612,
+      "sha256": "2b31753459929ee2d24e7f107f4229e5db4c20a68c36b69db43ce52e2dcb143a",
+      "utf16PathUnits": 76
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️tests/🔬️memory/🦀️.rs",
+      "bytes": 7441,
+      "sha256": "576d7035d3d08d9c14da8c32ddd86175cd99620d1730a4bbe7a18fbb5ec0097e",
+      "utf16PathUnits": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧬️schema/🔣️.json",
+      "bytes": 2658,
+      "sha256": "9096ecf00a18b3bfbc3cf7bdf43ef02d9db85414e5c47ce243bbe812d59d104b",
+      "utf16PathUnits": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧵️thread-roles-and-counters/🦀️.rs",
+      "bytes": 7304,
+      "sha256": "5aaccc32d4a50fd15e6ad6e6725e56ff3534d12b712fff090c5c8d84390b534e",
+      "utf16PathUnits": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔤️utf8/🦀️.rs",
+      "bytes": 629,
+      "sha256": "5197e79caa564b9353e1f677e809e68b25e8d1ddda2790d68a8f88cd592f0cc9",
+      "utf16PathUnits": 85
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔤️utf8/🧪️tests/🦀️.rs",
+      "bytes": 2238,
+      "sha256": "212a75150af7bf63657b405ed9fa1583e7150ee81b4c40ebf1f9dbdbe5857a3c",
+      "utf16PathUnits": 94
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/⚠️refusal/🔤️utf8/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 1397,
+      "sha256": "acb2c85276729792acf1111db2da768e42f0ff2a5782eced3374a30cdf4038b5",
+      "utf16PathUnits": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/♻️original-close/🦀️.rs",
+      "bytes": 1095,
+      "sha256": "0bf092bb19fb520f586e2644a0a466aadb83a76f67ec02c8e741d31a1ffcb245",
+      "utf16PathUnits": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 539,
+      "sha256": "06aeffad62da0bd20055b3bfc29ee82b7d3264ef87931b71f83ecfefad13bf9d",
+      "utf16PathUnits": 114
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/🦀️.rs",
+      "bytes": 10585,
+      "sha256": "b667b6a25cc4d31179b9df9f9ba25d561caabf842475d86647b0fd7e468956f8",
+      "utf16PathUnits": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/📖️read/🎟️.rs",
+      "bytes": 2536,
+      "sha256": "d22035ff3424107f013f97e043a7fcd6c5e9a09eb476be5994008f8ec417fe78",
+      "utf16PathUnits": 84
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 4613,
+      "sha256": "d44a1ee35eb598a3dc50296688d4f4a7ee69e0f0e4da854285c43d867b2f8fed",
+      "utf16PathUnits": 114
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📋️prefix/🎟️work/📐️.json",
+      "bytes": 535,
+      "sha256": "e210469bee05c6123cdf96393efb237aebd4155daf12c1034733b88d1d897ffb",
+      "utf16PathUnits": 117
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📋️prefix/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 7092,
+      "sha256": "6af7c8a2813804364dd18966f7bbdef4bed0e6574df6afe25178060fa9d26d2f",
+      "utf16PathUnits": 124
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📋️prefix/🦀️.rs",
+      "bytes": 3467,
+      "sha256": "c41079daba464183419e5f57b075f67655bb72feecb748b0b191350f24d511a4",
+      "utf16PathUnits": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📐️.json",
+      "bytes": 671,
+      "sha256": "1b4b83e496c5cc383cf833f270ddc42096a296d005b7a0ce84b8706b465c5cea",
+      "utf16PathUnits": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 963,
+      "sha256": "a9c3584696f17b941f5364684b107d0dcf850bc1316d1e35ba3076e897387fe6",
+      "utf16PathUnits": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 222,
+      "sha256": "a3f633bb074a894c15f63f91c7ba5480d7c3ebf22c39a20126b2cf061e125680",
+      "utf16PathUnits": 117
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/🦀️.rs",
+      "bytes": 5732,
+      "sha256": "94257b5e30694080a34349c5674e23ff8c49d8c1811e76c2f30dcd1646043102",
+      "utf16PathUnits": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/🧪️tests/🦀️.rs",
+      "bytes": 4246,
+      "sha256": "2ee191568d705d4f0c23b4e006970e0bf1388fc474047f6cfadb9c346ae59cc6",
+      "utf16PathUnits": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🔣️.json",
+      "bytes": 692,
+      "sha256": "55312df9ab0aa4830de3151722210e27b161cff0d67db066444164b09bf4da7f",
+      "utf16PathUnits": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🧾️progress.json",
+      "bytes": 580,
+      "sha256": "bfcaa71551e4293ed27cc884d05546ba19196b3ba2391ecfe0cab304e31713b5",
+      "utf16PathUnits": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🕰️clock.json",
+      "bytes": 1674,
+      "sha256": "4c2c1d0a95092baf6a904fb2099d911eb5772bce73575fd20857b1555e73cfd8",
+      "utf16PathUnits": 81
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🎟️original/payload.json",
+      "bytes": 2764,
+      "sha256": "5850c2697e2cd1dc7d8bbdd78096013232e005b9095f4f9f0f38f8dfab8d51a7",
+      "utf16PathUnits": 119
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/tests.rs",
+      "bytes": 4353,
+      "sha256": "d195885dc6c165d09ee2af152fb7bc5511e54f30064479366b5614cca1e816bf",
+      "utf16PathUnits": 111
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 787,
+      "sha256": "c571a480c62487b16380a2f61537f3435464f8c58cd5533fbde6073ad333f3bd",
+      "utf16PathUnits": 133
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 360,
+      "sha256": "739246c5cff16deaa07fc2de35e85ad6cd71478710a3d02fade4476f18174c36",
+      "utf16PathUnits": 129
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/🦀️.rs",
+      "bytes": 3515,
+      "sha256": "ccbdbaf0d40e96f26a413398435a9726c69b649e8482d87edb0d08761486127d",
+      "utf16PathUnits": 109
+    }
+  ]
+}

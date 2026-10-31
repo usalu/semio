@@ -23,6 +23,7 @@ members = [
   "🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/📦️packages/🦀️rust",
   "🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/📦️packages/🦀️rust",
   "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📦️packages/🦀️rust",
+  "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/📦️packages/🦀️rust",
   "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
   "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
   "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
@@ -154,11 +155,23 @@ path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/�
 [workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base-mutations]
 path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-stdio-ifc-geometry]
+path = "📐️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base-catalog]
+path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📚️catalog/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-4-catalog]
+path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📚️catalog/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base-model]
 path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base]
 path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-viewer]
+path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-cobie]
 path = "🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/📦️packages/🦀️rust"

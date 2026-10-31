@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "manager": "bun",
+      "locks": [
+        "bun.lock",
+        "bun.lockb"
+      ],
+      "scope": [
+        "bunfig.toml"
+      ]
+    },
+    {
+      "manager": "npm",
+      "locks": [
+        "package-lock.json",
+        "npm-shrinkwrap.json"
+      ],
+      "scope": [
+        ".npmrc"
+      ]
+    }
+  ]
+}

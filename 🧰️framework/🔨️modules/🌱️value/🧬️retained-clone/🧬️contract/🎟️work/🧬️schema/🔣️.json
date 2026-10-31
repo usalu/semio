@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Retained Clone Actual Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "closeWork",
+    "advanceWork"
+  ],
+  "properties": {
+    "closeWork": {
+      "const": {
+        "maximumCpu": 1048576,
+        "deniedCpu": 0,
+        "cachedCpu": 0
+      }
+    },
+    "advanceWork": {
+      "const": {
+        "deniedCpu": 0,
+        "bindingCpu": 1,
+        "payloadCpu": 1,
+        "cachedCpu": 0
+      }
+    }
+  }
+}

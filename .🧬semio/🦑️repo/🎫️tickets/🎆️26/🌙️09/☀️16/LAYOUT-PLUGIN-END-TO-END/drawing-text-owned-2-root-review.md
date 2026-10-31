@@ -1,0 +1,3 @@
+# Drawing Text Successor Independent Review
+
+Root independently verified actual normal and strict logs, both terminal exit zero: original Scene12 plus Text6 all pass, 926,942 assertions; strict7 no diagnostics. All 116 current files and both post-run input sets exactly match the capture. Normal log SHA256 689bc0cfc0f911c9fc27fd94bce60f98ae5590e9e625d10241c091b56109c0ab; strict SHA256 20146b4ff3f5eb6021980a0bf1e96cf2014434a47a1f7ba75d4d7c2e26d42b72. The sole successor changes are explicit type reexports at two public Run surfaces; original failed strict evidence remains immutable. Root accepts this scope and releases the 116-input hold. Broader Drawing callers, original fourteen glyph scenes, full native and browser flows remain open.

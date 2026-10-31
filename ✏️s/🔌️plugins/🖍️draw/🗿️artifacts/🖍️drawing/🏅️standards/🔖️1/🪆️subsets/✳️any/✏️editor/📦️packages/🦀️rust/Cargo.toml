@@ -59,6 +59,7 @@ semio-s-artifact-draw-drawing-write = { workspace = true }
 semio-framework-interaction = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🕹️interaction/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-plugin-job = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📦️packages/🦀️rust" }
 semio-framework-job-registry = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }
 
 png = { workspace = true }

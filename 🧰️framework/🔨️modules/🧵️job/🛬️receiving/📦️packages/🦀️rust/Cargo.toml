@@ -1,0 +1,35 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-job-receiving"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original native decoder and recipient custody across funded caller turns."
+
+[package.metadata.semio]
+role = "framework"
+id = "job-receiving"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_job_receiving"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value-retained-clone = { path = "../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { workspace = true }
+
+[dev-dependencies]
+semio-framework-value = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-job-context = { workspace = true, features = ["testkit"] }
+semio-framework-job-testing-caller = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

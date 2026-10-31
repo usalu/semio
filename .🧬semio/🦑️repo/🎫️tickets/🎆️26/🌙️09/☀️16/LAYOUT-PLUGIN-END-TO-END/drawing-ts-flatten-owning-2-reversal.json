@@ -1,0 +1,18 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+      "beforeSha256": "480c24913766ee52a15dece4234eabf9925badcada6e05c4975db5b3703fb774",
+      "sha256": "878a0fa006d847dcc22a8617923fe463da3f447681a5e81818fbc9517f995b66",
+      "wholeInverse": true,
+      "delta": "Explicit never-function binding annotation only; emitted arrow/function body unchanged."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts",
+      "beforeSha256": "982ce1f41761b187ab84d5eed679b3e49ea4fe4d05f5d5545b20550b6027259a",
+      "sha256": "2bc39c82fb13d141883bd2d596483e3fee4deed9d0c39faf57fb9cf0065d05c7",
+      "delta": "Select original nonempty closed contour for release; stop at genuine completion; two erased matcher type-width annotations."
+    }
+  ],
+  "unchanged": "Every original math/geometry fixture/limit, shared native corpus and finite stock. Initial actual failure preserved."
+}

@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\u25fb\ufe0f2d/\ud83d\udcdd\ufe0ftext/\ud83d\udd24\ufe0ffont/\ud83e\uddf5\ufe0frun/\ud83d\udcc4\ufe0fparagraph/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+      "before": "e9584c0e4b33fd33a7f73099c0150cada27afa3e33ec4a1ac9c1faddc0ecb516",
+      "sha256": "c3ba6117a9e1ba40b0c53cf83c28f48c1cebede12081644a4adf1eb7e0ac60e0",
+      "scope": "Read actual owned output pages; preserve all law bodies, goldens, external oracle calls and stock."
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\u25fb\ufe0f2d/\ud83d\udcdd\ufe0ftext/\ud83d\udd24\ufe0ffont/\ud83e\uddf5\ufe0frun/\ud83d\udcc4\ufe0fparagraph/\ud83e\uddea\ufe0ftests/\ud83e\uddf5\ufe0fflow/\ud83d\udfe6\ufe0f.ts",
+      "before": "e83b3d57506e116bca0f6f0502c4eef3d0eac8d7e3cc1f1518bfb3bcb03356d3",
+      "sha256": "1fd4e63210da62c44db8cc0573dafd0ef15e89a0ebd8e725dbb0e8b027c9d332",
+      "scope": "Read actual owned output pages; preserve all law bodies, goldens, external oracle calls and stock."
+    }
+  ]
+}

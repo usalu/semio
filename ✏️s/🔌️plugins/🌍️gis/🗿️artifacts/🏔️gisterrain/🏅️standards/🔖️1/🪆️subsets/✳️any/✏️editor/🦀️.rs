@@ -95,7 +95,7 @@ pub fn gis3d_map_in_port() -> semio_framework_plugin::MediaPortSpec {
     }
 }
 
-/// 🔌️ `scene:out` — this terrain as `3d.mesh` (kind already registered by lowpoly; reused verbatim,
+/// 🎭️ `scene:out` — this terrain as `3d.mesh` (kind already registered by lowpoly; reused verbatim,
 /// not redeclared — WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe). `Many`/optional: several
 /// downstream consumers may fan out from one terrain, and a terrain with no downstream edge is valid.
 pub fn gis3d_scene_out_port() -> semio_framework_plugin::MediaPortSpec {
@@ -149,13 +149,13 @@ use view::set_camera;
 //#endregion 🔖️Commands
 
 //#region 🔖️Gis3dPlayApp
-/// ⛰️ GIS 3D terrain play app. The document holds exaggeration plus the `map:in` overlay layer;
+/// 🎮️ GIS 3D terrain play app. The document holds exaggeration plus the `map:in` overlay layer;
 /// the camera is persisted by the exact terrain-window owner while pin selection is interaction state.
 #[derive(Default)]
 pub struct Gis3dPlayApp;
 
 //#region 🧵️RetainedCommands
-/// ⛰️ The vertical-exaggeration range the Actions rail stages: flattened terrain through a five-fold
+/// ↔️ The vertical-exaggeration range the Actions rail stages: flattened terrain through a five-fold
 /// relief. `GIS3D_EXAGGERATION_STAGED_DEFAULT` is deliberately NOT the document's own default, so a
 /// one-click dispatch from the rail produces a real edit instead of a zero-operation re-apply.
 pub const GIS3D_EXAGGERATION_MINIMUM: f64 = 0.5;
@@ -269,7 +269,7 @@ fn gis3d_bounded_serialized_bytes<T: semio_framework_value::ToValue>(value: &T) 
 }
 
 fn prepare_gis3d_artifact(base: &GisTerrainSnapshot, mutation: &GisTerrainMutation) -> Result<(GisTerrainSnapshot, Vec<GisTerrainMutation>, usize), semio_framework_value::ValueError> {
-    use protocol::Mutation as _;
+    use protocol::ColdMutation as _;
     if !matches!(mutation, GisTerrainMutation::ChangeExaggeration(payload) if payload.new_exaggeration.is_finite()) {
         return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "GIS terrain Artifact preparation only admits ChangeExaggeration"));
     }
@@ -469,7 +469,7 @@ impl ArtifactEditor for Gis3dPlayApp {
             return Err(semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "the gis terrain command does not match its exact registered tool").into());
         }
         if gis3d_retained_extent(&original.command, &original.snapshot, &original.interaction_state).is_none() {
-            return Err(Fault::from("gis3d-command-payload-too-large"));
+            return Err(Fault::from("gis3d-command-payload-too-large").into());
         }
         let tool_id = original.command.command_id();
         semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, gis3d_retained_reduce, gis3d_retained_extent))
@@ -479,13 +479,13 @@ impl ArtifactEditor for Gis3dPlayApp {
         Ok(default_terrain_document())
     })}
 
-    /// 🔌️ `map:in`/`scene:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the implicit
+    /// 🗺️ `map:in`/`scene:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the implicit
     /// document ports.
     fn io() -> Option<AppIo> {
         Some(gis3d_io())
     }
 
-    /// 🎞️ `scene:out` (see `gis3d_scene_media` in `🔖️Io` above) plus the inherited
+    /// 🌀️ `scene:out` (see `gis3d_scene_media` in `🔖️Io` above) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding
     /// `export_media` shadows the trait's provided body for every port on this app, not just the new one).
     fn export_media(port: &str, doc: &ArtifactView<'_, GisTerrainSnapshot>) -> Result<Media, MediaError> {
@@ -500,7 +500,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         }
     }
 
-    /// 🎞️ `map:in` validates and owns the incoming first-party `2d.map` values in
+    /// ✔️ `map:in` validates and owns the incoming first-party `2d.map` values in
     /// `GisTerrainSnapshot::imported_map` (rendered as an extra pin layer, see the
     /// 🏔️terrain window) via `change-imported-features`. `document:in` (whole-document replace) is
     /// deliberately unimplemented — per the semantic-mutations taxonomy, whole-document replace has
@@ -525,7 +525,7 @@ impl ArtifactEditor for Gis3dPlayApp {
         command.command_id()
     }
 
-    /// 🎯️ Maps host action id + JSON args onto `Gis3dCommand` — React/wgpu still speak the stringly
+    /// 🏠️ Maps host action id + JSON args onto `Gis3dCommand` — React/wgpu still speak the stringly
     /// `{action,args}` wire; this is the typed-command bridge until those call sites send `OpBinary`
     /// bytes directly. Mirrors `crate::editor::gis2d`'s arg-key tolerance (camelCase + snake_case + the
     /// nested `camera` object form).
@@ -539,7 +539,7 @@ impl ArtifactEditor for Gis3dPlayApp {
             "setCamera" => {
                 let camera_json = str_arg(&["cameraJson", "camera_json"]).or_else(|| args.get("camera").map(|value| if value.is_string() { value.as_str().unwrap_or("{}").to_string() } else { value.to_string() })).unwrap_or_else(|| "{}".into());
                 if camera_json.len() > GIS3D_RETAINED_RAW_BYTES {
-                    return Err(Fault::from("gis3d-command-payload-too-large"));
+                    return Err(Fault::from("gis3d-command-payload-too-large").into());
                 }
                 Ok(Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json }))
             }

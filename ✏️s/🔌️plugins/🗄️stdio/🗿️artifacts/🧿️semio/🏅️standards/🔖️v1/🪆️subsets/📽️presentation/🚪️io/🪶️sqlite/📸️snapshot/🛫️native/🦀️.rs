@@ -19,7 +19,7 @@ fn shape(value:&SlideShape,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(
  SlideShape::Placeholder{kind,..}=>placeholder(kind,w,e)?
  }w.delimiter(b"]",e)}
 fn shapes(values:&[SlideShape],w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{w.list(values,e,|w,value|shape(value,w,e))}
-pub fn fields(value:&SemioPresentationSnapshot,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{w.entities(1)?;if e==SnapshotEncoding::Binary{w.byte(1)?}else{w.bytes(b"schema=")?}w.string(&value.schema,e)?;w.delimiter(b"\nmasters=",e)?;
+pub fn fields(value:&SemioPresentationSnapshot,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{if e==SnapshotEncoding::Binary{return semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::record_binary(value,w)}w.entities(1)?;if e==SnapshotEncoding::Binary{w.byte(1)?}else{w.bytes(b"schema=")?}w.string(&value.schema,e)?;w.delimiter(b"\nmasters=",e)?;
  w.list(&value.masters,e,|w,value|{w.delimiter(b"[",e)?;w.string(&value.id,e)?;comma(w,e)?;shapes(&value.shapes,w,e)?;w.delimiter(b"]",e)})?;w.delimiter(b"\nlayouts=",e)?;
  w.list(&value.layouts,e,|w,value|{w.delimiter(b"[",e)?;w.string(&value.id,e)?;comma(w,e)?;w.string(&value.master_id,e)?;comma(w,e)?;shapes(&value.shapes,w,e)?;w.delimiter(b"]",e)})?;w.delimiter(b"\nslides=",e)?;
  w.list(&value.slides,e,|w,value|{w.delimiter(b"[",e)?;w.string(&value.id,e)?;comma(w,e)?;option(value.layout_id.as_ref(),w,e)?;comma(w,e)?;shapes(&value.shapes,w,e)?;comma(w,e)?;blocks(&value.notes,w,e)?;w.delimiter(b"]",e)})

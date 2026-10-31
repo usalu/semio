@@ -177,7 +177,7 @@ test("bun install never links workspace member manifests; only file directory de
    for(const[path,text]of Object.entries(fixture.bun.leaf)){mkdirSync(dirname(join(leaf,path)),{recursive:true});writeFileSync(join(leaf,path),text);}
    expect(spawnSync("tar",["czf",join(root,"leaf.tgz"),"-C",leaf,"package"]).status).toBe(0);
    for(const[path,text]of Object.entries(fixture.bun.workspace)){mkdirSync(dirname(join(workspace,path)),{recursive:true});writeFileSync(join(workspace,path),text);}
-   const install=()=>spawnSync(process.execPath,["install","--linker=isolated","--backend="+backend,"--cache-dir",cache,"--ignore-scripts"],{cwd:workspace,encoding:"utf8",env:{...process.env,HOME:root}});
+   const install=()=>spawnSync(process.execPath,["install","--linker=hoisted","--backend="+backend,"--cache-dir",cache,"--ignore-scripts"],{cwd:workspace,encoding:"utf8",env:{...process.env,HOME:root}});
    const first=install();expect(first.status,first.stderr).toBe(0);
    for(const path of Object.keys(fixture.bun.workspace))expect(lstatSync(join(workspace,path)).nlink,backend+" "+path).toBe(1);
    const controlRoot=join(root,fixture.bun.control.directory);

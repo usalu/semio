@@ -5,11 +5,12 @@ import{nodeNativeChildEnvironmentV1}from"../../../../../../../../../🔨️modul
 import{captureCompilerBuildSourceClosureV1}from"../../🏗️compiler/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import{relative,resolve,isAbsolute}from"node:path";
+import type{ScriptInvocation}from"../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import{createHash}from"node:crypto";
 import{captureBuildSourceClosureV1,buildSourceClosureTextV1,buildSourceClosureStdinLoaderV1}from"../../🟦️.ts";
 import{runtimeEntrySourcePathV1,readCapturedRuntimeEntryCommandV1,withCapturedRuntimeEntryProviderV1}from"../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🚪️entry/🟦️.ts";
 import{nativeDirectoryRuntimeEntryV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/📜️script.ts";
-import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlV1,withIssuedResourceOperationV1,type ScriptInvocation}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlV1,withIssuedResourceOperationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type{ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 /** 🧊️ Admits the declared Native helper before any Native store work and retains its exact closure through cleanup. */
 export function withRepositoryRuntimeEntriesV1<T>(workspace:string,original:ScriptInvocation,control:ResourceLeaseControl,body:()=>Promise<T>):Promise<T>{return withRepositoryRuntimeEntryScopeV1("admitted",workspace,original,control,body);}

@@ -39,7 +39,7 @@ impl<M:Send+Sync+'static> ArtifactMutationSource<M>{
   if !self.retirement.is_empty(){return self.retirement.step_granted(grant);}
   if let Some(projection)=self.projection.as_mut(){if !projection.terminal_is_empty(){return projection.close_step(grant);}self.projection.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
   if let Some(source)=self.source.as_mut(){if !source.terminal_is_empty(){return source.close_step(grant);}self.source.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.authority,grant)?{return Ok(step);}Ok(RetainedCloneStep::Complete(Default::default()))
+  if let Some(step)=self.retirement.begin_granted(&mut self.authority,grant).result?{return Ok(step);}Ok(RetainedCloneStep::Complete(Default::default()))
  }
 }
 impl<M:Send+Sync+'static> ArtifactMutationSource<M>{pub fn terminal_is_empty(&self)->bool{self.closing&&self.authority.is_none()&&self.source.is_none()&&self.projection.is_none()&&self.retirement.is_empty()}}

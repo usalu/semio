@@ -46,7 +46,6 @@ semio-s-artifact-stdio-pdf-pdf-snapshot-value-tests = { path = "../../../../🧱
 semio-s-artifact-stdio-pdf-schema-4 = { path = "../../../../🧱️base/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-schema-5 = { path = "../../../🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../../../🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-pdf-testkit = { path = "../../../../🧱️base/🧬️schema/🧪️testkit/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-tests-2 = { path = "../../../🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 

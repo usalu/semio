@@ -7,6 +7,11 @@
 //! the yielded leaf's inputs (offset, pivot, targets) through the real `historyEdit*` verbs and replays the downstream.
 
 extern crate semio_framework_os_kernel as protocol;
+#[global_allocator]static ACTOR_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+fn actor_admission_turn<T>(cx:&mut semio_framework_job::StepContext<'_>,run:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<T,semio_framework_job::OriginalTurnFailure>)->T{
+ let before=cx.retained_progress();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||run(cx));let after=cx.retained_progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(after.retained_capacity_bytes-before.retained_capacity_bytes,after.released_bytes-before.released_bytes));result.unwrap()
+}
+
 
 use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT;
@@ -167,7 +172,7 @@ async fn one_gumball_drag_is_one_edit_one_row_and_one_transaction() {
     app.close_fixture();
 }
 
-/// 🧯️ A cancelled gesture leaves zero trace — the overlay's own `abort` phase and every window fact the host forwards
+/// 🛑️ A cancelled gesture leaves zero trace — the overlay's own `abort` phase and every window fact the host forwards
 /// (`hostEvent` blur, lost capture, closing window) — and a late commit finds nothing.
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_gesture_leaves_zero_trace() {
@@ -354,7 +359,7 @@ async fn pump(app: &mut LayoutApp, done: impl Fn(Option<semio_framework::kernel:
     panic!("the history edit never settled: {:?}", time_travel(app).await);
 }
 
-/// 🧾️ The history rows that carry a document mutation, oldest first.
+/// 📜️ The history rows that carry a document mutation, oldest first.
 async fn document_rows(app: &mut LayoutApp) -> Vec<HistoryEntry> {
     let mut rows: Vec<_> = app.0.history_snapshot().await.expect("history").upserts.into_iter().filter(|entry| entry.edit_id.is_some() && !entry.mutations.is_empty()).collect();
     rows.sort_by_key(|entry| entry.seq);
@@ -381,7 +386,7 @@ fn turn_leaf(pivot_x: f64, pivot_y: f64) -> LayoutMutation {
     LayoutMutation::RotateFrames(semio_s_artifact_layout_layout_mutations_frames::rotate_frames::RotateFrames { page_id: "page-1".into(), targets: vec!["frame-1".into()], pivot_x, pivot_y, angle: std::f64::consts::FRAC_PI_2 })
 }
 
-/// ⏪️ Time travel edits the gesture's yielded leaf, never the gesture: the gumball drag's offset and then the downstream
+/// ⏱️ Time travel edits the gesture's yielded leaf, never the gesture: the gumball drag's offset and then the downstream
 /// turn's pivot are edited through the real `historyEdit*` verbs. Reviewing never touches the committed document; every
 /// overwrite replays the downstream turn onto the edited frame and the head equals the fresh fold of the edited log;
 /// both edits keep their mutation ids and rows.
@@ -513,10 +518,15 @@ fn original_press_settlement_preserves_lane_backings_under_denial_commit_and_can
         emit.child_emits.reserve_exact(2);emit.config_mutations.reserve_exact(2);emit.window_config_mutations.reserve_exact(2);
         let pointers=[emit.artifact_mutations.as_ptr()as usize,emit.child_emits.as_ptr()as usize,emit.config_mutations.as_ptr()as usize,emit.window_config_mutations.as_ptr()as usize];
         let mut tag=Some(ScrubTag{window:WINDOW.into(),tool:"s.layout.layout#renameLayout".into(),phase:ScrubPhase::Commit{gesture:"fixture-press".into()}});
-        let base=[7u8;32];let actor="fixture-actor";let mut owner=None;
+        let base=[7u8;32];let actor=fixture["actorAdmission"]["actor"].as_str().unwrap();let mut owner=None;
         let denied=caller.cx().with_retained_loan(Default::default(),|same|OriginalPressSettlement::<A>::admit(&base,actor,&mut emit,0,||(tag.take().unwrap(),semio_framework_tool_machine::authoring_clock(1)),same,&mut owner)).unwrap();
         assert!(!denied);assert!(tag.is_some());assert!(owner.is_none());assert_eq!(emit.artifact_mutations.len(),2);
-        assert!(OriginalPressSettlement::<A>::admit(&base,actor,&mut emit,0,||(tag.take().unwrap(),semio_framework_tool_machine::authoring_clock(1)),caller.cx(),&mut owner).unwrap());
+        let quote=OriginalPressSettlement::<A>::admission_demands(actor,&emit,0).unwrap();let frame=semio_framework_value::SharedUtf8::admission_demand().capacity_bytes;let before=caller.cx().retained_progress();let denied=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:quote.capacity_bytes-1,..caller.cx().retained_grant()};
+        assert!(!actor_admission_turn(caller.cx(),|cx|cx.with_retained_loan(denied,|same|OriginalPressSettlement::<A>::admit(&base,actor,&mut emit,0,||(tag.take().unwrap(),semio_framework_tool_machine::authoring_clock(1)),same,&mut owner))));assert!(tag.is_some());assert!(owner.is_none());assert_eq!(caller.cx().retained_progress(),before);assert_eq!(emit.artifact_mutations.as_ptr()as usize,pointers[0]);
+        let exact=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_capacity_bytes:quote.capacity_bytes,..caller.cx().retained_grant()};
+        assert!(actor_admission_turn(caller.cx(),|cx|cx.with_retained_loan(exact,|same|OriginalPressSettlement::<A>::admit(&base,actor,&mut emit,0,||(tag.take().unwrap(),semio_framework_tool_machine::authoring_clock(1)),same,&mut owner))));
+        let actual=caller.cx().retained_progress().retained_capacity_bytes-before.retained_capacity_bytes;assert_eq!(actual,quote.capacity_bytes);
+        println!("sdk-actor-admission={}",serde_json::json!({"name":"press","cancelled":cancel,"index":0,"actor":actor,"baselineCapacity":quote.capacity_bytes-actor.len()-frame,"frameCapacity":frame,"quotedCapacity":quote.capacity_bytes,"actualCapacity":actual,"deniedUnchanged":true,"sharedFrameQuoted":true,"oneItem":true}));
         assert!(tag.is_none());let before=caller.cx().retained_progress();
         caller.cx().with_retained_loan(Default::default(),|same|owner.as_mut().unwrap().advance(&mut ledger,&base,actor,&mut emit,same)).unwrap();assert_eq!(caller.cx().retained_progress(),before);assert_eq!(emit.artifact_mutations.len(),2);
         for _ in 0..1_048_576{if emit.artifact_mutations.len()==1{break}let turn=semio_framework_value::RetainedCloneGrant{maximum_items:row["turnItems"].as_u64().unwrap()as usize,..caller.cx().retained_grant()};caller.cx().with_retained_loan(turn,|same|owner.as_mut().unwrap().advance(&mut ledger,&base,actor,&mut emit,same)).unwrap()}
@@ -558,7 +568,7 @@ fn original_tool_tag_capture_preserves_exact_metadata_and_closes_partial_text(){
  }}
 }
 
-/// ⏳️ Expired semantic copying returns the exact original metadata through its unchanged financed source.
+/// ⌛️ Expired semantic copying returns the exact original metadata through its unchanged financed source.
 #[test]
 fn original_metadata_copy_restores_after_expiry_without_renewing_clock_or_stock(){
  use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,close_original_retained_step};
@@ -664,3 +674,6 @@ async fn direct_intent_qualified_action_rewrite_is_refused_without_control_effec
  println!("direct-intent-qualification-rewrite={}",serde_json::json!({"samePointer":true,"sameLength":true,"refused":true,"unchanged":app.0.snapshot().unwrap()==before,"closed":app.0.maintenance_source_terminal_is_empty()}));
  let mut sources=ControlledRetirement::retain((args,meta,fault));for _ in 0..1_048_576{if sources.terminal_is_empty(){break}let d=sources.next_demand(app.1.cx().retained_grant().maximum_copy_bytes).unwrap();app.1.cx().with_original_retirement(|same|close_original_retained_step(same,d,|g|sources.step(g))).unwrap();}assert!(sources.terminal_is_empty());app.1.cx().with_original_retirement(|same|artifact_app_laws::close_registered_fixture_app(&mut app.0,policy,same).map_err(|failure|failure.into())).unwrap();assert!(app.0.close_terminal_is_empty());
 }
+
+#[path="⌨️typing-edit/🦀️.rs"]
+mod typing_edit;

@@ -1,7 +1,6 @@
 //! 🔺️ The docx ecma-376 base diff with its text and binary codecs, held by its own crate above the model so the model crate stays inside the source gate.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;

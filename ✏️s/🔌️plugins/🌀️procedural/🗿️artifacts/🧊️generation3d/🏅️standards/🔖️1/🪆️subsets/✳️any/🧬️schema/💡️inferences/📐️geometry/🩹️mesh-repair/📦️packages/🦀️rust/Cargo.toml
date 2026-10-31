@@ -16,13 +16,13 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-3d = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-compute = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-inputs = { workspace = true }
 semio-s-artifact-procedural-3d-mesh-support = { workspace = true }
 semio-s-artifact-procedural-3d-model = { workspace = true }
 
 [dev-dependencies]
-semio-framework-3d = { workspace = true }
 semio-framework-3d-brep-analysis = { workspace = true }
 semio-framework-3d-brep-engine = { workspace = true }
 semio-framework-io-base64 = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }

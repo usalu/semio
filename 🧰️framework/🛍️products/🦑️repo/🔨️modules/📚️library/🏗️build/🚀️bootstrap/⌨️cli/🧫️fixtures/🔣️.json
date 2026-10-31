@@ -963,7 +963,7 @@
       "name": "rust-fixed-owner",
       "args": [
         "run",
-        "repo-cache-reset:rust"
+        "repo-cache-reset:cache-reset-rust"
       ],
       "fault": "none",
       "target": "rust"
@@ -972,7 +972,7 @@
       "name": "products-fixed-owner",
       "args": [
         "run",
-        "repo-cache-reset:products"
+        "repo-cache-reset:cache-reset-products"
       ],
       "fault": "none",
       "target": "products"
@@ -1443,12 +1443,6 @@
         "request": "repo-cache-reset:cache-reset-graph",
         "kind": "cache-reset",
         "target": "graph"
-      },
-      {
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📋️project.json",
-        "request": "repo-cache-retire:inactive-preview",
-        "kind": "maintenance",
-        "target": "preview"
       },
       {
         "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json",

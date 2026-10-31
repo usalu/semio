@@ -264,7 +264,6 @@ impl Generation3dMountedRegistry {
         }
         let operation_id = operation.operation;
         let generation = operation.generation;
-        let _ = semio_s_artifact_procedural_3d_host::generation3d_release_publication_authority(semio_framework_job::OperationId(operation_id), semio_framework_job::Generation(generation));
         let slot = self.operations.iter_mut().find(|slot| slot.as_ref().is_some_and(|entry| entry.matches(operation_id, generation))).expect("Generation3d close operation remains retained");
         *slot = None;
         self.operations.iter().all(Option::is_none)
@@ -454,30 +453,15 @@ mod mounted_laws {
     }
 
     #[test]
-    fn authoritative_publication_rejects_stale_generation_aba_and_parent() {
+    fn authoritative_publication_token_fails_closed_on_operation_generation_and_base() {
         use semio_framework_job::{Generation, OperationId};
-        let _serial = semio_s_artifact_procedural_3d_testkit::publication_authority::lock();
 
-        let operation = OperationId(u64::MAX - 71);
-        assert_eq!(
-            semio_s_artifact_procedural_3d_host::generation3d_admit_publication_authority(operation, Generation(41), 41, 40, 41, semio_s_artifact_procedural_3d_host::Generation3dPublicationCredits { maximum_items: GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_ENVELOPE_CONTROL_CREDITS }),
-            Err("generation3d-publication.initial-freshness")
-        );
-        assert!(semio_s_artifact_procedural_3d_host::generation3d_admit_publication_authority(operation, Generation(41), 41, 41, 41, semio_s_artifact_procedural_3d_host::Generation3dPublicationCredits { maximum_items: GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_ENVELOPE_CONTROL_CREDITS })
-        .is_ok());
-        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_publication_authority(operation, Generation(41)), Ok((41, 41)));
-        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_atomic_publication_authority(OperationId(operation.0 + 1), Generation(41), Generation(41)), Err("generation3d-publication.authority-missing"));
-        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_atomic_publication_authority(operation, Generation(42), Generation(41)), Err("generation3d-publication.wrong-generation"));
-        semio_s_artifact_procedural_3d_host::generation3d_refresh_publication_authority(operation, Generation(41), 42).expect("authoritative live revision refresh");
-        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_atomic_publication_authority(operation, Generation(41), Generation(42)), Err("generation3d-publication.wrong-base"));
-        assert!(semio_s_artifact_procedural_3d_host::generation3d_release_publication_authority(operation, Generation(41)));
-
-        assert!(semio_s_artifact_procedural_3d_host::generation3d_admit_publication_authority(operation, Generation(42), 42, 42, 42, semio_s_artifact_procedural_3d_host::Generation3dPublicationCredits { maximum_items: GENERATION3D_ENVELOPE_MAXIMUM_ITEMS, maximum_output_pages: GENERATION3D_ENVELOPE_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_ENVELOPE_CONTROL_CREDITS })
-        .is_ok());
-        assert!(semio_s_artifact_procedural_3d_host::generation3d_validate_publication_authority(operation, Generation(41)).is_err());
-        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_publication_authority(operation, Generation(42)), Ok((42, 42)));
-        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));
-        assert!(semio_s_artifact_procedural_3d_host::generation3d_release_publication_authority(operation, Generation(42)));
+        let token = semio_framework_plugin::DocumentStorePublicationToken::mint(OperationId(u64::MAX - 71), Generation(41), 9);
+        let live = |operation: u64, generation: u64, base: u64| semio_framework_plugin::DocumentStoreLivePublication::new(OperationId(operation), Generation(generation), base);
+        assert!(token.validate_live(live(u64::MAX - 71, 41, 9)).is_ok());
+        assert!(token.validate_live(live(u64::MAX - 70, 41, 9)).is_err(), "another operation is refused");
+        assert!(token.validate_live(live(u64::MAX - 71, 42, 9)).is_err(), "a stale parent generation (ABA) is refused");
+        assert!(token.validate_live(live(u64::MAX - 71, 41, 10)).is_err(), "another child-content base is refused");
     }
 
     #[test]

@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:pixels:coverage:work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "axes",
+    "width",
+    "height",
+    "rectangle",
+    "expected",
+    "maximumTurns",
+    "stock"
+  ],
+  "properties": {
+    "axes": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "items",
+          "copy",
+          "capacity",
+          "release",
+          "depth"
+        ]
+      }
+    },
+    "width": {
+      "const": 8
+    },
+    "height": {
+      "const": 8
+    },
+    "rectangle": {
+      "const": [
+        0,
+        0,
+        8,
+        8
+      ]
+    },
+    "expected": {
+      "type": "array",
+      "minItems": 64,
+      "maxItems": 64,
+      "items": {
+        "const": 255
+      }
+    },
+    "maximumTurns": {
+      "const": 100000
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "const": 4194304
+        },
+        "copy": {
+          "const": 268435456
+        },
+        "capacity": {
+          "const": 33554432
+        },
+        "release": {
+          "const": 67108864
+        },
+        "depth": {
+          "const": 256
+        }
+      }
+    }
+  }
+}

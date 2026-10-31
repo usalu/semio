@@ -1,0 +1,543 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "stdio.semio.cad",
+ "schemaHash": "aba184bf96953e2146088cee0811df418d9187829f9b28b5d6533f8c352fc267",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "layers",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 1
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "blocks",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 2
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "entities",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 3
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "name",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "color-index",
+    "optional": false,
+    "shape": {
+     "kind": "int"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "line-type",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "visible",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "name",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "base-point",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "entities",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 3
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "handle",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "layer",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "entity",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "arc",
+        5
+       ],
+       [
+        "circle",
+        6
+       ],
+       [
+        "dimension",
+        7
+       ],
+       [
+        "ellipse",
+        8
+       ],
+       [
+        "insert",
+        9
+       ],
+       [
+        "line",
+        10
+       ],
+       [
+        "polyline",
+        11
+       ],
+       [
+        "solid",
+        12
+       ],
+       [
+        "text",
+        13
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "x",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "y",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "center",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "radius",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "start-angle",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "end-angle",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "center",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "radius",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "def-point",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "text-position",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "measurement",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "text",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "center",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "major-axis-end",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "ratio",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "start-param",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "end-param",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "block-name",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "insertion-point",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "scale",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "rotation",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "a",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "b",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "vertices",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 4
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "closed",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "p1",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "p2",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "p3",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "p4",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "position",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "height",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "rotation",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "content",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ]
+ ],
+ "annotations": {
+  "single": [
+   [
+    3,
+    2
+   ]
+  ]
+ }
+}

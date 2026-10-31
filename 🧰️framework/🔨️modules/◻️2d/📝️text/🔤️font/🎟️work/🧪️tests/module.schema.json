@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "First Party Module Runtime and Erased Declarations",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "runtime",
+    "declarations",
+    "forbidden",
+    "rules"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "runtime": {
+      "const": [
+        "RetainedWorkBuffer",
+        "RetainedWorkLedger",
+        "RetainedWorkRetirement",
+        "retireRetainedWorkBuffer",
+        "popRetainedWorkBuffer",
+        "retireRetainedWorkArchive",
+        "retireRetainedWorkBuffers",
+        "retireRetainedWorkChildren",
+        "retainedWorkChildRetirement",
+        "retireRetainedWorkMatcher"
+      ]
+    },
+    "declarations": {
+      "const": [
+        "RetainedWorkGrant",
+        "RetainedWorkDemand",
+        "RetainedWorkReceipt",
+        "RetainedWorkRetirementProgress",
+        "RetainedWorkRetirementCursor"
+      ]
+    },
+    "forbidden": {
+      "const": [
+        "FontWorkLedger",
+        "FontBuffer",
+        "FontRetirement",
+        "FontRetainedGrant",
+        "FontRetirementCursor"
+      ]
+    },
+    "rules": {
+      "const": {
+        "sameCanonicalRuntimeIdentity": true,
+        "nativeRequireAndEsmAgree": true,
+        "explicitErasedExports": true,
+        "noRuntimeAliases": true
+      }
+    }
+  }
+}

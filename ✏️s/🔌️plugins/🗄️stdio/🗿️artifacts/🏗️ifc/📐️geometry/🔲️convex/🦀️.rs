@@ -52,7 +52,7 @@ mod tests {
 
     #[test]
     fn shared_neutral_convex_profile_cases() {
-        let data: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/cases.json")).unwrap();
+        let data: serde_json::Value = serde_json::from_str(&fixture!("🔲️convex/🧪️tests/cases.json")).unwrap();
         for row in data["cases"].as_array().unwrap() {
             let source = &row["boundary"];
             let radius = source["radius"].as_f64().unwrap(); let chords = source["chords"].as_u64().unwrap();

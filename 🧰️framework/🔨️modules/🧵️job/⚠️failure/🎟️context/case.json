@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "operations": [
+    "validate-original-source",
+    "borrow-current-and-lifetime-grants",
+    "borrow-current-and-lifetime-cpu",
+    "post-exact-effects",
+    "post-actual-cpu",
+    "lend-same-retained-context",
+    "lend-same-work-context"
+  ],
+  "sourceCreated": false,
+  "grantRenewal": false,
+  "callbackWorkInferred": false,
+  "errorOwnership": "complete-original",
+  "concreteImplementation": "StepContext",
+  "owningCorpus": [
+    "domain-reservation",
+    "original-work-failure",
+    "original-closure-failure",
+    "original-turn-failure"
+  ],
+  "limitsChanged": false
+}

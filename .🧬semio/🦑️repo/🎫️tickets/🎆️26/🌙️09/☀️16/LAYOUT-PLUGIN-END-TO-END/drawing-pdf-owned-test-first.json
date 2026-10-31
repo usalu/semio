@@ -1,0 +1,21 @@
+{
+  "status": "closed contract plus five actual owning laws before PDF production migration, including independently rendered arc",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/📐️.json",
+      "sha256": "5a296d421847f8784a3eb0f8c9278d981ce8eae654c8409400aa8a1c21913d07"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🔣️.json",
+      "sha256": "b2d8cd6a9ae67d1151510fa38eeaa5d37c942e4cb323f51c52a97de1bb028f91"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🧪️tests/owned.test.ts",
+      "sha256": "32b480fad7a3e367e01f6024651099f86ef5c96d2313f5f6c354d26077f61370"
+    }
+  ],
+  "productionBefore": {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🟦️.ts",
+    "sha256": "6609b703e8ce9359346323630bdc4813cc8123de6a09d2d14f3fe8873d125b15"
+  }
+}

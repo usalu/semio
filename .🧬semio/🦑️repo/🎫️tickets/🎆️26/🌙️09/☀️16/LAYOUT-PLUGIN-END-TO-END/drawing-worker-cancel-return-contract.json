@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "phase": "ineligible",
+      "work": 0,
+      "receiptItems": 0
+    },
+    {
+      "phase": "denied",
+      "work": 0,
+      "receiptItems": 0
+    },
+    {
+      "phase": "actual-alias-return",
+      "work": 1,
+      "receiptItems": 1
+    },
+    {
+      "phase": "cached-terminal",
+      "work": 0,
+      "receiptItems": 0
+    }
+  ],
+  "requirements": [
+    "Authority forwards defining CancelTokenRetirement.return_alias_step work before Result mapping.",
+    "Session custody gate is restored before returning full outcome, including refusal.",
+    "Mounted/Batch/erased ports preserve the same outcome with no entry-unit or receipt-derived CPU.",
+    "Fixture uses genuine same Source and posts direct outcome; all original host checkout and paid close cases remain."
+  ]
+}

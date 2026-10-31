@@ -4,7 +4,7 @@ name = "semio-framework-value-persistent"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Persistent paged lists with their splice, build, traversal and read cursors, original vector concatenation and structural retained equality."
+description = "Persistent paged lists with their splice, build, traversal and read cursors, and original vector concatenation."
 
 [package.metadata.semio]
 role = "framework"
@@ -23,6 +23,8 @@ name = "semio_framework_value_persistent"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-retained-work = { path = "../../🎟️work/📦️packages/🦀️rust" }
+semio-framework-value-equality = { path = "../../../../🌳️tree/🟰️equal/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../✨️derive/📦️packages/🦀️rust" }
 semio-framework-value-intrinsic = { path = "../../../../🌳️intrinsic/📦️packages/🦀️rust" }
@@ -35,6 +37,7 @@ semio-framework-value-shared-issuance = { path = "../../../../♻️retirement/�
 semio-framework-value-snapshot-projection = { path = "../../../../📽️projection/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

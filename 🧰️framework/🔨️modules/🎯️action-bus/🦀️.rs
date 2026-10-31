@@ -343,8 +343,11 @@ impl ErasedToolJob {
 }
 
 impl InteractiveJob for ErasedToolJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        self.inner.as_mut().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original erased job is physically retired"))?.step(cx)
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, return_claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        match self.inner.as_mut() {
+            Some(job) => job.step(cx, return_claim),
+            None => semio_framework_job::InteractiveJobStep::Continuation(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original erased job is physically retired").into()),
+        }
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {

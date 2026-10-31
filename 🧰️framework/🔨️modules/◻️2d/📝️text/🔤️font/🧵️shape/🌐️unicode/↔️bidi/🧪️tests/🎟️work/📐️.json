@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "text": "a ([אב]) 12 ⁧ב⁩",
+  "direction": "auto",
+  "quanta": [
+    1,
+    7
+  ],
+  "deniedRepeats": 3,
+  "cancelPhases": [
+    "cellWrite",
+    "isolatePop",
+    "statusPop",
+    "pairSwapSecond",
+    "reverseSecond",
+    "pairArchive",
+    "bracketArchive"
+  ],
+  "rules": {
+    "sameCatalogOriginalStock": true,
+    "actualInputPagesBorrowed": true,
+    "closedOutputPages": true,
+    "sourceProbeSemanticOnce": true,
+    "paidPreparationSemanticZero": true,
+    "eachRowWriteOrPopActualCpu": true,
+    "noMutableIndexedRecords": true,
+    "pendingFixedControlOnly": true,
+    "noArrayResultFacade": true,
+    "exactFrozenDemandDenial": true,
+    "cachedZero": true,
+    "reference": "bidi-js-visible-levels-order-and-sql-capacity-conservation"
+  }
+}

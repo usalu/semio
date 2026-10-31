@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Paged Clone Spent Closure Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "maximumEntries",
+    "entryCount",
+    "valuePrefix",
+    "grant",
+    "cancellationAfterEntries",
+    "expected"
+  ],
+  "properties": {
+    "maximumEntries": {
+      "const": 1024
+    },
+    "entryCount": {
+      "const": 513
+    },
+    "valuePrefix": {
+      "const": "page-β-日本語-"
+    },
+    "grant": {
+      "const": {
+        "maximumItems": 5,
+        "maximumCopyBytes": 32,
+        "maximumCapacityBytes": 4096,
+        "maximumReleaseBytes": 4096,
+        "maximumDepth": 64
+      }
+    },
+    "cancellationAfterEntries": {
+      "const": 173
+    },
+    "expected": {
+      "const": {
+        "ordered": true,
+        "sourcePreserved": true,
+        "copyRequiresMultipleTurns": true,
+        "closeRequiresMultipleTurns": true,
+        "terminalEmpty": true,
+        "spentCloseTurns": 9,
+        "spentCloseCpu": 9
+      }
+    }
+  }
+}

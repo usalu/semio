@@ -54,13 +54,22 @@ def decision(state):
     facts = {"floorBytes": floor, "heldBytes": held, "aheadBytes": ahead_bytes, "shortfallBytes": shortfall, "running": len(running)}
     if shortfall == 0:
         return {"verdict": "admit", "reason": "fits", **facts}
-    if not running and not ahead and state["reclaimed"]:
+    active = [r for r in running if r["admittedMs"] is None or state["nowMs"] - r["admittedMs"] <= r["rampMilliseconds"] + policy["strandedGraceMilliseconds"]]
+    if not active and not ahead and state["reclaimed"]:
         return {"verdict": "admit", "reason": "alone", **facts}
     queued = ahead_bytes > 0 and state["freeBytes"] - floor - held >= request["reservedBytes"]
     return {"verdict": "wait", "reason": "queue" if queued else "space", **facts}
 
 
+def prior(state):
+    for entry in policy["classPriors"]:
+        if any(name.startswith(entry["prefix"]) for name in state["classes"]):
+            return entry[state["temperature"]]
+    return policy["prior"][state["temperature"]]
+
+
 run = {
+    "prior": prior,
     "floor": lambda state: floor_bytes(state),
     "quantile": lambda state: quantile(state["values"], state["basisPoints"]),
     "estimate": estimate,

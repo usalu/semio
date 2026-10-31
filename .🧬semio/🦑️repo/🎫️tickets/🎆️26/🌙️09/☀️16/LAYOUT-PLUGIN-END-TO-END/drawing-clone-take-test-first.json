@@ -1,0 +1,25 @@
+{
+  "state": "schema-and-genuine-law-authored-before-defining-take-api-change-unexecuted",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🧪️tests/take.json",
+      "bytes": 633,
+      "sha256": "293baea9b7b183468abd70646f0ac584943a55e2901e4bc7f94a9f6fff8f772a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🧪️tests/take.schema.json",
+      "bytes": 1377,
+      "sha256": "466708765f0112731faeb2f4557ef7fade30623dbc1f733536c3bf5724d83d54"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🧪️tests/take.rs",
+      "bytes": 5902,
+      "sha256": "eef891b7f3c4cdee724469d889aaa0219204038e2015dfc8fad8276930eadf78"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs",
+      "bytes": 6162,
+      "sha256": "1aee6a784d54023d4f930af8f95e319c373a238eae1c0a94f19c6071e00f0564"
+    }
+  ]
+}

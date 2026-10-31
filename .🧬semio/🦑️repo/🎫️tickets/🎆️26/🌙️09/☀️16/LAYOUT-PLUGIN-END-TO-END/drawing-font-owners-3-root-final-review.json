@@ -1,0 +1,20 @@
+{
+  "state": "root-independently-verified-scoped-green-hold-released",
+  "commandSha256": "a9352bc0526807d5b3c20e6b1f6212d265dea6c66736bf799e088928d9e02cf9",
+  "actualTest": {
+    "exitCode": 0,
+    "pass": 9,
+    "fail": 0,
+    "assertions": 475,
+    "milliseconds": 121
+  },
+  "actualStrict": {
+    "exitCode": 0,
+    "roots": 9,
+    "diagnostics": 0
+  },
+  "inputs": 22,
+  "allMatchPreBothTerminalAndCurrent": true,
+  "hold": "released",
+  "scope": "Actual current admission8 and normalization1/3 ICU cases; broader Font/Drawing/native/Layout/browser remain open"
+}

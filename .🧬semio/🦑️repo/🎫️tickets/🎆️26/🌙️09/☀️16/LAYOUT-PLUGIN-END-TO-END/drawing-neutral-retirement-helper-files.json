@@ -1,0 +1,29 @@
+{
+  "status": "Authored, unexecuted; current page gate excludes new helper laws",
+  "corePath": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+  "coreFileSha256": "4a03c33df6b3ba4f5165d59a8e2060caa81cdffe4507bb10cb3fcf3f13c81acb",
+  "ownedHelperSectionSha256": "98b916a2987dc4d08b8761794587ffc4fdb6c77584fc700ca0b776b06e654ec1",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/🔣️.json",
+      "bytes": 334,
+      "sha256": "11a888c005a29447920a4e53a797a474c88690882f79501913a578f9374f6a23"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/📐️.json",
+      "bytes": 154,
+      "sha256": "7068b73e6553f7be8252e72c3351e57556e5187a2b32db82acb4fe8d107aaaa3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/♻️retirement/🧪️tests/retire.test.ts",
+      "bytes": 2537,
+      "sha256": "951e77a2bce866c4bc3d8b5413953635d129c1f8dd5e43df7aa029444d99c783"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "bytes": 10156,
+      "sha256": "cc8b2e13bea0586772b155dbc80763d42a8a733832d0b562c098dcd92251811a"
+    }
+  ],
+  "normalizerAttribution": "Only intoRetirement orderValue=null fixed metadata clear"
+}

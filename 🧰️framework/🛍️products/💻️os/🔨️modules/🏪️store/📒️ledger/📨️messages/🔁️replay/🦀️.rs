@@ -472,7 +472,7 @@ impl OriginalReplayDiagnostics {
         } else if let Some(row) = self.row.take() {
             self.row_close = Some(ArtifactStoreMessageLedgerRetirement::new(row.edit_id, row.messages));
         } else if let Some(ledger) = self.retiring.as_mut() {
-            p = ledger.close_step(grant)?.progress();
+            p = ledger.close_step(grant).result?.progress();
             if ledger.terminal_is_empty() {
                 self.retiring = None;
             }

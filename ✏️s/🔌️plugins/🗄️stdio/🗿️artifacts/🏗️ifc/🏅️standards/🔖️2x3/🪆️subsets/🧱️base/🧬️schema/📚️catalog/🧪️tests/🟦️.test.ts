@@ -6,14 +6,14 @@ import {createHash} from "node:crypto";
 import Ajv from "ajv";
 import {ifc2x3Catalog,ifc2x3AttributeDeclarations,ifc2x3Attribute,ifc2x3IsSubtype,ifc2x3EnumMembers,ifc2x3SelectAccepts,ifc2x3ResolveType} from "../🟦️.ts";
 import {extractExpressCatalog} from "../../../../../../../📚️catalog/🛠️extract/🟦️.ts";
-import {renderRustCatalog} from "../../../../../../../📚️catalog/🛠️extract/🦀️render.ts";
+import {encodeCatalogPack,decodeCatalogPack} from "../../../../../../../📚️catalog/🛠️extract/📦️pack.ts";
 export const records:{name:string;passed:boolean;error?:string}[]=[];
 export const checks:Promise<void>[]=[];
 const test=(name:string,run:()=>void):void=>{checks.push(register(name,()=>{try{run();records.push({name,passed:true});}catch(error){records.push({name,passed:false,error:String(error)});throw error;}}));};
 const read=(file:string):string=>readFileSync(new URL(file,import.meta.url),"utf8"),vectors=JSON.parse(read("./🔣️.json"));
 test("IFC2x3 complete catalog reproduces unchanged normative input and native output",()=>{
  const source=read("../IFC2X3_TC1.exp"),manifest=JSON.parse(read("../source.json"));assert.equal(createHash("sha256").update(source).digest("hex"),manifest.source.sha256);
- const extracted=extractExpressCatalog(source,manifest);assert.deepEqual(extracted,ifc2x3Catalog);const native=renderRustCatalog(extracted,{maximumSourceBytes:nativePolicy.storage.sourceBoundary.maxSourceBytes});assert.equal(native.assembler,read("../data.rs"));for(const component of native.components)assert.equal(component.rust,read("../🧩️components/"+component.folder+"/🦀️.rs"));
+ const extracted=extractExpressCatalog(source,manifest);assert.deepEqual(extracted,ifc2x3Catalog);{const{validation:_validation,...retained}=extracted,file=new Uint8Array(readFileSync(new URL("../catalog.ifcpack",import.meta.url)));assert.deepEqual(decodeCatalogPack(file),retained);assert.deepEqual(encodeCatalogPack(retained),file);}const native=renderRustCatalog(extracted,{maximumSourceBytes:nativePolicy.storage.sourceBoundary.maxSourceBytes});assert.equal(native.assembler,read("../data.rs"));for(const component of native.components)assert.equal(component.rust,read("../🧩️components/"+component.folder+"/🦀️.rs"));
  assert.deepEqual({entities:Object.keys(extracted.entities).length,types:Object.keys(extracted.types).length,enumerations:Object.values(extracted.types).filter(t=>t.kind==="enum").length,selects:Object.values(extracted.types).filter(t=>t.kind==="select").length,definedTypes:Object.values(extracted.types).filter(t=>t.kind==="defined").length,functions:Object.keys(extracted.functions).length,rules:Object.keys(extracted.rules).length},vectors.counts);
  assert.equal(ifc2x3Catalog.schema,"IFC2X3");assert.ok(Object.values(ifc2x3Catalog.validation).every(v=>v===false));
 });

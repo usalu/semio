@@ -5,6 +5,7 @@
   "private": true,
   "bundleKind": "repo",
   "scripts": {
+    "verify-record-document": "repo run @semio-tech/stdio-semio-rs:verify-record-document",
     "verify-stdio-document-contract": "repo run @semio-tech/stdio-semio-rs:verify-stdio-document-contract"
   },
   "devDependencies": {

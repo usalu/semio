@@ -1,0 +1,78 @@
+{
+  "files": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/work.schema.json",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/work.json",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🦀️.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/work.rs",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/zero-work.test.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/controller.schema.json",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/controller.json",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/controller.test.ts"
+  ],
+  "reportsInputs": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-text-test-first.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-text-ts-integration-plan.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-text-zero-red-command.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-text-ts-funding-boundary.md"
+  ],
+  "notes": "Only shared text work schema/cases and Rust/TS text tests authored by dependency_layout. Existing14 glyph corpus and limits untouched. Production files and Rust composition tests belong to Rust; no attribution claim. Source-authored only; no semantic execution/strict/admission proof. Separate controller schema/cases added after actual focused RED terminal; historical RED input/log remain immutable. No production implementation.",
+  "source": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/work.schema.json",
+      "sha256": "fedb273a3ed06ebcc04e6b8a3b0d7224c62a2d276d44f0802510ac9703a23804",
+      "bytes": 3691,
+      "absoluteUtf16Units": 162
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/work.json",
+      "sha256": "6f1c886aeb36f169c54b0b86260468e1b4b36cf8d35fe653d1ace9b4d7fc120d",
+      "bytes": 2375,
+      "absoluteUtf16Units": 155
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🦀️.rs",
+      "sha256": "96d9dac0a4d6dae883cd0d323bb042ba929b363dfe0b2de96977956954b4a272",
+      "bytes": 12045,
+      "absoluteUtf16Units": 152
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/work.rs",
+      "sha256": "f141af04cdaaed78548142db441e7a3c9bfbe80bc826e7818030f8f965006165",
+      "bytes": 3174,
+      "absoluteUtf16Units": 153
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🟦️.ts",
+      "sha256": "3c3f0e3a81e63aadc9a9f770d0418af62c9624db73fc80ff3bcc0bc229ffbebb",
+      "bytes": 21849,
+      "absoluteUtf16Units": 152
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/zero-work.test.ts",
+      "sha256": "7676065db7379e6337069083d7495381025a4258347e1718b512c3c946ea2c93",
+      "bytes": 1965,
+      "absoluteUtf16Units": 163
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/controller.schema.json",
+      "sha256": "7f81edf2294b2894efcbdac3c76070ba75e4eada79331d1a008ae473e58947bc",
+      "bytes": 11144,
+      "absoluteUtf16Units": 168
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/controller.json",
+      "sha256": "451e4ef6cd63615cd103fd5a18f6f09aae014b6f7f4760db38f28356ac04db16",
+      "bytes": 8536,
+      "absoluteUtf16Units": 161
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/controller.test.ts",
+      "sha256": "3ce41bff5901a7d23e4e11ea80cb50760a60bf78131e3dd3a08114c1553e9130",
+      "bytes": 13581,
+      "absoluteUtf16Units": 164
+    }
+  ],
+  "state": "test-first-source-authored-not-executed",
+  "productionEdited": false
+}

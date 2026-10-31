@@ -21,13 +21,16 @@ impl<S:JsonReadSource+Copy,V:JsonParsedValue> JsonSourceCursor<S,V>{
     pub fn position(&self)->usize{self.parser.position()}
     pub fn phase(&self)->&'static str{self.parser.phase()}
     pub fn normal_step_progress(&self)->super::RetainedCloneProgress{self.parser.normal_step_progress()}
+    /// ⏱️ Forwards the exact selected grammar work, including a refused operation.
+    pub fn last_turn_work(&self)->u64{self.parser.last_turn_work()}
     pub fn normal_step_demands(&self)->Result<super::RetirementDemand,JsonError>{self.parser.normal_step_demands(&self.source)}
     pub fn step(&mut self,maximum_units:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:super::RetainedCloneGrant)->Result<Option<V>,JsonError>{self.parser.step_source(&self.source,maximum_units,control,grant,false)}
     /// 🎟️ Admits the native grammar retirement frame before transferring its original owner.
     pub fn retirement_birth_bytes(&self)->usize{semio_framework_value::owned_retirement_birth_bytes::<super::JsonGrammarCursor<V>>()}
-    pub fn into_retirement(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Self)>{
+    pub fn into_retirement(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Self)>{
         let Self{source,parser}=self;
-        semio_framework_value::admit_owned_retirement(parser,grant).map_err(|(error,parser)|(error,Self{source,parser}))
+        let turn=semio_framework_value::admit_owned_retirement(parser,grant);
+        semio_framework_value::RetainedWorkOutcome{result:turn.result.map_err(|(error,parser)|(error,Self{source,parser})),work:turn.work}
     }
 }
 

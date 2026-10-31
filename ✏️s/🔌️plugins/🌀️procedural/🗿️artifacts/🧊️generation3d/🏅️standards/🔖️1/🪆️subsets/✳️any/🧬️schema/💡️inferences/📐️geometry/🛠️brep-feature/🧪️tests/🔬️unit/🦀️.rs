@@ -1,3 +1,4 @@
+use semio_s_artifact_procedural_3d_geometry_compute::testing::step_with_fuel;
 use std::sync::Arc;
 use semio_framework_3d_brep_engine::ShapeValue;
 use super::*;
@@ -95,9 +96,9 @@ fn cancelling_a_feature_midway_ends_in_the_cancelled_fault_without_outputs() {
     let kind = support::kind_of(catalogue(), "brep.feature.fillet");
     let values = BTreeMap::from([("shape".to_string(), GeometryValue::Shape(cube())), ("radius".to_string(), GeometryValue::Number(0.25))]);
     let mut job = (COMPUTES[0].start)(kind, WidgetInputs::new_cold("w", kind, values));
-    assert!(matches!(job.step(1), WidgetStep::Working { .. }));
+    assert!(matches!(step_with_fuel(&mut *job, 1), WidgetStep::Working { .. }));
     job.cancel();
-    let WidgetStep::Done(evaluation) = job.step(1) else { panic!("finished") };
+    let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 1) else { panic!("finished") };
     assert_eq!(evaluation.fault.expect("fault").code, "generation3d.geometry.cancelled");
     assert!(evaluation.outputs.is_empty());
 }

@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-plugin-typing-edit = { path = "../../../../🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust" }
 semio-framework-plugin-scrub-host = { path = "../../../../🛠️tool-machine/🫧️host/📦️packages/🦀️rust" }
 semio-framework-plugin-reactor-tasks = { path = "../../../../⚛️reactor/⏲️tasks/📦️packages/🦀️rust" }
 semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }

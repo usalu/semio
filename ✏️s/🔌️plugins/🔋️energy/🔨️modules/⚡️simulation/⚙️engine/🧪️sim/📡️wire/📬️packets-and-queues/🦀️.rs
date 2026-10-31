@@ -136,7 +136,7 @@ impl EnergyWirePacket {
         if !energy_grant_covers(grant, demand) {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
         }
-        self.payload.close_step(grant)
+        self.payload.close_step(grant).result
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -354,8 +354,14 @@ impl Default for EnergyPublicationChannels {
 pub struct EnergyWireBuild {
     pub kind: EnergyWireKind,
     pub identity: EnergyWireIdentity,
-    pub writer: semio_framework_job_payload::RetainedJobPayloadWriter,
+    pub stream: semio_framework_job_payload::JobPayloadStream,
+    pub builder: Option<Box<semio_framework_job_payload::RetainedPayloadBuilder>>,
     pub field: u8,
+}
+
+/// 🧾️ Posts one funded payload-builder turn into the step receipt and reports whether that phase completed.
+pub fn energy_post(context: &mut StepContext<'_>, turn: semio_framework_value::RetainedWorkOutcome) -> Result<bool, ()> {
+    semio_framework_job::receive_original_retained_work(context, turn).map(|step| matches!(step, RetainedCloneStep::Complete(_))).map_err(|_| ())
 }
 
 pub fn energy_wire_header(kind: EnergyWireKind, identity: EnergyWireIdentity, census: EnergyNumericalCensus, stage: EnergyJobStage, tier: EnergyQualityTier) -> [u8; ENERGY_WIRE_HEADER_BYTES] {

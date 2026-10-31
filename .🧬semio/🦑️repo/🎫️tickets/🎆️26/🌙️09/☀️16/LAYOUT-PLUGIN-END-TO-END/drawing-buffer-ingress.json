@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "elementLogicalBytes": 8,
+  "value": 42,
+  "attempt": "Array.prototype.push.call",
+  "operationGrant": [
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "expectedElements": [],
+  "expectedRejection": true,
+  "cleanupStock": [
+    64,
+    1024,
+    1024,
+    1024,
+    32
+  ],
+  "cleanupFuel": 64,
+  "cleanupTurn": [
+    1,
+    1024,
+    1024,
+    1024,
+    32
+  ]
+}

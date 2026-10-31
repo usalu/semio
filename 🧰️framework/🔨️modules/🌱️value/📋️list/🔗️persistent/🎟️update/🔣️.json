@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "inputCount",
+    "rank",
+    "value",
+    "operations",
+    "cancelPrefixes",
+    "stock",
+    "rules"
+  ],
+  "properties": {
+    "inputCount": {
+      "const": 17
+    },
+    "rank": {
+      "const": 8
+    },
+    "value": {
+      "const": 99
+    },
+    "operations": {
+      "const": [
+        "set",
+        "insert",
+        "remove"
+      ]
+    },
+    "cancelPrefixes": {
+      "const": [
+        0,
+        1,
+        2,
+        4,
+        8,
+        16,
+        32
+      ]
+    },
+    "stock": {
+      "const": {
+        "items": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 64,
+        "fuel": 100000,
+        "maximumTurns": 100000
+      }
+    },
+    "rules": {
+      "const": {
+        "trueAtomicAliasWork": true,
+        "realNullRestoresScratch": true,
+        "fixedHeaderCopyBytes": 0,
+        "parentPublicationSeparate": true,
+        "independentVectorOracle": true,
+        "sameFiniteBank": true
+      }
+    }
+  }
+}

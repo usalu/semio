@@ -10,7 +10,7 @@ import schema from "../🧬️schema/🔣️.json";
 import {CurrentPhysicalOwnerV1} from "../../📁️current/🟦️.ts";
 import type {FileObservationControlV1,FileObservationProgressV1} from "../../🟦️.ts";
 import {testPythonV1} from "../../../../🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {ConcurrentEditErrorV1,churnLanguagesV1,churnProtocolV1,churnTextV1,concurrentEditOfV1,concurrentEditV1,isConcurrentEditV1,retryOnConcurrentEditSyncV1,retryOnConcurrentEditV1,type ChurnProfileNameV1,type ChurnRetryEventV1,type ConcurrentEditReasonV1} from "../🟦️.ts";
+import {ConcurrentEditErrorV1,quietWaitMillisecondsV1,churnLanguagesV1,churnProtocolV1,churnTextV1,concurrentEditOfV1,concurrentEditV1,isConcurrentEditV1,retryOnConcurrentEditSyncV1,retryOnConcurrentEditV1,type ChurnProfileNameV1,type ChurnRetryEventV1,type ConcurrentEditReasonV1} from "../🟦️.ts";
 
 const python=testPythonV1(),here=dirname(fileURLToPath(import.meta.url)),protocol=churnProtocolV1();
 const oracle=JSON.parse(Bun.spawnSync([python!,"-I",join(here,"🐍️.py"),join(here,"🔣️.json"),join(here,"..","🧬️schema","🔣️.json")]).stdout.toString()) as Record<string,unknown>;
@@ -157,7 +157,7 @@ test("a directory listed while a peer adds a file is listed again; a roster that
 test("an input that is rewritten on every read fails after the declared attempts, naming the path in the chosen language",async()=>{
  const root=scratch(),path=join(root,"busy.txt");writeFileSync(path,"x");
  let version=0;
- const reader=owner(root,event=>{if(event.phase==="read")writeFileSync(path,"v"+(++version)+" ".repeat(version%3));});
+ const reader=owner(root,event=>{if(event.phase==="read"){writeFileSync(path,"v"+(++version)+" ".repeat(version%3));utimesSync(path,1,1);}});
  const saved=process.env.SEMIO_LANGUAGE;process.env.SEMIO_LANGUAGE="de";
  const failure=await reader.digest(path).catch(error=>error).finally(()=>{if(saved===undefined)delete process.env.SEMIO_LANGUAGE;else process.env.SEMIO_LANGUAGE=saved;});
  expect(failure).toBeInstanceOf(ConcurrentEditErrorV1);
@@ -174,4 +174,26 @@ test("a failure the caller marks as not retryable passes through at once, while 
  calls=0;
  const result=await retryOnConcurrentEditV1("snapshot",async()=>{calls++;if(calls<3)throw concurrentEditV1("generation","/outside");return "done";},options);
  expect(result).toBe("done");expect(calls).toBe(3);expect(events.length).toBe(2);
+});
+
+
+/** 🤫️ A peer that keeps saving one file must cost waiting time, not retry attempts. */
+test("an edit of a file that was modified moments ago waits for quiet without using an attempt; a file that never gets quiet still fails after the layer's attempts and the quiet ceiling",async()=>{
+ const sleeps:number[]=[];let calls=0;const quiet=protocol.quiet;
+ const result=await retryOnConcurrentEditV1("read",async()=>{calls++;if(calls<=protocol.profiles.read.maximumAttempts+3)throw concurrentEditV1("bytes","/x/edited.rs","its bytes changed");return "settled";},{onRetry:()=>undefined,sleep:async milliseconds=>{sleeps.push(milliseconds);},modifiedAgeMs:()=>calls<=protocol.profiles.read.maximumAttempts+3?500:60000});
+ expect(result).toBe("settled");expect(calls).toBe(protocol.profiles.read.maximumAttempts+4);expect(sleeps.every(value=>value===quiet.windowMilliseconds-500)).toBe(true);
+ expect(quietWaitMillisecondsV1("/x",0,{modifiedAgeMs:()=>undefined})).toBe(0);expect(quietWaitMillisecondsV1("/x",0,{modifiedAgeMs:()=>quiet.windowMilliseconds})).toBe(0);
+ expect(quietWaitMillisecondsV1("/x",0,{modifiedAgeMs:()=>0})).toBe(quiet.windowMilliseconds);expect(quietWaitMillisecondsV1("/x",quiet.ceilingMilliseconds-100,{modifiedAgeMs:()=>0})).toBe(100);expect(quietWaitMillisecondsV1("/x",quiet.ceilingMilliseconds,{modifiedAgeMs:()=>0})).toBe(0);
+ let total=0,attempts=0;const failure=await retryOnConcurrentEditV1("read",async()=>{attempts++;throw concurrentEditV1("bytes","/x/always.rs","its bytes changed");},{onRetry:()=>undefined,sleep:async milliseconds=>{total+=milliseconds;},modifiedAgeMs:()=>0}).catch(error=>error);
+ expect(isConcurrentEditV1(failure)).toBe(true);expect(attempts).toBe(protocol.profiles.read.maximumAttempts+Math.ceil(quiet.ceilingMilliseconds/quiet.windowMilliseconds));
+ expect(total-protocol.profiles.read.backoffMs.reduce((sum,value)=>sum+value,0)).toBe(quiet.ceilingMilliseconds);
+ let syncCalls=0;const slept:number[]=[];expect(retryOnConcurrentEditSyncV1("read",()=>{if(++syncCalls<10)throw concurrentEditV1("bytes","/x/s.rs","its bytes changed");return 7;},{onRetry:()=>undefined,sleepSync:milliseconds=>{slept.push(milliseconds);},modifiedAgeMs:()=>1000})).toBe(7);expect(slept.length).toBe(9);
+});
+
+test("a file whose modification time lies in the future (clock skew) is not waited for, a fresh one still is",async()=>{
+ const {mkdtempSync,writeFileSync,utimesSync,rmSync}=await import("node:fs"),{tmpdir}=await import("node:os"),{join}=await import("node:path");
+ const directory=mkdtempSync(join(tmpdir(),"churn-")),file=join(directory,"a");
+ try{writeFileSync(file,"x");const future=new Date(Date.now()+3600000);utimesSync(file,future,future);expect(quietWaitMillisecondsV1(file,0)).toBe(0);
+  const now=new Date();utimesSync(file,now,now);expect(quietWaitMillisecondsV1(file,0)).toBeGreaterThan(0);}
+ finally{rmSync(directory,{recursive:true,force:true});}
 });

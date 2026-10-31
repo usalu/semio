@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "contract": "framework.job.worker.authentic-admission",
+  "source": {
+    "operation": 7544,
+    "generation": 4,
+    "clockBinding": 1,
+    "deadlineUs": 1000000
+  },
+  "stock": [
+    4096,
+    1048576,
+    1048576,
+    1048576,
+    64
+  ],
+  "fuel": 16384,
+  "turn": {
+    "items": 1,
+    "fuel": 1
+  },
+  "maximumTurns": 512,
+  "phases": [
+    "genuine-source",
+    "fault-builder",
+    "native-backing",
+    "payload-handoff",
+    "source-handoff",
+    "receiver-handoff"
+  ],
+  "cases": [
+    {
+      "name": "zero-items",
+      "deny": "items"
+    },
+    {
+      "name": "zero-depth",
+      "deny": "depth"
+    },
+    {
+      "name": "real-source",
+      "deny": null
+    },
+    {
+      "name": "foreign-source",
+      "deny": "foreign"
+    },
+    {
+      "name": "cancelled",
+      "deny": "cancel"
+    }
+  ],
+  "newLedger": false,
+  "configurationSeedsLifetime": false,
+  "bodyEntriesBeforeReceiver": 0,
+  "terminalDropBytes": 0
+}

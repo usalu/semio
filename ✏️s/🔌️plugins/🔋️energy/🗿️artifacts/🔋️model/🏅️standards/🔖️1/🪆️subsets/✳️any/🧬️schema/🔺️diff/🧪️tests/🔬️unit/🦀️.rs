@@ -8,21 +8,21 @@ fn zone(id: u32, name: &str) -> Zone {
 }
 
 fn snapshot(zones: Vec<Zone>) -> EnergyModelSnapshot {
-    crate::snapshot::energy_snapshot_with_state(crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA, &crate::model::Model { zones, ..crate::model::Model::default() }, None)
+    crate::snapshot::reference::energy_snapshot_with_state(crate::snapshot::reference::ENERGY_MODEL_DOCUMENT_SCHEMA, &crate::model::Model { zones, ..crate::model::Model::default() }, None)
 }
 
-fn zones_of(zones: Rows<ZonePatch>) -> EnergyModelDiff {
-    EnergyModelDiff::of(ModelPatch { zones, ..ModelPatch::default() })
+fn zones_of(zones: Rows<ZonePatch>) -> ReferenceEnergyModelDiff {
+    ReferenceEnergyModelDiff::of(ModelPatch { zones, ..ModelPatch::default() })
 }
 
-fn rename(id: u32, name: &str) -> EnergyModelDiff {
+fn rename(id: u32, name: &str) -> ReferenceEnergyModelDiff {
     zones_of(Rows::modifying(ZonePatch { name: Some(name.to_string()), ..ZonePatch::of(EntityId(id)) }))
 }
 
 #[semio_framework_async_macros::async_test]
 async fn empty_diff_is_a_no_operation() {
-    let base = crate::snapshot::EnergyModelSnapshot::default();
-    let diff = EnergyModelDiff::default();
+    let base = crate::snapshot::reference::EnergyModelSnapshot::default();
+    let diff = ReferenceEnergyModelDiff::default();
     assert!(DiffAlgebra::is_empty(&diff));
     assert_eq!(protocol::apply_diff_cold(&diff, &base).expect("valid mutation diff"), base);
 }
@@ -106,11 +106,11 @@ async fn the_wire_form_round_trips_and_omits_what_did_not_change() {
     let mut diff = rename(1, "Uno");
     diff.absorb(zones_of(Rows::inserting(2, zone(3, "Tres"))));
     diff.absorb(zones_of(Rows::removing(&base.model.zones, &EntityId(2))));
-    diff.absorb(EnergyModelDiff::weather(EnergyLinkSlotDelta::Detached));
+    diff.absorb(ReferenceEnergyModelDiff::weather(EnergyLinkSlotDelta::Detached));
     let value = diff.to_value();
-    assert_eq!(EnergyModelDiff::from_value(value.clone()).expect("decodes"), diff);
+    assert_eq!(ReferenceEnergyModelDiff::from_value(value.clone()).expect("decodes"), diff);
     assert!(value["model"]["spaces"].is_null() && value["model"]["name"].is_null(), "only the touched collections appear: {value:?}");
-    assert_eq!(EnergyModelDiff::default().to_value(), semio_framework_value::DslValue::Object(Vec::new()));
+    assert_eq!(ReferenceEnergyModelDiff::default().to_value(), semio_framework_value::DslValue::Object(Vec::new()));
 }
 
 #[test]
@@ -118,14 +118,13 @@ fn link_and_scalar_edits_preserve_untouched_projection_storage() {
     let mut base = snapshot(vec![zone(1, "A"), zone(2, "B")]);
     let zones = base.model.zones.as_ptr();
     let schema = base.schema.as_ptr();
-    protocol::apply_diff_cold_into(&EnergyModelDiff::weather(EnergyLinkSlotDelta::Detached), &mut base).expect("link change");
+    protocol::apply_diff_cold_into(&ReferenceEnergyModelDiff::weather(EnergyLinkSlotDelta::Detached), &mut base).expect("link change");
     assert_eq!(base.model.zones.as_ptr(), zones);
     assert_eq!(base.schema.as_ptr(), schema);
-    protocol::apply_diff_cold_into(&EnergyModelDiff::of(ModelPatch { name: Some("Changed".into()), ..Default::default() }), &mut base).expect("name change");
+    protocol::apply_diff_cold_into(&ReferenceEnergyModelDiff::of(ModelPatch { name: Some("Changed".into()), ..Default::default() }), &mut base).expect("name change");
     assert_eq!(base.model.name, "Changed");
     assert_eq!(base.model.zones.as_ptr(), zones);
     assert_eq!(base.schema.as_ptr(), schema);
-    eprintln!("[DEBUG] Energy link/scalar edits preserve unrelated model and snapshot storage");
 }
 
 #[test]
@@ -133,11 +132,10 @@ fn a_late_model_field_refusal_preserves_every_original_field_and_link() {
     let mut base = snapshot(vec![zone(1, "A")]);
     let original = base.clone();
     let zones = base.model.zones.as_ptr();
-    let diff = EnergyModelDiff { model: ModelPatch { name: Some("Rejected".into()), ground_temperature: GroundTemperatureConfigPatch { building_surface_c: Slots::assigning(12, 7.0), ..Default::default() }, ..Default::default() }, weather_link: Some(EnergyLinkSlotDelta::Detached), ..Default::default() };
+    let diff = ReferenceEnergyModelDiff { model: ModelPatch { name: Some("Rejected".into()), ground_temperature: GroundTemperatureConfigPatch { building_surface_c: Slots::assigning(12, 7.0), ..Default::default() }, ..Default::default() }, weather_link: Some(EnergyLinkSlotDelta::Detached), ..Default::default() };
     assert!(protocol::apply_diff_cold_into(&diff, &mut base).is_err());
     assert_eq!(base, original);
     assert_eq!(base.model.zones.as_ptr(), zones);
-    eprintln!("[DEBUG] Energy late field refusal leaves the original projection and links unchanged");
 }
 
 #[test]

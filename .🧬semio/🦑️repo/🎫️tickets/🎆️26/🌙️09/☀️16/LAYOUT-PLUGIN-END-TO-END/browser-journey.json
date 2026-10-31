@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "demo": {
     "pageIds": [
       "layout-document.page.page-1",
@@ -56,6 +56,13 @@
       "step": "baseline-media",
       "values": {
         "valid": true
+      }
+    },
+    {
+      "step": "rendered-text-contrast",
+      "values": {
+        "valid": true,
+        "measurement": "retained-render-color-projection"
       }
     },
     {
@@ -216,5 +223,21 @@
       "fault": null,
       "valid": false
     }
-  ]
+  ],
+  "renderer": {
+    "kind": "wgpu",
+    "port": 6179,
+    "canvasId": "semio-wgpu-canvas",
+    "identityAttribute": "data-node-key",
+    "actionsSurfaceSuffix": "/framework.section.engagements",
+    "activationTarget": "@semio-tech/framework-os-dev:activate-layout-wgpu-prototype",
+    "serveTarget": "@semio-tech/framework-os-dev:serve-layout-wgpu-prototype"
+  },
+  "textContrast": {
+    "minimumRatio": 4.5,
+    "measurement": "retained-render-color-projection",
+    "action": "addFrame",
+    "field": "x",
+    "kind": "input"
+  }
 }

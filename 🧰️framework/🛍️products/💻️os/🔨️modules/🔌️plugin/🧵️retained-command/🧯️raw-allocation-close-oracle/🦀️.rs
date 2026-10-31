@@ -69,14 +69,14 @@ pub fn test_raw_allocation_close<A: ArtifactApp>() {
         let expected:Vec<u8>=serde_json::from_str(&serde_json::to_string(&vec![42u8;case["initializedBytes"].as_u64().unwrap() as usize]).unwrap()).unwrap();
         assert_eq!(job.raw,expected);
         assert_eq!(job.next_close_copy_byte_demand().unwrap(),0);
-        let unfunded=RetainedCloneGrant{maximum_items:0,maximum_depth:1,..Default::default()};
-        assert!(matches!(semio_framework_job::close_with_self_funded_context(unfunded, |cx| job.close_step(cx)).expect("original fixture close turn"),InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()));
+        let mut close_caller=close_source::caller(1,1);let unfunded=RetainedCloneGrant{maximum_items:0,maximum_depth:1,..Default::default()};
+        assert!(matches!(close_caller.turn(unfunded, |cx| job.close_step(cx)).expect("original fixture close turn"),InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()));
         assert_eq!(job.raw.as_ptr(),pointer);assert_eq!(job.raw.capacity(),capacity);
         let mut copied=0;let mut released=0;
         for _ in 0..16 {
             let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:fixture["maximumCopyBytes"].as_u64().unwrap() as usize,maximum_capacity_bytes:0,maximum_release_bytes:job.next_close_release_byte_demand().unwrap(),maximum_depth:job.next_close_depth_demand().unwrap()};
-            let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-            let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self_funded.turn(grant, |cx| job.close_step(cx)).expect("original fixture close turn"));
+            
+            let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close_caller.turn(grant, |cx| job.close_step(cx)).expect("original fixture close turn"));
             let progress=match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>progress,_=>panic!("funded original raw allocation must complete")};
             assert_eq!(heap.requested_bytes,0);assert_eq!(heap.released_bytes,progress.released_bytes);
             assert!(progress.copied_items<=grant.maximum_items&&progress.copied_bytes<=grant.maximum_copy_bytes&&progress.released_bytes<=grant.maximum_release_bytes);
@@ -85,7 +85,12 @@ pub fn test_raw_allocation_close<A: ArtifactApp>() {
         }
         assert!(job.terminal_is_empty());
         assert_eq!(copied,case["expectedCopiedBytes"].as_u64().unwrap() as usize);
+        close_caller.retire(close_source::STOCK);
         assert_eq!(released,case["expectedReleasedBytes"].as_u64().unwrap() as usize);
         assert_eq!(released,capacity);
     }
 }
+
+#[cfg(any(test,feature="artifact-app-testing"))]
+#[path="../../../../../../🔨️modules/🧵️job/🧪️testing/♻️close/🦀️.rs"]
+mod close_source;

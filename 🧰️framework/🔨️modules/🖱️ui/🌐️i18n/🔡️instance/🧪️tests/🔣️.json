@@ -692,6 +692,161 @@
      "expected": "two"
     }
    ]
+  },
+  {
+   "name": "no fallback language: a key the language lacks answers itself, never another language",
+   "options": {
+    "language": "de",
+    "supportedLanguages": [
+     "en",
+     "de"
+    ]
+   },
+   "bundles": {
+    "en": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Back",
+        "beginner": "Go back"
+       }
+      },
+      "title": "Hello {{name}}"
+     },
+     "only": {
+      "en": "English only"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} of {{count}}"
+     },
+     "nested": {
+      "user": "{{user.name}} ({{ user.id }})"
+     },
+     "plain": "Plain",
+     "empty": ""
+    },
+    "de": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Zurück",
+        "beginner": "Zurück gehen"
+       }
+      },
+      "title": "Hallo {{name}}"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} von {{count}}"
+     },
+     "plain": "Schlicht"
+    }
+   },
+   "steps": [
+    {
+     "call": "t",
+     "key": "plain",
+     "expected": "Schlicht"
+    },
+    {
+     "call": "t",
+     "key": "only.en",
+     "expected": "only.en"
+    },
+    {
+     "call": "exists",
+     "key": "only.en",
+     "expected": false
+    },
+    {
+     "call": "t",
+     "key": "only.en",
+     "expected": "English only",
+     "options": {
+      "lng": "en"
+     }
+    }
+   ]
+  },
+  {
+   "name": "undecided language: nothing answers until a language is chosen, then it answers in that language only",
+   "options": {
+    "supportedLanguages": [
+     "en",
+     "de"
+    ]
+   },
+   "bundles": {
+    "en": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Back",
+        "beginner": "Go back"
+       }
+      },
+      "title": "Hello {{name}}"
+     },
+     "only": {
+      "en": "English only"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} of {{count}}"
+     },
+     "nested": {
+      "user": "{{user.name}} ({{ user.id }})"
+     },
+     "plain": "Plain",
+     "empty": ""
+    },
+    "de": {
+     "nav": {
+      "back": {
+       "label": {
+        "normal": "Zurück",
+        "beginner": "Zurück gehen"
+       }
+      },
+      "title": "Hallo {{name}}"
+     },
+     "list": {
+      "count": "{{node}}, {{position}} von {{count}}"
+     },
+     "plain": "Schlicht"
+    }
+   },
+   "steps": [
+    {
+     "call": "language",
+     "expected": null
+    },
+    {
+     "call": "resolvedLanguage",
+     "expected": null
+    },
+    {
+     "call": "t",
+     "key": "plain",
+     "expected": "plain"
+    },
+    {
+     "call": "exists",
+     "key": "plain",
+     "expected": false
+    },
+    {
+     "call": "changeLanguage",
+     "language": "en"
+    },
+    {
+     "call": "t",
+     "key": "plain",
+     "expected": "Plain"
+    },
+    {
+     "call": "language",
+     "expected": "en"
+    }
+   ]
   }
  ]
 }

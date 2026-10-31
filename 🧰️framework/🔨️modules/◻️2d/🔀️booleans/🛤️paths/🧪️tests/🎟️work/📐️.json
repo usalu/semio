@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "const": {
+    "version": 1,
+    "items": 4194304,
+    "copy": 268435456,
+    "capacity": 33554432,
+    "release": 67108864,
+    "depth": 256,
+    "maxTurns": 10000000,
+    "deniedAxes": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ],
+    "deniedEffects": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "originalOperandIdentity": true,
+    "heapEqualsReceipt": true,
+    "independentMaskCase": "transformed overlapping rectangles",
+    "independentExtent": [
+      64,
+      64
+    ],
+    "handoffSemantic": 0,
+    "handoffCpu": 1,
+    "ceilingSettlement": "completed actual child only",
+    "childFinishedBeforePublication": true,
+    "deniedCeilingResumeEffects": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "custodyBirth": {
+      "semantic": 0,
+      "cpu": 1,
+      "copy": 0,
+      "capacity": 0,
+      "release": 0
+    },
+    "freshChildAtCeiling": "born without heap effects; first algorithm refused",
+    "segmentPointerProof": "composed with defining Flatten input-pointer law"
+  }
+}

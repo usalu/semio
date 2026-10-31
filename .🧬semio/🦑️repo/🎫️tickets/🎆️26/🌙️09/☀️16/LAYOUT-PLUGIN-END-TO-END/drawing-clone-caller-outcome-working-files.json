@@ -1,0 +1,27 @@
+{
+  "state": "requested-three-owning-test-callers-Source-authored",
+  "runtimeExecuted": false,
+  "compilerPassClaimed": false,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🦀️.rs",
+      "bytes": 22836,
+      "sha256": "5873f4b039ed1315e52d64425cb938eb810ce7406ea8f483911db2f4c784a130",
+      "directTestDefinitions": 9
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🦀️.rs",
+      "bytes": 11953,
+      "sha256": "ac647691b5fcca72ab920fd1c428d06ff1263da538e0be78df511b970c8752c5",
+      "directTestDefinitions": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🎯️dispatch/🦀️.rs",
+      "bytes": 4977,
+      "sha256": "a5f12e0f5548f06a0a5fcd2a95ce7c9d0b1eb059333fbcb43f98be170bdd635e",
+      "directTestDefinitions": 0
+    }
+  ],
+  "fixturesStocksGrantsLawsPreserved": true,
+  "manifestChanges": false
+}

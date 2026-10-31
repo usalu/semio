@@ -1,0 +1,7 @@
+# Worker Session Birth Source Progress
+
+The retained production state and caller-owned output API are authored after the three-file test-first packet. One actual CAS is attempted per slot-scan turn. The empty Arc frame delegates to the existing true fallible first-party allocation backend; the fixed retirement node uses one fallible raw allocation. Partial frames, exact slot, authority and output are stored before any receipt qualification. Existing consuming admit_ready methods and infallible SessionHandle.new were removed, with no aliases.
+
+Partial close handles born session, ready authority and same-root cancel alias, empty frame, node, exact reserved slot and original authority admission before its final metadata. Raw allocation/null work comes from the defining attempt; current grant denial remains0. Output handoff owns the session in the caller slot before actual metadata posting. The first-party wrapper conversion trait is sealed.
+
+Two actual Original source tests are mounted, and the Worker unit binary now selects only the canonical refusal-capable test allocator, which forwards the existing Trace witness. The neutral stock wire keys were corrected to the defining camelCase representation; no stock value changed. No runtime gate has run for this body. Existing direct worker tests and higher callers remain partially unmigrated; do not claim SourceReady or Host proof. NativeIO run fixture now uses actual retained Batch admission plus real context-owned ACK, while other direct job-step consumers still require Original receiving ownership.

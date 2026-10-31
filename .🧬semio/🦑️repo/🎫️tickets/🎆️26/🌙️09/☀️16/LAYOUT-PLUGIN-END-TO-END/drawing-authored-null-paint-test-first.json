@@ -1,0 +1,24 @@
+{
+  "state": "schema-first-parser-law-authored-before-parser-schema-body",
+  "cases": 12,
+  "laws": 1,
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️attributes/🧪️tests/📐️.json",
+      "bytes": 2619,
+      "sha256": "e64dbe7fe3c9f8439e303dec7b3b88c9ebcfec84bd6507d51a6321599d5ad29b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️attributes/🧪️tests/🔣️.json",
+      "bytes": 3515,
+      "sha256": "eb1d363ae08ad93c22953a945df2640a2c78e194904cf1ac8a79eabc70f59399"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️attributes/🧪️tests/paint.test.ts",
+      "bytes": 3291,
+      "sha256": "15427b42b6bcbc200199c7517e0cdb636e96cc917acaf467b19a96c021a26c8f"
+    }
+  ],
+  "semantics": "Explicit null accepted and preserved as no paint; omitted remains omitted. Original null fixture unchanged. Hostile scalar/string/array/malformed object refused. Independent Ajv and SQLite behind actual Bun tool boundary. Native Option remains same no-paint semantic, no inheritance claim.",
+  "lawFollowup": "Before any execution, defined original JSON parent/property guard added for static union safety; no value/assertion/case/stock change."
+}

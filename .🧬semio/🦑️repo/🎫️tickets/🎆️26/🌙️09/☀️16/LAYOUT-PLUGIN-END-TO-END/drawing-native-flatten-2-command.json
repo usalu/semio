@@ -1,0 +1,46 @@
+{
+  "state": "prepared-isolated-unfiltered-repeat-after-test-only-guard-scheduling-fix",
+  "cwd": "/Users/ueli/Documents/semio",
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/🧰️framework/Cargo.toml",
+    "-p",
+    "semio-framework-2d-path-flatten",
+    "--lib",
+    "--",
+    "--nocapture"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-flatten-2",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-flatten-2/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-flatten-2/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-flatten-2/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-flatten-2/tmp"
+  },
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-flatten-2/native.log",
+  "sourcePacket": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-native-flatten-2-inputs.json",
+  "sourcePacketSha256": "b5291369641ebdd1beb49394b4b3be8f50fa49c4b965b57769f0e331f3ca21bc",
+  "inputs": 462,
+  "metadataSha256": "75e725c6429195c03f020dea8bfd2b8613cda778808bffde6429d659031923d6",
+  "declarationsNotActualOutcomes": [
+    "shared_contours_are_budget_independent",
+    "partial_and_cancelled_contours_are_unavailable",
+    "invalid_contracts_points_and_output_budgets_are_rejected",
+    "flatten_retirement_preserves_owned_contours_and_drains_private_curves_under_grants",
+    "cancellation_retains_actual_private_buffers_until_consuming_retirement",
+    "retained_admission_keeps_refused_flatten_source",
+    "exact_five_axis_work_preserves_shared_contours_and_actual_backing",
+    "funded_contours_paint_the_same_output_as_independent_tiny_skia_geometry"
+  ],
+  "features": [],
+  "filter": null,
+  "scope": "Actual dedicated Flatten --lib only; no Pixels/Stroke/Boolean/Drawing/Job/Flow/fullLayout substitution"
+}

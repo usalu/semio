@@ -1,0 +1,14 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/actual.json",
+    "sha256": "e54f04fc728952893c5a4f797e1d0adfe54a22c2079b7ae81cef04007c4746a3"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/actual.schema.json",
+    "sha256": "81b9d23145b72439100ee09c8118090a559e36de4a9885dc37d2a54f9bccbb80"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🦀️.rs",
+    "sha256": "2cc4a333a88bffb2d75e5d864b55ec2c4fa3d1b688a208f38101017c10d6529a"
+  }
+]

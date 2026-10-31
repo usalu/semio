@@ -1,0 +1,17 @@
+{
+  "status": "physical move of unchanged original independent renderer implementations; no Source/runtime claim",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
+      "beforeSha256": "6f9ccd0e21bf6c31c9332a89e590696e60cb0baeda7de13ec66359798d1722ed",
+      "sha256": "692622a9594af547770b41d6e42f35730294803e8503e8822c2e8d6682384dd3"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🔮️oracle/🟦️.ts",
+      "status": "added",
+      "sha256": "ea82157b44e49d01232264a4d371d2f8582fbcc2eaa1adbb301461a4a85c93cf"
+    }
+  ],
+  "originalCanvasHelperSha256": "fb676cb7b6e65dcc69a935ea14ff5c04da35ce6ad7367450fbe4e6738d626072",
+  "originalPixelFunctionsSha256": "c161e87e5744b249904205a54155fa3b643bddf883de5096220a29c4450b1cf8"
+}

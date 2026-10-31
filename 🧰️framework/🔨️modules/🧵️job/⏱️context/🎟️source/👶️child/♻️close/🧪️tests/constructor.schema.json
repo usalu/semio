@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "deadlineUs",
+    "refusedAllocations",
+    "actualWork",
+    "physicalProgressOnRefusal",
+    "retainedOriginalChild"
+  ],
+  "properties": {
+    "deadlineUs": {
+      "const": 1500
+    },
+    "refusedAllocations": {
+      "const": 1
+    },
+    "actualWork": {
+      "const": 1
+    },
+    "physicalProgressOnRefusal": {
+      "const": 0
+    },
+    "retainedOriginalChild": {
+      "const": true
+    }
+  }
+}

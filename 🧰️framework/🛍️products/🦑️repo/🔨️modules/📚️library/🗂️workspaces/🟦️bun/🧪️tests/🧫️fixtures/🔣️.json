@@ -1399,7 +1399,10 @@
       "temp",
       "coverage",
       "__pycache__",
-      "🔌️plugin-modules"
+      "🔌️plugin-modules",
+      "compose",
+      "pkg",
+      "🕸️bindings"
     ],
     "cases": [
       {
@@ -1670,5 +1673,11 @@
       "later": true,
       "adopted": false
     }
-  ]
+  ],
+  "gitignoredOutputPackages": {
+    "pattern": "owner/**",
+    "ignoredNames": ["pkg", "🕸️bindings"],
+    "authored": ["owner/lib", "owner/lib/nested"],
+    "outputs": ["owner/lib/pkg", "owner/lib/🕸️bindings", "owner/lib/nested/pkg", "owner/lib/target/pkg"]
+  }
 }

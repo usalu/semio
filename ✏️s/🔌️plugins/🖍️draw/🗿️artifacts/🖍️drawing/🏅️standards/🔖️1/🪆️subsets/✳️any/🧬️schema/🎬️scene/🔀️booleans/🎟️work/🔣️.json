@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "nodes",
+    "copyInlineMoves",
+    "axes",
+    "stock"
+  ],
+  "properties": {
+    "nodes": {
+      "const": 1024
+    },
+    "copyInlineMoves": {
+      "const": 0
+    },
+    "axes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "stock": {
+      "type": "object"
+    }
+  }
+}

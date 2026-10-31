@@ -1,15 +1,16 @@
-/** 🖊️ Exact transformed polygon coverage for https://www.w3.org/TR/SVG11/painting.html#FillProperties. */
+/** 🖊️ Original exact polygon integration owns real caller-funded rows and typed mask bytes. */
 import {validateExtent} from "../✍️editing/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework-2d-js/retire";
-export type CoverageInput={width:number;height:number;transform:readonly number[];rule:"nonzero"|"evenodd";contours:readonly (readonly (readonly number[])[])[]};
-export type CoverageMask={width:number;height:number;coverage:Uint8Array};
+import {RetainedWorkBuffer,RetainedWorkBytes,RetainedWorkRetirement,type RetainedWorkLedger,type RetainedWorkDemand,type RetainedWorkRetirementCursor,type RetainedWorkInputSequence} from "../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts";
+import {RetainedWorkProducerRuntime,type RetainedWorkProducerStep} from "../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts";
+export type CoverageInput={width:number;height:number;transform:RetainedWorkInputSequence<number>;rule:"nonzero"|"evenodd";contours:RetainedWorkInputSequence<RetainedWorkInputSequence<RetainedWorkInputSequence<number>>>};
+export interface CoverageMask{readonly width:number;readonly height:number;borrow():Uint8Array;intoRetirement():RetainedWorkRetirementCursor}
 export type CoverageProgress={phase:"preparing"|"sorting"|"rasterizing"|"complete";completed:number;total:number;work:number;done:boolean};
-type Point=readonly [number,number];
 type Edge={x:number;y:number;dx:number;winding:number};
 type SweepEvent={y:number;edge:number;add:boolean};
 type Stage="prepare"|"events"|"apply"|"copy"|"sort"|"cross"|"wind"|"span"|"finish"|"write"|"done";
+type Pending="edge"|"position"|"id-start"|"id-end"|"event-start"|"event-end"|"add-position"|"add-active"|"remove-pop"|"remove-active"|"remove-position"|"remove-final"|"clear-copy"|"area"|"mask"|"reset"|null;
 const EPS=1e-10,MAX_POINTS=65536,MAX_CONTOURS=65536,MAX_COORDINATE=1e9;
-const invalid=(message:string):never=>{throw new RangeError(message);};
+const invalid:(message:string)=>never=(message)=>{throw new RangeError(message);};
 const coordinate=(value:number)=>Number.isFinite(value)&&Math.abs(value)<=MAX_COORDINATE;
 const clamp=(value:number)=>Math.max(0,Math.min(1,value));
 const primitive=(value:number)=>value<=0?0:value<1?value*value/2:value-.5;
@@ -19,160 +20,67 @@ function integral(a:number,b:number,height:number):number {
   return Math.abs(b-a)<EPS?clamp((a+b)/2)*height:(primitive(b)-primitive(a))/(b-a)*height;
 }
 const xAt=(edge:Edge,y:number)=>edge.x+(y-edge.y)*edge.dx;
-class MergeSort {
-  target:number[];width=1;left=0;i=0;j=0;k=0;mid=0;end=0;writes=0;
-  constructor(public source:number[]) {this.target=new Array(source.length);this.setup();}
-  get done():boolean {return this.width>=this.source.length;}
-  setup():void {this.i=this.left;this.mid=Math.min(this.left+this.width,this.source.length);this.j=this.mid;this.k=this.left;this.end=Math.min(this.left+2*this.width,this.source.length);}
-  step(compare:(a:number,b:number)=>number):void {
-    if(this.done)return;
-    this.target[this.k++]=this.i<this.mid&&(this.j>=this.end||compare(this.source[this.i]!,this.source[this.j]!)<=0)?this.source[this.i++]!:this.source[this.j++]!;
-    this.writes++;
-    if(this.k<this.end)return;
-    this.left+=2*this.width;
-    if(this.left>=this.source.length){[this.source,this.target]=[this.target,this.source];this.width*=2;this.left=0;}
-    this.setup();
-  }
+class OwnedCoverageMask implements CoverageMask{
+ constructor(readonly width:number,readonly height:number,private body:RetainedWorkBytes|null){}
+ borrow():Uint8Array{if(this.body===null)throw Error("Coverage mask ownership transferred");return this.body.bytes;}
+ intoRetirement():RetainedWorkRetirementCursor{if(this.body===null)throw Error("Coverage mask ownership transferred");let body:RetainedWorkBytes|null=this.body;this.body=null;return new RetainedWorkRetirement((work,turn)=>{if(body===null)return true;if(!body.retire(work,turn)||turn.actualWork()>0)return false;if(!work.canStep())return false;body=null;turn.commitActualWork();return false;});}
 }
-/** ⏱️ Budgeted sweep and exact area integration; input remains immutable until completion. */
-export class CoverageJob {
-  private mask:CoverageMask;private areas:Float64Array;
-  private edges:Edge[]=[];private events:SweepEvent[]=[];private positions:number[]=[];private active:number[]=[];private eventIds:number[]=[];
-  private sorted:number[]=[];private copied:number[]=[];private sorter:MergeSort|null=null;private stage:Stage="prepare";
-  private cancelled=false;private transferred=false;private failed:unknown=null;private work=0;private contour=0;private point=0;private prepared=0;private readonly preparationTotal:number;
-  private first:Point|null=null;private previous:Point|null=null;
-  private event=0;private copy=0;private scan=0;private row=0;private y=0;private end=0;private winding=0;private left=-1;private spanLeft=-1;private spanRight=-1;private pixel=0;private pixelEnd=0;private dirtyStart:number;private dirtyEnd=0;
-  constructor(private input:CoverageInput) {
-    const count=validateExtent(input.width,input.height);
-    if(!["nonzero","evenodd"].includes(input.rule)||input.transform.length!==6||!input.transform.every(coordinate)||input.contours.length>MAX_CONTOURS)invalid("Invalid vector coverage contract");
-    this.preparationTotal=input.contours.reduce((total,points)=>total+points.length+1,0);
-    if(this.preparationTotal-input.contours.length>MAX_POINTS)invalid("Coverage geometry exceeds point budget");
-    this.mask={width:input.width,height:input.height,coverage:new Uint8Array(count)};this.areas=new Float64Array(input.width);this.dirtyStart=input.width;
-  }
-  private edge(from:Point,to:Point):void {
-    if(from[1]===to[1])return;
-    const low=from[1]<to[1]?from:to,high=from[1]<to[1]?to:from,start=Math.max(0,low[1]),end=Math.min(this.input.height,high[1]);
-    if(start>=end)return;
-    const dx=(high[0]-low[0])/(high[1]-low[1]);if(!Number.isFinite(dx))invalid("Coverage edge exceeds numeric limits");
-    const id=this.edges.length;this.edges.push({x:low[0],y:low[1],dx,winding:from[1]<to[1]?1:-1});this.positions.push(-1);
-    this.eventIds.push(this.events.length,this.events.length+1);this.events.push({y:start,edge:id,add:true},{y:end,edge:id,add:false});
-  }
-  private step():void {
-    switch(this.stage) {
-      case "prepare": {
-        const points=this.input.contours[this.contour];
-        if(!points){this.sorter=new MergeSort(this.eventIds);this.stage="events";break;}
-        if(this.point<points.length) {
-          const value=points[this.point++]!;if(value.length!==2||!value.every(coordinate))invalid("Invalid coverage point");
-          const m=this.input.transform,p:Point=[m[0]!*value[0]!+m[2]!*value[1]!+m[4]!,m[1]!*value[0]!+m[3]!*value[1]!+m[5]!];
-          if(!p.every(coordinate))invalid("Transformed coverage exceeds coordinate budget");
-          if(this.previous)this.edge(this.previous,p);else this.first=p;this.previous=p;
-        }else {if(this.first&&this.previous)this.edge(this.previous,this.first);this.contour++;this.point=0;this.first=null;this.previous=null;}
-        this.prepared++;break;
-      }
-      case "events": {
-        if(this.sorter!.done){this.sorted=this.sorter!.source;this.sorter=null;this.stage="apply";break;}
-        this.sorter!.step((a,b)=>this.events[a]!.y-this.events[b]!.y||Number(this.events[a]!.add)-Number(this.events[b]!.add));break;
-      }
-      case "apply": {
-        if(this.y>=this.input.height){this.stage="done";break;}
-        const event=this.events[this.sorted[this.event]??-1];
-        if(event&&event.y<=this.y) {
-          this.event++;
-          if(event.add){this.positions[event.edge]=this.active.length;this.active.push(event.edge);}
-          else {const at=this.positions[event.edge]!,last=this.active.pop()!;if(at<this.active.length){this.active[at]=last;this.positions[last]=at;}this.positions[event.edge]=-1;}
-          break;
-        }
-        this.end=Math.min(this.row+1,event?.y??this.input.height,this.input.height);this.copy=0;this.copied=[];this.stage="copy";break;
-      }
-      case "copy": {
-        if(this.copy<this.active.length){this.copied.push(this.active[this.copy++]!);break;}
-        this.sorter=new MergeSort(this.copied);this.stage="sort";break;
-      }
-      case "sort": {
-        if(this.sorter!.done){this.copied=this.sorter!.source;this.sorter=null;this.scan=0;this.stage="cross";break;}
-        this.sorter!.step((a,b)=>{const x=this.edges[a]!,z=this.edges[b]!,delta=xAt(x,this.y)-xAt(z,this.y);return Math.abs(delta)>EPS?delta:x.dx-z.dx||a-b;});break;
-      }
-      case "cross": {
-        if(this.scan+1<this.copied.length) {
-          const left=this.edges[this.copied[this.scan]!]!,right=this.edges[this.copied[++this.scan]!]!,slope=left.dx-right.dx;
-          if(slope>0){const cross=this.y+(xAt(right,this.y)-xAt(left,this.y))/slope;if(cross>this.y+EPS&&cross<this.end)this.end=cross;}
-          break;
-        }
-        this.scan=0;this.winding=0;this.left=-1;this.stage="wind";break;
-      }
-      case "wind": {
-        if(this.scan>=this.copied.length){this.stage="finish";break;}
-        const id=this.copied[this.scan++]!,before=this.input.rule==="nonzero"?this.winding!==0:Math.abs(this.winding)%2===1;
-        this.winding+=this.edges[id]!.winding;
-        const after=this.input.rule==="nonzero"?this.winding!==0:Math.abs(this.winding)%2===1;
-        if(!before&&after)this.left=id;
-        if(before&&!after) {
-          this.spanLeft=this.left;this.spanRight=id;const left=this.edges[this.left]!,right=this.edges[id]!;
-          this.pixel=Math.max(0,Math.floor(Math.min(xAt(left,this.y),xAt(left,this.end))));this.pixelEnd=Math.min(this.input.width,Math.ceil(Math.max(xAt(right,this.y),xAt(right,this.end))));this.stage="span";
-        }
-        break;
-      }
-      case "span": {
-        if(this.pixel>=this.pixelEnd){this.stage="wind";break;}
-        const x=this.pixel++,left=this.edges[this.spanLeft]!,right=this.edges[this.spanRight]!,height=this.end-this.y;
-        this.areas[x]!+=integral(xAt(right,this.y)-x,xAt(right,this.end)-x,height)-integral(xAt(left,this.y)-x,xAt(left,this.end)-x,height);
-        this.dirtyStart=Math.min(this.dirtyStart,x);this.dirtyEnd=Math.max(this.dirtyEnd,x+1);break;
-      }
-      case "finish": {
-        this.y=this.end;if(this.y>=this.row+1){this.pixel=this.dirtyStart;this.stage="write";}else this.stage="apply";break;
-      }
-      case "write": {
-        if(this.pixel<this.dirtyEnd){const x=this.pixel++;this.mask.coverage[this.row*this.input.width+x]=Math.round(clamp(this.areas[x]!)*255);this.areas[x]=0;break;}
-        this.row++;this.dirtyStart=this.input.width;this.dirtyEnd=0;this.stage="apply";break;
-      }
-      case "done":break;
-    }
-  }
-  advance(budget:number):CoverageProgress {
-    if(!Number.isSafeInteger(budget)||budget<=0)invalid("Coverage work grant must be a positive integer");
-    if(this.cancelled)throw new DOMException("Coverage job cancelled","AbortError");if(this.failed)throw this.failed;
-    try {for(let count=0;count<budget&&this.stage!=="done";count++){this.step();this.work++;}}catch(error){this.failed=error;throw error;}
-    const phase=this.stage==="prepare"?"preparing":this.stage==="events"?"sorting":this.stage==="done"?"complete":"rasterizing";
-    return {phase,completed:phase==="preparing"?this.prepared:phase==="sorting"?this.sorter!.writes:this.row*this.input.width,total:phase==="preparing"?this.preparationTotal:phase==="sorting"?this.eventIds.length*Math.ceil(Math.log2(Math.max(1,this.eventIds.length))):this.mask.coverage.length,work:this.work,done:this.stage==="done"};
-  }
-  cancel():void {this.cancelled=true;}
-  result():CoverageMask {
-    if(this.cancelled)throw new DOMException("Coverage job cancelled","AbortError");if(this.failed)throw this.failed;
-    if(this.stage!=="done")throw Error("Coverage job is incomplete");return this.mask;
-  }
-  /** 🧹️ Moves a completed mask and retires actual private sweep owners through structural grants. */
-  intoRetirement():{job:WorkRetirement;output:CoverageMask|null}{
-    if(this.transferred)invalid("Coverage ownership already transferred");this.transferred=true;
-    const output=this.stage==="done"&&!this.cancelled&&!this.failed?this.mask:null;if(output)this.mask={width:output.width,height:output.height,coverage:new Uint8Array(0)};this.cancelled=true;let slot=0;
-    return {output,job:new UnitRetirement(()=>{let complete=true;switch(slot){
-      case 0:this.input={...this.input,contours:[],transform:[]};break;
-      case 1:this.mask={width:this.mask.width,height:this.mask.height,coverage:new Uint8Array(0)};break;
-      case 2:this.areas=new Float64Array(0);break;
-      case 3:if(this.edges.length){this.edges.pop();complete=false;}else this.edges=[];break;
-      case 4:if(this.events.length){this.events.pop();complete=false;}else this.events=[];break;
-      case 5:this.positions=[];break;
-      case 6:this.active=[];break;
-      case 7:this.eventIds=[];break;
-      case 8:this.sorted=[];break;
-      case 9:this.copied=[];break;
-      case 10:if(this.sorter)this.sorter.source=[];break;
-      case 11:if(this.sorter)this.sorter.target=[];break;
-      case 12:this.sorter=null;break;
-      case 13:this.first=null;this.previous=null;break;
-    }if(complete)slot++;return slot===14;})};
-  }
+class MergeSort{
+ private width=1;private left=0;private i=0;private j=0;private k=0;private mid=0;private end=0;private picked=false;private value=0;private fromLeft=false;writes=0;
+ constructor(private source:RetainedWorkBuffer<number>,private target:RetainedWorkBuffer<number>){this.setup();}
+ get length():number{return this.source.length;}
+ get done():boolean{return this.width>=this.source.length;}
+ settlementPending():boolean{return this.picked||this.done;}
+ private setup():void{this.i=this.left;this.mid=Math.min(this.left+this.width,this.source.length);this.j=this.mid;this.k=this.left;this.end=Math.min(this.left+2*this.width,this.source.length);}
+ step(c:RetainedWorkProducerStep,compare:(a:number,b:number)=>number):void{if(this.done)return;if(this.target.length<this.source.length){if(!c.slot(this.target))return;c.push(this.target,0);return;}if(this.target.length>this.source.length){c.pop(this.target);return;}if(!this.picked){c.commitSemanticWork();this.fromLeft=this.i<this.mid&&(this.j>=this.end||compare(this.source.at(this.i)!,this.source.at(this.j)!)<=0);this.value=this.source.at(this.fromLeft?this.i:this.j)!;this.picked=true;return;}if(!c.write(this.target,this.k,this.value))return;this.picked=false;this.k++;if(this.fromLeft)this.i++;else this.j++;this.writes++;if(this.k<this.end)return;this.left+=2*this.width;if(this.left>=this.source.length){const source=this.source;this.source=this.target;this.target=source;this.width*=2;this.left=0;}this.setup();}
+ take():{source:RetainedWorkBuffer<number>;target:RetainedWorkBuffer<number>}{return{source:this.source,target:this.target};}
+ intoRetirement():RetainedWorkRetirementCursor{let source:RetainedWorkBuffer<number>|null=this.source,target:RetainedWorkBuffer<number>|null=this.target;return new RetainedWorkRetirement((work,turn)=>{if(source!==null){if(!source.retireOne(work,turn)||turn.actualWork()>0)return false;if(!work.canStep())return false;source=null;turn.commitActualWork();return false;}if(target!==null){if(!target.retireOne(work,turn)||turn.actualWork()>0)return false;if(!work.canStep())return false;target=null;turn.commitActualWork();return false;}return true;});}
 }
-
-export type CoverageOptions={signal?:AbortSignal;workBudget?:number;onProgress?:(progress:CoverageProgress)=>void};
-/** 🕰️ Yields between work grants and publishes only completed vector coverage. */
-export async function polygonCoverage(input:CoverageInput,options:CoverageOptions={}):Promise<CoverageMask> {
-  const abort=()=>{if(options.signal?.aborted)throw new DOMException("Coverage job cancelled","AbortError");};
-  abort();const job=new CoverageJob(input);
-  try {
-    for(;;) {
-      abort();const progress=job.advance(options.workBudget??4096);options.onProgress?.(progress);abort();
-      if(progress.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));
-    }
-  }catch(error){job.cancel();throw error;}finally{const retired=job.intoRetirement(),grant=Number.isSafeInteger(options.workBudget)&&options.workBudget!>0?options.workBudget!:4096;while(!retired.job.advance(grant).done)await new Promise<void>(resolve=>setTimeout(resolve,0));}
+/** ⏱️ Completed sweep decisions publish their exact effects before later custody or allocator turns. */
+export class CoverageJob{
+ #runtime=new RetainedWorkProducerRuntime();#demand:RetainedWorkDemand={copyBytes:0,capacityBytes:0,releaseBytes:0,depth:1};#mask:RetainedWorkBytes|null=new RetainedWorkBytes();#output:OwnedCoverageMask|null=null;
+ private areas:RetainedWorkBuffer<number>|null=new RetainedWorkBuffer<number>(8);private edges:RetainedWorkBuffer<Edge>|null=new RetainedWorkBuffer<Edge>(32);private events:RetainedWorkBuffer<SweepEvent>|null=new RetainedWorkBuffer<SweepEvent>(24);private positions:RetainedWorkBuffer<number>|null=new RetainedWorkBuffer<number>(8);private active:RetainedWorkBuffer<number>|null=new RetainedWorkBuffer<number>(8);private eventIds:RetainedWorkBuffer<number>|null=new RetainedWorkBuffer<number>(8);private eventScratch:RetainedWorkBuffer<number>|null=new RetainedWorkBuffer<number>(8);private sorted:RetainedWorkBuffer<number>|null=null;private copied:RetainedWorkBuffer<number>|null=new RetainedWorkBuffer<number>(8);private scratch:RetainedWorkBuffer<number>|null=new RetainedWorkBuffer<number>(8);private sorter:MergeSort|null=null;
+ private admission:"headers"|"mask"|"areas"|"ready"="headers";private headers=0;private preparationTotal=0;private stage:Stage="prepare";private pending:Pending=null;private count:number;private cancelled=false;private transferred=false;private failed:unknown=null;private work=0;private contour=0;private point=0;private prepared=0;
+ private first=false;private previous=false;private firstX=0;private firstY=0;private previousX=0;private previousY=0;private edgeX=0;private edgeY=0;private edgeDx=0;private edgeWinding=0;private edgeStart=0;private edgeEnd=0;private edgeId=0;private eventBase=0;private selectedEdge=0;private selectedAt=0;private selectedLast=0;private areaAt=0;private areaValue=0;private maskAt=0;private maskValue=0;
+ private event=0;private copy=0;private scan=0;private row=0;private y=0;private end=0;private winding=0;private left=-1;private spanLeft=-1;private spanRight=-1;private pixel=0;private pixelEnd=0;private dirtyStart:number;private dirtyEnd=0;
+ constructor(private input:CoverageInput|null){if(input===null)invalid("Invalid vector coverage contract");this.count=validateExtent(input.width,input.height);if(!["nonzero","evenodd"].includes(input.rule)||input.transform.length!==6||input.contours.length>MAX_CONTOURS)invalid("Invalid vector coverage contract");for(let at=0;at<6;at++){const value=input.transform.at(at);if(value===undefined||!coordinate(value))invalid("Invalid vector coverage contract");}this.dirtyStart=input.width;}
+ lastTurnWork():number{return this.#runtime.lastTurnWork();}lastTurnSemanticWork():number{return this.#runtime.lastTurnSemanticWork();}nextWorkDemand():RetainedWorkDemand{return this.#demand;}failurePending():boolean{return this.failed!==null;}
+ settlementPending():boolean{if(this.cancelled||this.transferred||this.admission!=="ready")return false;return this.pending!==null||this.sorter!==null&&this.sorter.settlementPending()||this.stage==="copy"&&(this.copy<this.active!.length||this.copied!.length<2)||this.stage==="prepare"&&this.contour===this.input!.contours.length&&this.eventIds!.length<2||this.stage==="cross"&&this.scan+1>=this.copied!.length||this.stage==="wind"&&this.scan>=this.copied!.length||this.stage==="span"&&this.pixel>=this.pixelEnd||this.stage==="finish"||this.stage==="write"&&this.pixel>=this.dirtyEnd||this.stage==="apply"&&this.y>=this.input!.height||this.stage==="done";}
+ progress():CoverageProgress{const phase=this.stage==="done"?"complete":this.stage==="prepare"?"preparing":this.stage==="events"?"sorting":"rasterizing";return{phase,completed:phase==="preparing"?this.headers+this.prepared:phase==="sorting"?this.sorter?.writes??0:this.row*(this.input?.width??0),total:phase==="preparing"?this.admission==="headers"&&this.headers<(this.input?.contours.length??0)?MAX_POINTS+2*(this.input?.contours.length??0):this.preparationTotal+(this.input?.contours.length??0):phase==="sorting"?(this.sorter?.length??0)*Math.ceil(Math.log2(Math.max(1,this.sorter?.length??0))):this.count,work:this.work,done:this.#output!==null};}
+ private edge(fromX:number,fromY:number,toX:number,toY:number):void{if(fromY===toY)return;const down=fromY<toY,lowX=down?fromX:toX,lowY=down?fromY:toY,highX=down?toX:fromX,highY=down?toY:fromY,start=Math.max(0,lowY),end=Math.min(this.input!.height,highY);if(start>=end)return;const dx=(highX-lowX)/(highY-lowY);if(!Number.isFinite(dx))invalid("Coverage edge exceeds numeric limits");this.edgeX=lowX;this.edgeY=lowY;this.edgeDx=dx;this.edgeWinding=down?1:-1;this.edgeStart=start;this.edgeEnd=end;this.edgeId=this.edges!.length;this.eventBase=this.events!.length;this.pending="edge";}
+ private publish(c:RetainedWorkProducerStep):void{switch(this.pending){
+ case"edge":if(!c.slot(this.edges!))return;c.push(this.edges!,{x:this.edgeX,y:this.edgeY,dx:this.edgeDx,winding:this.edgeWinding});this.pending="position";return;
+ case"position":if(!c.slot(this.positions!))return;c.push(this.positions!,-1);this.pending="id-start";return;
+ case"id-start":case"id-end":{if(!c.slot(this.eventIds!))return;const first=this.pending==="id-start";c.push(this.eventIds!,this.eventBase+(first?0:1));this.pending=first?"id-end":"event-start";return;}
+ case"event-start":case"event-end":{if(!c.slot(this.events!))return;const first=this.pending==="event-start";c.push(this.events!,{y:first?this.edgeStart:this.edgeEnd,edge:this.edgeId,add:first});this.pending=first?"event-end":null;return;}
+ case"add-position":if(!c.write(this.positions!,this.selectedEdge,this.active!.length))return;this.pending="add-active";return;
+ case"add-active":if(!c.slot(this.active!))return;c.push(this.active!,this.selectedEdge);this.pending=null;return;
+ case"remove-pop":if(!c.pop(this.active!))return;this.pending=this.selectedAt<this.active!.length?"remove-active":"remove-final";return;
+ case"remove-active":if(!c.write(this.active!,this.selectedAt,this.selectedLast))return;this.pending="remove-position";return;
+ case"remove-position":if(!c.write(this.positions!,this.selectedLast,this.selectedAt))return;this.pending="remove-final";return;
+ case"remove-final":if(!c.write(this.positions!,this.selectedEdge,-1))return;this.pending=null;return;
+ case"clear-copy":if(this.copied!.length){c.pop(this.copied!);return;}if(!c.work.canStep())return;this.pending=null;this.stage="copy";c.commitControlWork();return;
+ case"area":if(!c.write(this.areas!,this.areaAt,this.areaValue))return;this.pending=null;return;
+ case"mask":if(!this.#mask!.set(this.maskAt,this.maskValue,c.work,c.retainedTurn))return;this.pending="reset";return;
+ case"reset":if(!c.write(this.areas!,this.areaAt,0))return;this.pending=null;return;
+ case null:return;
+ }}
+ private body(c:RetainedWorkProducerStep):void{if(this.admission==="headers"){if(this.headers<this.input!.contours.length){c.commitSemanticWork();const contour=this.input!.contours.at(this.headers);if(contour===undefined)invalid("Invalid coverage contour");this.preparationTotal+=contour.length+1;if(this.preparationTotal-this.headers-1>MAX_POINTS)invalid("Coverage geometry exceeds point budget");this.headers++;return;}if(!c.work.canStep())return;this.admission="mask";c.commitControlWork();return;}if(this.admission==="mask"){if(!this.#mask!.admit(this.count,c.work,c.retainedTurn))return;this.admission="areas";return;}if(this.areas!.length<this.input!.width){if(!c.slot(this.areas!))return;c.push(this.areas!,0);return;}if(!c.work.canStep())return;this.admission="ready";c.commitControlWork();}
+ private step(c:RetainedWorkProducerStep):void{if(this.admission!=="ready"){this.body(c);return;}if(this.pending!==null){this.publish(c);return;}switch(this.stage){
+ case"prepare":{const points=this.input!.contours.at(this.contour);if(points===undefined){if(!c.work.canStep())return;if(this.eventIds!.length<2){this.sorted=this.eventIds;this.eventIds=null;this.stage="apply";}else{this.sorter=new MergeSort(this.eventIds!,this.eventScratch!);this.eventIds=null;this.eventScratch=null;this.stage="events";}c.commitControlWork();return;}c.commitSemanticWork();if(this.point<points.length){const value=points.at(this.point);if(value===undefined||value.length!==2)invalid("Invalid coverage point");const x=value.at(0),y=value.at(1);if(x===undefined||y===undefined||!coordinate(x)||!coordinate(y))invalid("Invalid coverage point");const m=this.input!.transform,px=m.at(0)!*x+m.at(2)!*y+m.at(4)!,py=m.at(1)!*x+m.at(3)!*y+m.at(5)!;if(!coordinate(px)||!coordinate(py))invalid("Transformed coverage exceeds coordinate budget");if(this.previous)this.edge(this.previousX,this.previousY,px,py);else{this.firstX=px;this.firstY=py;this.first=true;}this.previousX=px;this.previousY=py;this.previous=true;this.point++;}else{if(this.first&&this.previous)this.edge(this.previousX,this.previousY,this.firstX,this.firstY);this.contour++;this.point=0;this.first=false;this.previous=false;}this.prepared++;return;}
+ case"events":{const sorter=this.sorter!;if(sorter.done){if(!c.work.canStep())return;const moved=sorter.take();this.sorted=moved.source;this.eventScratch=moved.target;this.sorter=null;this.stage="apply";c.commitControlWork();return;}sorter.step(c,(a,b)=>this.events!.at(a)!.y-this.events!.at(b)!.y||Number(this.events!.at(a)!.add)-Number(this.events!.at(b)!.add));return;}
+ case"apply":{if(this.y>=this.input!.height){if(!c.work.canStep())return;this.#output=new OwnedCoverageMask(this.input!.width,this.input!.height,this.#mask!);this.#mask=null;this.stage="done";c.commitControlWork();return;}c.commitSemanticWork();const id=this.sorted!.at(this.event),event=id===undefined?undefined:this.events!.at(id);if(event!==undefined&&event.y<=this.y){this.event++;this.selectedEdge=event.edge;if(event.add)this.pending="add-position";else{const at=this.positions!.at(event.edge),last=this.active!.at(this.active!.length-1);if(at===undefined||last===undefined||at<0)invalid("Coverage active identity absent");this.selectedAt=at;this.selectedLast=last;this.pending="remove-pop";}return;}this.end=Math.min(this.row+1,event?.y??this.input!.height,this.input!.height);this.copy=0;this.pending="clear-copy";return;}
+ case"copy":if(this.copy<this.active!.length){if(!c.slot(this.copied!))return;c.push(this.copied!,this.active!.at(this.copy)!);this.copy++;return;}if(!c.work.canStep())return;if(this.copied!.length<2){this.scan=0;this.stage="cross";}else{this.sorter=new MergeSort(this.copied!,this.scratch!);this.copied=null;this.scratch=null;this.stage="sort";}c.commitControlWork();return;
+ case"sort":{const sorter=this.sorter!;if(sorter.done){if(!c.work.canStep())return;const moved=sorter.take();this.copied=moved.source;this.scratch=moved.target;this.sorter=null;this.scan=0;this.stage="cross";c.commitControlWork();return;}sorter.step(c,(a,b)=>{const left=this.edges!.at(a)!,right=this.edges!.at(b)!,delta=xAt(left,this.y)-xAt(right,this.y);return Math.abs(delta)>EPS?delta:left.dx-right.dx||a-b;});return;}
+ case"cross":if(this.scan+1<this.copied!.length){c.commitSemanticWork();const left=this.edges!.at(this.copied!.at(this.scan)!)!,right=this.edges!.at(this.copied!.at(++this.scan)!)!,slope=left.dx-right.dx;if(slope>0){const cross=this.y+(xAt(right,this.y)-xAt(left,this.y))/slope;if(cross>this.y+EPS&&cross<this.end)this.end=cross;}return;}if(!c.work.canStep())return;this.scan=0;this.winding=0;this.left=-1;this.stage="wind";c.commitControlWork();return;
+ case"wind":{if(this.scan>=this.copied!.length){if(!c.work.canStep())return;this.stage="finish";c.commitControlWork();return;}c.commitSemanticWork();const id=this.copied!.at(this.scan++)!,before=this.input!.rule==="nonzero"?this.winding!==0:Math.abs(this.winding)%2===1;this.winding+=this.edges!.at(id)!.winding;const after=this.input!.rule==="nonzero"?this.winding!==0:Math.abs(this.winding)%2===1;if(!before&&after)this.left=id;if(before&&!after){this.spanLeft=this.left;this.spanRight=id;const left=this.edges!.at(this.left)!,right=this.edges!.at(id)!;this.pixel=Math.max(0,Math.floor(Math.min(xAt(left,this.y),xAt(left,this.end))));this.pixelEnd=Math.min(this.input!.width,Math.ceil(Math.max(xAt(right,this.y),xAt(right,this.end))));this.stage="span";}return;}
+ case"span":{if(this.pixel>=this.pixelEnd){if(!c.work.canStep())return;this.stage="wind";c.commitControlWork();return;}c.commitSemanticWork();const x=this.pixel++,left=this.edges!.at(this.spanLeft)!,right=this.edges!.at(this.spanRight)!,height=this.end-this.y;this.areaAt=x;this.areaValue=this.areas!.at(x)!+(integral(xAt(right,this.y)-x,xAt(right,this.end)-x,height)-integral(xAt(left,this.y)-x,xAt(left,this.end)-x,height));this.dirtyStart=Math.min(this.dirtyStart,x);this.dirtyEnd=Math.max(this.dirtyEnd,x+1);this.pending="area";return;}
+ case"finish":if(!c.work.canStep())return;this.y=this.end;if(this.y>=this.row+1){this.pixel=this.dirtyStart;this.stage="write";}else this.stage="apply";c.commitControlWork();return;
+ case"write":if(this.pixel<this.dirtyEnd){c.commitSemanticWork();const x=this.pixel++;this.maskAt=this.row*this.input!.width+x;this.maskValue=Math.round(clamp(this.areas!.at(x)!)*255);this.areaAt=x;this.pending="mask";return;}if(!c.work.canStep())return;this.row++;this.dirtyStart=this.input!.width;this.dirtyEnd=0;this.stage="apply";c.commitControlWork();return;
+ case"done":return;
+ }}
+ advance(items:number,work:RetainedWorkLedger):CoverageProgress{return this.#runtime.advance(items,work,{maximumWork:Number.MAX_SAFE_INTEGER,workLimitMessage:"Coverage work limit exceeded",validate:()=>{if(this.cancelled||this.transferred)throw new DOMException("Coverage job cancelled","AbortError");if(this.failed!==null)throw this.failed;},stopped:()=>this.#output!==null,settlementPending:()=>this.settlementPending(),failurePending:()=>this.failurePending(),semanticWork:()=>this.work,recordSemanticWork:n=>{this.work+=n;},step:c=>{try{this.step(c);}catch(error){this.failed=error;throw error;}finally{this.#demand=c.work.nextDemand;}},progress:()=>this.progress()});}
+ result():CoverageMask{if(this.cancelled||this.transferred)throw new DOMException("Coverage job cancelled","AbortError");if(this.failed!==null)throw this.failed;if(this.#output===null)throw Error("Coverage job is incomplete");return this.#output;}
+ cancel():void{this.cancelled=true;}
+ intoRetirement():{job:RetainedWorkRetirementCursor;output:CoverageMask|null}{if(this.transferred)throw Error("Coverage ownership already transferred");const output=!this.cancelled&&this.failed===null&&this.stage==="done"?this.#output:null;this.transferred=true;this.cancelled=true;let rejected=output===null&&this.#output!==null?this.#output.intoRetirement():null,sorter=this.sorter===null?null:this.sorter.intoRetirement();this.#output=null;this.sorter=null;let phase=0;const job=new RetainedWorkRetirement((work,turn)=>{if(phase===0){if(!work.canStep())return false;this.input=null;this.first=false;this.previous=false;this.pending=null;this.failed=null;phase++;turn.commitActualWork();return false;}if(phase===1){if(this.#mask!==null){if(!this.#mask.retire(work,turn)||turn.actualWork()>0)return false;if(!work.canStep())return false;this.#mask=null;phase++;turn.commitActualWork();return false;}phase++;}while(phase===2||phase===3){const child=phase===2?rejected:sorter;if(child!==null){if(!child.terminalIsEmpty()){try{child.advance(1,work);}finally{turn.commitActualWork(child.lastTurnWork());}return false;}if(!work.canStep())return false;if(phase===2)rejected=null;else sorter=null;phase++;turn.commitActualWork();return false;}phase++;}for(;;){const values=phase===4?this.areas:phase===5?this.edges:phase===6?this.events:phase===7?this.positions:phase===8?this.active:phase===9?this.eventIds:phase===10?this.eventScratch:phase===11?this.sorted:phase===12?this.copied:phase===13?this.scratch:null;if(values===null){if(phase>=14)return true;phase++;continue;}if(!values.retireOne(work,turn)||turn.actualWork()>0)return false;if(!work.canStep())return false;switch(phase){case 4:this.areas=null;break;case 5:this.edges=null;break;case 6:this.events=null;break;case 7:this.positions=null;break;case 8:this.active=null;break;case 9:this.eventIds=null;break;case 10:this.eventScratch=null;break;case 11:this.sorted=null;break;case 12:this.copied=null;break;case 13:this.scratch=null;break;}phase++;turn.commitActualWork();return false;}});return{job,output};}
 }

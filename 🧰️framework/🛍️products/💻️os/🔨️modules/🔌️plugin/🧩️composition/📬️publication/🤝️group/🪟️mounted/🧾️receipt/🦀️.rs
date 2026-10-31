@@ -120,7 +120,7 @@ pub struct MountedPreparedOperationBytes {
     pub cursor: store::ArtifactPreparedOperationCursor,
     pub output: MountedReceiptBytes,
     pub pending: [u8; 64],
-    pending_len: usize,
+    pub pending_len: usize,
     pub pending_offset: usize,
     encoded_complete: bool,
     cursor_closed: bool,
@@ -161,10 +161,10 @@ impl MountedPreparedOperationBytes {
             Err(error) => { self.pending_offset = 0; self.pending_len = error.written_bytes; self.failed = true; Err(error.reason) }
         }
     }
-    /// 🧳️ Transfers the fully prestaged original operation only after inline codec authority is closed.
+    /// 🈵️ Transfers the fully prestaged original operation only after inline codec authority is closed.
     pub fn take(&mut self, grant: RetainedCloneGrant) -> Option<Vec<u8>> { if !self.is_complete() { return None; } self.output.take(grant) }
     pub fn next_close_byte_demand(&self) -> Result<usize, ValueError> { if self.cursor_closed { Ok(self.output.next_close_byte_demand()) } else { self.cursor.next_close_byte_demand() } }
-    /// 📏️ Quotes independent currencies for the original retained close frontier.
+    /// 🚪️ Quotes independent currencies for the original retained close frontier.
     pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if !self.cursor_closed { return mounted_nested_retirement_demand(self.cursor.retirement_demands()?, 1); }
@@ -253,14 +253,14 @@ impl MountedPreparedOperationsBytes {
     }
     pub fn take(&mut self, grant: RetainedCloneGrant) -> Option<Vec<u8>> { if !self.is_complete() { return None; } self.output.take(grant) }
     pub fn next_close_byte_demand(&self) -> Result<usize, ValueError> { if let Some(operation) = self.operation.as_ref() { operation.next_close_byte_demand() } else if let Some(encoded) = self.encoded.as_ref() { Ok(encoded.capacity()) } else { Ok(self.output.next_close_byte_demand()) } }
-    /// 📏️ Quotes independent currencies for the original retained close frontier.
+    /// 🌀️ Quotes independent currencies for the original retained close frontier.
     pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if let Some(operation) = self.operation.as_ref() { return mounted_nested_retirement_demand(operation.retirement_demands()?, 1); }
         if let Some(encoded) = self.encoded.as_ref() { return Ok(RetirementDemand { release_bytes: encoded.capacity(), depth: 1, ..Default::default() }); }
         mounted_nested_retirement_demand(self.output.retirement_demands()?, 1)
     }
-    /// ♻️ Retains the exact operation, candidate, and framed backing until each original extent is funded.
+    /// 🎞️ Retains the exact operation, candidate, and framed backing until each original extent is funded.
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -389,7 +389,7 @@ impl MountedKernelMutationReceipt {
         }
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
-    /// 🧳️ Assembles the complete mutation, undo ID, and undo inverse through constant original-owner moves.
+    /// ↩️ Assembles the complete mutation, undo ID, and undo inverse through constant original-owner moves.
     pub fn take(&mut self, grant: RetainedCloneGrant) -> Option<(KernelMutation, MutationId, InverseMutation)> {
         if !self.is_complete() || grant.maximum_items == 0 { return None; }
         let [id, invocation, schema, target, inverse_schema, _, undo_id, undo_target, undo_schema] = std::array::from_fn(|index| if index == 5 { String::new() } else { unsafe { String::from_utf8_unchecked(self.strings[index].take(grant).unwrap()) } });
@@ -409,7 +409,7 @@ impl MountedKernelMutationReceipt {
         for dependencies in &self.dependencies { if let Some(id) = dependencies.last() { return id.0.capacity(); } if dependencies.capacity() > 0 { return dependencies.capacity() * size_of::<MutationId>(); } }
         0
     }
-    /// 📏️ Quotes independent currencies for the original retained close frontier.
+    /// 🌁️ Quotes independent currencies for the original retained close frontier.
     pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if !self.forward.terminal_is_empty() { return mounted_nested_retirement_demand(self.forward.retirement_demands()?, 1); }
@@ -420,7 +420,7 @@ impl MountedKernelMutationReceipt {
         if self.author.is_some() { return mounted_nested_retirement_demand(RetirementDemand { release_bytes: self.next_close_byte_demand(), depth: 1, ..Default::default() }, 1); }
         Ok(RetirementDemand { release_bytes: self.next_close_byte_demand(), depth: 2, ..Default::default() })
     }
-    /// 🍂️ Cancels each original payload, field, dependency string, and vector backing under whole physical grants.
+    /// 🛑️ Cancels each original payload, field, dependency string, and vector backing under whole physical grants.
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep {
         if self.terminal_is_empty() { return RetainedCloneStep::Complete(Default::default()); }
         if grant.maximum_items == 0 { return RetainedCloneStep::Progress(Default::default()); }
@@ -478,6 +478,3 @@ impl MountedArtifactHandleIssuer {
     pub fn take(&mut self, grant: RetainedCloneGrant) -> Option<ArtifactHandle> { if !self.ready() || grant.maximum_items == 0 { return None; } self.closed = true; Some(ArtifactHandle((u128::from(self.first) << 64) | u128::from(self.second))) }
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep { if self.closed { return RetainedCloneStep::Complete(Default::default()); } if grant.maximum_items == 0 { return RetainedCloneStep::Progress(Default::default()); } self.identity = None; self.closed = true; RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }) }
 }
-
-#[cfg(test)]
-include!("🧪️tests/🦀️.rs");

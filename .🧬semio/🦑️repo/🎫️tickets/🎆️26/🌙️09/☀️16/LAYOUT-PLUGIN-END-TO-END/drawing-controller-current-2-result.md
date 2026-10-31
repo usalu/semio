@@ -1,0 +1,9 @@
+# Actual Current Controller Complete Scoped Result
+
+Normal unfiltered managed Bun completed directly outer0 (chunk2c9295):14pass,0fail,126 assertions in99ms. Sequential canonical strict3 completed directly outer0 (chunkc8159d), no diagnostics. All12 captured input bytes match before test, after test, after strict and at final current observation. Exact direct terminals/log digests/post snapshots remain in [launch-receipt.json](🗑️generated/drawing-controller-current-2/launch-receipt.json).
+
+Every current actual controller law executed: closed eighteen lifecycle/eight matrix rows, genuine positive CURRENT final-error capacity/CPU, retained accounting and full cause/receipt identity, expired/forged/foreign/reentrant turns, repeated individually valid loans exhausting the same original stock, provider/wait/cancel and retained producer/output same-stock close recovery. The helper authenticates before any property read, following a genuine SQL getter-read RED. No default bytes, fake Original, receipt/epoch CPU fallback, producer data substitution or stock increase was introduced.
+
+The test-only stable finite-case guards preserved every actual/expected value and all ten original matchers in that law; exact reversal reconstructs its entire prior source. The actual earlier fourteen GREEN/strict twenty test-only diagnostics and focused entry RED remain immutable history. Held12 remain pending Root independent final review; no runtime remains.
+
+This proof is the controller boundary and its actual retained byte fixture owners, not whole Drawing Text/Plan/Scene lower integration or the separate fourteen glyph-scene vector/raster/export/independent geometry rows. Those, Native/Layout/setup/browser and all original acceptance remain mandatory. Genuine private priced Scene Plan storage and every real close caller are still under schema-first implementation.

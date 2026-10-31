@@ -1,0 +1,102 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "s.stdio.semio.text",
+ "schemaHash": "f24e33463f7c6bbef4de7f011a236d745d7dce8940c8998612f2dbd4314e818a",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "runs",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 1
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "language",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "content",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "marks",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 2
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "kind",
+    "optional": false,
+    "shape": {
+     "kind": "enum",
+     "variants": [
+      [
+       0,
+       "bold"
+      ],
+      [
+       1,
+       "italic"
+      ],
+      [
+       2,
+       "code"
+      ],
+      [
+       3,
+       "link"
+      ]
+     ]
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "href",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ]
+ ]
+}

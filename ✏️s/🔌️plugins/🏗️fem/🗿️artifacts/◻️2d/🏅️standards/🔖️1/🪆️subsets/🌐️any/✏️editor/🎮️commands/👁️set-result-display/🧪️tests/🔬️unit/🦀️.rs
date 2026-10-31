@@ -16,9 +16,9 @@ fn results_view() -> ViewModel {
 /// configuration partition and never into the document.
 #[semio_framework_async_macros::async_test]
 async fn set_result_display_is_config_only() {
-    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("bundled demo loads"));
     let history = HistoryView::empty();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let doc = ArtifactView::new(&*snapshot, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     let emit = handle_window(&SetResultDisplay { source_id: Some(semio_s_fem_analyses_model::encode_result_source_parts("loadCase", "dead").unwrap()), mode: "modal".into(), mode_index: 1, field: None, value: None, window_id: None }, &cfg, &results_view()).expect("the addressed results window accepts a display change");

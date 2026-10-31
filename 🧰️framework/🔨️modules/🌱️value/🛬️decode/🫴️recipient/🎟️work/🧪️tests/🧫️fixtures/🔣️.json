@@ -1,0 +1,35 @@
+{
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 0,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 1
+  },
+  "expected": [
+    {
+      "label": "deniedItems",
+      "work": 0,
+      "copiedItems": 0,
+      "reserved": true
+    },
+    {
+      "label": "deniedDepth",
+      "work": 0,
+      "copiedItems": 0,
+      "reserved": true
+    },
+    {
+      "label": "paidClear",
+      "work": 1,
+      "copiedItems": 1,
+      "reserved": false
+    },
+    {
+      "label": "cachedComplete",
+      "work": 0,
+      "copiedItems": 0,
+      "reserved": false
+    }
+  ]
+}

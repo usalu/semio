@@ -1,7 +1,7 @@
 //! 📤️ Canonical Fault wire advances through original borrowed fields without whole-value materialization.
 use crate::{Fault,FaultOrigin,Severity};
 use std::mem::MaybeUninit;
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,DslValue,Number};
+use semio_framework_value::{RetainedWorkOutcome,ValueError,ValueRefusalKind,RetirementDemand,DslValue,Number};
 use semio_framework_pack_json::{ArtifactCanonicalJsonNode as JsonNode,ArtifactCanonicalJsonScalarBytes as ScalarBytes};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 
@@ -103,14 +103,16 @@ impl FaultWireCursor{
   Ok(RetirementDemand{copy_bytes:if self.binding.is_some()&&matches!(self.current(fault),Part::Scalar(_))&&!self.scalar_ready{64}else{usize::from(self.binding.is_some()&&self.next_byte(self.current(fault))?.is_some())},depth:if self.phase==28&&fault.domain.is_some(){self.domain.next_depth()}else{1},..Default::default()})
  }
  /// ✍️ Writes one paid canonical byte into the same caller-owned target; denials retain both cursors.
- pub fn advance_one(&mut self,fault:&Fault,target:&mut[MaybeUninit<u8>],grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  let demand=self.advance_demands(fault,target)?;if self.is_complete(){return Ok(RetainedCloneStep::Complete(Default::default()))}
-  if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes{return Ok(RetainedCloneStep::Progress(Default::default()))}
+ pub fn advance_one(&mut self,fault:&Fault,target:&mut[MaybeUninit<u8>],grant:RetainedCloneGrant)->RetainedWorkOutcome{
+  let demand=match self.advance_demands(fault,target){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if self.is_complete(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+  if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  let result=(||{
   let mut progress=RetainedCloneProgress{copied_items:1,..Default::default()};
   if self.binding.is_none(){self.binding=Some(Self::original(fault,target));return Ok(RetainedCloneStep::Progress(progress))}
   if let Part::Scalar(node)=self.current(fault){if !self.scalar_ready{progress=self.scalar.write_node(node).map_err(|error|error.with_retained_progress(progress))?;self.scalar_ready=true;return Ok(RetainedCloneStep::Progress(progress))}}
   if let Some((byte,next))=self.next_byte(self.current(fault))?{let slot=target.get_mut(self.written-self.drained).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"canonical Fault wire exhausted its original target extent"))?;slot.write(byte);self.token=next;self.written+=1;progress.copied_bytes=1;}else{self.next_part(fault).map_err(|error|error.with_retained_progress(progress))?}
   Ok(if self.is_complete(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
+  })();RetainedWorkOutcome{result,work:1}
  }
  /// 🔎️ Borrows only the initialized prefix of the same original streaming window.
  pub fn buffered_bytes<'a>(&self,target:&'a[MaybeUninit<u8>])->Result<&'a[u8],ValueError>{
@@ -119,17 +121,17 @@ impl FaultWireCursor{
   Ok(unsafe{std::slice::from_raw_parts(target.as_ptr().cast::<u8>(),length)})
  }
  /// 🌊️ Ends one original window loan on a separate metadata turn before reusing its storage.
- pub fn drain_buffer(&mut self,target:&[MaybeUninit<u8>],grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  let empty=self.buffered_bytes(target)?.is_empty();if empty{return Ok(RetainedCloneStep::Complete(Default::default()))}
-  if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-  self.drained=self.written;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))
+ pub fn drain_buffer(&mut self,target:&[MaybeUninit<u8>],grant:RetainedCloneGrant)->RetainedWorkOutcome{
+  let empty=match self.buffered_bytes(target){Ok(bytes)=>bytes.is_empty(),Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};if empty{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+  if grant.maximum_items==0||grant.maximum_depth==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  self.drained=self.written;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
  }
  pub fn retirement_demands(&self)->RetirementDemand{RetirementDemand{depth:usize::from(self.binding.is_some()),..Default::default()}}
  /// ♻️ Releases only cursor metadata after the caller ends the original byte loan.
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}
-  if grant.maximum_items==0||grant.maximum_depth<1{return Ok(RetainedCloneStep::Progress(Default::default()))}
-  self.binding=None;self.phase=0;self.index=0;self.part=0;self.token=Default::default();self.written=0;self.drained=0;self.domain=DomainCursor::new();self.scalar_ready=false;self.scalar.length=0;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+  if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+  if grant.maximum_items==0||grant.maximum_depth<1{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  self.binding=None;self.phase=0;self.index=0;self.part=0;self.token=Default::default();self.written=0;self.drained=0;self.domain=DomainCursor::new();self.scalar_ready=false;self.scalar.length=0;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
  }
 }
 impl Default for FaultWireCursor{fn default()->Self{Self::new()}}

@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "stream",
+    "stock",
+    "stagedBytes",
+    "actualCloseWork",
+    "deniedWork",
+    "cachedWork",
+    "copyBytes",
+    "primaryKind",
+    "postingRefusalRequired"
+  ],
+  "properties": {
+    "operation": {
+      "const": 99205
+    },
+    "generation": {
+      "const": 7
+    },
+    "stream": {
+      "const": "Fault"
+    },
+    "stock": {
+      "const": {
+        "items": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 128,
+        "fuel": 100000,
+        "maximumTurns": 100000
+      }
+    },
+    "stagedBytes": {
+      "const": 16384
+    },
+    "actualCloseWork": {
+      "const": [
+        1,
+        1,
+        1
+      ]
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "copyBytes": {
+      "const": 0
+    },
+    "primaryKind": {
+      "const": "OwnershipLimit"
+    },
+    "postingRefusalRequired": {
+      "const": true
+    }
+  }
+}

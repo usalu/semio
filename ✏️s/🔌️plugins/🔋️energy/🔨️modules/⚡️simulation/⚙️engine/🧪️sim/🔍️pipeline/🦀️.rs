@@ -536,33 +536,42 @@ impl EnergyJobAuthority {
     }
 
     fn write_output_fragment(&mut self, context: &mut StepContext<'_>, fragment: &[u8]) -> Result<bool, OutputFault> {
-        let writer = self.output_writer.as_mut().ok_or(OutputFault::BackingRejected)?;
-        if writer.staged_page_len().is_none() {
+        let rejected = |_: ()| OutputFault::BackingRejected;
+        let builder = self.output_writer.as_mut().ok_or(OutputFault::BackingRejected)?;
+        if builder.staged_page_len().is_none() {
+            if builder.incoming_backing_identity().is_some() {
+                let turn = builder.begin_staged_page_funded(context);
+                energy_post(context, turn).map_err(rejected)?;
+                return Ok(false);
+            }
             let reservation = self.commit_reservation.as_mut().ok_or(OutputFault::BackingRejected)?;
             if self.commit_pages_mounted >= reservation.pages {
                 return Err(OutputFault::BackingRejected);
             }
-            let source = reservation.take_source(self.commit_pages_mounted).ok_or(OutputFault::BackingRejected)?;
-            match context.admit_payload_page(writer, source) {
-                Ok(page) => page.stage(),
-                Err(rejected) => {
-                    reservation.restore_source(self.commit_pages_mounted, rejected.into_source());
-                    return Err(OutputFault::BackingRejected);
-                }
+            let mut source = Some(reservation.take_source(self.commit_pages_mounted).ok_or(OutputFault::BackingRejected)?);
+            let turn = builder.accept_original_page(&mut source, context);
+            let posted = energy_post(context, turn);
+            match source {
+                Some(source) => reservation.restore_source(self.commit_pages_mounted, source),
+                None => self.commit_pages_mounted += 1,
             }
-            self.commit_pages_mounted += 1;
+            posted.map_err(rejected)?;
             return Ok(false);
         }
-        if writer.staged_page_remaining() < fragment.len() {
-            writer.commit_staged_page().map_err(|_| OutputFault::BackingRejected)?;
+        if builder.staged_page_remaining() < fragment.len() {
+            let turn = builder.commit_staged_page_funded(context);
+            energy_post(context, turn).map_err(rejected)?;
             return Ok(false);
         }
-        writer.write_staged(fragment).map_err(|_| OutputFault::BackingRejected)?;
+        let turn = builder.write_staged_source_funded(context, fragment);
+        if !energy_post(context, turn).map_err(rejected)? {
+            return Ok(false);
+        }
         self.commit_items_encoded = self.commit_items_encoded.checked_add(1).ok_or(OutputFault::BackingRejected)?;
         Ok(true)
     }
 
-    pub(super) fn step_commit_census(&mut self) -> Result<bool, OutputFault> {
+    pub(super) fn step_commit_census(&mut self, context: &mut StepContext<'_>) -> Result<bool, OutputFault> {
         let result = self.result.as_ref().ok_or(OutputFault::MissingResult)?;
         let mut work = self.commit_census.take().unwrap_or_default();
         let add_output = |work: &mut CommitCensusWork, bytes: usize, items: usize| -> Result<(), OutputFault> {
@@ -714,8 +723,19 @@ impl EnergyJobAuthority {
             CommitCensusStage::ReservePage => {
                 let reservation = work.reservation.as_mut().ok_or(OutputFault::BackingRejected)?;
                 if reservation.prepared < reservation.pages {
-                    reservation.sources[reservation.prepared] = Some(semio_framework_job_payload::JobPayloadPageSource::new());
-                    reservation.prepared += 1;
+                    let turn = semio_framework_job_payload::JobPayloadPageSource::admit(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES, context.retained_grant());
+                    let (progress, admitted) = match turn.result {
+                        Ok(Some((source, progress))) => (progress, Some(source)),
+                        Ok(None) => (RetainedCloneProgress::default(), None),
+                        Err(_) => return Err(OutputFault::BackingRejected),
+                    };
+                    let posted = semio_framework_value::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(progress)), work: turn.work };
+                    let reservation = work.reservation.as_mut().ok_or(OutputFault::BackingRejected)?;
+                    if let Some(source) = admitted {
+                        reservation.sources[reservation.prepared] = Some(source);
+                        reservation.prepared += 1;
+                    }
+                    energy_post(context, posted).map_err(|_| OutputFault::BackingRejected)?;
                 } else {
                     self.commit_reservation = work.reservation.take();
                     work.stage = CommitCensusStage::Complete;

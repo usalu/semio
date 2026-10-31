@@ -1,0 +1,17 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs",
+    "bytes": 38650,
+    "sha256": "478c3554075794c535b099f92031a9180e44dde75885f64806a74041604ccc4e"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🪡️field/🦀️.rs",
+    "bytes": 7089,
+    "sha256": "882f40b01b8d158ec0cca6741bdb0227a717444e9999d1ad9dd0b837731c15ef"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧪️tests/🦀️.rs",
+    "bytes": 17001,
+    "sha256": "9766bcb777044e1e6b47ae7e38b9217550cec18c737359e73b308ec98bfba28b"
+  }
+]

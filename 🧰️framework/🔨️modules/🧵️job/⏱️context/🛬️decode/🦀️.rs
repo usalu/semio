@@ -10,9 +10,9 @@ use std::{cell::UnsafeCell,mem::ManuallyDrop,sync::atomic::{AtomicBool,Ordering}
 #[derive(Clone,Copy,Debug)]
 pub struct OriginalNativeDecodePolicy{pub maximum_owned_bytes:usize}
 /// 🧾️ The actual bounded producer returns its unchanged supplied grant, physical receipt and raw work.
-pub struct OriginalNativeDecodeIssued<T>{pub value:Result<T,ValueError>,pub grant:RetainedCloneGrant,pub progress:RetainedCloneProgress,pub work:u64}
+pub struct OriginalNativeDecodeIssued<T,E=ValueError>{pub value:Result<T,E>,pub grant:RetainedCloneGrant,pub progress:RetainedCloneProgress,pub work:u64}
 /// 🧳️ A receiving refusal stays beside the original outcome without destroying either source.
-pub struct OriginalNativeDecodeOutcome<T>{pub value:Result<T,ValueError>,pub progress:RetainedCloneProgress,pub work:u64,pub receiving_refusal:Option<OriginalTurnFailure>}
+pub struct OriginalNativeDecodeOutcome<T,E=ValueError>{pub value:Result<T,E>,pub progress:RetainedCloneProgress,pub work:u64,pub reported_work:u64,pub observed_native_work:u64,pub receiving_refusal:Option<OriginalTurnFailure>}
 
 struct ActualTurn<'a,'source>{actual:UnsafeCell<&'a mut StepContext<'source>>,reserved:UnsafeCell<usize>,borrowed:AtomicBool}
 /// 🔒️ Every mutable caller access is excluded by the atomic gate; its declared context supports transfer.
@@ -22,6 +22,12 @@ impl Drop for ActualGuard<'_>{fn drop(&mut self){self.0.store(false,Ordering::Re
 impl<'a,'source> ActualTurn<'a,'source>{
  fn new(actual:&'a mut StepContext<'source>)->Self{Self{actual:UnsafeCell::new(actual),reserved:UnsafeCell::new(0),borrowed:AtomicBool::new(false)}}
  fn with<R>(&self,run:impl FnOnce(&mut StepContext<'source>,&mut usize)->R)->Result<R,ValueError>{self.borrowed.compare_exchange(false,true,Ordering::Acquire,Ordering::Relaxed).map_err(|_|refusal("original native decoder caller is already borrowed"))?;let guard=ActualGuard(&self.borrowed);let result=unsafe{run(&mut **self.actual.get(),&mut *self.reserved.get())};drop(guard);Ok(result)}
+}
+struct ActualWork<'a,'turn,'source>{turn:&'a ActualTurn<'turn,'source>,closing:bool}
+impl semio_framework_value_native_owned::native_decoding::NativeDecodeWorkRecipient for ActualWork<'_,'_,'_>{
+ fn admits(&mut self,observed:u64,additional:u64)->Result<bool,ValueError>{
+  self.turn.with(|cx,_|!paused(cx,self.closing)&&(self.closing||!cx.is_cancelled())&&observed.checked_add(additional).is_some_and(|work|work<=cx.fuel_remaining()))
+ }
 }
 fn refusal(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
 fn paused(cx:&StepContext<'_>,closing:bool)->bool{if closing{cx.retirement_should_yield()}else{cx.should_yield()}}
@@ -35,39 +41,43 @@ impl OriginalNativeDecodeSource{
  /// 🪪️ Admits the actual source before recipient birth and before any native decode import can be lent.
  pub fn admit_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.closing||self.closed{return Err(refusal("closing original native decode source cannot admit work").into())}
-  if let Some(source)=self.source.as_ref(){source.validate_context(cx)?}else{*self.source=cx.original_source_parent()?.admit_loan(cx)?;return Ok(false)}
+  if let Some(source)=self.source.as_ref(){source.validate_context(cx)?}else{cx.original_source_parent()?.admit_loan(&mut self.source,cx)?;return Ok(false)}
   if self.original_recipient.is_none(){if !metadata(cx,false)?{return Ok(false)}*self.original_recipient=Some(NativeDecodeRetirementRecipient::new());return Ok(false)}
   if self.receipt.is_none(){if !metadata(cx,false)?{return Ok(false)}let _=self.with_control(cx,false,|_|())?;return Ok(false)}
   Ok(true)
  }
- fn with_control<T>(&mut self,cx:&mut StepContext<'_>,closing:bool,run:impl FnOnce(&mut NativeDecodeControl<'_>)->T)->Result<T,OriginalTurnFailure>{
+ fn with_control<T>(&mut self,cx:&mut StepContext<'_>,closing:bool,run:impl FnOnce(&mut NativeDecodeControl<'_>)->T)->Result<(T,u64),OriginalTurnFailure>{
   self.source.as_ref().ok_or_else(||refusal("original native decoder has no admitted source"))?.validate_context(cx)?;
   let borrowed=ActualTurn::new(&mut *cx);
   let mut progress=|_|borrowed.with(|actual,_|!paused(actual,closing)&&(closing||!actual.is_cancelled())).unwrap_or(false);
   let mut allocate=|quote:NativeDecodeAllocation|borrowed.with(|actual,reserved|{if paused(actual,closing)||(!closing&&actual.is_cancelled()){return Err(ValueError::literal(ValueRefusalKind::Canceled,"original native decode caller yielded"))}let next=reserved.checked_add(quote.bytes).filter(|bytes|*bytes<=actual.retained_grant().maximum_capacity_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original native reservation exceeds the actual turn capacity"))?;*reserved=next;Ok(())}).and_then(|answer|answer);
   let original_recipient=self.original_recipient.as_mut().ok_or_else(||refusal("original native decoder has no admitted recipient"))?;
   let mut control=if let Some(original)=self.receipt.take(){match NativeForwardedDecodeControl::rebind(original,&mut progress,&mut allocate,original_recipient){Ok(control)=>control,Err((error,original))=>{self.receipt=Some(original);return Err(error.into())}}}else{let mut control=NativeDecodeControl::new_forwarded(self.policy.maximum_owned_bytes,&mut progress,&mut allocate);control.install_retirement_recipient(original_recipient)?;control};
-  let answer=control.scoped_stage(|control|Ok::<_,std::convert::Infallible>(run(control))).unwrap();
-  self.receipt=Some(control.detach().unwrap_or_else(|_|panic!("original native decode supplier violated the canonical consuming receipt")));
-  Ok(answer)
+  let before_work=control.actual_work();let mut work=ActualWork{turn:&borrowed,closing};let answer=control.with_work_recipient(&mut work,|control|Ok::<_,ValueError>(run(control)));
+  let observed=control.actual_work().saturating_sub(before_work);self.receipt=Some(control.detach().unwrap_or_else(|_|panic!("original native decode supplier violated the canonical consuming receipt")));
+  answer.map(|value|(value,observed)).map_err(OriginalTurnFailure::from)
  }
  /// 🧮️ Reservations never debit birth; the concrete bounded producer's actual receipt returns to this exact caller.
- pub fn receive_step<T>(&mut self,cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->OriginalNativeDecodeIssued<T>)->Result<Option<OriginalNativeDecodeOutcome<T>>,OriginalTurnFailure>{
+ pub fn receive_step<T,E>(&mut self,cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->OriginalNativeDecodeIssued<T,E>)->Result<Option<OriginalNativeDecodeOutcome<T,E>>,OriginalTurnFailure>{
   if !self.admit_step(cx)?||cx.should_yield()||cx.is_cancelled(){return Ok(None)}
-  let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}let fuel=cx.fuel_remaining();let issued=self.with_control(cx,false,|control|run(control,grant))?;
-  Ok(Some(Self::receive_issued(cx,grant,fuel,issued)))
+  let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}let fuel=cx.fuel_remaining();let (issued,observed)=self.with_control(cx,false,|control|run(control,grant))?;
+  Ok(Some(Self::receive_observed(cx,grant,fuel,issued,observed)))
  }
  /// ♻️ A retained producer borrows its authentic decoder during paid close even after original cancellation.
- pub fn close_producer_step<T>(&mut self,cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->OriginalNativeDecodeIssued<T>)->Result<Option<OriginalNativeDecodeOutcome<T>>,OriginalTurnFailure>{
-  if self.closing{return Err(refusal("original producer close cannot resume after native source return began").into())}if self.source.is_none()||cx.retirement_should_yield(){return Ok(None)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}let fuel=cx.fuel_remaining();let issued=self.with_control(cx,true,|control|run(control,grant))?;Ok(Some(Self::receive_issued(cx,grant,fuel,issued)))
+ pub fn close_producer_step<T,E>(&mut self,cx:&mut StepContext<'_>,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->OriginalNativeDecodeIssued<T,E>)->Result<Option<OriginalNativeDecodeOutcome<T,E>>,OriginalTurnFailure>{
+  if self.closing{return Err(refusal("original producer close cannot resume after native source return began").into())}if self.source.is_none()||cx.retirement_should_yield(){return Ok(None)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}let fuel=cx.fuel_remaining();let (issued,observed)=self.with_control(cx,true,|control|run(control,grant))?;Ok(Some(Self::receive_observed(cx,grant,fuel,issued,observed)))
  }
- fn receive_issued<T>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,issued:OriginalNativeDecodeIssued<T>)->OriginalNativeDecodeOutcome<T>{
+ fn receive_issued<T,E>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,issued:OriginalNativeDecodeIssued<T,E>)->OriginalNativeDecodeOutcome<T,E>{
+  Self::receive_observed(cx,grant,fuel,issued,0)
+ }
+ fn receive_observed<T,E>(cx:&mut StepContext<'_>,grant:RetainedCloneGrant,fuel:u64,issued:OriginalNativeDecodeIssued<T,E>,observed:u64)->OriginalNativeDecodeOutcome<T,E>{
   let mut receiving_refusal=None;
   if issued.grant!=grant||!issued.progress.fits(grant){receiving_refusal=Some(OriginalTurnFailure::from(refusal("original native producer changed its supplied grant or exceeded its physical receipt").with_retained_progress(issued.progress)))}
   if issued.work>fuel&&receiving_refusal.is_none(){receiving_refusal=Some(ValueError::literal(ValueRefusalKind::WorkLimit,"original native producer exceeded the supplied caller work").with_retained_progress(issued.progress).into())}
-  cx.consume_fuel(issued.work);
+  if issued.work<observed{let error=ValueError::literal(ValueRefusalKind::InvariantViolated,"original native producer omitted observed native work");if let Some(failure)=receiving_refusal.as_mut(){failure.context_refusal=Some(error)}else{receiving_refusal=Some(error.into())}}
+  let posted_work=issued.work.max(observed);cx.consume_fuel(posted_work);
   if let Err(error)=cx.consume_retained(issued.progress){if let Some(failure)=receiving_refusal.as_mut(){failure.receipt_refusal=Some(error)}else{receiving_refusal=Some(error.into())}}
-  OriginalNativeDecodeOutcome{value:issued.value,progress:issued.progress,work:issued.work,receiving_refusal}
+  OriginalNativeDecodeOutcome{value:issued.value,progress:issued.progress,work:posted_work,reported_work:issued.work,observed_native_work:observed,receiving_refusal}
  }
  /// 📏️ Quotes the retained recipient or original source metadata return without constructing an authority.
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.closed{return Ok(Default::default())}if let Some(recipient)=self.original_recipient.as_ref().filter(|recipient|!recipient.terminal_is_empty()){return Ok(RetirementDemand{copy_bytes:recipient.next_copy_byte_demand()?,capacity_bytes:recipient.next_capacity_byte_demand(body)?,release_bytes:recipient.next_release_byte_demand()?,depth:recipient.next_depth_demand()?})}Ok(RetirementDemand{depth:1,..Default::default()})}
@@ -79,7 +89,7 @@ impl OriginalNativeDecodeSource{
   if self.original_recipient.as_ref().is_some_and(|recipient|!recipient.terminal_is_empty()){
    let grant=RetainedCloneGrant{maximum_items:cx.retained_grant().maximum_items.min(1),..cx.retained_grant()};let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
    if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}
-   let raw=self.with_control(cx,true,|control|control.close_retirement_recipient(grant))?;
+   let (raw,_observed)=self.with_control(cx,true,|control|control.close_retirement_recipient(grant))?;
    return semio_framework_job::close_original_retained_step(cx,demand,|_|raw).map(|step|match step{semio_framework_job::InteractiveJobCloseStep::Pending{progress}=>RetainedCloneStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>RetainedCloneStep::Complete(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>RetainedCloneStep::Progress(Default::default())})
   }
   if self.receipt.is_some(){if !metadata(cx,true)?{return Ok(RetainedCloneStep::Progress(Default::default()))}self.receipt.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
@@ -93,3 +103,9 @@ impl OriginalNativeDecodeSource{
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.source.is_none()&&self.original_recipient.is_none()&&self.receipt.is_none()}
 }
 impl Drop for OriginalNativeDecodeSource{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original native decode source requires explicit terminal source return")}}
+
+#[cfg(test)]
+#[path="🎟️transport/🧪️tests/🦀️.rs"]
+mod transport_tests;
+
+#[cfg(test)]#[path="🎟️work/🧪️tests/🦀️.rs"]mod actual_work_tests;

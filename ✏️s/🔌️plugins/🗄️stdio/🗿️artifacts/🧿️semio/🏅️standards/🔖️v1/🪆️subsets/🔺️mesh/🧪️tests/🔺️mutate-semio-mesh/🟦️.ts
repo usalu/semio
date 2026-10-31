@@ -29,13 +29,10 @@
  * - the DSL body from `../../🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📝️text/📸️snapshot/📖️.grammar.semio`
  *   (`document = artifact-mark schema-line meshes-line materials-line textures-line`, the six
  *   `topology` letters, `option-hex`, and plain bracketed number lists for the geometry buffers);
- * - the pack frame from `…/📸️snapshot/💾️binary/📡️.protocol.semio` and its Kaitai mirror,
- *   which names what the opaque tail holds: *"per-mesh id + varint primitive count, per-primitive
- *   id/topology-tag/positions/normals/uvs/colors(real f64/f32 LE buffers)/indices(u32 LE)/
- *   material_id-option, per-material id/baseColor/metallic/roughness, per-texture id/mime/raw-bytes"*.
- *   The exact field order was DERIVED from that description together with the committed
- *   `📚️examples/🧊️cube` bytes, whose DSL twin pins every field against a readable spelling, and the
- *   derivation is pinned by re-encoding that committed file byte for byte;
+ * - the pack body from the shared record-document codec (`🧰️semio/🚪️io/💾️binary/🎒️record-document/🟦️.ts`), driven by the committed record spec
+ *   `…/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json`: the SPK container, the fixed-Huffman deflate, the BLAKE3 content hash and the schema-hashed record body
+ *   are specified by `🧰️framework/🔨️modules/🎒️pack` and re-implemented there, not here. The committed `🎒️.pack.semio` files were written by the Rust
+ *   record pack, so `parsePack`/`packBytes` reproducing them is a cross-language byte agreement;
  * - the eighteen verbs, their argument lists and their JSON wire form from
  *   `…/🚪️io/📝️text/🧬️mutations/📖️.grammar.semio`, the committed proto and JSON schema
  *   mirrors, and the committed per-kind `(before, mutation, after)` specification vectors.
@@ -48,6 +45,8 @@
 import * as THREE from "three";
 import { defineTestAdapter, type AdapterContext, type AdapterOutcome } from "@semio-tech/framework/test/adapter";
 import { sha256Hex } from "@semio-tech/framework-hash";
+import { decodePack, encodePack, loadRecordSpec, type RecordSpecDocument } from "../../../../../../🚪️io/💾️binary/🎒️record-document/🟦️.ts";
+import recordSpecDocument from "../../🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json";
 
 /** #⃣ Stable content digest of a text or byte string: the leading 32 hex digits of its sha256. */
 const digest = (input: string | Uint8Array): string => sha256Hex(typeof input === "string" ? new TextEncoder().encode(input) : input).slice(0, 32);
@@ -64,13 +63,9 @@ type Texture = { id: string; mime: string; bytes: number[] };
 type Snapshot = { schema: string; meshes: Mesh[]; materials: Material[]; textures: Texture[] };
 type Mutation = Record<string, Record<string, unknown>>;
 
-const BINARY_MAGIC = new Uint8Array([0x89, 0x53, 0x45, 0x4d, 0x0d, 0x0a, 0x1a, 0x0a]);
 const DSL_PREAMBLE = "semio stdio.semio.mesh.dsl v1";
-const PACK_TOKEN = "stdio.semio.mesh.pack v1";
-const PACK_FORMAT = 1;
 
-/** 🔺️ `topology = "P" | "L" | "S" | "T" | "X" | "F"`, in the enum order the pack tag byte indexes —
- * the committed cube's `T` primitive carries `0x03`, the fourth ordinal. */
+/** 🔺️ `topology = "P" | "L" | "S" | "T" | "X" | "F"`, the six declared topologies in the grammar's own order. */
 const TOPOLOGY_ORDER = ["points", "lines", "lineStrip", "triangles", "triangleStrip", "triangleFan"] as const;
 const TOPOLOGY_LETTER: Record<string, string> = { points: "P", lines: "L", lineStrip: "S", triangles: "T", triangleStrip: "X", triangleFan: "F" };
 const LETTER_TOPOLOGY: Record<string, string> = Object.fromEntries(Object.entries(TOPOLOGY_LETTER).map(([kind, letter]) => [letter, kind]));
@@ -87,7 +82,7 @@ function hexOfText(text: string): string {
     .join("");
 }
 
-/** 🔡️ The grammar's `hex` macro in the reading direction, for a string leaf. */
+/** 🪄️ The grammar's `hex` macro in the reading direction, for a string leaf. */
 function textOfHex(hexed: string): string {
   return new TextDecoder("utf-8", { fatal: true }).decode(bytesOfHex(hexed));
 }
@@ -115,13 +110,13 @@ function plainDecimal(text: string): string {
   return `${sign}${digits.slice(0, point)}.${digits.slice(point)}`;
 }
 
-/** 🔢️ One `f64` leaf, printed the way the reference printer prints it: the shortest decimal that
+/** 🍃️ One `f64` leaf, printed the way the reference printer prints it: the shortest decimal that
  * reads back as the same double, with no exponent and no trailing `.0`. */
 function printF64(value: number): string {
   return plainDecimal(String(value));
 }
 
-/** 🔢️ One `f32` leaf. `SemioRgba` and a material's `metallic`/`roughness` are single precision, so
+/** 🧱️ One `f32` leaf. `SemioRgba` and a material's `metallic`/`roughness` are single precision, so
  * the shortest decimal that round-trips is the shortest that survives `Math.fround` — printing the
  * widened double instead would spell `0.1` as `0.10000000149011612`. */
 function printF32(value: number): string {
@@ -272,7 +267,7 @@ function printTexture(texture: Texture): string {
   return `[${hexOfText(texture.id)},${hexOfText(texture.mime)},${hexOfBytes(texture.bytes)}]`;
 }
 
-/** 📜️ `document = artifact-mark schema-line meshes-line materials-line textures-line`. */
+/** 📄️ `document = artifact-mark schema-line meshes-line materials-line textures-line`. */
 export function parseDsl(text: string): Snapshot {
   let body = stripPreamble(text);
   let schemaHex: string;
@@ -292,7 +287,7 @@ export function parseDsl(text: string): Snapshot {
   };
 }
 
-/** 📜️ The committed DSL grammar in the writing direction, line for line in its declared order. */
+/** 🌀️ The committed DSL grammar in the writing direction, line for line in its declared order. */
 export function printDsl(document: Snapshot): string {
   return [
     DSL_PREAMBLE,
@@ -305,241 +300,16 @@ export function printDsl(document: Snapshot): string {
 // #endregion 📜️Dsl
 
 // #region 🎒️Pack
-class Reader {
-  constructor(
-    private readonly data: Uint8Array,
-    private at = 0,
-  ) {}
+const RECORD_SPEC = loadRecordSpec(recordSpecDocument as unknown as RecordSpecDocument);
 
-  get offset(): number {
-    return this.at;
-  }
-
-  get done(): boolean {
-    return this.at === this.data.length;
-  }
-
-  byte(): number {
-    const value = this.data[this.at];
-    if (value === undefined) throw new Error("the pack frame ends inside a record");
-    this.at += 1;
-    return value;
-  }
-
-  varint(): number {
-    let value = 0;
-    let shift = 0;
-    for (;;) {
-      const byte = this.byte();
-      value += (byte & 0x7f) * 2 ** shift;
-      if ((byte & 0x80) === 0) return value;
-      shift += 7;
-    }
-  }
-
-  bytes(length: number): Uint8Array {
-    const slice = this.data.slice(this.at, this.at + length);
-    if (slice.length !== length) throw new Error("the pack frame ends inside a length-prefixed run");
-    this.at += length;
-    return slice;
-  }
-
-  blob(): Uint8Array {
-    return this.bytes(this.varint());
-  }
-
-  text(): string {
-    return new TextDecoder("utf-8", { fatal: true }).decode(this.blob());
-  }
-
-  f64(): number {
-    const view = new DataView(this.bytes(8).buffer);
-    return view.getFloat64(0, true);
-  }
-
-  f32(): number {
-    const view = new DataView(this.bytes(4).buffer);
-    return view.getFloat32(0, true);
-  }
-
-  u32(): number {
-    const view = new DataView(this.bytes(4).buffer);
-    return view.getUint32(0, true);
-  }
-}
-
-function readTextureReference(reader:Reader):string|null{const tag=reader.byte();if(tag===0)return null;if(tag===1)return reader.text();throw Error("invalid material texture reference presence");}
-class Writer {
-  private readonly chunks: number[] = [];
-
-  byte(value: number): void {
-    this.chunks.push(value & 0xff);
-  }
-
-  varint(value: number): void {
-    let rest = value;
-    for (;;) {
-      const byte = rest % 128;
-      rest = Math.floor(rest / 128);
-      if (rest > 0) {
-        this.byte(byte | 0x80);
-        continue;
-      }
-      this.byte(byte);
-      return;
-    }
-  }
-
-  raw(bytes: Uint8Array | number[]): void {
-    for (const byte of bytes) this.chunks.push(byte & 0xff);
-  }
-
-  blob(bytes: Uint8Array | number[]): void {
-    const payload = bytes instanceof Uint8Array ? bytes : Uint8Array.from(bytes);
-    this.varint(payload.length);
-    this.raw(payload);
-  }
-
-  text(value: string): void {
-    this.blob(new TextEncoder().encode(value));
-  }
-
-  f64(value: number): void {
-    const buffer = new ArrayBuffer(8);
-    new DataView(buffer).setFloat64(0, value, true);
-    this.raw(new Uint8Array(buffer));
-  }
-
-  f32(value: number): void {
-    const buffer = new ArrayBuffer(4);
-    new DataView(buffer).setFloat32(0, value, true);
-    this.raw(new Uint8Array(buffer));
-  }
-
-  u32(value: number): void {
-    const buffer = new ArrayBuffer(4);
-    new DataView(buffer).setUint32(0, value, true);
-    this.raw(new Uint8Array(buffer));
-  }
-
-  finish(): Uint8Array {
-    return Uint8Array.from(this.chunks);
-  }
-}
-
-/** 🎒️ The committed binary envelope and the pack frame the Kaitai mirror describes. */
+/** 🎒️ A `.pack.semio` file as the JSON snapshot its record document carries, decoded by the shared record-document codec from the committed record spec. */
 export function parsePack(input: Uint8Array): Snapshot {
-  const data = Uint8Array.from(input);
-  for (let at = 0; at < BINARY_MAGIC.length; at += 1) if (data[at] !== BINARY_MAGIC[at]) throw new Error("the binary envelope magic is not the semio magic");
-  const tokenLength = new DataView(data.slice(8, 12).buffer).getUint32(0, true);
-  const token = new TextDecoder().decode(data.slice(12, 12 + tokenLength));
-  if (token !== PACK_TOKEN) throw new Error(`the binary envelope token is ${token}, expected ${PACK_TOKEN}`);
-  const reader = new Reader(data, 12 + tokenLength);
-  const format = reader.byte();
-  if (format !== PACK_FORMAT) throw new Error(`the pack format byte is ${format}, expected ${PACK_FORMAT}`);
-  const schema = reader.text();
-  const meshes: Mesh[] = [];
-  for (let mesh = reader.varint(); mesh > 0; mesh -= 1) {
-    const id = reader.text();
-    const primitives: Primitive[] = [];
-    for (let count = reader.varint(); count > 0; count -= 1) {
-      const primitiveId = reader.text();
-      const tag = reader.byte();
-      const topology = TOPOLOGY_ORDER[tag];
-      if (topology === undefined) throw new Error(`the pack topology tag ${tag} is outside the declared enumeration`);
-      const positions: Point3[] = [];
-      for (let entry = reader.varint(); entry > 0; entry -= 1) positions.push({ x: reader.f64(), y: reader.f64(), z: reader.f64() });
-      const normals: Point3[] = [];
-      for (let entry = reader.varint(); entry > 0; entry -= 1) normals.push({ x: reader.f64(), y: reader.f64(), z: reader.f64() });
-      const uvs: Uv[] = [];
-      for (let entry = reader.varint(); entry > 0; entry -= 1) uvs.push({ u: reader.f64(), v: reader.f64() });
-      const colors: Rgba[] = [];
-      for (let entry = reader.varint(); entry > 0; entry -= 1) colors.push({ r: reader.f32(), g: reader.f32(), b: reader.f32(), a: reader.f32() });
-      const indices: number[] = [];
-      for (let entry = reader.varint(); entry > 0; entry -= 1) indices.push(reader.u32());
-      const present = reader.byte();
-      if (present !== 0 && present !== 1) throw new Error(`the material-id presence byte is ${present}, expected 0 or 1`);
-      primitives.push({ id: primitiveId, topology, positions, normals, uvs, colors, indices, materialId: present === 1 ? reader.text() : null });
-    }
-    meshes.push({ id, primitives });
-  }
-  const materials: Material[] = [];
-  for (let count = reader.varint(); count > 0; count -= 1) materials.push({ id: reader.text(), baseColor: { r: reader.f32(), g: reader.f32(), b: reader.f32(), a: reader.f32() }, metallic: reader.f32(), roughness: reader.f32(), baseColorTexture: readTextureReference(reader), metallicRoughnessTexture: readTextureReference(reader), normalTexture: readTextureReference(reader), occlusionTexture: readTextureReference(reader), emissiveTexture: readTextureReference(reader) });
-  const textures: Texture[] = [];
-  for (let count = reader.varint(); count > 0; count -= 1) textures.push({ id: reader.text(), mime: reader.text(), bytes: Array.from(reader.blob()) });
-  if (!reader.done) throw new Error(`the pack frame ends ${data.length - reader.offset} bytes before its envelope does`);
-  return { schema, meshes, materials, textures };
+  return decodePack(RECORD_SPEC, input) as unknown as Snapshot;
 }
 
-/** 🎒️ The pack frame in the writing direction, inside the shared binary envelope. */
+/** 🔍️ The writing direction of `parsePack`, inside the shared binary envelope. */
 export function packBytes(document: Snapshot): Uint8Array {
-  const body = new Writer();
-  body.byte(PACK_FORMAT);
-  body.text(document.schema);
-  body.varint(document.meshes.length);
-  for (const mesh of document.meshes) {
-    body.text(mesh.id);
-    body.varint(mesh.primitives.length);
-    for (const primitive of mesh.primitives) {
-      body.text(primitive.id);
-      body.byte(TOPOLOGY_ORDER.indexOf(primitive.topology as (typeof TOPOLOGY_ORDER)[number]));
-      body.varint(primitive.positions.length);
-      for (const point of primitive.positions) {
-        body.f64(point.x);
-        body.f64(point.y);
-        body.f64(point.z);
-      }
-      body.varint(primitive.normals.length);
-      for (const point of primitive.normals) {
-        body.f64(point.x);
-        body.f64(point.y);
-        body.f64(point.z);
-      }
-      body.varint(primitive.uvs.length);
-      for (const uv of primitive.uvs) {
-        body.f64(uv.u);
-        body.f64(uv.v);
-      }
-      body.varint(primitive.colors.length);
-      for (const colour of primitive.colors) {
-        body.f32(colour.r);
-        body.f32(colour.g);
-        body.f32(colour.b);
-        body.f32(colour.a);
-      }
-      body.varint(primitive.indices.length);
-      for (const index of primitive.indices) body.u32(index);
-      if (primitive.materialId === null) body.byte(0);
-      else {
-        body.byte(1);
-        body.text(primitive.materialId);
-      }
-    }
-  }
-  body.varint(document.materials.length);
-  for (const material of document.materials) {
-    body.text(material.id);
-    body.f32(material.baseColor.r);
-    body.f32(material.baseColor.g);
-    body.f32(material.baseColor.b);
-    body.f32(material.baseColor.a);
-    body.f32(material.metallic);
-    body.f32(material.roughness);
-    for(const id of [material.baseColorTexture, material.metallicRoughnessTexture, material.normalTexture, material.occlusionTexture, material.emissiveTexture]){body.byte(id==null?0:1);if(id!=null)body.text(id);}
-  }
-  body.varint(document.textures.length);
-  for (const texture of document.textures) {
-    body.text(texture.id);
-    body.text(texture.mime);
-    body.blob(texture.bytes);
-  }
-  const envelope = new Writer();
-  const token = new TextEncoder().encode(PACK_TOKEN);
-  envelope.raw(BINARY_MAGIC);
-  envelope.u32(token.length);
-  envelope.raw(token);
-  envelope.raw(body.finish());
-  return envelope.finish();
+  return encodePack(RECORD_SPEC, document);
 }
 // #endregion 🎒️Pack
 
@@ -778,7 +548,7 @@ export function inverseMutation(document: Snapshot, mutation: Mutation): Mutatio
 
 // #region 🔺️Three
 /**
- * 🔺️ What the third-party 3D engine states about the primitives this document carries.
+ * 🔄️ What the third-party 3D engine states about the primitives this document carries.
  *
  * Every primitive becomes a real `THREE.BufferGeometry` — positions in a `Float64Array`, so nothing
  * is quantised on the way in — and three.js reports its attribute counts, the bounding box `Box3`

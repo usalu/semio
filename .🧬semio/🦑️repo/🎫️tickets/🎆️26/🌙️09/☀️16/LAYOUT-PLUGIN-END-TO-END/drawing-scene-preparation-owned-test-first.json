@@ -1,0 +1,27 @@
+{
+  "state": "test-first-authored-unexecuted-before-production",
+  "laws": 6,
+  "originalCases": 17,
+  "productionEdited": false,
+  "paths": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🧪️tests/📐️.json",
+      "bytes": 2009,
+      "sha256": "42059d34605ed44d0dbeab8293707c7514c3d13ef8b032390cb0708f0120ac5f"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🧪️tests/🔣️.json",
+      "bytes": 2958,
+      "sha256": "685f96b69aa763a14b85244ffaae779efff99182dfa9cbf90ebc2838661eb9d2"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🧪️tests/owned.test.ts",
+      "bytes": 7805,
+      "sha256": "2137d6737a468406a8d93fe37b8b2bf67771cdd2848ec4fb3e5c413115f1c198"
+    }
+  ],
+  "futurePublicInterface": "DocumentSceneJob(source, originalLimits, explicitMaximumSemanticWork), advance(items,sameLedger), nextWorkDemand/lastTurnWork/settlementPending, result readonly ScenePlanRead, intoRetirement genuine ScenePlanOwner +authentic cursor",
+  "profileFollowup": "Before new asset/builder body: same existing node112/asset32/resource24 layouts; resource payload is a genuine buffer OR actual byte owner with the same one reference +two domain counters (24). Byte length reflects actual typed allocation, not VM estimates. No prior case/data/stock change.",
+  "traversalProfileFollowup": "Before traversal body: frame136=parent/layers/at/sourceIndex/depth/lock/visible/scopeId/scopeOpacity/scopeBlend/scopeCount11*8+matrix48; key8,index16,cycle frame16,state8. Real field writes8; fixed control clears0. No VM/GC size claim or new grant/stock.",
+  "chronology": "All six law bodies and closed neutral cases preceded production. Logical traversal/resource profiles were added before their defining writes. After actual defining owner placement, only the test's production import was remounted from canonical public preparation entry to its actual owned module; no assertions/cases/stocks weakened. The old numeric body is removed, public route directly reexports the defining class."
+}

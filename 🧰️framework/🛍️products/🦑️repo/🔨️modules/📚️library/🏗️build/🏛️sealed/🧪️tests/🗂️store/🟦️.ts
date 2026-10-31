@@ -3,7 +3,7 @@ import{afterAll,expect,test}from"bun:test";
 import{spawn}from"node:child_process";
 import{existsSync,mkdirSync,readFileSync,readdirSync,rmSync,utimesSync,writeFileSync}from"node:fs";
 import{fileURLToPath}from"node:url";
-import{join}from"node:path";
+import{join,dirname,relative}from"node:path";
 import Ajv from"ajv";
 import ts from"typescript";
 import{validateJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -123,7 +123,7 @@ test("an older digest returns without a second validation, and collection keeps 
  expect((await run("A")).validated).toBe(1);
  expect((await run("B")).validated).toBe(1);
  const back=await run("A");
- expect(back.result.status).toBe("promoted");expect(back.validated).toBe(0);expect(back.result.pointer.digest).toBe(seen[0]);
+ expect(back.result.status).toBe("promoted");expect(back.validated).toBe(0);expect(back.result.pointer.digest).toBe(seen[0]!);
  await run("C");await run("B");
  const files=readdirSync(w.entry.directory).filter(name=>/^[0-9a-f]{64}\.(seal\.)?json$/u.test(name));
  const pointer=readSealedPointerV1(w.entry)!;
@@ -165,20 +165,15 @@ test("a waiting promoter can be cancelled, and the transpiler agrees with the in
  expect(existsSync(w.entry.directory)).toBe(true);
 },60_000);
 
-test("a drift check that runs inside a snapshot reads the live disk, not the snapshot's own image of the file (and the naive read is blind: negative control)",async()=>{
+test("a handcrafted captured program retains its code while descriptor reads see live drift and naive reads stay blind",async()=>{
+ let checkout=dirname(fileURLToPath(import.meta.url));while(!existsSync(join(checkout,"nx.json"))){const parent=dirname(checkout);if(parent===checkout)throw Error("Actual repository root required");checkout=parent;}
  for(const naive of[false,true]){
- const w=world();
- const original=readFileSync(fileURLToPath(new URL("../../🟦️.ts",import.meta.url)),"utf8").replace('"./🔣️.json"','"./policy.json"').replace('"../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts"','"./language.ts"'),core=naive?original.replace("sealedHashV1(readLiveFileV1(absolute(root,path)))!==sha256","sealedHashV1(readFileSync(absolute(root,path)))!==sha256"):original;
- expect(core===original,"mutation applies").toBe(!naive);
- writeFileSync(join(w.root,"tool/sealed.ts"),core);writeFileSync(join(w.root,"tool/policy.json"),JSON.stringify(policyData));writeFileSync(join(w.root,"tool/language.ts"),readFileSync(fileURLToPath(new URL("../../../../../../../../🔨️modules/⚙️runtime/🗣️language/🟦️.ts",import.meta.url)),"utf8").replace('"./🔣️.json"','"./language.json"'));writeFileSync(join(w.root,"tool/language.json"),readFileSync(fileURLToPath(new URL("../../../../../../../../🔨️modules/⚙️runtime/🗣️language/🔣️.json",import.meta.url)),"utf8"));
- writeFileSync(join(w.root,"tool/drift.ts"),'import{readFileSync}from"node:fs";import{sealedTreeDriftV1}from"./sealed.ts";import"./helper.ts";export async function runCapturedBuildSourceV1(args:string[]){console.log(JSON.stringify(sealedTreeDriftV1(args[0]!,JSON.parse(readFileSync(args[1]!,"utf8")))));}');
- const candidate=await fixtureCaptureV1(w.root,"tool/drift.ts")(new AbortController().signal),text=JSON.stringify(candidate.snapshot),digest=buildSourceClosureIdentityV1(candidate.snapshot);
- const tree=sealedTreeOfCaptureV1(w.root,candidate.snapshot.files,candidate.structure)!,treeFile=join(w.root,"tree.json");writeFileSync(treeFile,JSON.stringify(tree));
- const inside=()=>new Promise<unknown>(accept=>{const child=spawn(process.execPath,["--eval",buildSourceClosureStreamLoaderV1,"--",digest,w.root,treeFile],{stdio:["ignore","pipe","pipe","pipe"],env:{...process.env,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"}});let out="";child.stdout!.on("data",data=>out+=data);child.stderr!.on("data",data=>out+=data);child.on("close",()=>{try{accept(JSON.parse(out.trim().split("\n").pop()!));}catch{accept(out);}});(child.stdio[3] as NodeJS.WritableStream).end(text);});
- expect(await inside()).toEqual({fresh:true,changed:[]});
- setFixtureTreeV1(w.root,"B");
- expect(await inside()).toEqual(naive?{fresh:true,changed:[]}:{fresh:false,changed:["tool/helper.ts"]});
- expect(sealedTreeDriftV1(w.root,tree)).toEqual({fresh:false,changed:["tool/helper.ts"]});
+  const w=world(),entry=join(w.root,"tool/drift.ts"),helper=join(w.root,"tool/helper.ts"),treeFile=join(w.root,"tree.json"),core=relative(join(w.root,"tool"),fileURLToPath(new URL("../../🟦️.ts",import.meta.url))).replaceAll("\\","/");
+  const program='import{readFileSync}from"node:fs";import{createHash}from"node:crypto";import{relative,join}from"node:path";import{v}from"./helper.ts";import{sealedTreeDriftV1}from'+JSON.stringify(core)+';export async function runCapturedBuildSourceV1(args:string[]){const root=args[0]!,tree=JSON.parse(readFileSync(args[1]!,"utf8")),path=args[2]!,naive=args[3]==="true";const row=tree.files.find((item:string[])=>item[0]===path),fresh=naive?createHash("sha256").update(readFileSync(join(root,path))).digest("hex")===row[1]:undefined,result=naive?{fresh,changed:fresh?[]:[path]}:sealedTreeDriftV1(root,tree);console.log(JSON.stringify({...result,changed:result.changed.map((item:string)=>relative(args[4]!,join(root,item)).replaceAll("\\\\","/")),captured:v}));}';
+  writeFileSync(entry,program);writeFileSync(treeFile,"{}");
+  const candidate=await fixtureCaptureV1(checkout,relative(checkout,entry).replaceAll("\\","/"),undefined,join(w.root,".memo.json"))(new AbortController().signal),text=JSON.stringify(candidate.snapshot),digest=buildSourceClosureIdentityV1(candidate.snapshot),tree=sealedTreeOfCaptureV1(checkout,candidate.snapshot.files,candidate.structure)!;writeFileSync(treeFile,JSON.stringify(tree));
+  const inside=()=>new Promise<unknown>((accept,reject)=>{const child=spawn(process.execPath,["--eval",buildSourceClosureStreamLoaderV1,"--",digest,checkout,treeFile,relative(checkout,helper).replaceAll("\\","/"),String(naive),w.root],{stdio:["ignore","pipe","pipe","pipe"],env:{...process.env,BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"}});let out="";child.stdout!.on("data",data=>out+=data);child.stderr!.on("data",data=>out+=data);child.on("error",reject);child.on("close",code=>{if(code!==0){reject(Error(out));return;}try{accept(JSON.parse(out.trim().split("\n").pop()!));}catch(error){reject(error);}});(child.stdio[3]as NodeJS.WritableStream).end(text);});
+  expect(await inside()).toEqual({fresh:true,changed:[],captured:"A"});setFixtureTreeV1(w.root,"B");expect(await inside()).toEqual(naive?{fresh:true,changed:[],captured:"A"}:{fresh:false,changed:["tool/helper.ts"],captured:"A"});expect(sealedTreeDriftV1(checkout,tree).changed).toContain(relative(checkout,helper).replaceAll("\\","/"));
  }
 },120_000);
 

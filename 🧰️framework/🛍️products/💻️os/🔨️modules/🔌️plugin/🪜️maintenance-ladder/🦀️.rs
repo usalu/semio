@@ -369,7 +369,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         }
     }
 
-    /// 🎟️ One granted turn of the next store replacement; a closing app cancels it first and removes it once terminal.
+    /// 🎁️ One granted turn of the next store replacement; a closing app cancels it first and removes it once terminal.
     pub fn drive_store_replacement_jobs(&mut self,cx:&mut semio_framework_job::StepContext<'_>,loan:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         let demand=self.shared().store_replacement_demands(closing,loan.maximum_copy_bytes)?;
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,grant|{
@@ -481,7 +481,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             active.refuse(ArtifactStoreReplacementRefusal::PublicationGuard(guard));
             return Ok(PluginLifecycleStep::Progress(item));
         }
-        if A::validate_document_store_publication(active.operation, active.generation, live_generation).is_err() {
+        if A::validate_document_store_publication(&active.publication_token, semio_framework_plugin_ownership::store_lifecycle::DocumentStoreLivePublication::new(semio_framework_job::OperationId(operation_id), live_generation, self.child_composition.child_content_generation)).is_err() {
             *active.retained_disposer = Some(disposer);
             active.refuse(ArtifactStoreReplacementRefusal::PublicationAuthorityRejected);
             return Ok(PluginLifecycleStep::Progress(item));
@@ -530,7 +530,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
         Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { retained_capacity_bytes: store_replacement_commit_capacity(), ..item }))
     }
 
-    /// 🎟️ One granted turn of the next archive load; a closing app cancels every load and drops it once terminal-empty.
+    /// 🔁️ One granted turn of the next archive load; a closing app cancels every load and drops it once terminal-empty.
     pub fn drive_document_archive_load_retirements(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,closing:bool)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let empty = RetainedCloneProgress::default();
         let Some((index, operation)) = self.shared().document_archive_target(closing) else {
@@ -571,14 +571,14 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
 
     /// 🪹️ Every live retirement frontier and its retained directory backing is empty.
     pub fn maintenance_ladder_terminal_is_empty(&self) -> bool {
-        self.stores.window_config_store.direct_ingress_terminal_is_empty()
+        self.stores.window_config_store.direct_ingress_quiescent()
             && !self.render_ref().tool_overlay_retirement_pending()
             && self.tool_run_ref().tool_run_retirement_demand(0).is_ok_and(|demand| demand == RetirementDemand::default())
             && self.time_travel_ref().time_travel_retirement_demands(0).is_ok_and(|demand| demand == RetirementDemand::default())
             && self.history.pending_command_prune.is_none()
             && !self.history.command_prune_requested()
             && self.history.command_log.pruned_terminal_is_empty()
-            && self.child_composition.private_child_groups_terminal_is_empty()
+            && self.child_composition.private_child_groups.is_empty()
             && self.tools.tool_operations.is_empty()
             && self.tools.original_emission_admission.is_none()
             && self.tools.original_emission_receipt.is_none()
@@ -622,7 +622,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         match position {
             0 => (self.history.command_prune_requested() || self.history.pending_command_prune.is_some() || !self.history.command_log.pruned_terminal_is_empty()).then_some(MaintenanceUnit::CommandPrune),
             1 => self.tools.next_closing_private_child_group(&*self.child_composition).map(MaintenanceUnit::PrivateChildGroup),
-            2 => (!self.stores.window_config_store.direct_ingress_terminal_is_empty()).then_some(MaintenanceUnit::DirectIngress),
+            2 => (!self.stores.window_config_store.direct_ingress_quiescent()).then_some(MaintenanceUnit::DirectIngress),
             3 => self.next_granted_mounted_retirement().is_some().then_some(MaintenanceUnit::GrantedMounted),
             4 => self.render_ref().tool_overlay_retirement_pending().then_some(MaintenanceUnit::ToolOverlay),
             5 => Some(MaintenanceUnit::ToolRuns),
@@ -769,7 +769,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         })
     }
 
-    /// 📏️ Quotes the next envelope-ingress page release: the page payload, then the slot backing's whole physical release.
+    /// 📃️ Quotes the next envelope-ingress page release: the page payload, then the slot backing's whole physical release.
     pub fn envelope_ingress_demands(&self, closing: bool, _body: usize) -> Result<RetirementDemand, ValueError> {
         let Some((_, operation_id)) = self.envelope_ingress_target(closing) else { return Ok(RetirementDemand::default()) };
         Ok(self.ingest.envelope_ingress.get(operation_id).map_or_else(RetirementDemand::default, ActiveArtifactEnvelopeIngress::retirement_demands))
@@ -786,7 +786,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         })
     }
 
-    /// 📏️ Quotes the next store-replacement turn selected by the target replacement's own state.
+    /// 🏪️ Quotes the next store-replacement turn selected by the target replacement's own state.
     pub fn store_replacement_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
         let Some((_, operation_id)) = self.store_replacement_target(closing) else { return Ok(RetirementDemand::default()) };
         self.ingest.store_replacement_jobs.get(operation_id).map_or(Ok(RetirementDemand::default()), |active| store_replacement_unit_demands::<A, M>(active, closing, body))
@@ -800,7 +800,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         })
     }
 
-    /// 📏️ Quotes the next archive-load turn of the target load, in the phase its state machine is about to run.
+    /// 🌈️ Quotes the next archive-load turn of the target load, in the phase its state machine is about to run.
     pub fn document_archive_demands(&self, closing: bool, body: usize) -> Result<RetirementDemand, ValueError> {
         let Some((_, operation)) = self.document_archive_target(closing) else {
             let backing = if closing { self.ingest.document_archive_loads.empty_backing_byte_demand().unwrap_or(0) } else { 0 };

@@ -1,7 +1,6 @@
 //! 🧬️ `stdio.gltf` mutations: the mutation vocabulary, its dispatch and support modules and its text and binary codecs.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

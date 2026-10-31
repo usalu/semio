@@ -1,0 +1,275 @@
+{
+  "version": 1,
+  "plan": {
+    "version": 1,
+    "purpose": "current-selected-dependency-plan",
+    "artifact": {
+      "version": 1,
+      "purpose": "current-artifact-maintenance",
+      "action": "retain-allocation-payload",
+      "policy": {
+        "version": 1,
+        "root": "/store",
+        "leaseDirectory": "/leases",
+        "capacityBytes": 34603008,
+        "maximumWorkspaceBytes": 33554432,
+        "maximumArtifactBytes": 33554432
+      },
+      "backing": {
+        "root": "/store",
+        "identity": "inert-fixture",
+        "maximumPhysicalBytes": 34603008
+      },
+      "journalSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "journalBytes": 128,
+      "allocation": {
+        "id": "cccccccccccccccccccccccccccccccc",
+        "owner": "repository:dependencies-store",
+        "kind": "artifact-publication",
+        "phase": "committed",
+        "bytes": 33554432
+      }
+    },
+    "current": {
+      "version": 1,
+      "scopes": [
+        {
+          "scope": ".",
+          "members": [],
+          "generation": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "receiptFingerprint": "fp-current",
+          "bindings": [
+            {
+              "sourceDirectory": "/workspace/node_modules",
+              "targetDirectory": "/store/j/cccccccccccccccccccc/node_modules"
+            }
+          ]
+        }
+      ],
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    "roles": {
+      "stamp": "root",
+      "names": [
+        "j",
+        "dependencies.json",
+        "storage-events.jsonl"
+      ]
+    },
+    "generations": {
+      "stamp": "j",
+      "names": [
+        "aaaaaaaaaaaaaaaaaaaa",
+        "bbbbbbbbbbbbbbbbbbbb",
+        "cccccccccccccccccccc"
+      ]
+    },
+    "candidates": [
+      {
+        "prefix": "aaaaaaaaaaaaaaaaaaaa",
+        "generation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "status": "inactive",
+        "receiptFingerprint": "fp-a",
+        "rootStamp": "root-a",
+        "roles": [
+          "node_modules",
+          "bindings.json"
+        ],
+        "ownerReferences": [
+          {
+            "scope": "leaf",
+            "generation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          }
+        ],
+        "payloadQualified": false
+      },
+      {
+        "prefix": "bbbbbbbbbbbbbbbbbbbb",
+        "generation": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "status": "inactive",
+        "receiptFingerprint": "fp-b",
+        "rootStamp": "root-b",
+        "roles": [
+          "node_modules",
+          "bindings.json"
+        ],
+        "ownerReferences": [],
+        "payloadQualified": false
+      },
+      {
+        "prefix": "cccccccccccccccccccc",
+        "generation": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "status": "active",
+        "receiptFingerprint": "fp-c",
+        "rootStamp": "root-c",
+        "roles": [
+          "node_modules",
+          "bindings.json"
+        ],
+        "ownerReferences": [],
+        "payloadQualified": false
+      }
+    ],
+    "selected": null,
+    "wholeAllocationRetired": false,
+    "publicationRetirementDispatches": 0
+  },
+  "cases": [
+    {
+      "mode": "valid",
+      "accepted": true,
+      "expected": "aaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "mode": "reversed",
+      "accepted": true,
+      "expected": "aaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "mode": "after-first",
+      "accepted": true,
+      "expected": "bbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "mode": "done",
+      "accepted": true,
+      "expected": null
+    },
+    {
+      "mode": "empty",
+      "accepted": true,
+      "expected": "ffffffffffffffffffff"
+    },
+    {
+      "mode": "unknown",
+      "accepted": true,
+      "expected": "aaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "mode": "cycle",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "mode": "current-references-old",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "mode": "unqualified",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "mode": "duplicate",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "mode": "missing-current",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "mode": "active-mismatch",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "mode": "empty-current",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "mode": "busy",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "mode": "extra",
+      "accepted": false,
+      "expected": null
+    }
+  ],
+  "unreadyCases": [
+    {
+      "mode": "unready",
+      "accepted": true,
+      "prefix": "00000000000000000000"
+    },
+    {
+      "mode": "capsule",
+      "accepted": true,
+      "prefix": ".p00000000"
+    },
+    {
+      "mode": "capsule-same-current",
+      "accepted": true,
+      "prefix": ".p00000000"
+    },
+    {
+      "mode": "metadata",
+      "accepted": true,
+      "prefix": ".p00000000"
+    },
+    {
+      "mode": "metadata-with-payload",
+      "accepted": false,
+      "prefix": null
+    },
+    {
+      "mode": "unready-with-ready",
+      "accepted": false,
+      "prefix": null
+    },
+    {
+      "mode": "capsule-with-references",
+      "accepted": false,
+      "prefix": null
+    },
+    {
+      "mode": "capsule-bad-prefix",
+      "accepted": false,
+      "prefix": null
+    },
+    {
+      "mode": "dangling-inactive",
+      "accepted": true,
+      "prefix": "aaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "mode": "dangling-active",
+      "accepted": false,
+      "prefix": null
+    },
+    {
+      "mode": "prefix-collision",
+      "accepted": false,
+      "prefix": null
+    }
+  ],
+  "managerRoleCases": [
+    {
+      "manager": "bun",
+      "roles": [
+        "node_modules",
+        "w",
+        "patches",
+        "package.json",
+        "bun.lock",
+        "bunfig.toml"
+      ]
+    },
+    {
+      "manager": "npm",
+      "roles": [
+        "node_modules",
+        "w",
+        "patches",
+        "package.json",
+        "package-lock.json",
+        ".npmrc"
+      ]
+    }
+  ]
+}

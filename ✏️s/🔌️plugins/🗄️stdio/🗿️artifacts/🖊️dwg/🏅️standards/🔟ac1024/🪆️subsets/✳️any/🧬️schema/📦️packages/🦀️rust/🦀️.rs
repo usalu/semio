@@ -1,7 +1,6 @@
 //! 🧬️ `stdio.dwg` model: the AC1018 and AC1024 schemas, the drawing geometry, and the native text, binary and SQLite codecs.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

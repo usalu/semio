@@ -1,0 +1,14 @@
+{
+  "state": "defining-body-authored-not-source-ready-no-runtime",
+  "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🦀️.rs",
+  "sha256": "5f1a59a695687f25f20533274f90e4e61bc4d909b38c0c452c9c4d065c35a848",
+  "bytes": 32199,
+  "canonicalAdvance": "advance(items, source, &mut RetainedWorkLedger)",
+  "constructor": "new(input) -> Self",
+  "remaining": [
+    "generic Boolean canonical implementation owned by Cursor",
+    "direct Paint and lower Stroke owning test/caller migrations",
+    "whole reached native closure review",
+    "actual diagnostic/fault publication integration"
+  ]
+}

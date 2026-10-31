@@ -96,5 +96,10 @@
       "patchDocument": true
     },
     "changedAction": "patchDocumenX"
+  },
+  "actorAdmission": {
+    "actor": "fixture-港😀",
+    "sharedFrameQuoted": true,
+    "quoteMinusOneUnchanged": true
   }
 }

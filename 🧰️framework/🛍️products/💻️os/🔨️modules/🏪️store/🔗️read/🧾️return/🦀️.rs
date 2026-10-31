@@ -1,6 +1,6 @@
 //! 🧾️ Returned snapshot witnesses preserve original registry custody through funded closure.
-use super::{SnapshotReadReturn,SnapshotReadLeaseRegistry,snapshot_registry_frame_bytes};
-use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
+use super::{SnapshotReadReturn,SnapshotReadLeaseRegistry,snapshot_registry_frame_bytes,bounded_outcome,outcome_retirement_step};
+use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedWorkOutcome,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 use std::{mem::ManuallyDrop,sync::Arc};
 
 impl super::ErasedSnapshotRead {
@@ -61,8 +61,8 @@ impl RetireOwned for SnapshotReadReturn {
  fn controlled_retirement_supported()->bool{true}
 }
 impl RetirementCursor for SnapshotReadReturnRetirement {
-    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands() }
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
+    fn next_demand(&self, _body: usize) -> Result<RetirementDemand, ValueError> { self.demands() }
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let turn=bounded_outcome(self.step(grant));match turn.result{Err(error)=>RetirementStep::Failure(error,turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work)}}
  fn terminal_is_empty(&self)->bool{self.registry.is_none()&&self.last_registry.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
  fn allows_admitted_narrow_work(&self)->bool{true}
@@ -87,23 +87,26 @@ impl ErasedSnapshotReadRetirement {
   let depth=owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"erased read witness depth overflow"))?;
   Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(copy)?,release_bytes:owner.next_release_byte_demand()?,depth})
  }
- fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
-  if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-  let demand=self.demands(grant.maximum_copy_bytes)?;
-  if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"erased read closure exceeds admitted depth"));}
-  if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}
+ fn step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+  let refuse=|error:ValueError|RetainedWorkOutcome{result:Err(error),work:0};
+  if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
+  if grant.maximum_items==0{return bounded_outcome(Ok(RetainedCloneStep::Progress(Default::default())));}
+  let demand=match self.demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return refuse(error)};
+  if grant.maximum_depth<demand.depth{return refuse(ValueError::literal(ValueRefusalKind::DepthLimit,"erased read closure exceeds admitted depth"));}
+  if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return bounded_outcome(Ok(RetainedCloneStep::Progress(Default::default())));}
   if let Some(read)=self.read.take(){
    return match read.try_return_to_registry_witness(grant){
-    Ok((witness,progress))=>{*self.witness=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(witness).unwrap_or_else(|(error,_)|unreachable!("registry witness has typed retirement: {error}")));Ok(RetainedCloneStep::Progress(progress))},
-    Err((error,read))=>{*self.read=Some(read);Err(error)},
+    Ok((witness,progress))=>{*self.witness=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(witness).unwrap_or_else(|(error,_)|unreachable!("registry witness has typed retirement: {error}")));RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(progress)),work:1}},
+    Err((error,read))=>{*self.read=Some(read);refuse(error)},
    };
   }
   let owner=self.witness.as_mut().expect("erased read witness remains until terminal");
   let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-  let step=owner.step(child)?;
-  if owner.terminal_is_empty(){self.witness.take();return Ok(RetainedCloneStep::Complete(step.progress()));}
-  Ok(RetainedCloneStep::Progress(step.progress()))
+  let step=owner.step(child);
+  let work=owner.last_turn_work();
+  let step=match step{Ok(step)=>step,Err(error)=>return RetainedWorkOutcome{result:Err(error),work}};
+  if owner.terminal_is_empty(){self.witness.take();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(step.progress())),work};}
+  RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(step.progress())),work}
  }
 }
 impl RetireOwned for super::ErasedSnapshotRead {
@@ -112,8 +115,8 @@ impl RetireOwned for super::ErasedSnapshotRead {
  fn controlled_retirement_supported()->bool{true}
 }
 impl RetirementCursor for ErasedSnapshotReadRetirement {
-    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
+    fn next_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.demands(body) }
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{outcome_retirement_step(self.step(grant))}
  fn terminal_is_empty(&self)->bool{self.read.is_none()&&self.witness.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
  fn allows_admitted_narrow_work(&self)->bool{true}

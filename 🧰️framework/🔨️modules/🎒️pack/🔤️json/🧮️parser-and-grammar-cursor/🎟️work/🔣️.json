@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes"
+  ],
+  "properties": {
+    "cases": {
+      "const": [
+        {
+          "name": "deniedUtf8",
+          "bytes": [
+            255
+          ],
+          "items": 0,
+          "work": 0,
+          "invalidUtf8": false
+        },
+        {
+          "name": "invalidUtf8Probe",
+          "bytes": [
+            255
+          ],
+          "items": 1,
+          "work": 1,
+          "invalidUtf8": true
+        },
+        {
+          "name": "validUtf8Probe",
+          "bytes": [
+            49
+          ],
+          "items": 1,
+          "work": 1,
+          "invalidUtf8": false
+        }
+      ]
+    },
+    "copyBytes": {
+      "const": 0
+    },
+    "capacityBytes": {
+      "const": 0
+    },
+    "releaseBytes": {
+      "const": 0
+    }
+  }
+}

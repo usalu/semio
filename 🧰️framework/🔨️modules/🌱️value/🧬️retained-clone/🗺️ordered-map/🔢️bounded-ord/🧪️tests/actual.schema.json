@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "stock",
+    "maximumTurns",
+    "deniedWork",
+    "cachedWork",
+    "maximumTurnWork",
+    "serdeOracle",
+    "birth"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "const": [
+        {
+          "left": "αa",
+          "right": "αb",
+          "ordering": "Less"
+        },
+        {
+          "left": "Grüße",
+          "right": "Grüße",
+          "ordering": "Equal"
+        },
+        {
+          "left": "🌱z",
+          "right": "🌱a",
+          "ordering": "Greater"
+        }
+      ]
+    },
+    "stock": {
+      "const": {
+        "items": 4096,
+        "copy": 16777216,
+        "capacity": 16777216,
+        "release": 16777216,
+        "depth": 128
+      }
+    },
+    "maximumTurns": {
+      "const": 10000
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "maximumTurnWork": {
+      "const": 1
+    },
+    "serdeOracle": {
+      "const": true
+    },
+    "birth": {
+      "const": {
+        "work": 1,
+        "deniedWork": 0,
+        "deniedAxes": [
+          "items",
+          "copy",
+          "depth"
+        ],
+        "capacityBytes": 0
+      }
+    }
+  }
+}

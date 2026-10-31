@@ -58,7 +58,7 @@ pub fn wire_value_spec()->semio_framework_dsl_record::BorrowedRecordSpec{
 }
 
 /// 🪶️ Moves the received wire payload while its original receiver retains paid Record close.
-pub fn take_received_wire_value(receiver:&mut RetainedRecordReceiving,output:&mut Option<DslValue>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,semio_framework_value::ValueError>{
+pub fn take_received_wire_value(receiver:&mut RetainedRecordReceiving,output:&mut Option<DslValue>,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress>{
     receiver.take_value_into(VALUE_BRIDGE_FIELD_ID,output,grant)
 }
 

@@ -13,14 +13,6 @@ pub mod affine {
     pub mod tests;
 }
 #[path = "."]
-pub mod fill {
-    #[path = "."]
-    pub mod sampling {
-        #[path = "../../🎨️fill/🎨️sampling/🧪️tests/🔬️unit/🦀️.rs"]
-        pub mod tests;
-    }
-}
-#[path = "."]
 pub mod fill_rule {
     #[path = "../../🎨️fill/🌀️rule/🧪️tests/🔬️unit/🦀️.rs"]
     pub mod tests;

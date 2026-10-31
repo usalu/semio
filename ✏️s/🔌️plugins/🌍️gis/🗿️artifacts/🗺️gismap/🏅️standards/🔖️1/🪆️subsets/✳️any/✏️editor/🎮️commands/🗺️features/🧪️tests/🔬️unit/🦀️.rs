@@ -72,7 +72,7 @@ async fn two_instances_converge_on_disjoint_route_edits() {
     assert_two_instances_converge("mem://gis2d-convergence", command_a, command_b, |app| {
         let document = app.snapshot().expect("projection");
         (label(&document, ROUTE_A), label(&document, ROUTE_B))
-    }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())
+    })
     .await;
 }
 

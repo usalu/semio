@@ -1,0 +1,32 @@
+{
+  "state": "authored-unrun-current-migration-not-exact-working-tree-restoration",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/🦀️.rs",
+      "sha256": "0b25f4fdd80aa0d2777282b6c86428319a0064cd1083a69ce604e35c1d2fae84",
+      "bytes": 7174
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️law-bank/🦀️.rs",
+      "sha256": "34596a302b0ea24ef14c227283005b99bbc1c2aa3839b1a69f933339bc0ff183",
+      "bytes": 4005
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "a76291a48b3be8c675594ae75fe19be33db23fd67bead6a7959f74bd3d998587",
+      "bytes": 13572
+    }
+  ],
+  "baseline": {
+    "HEAD": {
+      "bytes": 3816,
+      "sha256": "00acb6a2bd4b036b893eca4ebba584be96f31bd419805f3e87e46ddaa491e9c1",
+      "gitBlob": "be07cb4382875b8392c5e898a29fc37d0f54defe"
+    },
+    "priorWorking": {
+      "bytes": 3890,
+      "sha256": "bcdc7bf3ff23502f5df51bcaf292d3ae43ce29bbd145f05dbed3d85e54a1b707",
+      "deltaRecovered": false
+    }
+  }
+}

@@ -1,7 +1,7 @@
 {
   "schema": "repository-cache-budget/v1",
-  "expectedPartitionBytes": 134821707776,
-  "expectedHeadroomBytes": 461373440,
+  "expectedPartitionBytes": 186362363904,
+  "expectedHeadroomBytes": 19787677696,
   "cases": [
     {
       "id": "authored",
@@ -63,7 +63,7 @@
     },
     {
       "id": "authored-read-ceiling",
-      "maximumLogicalBytes": 68719476736,
+      "maximumLogicalBytes": 103080263680,
       "missing": false,
       "accepted": true
     },
@@ -81,13 +81,13 @@
     },
     {
       "id": "above-ceiling",
-      "maximumLogicalBytes": 68719476737,
+      "maximumLogicalBytes": 103080263681,
       "missing": false,
       "accepted": false
     },
     {
       "id": "string",
-      "maximumLogicalBytes": "68719476736",
+      "maximumLogicalBytes": "103080263680",
       "missing": false,
       "accepted": false
     },
@@ -196,13 +196,13 @@
       "id": "host-ample",
       "minimumBytes": 51539607552,
       "hostFreeBytes": 139586437120,
-      "capacityBytes": 64424509440
+      "capacityBytes": 69793218560
     },
     {
       "id": "this host: 123 GiB free",
       "minimumBytes": 51539607552,
       "hostFreeBytes": 132070244352,
-      "capacityBytes": 64424509440
+      "capacityBytes": 65498251264
     },
     {
       "id": "host-free-binds",
@@ -226,7 +226,7 @@
       "id": "host-huge",
       "minimumBytes": 51539607552,
       "hostFreeBytes": 2147483648000,
-      "capacityBytes": 64424509440
+      "capacityBytes": 103079215104
     }
   ],
   "imageBackends": [

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "kinds",
+    "work",
+    "copyBytes",
+    "items"
+  ],
+  "properties": {
+    "kinds": {
+      "const": [
+        "yield",
+        "cancelled",
+        "payload"
+      ]
+    },
+    "work": {
+      "const": [
+        0,
+        1,
+        0
+      ]
+    },
+    "copyBytes": {
+      "const": 0
+    },
+    "items": {
+      "const": [
+        0,
+        1,
+        0
+      ]
+    }
+  }
+}

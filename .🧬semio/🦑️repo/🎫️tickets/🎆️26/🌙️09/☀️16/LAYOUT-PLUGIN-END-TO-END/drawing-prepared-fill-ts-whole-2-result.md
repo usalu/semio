@@ -1,0 +1,5 @@
+# Whole PreparedFill second actual gate
+
+Owning session 78769 exited 1: fourteen pass, one fail, 724,072 assertions. The genuine zero-work child completion fix passed. The original repeated4096-stop case then exceeded a new test helper's unrelated small-fixture 100,000-turn guard during genuinely funded stable merge preparation. Existing same-bank CPU stock remains 1,048,576 and is not exhausted. The successor will bound preparation by the SAME initial remaining bank CPU; it grants no new fuel, bytes, items or depth and does not change production limits, original fixture rows or per-turn quanta. Closed small fixtures retain their original100,000 guard.
+
+Strict session 92202 exited 2 with only the owning indexed tuple guard: TypeScript did not narrow after a call to an inferred never-returning arrow. Returning that exact existing refusal makes the already checked branch explicit, with unchanged error/value semantics. All thirty-two inputs match both postchecks/current. Wide SVG strict20 is separately retained and remains mandatory pending real caller migration. Exact logs/hashes are in generated/drawing-prepared-fill-ts-whole-2/receipt.json.

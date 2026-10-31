@@ -1,0 +1,50 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-energy-model-editor-inspector"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy model editor inspector property setters and shared edit helpers"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+
+[dependencies]
+semio-framework-plugin = { workspace = true }
+semio-s-artifact-energy-model-mut-boundary = { workspace = true }
+semio-s-artifact-energy-model-mut-construction = { workspace = true }
+semio-s-artifact-energy-model-mut-fenestration = { workspace = true }
+semio-s-artifact-energy-model-mut-fenestration-geometry = { workspace = true }
+semio-s-artifact-energy-model-mut-finish = { workspace = true }
+semio-s-artifact-energy-model-mut-glazing = { workspace = true }
+semio-s-artifact-energy-model-mut-material = { workspace = true }
+semio-s-artifact-energy-model-mut-ideal-loads = { workspace = true }
+semio-s-artifact-energy-model-mut-ideal-loads-limits = { workspace = true }
+semio-s-artifact-energy-model-mut-space = { workspace = true }
+semio-s-artifact-energy-model-mut-people-gain = { workspace = true }
+semio-s-artifact-energy-model-mut-people-gain-fractions = { workspace = true }
+semio-s-artifact-energy-model-mut-lighting-gain = { workspace = true }
+semio-s-artifact-energy-model-mut-lighting-gain-emission = { workspace = true }
+semio-s-artifact-energy-model-mut-equipment-gain = { workspace = true }
+semio-s-artifact-energy-model-mut-infiltration = { workspace = true }
+semio-s-artifact-energy-model-mut-leakage = { workspace = true }
+semio-s-plugin-energy-engine-air-exchange = { workspace = true }
+semio-s-artifact-energy-model-mut-shading = { workspace = true }
+semio-s-artifact-energy-model-mut-shading-device = { workspace = true }
+semio-s-artifact-energy-model-mut-surface = { workspace = true }
+semio-s-artifact-energy-model-mut-surface-properties = { workspace = true }
+semio-s-artifact-energy-model-mut-window-layer = { workspace = true }
+semio-s-artifact-energy-model-mut-window-layer-optics = { workspace = true }
+semio-s-artifact-energy-model-mut-window-layer-optics-visible = { workspace = true }
+semio-s-artifact-energy-model-mut-zone = { workspace = true }
+semio-s-artifact-energy-model-mutations = { workspace = true }
+semio-s-artifact-energy-model-snapshot = { workspace = true }
+semio-s-plugin-energy-engine-model = { workspace = true }
+semio-s-plugin-energy-engine-schedule = { workspace = true }

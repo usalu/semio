@@ -7,13 +7,13 @@ use std::mem::ManuallyDrop;
 trait EditOwner:Send+'static {
  fn demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>;
  fn begin(&mut self);
- fn close(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>;
+ fn close(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome;
  fn empty(&self)->bool;
 }
 struct EditRetirement<C:EditOwner>{cursor:ManuallyDrop<C>}
 impl<C:EditOwner> RetirementCursor for EditRetirement<C> {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.cursor.demand(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.cursor.close(grant){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress),Err(error)=>RetirementStep::Failure(error)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let turn=self.cursor.close(grant);match turn.result{Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
  fn terminal_is_empty(&self)->bool{self.cursor.empty()}
  fn next_depth_demand(&self)->Result<usize,crate::ValueError>{Ok(self.cursor.demand(0)?.depth)}
  fn next_work_byte_demand(&self)->Result<usize,crate::ValueError>{Ok(self.cursor.demand(0)?.copy_bytes)}
@@ -28,7 +28,7 @@ macro_rules! edit_owner {
   impl<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync> EditOwner for $cursor<K,V>{
    fn demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.close_demands(body)}
    fn begin(&mut self){self.begin_close();}
-   fn close(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{self.close_step(grant)}
+   fn close(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{self.close_step(grant)}
    fn empty(&self)->bool{self.terminal_is_empty()}
   }
   impl<K:BoundedOrd+RetireOwned,V:RetireOwned+Sync> RetireOwned for $cursor<K,V>{
@@ -44,7 +44,7 @@ edit_owner!(RetainedOrderedMapRemoveCursor);
 impl<K:RetainedClone,V:RetainedClone> EditOwner for RetainedOrderedMapCloneCursor<K,V>{
  fn demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.close_demands(body)}
  fn begin(&mut self){self.begin_close();}
- fn close(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError>{self.close_step(grant)}
+ fn close(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{self.close_step(grant)}
  fn empty(&self)->bool{self.terminal_is_empty()}
 }
 impl<K:RetainedClone,V:RetainedClone> RetireOwned for RetainedOrderedMapCloneCursor<K,V>{

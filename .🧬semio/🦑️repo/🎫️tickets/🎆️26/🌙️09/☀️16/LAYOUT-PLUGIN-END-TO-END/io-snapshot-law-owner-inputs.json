@@ -1,0 +1,39 @@
+{
+  "state": "read-only-not-execution-or-admission",
+  "owner": "semio-s-artifact-layout-layout-model",
+  "additionalOwnersRequired": 0,
+  "sources": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+      "sha256": "cc50518cdbc712950012ab125fc95ffc0170eb41d21611d231c96cb4f43be266"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "7a818ba4dd36155b3d6911793650ca635d898c9f2a72b1c04febf0fdc621d2f1"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🦀️.rs",
+      "sha256": "e11d4d119a847e90fdad1f97413ced64265d99f5181756ec9c513c177225d0d1"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "sha256": "fa4cb0e2e48fd01ba7816024b418d3c9dc4667d79f9fa9ee6624c01b6a44c9c9"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "fe6ef87975d803d8bca708442601a0f17f93fee97efcbbfa066fc7f36bd26fd4"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "4ce24a4dd97c1ed8ae937311de4a80aa90a5bac441033582bea5ce6a77c70739"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/🦀️.rs",
+      "sha256": "413ad8181865e861238b64173d332cb5358d9624af5349f17805749dddf49b6f"
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🦀️.rs",
+      "sha256": "413ad8181865e861238b64173d332cb5358d9624af5349f17805749dddf49b6f"
+    }
+  ]
+}

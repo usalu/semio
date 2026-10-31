@@ -1,0 +1,31 @@
+{
+  "$schema": "./🔣️.json",
+  "version": 1,
+  "stock": {
+    "fuel": 4,
+    "capacityBytes": 128
+  },
+  "cases": [
+    "absent-refusal",
+    "zero-loan-denial",
+    "actual-body",
+    "nested-same-loan",
+    "actual-probe-failure",
+    "paid-body-release",
+    "cached-zero"
+  ],
+  "body": [
+    3,
+    7
+  ],
+  "probe": [
+    255
+  ],
+  "expected": {
+    "work": 4,
+    "copiedBytes": 0,
+    "callbackDebits": 0,
+    "workAfterDenial": 0,
+    "nestedRecipientSubstitution": false
+  }
+}

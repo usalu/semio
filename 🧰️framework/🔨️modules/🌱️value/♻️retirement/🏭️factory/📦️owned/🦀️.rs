@@ -12,24 +12,24 @@ pub struct FactoryOwnedRetirement<T:Send+'static> {
 impl<T:Send+'static> FactoryOwnedRetirement<T> {
     pub const fn constructor_capacity_bytes()->usize {size_of::<Self>()}
     /// 🎟️ Grants the complete frame before taking its original or cloning its installed issuer.
-    pub fn admit_original(original:&mut Option<T>,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>,grant:RetainedCloneGrant)->Result<Option<(Box<Self>,RetainedCloneProgress)>,ValueError> {
+    pub fn admit_original(original:&mut Option<T>,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<(Box<Self>,RetainedCloneProgress)>,ValueError> {let mut work=0;let result=(||{
         if original.is_none(){return Ok(None);}
         let refusal=if grant.maximum_items==0{Some((ValueRefusalKind::WorkLimit,"owned factory frame requires one admitted item"))}else if grant.maximum_depth==0{Some((ValueRefusalKind::DepthLimit,"owned factory frame requires admitted depth"))}else if grant.maximum_capacity_bytes<Self::constructor_capacity_bytes(){Some((ValueRefusalKind::OwnershipLimit,"owned factory frame exceeds admitted capacity"))}else{None};
         if let Some((kind,message))=refusal{return Err(ValueError::literal(kind,message));}
         let layout=std::alloc::Layout::new::<Self>();
-        let Some(pointer)=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<Self>())else{return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"owned factory frame allocation failed"));};
+        work=1;let Some(pointer)=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<Self>())else{return Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"owned factory frame allocation failed"));};
         let owner=unsafe{pointer.as_ptr().write(Self{original:ManuallyDrop::new(original.take()),unique:ManuallyDrop::new(None),factory:ManuallyDrop::new(Some(Arc::clone(factory))),closing_factory:ManuallyDrop::new(None)});Box::from_raw(pointer.as_ptr())};
         Ok(Some((owner,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()})))
-    }
+    })();crate::RetainedWorkOutcome{result,work}}
     pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {
         if let Some(original)=self.original.as_ref(){return Ok(RetirementDemand{capacity_bytes:self.factory.as_ref().expect("original value retains installed issuer").retirement_birth_bytes(original),depth:2,..Default::default()});}
-        let mut demand=if let Some(unique)=self.unique.as_ref(){crate::factory_ticket_demands(unique,copy)?}else if self.factory.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}else if let Some(factory)=self.closing_factory.as_ref(){factory.demands(copy)?}else{return Ok(Default::default());};
+        let mut demand=if let Some(unique)=self.unique.as_ref(){crate::factory_ticket_demands(unique,copy)?}else if self.factory.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}else if let Some(factory)=self.closing_factory.as_ref(){if factory.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()})}else{factory.demands(copy)?}}else{return Ok(Default::default());};
         demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"owned factory nested retirement depth overflow"))?;
         Ok(demand)
     }
 }
 impl<T:Send+'static> ErasedSnapshotRetirement for FactoryOwnedRetirement<T> {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+    fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
@@ -38,20 +38,20 @@ impl<T:Send+'static> ErasedSnapshotRetirement for FactoryOwnedRetirement<T> {
         let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
         if self.original.is_some(){
             let value=self.original.take().unwrap();
-            match self.factory.as_ref().unwrap().retire_owned(value,child){
-                Ok((owner,progress))=>{*self.unique=Some(owner);if !progress.fits(child)||progress.retained_capacity_bytes!=demand.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned factory payload constructor changed its admitted receipt"));}return Ok(RetainedCloneStep::Progress(progress));},
+            let turn=self.factory.as_ref().unwrap().retire_owned(value,child);work=turn.work;match turn.result{
+                Ok((owner,progress))=>{*self.unique=Some(owner);if !progress.fits(child)||progress.retained_capacity_bytes!=demand.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned factory payload constructor changed its admitted receipt").with_retained_progress(progress));}return Ok(RetainedCloneStep::Progress(progress));},
                 Err((error,value))=>{*self.original=Some(value);return Err(error);},
             }
         }
-        if self.unique.is_some(){return crate::close_factory_ticket(&mut self.unique,child).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if self.unique.is_some(){let turn=crate::close_factory_ticket(&mut self.unique,child);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()));}
         if self.factory.is_some(){
-            let factory:Arc<dyn FactoryRetirement>=self.factory.take().unwrap();*self.closing_factory=Some(FactoryAuthority::new(factory));
+            let factory:Arc<dyn FactoryRetirement>=self.factory.take().unwrap();*self.closing_factory=Some(FactoryAuthority::new(factory));work=1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));
         }
-        let factory=self.closing_factory.as_mut().unwrap();let step=factory.step(child)?;let step=admit_retained_clone_close(child,step,factory.terminal_is_empty(),"original owned mutation factory capability")?;
-        if factory.terminal_is_empty(){drop(self.closing_factory.take());}
+        if self.closing_factory.as_ref().unwrap().terminal_is_empty(){self.closing_factory.take();work=1;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty}))}let factory=self.closing_factory.as_mut().unwrap();let turn=factory.step(child);work=turn.work;let step=turn.result?;let step=admit_retained_clone_close(child,step,factory.terminal_is_empty(),"original owned mutation factory capability")?;
+        
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
-    }
+    })();crate::RetainedWorkOutcome{result,work}}
     fn terminal_is_empty(&self)->bool {self.original.is_none()&&self.unique.is_none()&&self.factory.is_none()&&self.closing_factory.is_none()}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.copy_bytes)}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {Ok(self.demands(copy)?.capacity_bytes)}
@@ -86,7 +86,7 @@ impl<T:Send+'static> FactoryOwnedSourceAuthority<T> {
 struct OwnedSourceRetirement<T:Send+'static>(FactoryOwnedRetirement<T>);
 impl<T:Send+'static> crate::retirement::RetirementCursor for OwnedSourceRetirement<T> {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.0.demands(body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->crate::retirement::RetirementStep { match ErasedSnapshotRetirement::close_step(&mut self.0,grant) { Err(error)=>crate::retirement::RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>crate::retirement::RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>crate::retirement::RetirementStep::Progress(progress) } }
+    fn close_step(&mut self,grant:RetainedCloneGrant)->crate::retirement::RetirementStep { let turn=ErasedSnapshotRetirement::close_step(&mut self.0,grant);match turn.result { Err(error)=>crate::retirement::RetirementStep::Failure(error,turn.work),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>crate::retirement::RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>crate::retirement::RetirementStep::Progress(progress,turn.work) } }
     fn terminal_is_empty(&self)->bool { self.0.terminal_is_empty() }
     fn next_work_byte_demand(&self)->Result<usize,ValueError> { self.0.next_copy_byte_demand() }
     fn allows_admitted_narrow_work(&self)->bool { true }

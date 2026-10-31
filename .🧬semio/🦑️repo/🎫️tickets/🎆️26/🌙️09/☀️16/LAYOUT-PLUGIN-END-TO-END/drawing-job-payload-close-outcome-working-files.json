@@ -1,0 +1,91 @@
+{
+  "status": "Authored, uncompiled and unexecuted; not SourceReady",
+  "canonicalOutcome": "RetainedWorkOutcome; no alias or Result facade",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🎟️work/⚠️posting/📐️.json",
+      "bytes": 322,
+      "sha256": "fc9773f3468b907c4deb1572bdb41c926303f9bde0f63006e519081677bd01f5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🎟️work/⚠️posting/🔣️.json",
+      "bytes": 804,
+      "sha256": "79b53f1f43f6cf1ef5863eb1f6430a9ee05937605d990c4a7430213125539a09"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🎟️work/⚠️posting/🧪️tests/🦀️.rs",
+      "bytes": 2835,
+      "sha256": "f76958e9d27d5b25c1127f5aed8728e642dc74153cfd6e4bb47e1e79e5697b27"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🎟️work/📐️.json",
+      "bytes": 158,
+      "sha256": "aeb8782763bfbe6f75343ea3943839ca56d1e4d452236dda6c131a7f5721a093"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🎟️work/🔣️.json",
+      "bytes": 517,
+      "sha256": "2c626ab5715a9831211b45650997834bd935b39e8ee0c80379d247e57e57b45d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 1593,
+      "sha256": "8f1ab6ce7df344421a77a47374888037f9125b62de0440e47404732a5f63a7ff"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🦀️.rs",
+      "bytes": 8870,
+      "sha256": "c2a8c39224fe0535239141ef3d2507a65d4a6cb0d82956a89e03b36bd3a95536"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧪️tests/📦️physical/🦀️.rs",
+      "bytes": 4043,
+      "sha256": "aa21430bf2bd20e269d602b35dd599661b9a90739138eb12d782778086a75eeb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧱️payload-owner/🦀️.rs",
+      "bytes": 6969,
+      "sha256": "70f6c1d519ec3349ab16ca628c650293a0f7eaf25e7fc46079b8092ed0cfa9e7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/♻️close/📐️.json",
+      "bytes": 454,
+      "sha256": "e0e499cc9e1d5974027adf97d84ca9190b9f17b128f4ea683fb307d6c46d488f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/♻️close/🔣️.json",
+      "bytes": 1139,
+      "sha256": "e37ab8d512f1b8be394c0a5eaa531e1712c05d75edea86a0a752fe19d5662171"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/♻️close/🧪️tests/🦀️.rs",
+      "bytes": 3065,
+      "sha256": "5fb5817e9bb540ec3435a48f21ee53330e78ec8b667e8ad27480d2d8bf91d180"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/⛽️staged/🦀️.rs",
+      "bytes": 8016,
+      "sha256": "dadc3f8deda74c2bf3fa57038f11a0695c5d4518ac15680709f76ad6fbdbcee3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📏️limit/🧪️tests/🦀️.rs",
+      "bytes": 4164,
+      "sha256": "df8726e7fb8344d43553e3dec50be5ff70cd43d963c11fd7f18aa2d64293f36a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🦀️.rs",
+      "bytes": 14654,
+      "sha256": "6af4e247826687a43d7f1c12266f7b191b5bc7b54e4f504683a22ba3401cfdb9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🌍️public/🦀️.rs",
+      "bytes": 12762,
+      "sha256": "6c1341f75b08500e8da162c1d855675ae4d733a9c963ef64100702c99e0cb3e9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️testing/📬️payload/🦀️.rs",
+      "bytes": 4521,
+      "sha256": "f9cad29e25148fb31f067e60b079d3fc124b82c68dd09b504e9639711fd56362"
+    }
+  ]
+}

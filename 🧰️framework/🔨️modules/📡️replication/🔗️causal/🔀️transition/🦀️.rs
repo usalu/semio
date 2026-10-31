@@ -604,10 +604,6 @@ pub fn fold_history_for(document_id: &ArtifactId, edits: &[FoldEdit], transition
 
 //#endregion 🔖️Fold
 
-#[cfg(test)]
-#[global_allocator]
-static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
-
 mod owned_retirement {
     use super::*;
     use semio_framework_value::retirement::{RetireOwned, RetirementCursor, sequence, deferred, deferred_birth_bytes_for, sequence_birth_bytes};

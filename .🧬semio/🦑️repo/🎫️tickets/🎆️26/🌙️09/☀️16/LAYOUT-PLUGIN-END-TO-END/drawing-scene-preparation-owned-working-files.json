@@ -1,0 +1,46 @@
+{
+  "state": "bounded-defining-preparation-source-authored-ready-for-review-unexecuted-not-full-caller-SourceReady",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts",
+      "beforeSha256": "1c7421cfac62144534ca1a888ed7ae7713d4ddd97e6b3ee9265a6c219a1292ef",
+      "sha256": "07cf9b7bb9973a65917f2e841ee9372256b84c31662e2092c8ae367df9cea371",
+      "bytes": 36432,
+      "scope": "Shared private same-body Scene node append definer extracted once for canonical copying and upcoming genuine authored builder; actual resource/path/group/content publication remains in private PlanStorage. No raw adopt API or numeric bridge."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+      "beforeSha256": "ac29ef71b6e2c92f94e28652de7e3261138a6b3d1bbda09581c11cb99d6d9672",
+      "sha256": "e7332a6fdeb4cbfddb47e58f435ef6a6dd681c19367de04ccf826725cd364173",
+      "bytes": 23402,
+      "scope": "Partial Source-only fixed borrowed authored node/content/path/paint/reference projections; no owned draft allocations. Actual old DocumentSceneJob still pending replacement and not SourceReady."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🟦️.ts",
+      "status": "created",
+      "sha256": "3f069f9f40d2421ae24eaec6a015338e0aa9ce002b27db37f3010c6f5e8e11a3",
+      "bytes": 34667,
+      "scope": "Genuine authored Scene traversal/builder source; original scalar/shape formulas relocated from old numeric implementation, which is removed. Real finite Runtime, actual frame/key/index/graph/state rows, original sorted asset order, direct owned RGBA, same-body output/close. Unexecuted."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🧪️tests/📐️.json",
+      "bytes": 2009,
+      "sha256": "42059d34605ed44d0dbeab8293707c7514c3d13ef8b032390cb0708f0120ac5f",
+      "scope": "New six schema-first genuine preparation owning laws/closed original17 contract; unexecuted, existing baseline retained."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🧪️tests/🔣️.json",
+      "bytes": 2958,
+      "sha256": "685f96b69aa763a14b85244ffaae779efff99182dfa9cbf90ebc2838661eb9d2",
+      "scope": "New six schema-first genuine preparation owning laws/closed original17 contract; unexecuted, existing baseline retained."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🧪️tests/owned.test.ts",
+      "bytes": 7805,
+      "sha256": "2137d6737a468406a8d93fe37b8b2bf67771cdd2848ec4fb3e5c413115f1c198",
+      "scope": "New six schema-first genuine preparation owning laws/closed original17 contract; unexecuted, existing baseline retained."
+    }
+  ],
+  "testFirst": "drawing-scene-preparation-owned-test-first.json",
+  "remaining": "All higher Vector/Trace/Boolean/Raster/export original16 callers are still open. Canonical DocScene owned24 (existingScene18+new6) +strict9 review/check is next; original fourteen full glyph-scene raster/export/pick remains unproved. No whole Layout/native/browser claim."
+}

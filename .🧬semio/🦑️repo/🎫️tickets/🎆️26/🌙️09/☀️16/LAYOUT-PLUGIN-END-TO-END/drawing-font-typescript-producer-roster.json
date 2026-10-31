@@ -1,0 +1,199 @@
+{
+  "state": "bounded-source-map-not-runtime",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "classes": [
+        "FontCatalogAdmissionJob"
+      ],
+      "children": [
+        "child"
+      ],
+      "sha256": "ae8540b6d56a1f88edf0ad2c8b66d31c8cb66cb91164c353b9c8d756c0738cd9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+      "classes": [
+        "FontFaceAdmissionJob"
+      ],
+      "children": [],
+      "sha256": "21269b699644285aced6b12487f3d62848fe81fbe8801a8c272c8979484d5bbc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts",
+      "classes": [
+        "FontKerningJob",
+        "exceeds"
+      ],
+      "children": [],
+      "sha256": "60cd8d26613a4f16ee3e9a3e4f44bb0f85f61f283f388e6ee5ab1c243bbfab5b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🟦️.ts",
+      "classes": [
+        "GlyphOutlineJob"
+      ],
+      "children": [],
+      "sha256": "2bd9c8159deab9406f6ed953a36aee357b9662c15b0f2c0d3bf5064b320bffbc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🟦️.ts",
+      "classes": [
+        "FontParagraphJob"
+      ],
+      "children": [
+        "lineJob",
+        "run"
+      ],
+      "sha256": "2c9de215b57d0397026f8b9b4320ec75aa61a210e829c64879204537af04579b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "classes": [
+        "FontOutlineRunJob"
+      ],
+      "children": [
+        "bidiJob",
+        "faceJob",
+        "grapheme",
+        "kerning",
+        "layoutJob",
+        "markJob",
+        "markPlan",
+        "normalizer",
+        "outline"
+      ],
+      "sha256": "148df1e2c4354187dcbcc9c633f7b9148641757679230dfbf830473c7a6aaa41"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🟦️.ts",
+      "classes": [
+        "UnicodeBidiJob"
+      ],
+      "children": [],
+      "sha256": "466371856aae18b688c682a876215ad1aadfa93cd0cbaea799a433e806b7ad76"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+      "classes": [
+        "LineBreakDataAdmissionJob",
+        "UnicodeLineBreakJob"
+      ],
+      "children": [],
+      "sha256": "d4cb39ce49c3d5379ab31f9cc9d8ea39b0915ea9b1011ae87702f232f0896af3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "classes": [
+        "UnicodeDataAdmissionJob"
+      ],
+      "children": [],
+      "sha256": "a53c5edffd4d6168783590c92904062be3e6eac806171aa9ead73697326212dd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "classes": [
+        "UnicodeGraphemeJob"
+      ],
+      "children": [],
+      "sha256": "61351fb3e8999a6011eaf24ca859cf2f65ab9438f1fa1c911d6de66eb704b467"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "classes": [
+        "UnicodeNormalizationJob"
+      ],
+      "children": [],
+      "sha256": "5a11c550bd964b1e5c9e0d83df4f662530e4995e31d2fce213268bb4187ed4dd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "classes": [
+        "FontClusterFaceJob"
+      ],
+      "children": [
+        "scalarJob"
+      ],
+      "sha256": "0175fca90a15e78b8dd85a65c6a289ec7fdc3b561a68b39dec681837d9ad26e3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+      "classes": [
+        "FontCanonicalScalarJob"
+      ],
+      "children": [],
+      "sha256": "5f635778066766ce04a09f3766c15595ab6aba83b843e99b7ad28e155f1a8ae2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts",
+      "classes": [
+        "FontMarkJob"
+      ],
+      "children": [],
+      "sha256": "4ed959cc116e10d229a62bb56dc3bc583b217ac53ea5b3c76a1e9002de77f17a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts",
+      "classes": [
+        "FontLigatureJob"
+      ],
+      "children": [],
+      "sha256": "9a1e73f577d8e50687c09952c8c30a443c5261bc9d45ab3e4a7e5fad24301bd2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts",
+      "classes": [
+        "FontLookupPlanJob"
+      ],
+      "children": [],
+      "sha256": "1a1ede6c43a417516ec1c2b5325d8463234115aee7ac6fabf10e0df80693c38d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts",
+      "classes": [
+        "FontContextJob"
+      ],
+      "children": [],
+      "sha256": "3f18e163643c5a2165dcff0a415f5b5ea9dfa4c9adcac63e8e92c2ad7d8d74e8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🟦️.ts",
+      "classes": [],
+      "children": [],
+      "sha256": "c3c77f9e5f54c4d796ce98c20ee3f4fd3b4c56f736e4afe95625ab611814dab6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "classes": [
+        "FontLookupApplyJob",
+        "FontContextLayoutJob"
+      ],
+      "children": [
+        "child",
+        "matcher"
+      ],
+      "sha256": "27d2b8920459e6e38ac534e318e90197b2550b86e51ece422cd68e6ae5fb9ba5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "classes": [
+        "FontClusterLayoutJob"
+      ],
+      "children": [
+        "contextual",
+        "matcher",
+        "plan"
+      ],
+      "sha256": "904fe30b6655b4cf593d3973546771740ed0782e1b3b6932e5b7f819d328e39e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts",
+      "classes": [
+        "FontSubstitutionJob"
+      ],
+      "children": [],
+      "sha256": "05be34159291e9437e1e9129cf43ff4f4134962e16690134e46e552b54dae248"
+    }
+  ],
+  "notes": "dependency_layout owns advance/step producer outcome methods and class counter fields. drawing_cursor owns imports/retirement/close sections; source fresh/CAS edits preserve peers. Canonical numeric/core15 frozen for Root scoped gate."
+}

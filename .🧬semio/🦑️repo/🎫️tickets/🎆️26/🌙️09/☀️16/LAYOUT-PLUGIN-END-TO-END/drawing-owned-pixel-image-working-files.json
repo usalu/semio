@@ -1,0 +1,22 @@
+{
+  "state": "schema-owning-laws-before-body-authored-unexecuted",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/📦️owned/📐️.json",
+      "sha256": "a4d42982313054a693a17505e8918b8a1d9041b416b3145b7f0dda57034004d0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/📦️owned/🔣️.json",
+      "sha256": "cd71b59c3e921eb4ddfa7f3b569869d93752a8bdbfcdff9a148de9efda86192c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/📦️owned/owned.test.ts",
+      "sha256": "b78971e7e81959546eaeab0e20249f1445bfd90fe320f8f24dba2dc0dc5ec473"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/📦️owned/🟦️.ts",
+      "sha256": "7251a76df1056cda5388bc592d0e8a9ebd7f625fde64d43a7588a18b52a8a5db"
+    }
+  ],
+  "scope": "Actual private RetainedWorkBytes, exact copy4 scalar tuple mutation and explicit genuine borrowed PixelImage. No raw adoption/default authority, no Core edit. All actual backing same-bank conserved, independent PNG roundtrip test-only."
+}

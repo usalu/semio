@@ -46,7 +46,7 @@ chk_retry(){
   b=$1; tag=$2
   for attempt in 1 2 3 4 5 6; do
     chk "$b" "$tag"
-    if /usr/bin/grep -q "No space left on device\|ENOSPC\|Original resource loan deadline exhausted" "$G/extfix-$b-$tag.txt"; then
+    if /usr/bin/grep -q "No space left on device\|ENOSPC\|Original resource loan deadline exhausted\|ProgressDeadlineExpired" "$G/extfix-$b-$tag.txt"; then
       echo "[retry] $b attempt $attempt hit infrastructure ENOSPC/deadline" >> "$G/extfix-retry-$tag.log"
       sleep 240
     else

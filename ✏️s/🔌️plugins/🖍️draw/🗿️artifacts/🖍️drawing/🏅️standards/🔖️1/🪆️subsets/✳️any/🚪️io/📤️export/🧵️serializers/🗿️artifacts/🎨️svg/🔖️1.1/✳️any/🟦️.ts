@@ -1,24 +1,12 @@
 import {drawingImageDataUri} from "../../../../../../🖼️image/🟦️.ts";
 import type {DrawingImageAsset} from "../../../../../../../🧬️schema/🟦️.ts";
 /** 🎨️ SVG scene serializer twin preserving paint, text and affine geometry. */
-import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT, type PathSegment, type FillStyle, type StrokeStyle } from "@semio-tech/framework/2d";
+import { pathSegmentsToSvgD, drawingTextLines, DRAWING_TEXT_LINE_HEIGHT } from "@semio-tech/framework/2d";
 
-import {PreparedFill} from "../../../../../../../🧬️schema/🎨️fill/🎨️sampling/🟦️.ts";
+import {constantFillColor} from "../../../../../../../🧬️schema/🎨️fill/🎨️sampling/🟦️.ts";
 
-export interface DrawingSvgNode {
-  readonly id: string;
-  readonly groups?: readonly {readonly id:string;readonly opacity:number;readonly blendMode:string}[];
-  readonly transform: readonly number[];
-  readonly segments: readonly PathSegment[];
-  readonly fill?: FillStyle;
-  readonly stroke?: StrokeStyle;
-  readonly opacity: number;
-  readonly blendMode: string;
-  readonly visible: boolean;
-  readonly fillRule?: string;
-  readonly text?: { readonly content: string; readonly size: number };
-  readonly image?: { readonly assetId: string; readonly width: number; readonly height: number };
-}
+import type {DrawingSvgNode} from "./🧬️schema/🟦️.ts";
+export type {DrawingSvgNode} from "./🧬️schema/🟦️.ts";
 
 const escape = (value: string | number): string => String(value).replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 const element = (name: string, attrs: Record<string, string | number>, content = ""): string => `<${name}${Object.entries(attrs).map(([key,value]) => ` ${key}="${escape(value)}"`).join("")}>${content}</${name}>`;
@@ -49,7 +37,7 @@ export function drawingSceneToSvg(nodes: readonly DrawingSvgNode[], viewBox: rea
     }
     active=groups;
     const paint: Record<string,string | number> = {fill:"none",stroke:"none","fill-rule":node.fillRule ?? "evenodd"};
-    const constant=node.fill ? new PreparedFill(node.fill).constantColor() : null;
+    const constant=node.fill ? constantFillColor(node.fill) : null;
     if (constant) { paint.fill=rgb(constant);paint["fill-opacity"]=constant[3]; }
     else if (node.fill&&node.fill.kind!=="solid") {
       const fill = node.fill, id = `draw-gradient-${index}`;

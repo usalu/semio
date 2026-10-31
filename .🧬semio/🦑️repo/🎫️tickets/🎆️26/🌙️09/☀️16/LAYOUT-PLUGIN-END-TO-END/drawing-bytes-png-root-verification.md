@@ -1,0 +1,5 @@
+# Byte and PNG Root Actual Verification
+
+Root independently read both actual terminal receipts and actual logs, checked the ten actual registered success lines and normal strict terminal, and rehashed all16 current inputs against immutable command235f480ac04eae803fdef891afd4f811d4547e3de02dfe24ccf4a1d52ee3b4f6. Actual test86887 EXIT0:10passed,0failed,1912 assertions,246ms. Actual strict36068 EXIT0, no diagnostics. Test log3387bytes SHAad8294655ecfefeb64c09e2b022b3c77b5e49ffcbd06aebc3bcf798d041c4a87. Strict log1096bytes SHAa68218ae94af85071674d818504f0da5eb834e2d75f32c20f1331ed710b9064d. All16 current hashes match both unchanged captured gates.
+
+Exact scoped freeze is released after this review. The result covers actual Byte/PNG owning laws and strict4 with the recorded current shared core/turn dependencies. The previous numeric proof is historical for the changed shared core/Byte closure and requires appropriate refresh after that closure settles. Broader Font/Drawing producer callers, native lower gates, full Layout19, tools setup/publication and complete browser journey remain required.

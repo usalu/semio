@@ -1,0 +1,13 @@
+{
+  "outerExitCode": 0,
+  "nativeExitCode": 0,
+  "tests": 23,
+  "passed": 23,
+  "failed": 0,
+  "filtered": 0,
+  "seconds": 14.65,
+  "changedInputs": [],
+  "logBytes": 264673,
+  "logSha256": "8d12097d8f9b2502f72532bb887b8a1372d9ff06f107c563b84aaff6e35c64b2",
+  "commandSha256": "cbf988fe506848e3f0a1b71a100a95407196c9c1d53d4d30a6be9b3505ecf3d9"
+}

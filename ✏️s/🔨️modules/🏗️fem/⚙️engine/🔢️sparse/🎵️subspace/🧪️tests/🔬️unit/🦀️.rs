@@ -1,5 +1,6 @@
 use semio_s_fem_sparse::{Coo, Csr, NUMERICAL_OWNER_PAGE_BYTES, NumericalCheckpointFault, NumericalOwnerRestoreCursor, NumericalPageCursor, SPARSE_INDEX_SPACE, SPARSE_PAGE_BYTES, SparseColumns, advance_matrix_owner, advance_numerical_page_header, close_vec_owner_step, numerical_page_header, parse_numerical_page, read_checkpoint_u64};
 use super::*;
+use semio_s_fem_payload_turns::{numerical_begin_page, numerical_commit_page, numerical_post};
 use semio_framework_job::StepBudget;
 use semio_s_fem_sparse_ldlt::LdltRestoreCursor;
 use semio_s_fem_sparse_ldlt::ldlt_factor;
@@ -32,10 +33,10 @@ fn numerical_page_subspace_work_persists_solver_state_without_physical_retiremen
             retiring.close_lane = lane.as_u64().unwrap() as u8;
             job.state.retiring_work = Some(retiring);
             let mut writer = original_writer(&mut original);
-            assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| writer.begin_staged_page_funded(cx).map_err(Into::into)).expect("original staged page birth"));
+            original.until_done(|cx| numerical_begin_page(writer.as_deref_mut().unwrap(), cx));
             let mut cursor = NumericalPageCursor { field, owner: 0, item: 0 };
             for _ in 0..64 {
-                original.turn(TEST_GRANT, 1, u64::MAX, |cx| SubspaceIterationJob::advance_checkpoint_entry(&job.state, &mut cursor, &mut writer, cx).map_err(Into::into)).expect("original checkpoint entry");
+                original.turn(TEST_GRANT, 1, u64::MAX, |cx| SubspaceIterationJob::advance_checkpoint_entry(&job.state, &mut cursor, writer.as_deref_mut().unwrap(), cx).map_err(Into::into)).expect("original checkpoint entry");
                 if cursor.field != field { break; }
             }
             let mut payload = original_finish(&mut original, writer);
@@ -144,11 +145,11 @@ fn numerical_page_restore_fault_is_sticky_before_later_input_or_allocation() {
     for _ in 0..2 {
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        let left = ldlt.step(&mut context).err();
+        let left = ldlt.step_plain(&mut context).err();
         let mut sequence_receipt = RetainedCloneProgress::default();
         drop(context);
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        let right = subspace.step(&mut context).err();
+        let right = subspace.step_plain(&mut context).err();
         observations.push((left, right, ldlt.page_slot, ldlt.page_entry, subspace.page_slot, subspace.page_entry));
     }
     for _ in 0..16 {
@@ -184,18 +185,18 @@ fn numerical_page_matrix_restore_retains_dimensions_and_partial_capacity_across_
         let mut write_fault = None;
         let mut completed = false;
         for _ in 0..length * 3 + 64 {
-            let result = if writer.staged_page_len().is_none() {
-                assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| writer.begin_staged_page_funded(cx).map_err(Into::into)).expect("original staged page birth"));
+            let result = if writer.as_deref().unwrap().staged_page_len().is_none() {
+                original.until_done(|cx| numerical_begin_page(writer.as_deref_mut().unwrap(), cx));
                 Ok(false)
             } else {
-                match original_step(&mut original, |context| advance_numerical_page_header(&mut writer, b"FEMSCP1\0", 12, write_cursor, context)) {
+                match original_step(&mut original, |context| advance_numerical_page_header(writer.as_deref_mut().unwrap(), b"FEMSCP1\0", 12, write_cursor, context)) {
                     Ok(true) => Ok(false),
-                    Ok(false) => original_step(&mut original, |context| advance_matrix_owner(&mut writer, &matrix, &mut write_cursor, context)),
+                    Ok(false) => original_step(&mut original, |context| advance_matrix_owner(writer.as_deref_mut().unwrap(), &matrix, &mut write_cursor, context)),
                     Err(fault) => Err(fault),
                 }
             };
             match result {
-                Ok(true) => { assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| writer.commit_staged_page_funded(cx, 0).map_err(Into::into)).expect("original staged page commit")); completed = true; break; }
+                Ok(true) => { original.until_done(|cx| numerical_commit_page(writer.as_deref_mut().unwrap(), cx)); completed = true; break; }
                 Ok(false) => {}
                 Err(fault) => { write_fault = Some(fault); break; }
             }
@@ -222,7 +223,7 @@ fn numerical_page_matrix_restore_retains_dimensions_and_partial_capacity_across_
             original.close_payload(&mut payload);
         } else {
             original.close_writer(&mut writer);
-            assert!(writer.terminal_is_empty());
+            assert!(writer.is_none());
         }
         original.finish();
         let values = restored.data.clone();
@@ -379,7 +380,7 @@ fn subspace_publication_restarts_at_zero_and_commits_convergence_after_the_last_
         for fuel in fuels.iter().copied() {
             let mut sequence_receipt = RetainedCloneProgress::default();
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            let yielded = matches!(seen_of(job.step(&mut context)), Seen::Yield);
+            let yielded = matches!(seen_of(job.step_plain(&mut context)), Seen::Yield);
             observations.push((yielded && context.fuel_remaining() == 0, job.state.final_theta.iter().copied().collect::<Vec<_>>(), job.state.converged, job.state.work.first, job.state.iteration, job.state.final_theta.backing_ptr(0) == pointer && job.state.final_theta.capacity() == capacity, job.terminal_writer.is_none()));
         }
         let solution = job.solution();
@@ -418,7 +419,7 @@ fn restore_subspace(original: &mut OriginalNumericalFixture, operation: Operatio
 }
 
 fn step_job(original: &mut OriginalNumericalFixture, job: &mut impl InteractiveJob, fuel: u64, deadline: u64) -> Seen {
-    original.turn(TEST_GRANT, fuel, deadline, |cx| Ok(seen_of(job.step(cx)))).expect("same original subspace job step")
+    original.turn(TEST_GRANT, fuel, deadline, |cx| Ok(seen_of(job.step_plain(cx)))).expect("same original subspace job step")
 }
 
 #[track_caller]
@@ -450,16 +451,12 @@ fn original_step<T>(original: &mut OriginalNumericalFixture, step: impl FnOnce(&
     original.turn(TEST_GRANT, 1, u64::MAX, |cx| Ok(step(cx))).expect("original writer turn")
 }
 
-fn original_writer(original: &mut OriginalNumericalFixture) -> RetainedJobPayloadWriter {
-    let mut writer = None;
-    original.turn(TEST_GRANT, 1, u64::MAX, |cx| { writer = RetainedJobPayloadWriter::new_funded(JobPayloadStream::CheckpointState, cx)?; Ok(()) }).expect("original writer birth");
-    writer.expect("original writer admitted")
+fn original_writer(original: &mut OriginalNumericalFixture) -> Option<Box<RetainedPayloadBuilder>> {
+    original.open_writer(JobPayloadStream::CheckpointState)
 }
 
-fn original_finish(original: &mut OriginalNumericalFixture, writer: RetainedJobPayloadWriter) -> RetainedJobPayload {
-    let (mut slot, mut output) = (Some(writer), None);
-    assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| RetainedJobPayloadWriter::finish_funded(&mut slot, &mut output, cx).map_err(Into::into)).expect("original writer handoff"));
-    output.expect("committed pages hand off one payload")
+fn original_finish(original: &mut OriginalNumericalFixture, writer: Option<Box<RetainedPayloadBuilder>>) -> RetainedJobPayload {
+    original.finish_writer(writer)
 }
 
 #[test]

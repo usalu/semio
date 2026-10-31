@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "cases": [
+    "pageReservation",
+    "bytesReservation"
+  ],
+  "currentWork": 0,
+  "heldWitnesses": 2,
+  "witnessWork": 1,
+  "witnessItems": 1,
+  "witnessCopyBytes": 0,
+  "witnessCapacityBytes": 0,
+  "witnessReleaseBytes": 0,
+  "maximumAdmissionTurns": 8,
+  "maximumCloseTurns": 32,
+  "source": {
+    "items": 4096,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 64,
+    "fuel": 16384,
+    "deadlineUs": 1000000
+  }
+}

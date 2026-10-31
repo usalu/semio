@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "stock",
+    "maximumTurns",
+    "quantumItems",
+    "copyBytes",
+    "deniedWork",
+    "cachedWork",
+    "readAliasReturnWork",
+    "closingChildHandoffWork",
+    "completedChildHeaderWork",
+    "emptyFactoryPreparationWork",
+    "forwardChildWorkBeforeResult",
+    "originalRootAndRegistryRetainedOnRefusal",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "framework.value.read-owned-work"
+    },
+    "stock": {
+      "const": {
+        "items": 65536,
+        "copyBytes": 16777216,
+        "capacityBytes": 16777216,
+        "releaseBytes": 16777216,
+        "depth": 128,
+        "fuel": 65536
+      }
+    },
+    "maximumTurns": {
+      "const": 65536
+    },
+    "quantumItems": {
+      "const": [
+        1,
+        2,
+        31
+      ]
+    },
+    "copyBytes": {
+      "const": [
+        1,
+        3,
+        64
+      ]
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "readAliasReturnWork": {
+      "const": 1
+    },
+    "closingChildHandoffWork": {
+      "const": 1
+    },
+    "completedChildHeaderWork": {
+      "const": 1
+    },
+    "emptyFactoryPreparationWork": {
+      "const": 0
+    },
+    "forwardChildWorkBeforeResult": {
+      "const": true
+    },
+    "originalRootAndRegistryRetainedOnRefusal": {
+      "const": true
+    },
+    "cases": {
+      "const": [
+        "typed-read",
+        "erased-read",
+        "authority-view",
+        "source-admission"
+      ]
+    }
+  }
+}

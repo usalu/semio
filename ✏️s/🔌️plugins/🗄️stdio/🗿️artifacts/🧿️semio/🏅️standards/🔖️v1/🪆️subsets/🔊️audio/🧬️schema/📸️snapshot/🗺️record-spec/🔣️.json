@@ -1,0 +1,130 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "stdio.semio.audio",
+ "schemaHash": "9e0d927d14af2903b209752682b4b4239a79a0782189817201eeb706c3c658e0",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "sample-rate",
+    "optional": false,
+    "shape": {
+     "kind": "uint"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "format",
+    "optional": false,
+    "shape": {
+     "kind": "enum",
+     "variants": [
+      [
+       0,
+       "pcm8"
+      ],
+      [
+       1,
+       "pcm16"
+      ],
+      [
+       2,
+       "pcm24"
+      ],
+      [
+       3,
+       "pcm32"
+      ],
+      [
+       4,
+       "float32"
+      ],
+      [
+       5,
+       "float64"
+      ]
+     ]
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "channels",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 1
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "tags",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 2
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "samples",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "float"
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "key",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ]
+ ],
+ "annotations": {
+  "float32": [
+   [
+    1,
+    0
+   ]
+  ]
+ }
+}

@@ -29,7 +29,7 @@ use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
 use semio_s_artifact_procedural_3d_geometry_inputs::resolve_inputs;
-use protocol::{ComputeStep, InferenceWorkFailure, InferenceFault, InferencePending, InferenceStep, InferredField};
+use protocol::{ComputeStep, InferenceWorkFailure, InferenceFault, InferencePending, InferenceStep, InferredField, OriginalInferredField};
 use semio_framework_artifact_flow_flow::{FlowHostSnapshot, SynapseSpec, Widget};
 use semio_framework_artifact_flow_flow::neural::Dictionary;
 use std::any::Any;
@@ -100,7 +100,8 @@ fn plan_of(host: &FlowHostSnapshot) -> Vec<InferenceStep<String>> {
 
 //#region 🔖️Dependency
 /// 🔌️ One wire into a widget, as far as its evaluation reads it.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue)]
+#[value(rename_all = "camelCase")]
 pub struct GeometryWire {
     pub from: String,
     pub from_port: String,
@@ -116,8 +117,35 @@ pub enum GeometryDependencyLiteral {
     Absent,
 }
 
+#[derive(semio_framework_value::ToValue)]
+struct GeometryScalarLiteral<T: semio_framework_value::ToValue> {
+    value: T,
+}
+
+impl semio_framework_value::ToValue for GeometryDependencyLiteral {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        use semio_framework_value::ToValue;
+        match self {
+            Self::Parameters(value) => value.to_value(),
+            Self::Number { value } => GeometryScalarLiteral { value: *value }.to_value(),
+            Self::Text { value } => GeometryScalarLiteral { value: value.as_str() }.to_value(),
+            Self::Absent => semio_framework_value::DslValue::Null,
+        }
+    }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_value::DslValue, semio_framework_value::ValueError> {
+        use semio_framework_value::ToValue;
+        match self {
+            Self::Parameters(value) => value.to_value_controlled(control),
+            Self::Number { value } => GeometryScalarLiteral { value: *value }.to_value_controlled(control),
+            Self::Text { value } => GeometryScalarLiteral { value: value.as_str() }.to_value_controlled(control),
+            Self::Absent => semio_framework_value::DslValue::Null.to_value_controlled(control),
+        }
+    }
+}
+
 /// 🔑️ Everything a widget's evaluation reads besides its parents' values: the widget variant, admitted kind definition, stored literals and incoming wiring.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue)]
+#[value(rename_all = "camelCase")]
 pub struct GeometryDependency {
     pub variant: String,
     pub kind: String,
@@ -226,6 +254,13 @@ pub(crate) fn contract_checked(kind: &Kind, evaluation: WidgetEvaluation) -> Wid
 //#endregion 🔖️Start
 
 //#region 🔖️Field
+const COLD_GRANT: semio_framework_value::RetainedCloneGrant = semio_framework_value::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
+
+/// 🚫️ A turn the funded context refused is a typed inference fault that carries the refusal.
+fn turn_fault(failure: semio_framework_job::OriginalTurnFailure) -> InferenceFault {
+    InferenceFault::new(format!("{FAULT_PREFIX}step-refused"), format!("the funded step context refused this turn: {failure:?}"))
+}
+
 /// ⏳ The widget job parked in the driver's cursor between calls.
 struct GeometryPending {
     job: Box<dyn WidgetJob>,
@@ -243,7 +278,7 @@ impl InferencePending for GeometryPending {
     }
 }
 
-/// 📐️ The `geometry` field: widget id to the shared evaluation of that widget.
+/// 🌾️ The `geometry` field: widget id to the shared evaluation of that widget.
 pub struct Generation3dGeometry;
 
 /// 🧩️ The admitted semantic inputs of one inference run.
@@ -280,8 +315,10 @@ impl<'a> InferredField<GeometryInput<'a>> for Generation3dGeometry {
 
     fn compute(snapshot: &GeometryInput<'_>, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         let mut pending = None;
+        let mut caller = semio_framework_job::SelfFundedCloseCaller::new();
         loop {
-            match Self::compute_cold_step(snapshot, key, parents, &mut pending, usize::MAX) {
+            let turn = caller.turn(COLD_GRANT, |cx| Ok(Self::compute_cold_step(snapshot, key, parents, &mut pending, cx)));
+            match turn.map_err(turn_fault).and_then(|step| step) {
                 Ok(ComputeStep::Done { value, .. }) => return value,
                 Ok(ComputeStep::Working { .. }) => continue,
                 Err(fault) => return Arc::new(WidgetEvaluation::faulted(WidgetFault::new(fault.code, fault.message.clone(), fault.message), Quality::ExactAnalytic)),
@@ -293,25 +330,28 @@ impl<'a> InferredField<GeometryInput<'a>> for Generation3dGeometry {
         value.byte_len()
     }
 
-    fn plan_source_extent(snapshot:&GeometryInput<'_>)->Option<(usize,usize)>{Some((snapshot.snapshot.host_snapshot.widgets.len(),snapshot.snapshot.host_snapshot.synapses.len()))}
-    fn plan_source_node(snapshot:&GeometryInput<'_>,ordinal:usize)->Option<&str>{snapshot.snapshot.host_snapshot.widgets.get(ordinal).map(widget_id)}
-    fn plan_source_key(snapshot:&GeometryInput<'_>,ordinal:usize)->Option<&Self::Key>{source_widget_key(snapshot.snapshot,ordinal)}
+}
+
+impl<'a> OriginalInferredField<GeometryInput<'a>> for Generation3dGeometry {
+    type Source = GeometryInput<'a>;
+    fn validate_source(snapshot:&GeometryInput<'a>,source:&Self::Source,cx:&semio_framework_job::StepContext<'_>)->Result<(),InferenceWorkFailure>{cx.original_source_parent()?.validate_borrowed_context(cx)?;if !std::ptr::eq(snapshot,source){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"generation3d geometry inference changed its original input owner").into())}Ok(())}
+    fn plan_source_extent(snapshot:&GeometryInput<'a>,_source:&Self::Source)->Option<(usize,usize)>{Some((snapshot.snapshot.host_snapshot.widgets.len(),snapshot.snapshot.host_snapshot.synapses.len()))}
+    fn plan_source_node<'view>(snapshot:&'view GeometryInput<'a>,_source:&'view Self::Source,ordinal:usize)->Option<&'view str>{snapshot.snapshot.host_snapshot.widgets.get(ordinal).map(widget_id)}
+    fn plan_source_key<'view>(snapshot:&'view GeometryInput<'a>,_source:&'view Self::Source,ordinal:usize)->Option<&'view String>{source_widget_key(snapshot.snapshot,ordinal)}
+    fn plan_source_link<'view>(snapshot:&'view GeometryInput<'a>,_source:&'view Self::Source,ordinal:usize)->Option<(&'view str,&'view str)>{snapshot.snapshot.host_snapshot.synapses.get(ordinal).map(|link|(link.from.as_str(),link.to.as_str()))}
+    fn source_identity(snapshot:&GeometryInput<'a>,_source:&Self::Source)->usize{snapshot.snapshot as*const Generation3dSnapshot as usize}
     fn clone_original_parent(original:&Self::Value,output:&mut Option<Self::Value>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,InferenceWorkFailure>{
         let _=cx.original_source_parent()?.source_identity()?;if let Some(output)=output.as_ref(){if !Arc::ptr_eq(original,output){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original inferred parent donor changed its source owner").into())}return Ok(true)}
         let grant=cx.retained_grant();let bytes=std::mem::size_of::<Self::Value>();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
         cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);*output=Some(Arc::clone(original));Ok(true)
     }
 
-    fn plan_source_link(snapshot:&GeometryInput<'_>,ordinal:usize)->Option<(&str,&str)>{snapshot.snapshot.host_snapshot.synapses.get(ordinal).map(|link|(link.from.as_str(),link.to.as_str()))}
-
-    fn source_identity(snapshot:&GeometryInput<'_>)->usize{snapshot.snapshot as*const Generation3dSnapshot as usize}
-
-    fn compute_step(snapshot:&GeometryInput<'_>,key:&Self::Key,parents:&[Self::Value],pending:&mut Option<Box<dyn InferencePending>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{original_field::compute_step(snapshot,key,parents,pending,cx)}
-    fn compute_cyclic_step(snapshot:&GeometryInput<'_>,key:&Self::Key,pending:&mut Option<Box<dyn InferencePending>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{original_field::compute_cyclic_step(snapshot,key,pending,cx)}
+    fn compute_step(snapshot:&GeometryInput<'a>,_source:&Self::Source,key:&Self::Key,parents:&[Self::Value],pending:&mut Option<Box<dyn InferencePending>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{original_field::compute_step(snapshot,key,parents,pending,cx)}
+    fn compute_cyclic_step(snapshot:&GeometryInput<'a>,_source:&Self::Source,key:&Self::Key,pending:&mut Option<Box<dyn InferencePending>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<ComputeStep<Self::Value>,InferenceWorkFailure>{original_field::compute_cyclic_step(snapshot,key,pending,cx)}
 }
 
 impl Generation3dGeometry{
-    fn compute_cold_step(snapshot: &GeometryInput<'_>, key: &String, parents: &[Arc<WidgetEvaluation>], pending: &mut Option<Box<dyn InferencePending>>, fuel: usize) -> Result<ComputeStep<Arc<WidgetEvaluation>>, InferenceFault> {
+    fn compute_cold_step(snapshot: &GeometryInput<'_>, key: &String, parents: &[Arc<WidgetEvaluation>], pending: &mut Option<Box<dyn InferencePending>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ComputeStep<Arc<WidgetEvaluation>>, InferenceFault> {
         if pending.is_none() {
             match begin(snapshot, key, parents) {
                 Started::Ready(evaluation) => return Ok(ComputeStep::Done { value: Arc::new(evaluation), fuel_used: 1 }),
@@ -319,10 +359,12 @@ impl Generation3dGeometry{
             }
         }
         let parked = pending.as_mut().and_then(|parked| parked.as_any_mut().downcast_mut::<GeometryPending>()).ok_or_else(|| InferenceFault::new(format!("{FAULT_PREFIX}internal"), "the pending slot does not hold a geometry job"))?;
-        let grant = fuel.max(1);
-        match parked.job.step(grant) {
-            WidgetStep::Working { progress } => Ok(ComputeStep::Working { fuel_used: grant, progress }),
-            WidgetStep::Done(evaluation) => {
+        let before = cx.fuel_remaining();
+        let used = |cx: &semio_framework_job::StepContext<'_>| usize::try_from(before.saturating_sub(cx.fuel_remaining())).unwrap_or(usize::MAX).max(1);
+        match parked.job.step(cx).map_err(turn_fault)? {
+            None => Ok(ComputeStep::Working { fuel_used: used(cx), progress: 0.0 }),
+            Some(WidgetStep::Working { progress }) => Ok(ComputeStep::Working { fuel_used: used(cx), progress }),
+            Some(WidgetStep::Done(evaluation)) => {
                 let checked = contract_checked(parked.catalogue.kind(&parked.kind).ok_or_else(|| InferenceFault::new(format!("{FAULT_PREFIX}internal"), "the admitted kind is missing"))?, evaluation);
                 *pending = None;
                 Ok(ComputeStep::Done { value: Arc::new(checked), fuel_used: 1 })
@@ -333,8 +375,9 @@ impl Generation3dGeometry{
 //#endregion 🔖️Field
 
 //#region 🔖️Record
-/// 🚫️ A fault as the inference record states it.
-#[derive(Clone, Debug, PartialEq)]
+/// 💥️ A fault as the inference record states it.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Generation3dFaultRecord {
     pub code: String,
     pub en: String,
@@ -343,30 +386,33 @@ pub struct Generation3dFaultRecord {
 }
 
 /// 📇️ One output of a widget as the inference record states it: the port, the value kind and a one-line detail.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Generation3dOutputRecord {
     pub port: String,
     pub kind: String,
     pub detail: String,
 }
 
-/// 📇️ One widget's evaluation as the inference record states it.
-#[derive(Clone, Debug, PartialEq)]
+/// 🔄️ One widget's evaluation as the inference record states it.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Generation3dWidgetRecord {
     pub quality: Quality,
     pub fault: Option<Generation3dFaultRecord>,
     pub outputs: Vec<Generation3dOutputRecord>,
 }
 
-/// 📐️ `geometry` — the evaluation of every widget, summarised: quality, fault and the kind and detail of each output.
-#[derive(Clone, Debug, Default, PartialEq)]
+/// 🏷️ `geometry` — the evaluation of every widget, summarised: quality, fault and the kind and detail of each output.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase")]
 pub struct Generation3dGeometryRecord {
     pub widgets: BTreeMap<String, Generation3dWidgetRecord>,
     pub faulted: u32,
 }
 
 impl Generation3dWidgetRecord {
-    /// 📇️ The record of one evaluation.
+    /// 🌀️ The record of one evaluation.
     pub fn of(evaluation: &WidgetEvaluation) -> Self {
         Self {
             quality: evaluation.quality,
@@ -380,13 +426,13 @@ impl Generation3dWidgetRecord {
 }
 
 impl Generation3dGeometryRecord {
-    /// 📇️ The record of a full evaluation.
+    /// 🈵️ The record of a full evaluation.
     pub fn of(evaluations: &BTreeMap<String, Arc<WidgetEvaluation>>) -> Self {
         Self { widgets: evaluations.iter().map(|(id, evaluation)| (id.clone(), Generation3dWidgetRecord::of(evaluation))).collect(), faulted: evaluations.values().filter(|evaluation| evaluation.fault.is_some()).count() as u32 }
     }
 }
 
-/// 📐️ Evaluates a snapshot completely and cold, the semantic source every cached or stepped run equals.
+/// 🧲️ Evaluates a snapshot completely and cold, the semantic source every cached or stepped run equals.
 pub fn infer_geometry(snapshot: &GeometryInput<'_>) -> BTreeMap<String, Arc<WidgetEvaluation>> {
     protocol::infer_field::<GeometryInput<'_>, Generation3dGeometry>(snapshot, None)
 }
@@ -396,5 +442,5 @@ pub fn infer_geometry(snapshot: &GeometryInput<'_>) -> BTreeMap<String, Arc<Widg
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
-/// 🧭️ The retained source widget ID is borrowed directly from its snapshot ordinal.
-pub(super) fn source_widget_key(snapshot:&Generation3dSnapshot,ordinal:usize)->Option<&String>{snapshot.host_snapshot.widgets.get(ordinal).map(|widget|match widget{Widget::Neuron{id,..}|Widget::InputSlider{id,..}|Widget::InputNote{id,..}|Widget::InputImage{id,..}|Widget::Variable{id,..}|Widget::OutputPreview{id,..}|Widget::OutputAction{id,..}|Widget::OutputExport{id,..}|Widget::Cluster{id,..}=>id})}
+/// 🪪️ The retained source widget ID is borrowed directly from its snapshot ordinal.
+pub(crate) fn source_widget_key(snapshot:&Generation3dSnapshot,ordinal:usize)->Option<&String>{snapshot.host_snapshot.widgets.get(ordinal).map(|widget|match widget{Widget::Neuron{id,..}|Widget::InputSlider{id,..}|Widget::InputNote{id,..}|Widget::InputImage{id,..}|Widget::Variable{id,..}|Widget::OutputPreview{id,..}|Widget::OutputAction{id,..}|Widget::OutputExport{id,..}|Widget::Cluster{id,..}=>id})}

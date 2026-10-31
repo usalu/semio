@@ -96,7 +96,7 @@ impl MutationMessageLedgerRetirement {
 
 impl ErasedSnapshotRetirement for MutationMessageLedgerRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { Ok(semio_framework_value::RetirementDemand { copy_bytes: Self::next_copy_byte_demand(self), capacity_bytes: Self::next_capacity_byte_demand(self,body)?, release_bytes: Self::next_release_byte_demand(self)?, depth: Self::next_depth_demand(self)? }) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Self::close_step(self, grant) }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = Self::close_step(self, grant); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != semio_framework_value::RetainedCloneProgress::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(Self::next_copy_byte_demand(self)) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Self::next_capacity_byte_demand(self, body) }
@@ -147,7 +147,7 @@ impl EditMessageLedgerRetirement {
 
 impl ErasedSnapshotRetirement for EditMessageLedgerRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> { if let Some(active)=self.active.as_ref() { let mut demand=active.next_demand(body)?; demand.depth+=1; return Ok(demand); } Ok(semio_framework_value::RetirementDemand { copy_bytes: usize::from(!self.entries.is_empty())*size_of::<EditMessages>(), release_bytes: if self.entries.is_empty(){self.entries.capacity()*size_of::<EditMessages>()}else{0}, depth: usize::from(!self.terminal_is_empty()), ..Default::default() }) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Self::close_step(self,grant) }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = Self::close_step(self, grant); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != semio_framework_value::RetainedCloneProgress::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { Self::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Self::next_copy_byte_demand(self) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Self::next_capacity_byte_demand(self,body) }

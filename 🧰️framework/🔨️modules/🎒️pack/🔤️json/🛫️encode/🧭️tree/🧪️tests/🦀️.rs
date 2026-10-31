@@ -2,9 +2,36 @@
 use super::*;
 use semio_framework_value::retained_clone::RetainedCloneSource;
 use semio_framework_trace::observe_heap_allocations_on_this_thread;
+fn admit_source<T:semio_framework_value::retirement::RetireOwned+Sync+'static>(root:T,grant:RetainedCloneGrant)->(RetainedCloneSource<T>,RetainedCloneProgress){
+    let mut admission=RetainedCloneSource::<T>::admission_owned(root,());let mut source=None;let mut total=RetainedCloneProgress::default();
+    for _ in 0..64{
+        let ready=admission.phase()=="ready";
+        let turn=if ready{admission.take_output(&mut source,grant)}else{admission.advance(grant)};
+        total=total.checked_add(turn.result.unwrap_or_else(|error|panic!("source admission: {error}")).progress()).unwrap();
+        if ready{break}
+    }
+    (source.expect("source admitted"),total)
+}
 
 #[derive(semio_framework_value::RetireOwned)]
 enum NativeValue { Text(PagedUtf8<{usize::MAX}>), Array(PagedList<NativeValue,{usize::MAX}>), Object(PagedMap<NativeValue,{usize::MAX}>), Flag(bool), Number(u64) }
+struct PathlessBox<V>(Vec<V>);
+impl<V:semio_framework_value::retirement::RetireOwned> semio_framework_value::retirement::RetireOwned for PathlessBox<V>{
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{self.0.retirement()}
+    fn controlled_retirement_supported()->bool{V::controlled_retirement_supported()}
+}
+#[derive(semio_framework_value::RetireOwned)]
+enum PathlessRecursive{Leaf(u8),Many(PathlessBox<PathlessRecursive>)}
+#[derive(semio_framework_value::RetireOwned)]
+enum OrderedRecursive{Leaf(u8),Map(semio_framework_value_ordered::ordered::OrderedMap<OrderedRecursive>)}
+#[test]
+fn pathless_generic_containers_cannot_restart_a_recursive_support_cycle(){
+    use semio_framework_value::retirement::RetireOwned;
+    assert!(PathlessRecursive::controlled_retirement_supported());
+    assert!(OrderedRecursive::controlled_retirement_supported());
+}
+#[test]
+fn recursive_paged_native_value_closes_its_controlled_retirement_support_cycle(){use semio_framework_value::retirement::RetireOwned;assert!(NativeValue::controlled_retirement_supported());}
 impl ArtifactCanonicalJsonTree for NativeValue {
     fn canonical_tree_node(&self) -> Result<Node<'_>,ValueError> {
         Ok(match self { Self::Text(text)=>Node::Text(ArtifactCanonicalJsonText::Native(text)),Self::Array(values)=>Node::Array(values.len()),Self::Object(values)=>Node::Object(values.len()),Self::Flag(value)=>Node::Bool(*value),Self::Number(value)=>Node::U64(*value) })
@@ -60,10 +87,10 @@ fn canonical_native_paged_tree_arbitrary_depth_and_cancellation_conserve_actual_
             let birth=RetainedCloneSource::<NativeValue>::owned_constructor_demand::<()>();
             assert!(birth.capacity_bytes<=4096);
             let grant=admitted(RetirementDemand{capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()});
-            let((mut source,receipt),heap)=observe_heap_allocations_on_this_thread(||RetainedCloneSource::admit_owned(root,(),grant).unwrap_or_else(|(error,_,_)|panic!("native source birth: {error}")));
-            assert!(receipt.fits(grant));
+            let((mut source,receipt),heap)=observe_heap_allocations_on_this_thread(||admit_source(root,grant));
+            assert!(receipt.retained_capacity_bytes<=grant.maximum_capacity_bytes);
             assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,0));
-            let projection_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:source.borrow().binding_copy_bytes(),maximum_depth:1,..Default::default()};let(projection,heap)=observe_heap_allocations_on_this_thread(||source.project_owned(0,|value|value as&dyn ArtifactCanonicalJsonTree,projection_grant).unwrap().0);
+            let projection_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:source.borrow().binding_copy_bytes(),maximum_depth:1,..Default::default()};let(projection,heap)=observe_heap_allocations_on_this_thread(||source.project_owned(0,|value|value as&dyn ArtifactCanonicalJsonTree,projection_grant).result.unwrap().0);
             assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
             let demand=ArtifactCanonicalJsonTreeCursor::constructor_demand();
             let original_grant=admitted(demand);
@@ -92,7 +119,7 @@ fn canonical_native_paged_tree_arbitrary_depth_and_cancellation_conserve_actual_
                 if source.terminal_is_empty(){break;}
                 let copy=source.next_close_copy_byte_demand().unwrap();
                 let grant=admitted(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});
-                let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).unwrap());
+                let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).result.unwrap());
                 assert!(step.progress().fits(grant));
                 assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
                 assert!(turn<99_999||source.terminal_is_empty());
@@ -133,13 +160,13 @@ fn canonical_native_derived_mutation_fields_match_serde_and_original_projection_
     let oracle=serde_json::to_vec(&mutation).unwrap();if repeat==1&&visible.is_none(){assert_eq!(oracle,fixture["expected"].as_str().unwrap().as_bytes());}
     let birth=RetainedCloneSource::<DerivedMutation>::owned_constructor_demand::<()>();
     let grant=admitted(RetirementDemand{capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()});
-    let((mut source,receipt),heap)=observe_heap_allocations_on_this_thread(||RetainedCloneSource::admit_owned(mutation,(),grant).unwrap_or_else(|(error,_,_)|panic!("derived native source: {error}")));
-    assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,0));
+    let((mut source,receipt),heap)=observe_heap_allocations_on_this_thread(||admit_source(mutation,grant));
+    assert!(receipt.retained_capacity_bytes<=grant.maximum_capacity_bytes);assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,0));
     let(_,heap)=observe_heap_allocations_on_this_thread(||{
      let root=source.borrow();let DerivedMutation::MoveNode(payload)=root.get()else{unreachable!()};
      let child=root.get().canonical_tree_child(1).unwrap();assert_eq!(child as*const dyn ArtifactCanonicalJsonTree as*const (),&payload.id as*const PagedUtf8<{usize::MAX}> as*const ());
     });assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    let projection=source.project_owned(0,|owner|owner as&dyn ArtifactCanonicalJsonTree,admitted(RetirementDemand{copy_bytes:source.borrow().binding_copy_bytes(),depth:1,..Default::default()})).unwrap().0;let demand=ArtifactCanonicalJsonTreeCursor::constructor_demand();
+    let projection=source.project_owned(0,|owner|owner as&dyn ArtifactCanonicalJsonTree,admitted(RetirementDemand{copy_bytes:source.borrow().binding_copy_bytes(),depth:1,..Default::default()})).result.unwrap().0;let demand=ArtifactCanonicalJsonTreeCursor::constructor_demand();
     let(mut cursor,receipt)=ArtifactCanonicalJsonTreeCursor::admit(projection,admitted(demand)).unwrap_or_else(|(error,_)|panic!("derived native tree: {error}"));assert_eq!(receipt.copied_bytes,demand.copy_bytes);
     let mut output=Vec::new();let mut turns=0;
     while !cursor.terminal_is_empty(){assert!(turns<100000);if pause==Some(turns){cursor.begin_close();}let mut byte=[0xa5];let step=observe_step(&mut cursor,&mut byte);output.extend_from_slice(&byte[..step.written_bytes]);turns+=1;}
@@ -148,7 +175,7 @@ fn canonical_native_derived_mutation_fields_match_serde_and_original_projection_
     for turn in 0..100000{
      if source.terminal_is_empty(){break;}
      let copy=source.next_close_copy_byte_demand().unwrap();let grant=admitted(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});
-     let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999||source.terminal_is_empty());
+     let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).result.unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999||source.terminal_is_empty());
     }
     assert!(source.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
    }
@@ -164,8 +191,8 @@ fn canonical_native_scalar_initializes_only_real_prefix_and_preserves_immutable_
   let root=match row["value"].as_bool(){Some(flag)=>NativeValue::Flag(flag),None=>NativeValue::Number(row["value"].as_u64().unwrap())};
   let oracle=serde_json::to_vec(&row["value"]).unwrap();assert_eq!(oracle,row["expected"].as_str().unwrap().as_bytes());
   let birth=RetainedCloneSource::<NativeValue>::owned_constructor_demand::<()>();let policy=admitted(RetirementDemand{capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()});
-  let(mut source,_)=RetainedCloneSource::admit_owned(root,(),policy).unwrap_or_else(|(error,_,_)|panic!("scalar original source birth: {error}"));
-  let projection=source.project_owned(0,|value|value as&dyn ArtifactCanonicalJsonTree,admitted(RetirementDemand{copy_bytes:source.borrow().binding_copy_bytes(),depth:1,..Default::default()})).unwrap().0;let(mut cursor,_)=ArtifactCanonicalJsonTreeCursor::admit(projection,policy).unwrap_or_else(|(error,_)|panic!("scalar original cursor admission: {error}"));
+  let(mut source,_)=admit_source(root,policy);
+  let projection=source.project_owned(0,|value|value as&dyn ArtifactCanonicalJsonTree,admitted(RetirementDemand{copy_bytes:source.borrow().binding_copy_bytes(),depth:1,..Default::default()})).result.unwrap().0;let(mut cursor,_)=ArtifactCanonicalJsonTreeCursor::admit(projection,policy).unwrap_or_else(|(error,_)|panic!("scalar original cursor admission: {error}"));
   let mut actual=Vec::new();let mut inspections=0;
   for turn in 0..10000{
    if cursor.terminal_is_empty(){break;}
@@ -179,7 +206,7 @@ fn canonical_native_scalar_initializes_only_real_prefix_and_preserves_immutable_
    actual.extend_from_slice(&output[..step.written_bytes]);assert!(turn<9999||cursor.terminal_is_empty());
   }
   assert_eq!(inspections,1);assert_eq!(actual,oracle);drop(cursor);
-  for turn in 0..10000{if source.terminal_is_empty(){break;}let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(policy).unwrap());assert!(step.progress().fits(policy));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<9999||source.terminal_is_empty());}assert!(source.terminal_is_empty());drop(source);
+  for turn in 0..10000{if source.terminal_is_empty(){break;}let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(policy).result.unwrap());assert!(step.progress().fits(policy));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<9999||source.terminal_is_empty());}assert!(source.terminal_is_empty());drop(source);
  }
 }
 
@@ -199,8 +226,8 @@ fn canonical_native_leaf_impls_match_independent_serde_json_output() {
     let oracle=format!("{{\"dsl\":{},\"f32\":{},\"i128\":{},\"i16\":{},\"i8\":{},\"isize\":{},\"number\":{},\"pair\":{},\"triple\":{},\"u128\":{},\"u16\":{},\"u32\":{},\"unit\":{},\"value_type\":{}}}",serde_json::to_string(&serde_json::Value::from(&dsl)).unwrap(),serde_json::to_string(&0.1f32).unwrap(),serde_json::to_string(&leaves.i128_).unwrap(),serde_json::to_string(&leaves.i16_).unwrap(),serde_json::to_string(&leaves.i8_).unwrap(),serde_json::to_string(&leaves.isize_).unwrap(),serde_json::to_string(&-0.25f64).unwrap(),serde_json::to_string(&leaves.pair).unwrap(),serde_json::to_string(&leaves.triple).unwrap(),serde_json::to_string(&leaves.u128_).unwrap(),serde_json::to_string(&leaves.u16_).unwrap(),serde_json::to_string(&leaves.u32_).unwrap(),serde_json::to_string(&()).unwrap(),serde_json::to_string(&serde_json::Value::from(semio_framework_value::ToValue::to_value(&leaves.value_type))).unwrap());
     let birth=RetainedCloneSource::<Leaves>::owned_constructor_demand::<()>();
     let grant=admitted(RetirementDemand{copy_bytes:RetainedCloneSource::<Leaves>::constructor_copy_bytes(),capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()});
-    let(mut source,_)=RetainedCloneSource::admit_owned(leaves,(),grant).unwrap_or_else(|(error,_,_)|panic!("leaf fixture source birth: {error}"));
-    let projection=source.project_owned(0,|value|value as&dyn ArtifactCanonicalJsonTree,admitted(RetirementDemand{copy_bytes:source.borrow().binding_copy_bytes(),depth:1,..Default::default()})).unwrap().0;
+    let(mut source,_)=admit_source(leaves,grant);
+    let projection=source.project_owned(0,|value|value as&dyn ArtifactCanonicalJsonTree,admitted(RetirementDemand{copy_bytes:source.borrow().binding_copy_bytes(),depth:1,..Default::default()})).result.unwrap().0;
     let(mut cursor,_)=ArtifactCanonicalJsonTreeCursor::admit(projection,admitted(ArtifactCanonicalJsonTreeCursor::constructor_demand())).unwrap_or_else(|(error,_)|panic!("leaf fixture cursor admission: {error}"));
     let mut output=Vec::new();
     for turn in 0..1_000_000 {
@@ -214,7 +241,7 @@ fn canonical_native_leaf_impls_match_independent_serde_json_output() {
         if source.terminal_is_empty(){break;}
         let copy=source.next_close_copy_byte_demand().unwrap();
         let grant=admitted(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});
-        assert!(source.close_step(grant).unwrap().progress().fits(grant));
+        assert!(source.close_step(grant).result.unwrap().progress().fits(grant));
     }
     assert!(source.terminal_is_empty());
 }
@@ -222,8 +249,8 @@ fn canonical_native_leaf_impls_match_independent_serde_json_output() {
 fn canonical_bytes<T:ArtifactCanonicalJsonTree+semio_framework_value::retirement::RetireOwned>(root:T)->Vec<u8>{
     let birth=RetainedCloneSource::<T>::owned_constructor_demand::<()>();
     let grant=admitted(RetirementDemand{copy_bytes:RetainedCloneSource::<T>::constructor_copy_bytes(),capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()});
-    let(mut source,_)=RetainedCloneSource::admit_owned(root,(),grant).unwrap_or_else(|(error,_,_)|panic!("map fixture source birth: {error}"));
-    let projection=source.project_owned(0,|value|value as&dyn ArtifactCanonicalJsonTree,admitted(RetirementDemand{copy_bytes:source.borrow().binding_copy_bytes(),depth:1,..Default::default()})).unwrap().0;
+    let(mut source,_)=admit_source(root,grant);
+    let projection=source.project_owned(0,|value|value as&dyn ArtifactCanonicalJsonTree,admitted(RetirementDemand{copy_bytes:source.borrow().binding_copy_bytes(),depth:1,..Default::default()})).result.unwrap().0;
     let(mut cursor,_)=ArtifactCanonicalJsonTreeCursor::admit(projection,admitted(ArtifactCanonicalJsonTreeCursor::constructor_demand())).unwrap_or_else(|(error,_)|panic!("map fixture cursor admission: {error}"));
     let mut output=Vec::new();
     for turn in 0..1_000_000 {
@@ -236,7 +263,7 @@ fn canonical_bytes<T:ArtifactCanonicalJsonTree+semio_framework_value::retirement
         if source.terminal_is_empty(){break;}
         let copy=source.next_close_copy_byte_demand().unwrap();
         let grant=admitted(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});
-        assert!(source.close_step(grant).unwrap().progress().fits(grant));
+        assert!(source.close_step(grant).result.unwrap().progress().fits(grant));
     }
     assert!(source.terminal_is_empty());
     output
@@ -713,8 +740,8 @@ fn bulk_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_c
 
 fn encode_with_window<R:ArtifactCanonicalJsonTree+semio_framework_value::retirement::RetireOwned>(root:R,window:usize)->(Vec<u8>,usize) {
  let grant=bulk_grant();
- let(mut source,_)=RetainedCloneSource::admit_owned(root,(),grant).unwrap_or_else(|(error,_,_)|panic!("bulk source birth: {error}"));
- let projection=source.project_owned(0,|value|value as&dyn ArtifactCanonicalJsonTree,grant).unwrap().0;
+ let(mut source,_)=admit_source(root,grant);
+ let projection=source.project_owned(0,|value|value as&dyn ArtifactCanonicalJsonTree,grant).result.unwrap().0;
  let(mut cursor,_)=ArtifactCanonicalJsonTreeCursor::admit(projection,grant).unwrap_or_else(|(error,_)|panic!("bulk traversal birth: {error}"));
  let(mut output,mut turns,mut buffer)=(Vec::new(),0usize,vec![0u8;window]);
  while !cursor.terminal_is_empty(){
@@ -731,7 +758,7 @@ fn encode_with_window<R:ArtifactCanonicalJsonTree+semio_framework_value::retirem
   if source.terminal_is_empty(){break;}
   let copy=source.next_close_copy_byte_demand().unwrap();
   let close=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:source.next_close_release_byte_demand().unwrap(),maximum_depth:source.next_close_depth_demand().unwrap()};
-  assert!(source.close_step(close).unwrap().progress().fits(close));
+  assert!(source.close_step(close).result.unwrap().progress().fits(close));
  }
  assert!(source.terminal_is_empty());
  (output,turns)
@@ -799,8 +826,8 @@ fn original_canonical_tree_constructor_moves_header_without_payload_copy(){
     let law:serde_json::Value=serde_json::from_str(crate::text("🛫️encode/🧭️tree/🧪️tests/🧫️fixtures/🎟️header.json")).unwrap();
     for body in law["cancelBodies"].as_array().unwrap(){let body=body.as_u64().unwrap()as usize;
         let ((mut source,mut projection),factory)=observe_heap_allocations_on_this_thread(||{
-            let birth=RetainedCloneSource::<NativeValue>::owned_constructor_demand::<()>();let(mut source,_)=RetainedCloneSource::admit_owned(NativeValue::Flag(true),(),admitted(RetirementDemand{capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()})).unwrap_or_else(|(error,_,_)|panic!("original header source: {error}"));
-            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:source.borrow().binding_copy_bytes(),maximum_depth:1,..Default::default()};let projection=source.project_owned(0,|root|root as&dyn ArtifactCanonicalJsonTree,grant).unwrap().0;(source,projection)
+            let birth=RetainedCloneSource::<NativeValue>::owned_constructor_demand::<()>();let(mut source,_)=admit_source(NativeValue::Flag(true),admitted(RetirementDemand{capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()}));
+            let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:source.borrow().binding_copy_bytes(),maximum_depth:1,..Default::default()};let projection=source.project_owned(0,|root|root as&dyn ArtifactCanonicalJsonTree,grant).result.unwrap().0;(source,projection)
         });
         let mut born=factory.requested_bytes;let mut released=factory.released_bytes;let original=projection.borrow().unwrap().get()as*const dyn ArtifactCanonicalJsonTree as*const();
         let demand=ArtifactCanonicalJsonTreeCursor::constructor_demand();assert_eq!(demand,RetirementDemand{depth:1,..Default::default()});let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};
@@ -808,9 +835,9 @@ fn original_canonical_tree_constructor_moves_header_without_payload_copy(){
         let((mut cursor,receipt),heap)=observe_heap_allocations_on_this_thread(||ArtifactCanonicalJsonTreeCursor::admit(projection,grant).unwrap_or_else(|(error,_)|panic!("original header admission: {error}")));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(receipt,RetainedCloneProgress{copied_items:1,..Default::default()});assert_eq!(cursor.pending.as_ref().unwrap().borrow().unwrap().get()as*const dyn ArtifactCanonicalJsonTree as*const(),original);
         let(demand,heap)=observe_heap_allocations_on_this_thread(||cursor.next_demand().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(demand.capacity_bytes>0);assert_eq!(demand.copy_bytes,0);
         let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.advance(&mut[0],grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.ownership.progress(),Default::default());assert_eq!(cursor.pending.as_ref().unwrap().borrow().unwrap().get()as*const dyn ArtifactCanonicalJsonTree as*const(),original);
-        cursor.begin_close();for _ in 0..10000{if cursor.terminal_is_empty(){break;}let(demand,heap)=observe_heap_allocations_on_this_thread(||cursor.next_demand().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.close_step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(receipt.copied_items!=0,"original pending header close stalled at literal body={body} demand={demand:?} receipt={receipt:?}");}
+        cursor.begin_close();for _ in 0..10000{if cursor.terminal_is_empty(){break;}let(demand,heap)=observe_heap_allocations_on_this_thread(||cursor.next_demand().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:body,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.close_step(grant).unwrap());let receipt=step.progress();assert!(receipt.retained_capacity_bytes<=grant.maximum_capacity_bytes);assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(receipt.copied_items!=0,"original pending header close stalled at literal body={body} demand={demand:?} receipt={receipt:?}");}
         assert!(cursor.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(source.borrow().get()as*const NativeValue as*const(),original);
-        for _ in 0..10000{if source.terminal_is_empty(){break;}let copy=source.next_close_copy_byte_demand().unwrap();let grant=admitted(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).unwrap());let receipt=step.progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}
+        for _ in 0..10000{if source.terminal_is_empty(){break;}let copy=source.next_close_copy_byte_demand().unwrap();let grant=admitted(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).result.unwrap());let receipt=step.progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}
         assert!(source.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);
     }
 }
@@ -825,8 +852,8 @@ fn original_canonical_tree_nested_headers_preserve_body_minima_and_complete_cust
         let mut stops:Vec<Option<usize>>=law["traversalStops"].as_array().unwrap().iter().map(|n|Some(n.as_u64().unwrap()as usize)).collect();stops.push(None);
         for stop in stops{for body in law["cancelBodies"].as_array().unwrap(){let body=body.as_u64().unwrap()as usize;
             let ((mut source,mut cursor),factory)=observe_heap_allocations_on_this_thread(||{
-                let birth=RetainedCloneSource::<NativeValue>::owned_constructor_demand::<()>();let(mut source,_)=RetainedCloneSource::admit_owned(fixture(text,depth),(),admitted(RetirementDemand{capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()})).unwrap_or_else(|(e,_,_)|panic!("original nested source: {e}"));
-                let grant=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};let(projection,receipt)=source.project_owned(0,|root|root as&dyn ArtifactCanonicalJsonTree,grant).unwrap();assert_eq!(receipt.copied_bytes,0);
+                let birth=RetainedCloneSource::<NativeValue>::owned_constructor_demand::<()>();let(mut source,_)=admit_source(fixture(text,depth),admitted(RetirementDemand{capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()}));
+                let grant=RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()};let(projection,receipt)=source.project_owned(0,|root|root as&dyn ArtifactCanonicalJsonTree,grant).result.unwrap();assert_eq!(receipt.copied_bytes,0);
                 let(cursor,receipt)=ArtifactCanonicalJsonTreeCursor::admit(projection,grant).unwrap_or_else(|(e,_)|panic!("original nested cursor: {e}"));assert_eq!(receipt.copied_bytes,0);(source,cursor)
             });
             let mut born=factory.requested_bytes;let mut released=factory.released_bytes;let original=source.borrow().get()as*const NativeValue as*const();let mut output=Vec::with_capacity(oracle.len());let mut turns=0;
@@ -839,12 +866,12 @@ fn original_canonical_tree_nested_headers_preserve_body_minima_and_complete_cust
                 if demand.capacity_bytes>0{denials.push(RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..grant});}
                 if demand.release_bytes>0{denials.push(RetainedCloneGrant{maximum_release_bytes:demand.release_bytes-1,..grant});}
                 for denied in denials{let mut byte=[0xa5];let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.advance(&mut byte,denied).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.ownership.progress(),Default::default());assert_eq!(step.written_bytes,0);assert_eq!(byte,[0xa5]);assert_eq!(cursor.next_demand().unwrap(),demand);}
-                let mut byte=[0xa5];let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.advance(&mut byte,grant).unwrap());let receipt=step.ownership.progress();assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(receipt.copied_items!=0);if demand.copy_bytes==0{assert_eq!(receipt.copied_bytes,0);}
+                let mut byte=[0xa5];let(step,heap)=observe_heap_allocations_on_this_thread(||cursor.advance(&mut byte,grant).unwrap());let receipt=step.ownership.progress();assert!(receipt.retained_capacity_bytes<=grant.maximum_capacity_bytes);assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(receipt.copied_items!=0);if demand.copy_bytes==0{assert_eq!(receipt.copied_bytes,0);}
                 output.extend_from_slice(&byte[..step.written_bytes]);assert_eq!(source.borrow().get()as*const NativeValue as*const(),original);turns+=1;
             }
             assert_eq!(output,oracle[..output.len()]);if stop.is_none(){assert_eq!(output,oracle);}
             let(_,heap)=observe_heap_allocations_on_this_thread(||drop(cursor));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-            for _ in 0..100000{if source.terminal_is_empty(){break;}let copy=source.next_close_copy_byte_demand().unwrap();let grant=admitted(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(receipt.copied_items!=0);}
+            for _ in 0..100000{if source.terminal_is_empty(){break;}let copy=source.next_close_copy_byte_demand().unwrap();let grant=admitted(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()});let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).result.unwrap());let receipt=step.progress();assert!(receipt.retained_capacity_bytes<=grant.maximum_capacity_bytes);assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(receipt.copied_items!=0);}
             assert!(source.terminal_is_empty());let(_,heap)=observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(born,released);
         }}
     }
@@ -858,7 +885,7 @@ fn retained_ordered_map_canonical_tree_matches_serde_without_projection_allocati
  for row in law["cases"].as_array().unwrap(){let entries:Vec<(String,u64)>=row["entries"].as_array().unwrap().iter().map(|entry|(entry["key"].as_str().unwrap().to_owned(),entry["value"].as_u64().unwrap())).collect();let oracle:std::collections::BTreeMap<String,u64>=entries.iter().cloned().collect();let expected=serde_json::to_vec(&oracle).unwrap();assert_eq!(expected,row["expected"].as_str().unwrap().as_bytes());let map:RetainedOrderedMap<String,u64>=entries.into_iter().collect();
   for ordinal in 0..map.len(){let((node,key),heap)=observe_heap_allocations_on_this_thread(||(map.canonical_tree_child(ordinal).unwrap().canonical_tree_node().unwrap(),map.canonical_tree_key(ordinal).unwrap()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(matches!(node,Node::U64(value)if value==*map.get_index(ordinal).unwrap().1));let(mut chunk,mut offset)=(0,0);let mut key_bytes=Vec::new();while let Some(byte)=key.next_byte(&mut chunk,&mut offset).unwrap(){key_bytes.push(byte)}assert_eq!(key_bytes,map.get_index(ordinal).unwrap().0.as_bytes());}
   assert!(map.canonical_tree_child(map.len()).is_err());assert!(map.canonical_tree_key(map.len()).is_err());
-  let grant=admitted(Default::default());let(mut source,_)=RetainedCloneSource::admit_owned(map,(),grant).unwrap_or_else(|(error,_,_)|panic!("retained map source birth: {error}"));let projection_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:source.borrow().binding_copy_bytes(),maximum_depth:1,..Default::default()};let projection=source.project_owned(0,|map|map as&dyn ArtifactCanonicalJsonTree,projection_grant).unwrap().0;let(mut cursor,_)=ArtifactCanonicalJsonTreeCursor::admit(projection,grant).unwrap_or_else(|(error,_)|panic!("retained map cursor birth: {error}"));let mut output=Vec::new();let mut turns=0;while !cursor.terminal_is_empty(){let mut bytes=[0];let step=observe_step(&mut cursor,&mut bytes);output.extend_from_slice(&bytes[..step.written_bytes]);turns+=1;assert!(turns<100_000);}assert!(cursor.is_complete());assert_eq!(output,expected);drop(cursor);
-  for _ in 0..100_000{if source.terminal_is_empty(){break}let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).unwrap());let progress=step.progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}assert!(source.terminal_is_empty());let((),heap)=observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+  let grant=admitted(Default::default());let(mut source,_)=admit_source(map,grant);let projection_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:source.borrow().binding_copy_bytes(),maximum_depth:1,..Default::default()};let projection=source.project_owned(0,|map|map as&dyn ArtifactCanonicalJsonTree,projection_grant).result.unwrap().0;let(mut cursor,_)=ArtifactCanonicalJsonTreeCursor::admit(projection,grant).unwrap_or_else(|(error,_)|panic!("retained map cursor birth: {error}"));let mut output=Vec::new();let mut turns=0;while !cursor.terminal_is_empty(){let mut bytes=[0];let step=observe_step(&mut cursor,&mut bytes);output.extend_from_slice(&bytes[..step.written_bytes]);turns+=1;assert!(turns<100_000);}assert!(cursor.is_complete());assert_eq!(output,expected);drop(cursor);
+  for _ in 0..100_000{if source.terminal_is_empty(){break}let(step,heap)=observe_heap_allocations_on_this_thread(||source.close_step(grant).result.unwrap());let progress=step.progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}assert!(source.terminal_is_empty());let((),heap)=observe_heap_allocations_on_this_thread(||drop(source));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  }
 }

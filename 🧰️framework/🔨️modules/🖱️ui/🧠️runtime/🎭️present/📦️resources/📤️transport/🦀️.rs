@@ -54,7 +54,7 @@ impl UiNativeResourceLoans {
     }
 
     pub fn describe_mesh_on_original(&mut self, resource: usize, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<UiNativeMeshDescriptor>, semio_framework_job::OriginalTurnFailure> {
-        if self.pending_failure.is_some() { return admit_native_resource_failure(&mut self.pending_failure, cx).map(|_| None); }
+        if self.pending_failure.is_some() { return admit_native_resource_failure(&mut self.pending_failure, &mut self.failure_place, cx).map(|_| None); }
         let grant = cx.retained_grant();
         if cx.should_yield() || cx.is_cancelled() || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
         let result = (|| {
@@ -65,7 +65,7 @@ impl UiNativeResourceLoans {
     }
 
     pub fn read_mesh_chunk_on_original(&mut self, resource: usize, descriptor: UiNativeMeshDescriptor, channel: UiNativeMeshChannel, offset: usize, output: &mut [u8], cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<UiNativeMeshChunk>, semio_framework_job::OriginalTurnFailure> {
-        if self.pending_failure.is_some() { return admit_native_resource_failure(&mut self.pending_failure, cx).map(|_| None); }
+        if self.pending_failure.is_some() { return admit_native_resource_failure(&mut self.pending_failure, &mut self.failure_place, cx).map(|_| None); }
         let grant = cx.retained_grant();
         let limit = output.len().min(grant.maximum_copy_bytes).min(UI_NATIVE_MESH_CHUNK_BYTES);
         if cx.should_yield() || cx.is_cancelled() || grant.maximum_items == 0 || grant.maximum_depth == 0 || limit == 0 { return Ok(None); }

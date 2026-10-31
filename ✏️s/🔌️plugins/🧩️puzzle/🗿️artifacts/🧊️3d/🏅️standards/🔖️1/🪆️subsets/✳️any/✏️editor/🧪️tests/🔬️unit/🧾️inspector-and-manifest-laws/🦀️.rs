@@ -203,7 +203,7 @@ async fn inspector_field_actions_resolve_selection_without_embedding_ids() {
 #[semio_framework_async_macros::async_test]
 async fn app_definition_has_the_main_world_window() {
     let definition = create_puzzle3d_app();
-    assert!(definition.window_kinds.iter().any(|window| window.id == main::WINDOW_KIND_ID));
+    assert!(definition.window_kinds.iter().any(|window| window.id == WINDOW_KIND_ID));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -260,7 +260,7 @@ async fn app_definition_labels_resolve_german_reuse_branded_for_aggregator() {
     let actions = || dispatchable_actions(def).into_iter();
     let action = |id: &str| actions().find(|entry| entry.id == id).unwrap_or_else(|| panic!("{id} action declared"));
     assert_eq!(def.modes.iter().find(|entry| entry.id == "edit").expect("edit mode").label.resolve(terminology, locale), "Bearbeiten");
-    assert_eq!(def.window_kinds.iter().find(|entry| entry.id == main::WINDOW_KIND_ID).expect("window kind").label.resolve(terminology, locale), "Aggregator");
+    assert_eq!(def.window_kinds.iter().find(|entry| entry.id == WINDOW_KIND_ID).expect("window kind").label.resolve(terminology, locale), "Aggregator");
     let dialog = def.dialogs.iter().find(|entry| entry.id == "addObject").expect("addObject dialog");
     assert_eq!(dialog.title.resolve(terminology, locale), "Baukomponente hinzufügen");
     assert_eq!(dialog.submit_label.resolve(terminology, locale), "Hinzufügen");
@@ -306,7 +306,7 @@ async fn app_definition_labels_stay_english_native_without_brand_locks() {
     let (terminology, locale) = (Terminology::Native, Locale::En);
     let action = |id: &str| dispatchable_actions(def).into_iter().find(|entry| entry.id == id).unwrap_or_else(|| panic!("{id} action declared"));
     assert_eq!(def.modes.iter().find(|entry| entry.id == "edit").expect("edit mode").label.resolve(terminology, locale), "Edit");
-    assert_eq!(def.window_kinds.iter().find(|entry| entry.id == main::WINDOW_KIND_ID).expect("window kind").label.resolve(terminology, locale), "Puzzle 3D");
+    assert_eq!(def.window_kinds.iter().find(|entry| entry.id == WINDOW_KIND_ID).expect("window kind").label.resolve(terminology, locale), "Puzzle 3D");
     assert_eq!(def.dialogs.iter().find(|entry| entry.id == "addObject").expect("addObject dialog").title.resolve(terminology, locale), "Add Object");
     assert_eq!(action("addObjectKind").label.resolve(terminology, locale), "Add Object");
 }

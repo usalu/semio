@@ -272,7 +272,10 @@ impl MountedLayoutJob {
     }
 
     fn publish_fault<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
-        if !self.fault_payload.advance_initialization(cx)? || !self.fault_payload.seal(cx)? { return Ok(None); }
+        let turn = self.fault_payload.advance_initialization(cx);
+        if !matches!(turn.result?, semio_framework_job::RetainedCloneStep::Complete(_)) { return Ok(None); }
+        let turn = self.fault_payload.seal(cx);
+        if !matches!(turn.result?, semio_framework_job::RetainedCloneStep::Complete(_)) { return Ok(None); }
         semio_framework_job::JobOutcomeBorrow::admit_fault(cx, self.fault_payload.published().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "layout original fault payload was not sealed"))?)
     }
 

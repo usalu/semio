@@ -1,0 +1,23 @@
+{
+  "state": "neutral-case-and-actual-law-before-custody-semantic-fix",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🎟️work/🧪️tests/compaction.json",
+      "sha256": "0c5d73ee88f5347d41b36f7a20805cbe039cb17a70d428a8aa2f15bcf1fd8baa",
+      "bytes": 160
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🎟️work/🧪️tests/compaction.schema.json",
+      "sha256": "fc9982cd8bf672fd6d0ab6cfa9ee68321b536ce612aafd17fd464248cda71517",
+      "bytes": 569
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🎟️work/🧪️tests/🟦️.ts",
+      "sha256": "10dcab2eaad684a3e0c0576a49da68e0279a3b9d7a88d196e291915115d3dcc3",
+      "bytes": 13541
+    }
+  ],
+  "preBodySha256": "bc79dd6c32e087d5fd05cce241b116926acf07a4ccf7266652a1d043bfbbcb3a",
+  "originalStocksFuelExistingSixLawsUnchanged": true,
+  "runtimeExecuted": false
+}

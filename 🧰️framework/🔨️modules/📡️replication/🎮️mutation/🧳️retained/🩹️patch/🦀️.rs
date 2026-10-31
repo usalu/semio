@@ -60,8 +60,8 @@ macro_rules! retained_row_patch{
     fn advance(&mut self,patch:RetainedCloneRef<'_,$patch>,row:RetainedCloneRef<'_,$row>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
      let demand=self.demand(patch,row,body)?;
      if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-     if let Some(progress)=patch.bind(&mut self.payload,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
-     if let Some(progress)=row.bind(&mut self.row,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
+     if let Some(progress)=patch.bind(&mut self.payload,grant).result?{return Ok(RetainedCloneStep::Progress(progress));}
+     if let Some(progress)=row.bind(&mut self.row,grant).result?{return Ok(RetainedCloneStep::Progress(progress));}
      let mut index=0;
      $(if self.phase==index{
       if patch.get().$field.is_none(){self.phase+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
@@ -95,9 +95,9 @@ macro_rules! retained_row_patch{
      if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"sparse inverse closure not started"));}
      if !retained_mutation_demand_fits(self.close_demand(grant.maximum_copy_bytes)?,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
      $(if let Some(field)=self.$field.as_mut(){if field.terminal_is_empty(){drop(self.$field.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:2*std::mem::size_of::<Option<Box<RetainedFieldPreparation<$field_ty>>>>(),released_bytes:std::mem::size_of::<RetainedFieldPreparation<$field_ty>>(),..Default::default()}));}return field.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));})+
-     if !self.retirement.is_empty(){return self.retirement.step_granted(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-     if let Some(step)=self.retirement.begin_granted(&mut self.result,grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}
-     let step=RetainedCloneBinding::close_one(if self.row.is_some(){&mut self.row}else{&mut self.payload},grant)?;
+     if !self.retirement.is_empty(){return self.retirement.step_granted(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+     if let Some(step)=self.retirement.begin_granted(&mut self.result,grant).result?{return Ok(RetainedCloneStep::Progress(step.progress()));}
+     let step=RetainedCloneBinding::close_one(if self.row.is_some(){&mut self.row}else{&mut self.payload},grant).result?;
      Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
     fn terminal_is_empty(&self)->bool{self.result.is_none()&&self.retirement.is_empty()&&self.payload.is_none()&&self.row.is_none()$(&&self.$field.is_none())+}

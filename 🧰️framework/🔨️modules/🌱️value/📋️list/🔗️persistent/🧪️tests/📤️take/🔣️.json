@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "producers",
+    "base",
+    "authored",
+    "expected",
+    "deniedWork",
+    "handoffWork",
+    "cachedWork",
+    "copyBytes",
+    "wallet"
+  ],
+  "properties": {
+    "producers": {
+      "const": [
+        "builder",
+        "set",
+        "splice"
+      ]
+    },
+    "base": {
+      "const": [
+        0
+      ]
+    },
+    "authored": {
+      "const": 9
+    },
+    "expected": {
+      "const": {
+        "builder": [],
+        "set": [
+          9
+        ],
+        "splice": [
+          9,
+          0
+        ]
+      }
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "handoffWork": {
+      "const": 1
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "copyBytes": {
+      "const": 0
+    },
+    "wallet": {
+      "const": "../\ud83c\udf9f\ufe0fwallet/\ud83d\udcd0\ufe0f.json"
+    }
+  }
+}

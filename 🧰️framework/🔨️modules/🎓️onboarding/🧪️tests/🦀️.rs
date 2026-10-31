@@ -46,14 +46,14 @@ async fn introduction_interaction_kind_round_trips_tagged() {
 
 #[semio_framework_async_macros::async_test]
 async fn introduction_interaction_round_trips_and_defaults() {
-    let interaction = IntroductionInteraction::zoom("puzzle3d-main", "Zoom in").await;
+    let interaction = IntroductionInteraction::zoom("puzzle3d-main", LocalizedLabel::native("Zoom in", "Hineinzoomen")).await;
     assert_eq!(interaction.celebrate, None);
     let json = serde_json::to_string(&interaction).unwrap();
     assert!(!json.contains("celebrate"), "{json}");
     let round: IntroductionInteraction = serde_json::from_str(&json).unwrap();
     assert_eq!(round, interaction);
 
-    let with_celebrate = IntroductionInteraction::pan("puzzle3d-main", "Pan").await.celebrate(window_element_id("puzzle3d-main")).await;
+    let with_celebrate = IntroductionInteraction::pan("puzzle3d-main", LocalizedLabel::native("Pan", "Verschieben")).await.celebrate(window_element_id("puzzle3d-main")).await;
     let json = serde_json::to_string(&with_celebrate).unwrap();
     assert!(json.contains("\"celebrate\":\"framework.window.puzzle3dMain\""), "{json}");
     let round: IntroductionInteraction = serde_json::from_str(&json).unwrap();
@@ -65,9 +65,9 @@ async fn introduction_interaction_round_trips_and_defaults() {
     assert!(!step.ordered);
 
     let with_interactions = IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…")).interact_ordered(vec![
-        IntroductionInteraction::zoom("puzzle3d-main", "Zoom").await,
-        IntroductionInteraction::pan("puzzle3d-main", "Pan").await,
-        IntroductionInteraction::orbit("puzzle3d-main", "Orbit").await,
+        IntroductionInteraction::zoom("puzzle3d-main", LocalizedLabel::native("Zoom", "Zoomen")).await,
+        IntroductionInteraction::pan("puzzle3d-main", LocalizedLabel::native("Pan", "Verschieben")).await,
+        IntroductionInteraction::orbit("puzzle3d-main", LocalizedLabel::native("Orbit", "Orbitieren")).await,
     ]);
     assert!(with_interactions.ordered);
     assert_eq!(with_interactions.interactions.len(), 3);

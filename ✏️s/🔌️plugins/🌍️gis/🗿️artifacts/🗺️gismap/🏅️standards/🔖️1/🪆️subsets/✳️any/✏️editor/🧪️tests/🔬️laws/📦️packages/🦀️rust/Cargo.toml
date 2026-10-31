@@ -31,9 +31,12 @@ semio-framework-surface = { path = "../../../../../../../../../../../../../../�
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { workspace = true }
-semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-store-testing-doubles = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/📦️packages/🦀️rust" }
+semio-framework-os-store-testing-prelude = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧭️prelude/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-gis-gismap-demo-asset = { path = "../../../../../🖼️assets/🎬️demo/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
 semio-s-artifact-stdio-semio-value-model = { workspace = true }
 semio-s-artifact-stdio-semio-value-mutations = { workspace = true }

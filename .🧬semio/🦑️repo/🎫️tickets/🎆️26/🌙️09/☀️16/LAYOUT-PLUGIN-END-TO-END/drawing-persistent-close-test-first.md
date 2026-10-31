@@ -1,0 +1,3 @@
+# Persistent Close Test First
+
+Neutral closed fixture/schema and a genuine PersistentListBuilder child owning law were authored before the close outcome rewrite. The real original sealed scalar identity survives denial, independent serde_json output equals the fixture, and paid close debits one finite bank while the linked allocator observes actual allocations/releases. Actual child CPU must survive errors; empty slot scans are distinct fixed metadata turns with zero payload copy, and cached completion has zero work. Persistent --lib and downstream native-owned --lib remain mandatory and unexecuted for these changes. Normal builder birth/adoption CPU interfaces remain explicitly outside this close proof.

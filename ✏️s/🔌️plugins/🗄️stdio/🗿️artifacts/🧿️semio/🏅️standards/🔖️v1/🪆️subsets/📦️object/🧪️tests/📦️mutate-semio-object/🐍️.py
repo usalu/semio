@@ -18,13 +18,12 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 * the nine verbs and their argument lists are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is the
   committed per-kind specification vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/`;
-* the pack body's `format u8` + varint-length-prefixed `schema` is the committed protocol
-  `…/📸️snapshot/💾️binary/📡️.protocol.semio`, whose prose then names — but declines to
-  frame — "`transform` (10 fixed f64 LE) plus the three optional child-handle slots
-  (`brep`/`mesh`/`properties`, each a presence byte + five length-prefixed strings when present)".
-  That named-but-unframed layout was written out here from the protocol's own sentence and is
-  PINNED by `pack_bytes` re-encoding the committed `🎒️.pack.semio` byte for byte, which a
-  misreading could not do.
+* the pack body is the derived record document of the shared record-document codec
+  (`🧿️semio/🚪️io/💾️binary/🎒️record-document/🐍️.py`), driven by this subset's committed record spec
+  `…/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json`: the SPK container, the fixed-Huffman deflate, the BLAKE3
+  content hash and the schema-hashed record body are specified by `🧰️framework/🔨️modules/🎒️pack` and
+  re-implemented there, not here. The committed `🎒️.pack.semio` files were written by the Rust record
+  pack, so `parse_pack`/`pack_bytes` reproducing them is a cross-language byte agreement.
 
 Nothing here imports, links, wraps or transliterates the Rust subject. Every function was written
 against the documents above; where the two disagree the disagreement is a finding, not something to
@@ -34,8 +33,11 @@ tune away.
 from __future__ import annotations
 
 # region 🔖️Imports
+import importlib.util
 import json
+import os
 import struct
+import sys
 
 from semio_repo_test import Adapter, Context, Outcome, digest
 
@@ -43,11 +45,8 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 
 
 # region 🔖️Carrier
-BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 DSL_PREAMBLE = "semio stdio.semio.object.dsl v1"
-PACK_TOKEN = "stdio.semio.object.pack v1"
 DOCUMENT_SCHEMA = "stdio.semio.object"
-PACK_FORMAT = 1
 
 #: 🎰️ The three optional owned child slots, in the order the grammar's `document` lists them —
 #: which is also the order the pack frame writes them.
@@ -63,7 +62,7 @@ def hex_of(text: str) -> str:
 
 
 def text_of(hexed: str) -> str:
-    """🔡️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
+    """🪄️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
     if len(hexed) % 2 != 0:
         raise AssertionError("hex run %r has an odd digit count" % hexed)
     return bytes.fromhex(hexed).decode("utf-8")
@@ -130,22 +129,8 @@ def read_reference(reader) -> dict:
 
 
 def print_reference(target: dict) -> str:
-    """🖨️ Prints the literal reference production."""
+    """🔖️ Prints the literal reference production."""
     return "[" + ",".join(hex_of(field) for field in reference_fields(target)) + "]"
-
-
-def read_pack_reference(body: bytes, at: int) -> tuple:
-    """💾️ Reads four length-prefixed reference strings."""
-    fields = []
-    for _ in range(4):
-        field, at = read_string(body, at)
-        fields.append(field)
-    return reference_from_fields(fields), at
-
-
-def write_pack_reference(target: dict) -> bytes:
-    """📦️ Writes four length-prefixed reference strings."""
-    return b"".join(write_string(field) for field in reference_fields(target))
 
 
 # endregion 🔖️Carrier
@@ -199,14 +184,14 @@ def read_child(reader: Reader) -> dict:
 
 
 def print_child(child: dict) -> str:
-    """🧒️ The writing direction of `child`."""
+    """👶️ The writing direction of `child`."""
     if not child:
         return "[]"
     return "[%s,%s]" % (hex_of(child["childId"]), print_reference(child["target"]))
 
 
 def parse_dsl(text: str) -> dict:
-    """📖️ `document = artifact-mark schema-line transform-line brep-line mesh-line
+    """📄️ `document = artifact-mark schema-line transform-line brep-line mesh-line
     properties-line`, under the text envelope."""
     body = [line.rstrip("\r") for line in split_preamble(text).split("\n") if line.strip() != ""]
     if len(body) != 5:
@@ -261,7 +246,7 @@ def transform_of(numbers: list) -> dict:
 
 
 def transform_numbers(transform: dict) -> list:
-    """📐️ The inverse of `transform_of` — translation, rotation, scale, in the grammar's order."""
+    """⚖️ The inverse of `transform_of` — translation, rotation, scale, in the grammar's order."""
     translation, rotation, scale = transform["translation"], transform["rotation"], transform["scale"]
     return [
         translation["x"],
@@ -281,101 +266,33 @@ def transform_numbers(transform: dict) -> list:
 
 
 # region 🔖️Pack
-def read_varint(data: bytes, at: int) -> tuple:
-    """🔢️ Unsigned LEB128 — the `varint` the protocol description names for every length."""
-    value = 0
-    shift = 0
-    while True:
-        if at >= len(data):
-            raise AssertionError("the pack frame ends inside a varint")
-        byte = data[at]
-        at += 1
-        value |= (byte & 0x7F) << shift
-        if byte & 0x80 == 0:
-            return value, at
-        shift += 7
+_HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def write_varint(value: int) -> bytes:
-    """🔢️ The writing direction of the same encoding."""
-    out = bytearray()
-    while True:
-        byte = value & 0x7F
-        value >>= 7
-        out.append(byte | (0x80 if value else 0))
-        if not value:
-            return bytes(out)
+def _load_shared(alias, *parts):
+    """🧬️ Loads a shared module from the `stdio.semio` artifact root, six folders above this case, and registers it under an importable name."""
+    if alias in sys.modules:
+        return sys.modules[alias]
+    path = os.path.join(_HERE, *[os.pardir] * 6, *parts)
+    spec = importlib.util.spec_from_file_location(alias, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[alias] = module
+    spec.loader.exec_module(module)
+    return module
 
 
-def read_string(data: bytes, at: int) -> tuple:
-    """🧵️ A varint-length-prefixed UTF-8 string, the protocol's only scalar past the header."""
-    length, at = read_varint(data, at)
-    if at + length > len(data):
-        raise AssertionError("the pack frame ends inside a length-prefixed string")
-    return data[at : at + length].decode("utf-8"), at + length
-
-
-def write_string(text: str) -> bytes:
-    """🧵️ The writing direction of the same scalar."""
-    raw = text.encode("utf-8")
-    return write_varint(len(raw)) + raw
-
-
-def unwrap_binary(data: bytes) -> bytes:
-    """📖️ Strips the semio binary envelope and refuses any token but this subset's own."""
-    if data[:8] != BINARY_MAGIC:
-        raise AssertionError("the pack file does not start with the semio binary magic")
-    if len(data) < 12:
-        raise AssertionError("the pack file is truncated inside its envelope")
-    token_len = int.from_bytes(data[8:12], "little")
-    token = data[12 : 12 + token_len].decode("utf-8")
-    if token != PACK_TOKEN:
-        raise AssertionError("expected the %r envelope token, got %r" % (PACK_TOKEN, token))
-    return data[12 + token_len :]
+record_document = _load_shared("record_document", "🚪️io", "💾️binary", "🎒️record-document", "🐍️.py")
+RECORD_SPEC = record_document.load_record_spec(os.path.join(_HERE, os.pardir, os.pardir, "🧬️schema", "📸️snapshot", "🗺️record-spec", "🔣️.json"))
 
 
 def parse_pack(data: bytes) -> dict:
-    """📦️ Binary envelope, then `format u8`, the schema, ten f64 LE and the three slot records."""
-    body = unwrap_binary(data)
-    if body[0] != PACK_FORMAT:
-        raise AssertionError("unknown pack format byte %d" % body[0])
-    schema, at = read_string(body, 1)
-    if at + 80 > len(body):
-        raise AssertionError("the pack frame ends inside the transform")
-    numbers = list(struct.unpack_from("<10d", body, at))
-    at += 80
-    document = {"schema": schema, "transform": transform_of(numbers)}
-    for slot in SLOTS:
-        if at >= len(body):
-            raise AssertionError("the pack frame ends before the %s slot" % slot)
-        present = body[at]
-        at += 1
-        if present not in (0, 1):
-            raise AssertionError("the %s presence byte is %d, not 0 or 1" % (slot, present))
-        if present:
-            child_id, at = read_string(body, at)
-            target, at = read_pack_reference(body, at)
-            document[slot] = {"childId": child_id, "target": target}
-    if at != len(body):
-        raise AssertionError("%d trailing byte(s) after the last slot" % (len(body) - at))
-    return document
+    """📦️ A `.pack.semio` file as the JSON snapshot its record document carries."""
+    return record_document.decode_pack(RECORD_SPEC, data)
 
 
 def pack_bytes(document: dict) -> bytes:
-    """📦️ The writing direction of `parse_pack`, envelope included."""
-    body = bytearray([PACK_FORMAT])
-    body += write_string(document["schema"])
-    body += struct.pack("<10d", *transform_numbers(document["transform"]))
-    for slot in SLOTS:
-        child = document.get(slot)
-        if not child:
-            body.append(0)
-            continue
-        body.append(1)
-        body += write_string(child["childId"])
-        body += write_pack_reference(child["target"])
-    token = PACK_TOKEN.encode("utf-8")
-    return BINARY_MAGIC + len(token).to_bytes(4, "little") + token + bytes(body)
+    """🔍️ The writing direction of `parse_pack`, envelope included."""
+    return record_document.encode_pack(RECORD_SPEC, document)
 
 
 # endregion 🔖️Pack
@@ -402,7 +319,7 @@ FIELD_OF_TAG = {"MoveObject": ("translation", "translation"), "RotateObject": ("
 
 
 def tagged(mutation: dict) -> tuple:
-    """🔎️ Splits `{"MoveObject": {…}}` into its verb and its arguments."""
+    """✂️ Splits `{"MoveObject": {…}}` into its verb and its arguments."""
     if len(mutation) != 1:
         raise AssertionError("a mutation is exactly one externally tagged verb, got %r" % sorted(mutation))
     tag = next(iter(mutation))
@@ -416,7 +333,7 @@ def clone(value):
 
 
 def apply_mutation(document: dict, mutation: dict) -> dict:
-    """🧬️ Applies one verb, returning a NEW document. A verb addressing a slot that cannot carry
+    """📱️ Applies one verb, returning a NEW document. A verb addressing a slot that cannot carry
     its argument is a refusal, never a silent no-op — a quietly skipped mutation would report as a
     pass."""
     result = clone(document)
@@ -455,7 +372,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
 
 
 def apply_all(document: dict, mutations: list) -> dict:
-    """🧬️ Folds a list of verbs over a document, left to right."""
+    """🗜️ Folds a list of verbs over a document, left to right."""
     for mutation in mutations:
         document = apply_mutation(document, mutation)
     return document
@@ -466,7 +383,7 @@ def apply_all(document: dict, mutations: list) -> dict:
 
 # region 🔖️Scenario input
 def doc_json(ctx: Context) -> dict:
-    """📜️ The scenario's own committed vector — the feature owns the parameters, not the adapter."""
+    """➡️ The scenario's own committed vector — the feature owns the parameters, not the adapter."""
     for step in ctx.scenario["steps"]:
         if step.get("docString"):
             return json.loads(step["docString"])
@@ -474,7 +391,7 @@ def doc_json(ctx: Context) -> dict:
 
 
 def prepared(ctx: Context) -> tuple:
-    """📦️ The real committed crate object, put into the state the scenario's verb is defined for by
+    """🔟️ The real committed crate object, put into the state the scenario's verb is defined for by
     the doc string's own `prepare` list, plus the verb itself."""
     plan = doc_json(ctx)
     document = apply_all(parse_dsl(ctx.input_bytes(CRATE_DSL).decode("utf-8")), plan.get("prepare", []))
@@ -498,7 +415,7 @@ def mutate(ctx: Context) -> Outcome:
 
 
 def inverse(ctx: Context) -> Outcome:
-    """↩️ The same verb, then this implementation's own undo of it. The restored document must be
+    """📚️ The same verb, then this implementation's own undo of it. The restored document must be
     the prepared object again — asserted here, and compared against the subject's restored document
     by the runner, so a wrong undo that happens to be self-consistent still shows up."""
     document, mutation = prepared(ctx)
@@ -510,7 +427,7 @@ def inverse(ctx: Context) -> Outcome:
 
 
 def spec_vector(ctx: Context) -> Outcome:
-    """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
+    """🌀️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
     is a THIRD statement of what the verb means, independent of both implementations."""
     before_uri, mutation_uri, after_uri = ctx.step_input_uris()[:3]
     before = snapshot_json(ctx, before_uri)

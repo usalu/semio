@@ -35,15 +35,34 @@ use crate::sim::testing::OriginalEnergyCaller;
 fn prepare_input_identity(job:&mut EnergyJob,caller:&mut OriginalEnergyCaller){for _ in 0..1_000_000{if caller.turn(ENERGY_BATCH_GRANT,1,u64::MAX,|cx|Ok(job.step_input_identity(cx))).unwrap().expect("original complete input identity"){return}}panic!("original input identity remained pending")}
 fn build_checkpoint_packet(job:&mut EnergyJob,caller:&mut OriginalEnergyCaller)->EnergyWirePacket{prepare_input_identity(job,caller);let hour_index = job.hour_index as u64;job.start_wire(EnergyWireKind::Checkpoint,hour_index,JobPayloadStream::CheckpointState).expect("checkpoint preflight");for _ in 0..1_000_000{if caller.turn(ENERGY_BATCH_GRANT,1,u64::MAX,|cx|Ok(job.step_wire_build(cx))).unwrap().expect("original checkpoint fragment"){return job.wire_ready.take().expect("sealed original checkpoint")}}panic!("original checkpoint did not seal")}
 fn retained_test_packet(_operation:Operation,identity:EnergyWireIdentity,bytes:&[u8],caller:&mut OriginalEnergyCaller)->EnergyWirePacket{
- let mut writer=Some(semio_framework_job_payload::RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState));let mut preborn=Some(semio_framework_job_payload::JobPayloadPageSource::new());let mut output=None;let copied_bytes=bytes.len()+std::mem::size_of::<EnergyWirePacket>()+std::mem::size_of::<Option<semio_framework_job_payload::RetainedJobPayloadWriter>>();
- caller.turn(ENERGY_BATCH_GRANT,1,u64::MAX,|cx|{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"native original checkpoint source requires its quoted copy loan").into())}let source=preborn.take().unwrap();match cx.admit_payload_page(writer.as_mut().unwrap(),source){Ok(mut page)=>{page.write(bytes).expect("authored bounded native source");page.commit();},Err(rejected)=>{preborn=Some(rejected.into_source());return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"native checkpoint source remains original on page refusal").into())}}match writer.take().unwrap().finish(){Ok(payload)=>output=Some(EnergyWirePacket{kind:EnergyWireKind::Checkpoint,identity,payload,preview:None,reservation:None}),Err(original)=>{writer=Some(original);return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native packet keeps the original refused writer").into())}}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()})?;Ok(())}).expect("same original checkpoint page binding and retained sealed candidate");assert!(preborn.is_none());output.unwrap()
+ use semio_framework_job_payload::{JobPayloadPageSource,RetainedPayloadBuilder};
+ let mut builder:Option<Box<RetainedPayloadBuilder>>=None;let mut preborn=Some(JobPayloadPageSource::new());let mut payload=None;let mut written=false;
+ for _ in 0..4096{
+  caller.turn(ENERGY_BATCH_GRANT,1,u64::MAX,|cx|{
+   if builder.is_none(){let turn=RetainedPayloadBuilder::admit_boxed(JobPayloadStream::CheckpointState,&mut builder,&*cx);semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(())}
+   let b=builder.as_mut().unwrap();
+   let (turn,writing)=if !b.is_initialized(){(b.advance_initialization(&*cx),false)}
+    else if preborn.is_some(){(b.accept_original_page(&mut preborn,cx),false)}
+    else if !written&&b.staged_page_len().is_none(){(b.begin_staged_page_funded(cx),false)}
+    else if !written{(b.write_staged_source_funded(cx,bytes),true)}
+    else if b.staged_page_len().is_some(){(b.commit_staged_page_funded(cx),false)}
+    else if b.published().is_none(){(b.seal(&*cx),false)}
+    else{(b.take_finished(&mut payload,cx.retained_grant()),false)};
+   let step=semio_framework_job::receive_original_retained_work(cx,turn)?;
+   if writing&&matches!(step,RetainedCloneStep::Complete(_)){written=true;}
+   Ok(())
+  }).expect("same original checkpoint page binding and retained sealed candidate");
+  if payload.is_some(){break;}
+ }
+ assert!(preborn.is_none());
+ EnergyWirePacket{kind:EnergyWireKind::Checkpoint,identity,payload:payload.expect("sealed original checkpoint payload"),preview:None,reservation:None}
 }
 fn step_restore(job:&mut EnergyRestoreJob,caller:&mut OriginalEnergyCaller)->Result<bool,EnergyWireRejection>{caller.turn(ENERGY_BATCH_GRANT,1,u64::MAX,|cx|Ok(job.step(cx))).expect("original restore source turn")}
 fn finish_restore(job:EnergyRestoreJob,caller:&mut OriginalEnergyCaller)->Result<EnergyJob,EnergyRestoreJob>{let mut input=Some(job);let mut output=None;let copied_bytes=std::mem::size_of::<EnergyRestoreJob>()+std::mem::size_of::<EnergyJob>();for _ in 0..4096{caller.turn(ENERGY_BATCH_GRANT,1,u64::MAX,|cx|{let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(())}output=Some(input.take().unwrap().finish(cx));cx.consume_fuel(1);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()})?;Ok(())}).expect("original install retains candidate before receipt acceptance");if let Some(output)=output.take(){return output}}panic!("original install remained pending")}
 fn close_restore(job:&mut EnergyRestoreJob,caller:&mut OriginalEnergyCaller){for _ in 0..1_000_000{if job.terminal_is_empty(){return}caller.turn(ENERGY_BATCH_GRANT,64,u64::MAX,|cx|cx.with_original_retirement(|cx|job.close_step(cx))).expect("same original restore close");}panic!("original restore close remained pending")}
-fn close_rejected(job:&mut EnergyCheckpointRejected,caller:&mut OriginalEnergyCaller){for _ in 0..1_000_000{if job.terminal_is_empty(){return}let demand=job.close_demands().unwrap();caller.turn(ENERGY_BATCH_GRANT,64,u64::MAX,|cx|{semio_framework_job::close_original_retained_step(cx,demand,|loan|job.close_step(loan).map(|step|RetainedCloneStep::Progress(step.progress())))?;Ok(())}).expect("same original rejected restore close");}panic!("original rejected restore remained pending")}
+fn close_rejected(job:&mut EnergyCheckpointRejected,caller:&mut OriginalEnergyCaller){for _ in 0..1_000_000{if job.terminal_is_empty(){return}let demand=job.close_demands().unwrap();caller.turn(ENERGY_BATCH_GRANT,64,u64::MAX,|cx|{crate::retirement::energy_retained_step(cx,demand,|loan|job.close_step(loan).map(|step|RetainedCloneStep::Progress(step.progress())))?;Ok(())}).expect("same original rejected restore close");}panic!("original rejected restore remained pending")}
 fn drive_energy_job_with_fuel(mut job:EnergyJob,caller:&mut OriginalEnergyCaller,fuel:u64)->(EnergyJob,Vec<EnergyJobPreview>,usize,Vec<u8>,std::time::Duration){let generation=job.operation.generation;let mut previews=Vec::new();let mut checkpoints=0;let mut worst=std::time::Duration::ZERO;let mut completed_bytes=None;for _ in 0..1_000_000{let start=Instant::now();let observed=caller.turn(ENERGY_BATCH_GRANT,fuel,u64::MAX,|cx|seen_step(&mut job,cx)).unwrap();worst=worst.max(start.elapsed());if let Some(mut lease)=job.take_commit_packet(generation).unwrap(){completed_bytes=Some(page_bytes(&lease.packet().payload));caller.close_packet(lease.packet_mut());let mut lease=Some(lease);caller.acknowledge(&mut job,&mut lease,EnergyWireKind::Commit);}match observed{Seen::Preview=>{let mut packet=job.take_preview_packet(generation).unwrap().unwrap();previews.push(packet.preview().unwrap().clone());caller.close_packet(&mut packet);},Seen::Checkpoint=>{let mut lease=job.take_checkpoint_packet(generation).unwrap().unwrap();caller.close_packet(lease.packet_mut());let mut lease=Some(lease);caller.acknowledge(&mut job,&mut lease,EnergyWireKind::Checkpoint);checkpoints+=1;},Seen::Complete(bytes)=>{caller.close_job(&mut job);return(job,previews,checkpoints,completed_bytes.unwrap_or(bytes),worst)},Seen::Yield=>{},other=>panic!("original energy replay ended with {other:?}")}}panic!("native original replay remained pending")}
-fn payload_bytes(mut payload:RetainedJobPayload,caller:&mut OriginalEnergyCaller)->Vec<u8>{let bytes=(0..payload.page_count()).flat_map(|i|payload.page(i).unwrap().iter().copied()).collect();while !payload.terminal_is_empty(){let demand=payload.retirement_demands().unwrap();caller.turn(ENERGY_BATCH_GRANT,64,u64::MAX,|cx|{semio_framework_job::close_original_retained_step(cx,demand,|loan|payload.close_step(loan))?;Ok(())}).unwrap();}bytes}
+fn payload_bytes(mut payload:RetainedJobPayload,caller:&mut OriginalEnergyCaller)->Vec<u8>{let bytes=(0..payload.page_count()).flat_map(|i|payload.page(i).unwrap().iter().copied()).collect();while !payload.terminal_is_empty(){let demand=payload.retirement_demands().unwrap();caller.turn(ENERGY_BATCH_GRANT,64,u64::MAX,|cx|{crate::retirement::energy_retained_step(cx,demand,|loan|payload.close_step(loan))?;Ok(())}).unwrap();}bytes}
 
 #[test]
 fn p7c2_wire_schema_maximum_plus_one_and_exact_restore_owner() {
@@ -214,3 +233,33 @@ caller.finish();}
 
 #[global_allocator]
 static ENERGY_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+/// ♻️ Cancelling a wire build mid-page retires the boxed payload builder only through funded close steps, and the box release is itself paid.
+#[test]
+fn cancelling_a_wire_build_mid_page_funds_the_whole_builder_release() {
+    let operation = Operation::new(allocate_operation_id(), RevisionId(92), Generation(7), 0x55ab);
+    let mut caller = OriginalEnergyCaller::new(operation.operation, operation.generation);
+    let mut job = EnergyJob::new(operation, test_model_single_zone(), SimulationConfig::default()).expect("source admission");
+    prepare_input_identity(&mut job, &mut caller);
+    let hour_index = job.hour_index as u64;
+    job.start_wire(EnergyWireKind::Checkpoint, hour_index, JobPayloadStream::CheckpointState).expect("checkpoint preflight");
+    for _ in 0..4 {
+        caller.turn(ENERGY_BATCH_GRANT, 1, u64::MAX, |cx| Ok(job.step_wire_build(cx))).unwrap().expect("a build turn");
+    }
+    assert!(job.wire_build.as_ref().is_some_and(|build| build.builder.as_ref().is_some_and(|builder| !builder.terminal_is_empty())), "the build is mid-flight");
+    job.begin_close();
+    let mut released = 0usize;
+    let mut turns = 0usize;
+    while !job.terminal_is_empty() {
+        turns += 1;
+        assert!(turns < 1_000_000, "finite close");
+        caller.turn(ENERGY_BATCH_GRANT, 64, u64::MAX, |cx| cx.with_original_retirement(|cx| {
+            let step = job.close_step(cx)?;
+            released += step.progress().released_bytes;
+            Ok(step)
+        })).expect("funded builder close");
+    }
+    assert!(job.wire_build.is_none() && job.builder_retiring.is_none());
+    assert!(released >= std::mem::size_of::<semio_framework_job_payload::RetainedPayloadBuilder>(), "the box release is paid: {released}");
+    caller.finish();
+}

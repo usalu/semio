@@ -81,7 +81,7 @@ impl<Mu> ArtifactStoreOperationRowsRetirement<Mu> {
 }
 
 impl<Mu: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreOperationRowsRetirement<Mu> {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress, admit_retained_clone_progress};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -89,10 +89,10 @@ impl<Mu: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreOperationRows
         let demand = self.demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "operation retirement exceeds admitted depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, grant); }
+        if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, grant).result; }
         if let Some(row) = self.pending.take().or_else(|| self.rows.pop()) {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match self.factory.as_ref().expect("operation payload retains its factory").retire_owned(row, child) {
+            return match self.factory.as_ref().expect("operation payload retains its factory").retire_owned(row, child).result {
                 Ok((owner, progress)) => { *self.active = Some(owner); admit_retained_clone_progress(child, progress, "operation row retirement birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "operation row original factory changed admitted constructor receipt")); } Ok(RetainedCloneStep::Progress(progress)) }
                 Err((error, row)) => { *self.pending = Some(row); Err(error) }
             };
@@ -102,7 +102,7 @@ impl<Mu: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreOperationRows
             drop(self.identity.take());
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty }));
         }
-        if self.strings.is_some() { return retirement_owner_close(&mut self.strings, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.strings.is_some() { return retirement_owner_close(&mut self.strings, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(factory) = self.factory.take() {
             let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory;
             *self.closing_factory = Some(semio_framework_value::FactoryAuthority::new(factory));
@@ -110,11 +110,11 @@ impl<Mu: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreOperationRows
         }
         let owner = self.closing_factory.as_mut().expect("remaining original operation factory");
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = owner.step(child)?;
+        let step = owner.step(child).result?;
         semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original operation row factory")?;
         if owner.terminal_is_empty() { drop(self.closing_factory.take()); }
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
-    }
+    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { self.rows.terminal_is_empty() && self.identity.is_none() && self.active.is_none() && self.pending.is_none() && self.strings.is_none() && self.factory.is_none() && self.closing_factory.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }
@@ -157,9 +157,9 @@ pub fn admit_history_edit_read_issuer<Mutation:Send+'static>(original:&Arc<dyn A
 
 impl<Mutation: Send + 'static> ArtifactOwnedValueRetirementFactory<Edit<Mutation>> for ArtifactStoreDecodedEditRetirementFactory<Mutation> {
     fn retirement_birth_bytes(&self, _value: &Edit<Mutation>) -> usize { size_of::<ArtifactStoreDecodedEditRetirement<Mutation>>() }
-    fn retire_owned(&self, value: Edit<Mutation>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Edit<Mutation>)> {
+    fn retire_owned(&self, value: Edit<Mutation>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Edit<Mutation>)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Edit<Mutation>)> {
         admit_artifact_retirement(value, grant, |value| ArtifactStoreDecodedEditRetirement::new(value, self.mutation_factory.clone()))
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
@@ -167,9 +167,9 @@ pub struct ArtifactStoreChangeRetirementFactory;
 
 impl ArtifactOwnedValueRetirementFactory<Change> for ArtifactStoreChangeRetirementFactory {
     fn retirement_birth_bytes(&self, _value: &Change) -> usize { size_of::<ArtifactStoreHistoryMetadataRetirement>() }
-    fn retire_owned(&self, value: Change, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Change)> {
+    fn retire_owned(&self, value: Change, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Change)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Change)> {
         admit_artifact_retirement(value, grant, ArtifactStoreHistoryMetadataRetirement::change)
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 impl<Mutation> ArtifactStoreDecodedEditRetirement<Mutation> {
@@ -192,7 +192,7 @@ impl<Mutation> ArtifactStoreDecodedEditRetirement<Mutation> {
 }
 
 impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecodedEditRetirement<Mutation> {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -200,12 +200,12 @@ impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecoded
         let demand = self.demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "decoded edit retirement exceeds admitted depth")); }
         if grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_copy_bytes < demand.copy_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, grant); }
+        if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, grant).result; }
         if self.edit.is_none() {
             if self.mutation_factory.is_some() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = self.mutation_factory.take().unwrap(); *self.closing_factory = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
             let factory = self.closing_factory.as_mut().expect("nonterminal decoded edit retains original closing capability");
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = factory.step(child)?;
+            let step = factory.step(child).result?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "decoded edit original factory capability")?;
             if factory.terminal_is_empty() { drop(self.closing_factory.take()); }
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
@@ -213,7 +213,7 @@ impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecoded
         let edit = self.edit.as_mut().expect("decoded edit retains its original owner");
         if let Some(mutation) = self.pending_mutation.take().or_else(|| edit.inverse.pop().or_else(|| edit.forwards.pop())) {
             let child = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - demand.copy_bytes, maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match self.mutation_factory.as_ref().unwrap().retire_owned(mutation, child) {
+            return match self.mutation_factory.as_ref().unwrap().retire_owned(mutation, child).result {
                 Ok((owner, mut progress)) => {
                     *self.active = Some(owner);
                     let valid = progress.fits(child) && progress.retained_capacity_bytes == demand.capacity_bytes;
@@ -243,7 +243,7 @@ impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecoded
         let retirement = match ArtifactStoreEditRetirement::new(edit) { Ok(retirement) => retirement, Err(edit) => { *self.edit = Some(edit); return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "decoded edit structural handoff retained native backing")); } };
         *self.active = Some(Box::new(retirement));
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..empty }))
-    }
+    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { self.edit.is_none() && self.active.is_none() && self.pending_mutation.is_none() && self.mutation_factory.is_none() && self.closing_factory.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.demands(body)?.capacity_bytes) }

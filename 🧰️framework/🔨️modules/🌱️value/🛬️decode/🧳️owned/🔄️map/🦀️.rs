@@ -1,39 +1,24 @@
-//! 🔄️ Authored native wrappers adopt completed original typed fields without rebuilding their payloads.
-use crate::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,retirement::RetireOwned};
-use super::{NativeReceive,NativeReceiver,NativeDecodeControl,RetainedCloneRef};
-use std::{marker::PhantomData,mem::size_of};
-/// 🧬️ Maps only a complete actual typed owner through an infallible authored ownership transfer.
+//! 🔄️ Authored wrappers retain the genuine child handoff before a separately funded ownership mapping.
+use crate::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,OriginalReceivingPrimary,ValueError,retirement::RetireOwned,retained_clone::{RetainedCloneClose,retained_clone_grant_admits}};
+use super::{NativeReceive,NativeReceiver,NativeDecodeControl,RetainedCloneRef,tree::{fixed,receipt,invalid}};
+use std::{marker::PhantomData,mem::ManuallyDrop};
+/// 🧬️ Implementations perform only an infallible allocation-free authored ownership move.
 pub trait NativeReceiveMap<T>:RetireOwned{fn from_native(value:T)->Self;}
-/// 🪡️ A wrapper retains its defining receiver through the same original input and funded cleanup.
-pub struct NativeMappedReceiver<I:?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>>{inner:T::Receiver,marker:PhantomData<fn(&I)->U>}
+/// 🪡️ The original child, pending native owner and mapped output all keep their real cancellation custody.
+pub struct NativeMappedReceiver<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>>{inner:T::Receiver,pending:ManuallyDrop<Option<T>>,output:ManuallyDrop<Option<U>>,retirement:RetainedCloneClose,closing:bool,marker:PhantomData<fn(&I)->U>}
 fn nested(mut d:RetirementDemand)->Result<RetirementDemand,ValueError>{d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::DepthLimit,"native mapped receiving depth overflow"))?;Ok(d)}
 fn child(g:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g}}
-impl<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>> NativeMappedReceiver<I,T,U>{
- /// 📐️ Adds the real wrapper ancestor to its defining child's original constructor quote.
- pub fn birth()->Result<RetirementDemand,ValueError>{nested(T::receive_birth_demand())}
- /// 🎟️ Refusal constructs no child or wrapper owner.
- pub fn begin(g:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{let d=Self::birth()?;if !crate::retained_clone::retained_clone_grant_admits(g,d){return Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"native wrapper constructor requires its complete original quote"))}let(inner,p)=T::begin_receive(child(g))?;Ok((Self{inner,marker:PhantomData},p))}
+impl<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>> NativeMappedReceiver<I,T,U>{pub fn new()->Self{Self{inner:T::receiver(),pending:ManuallyDrop::new(None),output:ManuallyDrop::new(None),retirement:Default::default(),closing:false,marker:PhantomData}}}
+impl<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>>NativeReceiver<I,U>for NativeMappedReceiver<I,T,U>{
+ fn demands(&self,input:RetainedCloneRef<'_,I>,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.output.is_some(){return Err(invalid())}if self.pending.is_some(){return Ok(fixed(0))}if self.inner.output_ready(){return nested(self.inner.take_demand()?)}nested(self.inner.demands(input,body)?)}
+ fn advance(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneStep,OriginalReceivingPrimary>{let mut work=0;let result=(||{let d=self.demands(input,body)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}control.checkpoint()?;if self.pending.is_some(){let value=self.pending.take().unwrap();*self.output=Some(U::from_native(value));work=1;return Ok(RetainedCloneStep::Complete(receipt(fixed(0))))}if self.inner.output_ready(){let turn=self.inner.take(child(g));work=turn.work;let Some((value,p))=turn.result?else{return Ok(RetainedCloneStep::Progress(Default::default()))};*self.pending=Some(value);return Ok(RetainedCloneStep::Progress(p))}let turn=self.inner.advance(input,control,body,child(g));work=turn.work;turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))})();RetainedWorkOutcome{result,work}}
+ fn output_ready(&self)->bool{!self.closing&&self.output.is_some()}
+ fn take_demand(&self)->Result<RetirementDemand,ValueError>{if !self.output_ready(){return Err(invalid())}Ok(fixed(0))}
+ fn take(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome<Option<(U,RetainedCloneProgress)>>{if !self.output_ready()||!retained_clone_grant_admits(g,fixed(0)){return RetainedWorkOutcome{result:Ok(None),work:0}}RetainedWorkOutcome{result:Ok(Some((self.output.take().unwrap(),receipt(fixed(0))))),work:1}}
+ fn begin_close(&mut self){self.closing=true;self.inner.begin_close();}
+ fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid())}if !self.inner.terminal_is_empty(){return nested(self.inner.close_demands(body)?)}if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.pending.is_some(){return self.retirement.next_owner_demands::<T>(true,&None,body)}if self.output.is_some(){return self.retirement.next_owner_demands::<U>(true,&None,body)}Ok(Default::default())}
+ fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{let mut work=0;let result=(||{if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demands(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.inner.terminal_is_empty(){let turn=self.inner.close_step(child(g));work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}if !self.retirement.is_empty(){let turn=self.retirement.step_granted(g);work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}let turn=if self.pending.is_some(){self.retirement.begin_granted(&mut self.pending,g)}else{self.retirement.begin_granted(&mut self.output,g)};work=turn.work;turn.result.map(|s|s.unwrap_or(RetainedCloneStep::Progress(Default::default())))})();RetainedWorkOutcome{result,work}}
+ fn terminal_is_empty(&self)->bool{self.inner.terminal_is_empty()&&self.pending.is_none()&&self.output.is_none()&&self.retirement.is_empty()}
 }
-impl<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>> NativeReceiver<I,U> for NativeMappedReceiver<I,T,U>{
- fn demands(&self,input:RetainedCloneRef<'_,I>,body:usize)->Result<RetirementDemand,ValueError>{nested(self.inner.demands(input,body)?)}
- fn advance(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.demands(input,body)?;if !crate::retained_clone::retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}self.inner.advance(input,control,body,child(g))}
- fn output_ready(&self)->bool{self.inner.output_ready()}
- fn take_demand(&self)->Result<RetirementDemand,ValueError>{let mut d=nested(self.inner.take_demand()?)?;d.copy_bytes=d.copy_bytes.checked_add(size_of::<U>()).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::WorkLimit,"native wrapper transfer extent overflow"))?;Ok(d)}
- fn take(&mut self,g:RetainedCloneGrant)->Result<Option<(U,RetainedCloneProgress)>,ValueError>{let d=self.take_demand()?;if !self.output_ready()||!crate::retained_clone::retained_clone_grant_admits(g,d){return Ok(None)}let child=RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-size_of::<U>(),..child(g)};let Some((value,mut p))=self.inner.take(child)?else{return Ok(None)};p.copied_bytes+=size_of::<U>();Ok(Some((U::from_native(value),p)))}
- fn begin_close(&mut self){self.inner.begin_close()}
- fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{nested(self.inner.close_demands(body)?)}
- fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.close_demands(g.maximum_copy_bytes)?;if !crate::retained_clone::retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}self.inner.close_step(child(g))}
- fn terminal_is_empty(&self)->bool{self.inner.terminal_is_empty()}
-}
-
-/// 📦️ A boxed child adopts its completed typed owner into one heap cell without rebuilding the payload.
-impl<T:RetireOwned> NativeReceiveMap<T> for Box<T>{fn from_native(value:T)->Self{Box::new(value)}}
-impl<I:?Sized+'static,T:NativeReceive<I>> NativeReceive<I> for Box<T>{
- type Receiver=NativeMappedReceiver<I,T,Self>;
- fn receive_birth_demand()->RetirementDemand{Self::Receiver::birth().expect("boxed receiving has one fixed original child ancestor")}
- fn begin_receive(grant:RetainedCloneGrant)->Result<(Self::Receiver,RetainedCloneProgress),ValueError>{Self::Receiver::begin(grant)}
-}
-
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+impl<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>>Drop for NativeMappedReceiver<I,T,U>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"native mapped receiving requires funded closure");if empty{unsafe{ManuallyDrop::drop(&mut self.pending);ManuallyDrop::drop(&mut self.output);}}}}
+#[path="📦️box/🦀️.rs"]mod boxed;pub use boxed::NativeBoxReceiver;

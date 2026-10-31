@@ -34,6 +34,3 @@ impl OriginalCompositionPinOrder{
  /// 🫙️ No borrowed vector coordinates remain after the funded return.
  pub fn terminal_is_empty(&self)->bool{self.source.is_none()}
 }
-#[cfg(test)]
-#[path="pin-order-tests.rs"]
-mod tests;

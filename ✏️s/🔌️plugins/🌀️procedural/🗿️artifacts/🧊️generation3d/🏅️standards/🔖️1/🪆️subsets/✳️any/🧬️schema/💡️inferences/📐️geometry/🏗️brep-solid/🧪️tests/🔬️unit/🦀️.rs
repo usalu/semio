@@ -1,3 +1,4 @@
+use semio_s_artifact_procedural_3d_geometry_compute::testing::step_with_fuel;
 use super::*;
 
 use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
@@ -34,7 +35,7 @@ fn a_solid_job_yields_to_the_scheduler_at_fuel_one() {
     let kind = support::kind_of(catalogue(), "brep.solid.loft");
     let mut job = loft(kind, support::inputs_of(catalogue(), registry::lookup, kind, case));
     let mut working = 0;
-    while let WidgetStep::Working { .. } = job.step(1) {
+    while let WidgetStep::Working { .. } = step_with_fuel(&mut *job, 1) {
         working += 1;
         assert!(working < 1000, "the job finishes");
     }

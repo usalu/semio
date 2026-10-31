@@ -1,0 +1,9 @@
+# Coverage Existing Law and Custody Migration
+
+Root hand-migrated all existing exact-mask, budget, cancellation, invalid-input and private sweep retirement laws to the allocation-free owned constructor and same-ledger work API. Every lifetime now carries one explicit finite wallet through operation, typed retirement and published mask cleanup. The neutral fixture's accepted stock remains unchanged. Actual Pixels allocator observations enter the shared first-party test wallet through its explicit observer injection interface; no Trace-only observation substitutes for this owner's custom allocator.
+
+The old numeric retirement scheduling assertions are represented by actual zero-grant no-effect and cached-complete checks plus bounded physical close turns, private contour monotonicity and exact heap receipts. Each scheduling quantum still bounds work; all prior source masks and interruption phase cases remain. Malformed owned input is rejected during funded work and remains owned through paid close. The independent TinySkia law now also debits cleanup from its actual remaining stock.
+
+Coverage exposes read-only settlement status only for actual final metadata publication/complete state. Its final output metadata transition uses actual CPU with zero additional semantic work. No new authority, cap increase, runtime dependency or raw owned output adoption was introduced. Shared Pixels retirement helpers and only its Coverage caller slice were edited by Root; peer Flatten/Stroke/Affine/Composite migrations remain assigned to their owners.
+
+No compiler, Source-fit or runtime check has executed for these changes. Native primitive2 actual24672 is still waiting in canonical compiler image admission, with its selected290 inputs frozen; this Coverage closure is disjoint. PreparedFill, PathRaster, Drawing lower parents, publication and full Layout/browser gates remain unfinished.

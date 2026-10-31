@@ -1,0 +1,20 @@
+{
+  "state": "source-authored-no-compiler-or-runtime",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🦀️.rs",
+      "sha256": "2191688a971c1e52809c90ea11e82beb40f178ad6a502de394149a8d0b621922",
+      "scope": "Root Coverage defining/test source"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🧪️tests/🦀️.rs",
+      "sha256": "e1c7de7df6a64da10760f2b9b8a400f1708c8dc4c7d1b323eed62ef47f0feeb7",
+      "scope": "Root Coverage defining/test source"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/♻️retirement/🧪️tests/🦀️.rs",
+      "sha256": "3b2485ab6875582d0efac990294d2245d1baeca81ec108a3b446e994901147d3",
+      "scope": "Coverage defining settlement status and exact owning test/caller migration; retirement test helper plus Coverage slice only"
+    }
+  ]
+}

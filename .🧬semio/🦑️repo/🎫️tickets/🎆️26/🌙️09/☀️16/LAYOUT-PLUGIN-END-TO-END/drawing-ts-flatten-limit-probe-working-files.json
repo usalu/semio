@@ -1,0 +1,11 @@
+{
+  "state": "authored-after-original-budget-law-CPU-witness",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+      "beforeSha256": "450783517762c7a5bc693492115d0255261875d70a24d3b010ba121f98347eb1",
+      "sha256": "9822f5bbbd11c46366e3241c35376519f936ae5c9daaae07d0ce6220d4b9f939"
+    }
+  ],
+  "scope": "Only two actual failing point/contour budget comparisons commit defining CPU before throwing; no entry/receipt/epoch fallback or limit change."
+}

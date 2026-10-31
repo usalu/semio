@@ -47,7 +47,7 @@ fn assembly_triplet_pages_control_transitions_preserve_state_until_granted() {
         let mut sequence = 0;
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(case["fuel"].as_u64().unwrap(), case["deadline"].as_u64().unwrap(), TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        let outcome = seen_of(job.step(&mut context));
+        let outcome = seen_of(job.step_plain(&mut context));
         let observed = serde_json::json!({ "checkpointDue": job.state.checkpoint_due, "previewDue": job.state.preview_due, "pendingBuild": job.state.pending_build.is_some(), "complete": job.state.stage == AssemblyJobStage::Complete });
         assert_eq!(observed, case["after"], "fixture {index} preserves or advances exactly the admitted transition");
         assert_eq!(context.fuel_remaining(), case["fuelRemaining"].as_u64().unwrap(), "fixture {index} fuel");
@@ -431,7 +431,7 @@ fn mounted_element_build_reserves_and_reclaims_one_exact_owner_per_turn() {
     fn step_once(job: &mut AssemblyJob<'static>, operation: Operation, sequence: &mut u64) -> Seen {
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), sequence, &mut sequence_receipt);
-        seen_of(job.step(&mut context))
+        seen_of(job.step_plain(&mut context))
     }
     assert!(matches!(step_once(&mut job, operation, &mut sequence), Seen::Yield));
     let build = job.state.pending_build.as_ref().expect("first turn retains only the build shell");
@@ -505,7 +505,7 @@ fn finish_assembly_job<'model>(mut job: AssemblyJob<'model>, operation: Operatio
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(fuel, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
         let started = std::time::Instant::now();
-        let outcome = seen_of(job.step(&mut context));
+        let outcome = seen_of(job.step_plain(&mut context));
         latency.admit(started.elapsed());
         match outcome {
             Seen::Preview(pages) => previews.push(decode_value(&pages_bytes(&pages)).expect("assembly preview decodes")),
@@ -542,7 +542,7 @@ fn assembly_job_checkpoint_resume_is_byte_stable() {
     let checkpoint = loop {
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(4, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        match seen_of(job.step(&mut context)) {
+        match seen_of(job.step_plain(&mut context)) {
             Seen::Checkpoint(pages) => break pages_bytes(&pages),
             outcome => assert!(!matches!(outcome, Seen::Complete(_)), "assembly must checkpoint before completing"),
         }
@@ -618,7 +618,7 @@ fn p6h_element_stiffness_microcursor_deadline_stale_cancel_close_and_stage_laws(
             let started = std::time::Instant::now();
             let mut sequence_receipt = RetainedCloneProgress::default();
             let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            assert!(matches!(seen_of(job.step(&mut context)), Seen::Yield | Seen::Preview(_) | Seen::Checkpoint(_)));
+            assert!(matches!(seen_of(job.step_plain(&mut context)), Seen::Yield | Seen::Preview(_) | Seen::Checkpoint(_)));
             maximum_micros = maximum_micros.max(started.elapsed().as_micros());
             if job.state.pending.is_some() {
                 break;
@@ -724,7 +724,7 @@ fn p6h_owned_assembly_lookup_partition_scan_transfer_interrupt_replay_and_timing
             let started = std::time::Instant::now();
             let mut sequence_receipt = RetainedCloneProgress::default();
             let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            if matches!(seen_of(job.step(&mut context)), Seen::Complete(_)) {
+            if matches!(seen_of(job.step_plain(&mut context)), Seen::Complete(_)) {
                 maximum_micros = maximum_micros.max(started.elapsed().as_micros());
                 let system = job.finish().expect("owned assembly completes");
                 return (system.k_full_coo.to_dense().data, system.k_ff_coo.to_dense().data, maximum_micros);

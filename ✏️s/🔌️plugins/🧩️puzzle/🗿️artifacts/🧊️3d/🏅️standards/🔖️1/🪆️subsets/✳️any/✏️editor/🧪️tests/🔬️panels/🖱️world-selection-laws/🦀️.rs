@@ -364,7 +364,7 @@ async fn delete_selection_shrinks_the_world_census_and_drops_the_deleted_id() {
     deleted.expect("deleteSelection");
     assert_eq!(history_rows(&settled), 1, "a delete that removed an object must publish exactly one command-log row");
     assert_eq!(object_count(&app), 1, "the document must carry one object fewer");
-    assert_eq!(instance_count(&render_window(&mut app, main::WINDOW_KIND_ID).await), census_before - 1, "the rendered world census must shrink by one within the same settle");
+    assert_eq!(instance_count(&render_window(&mut app, WINDOW_KIND_ID).await), census_before - 1, "the rendered world census must shrink by one within the same settle");
     let selection = app.interaction_state().await.selection.get(PUZZLE3D_INTERACTION_DOMAIN).cloned().unwrap_or_default();
     assert!(!selection.ids.contains(&object_id), "the deleted id must be gone from the selection, else a second Delete is a silent no-op: {:?}", selection.ids);
     let (again, settled_again) = dispatch_reporting(&mut app, "deleteSelection", None, None).await;

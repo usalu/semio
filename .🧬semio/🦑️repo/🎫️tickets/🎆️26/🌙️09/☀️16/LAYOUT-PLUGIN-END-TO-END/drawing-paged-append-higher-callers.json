@@ -1,0 +1,22 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🪪️identity/🦀️.rs",
+    "sha256": "3aa66dc4f72078e7c3673dbe299b82cde44ed08778a430f1bdfb98b26e7f8e5e",
+    "role": "authored partial full-outcome migration"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧳️source/🦀️.rs",
+    "sha256": "b6beb976e4bd0efeae45141f8215cfd0f0dcb42d8ebd83fd7caec93cef8369d7",
+    "role": "read-only reached caller audit"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs",
+    "sha256": "1935022f14eb567a29bd05b1f94f82be3af43873f2d9b1d8ef1cdc5fcc88c940",
+    "role": "read-only reached caller audit"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs",
+    "sha256": "f5d0fda8764bc32209252fd22750ef4489e06debc4a6527ee5f20223ef4338f1",
+    "role": "read-only reached caller audit"
+  }
+]

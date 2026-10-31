@@ -13,7 +13,7 @@ use semio_s_artifact_procedural_2d_mode_generate::windows::preview as generate_p
 use semio_s_artifact_procedural_2d_preview_eval::PreviewEvalWindow;
 use semio_framework_os_flow::{FlowEvalPublication, FlowEvalSession};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use semio_s_artifact_procedural_2d_preview_eval::FlowEvalTick;
+pub use semio_s_artifact_procedural_2d_preview_eval::FlowEvalTick;
 
 
 
@@ -32,11 +32,11 @@ pub fn generation2d_preview_windows(view: Option<&semio_framework_plugin::ViewMo
 
 /// 🔢️ The digest of the text `target` evaluates for this document and config — what a hop records and
 /// what the editor's poll compares.
-pub fn target_digest(target: PreviewEvalTarget, doc: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>) -> u64 {
-    let fixture = semio_framework_pack_json::to_json_string(&doc.snapshot.host_snapshot);
+pub fn target_digest(target: PreviewEvalTarget, snapshot: &Generation2dSnapshot, cfg: &ConfigView<'_, Generation2dConfig>) -> u64 {
+    let fixture = semio_framework_pack_json::to_json_string(&snapshot.host_snapshot);
     match target {
         PreviewEvalTarget::Document => preview_eval::preview_eval_digest(&[&fixture]),
-        PreviewEvalTarget::Generation => preview_eval::preview_eval_digest(&[&fixture, &semio_framework_pack_json::to_json_string(doc.snapshot.generation.as_state()), cfg.snapshot.selected_generation_id.as_deref().unwrap_or_default()]),
+        PreviewEvalTarget::Generation => preview_eval::preview_eval_digest(&[&fixture, &semio_framework_pack_json::to_json_string(snapshot.generation.as_state()), cfg.snapshot.selected_generation_id.as_deref().unwrap_or_default()]),
     }
 }
 

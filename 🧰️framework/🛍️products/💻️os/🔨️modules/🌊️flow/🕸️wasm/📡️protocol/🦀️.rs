@@ -35,7 +35,7 @@ pub const FLOW_MAX_EVENTS_IN_FLIGHT: usize = 64;
 pub const FLOW_MAX_WORK_UNITS: usize = 64;
 pub const FLOW_DEADLINE_MILLISECONDS: u64 = 8;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq,semio_framework_value::RetireOwned)]
 pub enum FlowFailureCause {
     Message(String),
     Value(semio_framework_value::ValueError),
@@ -47,29 +47,34 @@ pub struct FlowFailure {
     pub code: AbiErrorCode,
     pub cause: FlowFailureCause,
     pub retained_progress:RetainedCloneProgress,
+    pub receipt_refusal:Option<semio_framework_value::ValueError>,
 }
 
 impl FlowFailure {
     pub fn new(code: AbiErrorCode, message: impl Into<String>) -> Self {
-        Self { code, cause:FlowFailureCause::Message(message.into()),retained_progress:Default::default() }
+        Self { code, cause:FlowFailureCause::Message(message.into()),retained_progress:Default::default(),receipt_refusal:None }
     }
     /// 📥️ Moves the complete original refusal across the Flow boundary without copying its prose.
-    pub fn from_value(code:AbiErrorCode,error:semio_framework_value::ValueError)->Self{let retained_progress=error.retained_progress();Self{code,cause:FlowFailureCause::Value(error),retained_progress}}
+    pub fn from_value(code:AbiErrorCode,error:semio_framework_value::ValueError)->Self{let retained_progress=error.retained_progress();Self{code,cause:FlowFailureCause::Value(error),retained_progress,receipt_refusal:None}}
     /// 🪢️ Keeps the same original geometry cause, physical effects and consumed work together.
-    pub fn from_geometry(code:AbiErrorCode,original:semio_framework_os_flow_geometry::GeometryWorkFailure)->Self{Self{code,retained_progress:original.work.retained,cause:FlowFailureCause::Geometry(original)}}
+    pub fn from_geometry(code:AbiErrorCode,original:semio_framework_os_flow_geometry::GeometryWorkFailure)->Self{Self{code,retained_progress:original.work.retained,cause:FlowFailureCause::Geometry(original),receipt_refusal:None}}
     /// ⛽️ Reads actual original work without replacing or formatting the producer cause.
     pub fn consumed_work_units(&self)->usize{match &self.cause{FlowFailureCause::Geometry(original)=>original.work.consumed_units,_=>0}}
     /// 🔤️ Borrows the original cause when preparing its external reply.
     pub fn message(&self)->&str{match &self.cause{FlowFailureCause::Message(message)=>message,FlowFailureCause::Value(error)=>&error.message,FlowFailureCause::Geometry(original)=>&original.primary.message}}
     /// 🧾️ Preserves actual retained effects when a native refusal crosses the original Flow boundary.
     pub fn with_retained_progress(mut self,progress:RetainedCloneProgress)->Self{self.retained_progress=progress;self}
+    /// 🪢️ Moves one original receipt-posting refusal alongside its unchanged primary cause.
+    pub fn with_receipt_refusal(mut self,refusal:Option<semio_framework_value::ValueError>)->Self{assert!(self.receipt_refusal.is_none(),"a Flow receipt refusal is attached once");self.receipt_refusal=refusal;self}
 
 }
 
+#[derive(semio_framework_value::RetireOwned)]
+struct FlowFailureOwners{cause:FlowFailureCause,receipt_refusal:Option<semio_framework_value::ValueError>}
 impl semio_framework_value::retirement::RetireOwned for FlowFailure {
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;match self.cause{FlowFailureCause::Message(message)=>message.retirement(),FlowFailureCause::Value(error)=>error.retirement(),FlowFailureCause::Geometry(original)=>original.retirement()}}
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::RetireOwned;match &self.cause{FlowFailureCause::Message(message)=>message.retirement_birth_bytes(),FlowFailureCause::Value(error)=>error.retirement_birth_bytes(),FlowFailureCause::Geometry(original)=>original.retirement_birth_bytes()}}
-    fn controlled_retirement_supported()->bool{true}
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;FlowFailureOwners{cause:self.cause,receipt_refusal:self.receipt_refusal}.retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.cause),deferred_birth_bytes_for(&self.receipt_refusal)])}
+ fn controlled_retirement_supported()->bool{<FlowFailureOwners as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
 
 #[derive(Debug, PartialEq, Eq)]

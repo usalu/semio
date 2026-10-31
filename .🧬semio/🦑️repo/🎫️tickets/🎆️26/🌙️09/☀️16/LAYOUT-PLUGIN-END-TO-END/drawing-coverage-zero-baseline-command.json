@@ -1,0 +1,163 @@
+{
+  "state": "prepared-unexecuted",
+  "expectedOwningLaws": 1,
+  "expectedOutcome": "Genuine behavioral work1vs0; imports/cleanup errors reported separately, no new API required.",
+  "inputs": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-coverage-zero-baseline.test.ts",
+      "bytes": 1614,
+      "sha256": "d652d3045575dc291bab181924e1555666171e0ef6a73b7089c5349b08dd991c",
+      "absoluteUtf16Units": 136
+    },
+    {
+      "path": "bun.lock",
+      "bytes": 603865,
+      "sha256": "b27bdace86f04889c66e59f5227d0bdef7568b22c550798705d3c911d1c88faf",
+      "absoluteUtf16Units": 36
+    },
+    {
+      "path": "package.json",
+      "bytes": 21673,
+      "sha256": "9605466756ffe292a2e5c425e8beec9cda9b60967cadccc33fef9d20c617f98b",
+      "absoluteUtf16Units": 40
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/package.json",
+      "bytes": 1819,
+      "sha256": "8ad8197ec24e4fca5c6a6ac46de4ceceba2054472ef271a65c087f16d9fa97cf",
+      "absoluteUtf16Units": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🧹️retire/🟦️.ts",
+      "bytes": 291,
+      "sha256": "68e532d0d22990ed94e01a110a1c73bc8a8b1bd39c045c41cca5e702ac73f3f3",
+      "absoluteUtf16Units": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts",
+      "bytes": 873,
+      "sha256": "2b772d76c48da6528c80fba6b9255e0400167e748068038c32f95e1a7ce50bc7",
+      "absoluteUtf16Units": 73
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts",
+      "bytes": 1677,
+      "sha256": "98e33379591bea207abb9c53360fd6e92d7b07ad76db3b8ec574f4eac47d25b5",
+      "absoluteUtf16Units": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "bytes": 3282,
+      "sha256": "480a86a9e9ddb878ec4736c41e72cf376a48a7cb35a94b42446894ccd5377f69",
+      "absoluteUtf16Units": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "bytes": 25510,
+      "sha256": "6041275db1facb4ef2b68af32c727bfa22d8a3d28b3a0997b4a9efb652638858",
+      "absoluteUtf16Units": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts",
+      "bytes": 26554,
+      "sha256": "e265ef0a5a80c742cb72ef36d2e551472dc1ec6e8d199e4258c41d12a61852a8",
+      "absoluteUtf16Units": 78
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🎟️work/🧫️fixtures/🔣️.json",
+      "bytes": 919,
+      "sha256": "988e64d8b66402bc326f96992c5dec256d28d11cc19172df0c51b3c4fabd0e80",
+      "absoluteUtf16Units": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts",
+      "bytes": 12655,
+      "sha256": "3c19f3a72b1875d644df7ecf68c73a36906d942084b3c566796ea24499b25f30",
+      "absoluteUtf16Units": 80
+    }
+  ],
+  "literalEdges": [
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-coverage-zero-baseline.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-coverage-zero-baseline.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-coverage-zero-baseline.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🎟️work/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🎟️work/🧫️fixtures/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "specifier": "./⏱️turn/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "specifier": "./📦️bytes/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "specifier": "../⏱️turn/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts",
+      "specifier": "../✍️editing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts",
+      "specifier": "@semio-tech/framework-2d-js/retire",
+      "to": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🧹️retire/🟦️.ts",
+      "specifier": "../../../🧹️retire/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🧹️retire/🟦️.ts",
+      "specifier": "../../../🧹️retire/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🧹️retire/🟦️.ts"
+    }
+  ],
+  "unresolved": [],
+  "commands": [
+    {
+      "kind": "test",
+      "cwd": "/Users/ueli/Documents/semio",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "bun",
+        "--",
+        "test",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-coverage-zero-baseline.test.ts"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-coverage-zero-baseline/test",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-coverage-zero-baseline/test/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-coverage-zero-baseline/test/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-coverage-zero-baseline/test/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-coverage-zero-baseline/test/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-coverage-zero-baseline/test/test.log"
+    }
+  ],
+  "scope": "Existing API direct zero ledger diagnostic only, not Host/Native authority or physical memory proof. Old existing numeric UnitRetirement is used solely for bootstrap cleanup; no production bridge."
+}

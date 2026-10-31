@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "cases",
+    "names",
+    "kindField",
+    "cancelCuts"
+  ],
+  "properties": {
+    "stock": {
+      "const": {
+        "items": 100000,
+        "fuel": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 64,
+        "maximumTurns": 20000
+      }
+    },
+    "cases": {
+      "const": [
+        {
+          "input": "empty",
+          "tagged": false,
+          "selected": 0
+        },
+        {
+          "input": {
+            "tuple": [
+              1,
+              2
+            ]
+          },
+          "tagged": false,
+          "selected": 1
+        },
+        {
+          "input": {
+            "kind": "tuple",
+            "payload": [
+              1,
+              2
+            ]
+          },
+          "tagged": true,
+          "selected": 1
+        },
+        {
+          "input": {
+            "kind": "empty"
+          },
+          "tagged": true,
+          "selected": 0
+        }
+      ]
+    },
+    "names": {
+      "const": [
+        "empty",
+        "tuple",
+        "record"
+      ]
+    },
+    "kindField": {
+      "const": "kind"
+    },
+    "cancelCuts": {
+      "const": [
+        0,
+        1,
+        2,
+        7,
+        19,
+        71
+      ]
+    }
+  }
+}

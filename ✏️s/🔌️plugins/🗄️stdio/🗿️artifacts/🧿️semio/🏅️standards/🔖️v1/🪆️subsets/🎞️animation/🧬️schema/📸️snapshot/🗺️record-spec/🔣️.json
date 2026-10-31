@@ -1,0 +1,339 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "s.stdio.semio.animation",
+ "schemaHash": "acf99067b5e01e6008e22e7fa5a57391d07db5f7634f5f60801524d4de10ea50",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "timelines",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 1
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "name",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "channels",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 2
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "target",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 3
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "interpolation",
+    "optional": false,
+    "shape": {
+     "kind": "enum",
+     "variants": [
+      [
+       0,
+       "linear"
+      ],
+      [
+       1,
+       "step"
+      ],
+      [
+       2,
+       "cubic-spline"
+      ]
+     ]
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "keyframes",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 4
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "node",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "property",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "custom",
+        5
+       ],
+       [
+        "rotation",
+        6
+       ],
+       [
+        "scale",
+        6
+       ],
+       [
+        "translation",
+        6
+       ],
+       [
+        "weights",
+        6
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "t",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "quat",
+        7
+       ],
+       [
+        "scalar",
+        8
+       ],
+       [
+        "vec3",
+        9
+       ],
+       [
+        "weights",
+        10
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "name",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 11
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 12
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "values",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "float"
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "x",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "y",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "z",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "w",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "x",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "y",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "z",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ]
+ ],
+ "annotations": {
+  "single": [
+   [
+    3,
+    1
+   ],
+   [
+    4,
+    1
+   ]
+  ],
+  "verbatim": [
+   [
+    3,
+    1
+   ],
+   [
+    4,
+    1
+   ]
+  ]
+ }
+}

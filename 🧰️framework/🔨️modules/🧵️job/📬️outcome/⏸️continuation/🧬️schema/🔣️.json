@@ -1,0 +1,223 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.job.original-continuation-return",
+  "const": {
+    "version": 1,
+    "kind": "original-job-continuation-return",
+    "source": {
+      "items": 1000000,
+      "fuel": 1000000,
+      "deadlineUs": 1000000,
+      "copyBytes": 4194304,
+      "capacityBytes": 4194304,
+      "releaseBytes": 8388608,
+      "depth": 128
+    },
+    "callbackQuantum": {
+      "items": 1,
+      "fuel": 1
+    },
+    "returnClaim": {
+      "captureItems": 1,
+      "captureFuel": 1,
+      "receiveItems": 1,
+      "receiveFuel": 1,
+      "copyBytes": 0,
+      "capacityBytes": 0,
+      "releaseBytes": 0,
+      "depth": 1
+    },
+    "claimControl": {
+      "items": 1,
+      "fuel": 1
+    },
+    "capture": {
+      "items": 1,
+      "fuel": 1
+    },
+    "receive": {
+      "items": 1,
+      "fuel": 1
+    },
+    "insertOneCause": {
+      "items": 1,
+      "fuel": 1
+    },
+    "invariants": [
+      "spent+held<=original-source",
+      "current-semantic-view-excludes-held",
+      "body-quantum-never-decremented-for-return",
+      "held-credit-spent-once-or-released-unspent",
+      "no-receive-allocation",
+      "returned-native-and-final-qualification-independent",
+      "no-persistent-producer-return-field",
+      "continuation-is-not-terminal-fault",
+      "same-source-close-before-loan-return"
+    ],
+    "cases": [
+      {
+        "id": "quantum-one-exhausted-child",
+        "bodyItems": 1,
+        "bodyFuel": 1,
+        "bodyNative": true,
+        "qualification": false,
+        "expect": "captured-and-received-from-held-original-credit"
+      },
+      {
+        "id": "readonly-native-zero-child",
+        "bodyItems": 0,
+        "bodyFuel": 0,
+        "bodyNative": true,
+        "qualification": false,
+        "expect": "capture-and-receive-cpu-independent-of-child"
+      },
+      {
+        "id": "dual-native-qualification",
+        "bodyItems": 1,
+        "bodyFuel": 1,
+        "bodyNative": true,
+        "qualification": true,
+        "expect": "both-complete-trees-owned"
+      },
+      {
+        "id": "denied-claim",
+        "bodyItems": 0,
+        "bodyFuel": 0,
+        "bodyNative": false,
+        "qualification": false,
+        "expect": "no-body-no-hold-no-slot-mutation"
+      },
+      {
+        "id": "denied-insertion",
+        "bodyItems": 1,
+        "bodyFuel": 1,
+        "bodyNative": true,
+        "qualification": false,
+        "expect": "same-occupied-return-owner"
+      },
+      {
+        "id": "foreign-receiver",
+        "bodyItems": 1,
+        "bodyFuel": 1,
+        "bodyNative": true,
+        "qualification": false,
+        "expect": "same-owner-returned-no-foreign-slot-mutation"
+      },
+      {
+        "id": "invalid-body-context",
+        "bodyItems": 0,
+        "bodyFuel": 0,
+        "bodyNative": true,
+        "qualification": true,
+        "expect": "original-claim-receives-quarantined-owner"
+      },
+      {
+        "id": "cancel-after-body",
+        "bodyItems": 1,
+        "bodyFuel": 1,
+        "bodyNative": true,
+        "qualification": false,
+        "expect": "receive-original-claim-then-paid-close"
+      },
+      {
+        "id": "normal-copy-success",
+        "bodyItems": 1,
+        "bodyFuel": 1,
+        "bodyNative": false,
+        "qualification": false,
+        "expect": "ordinary-success-unchanged-release-unused-capture-hold"
+      },
+      {
+        "id": "same-source-parent-close",
+        "bodyItems": 1,
+        "bodyFuel": 1,
+        "bodyNative": true,
+        "qualification": true,
+        "expect": "all-causes-frame-source-loan-closed"
+      }
+    ],
+    "phaseCeilings": "current-total-intersects-source-unheld-and-excludes-already-paid-return",
+    "normalReturn": {
+      "actualItems": 1,
+      "actualFuel": 1,
+      "unusedCaptureHoldReleased": true,
+      "currentFuelCharged": 0,
+      "witness": "physically-owned-by-outcome-return-arm-until-authenticated-receive"
+    },
+    "nativeConstruction": {
+      "sourcePosts": "accepted-physical-span-on-success-and-error-once",
+      "semanticSettlement": "only-additional-parent-effects",
+      "text": "Actual native source 🌱"
+    },
+    "finalQualification": {
+      "sameInitiatingSource": true,
+      "clockAndDeadlineUnchanged": true,
+      "sourceRefusalSeparateFromCallback": true,
+      "effects": 0
+    },
+    "returnOrigin": {
+      "issuer": "genuine-admitting-caller",
+      "alias": "actual-paid-SourceParent-loan",
+      "setupQuantumItems": 1,
+      "setupQuantumFuel": 1,
+      "maximumSetupTurns": 8,
+      "closeRequiresSameSource": true,
+      "prepaidFrame": "exact-native-cause-frame-born-before-body-and-closed-before-source-alias",
+      "allocationRefusal": {
+        "actualRefusedAllocations": 1,
+        "actualCpu": 1,
+        "heapBytes": 0,
+        "sourceAliasRetained": true
+      },
+      "closeControl": "distinct-paid-turn-denied-and-cached-unchanged",
+      "standaloneInherited": "borrowed-payer-requires-an-actual-durable-witness-or-scoped-relend",
+      "sourceFrozenBeforeWorker": true,
+      "inflightClose": "waits-for-actual-returned-arm-never-spends-its-delivery-without-the-result"
+    },
+    "captureWitness": {
+      "clone": false,
+      "issuer": "one-shot-genuine-held-source-claim",
+      "sourceBankBeforeRedemption": "credit-remains-held-and-unavailable",
+      "redemption": "same-source-once-before-observer",
+      "busyCapture": "does-not-reenter-source-lock",
+      "invalidReceive": "retains-witness-zero-effects"
+    },
+    "ownedCapsule": {
+      "message": "Original held continuation 源",
+      "qualificationMessage": "original return body changed its initiating context",
+      "capture": "same-prepaid-frame-returned-owned",
+      "insertion": "separate-genuine-current-turn",
+      "bodyQuantumItems": 1,
+      "bodyQuantumFuel": 1,
+      "receiverActualReservedWork": 2
+    },
+    "protocol": {
+      "producerArms": [
+        "outcome",
+        "ownedContinuation"
+      ],
+      "driverArms": [
+        "preparing",
+        "pending",
+        "outcome",
+        "ownedContinuation"
+      ],
+      "preparing": "does-not-redeem-unused-body-return-claim",
+      "qualificationSlots": [
+        "callback",
+        "sourceQualification",
+        "receiptQualification"
+      ],
+      "ordinarySuccess": "same-producer-owned-payload-loan",
+      "semanticAdmissionCpu": 1,
+      "pendingSteps": 3,
+      "pending": "no-result-keeps-the-same-unused-claim-without-a-per-turn-receipt-charge"
+    },
+    "readOnlyCallback": {
+      "message": "actual read-only declaration rejection",
+      "work": 0,
+      "reservedReturnWork": 2,
+      "currentFuelAfter": 1
+    }
+  }
+}

@@ -6,7 +6,6 @@ use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::semantic::Ce
 use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::semantic::add;
 use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::semantic::hex_text;
 use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::semantic::value_text;
-use semio_s_artifact_stdio_semio_value_model::io::sqlite::snapshot::semantic::value_binary;
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use store::os_store::serialization::ArtifactSqliteSnapshotHost;
 type Result<T>=std::result::Result<T,ValueError>;
@@ -18,16 +17,6 @@ pub(crate)fn layout(limits:SqliteDatabaseLimits)->Result<()>{
  if limits.max_tables<7||limits.max_columns<8||limits.max_rows<1{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"Semio table authored layout exceeds copied limits"))}Ok(())
 }
 fn kind(tag:u8)->Result<usize>{match tag{0=>Ok(4),1=>Ok(4),2=>Ok(3),3=>Ok(5),4=>Ok(3),5=>Ok(5),_=>Err(invalid())}}
-/// 📦️ Counts binary columns and recursive typed cells without constraining row width.
-pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
- layout(limits)?;control.scoped_stage(|control|{
-  let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}let mut census=Census::new(limits);census.row(add(8,control.borrow_text(native::bytes(&mut reader)?)?.len())?)?;
-  let count=native::length(&mut reader)?;census.future(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let bytes=add(24,control.borrow_text(native::bytes(&mut reader)?)?.len())?;census.row(add(bytes,kind(reader.read_u8().map_err(|_|invalid())?)?)?)?;control.step()?;}Ok::<_,ValueError>(())})?;
-  let count=native::length(&mut reader)?;census.future(count)?;control.begin_stage(count)?;for _ in 0..count{
-   census.row(24)?;let count=native::length(&mut reader)?;census.future(count.checked_mul(2).ok_or_else(invalid)?)?;control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{census.row(32)?;value_binary(&mut reader,&mut census,control,limits)?;control.step()?;}Ok::<_,ValueError>(())})?;control.step()?;
-  }if reader.remaining()!=0{return Err(invalid())}control.checkpoint()
- })
-}
 /// 📃️ Counts optional declaration/row lists and all nested literal reference values.
 pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{

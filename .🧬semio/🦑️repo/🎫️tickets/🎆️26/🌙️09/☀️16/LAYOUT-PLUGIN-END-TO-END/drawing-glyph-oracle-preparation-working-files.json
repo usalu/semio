@@ -1,0 +1,25 @@
+{
+  "state": "disjoint-test-oracle-preparation-unexecuted-not-glyph14-acceptance",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🟦️.ts",
+      "beforeSha256": "8700017d5a351b81b4f19dd46ae5fa93af47fd07fbb7b0910a79743579caa976",
+      "sha256": "7efa606cc5a023aaf950dd7477f8a5efdc134a532629ea4add057fdf326924df",
+      "bytes": 20887,
+      "scope": "Actual original glyph test caller now uses shared independent tool interface; original count assertion and all pixel/path/export/pick/origin/cancellation assertions preserved."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🔮️oracle/🟦️.ts",
+      "status": "created",
+      "sha256": "a8f424c1e7b6704af9f08cfc278bcdefca0bd5ab6b0a002099ebe3e2468196fb",
+      "bytes": 3831,
+      "scope": "One physically moved original OpenType private algorithm/count assertion, public byte+neutral-row→path interface; foreign Font type remains private."
+    }
+  ],
+  "inverseWholeOldTest": "8700017d5a351b81b4f19dd46ae5fa93af47fd07fbb7b0910a79743579caa976",
+  "movedOriginalFunctionSha256": "72eb28d30cfc94c02a1028d4f654714f35025a008ec8b719cb94b649d41b2ef4",
+  "originalFixtureSha256": "dd9582fd3d2964dfe71985c8f34c3b93455973810aba64004cd02bbb3d35def5",
+  "hold156Unchanged": true,
+  "noClaims": "No runtime/strict; original14 actual product vector/raster/export/pick and genuine owner/bank test migration remain open.",
+  "followup": "After separate14-case closed regression matrix: actual segment→SVG test serialization plus Sharp mask interface authored; first-party product raster/writers not bypassed for claimed acceptance. Original private OpenType algorithm is unchanged; original fixture untouched."
+}

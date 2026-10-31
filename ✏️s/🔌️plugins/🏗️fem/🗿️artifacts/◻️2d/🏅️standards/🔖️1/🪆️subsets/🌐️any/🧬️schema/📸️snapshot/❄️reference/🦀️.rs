@@ -1,16 +1,10 @@
 //! ❄️ Explicit synchronous FEM snapshot values own canonical authoring and reference algebra.
-use crate::standards::v1::subsets::any::schema::structure::FemCombination;
-use crate::standards::v1::subsets::any::schema::structure::FemElement;
-use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoadCase, FemRegion, FemSection, FemSupport, FemAnalysisSettings};
 use semio_s_fem_material::planar::FemMaterialValue;
 use semio_s_fem_node::planar::FemNodeValue;
-use crate::standards::v1::subsets::any::schema::structure::FemRegion;
-use crate::standards::v1::subsets::any::schema::structure::FemSection;
-use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
-use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, ArtifactSchema, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", deny_unknown_fields, validate = "Self::validate_interaction_identities", validate_controlled = "Self::validate_interaction_identities_controlled")]
 #[dsl(id = "fem.fem2d", layout = "lines")]

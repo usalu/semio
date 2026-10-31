@@ -1,0 +1,558 @@
+{
+  "state": "Source-authored/current-491-alltargets-run-live-not-a-pass",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/♻️header/🎟️work/📐️.json",
+      "bytes": 561,
+      "sha256": "5f8ed83da394ea68e8995a7cdbc66c60cd1aa744b90ffe4a7a039083c988926f",
+      "utf16PathUnits": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/♻️header/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 8552,
+      "sha256": "cd03fa43675730d6f1e72449d1fb42fc1752fd77893441ab8fd919b4997749bd",
+      "utf16PathUnits": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🦀️.rs",
+      "bytes": 6743,
+      "sha256": "d089942d630f093e69eedf936a5890626bb4ae8a2a3530067f44a0abf5247cb5",
+      "utf16PathUnits": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🦀️.rs",
+      "bytes": 4123,
+      "sha256": "43a73338a0550959ce530df7f3a3647a4925b9700584cb6517f4e7066a9829e3",
+      "utf16PathUnits": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🧫️fixtures/📐️.json",
+      "bytes": 687,
+      "sha256": "7bc83637e2c23e2c89aa1ac0f6d0ffe19fd47c4d483eef4b8f612b07fb97798a",
+      "utf16PathUnits": 127
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📖️source/🧪️tests/🦀️.rs",
+      "bytes": 7340,
+      "sha256": "ab770afa2c2c0f2b31c61940a085abd168f91b2b67167f05bf035a91176ccd11",
+      "utf16PathUnits": 114
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📖️source/🧪️tests/🧫️fixtures/📐️.json",
+      "bytes": 1323,
+      "sha256": "16d375eb3a24318613c2dcc77ac04821d708f9389d6024ba24de641a2bddc5bf",
+      "utf16PathUnits": 128
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📦️storage/📐️.json",
+      "bytes": 296,
+      "sha256": "e69f009b7e8578943f46ef8b5aa5b324b2362d2628adcba22f07b93f87e01eb6",
+      "utf16PathUnits": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📦️storage/🧪️tests/🦀️.rs",
+      "bytes": 3766,
+      "sha256": "28ae7056b0435e8405bf3516edf6bd04b91d1d69995053bb7e47a1955d50c67e",
+      "utf16PathUnits": 115
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🎟️work/📐️.json",
+      "bytes": 839,
+      "sha256": "f66ee6d765e5cc65f2fc3f6b0af659195481d582f450af3b969756b0148ff61f",
+      "utf16PathUnits": 116
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 4441,
+      "sha256": "61cce8c3545d00d0b675176f8409247285d1fffcc2a90ce79a54c9c47319d849",
+      "utf16PathUnits": 123
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🔢️unit/🦀️.rs",
+      "bytes": 4145,
+      "sha256": "e809b280cf6e4d947ec9718e4a693c4fb5d4b2e63af9f79980e1f9a2ab26500b",
+      "utf16PathUnits": 114
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🦀️.rs",
+      "bytes": 7844,
+      "sha256": "9785afb15ca8bd79608e846c15e9c7d9a721b0c5dde9fb6529dff75f04dbb1a3",
+      "utf16PathUnits": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🎟️work/📐️.json",
+      "bytes": 523,
+      "sha256": "423dc7a0dff2bce6178fe9e3a25ae570567e9f70492ad246997076b2f1906090",
+      "utf16PathUnits": 114
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 4960,
+      "sha256": "2a3cc141bf590fa6b180a8f41c35ccbb9548207c241d05d5bac62cd109f40c79",
+      "utf16PathUnits": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🦀️.rs",
+      "bytes": 7936,
+      "sha256": "1017f57b6a647e380b264d463ac54b4030c5322656e5fe566e721a1b53248141",
+      "utf16PathUnits": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs",
+      "bytes": 38759,
+      "sha256": "84c7cd811f761760901fafc28aea4bdfb5a30f5f741e265f1430f4319d1cf325",
+      "utf16PathUnits": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🎟️work/📐️.json",
+      "bytes": 1608,
+      "sha256": "b4f6a3915dc5094bdd0486ecc19eaf1e0bf079dab57ee04bd7feaebb34615a19",
+      "utf16PathUnits": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 7830,
+      "sha256": "1456069a3dd121f70fc0dad1f491e39b801f50f25e42cf2ed79de6ba5e960d56",
+      "utf16PathUnits": 120
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🦀️.rs",
+      "bytes": 17919,
+      "sha256": "1aaef347276ea63d0938943041aeef2935b28d07d8dce4c085ed9f986787b7eb",
+      "utf16PathUnits": 103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/📐️.json",
+      "bytes": 423,
+      "sha256": "9829a8caf25743883d08560484965c47b20f8df926f3fb0f6ad14c2b997445ae",
+      "utf16PathUnits": 96
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/📤️take/📐️.json",
+      "bytes": 334,
+      "sha256": "9b2e4f123a885b971357625d9c2d9a9179b4b2ab1995d9671d0c1b4a85df1a3a",
+      "utf16PathUnits": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/📤️take/🧪️tests/🦀️.rs",
+      "bytes": 7011,
+      "sha256": "d2493e1f1afc7dc34b93099a6e5e72583073a246b23b336963ebb7a6ac73cf3f",
+      "utf16PathUnits": 111
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/🧪️tests/📖️public/🦀️.rs",
+      "bytes": 2811,
+      "sha256": "b6bc792a202bbb086d525ec2328cc58a09b125ca35b84a5f8e39409af76a28e1",
+      "utf16PathUnits": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 5556,
+      "sha256": "4595afc22d63116c734d0f7abeec07a5a8aef1418f72fe9355693b3db06ebb33",
+      "utf16PathUnits": 103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🦀️.rs",
+      "bytes": 16823,
+      "sha256": "b16cfc689b68198f8daa67aaa2fba6533d33e943061b79ba30e235e0b2bc4afd",
+      "utf16PathUnits": 94
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🦀️.rs",
+      "bytes": 18770,
+      "sha256": "5c9cc93d970d3368276365bebbdb4fbd13835654b96c73aef66e30597ce667e2",
+      "utf16PathUnits": 103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🧪️tests/🧫️fixtures/📐️.json",
+      "bytes": 2075,
+      "sha256": "92c7d88ef9714a4a2552a1bffeec8711019c887d26323e6c6937bfa37914f0bc",
+      "utf16PathUnits": 117
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🎟️work/📐️.json",
+      "bytes": 541,
+      "sha256": "fede1403d3d934c4c6de0241e14191f2cd13e0a7022e848e30882fbfbcaf69c7",
+      "utf16PathUnits": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 6859,
+      "sha256": "0c7a7d79993716223136f58e53b59d0c4765b940936e05201ddb69c9bc94588e",
+      "utf16PathUnits": 114
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/👯️pair/🦀️.rs",
+      "bytes": 7186,
+      "sha256": "210f0619337c4f96ca5d8e4d0b261893a6280d9f922b835ca36ae8613989b53e",
+      "utf16PathUnits": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1499,
+      "sha256": "104b0e72a7b05b43be8e6330e146e5a3da16f6153af49c46dea92d2ae1991fc0",
+      "utf16PathUnits": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 619,
+      "sha256": "31863b279c466bb2ef2bda9a0581ded8216a97491d9c7f1d2ba51fc402804d98",
+      "utf16PathUnits": 117
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/📦️slot/🦀️.rs",
+      "bytes": 5568,
+      "sha256": "fafc5cc8f52eb4cc81b05dfb057f31851c44cd3e72bc39bf10920963a13fc028",
+      "utf16PathUnits": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🔢️array/🦀️.rs",
+      "bytes": 6796,
+      "sha256": "d0cfb2afe06b2797a00e1a7fd5de47810bd1a009fd8c9823add7dabd8f45be15",
+      "utf16PathUnits": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🦀️.rs",
+      "bytes": 9976,
+      "sha256": "945ca19971850f9d1a34e384c940881c0cb340e5aa49728b286e5079603837ae",
+      "utf16PathUnits": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 195,
+      "sha256": "bb8b4c2b209a49db611d3f3dc26ea4754ecce2748121589174724810d3e7296e",
+      "utf16PathUnits": 120
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 2549,
+      "sha256": "4f9565212c1ea670eeb10bee8bfa09edd201202952f70d0b5cb2250040a1be73",
+      "utf16PathUnits": 110
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 1528,
+      "sha256": "3e8ada6e05cd17c40b9503513af7b99c7a7dc5727c6c09edda0c8f471f8e6580",
+      "utf16PathUnits": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 4613,
+      "sha256": "d44a1ee35eb598a3dc50296688d4f4a7ee69e0f0e4da854285c43d867b2f8fed",
+      "utf16PathUnits": 114
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📋️prefix/🎟️work/📐️.json",
+      "bytes": 535,
+      "sha256": "e210469bee05c6123cdf96393efb237aebd4155daf12c1034733b88d1d897ffb",
+      "utf16PathUnits": 117
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📋️prefix/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 7092,
+      "sha256": "6af7c8a2813804364dd18966f7bbdef4bed0e6574df6afe25178060fa9d26d2f",
+      "utf16PathUnits": 124
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📋️prefix/🦀️.rs",
+      "bytes": 3467,
+      "sha256": "c41079daba464183419e5f57b075f67655bb72feecb748b0b191350f24d511a4",
+      "utf16PathUnits": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📐️.json",
+      "bytes": 671,
+      "sha256": "1b4b83e496c5cc383cf833f270ddc42096a296d005b7a0ce84b8706b465c5cea",
+      "utf16PathUnits": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 963,
+      "sha256": "a9c3584696f17b941f5364684b107d0dcf850bc1316d1e35ba3076e897387fe6",
+      "utf16PathUnits": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 222,
+      "sha256": "a3f633bb074a894c15f63f91c7ba5480d7c3ebf22c39a20126b2cf061e125680",
+      "utf16PathUnits": 117
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/🦀️.rs",
+      "bytes": 5732,
+      "sha256": "94257b5e30694080a34349c5674e23ff8c49d8c1811e76c2f30dcd1646043102",
+      "utf16PathUnits": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/🧪️tests/📖️initializers/🦀️.rs",
+      "bytes": 1978,
+      "sha256": "db9603fbe19e7b46c0cc1ee4eb48d2b6d794b68882255ddb20795c888cebfd75",
+      "utf16PathUnits": 122
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/🧪️tests/🦀️.rs",
+      "bytes": 4246,
+      "sha256": "2ee191568d705d4f0c23b4e006970e0bf1388fc474047f6cfadb9c346ae59cc6",
+      "utf16PathUnits": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/📦️box/📐️.json",
+      "bytes": 361,
+      "sha256": "f5761bf376929fe5631f094499c970295b83ea148ddc65cce5fbcf2f03e6cdcd",
+      "utf16PathUnits": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/📦️box/🦀️.rs",
+      "bytes": 6191,
+      "sha256": "85906a621616f92e37dba2a50558623fdf3c3e10484fd4a4cd7ba62e5e94daf5",
+      "utf16PathUnits": 100
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/📦️box/🧪️tests/🦀️.rs",
+      "bytes": 3802,
+      "sha256": "6d7ccb0c5259625be5092484e68f2a16353640ab937065efe703c727c03f78c6",
+      "utf16PathUnits": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🦀️.rs",
+      "bytes": 5524,
+      "sha256": "7f94e0a5287e29d8200b299348f17091ee572a62fc80f83e0ffa54f3b7dd5ee6",
+      "utf16PathUnits": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🎟️work/📐️.json",
+      "bytes": 137,
+      "sha256": "785f84977f730d945496d70848a1b6d87336bf7acd5bbcdaa8122fca96812cd3",
+      "utf16PathUnits": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🔣️.json",
+      "bytes": 183,
+      "sha256": "c80cbb7e3d1119ed783a613238447cdbe2a81a1e78987b59d6edb13b48c0fe72",
+      "utf16PathUnits": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🦀️.rs",
+      "bytes": 6086,
+      "sha256": "8d5abe29e27c04db541411e61a89497aac633e5b6d303e555ee756db4280503e",
+      "utf16PathUnits": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🦀️.rs",
+      "bytes": 10754,
+      "sha256": "02ce6f7d822d7676cb38433e738f2d218433e4bed1f109fe0388db8a95c4e9f0",
+      "utf16PathUnits": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/🦀️.rs",
+      "bytes": 14794,
+      "sha256": "bd6995ada35ccd7c704b8f38065c4de1f2d89802849810a6cfe36e682bcb1643",
+      "utf16PathUnits": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/🧫️fixtures/📐️.json",
+      "bytes": 805,
+      "sha256": "02c152c2c802cc7f2f048163f7187f8999e3c6a70fd5e596d9104fc7e55f93e6",
+      "utf16PathUnits": 135
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/🫙️empty/🦀️.rs",
+      "bytes": 1759,
+      "sha256": "620688b4548c462fcb6fe69015a565900da2c2e657bec7914f13e7d06ecbb76b",
+      "utf16PathUnits": 130
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🧪️tests/🫙️empty/🧫️fixtures/🔣️.json",
+      "bytes": 378,
+      "sha256": "92c93664af48e58984dbc35350c9a28130192f9add2132de723475753f242185",
+      "utf16PathUnits": 144
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/tests.rs",
+      "bytes": 6121,
+      "sha256": "eb9fbc6f26f82078f634e41655a25e7612cd595ecb849c7cf11adc44b7e81bef",
+      "utf16PathUnits": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/🎟️work/📐️.json",
+      "bytes": 589,
+      "sha256": "8a0c73b41b3550106ecd18ec8353ab8b7ba62fd6e268faed63fc479c98c93450",
+      "utf16PathUnits": 103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 5181,
+      "sha256": "e1eaafeea287a5346678b092bcd316d6f856b3567dfc5ee17e2c94b9819007c9",
+      "utf16PathUnits": 110
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/📐️.json",
+      "bytes": 1190,
+      "sha256": "d9c2167ea53ad29f4abcc3ade1786ba33f204851f1e0e35cac0c62ff8a2da3ad",
+      "utf16PathUnits": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/🦀️.rs",
+      "bytes": 11556,
+      "sha256": "b3a08a91469f1dcb659501c176c6781f154ac47de9ed2387905a11d28d01a984",
+      "utf16PathUnits": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs",
+      "bytes": 6333,
+      "sha256": "0b3f3cf66a2dcca7749e6368f9c6b4985ed0015471f5598a070de3d3a96be2a2",
+      "utf16PathUnits": 86
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/📦️storage/🎟️work/📐️.json",
+      "bytes": 288,
+      "sha256": "ec8cfa2ecd2361e9a874109d2746a4e9404647abe3dc0ce3a262682f6017483b",
+      "utf16PathUnits": 117
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/📦️storage/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 3218,
+      "sha256": "aa55a4da2b0dc42779903590f6bca685d5aedcf1a2a5af04ff135bf6608ce047",
+      "utf16PathUnits": 124
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/📦️storage/🦀️.rs",
+      "bytes": 5002,
+      "sha256": "c9ea26aee02a3558be8e700a41acbacbcefedcbca320c794e4cd902056d2e500",
+      "utf16PathUnits": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/🎟️work/📐️.json",
+      "bytes": 1140,
+      "sha256": "6c2b8a323ae25cb3ba39a8615ecfc460c6db823525bf6b6c9f33b4b2edb9198d",
+      "utf16PathUnits": 116
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 5679,
+      "sha256": "e83f859cdd4c67830090a916ecf936e16a2d506c14d62e97781e5ed8c7ef7bec",
+      "utf16PathUnits": 123
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/🦀️.rs",
+      "bytes": 11698,
+      "sha256": "702f59e85bf94a7798f31c4b15755c82744b242c94936c744825298dfe09f743",
+      "utf16PathUnits": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🦀️.rs",
+      "bytes": 1082,
+      "sha256": "07ca5dee7bb31d27729f35e4d928bb2d1852e74445b92496ad028080ac0c1c08",
+      "utf16PathUnits": 96
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🎮️receiving/🎟️work/📐️.json",
+      "bytes": 137,
+      "sha256": "785f84977f730d945496d70848a1b6d87336bf7acd5bbcdaa8122fca96812cd3",
+      "utf16PathUnits": 128
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🎮️receiving/🦀️.rs",
+      "bytes": 5681,
+      "sha256": "732bce932b05202cbe584a1d8580eed585465557dac3e27dc2dd226f3d568b29",
+      "utf16PathUnits": 118
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🦀️.rs",
+      "bytes": 2632,
+      "sha256": "6ed5d5f2dc20327864bd483922f87dfdbd0af5d7783fdbf02136fd4eb2158aa0",
+      "utf16PathUnits": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 596,
+      "sha256": "99c602a3159d5ff9bb98c5a44d63668df4459b203e8e67284c2d8dfcab5b780d",
+      "utf16PathUnits": 119
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/📖️public/🦀️.rs",
+      "bytes": 1047,
+      "sha256": "821a20178f7c14bb390ee7cb7a1d5f2d11c9d05d50bc9cb57be4ed24dbff6d64",
+      "utf16PathUnits": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/📥️admission/🦀️.rs",
+      "bytes": 6017,
+      "sha256": "b5f7e278d7a4fd763b6d5604150dbaeda1281af1f65ba6debb0437b9e38baccd",
+      "utf16PathUnits": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🦀️.rs",
+      "bytes": 20539,
+      "sha256": "43bfd238f3c1f7e9addf8d851c9038a0276d97567884bbc90c14c0ab4f83b122",
+      "utf16PathUnits": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🧫️fixtures/📐️.json",
+      "bytes": 823,
+      "sha256": "e73f0ba91fa774a554c23a27da3fa6ea6e7b14aa2c50ff1147d27d2c21d87fab",
+      "utf16PathUnits": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🦀️.rs",
+      "bytes": 8245,
+      "sha256": "86da080b1710649dc5e88318154adccd139ad6161fd62e6e3c1aa6f04c4ba098",
+      "utf16PathUnits": 98
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🎟️work/📐️.json",
+      "bytes": 171,
+      "sha256": "1529b770cb6d164bae1c759d13166e2ff0b46d7579fdec6128415d4d5efb1fcc",
+      "utf16PathUnits": 117
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🦀️.rs",
+      "bytes": 8641,
+      "sha256": "16f13f98237c63ae1d91e945907ea724a7ecdd7372fd7529acfcf7e98d3b4b35",
+      "utf16PathUnits": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 297,
+      "sha256": "272a7966b15ec801c587fe0542d2447dab64d48bef9326e1d8a12709f554dc69",
+      "utf16PathUnits": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🎟️work/📐️.json",
+      "bytes": 577,
+      "sha256": "ad945fe4f924e60ac28feeddda8deb7145858e41f565e8b38ed50d4573859920",
+      "utf16PathUnits": 103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 4809,
+      "sha256": "62ea4376b32ecd4575a1965867188fec2a650ae73af06e5acabb3072df890722",
+      "utf16PathUnits": 110
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🦀️.rs",
+      "bytes": 10524,
+      "sha256": "3a2698aa5166e75801d9f7c19441272dcb8530758d3c3d1c58de39bc3474d73b",
+      "utf16PathUnits": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🧪️tests/🦀️.rs",
+      "bytes": 2918,
+      "sha256": "0139f5aa251eac5ce9d74349d41919cce6298fc42761cfa95a9b37bb98148e25",
+      "utf16PathUnits": 102
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🧪️tests/🧫️fixtures/📐️.json",
+      "bytes": 596,
+      "sha256": "3b6c1440cad87a909d6ab04744d4d11d4fa3567ba4e39b4841196963d394b62e",
+      "utf16PathUnits": 116
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🪡️field/🦀️.rs",
+      "bytes": 7079,
+      "sha256": "0f4c78059302b15e91c6c5f39164bdb70f5bea9834f8ece81674b7c678ba6cf8",
+      "utf16PathUnits": 95
+    }
+  ],
+  "scope": "canonical storage/default extraction + owned receiving private/public law migration; original four Cargo test targets retained"
+}

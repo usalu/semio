@@ -1,0 +1,18 @@
+{
+  "state": "schema-law-before-equality-definer",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/actual.json",
+      "sha256": "ad5399eff6ebc2cf6cdd1903c8c42e6efde74030d9b49677e99b6e0e959599ff"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/actual.schema.json",
+      "sha256": "3237673ca72c67436656398fc90d0f3e003f0141f6bb3820ca188864452ce1f1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/actual.rs",
+      "sha256": "5afa1daca5073ceab6f418c698e9d7887d30b618a035139e9bca759b2a89090e"
+    }
+  ],
+  "runtime": "unexecuted"
+}

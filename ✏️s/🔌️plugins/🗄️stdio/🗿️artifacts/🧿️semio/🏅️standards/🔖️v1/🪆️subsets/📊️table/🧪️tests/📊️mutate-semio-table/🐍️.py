@@ -15,14 +15,12 @@ a second IMPLEMENTATION, written in another language from the format's own commi
   (`document = artifact-mark schema-line columns-line rows-line`, `column = "[" hex "," cell-kind
   "]"`, `cell-kind = "n"|"b"|"i"|"f"|"s"|"y"`, `row = "[" list-item* "]"`, and the tag-prefixed
   `SemioValue` production it restates from `🔢️value`'s own grammar);
-* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio`
-  (`format u8`, then the varint-length-prefixed UTF-8 `schema`), whose description then stops at the
-  repeated `columns`/`rows` records by its own admission and names their layout only in prose —
-  "per-column varint-length-prefixed name + kind tag byte; per-row varint cell count + per-cell
-  recursive SemioValue binary". That prose was turned into the reader/writer below by DERIVING the
-  field order from the grammar and the value tag ordinals from the grammar's own `Z B I F S Y L M R`
-  order, then PINNING the derivation against the committed `🎒️.pack.semio`: `pack_bytes`
-  re-encodes that file byte for byte, which a misreading could not do;
+* the pack body is the derived record document of the shared record-document codec
+  (`🧿️semio/🚪️io/💾️binary/🎒️record-document/🐍️.py`), driven by this subset's committed record spec
+  `…/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json`: the SPK container, the fixed-Huffman deflate, the BLAKE3
+  content hash and the schema-hashed record body are specified by `🧰️framework/🔨️modules/🎒️pack` and
+  re-implemented there, not here. The committed `🎒️.pack.semio` files were written by the Rust record
+  pack, so `parse_pack`/`pack_bytes` reproducing them is a cross-language byte agreement;
 * the eight verbs and their argument lists are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and the committed JSON schema
   `…/🧬️mutations/🔣️.json`, and what each verb MEANS is the committed per-kind
@@ -48,8 +46,11 @@ from __future__ import annotations
 
 # region 🔖️Imports
 import csv
+import importlib.util
 import io
 import json
+import os
+import sys
 
 from semio_repo_test import Adapter, Context, Outcome, digest
 
@@ -57,21 +58,14 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 
 
 # region 🔖️Carrier
-BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 ENVELOPE_ID = "s.stdio.semio.table"
 DSL_PREAMBLE = "semio %s.dsl v1" % ENVELOPE_ID
-PACK_TOKEN = "%s.pack v1" % ENVELOPE_ID
-PACK_FORMAT = 1
 
 #: 🔤️ `cell-kind = "n" | "b" | "i" | "f" | "s" | "y"`, paired with the JSON tag each letter stands
 #: for in the committed specification vectors.
 KIND_LETTER = {"null": "n", "bool": "b", "int": "i", "float": "f", "str": "s", "bytes": "y"}
 LETTER_KIND = {letter: kind for kind, letter in KIND_LETTER.items()}
 
-#: 🔢️ The `SemioValue` tag ordinals of the pack frame: the grammar's own `Z B I F S Y L M R` order.
-#: `null`…`bytes` are pinned by the committed `🎒️.pack.semio`, which carries one cell of each;
-#: `list`/`map`/`ref` follow the same declared order and no committed pack exercises them.
-VALUE_ORDER = ("null", "bool", "int", "float", "str", "bytes", "list", "map", "ref")
 VALUE_LETTER = {"null": "Z", "bool": "B", "int": "I", "float": "F", "str": "S", "bytes": "Y", "list": "L", "map": "M", "ref": "R"}
 LETTER_VALUE = {letter: kind for kind, letter in VALUE_LETTER.items()}
 
@@ -82,12 +76,12 @@ def hex_of(text: str) -> str:
 
 
 def text_of(hexed: str) -> str:
-    """🔡️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
+    """🪄️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
     return bytes_of(hexed).decode("utf-8")
 
 
 def bytes_of(hexed: str) -> bytes:
-    """🔡️ The same macro read as raw octets — what a `Y[…]` cell carries."""
+    """🔋️ The same macro read as raw octets — what a `Y[…]` cell carries."""
     if len(hexed) % 2 != 0:
         raise AssertionError("hex run %r has an odd digit count" % hexed)
     return bytes.fromhex(hexed)
@@ -182,7 +176,7 @@ def read_value(reader: Reader) -> dict:
 
 
 def write_value(value: dict) -> str:
-    """🌳️ The writing direction of `read_value`."""
+    """🌀️ The writing direction of `read_value`."""
     kind = value["kind"]
     if kind == "null":
         return "Z"
@@ -271,164 +265,33 @@ def print_dsl(document: dict) -> str:
 
 
 # region 🔖️Pack
-def read_varint(data: bytes, at: int):
-    """🔢️ Unsigned LEB128 — the `varint` the protocol description names for every length."""
-    value = 0
-    shift = 0
-    while True:
-        if at >= len(data):
-            raise AssertionError("the pack frame ends inside a varint")
-        byte = data[at]
-        at += 1
-        value |= (byte & 0x7F) << shift
-        if byte & 0x80 == 0:
-            return value, at
-        shift += 7
+_HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def write_varint(value: int) -> bytes:
-    """🔢️ The writing direction of the same encoding."""
-    out = bytearray()
-    while True:
-        byte = value & 0x7F
-        value >>= 7
-        out.append(byte | (0x80 if value else 0))
-        if not value:
-            return bytes(out)
+def _load_shared(alias, *parts):
+    """🧬️ Loads a shared module from the `stdio.semio` artifact root, six folders above this case, and registers it under an importable name."""
+    if alias in sys.modules:
+        return sys.modules[alias]
+    path = os.path.join(_HERE, *[os.pardir] * 6, *parts)
+    spec = importlib.util.spec_from_file_location(alias, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[alias] = module
+    spec.loader.exec_module(module)
+    return module
 
 
-def read_blob(data: bytes, at: int):
-    """🧵️ A varint-length-prefixed run of octets, the protocol's only scalar past the header."""
-    length, at = read_varint(data, at)
-    if at + length > len(data):
-        raise AssertionError("the pack frame ends inside a length-prefixed run")
-    return data[at : at + length], at + length
-
-
-def write_blob(raw: bytes) -> bytes:
-    """🧵️ The writing direction of the same scalar."""
-    return write_varint(len(raw)) + raw
-
-
-def read_pack_value(data: bytes, at: int):
-    """🌳️ One cell: a tag ordinal, then the payload that variant declares."""
-    if at >= len(data):
-        raise AssertionError("the pack frame ends where a value tag was expected")
-    ordinal = data[at]
-    at += 1
-    if ordinal >= len(VALUE_ORDER):
-        raise AssertionError("unknown value tag ordinal %d" % ordinal)
-    kind = VALUE_ORDER[ordinal]
-    if kind == "null":
-        return {"kind": "null"}, at
-    if kind == "bool":
-        return {"kind": "bool", "value": data[at] == 1}, at + 1
-    if kind in ("int", "float"):
-        raw, at = read_blob(data, at)
-        return {"kind": kind, "lexeme": raw.decode("utf-8")}, at
-    if kind == "str":
-        raw, at = read_blob(data, at)
-        return {"kind": "str", "value": raw.decode("utf-8")}, at
-    if kind == "bytes":
-        raw, at = read_blob(data, at)
-        return {"kind": "bytes", "value": list(raw)}, at
-    if kind == "list":
-        count, at = read_varint(data, at)
-        items = []
-        for _ in range(count):
-            item, at = read_pack_value(data, at)
-            items.append(item)
-        return {"kind": "list", "items": items}, at
-    if kind == "map":
-        count, at = read_varint(data, at)
-        entries = []
-        for _ in range(count):
-            key, at = read_blob(data, at)
-            value, at = read_pack_value(data, at)
-            entries.append({"key": key.decode("utf-8"), "value": value})
-        return {"kind": "map", "entries": entries}, at
-    raw, at = read_blob(data, at)
-    return {"kind": "ref", "id": {"value": raw.decode("utf-8")}}, at
-
-
-def write_pack_value(value: dict) -> bytes:
-    """🌳️ The writing direction of `read_pack_value`."""
-    kind = value["kind"]
-    out = bytearray([VALUE_ORDER.index(kind)])
-    if kind == "bool":
-        out.append(1 if value["value"] else 0)
-    elif kind in ("int", "float"):
-        out += write_blob(value["lexeme"].encode("utf-8"))
-    elif kind == "str":
-        out += write_blob(value["value"].encode("utf-8"))
-    elif kind == "bytes":
-        out += write_blob(bytes(value["value"]))
-    elif kind == "list":
-        out += write_varint(len(value["items"]))
-        for item in value["items"]:
-            out += write_pack_value(item)
-    elif kind == "map":
-        out += write_varint(len(value["entries"]))
-        for entry in value["entries"]:
-            out += write_blob(entry["key"].encode("utf-8")) + write_pack_value(entry["value"])
-    elif kind == "ref":
-        out += write_blob(value["id"]["value"].encode("utf-8"))
-    return bytes(out)
+record_document = _load_shared("record_document", "🚪️io", "💾️binary", "🎒️record-document", "🐍️.py")
+RECORD_SPEC = record_document.load_record_spec(os.path.join(_HERE, os.pardir, os.pardir, "🧬️schema", "📸️snapshot", "🗺️record-spec", "🔣️.json"))
 
 
 def parse_pack(data: bytes) -> dict:
-    """📦️ Binary envelope, then `format u8`, the schema, the column records and the row records."""
-    if data[:8] != BINARY_MAGIC:
-        raise AssertionError("the pack file does not start with the semio binary magic")
-    if len(data) < 12:
-        raise AssertionError("the pack file is truncated inside its envelope")
-    token_len = int.from_bytes(data[8:12], "little")
-    token = data[12 : 12 + token_len].decode("utf-8")
-    if token != PACK_TOKEN:
-        raise AssertionError("expected the %r envelope token, got %r" % (PACK_TOKEN, token))
-    at = 12 + token_len
-    if data[at] != PACK_FORMAT:
-        raise AssertionError("unknown pack format byte %d" % data[at])
-    at += 1
-    schema, at = read_blob(data, at)
-    count, at = read_varint(data, at)
-    columns = []
-    for _ in range(count):
-        name, at = read_blob(data, at)
-        letter_ordinal = data[at]
-        at += 1
-        if letter_ordinal >= len(VALUE_ORDER) or VALUE_ORDER[letter_ordinal] not in KIND_LETTER:
-            raise AssertionError("unknown column kind ordinal %d" % letter_ordinal)
-        columns.append({"name": name.decode("utf-8"), "kind": VALUE_ORDER[letter_ordinal]})
-    count, at = read_varint(data, at)
-    rows = []
-    for _ in range(count):
-        cell_count, at = read_varint(data, at)
-        cells = []
-        for _ in range(cell_count):
-            cell, at = read_pack_value(data, at)
-            cells.append(cell)
-        rows.append({"cells": cells})
-    if at != len(data):
-        raise AssertionError("%d trailing byte(s) after the last row record" % (len(data) - at))
-    return {"schema": schema.decode("utf-8"), "columns": columns, "rows": rows}
+    """📦️ A `.pack.semio` file as the JSON snapshot its record document carries."""
+    return record_document.decode_pack(RECORD_SPEC, data)
 
 
 def pack_bytes(document: dict) -> bytes:
-    """📦️ The writing direction of `parse_pack`, envelope included."""
-    body = bytearray([PACK_FORMAT])
-    body += write_blob(document["schema"].encode("utf-8"))
-    body += write_varint(len(document["columns"]))
-    for column in document["columns"]:
-        body += write_blob(column["name"].encode("utf-8"))
-        body.append(VALUE_ORDER.index(column["kind"]))
-    body += write_varint(len(document["rows"]))
-    for row in document["rows"]:
-        body += write_varint(len(row["cells"]))
-        for cell in row["cells"]:
-            body += write_pack_value(cell)
-    token = PACK_TOKEN.encode("utf-8")
-    return BINARY_MAGIC + len(token).to_bytes(4, "little") + token + bytes(body)
+    """🔍️ The writing direction of `parse_pack`, envelope included."""
+    return record_document.encode_pack(RECORD_SPEC, document)
 
 
 # endregion 🔖️Pack
@@ -452,7 +315,7 @@ TAG_OF_KIND = {
 
 
 def tagged(mutation: dict):
-    """🔎️ Splits `{"CreateColumn": {…}}` into its verb and its arguments."""
+    """✂️ Splits `{"CreateColumn": {…}}` into its verb and its arguments."""
     if len(mutation) != 1:
         raise AssertionError("a mutation is exactly one externally tagged verb, got %r" % sorted(mutation))
     tag = next(iter(mutation))
@@ -479,7 +342,7 @@ def row_index(document: dict, index, verb: str) -> int:
 
 
 def apply_mutation(document: dict, mutation: dict) -> dict:
-    """🧬️ Applies one verb, returning a NEW document. An unaddressable column, row or position is a
+    """📱️ Applies one verb, returning a NEW document. An unaddressable column, row or position is a
     refusal, never a silent no-op — a quietly skipped mutation would report as a pass.
 
     The semantics are the committed specification vectors': `CreateColumn` inserts the column at its
@@ -606,7 +469,7 @@ SURVEY_PACK = "shared://📊️mutate-semio-table/📦️reuse-marketplaces.pack
 
 
 def doc_string(ctx: Context) -> str:
-    """📜️ The scenario's own committed parameters — the feature owns them, not the adapter."""
+    """🔌️ The scenario's own committed parameters — the feature owns them, not the adapter."""
     for step in ctx.scenario["steps"]:
         if step.get("docString"):
             return step["docString"]
@@ -619,7 +482,7 @@ def survey(ctx: Context) -> dict:
 
 
 def snapshot_json(ctx: Context, uri: str) -> dict:
-    """🧫️ One committed specification-vector file, decoded from the bytes the plan pinned."""
+    """➡️ One committed specification-vector file, decoded from the bytes the plan pinned."""
     return json.loads(ctx.input_bytes(uri).decode("utf-8"))
 
 
@@ -635,7 +498,7 @@ def mutate(ctx: Context) -> Outcome:
 
 
 def inverse(ctx: Context) -> Outcome:
-    """↩️ The same verb, then this implementation's own undo of it. The restored table must be the
+    """🌁️ The same verb, then this implementation's own undo of it. The restored table must be the
     survey again — asserted here, and compared against the subject's restored table by the runner,
     so a wrong undo that happens to be self-consistent still shows up."""
     document = survey(ctx)
@@ -650,7 +513,7 @@ def inverse(ctx: Context) -> Outcome:
 
 
 def spec_vector(ctx: Context) -> Outcome:
-    """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
+    """🌂️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
     is a THIRD statement of what the verb means, independent of both implementations."""
     before_uri, mutation_uri, after_uri = ctx.step_input_uris()[:3]
     before = snapshot_json(ctx, before_uri)
@@ -662,7 +525,7 @@ def spec_vector(ctx: Context) -> Outcome:
 
 
 def payload_fidelity(ctx: Context) -> Outcome:
-    """📊️ The derived fixture against the real CSV it was derived from, re-tokenized on every run by
+    """🪑️ The derived fixture against the real CSV it was derived from, re-tokenized on every run by
     Python's own `csv` module — an RFC 4180 implementation with no connection to this repository."""
     derived = derive_document_from_csv(ctx.input_bytes(SURVEY_CSV))
     committed = survey(ctx)

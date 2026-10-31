@@ -4,6 +4,9 @@
 //! `wasm32-unknown-unknown`/`wasm32-wasip2` as well as native, same shape as `⏱️trace`/`⏳️async`'s
 //! own glue files.
 
+#[cfg(test)]
+extern crate self as semio_framework_job;
+
 #[path = "../../🦀️.rs"]
 mod component;
 pub use component::*;

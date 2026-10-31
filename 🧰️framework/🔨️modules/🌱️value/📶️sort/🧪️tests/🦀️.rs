@@ -1,5 +1,5 @@
 use semio_framework_test_fixtures::repo_text;
-use semio_framework_value::sort::*;
+use semio_framework_value_sort::*;
 use semio_framework_value_testing_allocator as _;
 
 fn execute(keys: &[[u64; 3]]) -> (Vec<usize>, usize) {

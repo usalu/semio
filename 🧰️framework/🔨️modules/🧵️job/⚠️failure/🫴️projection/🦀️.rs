@@ -1,9 +1,9 @@
 //! 🫴️ Common borrowed failure projections retain every original field without constructing a diagnostic mirror.
 use super::{OriginalDomainPrimary,OriginalReceivingPrimary,OriginalDomainView as V,OriginalTurnFailure,OriginalTurnPrimary,ValueError};
 use semio_framework_diagnostic::{Fault,FaultCause,FaultOrigin,FaultParams,FaultScope,FaultSource,Severity,TextSpan};
-use semio_framework_value::{Number,RetainedCloneProgress,ValueRefusalKind};
+use semio_framework_value_retained_clone::{Number,RetainedCloneProgress,ValueRefusalKind};
 #[derive(Clone,Copy)]
-enum Node<'a>{Turn(&'a OriginalTurnFailure),Primary(&'a OriginalTurnPrimary),Value(&'a ValueError),Fault(&'a Fault),Domain(&'a OriginalDomainPrimary),Receiving(&'a OriginalReceivingPrimary),Intrinsic(&'a semio_framework_value::DslValue),Progress(RetainedCloneProgress),Scope(&'a FaultScope),Source(FaultSource),Span(&'a TextSpan),Causes(&'a [FaultCause]),Cause(&'a FaultCause),Params(&'a FaultParams),Text(&'a str),Bool(bool),UInt(u64)}
+enum Node<'a>{Turn(&'a OriginalTurnFailure),Primary(&'a OriginalTurnPrimary),Value(&'a ValueError),Fault(&'a Fault),Domain(&'a OriginalDomainPrimary),Receiving(&'a OriginalReceivingPrimary),Intrinsic(&'a semio_framework_value_retained_clone::DslValue),Progress(RetainedCloneProgress),Scope(&'a FaultScope),Source(FaultSource),Span(&'a TextSpan),Causes(&'a [FaultCause]),Cause(&'a FaultCause),Params(&'a FaultParams),Text(&'a str),Bool(bool),UInt(u64)}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original failure projection ordinal changed")}
 fn fault_key(f:&Fault,index:usize)->Result<&'static str,ValueError>{if index<6{return Ok(["origin","code","severity","message","scope","retainedProgress"][index])}let mut position=6;for(present,key)in[(f.source.is_some(),"source"),(f.span.is_some(),"span"),(!f.causes.is_empty(),"causes"),(f.params.as_deref().is_some_and(|p|!p.0.is_empty()),"params"),(f.domain.is_some(),"domain")]{if present{if index==position{return Ok(key)}position+=1}}if index==position{Ok("retryable")}else{Err(invalid())}}
 impl<'a> Node<'a>{
@@ -49,4 +49,4 @@ impl super::OriginalDomainProjection for OriginalTurnFailure{
  fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{key_original_turn_failure(self,path,index)}
 }
 
-fn intrinsic_view<'a>(source:&'a semio_framework_value::DslValue,path:&[usize])->Result<V<'a>,ValueError>{super::OriginalDomainProjection::projection_view(source,path)}
+fn intrinsic_view<'a>(source:&'a semio_framework_value_retained_clone::DslValue,path:&[usize])->Result<V<'a>,ValueError>{super::OriginalDomainProjection::projection_view(source,path)}

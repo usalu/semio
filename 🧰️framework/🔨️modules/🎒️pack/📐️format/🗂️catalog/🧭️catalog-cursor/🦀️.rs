@@ -303,7 +303,7 @@ impl RetainedPackCatalogCursor {
             }
         };
         if self.allocated_bytes() > self.maximum_allocation_bytes {
-            let fault = RetainedPackCatalogFault::from_paged_allocation(PagedListAllocationError{kind:PagedListRefusalKind::OwnershipLimit,reason:"retained-pack.catalog-allocation-overgrant",allocated_bytes:step.allocated_bytes},"retained-pack.catalog-allocation-overgrant",offset);
+            let fault = RetainedPackCatalogFault::from_paged_allocation(PagedListAllocationError{work:0,kind:PagedListRefusalKind::OwnershipLimit,reason:"retained-pack.catalog-allocation-overgrant",allocated_bytes:step.allocated_bytes},"retained-pack.catalog-allocation-overgrant",offset);
             self.fault.get_or_insert(fault);
             return Err(RetainedPackCatalogAllocationError { allocated_bytes: step.allocated_bytes, fault });
         }

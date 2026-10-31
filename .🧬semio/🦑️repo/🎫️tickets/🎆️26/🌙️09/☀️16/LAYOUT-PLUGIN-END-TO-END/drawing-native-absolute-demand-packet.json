@@ -1,0 +1,37 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🦀️.rs",
+    "bytes": 13768,
+    "sha256": "81986cf048ec8be2e5fc210566d3631b85fdfbdc9fce8d936a6ed5c486ed739b"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🦀️.rs",
+    "bytes": 13543,
+    "sha256": "4801834c848a33d4986b0735f657b244d4c955b46a198e1b1e16390129ea1c51"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/🔣️.json",
+    "bytes": 140,
+    "sha256": "e9190c184209ccf4bfc5e644b1aa67228bf1769f2e1c457b1c90d2bd75526aa7"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/📐️.json",
+    "bytes": 515,
+    "sha256": "f4481f61008717602063eb92d0e231cb1c7dcc33e52584944a044778f5ab0d2d"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🦀️.rs",
+    "bytes": 8295,
+    "sha256": "c87fd170a75b4ac18a3485a9a0cec2da82bafd654a18bc67b5651ca8805dbbcb"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🔣️.json",
+    "bytes": 865,
+    "sha256": "5efd5cfa53a46331a48c1eabbdfd8190b251de0a01c22340d21b697ace99bd4b"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/📐️.json",
+    "bytes": 461,
+    "sha256": "83517067e64b93293fe2404e3c212b7787d3a74c5e4639f3655afdcf2240b7f8"
+  }
+]

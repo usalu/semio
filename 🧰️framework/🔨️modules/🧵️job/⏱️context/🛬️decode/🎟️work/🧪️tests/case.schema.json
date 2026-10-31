@@ -1,0 +1,56 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "currentWork",
+    "probe",
+    "expectedValid",
+    "expectedWork",
+    "nextWorkAdmitted",
+    "heap",
+    "scope",
+    "reportedWork",
+    "underreportRefusal"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "currentWork": {
+      "const": 1
+    },
+    "probe": {
+      "const": [
+        255
+      ]
+    },
+    "expectedValid": {
+      "const": false
+    },
+    "expectedWork": {
+      "const": 1
+    },
+    "nextWorkAdmitted": {
+      "const": false
+    },
+    "heap": {
+      "const": [
+        0,
+        0
+      ]
+    },
+    "scope": {
+      "const": "actual-caller-native-current-work-loan-no-new-stock"
+    },
+    "reportedWork": {
+      "const": [
+        0,
+        1
+      ]
+    },
+    "underreportRefusal": {
+      "const": "original native producer omitted observed native work"
+    }
+  }
+}

@@ -30,7 +30,7 @@ pub fn window_args(window_id: &str, window_kind_id: &str) -> semio_framework_val
     ])
 }
 
-/// 🧵️ The `Effect` that arms/continues the off-main-thread `flowEvalTick` chain, addressed at ONE
+/// 🧶️ The `Effect` that arms/continues the off-main-thread `flowEvalTick` chain, addressed at ONE
 /// window. An `Effect::DispatchAction` carries no window of its own — the shell redispatches it
 /// under whichever window is current — so the address rides on the payload.
 pub fn eval_tick_effect(window_id: &str, window_kind_id: &str) -> Effect {
@@ -70,7 +70,7 @@ pub struct FlowEvalTick {
     pub window_kind_id: String,
 }
 
-/// 🧮️ Advance `window_id`'s evaluation with the admitted window configuration, and owe exactly the
+/// 🌬️ Advance `window_id`'s evaluation with the admitted window configuration, and owe exactly the
 /// continuation that window still needs.
 ///
 /// 🔒️ Three outcomes, one each: a hop that parked extension answers owes NO re-arm (the answers own
@@ -92,7 +92,7 @@ pub fn tick_result(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig, sessi
         let hash=pending.node_hash;
         if session.invocation_origin_cold(window_id,hash).is_none(){
             let dependency_json=dependencies.remove(&pending.neuron_id).expect("initial invocation owns its original dependency source");
-            session.retain_invocation_origin_cold(semio_framework_os_flow_host_session::invocation_publication::FlowInvocationOriginLease::from_cold(semio_framework_os_flow_host_session::invocation_publication::FlowInvocationOrigin{window_id:window_id.into(),window_kind_id:window_kind_id.into(),neuron_id:pending.neuron_id,extension_id:pending.extension_id,operator_id:pending.operator_id,node_hash:hash,input_json:pending.input_json,dependency_json,operator_version:format!("registry:{};geometry:1;policy:1",flow::flow_extension_registry_generation()),outer_node_hash:None}));
+            session.retain_invocation_origin_cold(semio_framework_os_flow_host_session::invocation_publication::FlowInvocationOriginLease::from_cold(semio_framework_os_flow_host_session::invocation_publication::FlowInvocationOrigin{window_id:window_id.into(),window_kind_id:window_kind_id.into(),neuron_id:pending.neuron_id,extension_id:pending.extension_id,operator_id:pending.operator_id,node_hash:hash,input_json:pending.input_json,dependency_json,operator_version:format!("registry:{};geometry:1;policy:1",flow::flow_extension_registry_generation()),outer_node_hash:None,preview_source:None}));
         }
         let origin=session.invocation_origin_cold(window_id,hash).expect("invocation source is retained before dispatch");
         extension_invocations.push(ExtensionInvocation::new(origin.extension_id.clone(),"evaluate",origin.request_json_cold(resume),"flowEvalResolve"));

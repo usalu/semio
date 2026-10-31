@@ -1,0 +1,28 @@
+{
+  "state": "disjoint-regression-source-authored-unexecuted-not-full-glyph14-acceptance",
+  "laws": 14,
+  "cases": 14,
+  "quanta": [
+    1,
+    7,
+    4096
+  ],
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎨️corpus/📐️.json",
+      "sha256": "10a1e716f49c1239b7823c62ae794e66c9d9be24906792f83aa2310c6ec2726b",
+      "bytes": 1843
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎨️corpus/🔣️.json",
+      "sha256": "1306090b9fd8a1f0ad5bd219c9ee07250e6975030dbc0c3260a7cef84d60b32b",
+      "bytes": 2537
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎨️corpus/corpus.test.ts",
+      "sha256": "230f0ac03b16a589f1575225db203dae5a452dadcc0d366a575d5f15cfa1855d",
+      "bytes": 9894
+    }
+  ],
+  "scope": "Actual existing authored preparation→Text ScenePlanOwner caller under same existing bank; alloriginal14 rows/3quanta/semantic+private paint identity/actualGlyphs, original13 solid independent OpenType+Sharp geometry. No firstparty raster/SVG/PDF/pick/highlevel export acceptance substitute. Source/method guards and case metadata precede new law; Text body existed earlier under original6 TDD."
+}

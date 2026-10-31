@@ -1,0 +1,23 @@
+{
+  "state": "post-fix-regressions-after-actual-declared-bootstrap-red",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/🧪️tests/module.schema.json",
+      "bytes": 1356,
+      "sha256": "f55ddbe9895c2b613d4c066b9bc79e16b8c088b3074ebc4a33af16417f149845"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/🧪️tests/module.json",
+      "bytes": 823,
+      "sha256": "67400cfa7d33540788dac13893e452b8d7a34573cb18f325c4d5442e13eb7962"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/🧪️tests/module.test.ts",
+      "bytes": 1806,
+      "sha256": "f1c4f44d854c155f18c333e89ef39460aa3b6f2e2176a34457bd011467b81e2a"
+    }
+  ],
+  "authoredLaws": 2,
+  "actual": "unexecuted; no new RED claim",
+  "scope": "Native Bun ESM+require identities and independent official TypeScript AST classify actual value/type exports, forbidden old aliases remain absent."
+}

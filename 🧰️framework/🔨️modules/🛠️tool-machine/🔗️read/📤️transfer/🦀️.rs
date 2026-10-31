@@ -10,10 +10,10 @@ pub trait OriginalToolLedgerSource{
  fn original_next(&self,after:Option<&str>)->Option<(&semio_framework_value::SharedUtf8,RetainedOriginalSlotKey)>;
  fn original_live(&self,window:&str,key:RetainedOriginalSlotKey)->Result<bool,ValueError>;
  fn original_read_demands(&self,window:&str,key:RetainedOriginalSlotKey)->Result<RetirementDemand,ValueError>;
- fn original_read_advance(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>;
+ fn original_read_advance(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome;
  fn original_read(&self,window:&str,key:RetainedOriginalSlotKey)->Result<semio_framework_value::RetainedCloneRef<'_,Self::State>,ValueError>;
  fn original_return_demands(&self,window:&str,key:RetainedOriginalSlotKey,body:usize)->Result<RetirementDemand,ValueError>;
- fn original_return(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>>,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>;
+ fn original_return(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome;
 }
 
 macro_rules! original_transfer{($ledger:ident,$state:ident,$slot:ident,$slot_mut:ident,$busy:expr)=>{
@@ -23,12 +23,12 @@ macro_rules! original_transfer{($ledger:ident,$state:ident,$slot:ident,$slot_mut
   fn original_next(&self,after:Option<&str>)->Option<(&semio_framework_value::SharedUtf8,RetainedOriginalSlotKey)>{self.next_retained_window(after)}
   fn original_live(&self,window:&str,key:RetainedOriginalSlotKey)->Result<bool,ValueError>{let slot=self.$slot(window).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original resident tool address absent"))?;if slot.key()!=key{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original resident tool key changed"))}Ok(!slot.is_empty())}
   fn original_read_demands(&self,window:&str,key:RetainedOriginalSlotKey)->Result<RetirementDemand,ValueError>{self.retained_read_demands(window,key)}
-  fn original_read_advance(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>{self.advance_retained_read(window,key,factory,grant)}
+  fn original_read_advance(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{self.advance_retained_read(window,key,factory,grant)}
   fn original_read(&self,window:&str,key:RetainedOriginalSlotKey)->Result<semio_framework_value::RetainedCloneRef<'_,Self::State>,ValueError>{self.retained_read(window,key)}
   fn original_return_demands(&self,window:&str,key:RetainedOriginalSlotKey,body:usize)->Result<RetirementDemand,ValueError>{self.retained_read_return_demands(window,key,body)}
-  fn original_return(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>>,grant:RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>{self.return_retained_read(window,key,factory,grant)}
+  fn original_return(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Self::State>>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{self.return_retained_read(window,key,factory,grant)}
  }
- impl<M:Send+Sync+'static> $ledger<M>{
+ impl<M:Send+'static> $ledger<M>{
   /// 📏️ Quotes the original row, resident generation and complete-ledger source frontier once.
   pub fn original_transfer_demands()->RetirementDemand{let mut d=RetainedOriginalSlot::<$state<M>>::transfer_demand();d.copy_bytes+=size_of::<u64>()+size_of::<usize>();d}
   /// 🪪️ Borrows the sealed resident identity, including a previously withdrawn address.

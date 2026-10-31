@@ -18,7 +18,6 @@ pub fn visit_rows(snapshot:&SemioAudioSnapshot,out:&mut RowWriter<'_,'_>)->Resul
 /// 🫳️ Visits all actual typed cells before native forecast or output allocation.
 pub(crate)fn admit_values(snapshot:&SemioAudioSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
 pub(crate)fn admit_layout(limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
-pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
 pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
 
 fn integer(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|error|ValueError::new(ValueRefusalKind::WorkLimit,error.to_string()))}

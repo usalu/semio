@@ -19,18 +19,18 @@ fn close(owner:&mut dyn ErasedSnapshotRetirement,denials:&mut Vec<serde_json::Va
   for axis in ["items","copy","capacity","release","depth"]{
    let mut denied=policy;let required=match axis{"items"=>{denied.maximum_items=0;1},"copy"=>{denied.maximum_copy_bytes=before.copy_bytes.saturating_sub(1);before.copy_bytes},"capacity"=>{denied.maximum_capacity_bytes=before.capacity_bytes.saturating_sub(1);before.capacity_bytes},"release"=>{denied.maximum_release_bytes=before.release_bytes.saturating_sub(1);before.release_bytes},_=>{denied.maximum_depth=before.depth.saturating_sub(1);before.depth}};
    if required==0{continue}
-   let(result,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied));
+   let(result,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied).result);
    assert_eq!((physical.requested_bytes,physical.released_bytes),(0,0),"denied {axis} at turn {turn}");if let Ok(result)=result{assert_eq!(result.progress(),RetainedCloneProgress::default())}assert_eq!(demand(owner),before);
    denials.push(serde_json::json!({"axis":axis,"requested":physical.requested_bytes,"released":physical.released_bytes}));
   }
-  let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(policy).unwrap());let progress=step.progress();assert!(progress.fits(policy));assert_eq!(physical.requested_bytes,progress.retained_capacity_bytes);assert_eq!(physical.released_bytes,progress.released_bytes);born+=physical.requested_bytes;freed+=physical.released_bytes;
+  let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(policy).result.unwrap());let progress=step.progress();assert!(progress.fits(policy));assert_eq!(physical.requested_bytes,progress.retained_capacity_bytes);assert_eq!(physical.released_bytes,progress.released_bytes);born+=physical.requested_bytes;freed+=physical.released_bytes;
   if matches!(step,RetainedCloneStep::Complete(_)){assert!(owner.terminal_is_empty());return (born,freed)}
  }
  panic!("Drawing original close did not converge")
 }
 fn close_owned<T:RetireOwned>(value:T,denials:&mut Vec<serde_json::Value>)->(usize,usize){
- let mut pending=Some(value);let mut active=None;let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut pending,&mut active,grant()).unwrap());assert_eq!(physical.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(physical.released_bytes,step.progress().released_bytes);let(mut born,mut freed)=(physical.requested_bytes,physical.released_bytes);
- while let Some(owner)=active.as_mut(){let(b,f)=close(owner.as_mut(),denials);born+=b;freed+=f;let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut active,grant()).unwrap());assert_eq!(physical.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(physical.released_bytes,step.progress().released_bytes);born+=physical.requested_bytes;freed+=physical.released_bytes;}
+ let mut pending=Some(value);let mut active=None;let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut pending,&mut active,grant()).result.unwrap());assert_eq!(physical.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(physical.released_bytes,step.progress().released_bytes);let(mut born,mut freed)=(physical.requested_bytes,physical.released_bytes);
+ while let Some(owner)=active.as_mut(){let(b,f)=close(owner.as_mut(),denials);born+=b;freed+=f;let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut active,grant()).result.unwrap());assert_eq!(physical.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(physical.released_bytes,step.progress().released_bytes);born+=physical.requested_bytes;freed+=physical.released_bytes;}
  assert!(pending.is_none());(born,freed)
 }
 #[test]

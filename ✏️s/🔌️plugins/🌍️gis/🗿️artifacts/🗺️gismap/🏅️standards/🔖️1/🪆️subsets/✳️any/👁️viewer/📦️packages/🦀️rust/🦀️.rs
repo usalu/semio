@@ -1,6 +1,7 @@
 //! 👁️ gismap of `semio-s-artifact-gis-gismap` — a path-preserving carve of the artifact root mounts.
 
 #![allow(clippy::result_large_err)]
+#![cfg_attr(test, recursion_limit = "256")]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

@@ -39,10 +39,10 @@ impl<P: Send> MemberSnapshotOpenOperation for UnsupportedMemberSnapshotOpen<P> {
 
 impl<P: Send> ErasedSnapshotRetirement for UnsupportedMemberSnapshotOpen<P> {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_framework_os_store_read::retirement_owner_demands(&self.request, body) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled); }
         semio_framework_os_store_read::retirement_owner_close(&mut self.request, grant)
-    }
+    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { self.request.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(semio_framework_os_store_read::retirement_owner_demands(&self.request, 0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(semio_framework_os_store_read::retirement_owner_demands(&self.request, body)?.capacity_bytes) }

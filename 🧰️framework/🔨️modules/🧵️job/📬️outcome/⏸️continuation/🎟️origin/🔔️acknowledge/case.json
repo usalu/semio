@@ -1,0 +1,21 @@
+{
+  "source": {
+    "items": 4096,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 64,
+    "fuel": 16384,
+    "deadlineUs": 8000
+  },
+  "maximumTurns": 64,
+  "outcomes": 3,
+  "acknowledgeWork": 1,
+  "removeWork": 1,
+  "deniedWork": 0,
+  "cachedWork": 0,
+  "acknowledgeHeap": 0,
+  "sourceIdentityUnchanged": true,
+  "rearmDoesNotAllocate": true,
+  "sameFiniteBank": true
+}

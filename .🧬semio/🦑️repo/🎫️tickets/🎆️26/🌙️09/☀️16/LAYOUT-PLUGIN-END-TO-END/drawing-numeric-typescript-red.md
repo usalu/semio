@@ -1,0 +1,7 @@
+# Numeric Close Pending-Demand Behavioral RED
+
+Actual normal Root Bun session34851 is terminal EXIT1: **6pass,1fail,626assertions,138ms**, seven real owning laws executed through the .test.ts importer. All18 pre/post/current input bytes/hashes matched before any repair. Exact log6764bytes SHAc913c0720da3fa676554dac0b9ee2a1b59d31181bafbaaf0672d8f61877f86ba. Receipt is generated/drawing-ts-numeric/test/terminal.json. The original prepared v1 never executed; executed v2 SHAee00418eabb3b27f33566536fa725c851fdb45b47239fc5c0ca4f1444ed5188e is consumed.
+
+The failing assertion is sawRelease=true in the actual original-pages close law. Root independently located source column1251: done was already true; page totals/terminal/value-count assertions followed. Current demand() reports release0 when phase=value and nodes.length=0, while advance can make a free value→release phase hop and release the actual page in the same call. Consequently the real positive release frontier is never advertised for the one-below-axis refusal law. This is a real defining pending-demand bug, not a discovery/schema/bootstrap/cleanup failure.
+
+Dep is released to repair only the actual Numeric root demand lookahead for that empty-row frontier. No test/case/stock/fuel/profile/timeout weakening. Other18 captured inputs remain frozen for a new exact Source seal and separately released green attempt. Strict3 never ran and is not authorized from a nonzero test result. No Root Cargo/setup/browser runtime is live.

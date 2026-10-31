@@ -122,7 +122,7 @@ impl ErasedSnapshotRetirement for ArtifactPreparedOperationsOwner {
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement_demands()?.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.retirement_demands()?.depth)}
  fn terminal_is_empty(&self)->bool{self.closed&&self.values.terminal_is_empty()&&self.contiguous.is_none()}
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
   if self.closed{return Ok(RetainedCloneStep::Complete(Default::default()));}
   let demand=self.retirement_demands()?;
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -130,7 +130,7 @@ impl ErasedSnapshotRetirement for ArtifactPreparedOperationsOwner {
   if let Some(output)=self.contiguous.as_mut(){let progress=if let Some(row)=output.last_mut(){if row.capacity()!=0{let original=std::mem::take(row);self.payload_capacity_bytes-=original.capacity();drop(original);}else{output.pop();}RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}}else{drop(self.contiguous.take());RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}};return Ok(RetainedCloneStep::Progress(progress));}
   let step=self.close_paged_one(grant)?;if self.values.terminal_is_empty(){self.closed=true;}
   Ok(if self.closed{RetainedCloneStep::Complete(step.progress())}else{step})
- }
+ })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 impl Drop for ArtifactPreparedOperationsOwner {
  fn drop(&mut self){assert!(self.values.terminal_is_empty()&&self.contiguous.is_none(),"original operation rows require paid handoff or terminal closure");unsafe{ManuallyDrop::drop(&mut self.values);ManuallyDrop::drop(&mut self.contiguous)};}

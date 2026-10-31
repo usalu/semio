@@ -1,0 +1,37 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-value-equality"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Funded structural equality over retained original values and scalar slices."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-equality"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value_equality"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../../♻️retirement/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-value-derive = { path = "../../../../✨️derive/📦️packages/🦀️rust" }
+semio-framework-value-intrinsic = { path = "../../../../🌳️intrinsic/📦️packages/🦀️rust" }
+semio-framework-value-native-encoding = { path = "../../../../🛫️encode/📦️packages/🦀️rust" }
+semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

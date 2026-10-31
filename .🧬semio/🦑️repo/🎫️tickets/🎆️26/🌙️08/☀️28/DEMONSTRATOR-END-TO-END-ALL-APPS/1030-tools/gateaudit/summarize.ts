@@ -1,0 +1,15 @@
+import {readFileSync} from "node:fs";
+const j=JSON.parse(readFileSync(process.argv[2],"utf8"));
+const rows=j.rows as any[];
+const over=rows.filter(r=>r.bytes>r.lim.bytes||r.files>r.lim.files||r.lines>r.lim.lines||r.err);
+const near=rows.filter(r=>!over.includes(r)&&(r.bytes/r.lim.bytes>0.95||r.files/r.lim.files>0.95||r.lines/r.lim.lines>0.95));
+const errs=rows.filter(r=>r.err);
+const lines:string[]=[];
+lines.push(`closure=${j.closure} rows=${rows.length} over=${over.length} errs=${errs.length} near95=${near.length}`);
+lines.push("OVER:");
+for(const r of over)lines.push(`${r.name}\t${r.dir}\tB ${r.bytes}/${r.lim.bytes}\tF ${r.files}/${r.lim.files}\tL ${r.lines}/${r.lim.lines}\terr=${r.err??""}\tvia=${r.chain.join(">")}`);
+lines.push("NEAR95:");
+for(const r of near)lines.push(`${r.name}\t${r.dir}\tB ${r.bytes}/${r.lim.bytes}\tF ${r.files}/${r.lim.files}\tL ${r.lines}/${r.lim.lines}`);
+lines.push("RAISED-OR-STRICT-LIMITS:");
+for(const r of rows) if(r.lim.bytes!==262144||r.lim.files!==32||r.lim.lines!==4000) lines.push(`${r.name}\tlim ${r.lim.bytes}/${r.lim.files}/${r.lim.lines}`);
+console.log(lines.join("\n"));

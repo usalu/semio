@@ -819,6 +819,7 @@ impl AssemblyJobConstruction {
                 close_lane: 0,
                 model_close: AnalysisModelCloseCursor::default(),
                 desk: NumericalOutcomeDesk::default(),
+                publication: None,
             });
             self.stage = AssemblyConstructionStage::Complete;
         }

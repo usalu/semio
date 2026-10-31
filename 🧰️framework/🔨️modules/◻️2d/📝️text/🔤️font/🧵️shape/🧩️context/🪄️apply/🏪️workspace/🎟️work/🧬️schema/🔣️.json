@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Funded Glyph Gap Ownership",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximum",
+    "face",
+    "elementLogicalBytes",
+    "stock",
+    "turn",
+    "fuel",
+    "maxTurns",
+    "operations",
+    "expected",
+    "rules",
+    "unit"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximum": {
+      "const": 8
+    },
+    "face": {
+      "const": 0
+    },
+    "elementLogicalBytes": {
+      "const": 64
+    },
+    "stock": {
+      "const": [
+        256,
+        8192,
+        8192,
+        8192,
+        64
+      ]
+    },
+    "turn": {
+      "const": [
+        1,
+        8192,
+        8192,
+        8192,
+        64
+      ]
+    },
+    "fuel": {
+      "const": 256
+    },
+    "maxTurns": {
+      "const": 128
+    },
+    "operations": {
+      "const": [
+        {
+          "op": "insert",
+          "value": 1
+        },
+        {
+          "op": "insert",
+          "value": 2
+        },
+        {
+          "op": "insert",
+          "value": 3
+        },
+        {
+          "op": "move",
+          "to": 1
+        },
+        {
+          "op": "delete",
+          "count": 1
+        },
+        {
+          "op": "insert",
+          "value": 9
+        },
+        {
+          "op": "move",
+          "to": 3
+        },
+        {
+          "op": "compact"
+        }
+      ]
+    },
+    "expected": {
+      "const": [
+        1,
+        9,
+        3
+      ]
+    },
+    "rules": {
+      "const": {
+        "sameStock": true,
+        "actualPages": true,
+        "privateGapCells": true,
+        "twoStoreMove": true,
+        "noUndefinedGlyphCast": true,
+        "partialMoveSemanticZero": true,
+        "completedMoveSemanticOnce": true,
+        "headerCopyZero": true,
+        "denialPreservesOwner": true,
+        "soleTransfer": true,
+        "producerThenOutputClose": true,
+        "sourceIdentityPreserved": true,
+        "oracle": "independent-sqlite-list-state"
+      }
+    },
+    "unit": {
+      "const": "semantic-glyph-gap-cases-with-typescript-declared-logical-credit-profile"
+    }
+  }
+}

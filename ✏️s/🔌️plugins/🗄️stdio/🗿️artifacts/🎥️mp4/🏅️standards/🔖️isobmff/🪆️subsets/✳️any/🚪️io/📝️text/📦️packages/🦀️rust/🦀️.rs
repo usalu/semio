@@ -1,7 +1,6 @@
 //! 📝️ text of `semio-s-artifact-stdio-mp4` — a path-preserving carve of the artifact root mounts.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 #[path = "."]
 pub mod standards {

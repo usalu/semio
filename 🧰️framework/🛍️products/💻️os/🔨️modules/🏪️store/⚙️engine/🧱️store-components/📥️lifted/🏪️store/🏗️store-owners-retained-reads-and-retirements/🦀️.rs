@@ -292,10 +292,10 @@ where
         let factory = self.initial_snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "returned snapshot read requires its exact installed issuer"))?;
         match self.snapshot_read_leases.try_admit_one_returned::<P, _>(grant, |original, child| {
             match ReturnedSnapshotReadRetirement::admit(original, Arc::clone(factory), child) {
-                Ok(admitted) => Ok(admitted),
-                Err((error, original, capability)) => { drop(capability); Err((error, original)) }
+                Ok(admitted) => semio_framework_value::RetainedWorkOutcome { result: Ok(admitted), work: 1 },
+                Err((error, original, capability)) => { drop(capability); semio_framework_value::RetainedWorkOutcome { result: Err((error, original)), work: 0 } }
             }
-        }) {
+        }).result {
             Ok(admitted) => Ok(admitted),
             Err(SnapshotReadLeaseRefusal::Busy) => Ok((None, Default::default())),
             Err(refusal) => Err(refusal.into_value_error()),

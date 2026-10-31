@@ -1,5 +1,6 @@
 use semio_s_fem_sparse::{Coo, Csr, MountedScalarSlots, NUMERICAL_OWNER_PAGE_BYTES, NumericalCheckpointFault, parse_numerical_page, read_checkpoint_u64};
 use super::*;
+use semio_s_fem_payload_turns::{numerical_begin_page, numerical_commit_page, numerical_post};
 use semio_framework_job::StepBudget;
 use super::*;
 use semio_s_fem_test_support::close_turn;
@@ -373,7 +374,7 @@ fn pcg_job_publication_grants_preserve_pending_state_and_work_cursor() {
         let mut sequence = 0;
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(case["fuel"].as_u64().unwrap(), case["deadline"].as_u64().unwrap(), TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        let outcome = match seen_of(job.step(&mut context)) {
+        let outcome = match seen_of(job.step_plain(&mut context)) {
             Seen::Yield => "yield",
             Seen::Preview(_) => "preview",
             Seen::Checkpoint(_) => "checkpoint",
@@ -420,7 +421,7 @@ fn pcg_job_initial_precondition_preserves_admitted_direction_backing() {
     for _ in 0..3 {
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        assert!(matches!(seen_of(job.step(&mut context)), Seen::Yield));
+        assert!(matches!(seen_of(job.step_plain(&mut context)), Seen::Yield));
         assert_eq!(context.fuel_remaining(), 0);
         observed.push((job.state.p.0.clone(), job.state.p.0.as_ptr() == pointer && job.state.p.0.capacity() == capacity));
     }
@@ -458,7 +459,7 @@ fn pcg_job_publication_every_cut_cancels_without_losing_backing() {
             }
             let snapshot = |job: &PcgJob| (
                 job.state.checkpoint_control(operation), job.state.checkpoint_due, job.state.preview_due, job.terminal_published,
-                job.publication.as_ref().map(|publication| (publication.cursor, publication.writer.page_count(), publication.writer.staged_page_len(), publication.complete)),
+                job.publication.as_ref().map(|publication| (publication.cursor, writer_pages(&publication.writer), writer_staged(&publication.writer), publication.complete)),
                 pcg_physical_bytes(job),
             );
             let before = snapshot(&job);
@@ -468,7 +469,7 @@ fn pcg_job_publication_every_cut_cancels_without_losing_backing() {
             original.cancel();
             let cancelled = matches!(original.step_seen(&mut job, TEST_GRANT, 1, u64::MAX), Seen::Cancelled) && snapshot(&job) == before;
             let zero_items = matches!(original.close_turn(&mut job, grant_of(0, usize::MAX)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress == RetainedCloneProgress::default()) && snapshot(&job) == before;
-            let has_pages = job.publication.as_ref().is_some_and(|publication| publication.writer.page_count() != 0 || publication.writer.staged_page_len().is_some());
+            let has_pages = job.publication.as_ref().is_some_and(|publication| writer_pages(&publication.writer) != 0 || writer_staged(&publication.writer).is_some());
             let subexact = if has_pages || job.desk.lent.is_some() {
                 matches!(original.close_turn(&mut job, grant_of(1, semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES - 1)), Ok(InteractiveJobCloseStep::Pending { progress }) if progress.copied_items <= 1 && progress.released_bytes < semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES) && snapshot(&job) == before
             } else {
@@ -610,7 +611,7 @@ fn pcg_physical_bytes(job: &PcgJob) -> usize {
     let state = &job.state;
     let vectors = [&state.b.0, &state.x.0, &state.diag.0, &state.r.0, &state.z.0, &state.p.0, &state.ap.0];
     state.a.physical_backing_bytes().into_iter().sum::<usize>() + vectors.into_iter().map(|owner| owner.capacity() * size_of::<f64>()).sum::<usize>()
-        + job.publication.as_ref().map_or(0, |publication| (publication.writer.page_count() + usize::from(publication.writer.staged_page_len().is_some())) * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)
+        + job.publication.as_ref().map_or(0, |publication| (writer_pages(&publication.writer) + usize::from(writer_staged(&publication.writer).is_some())) * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)
         + job.desk.lent.as_ref().map_or(0, |payload| payload.page_count() * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES)
 }
 
@@ -686,15 +687,22 @@ fn step_restore(original: &mut OriginalNumericalFixture, cursor: &mut PcgRestore
     original.turn(grant, fuel, deadline, |cx| Ok(cursor.step(cx))).expect("same original PCG restore turn")
 }
 
+fn writer_pages(writer: &NumericalPayloadSlot) -> usize {
+    writer.as_deref().and_then(RetainedPayloadBuilder::original).map_or(0, RetainedJobPayload::page_count)
+}
+
+fn writer_staged(writer: &NumericalPayloadSlot) -> Option<usize> {
+    writer.as_deref().and_then(RetainedPayloadBuilder::staged_page_len)
+}
+
 fn pcg_checkpoint_payload(original: &mut OriginalNumericalFixture, job: &PcgJob) -> RetainedJobPayload {
     let mut publication = PcgPublication::new(PcgPublicationKind::Checkpoint);
+    publication.writer = original.open_writer(publication.stream);
     for _ in 0..2_000_000 {
-        if publication.writer.staged_page_len().is_none() {
-            assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| publication.writer.begin_staged_page_funded(cx).map_err(Into::into)).expect("original staged page birth"));
+        if writer_staged(&publication.writer).is_none() {
+            original.until_done(|cx| numerical_begin_page(publication.writer.as_deref_mut().unwrap(), cx));
         } else if original_step(original, |cx| publication.advance(job.operation, &job.state, cx)).unwrap() {
-            let (mut slot, mut output) = (Some(publication.writer), None);
-            assert!(original.turn(TEST_GRANT, 1, u64::MAX, |cx| RetainedJobPayloadWriter::finish_funded(&mut slot, &mut output, cx).map_err(Into::into)).expect("original writer handoff"));
-            return output.expect("committed pages hand off one payload");
+            return original.finish_writer(publication.writer.take());
         }
     }
     original.close_writer(&mut publication.writer);
@@ -861,7 +869,7 @@ fn adversarial_solver_steps_stay_below_eight_milliseconds() {
     let mut sequence_receipt = RetainedCloneProgress::default();
     let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
     let started = std::time::Instant::now();
-    let _ = pcg.step(&mut context);
+    let _ = pcg.step_plain(&mut context);
     assert!(started.elapsed() < std::time::Duration::from_millis(8));
 }
 

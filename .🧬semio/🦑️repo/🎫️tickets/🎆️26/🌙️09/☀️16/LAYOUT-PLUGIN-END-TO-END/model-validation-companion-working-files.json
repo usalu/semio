@@ -1,0 +1,64 @@
+{
+  "state": "source-ready-awaiting-review-not-admission",
+  "package": "semio-s-artifact-layout-layout-model-validation-tests",
+  "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧪️tests/🦀️.rs",
+  "manifest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧪️tests/📦️packages/🦀️rust/Cargo.toml",
+  "changes": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/🦀️.rs",
+      "beforeSha256": "253dc2033a57e59beaf190c3aa88887a53b998ac59dec234c2b4337a28454e69",
+      "afterSha256": "c5ade2155db1bcd2c4c5c6f596a2755facf50ac3452954a99c66064fa90e9747"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/👁️graph/🦀️.rs",
+      "beforeSha256": "aecb3594782a3df933997280978cf5da288a87a0415ce56e03ecab5899786b0a",
+      "afterSha256": "33323f775aa1e0d9da6e66991b55fde9d7f23820f56f036f5e6388717a0e9098"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/📖️source/🧷️reference/🦀️.rs",
+      "beforeSha256": "a7871fc6cfd9ed21ea9d563a71561bf8f547856128013a3f0ab5be59529b8f4d",
+      "afterSha256": "525fa3e4a856fb54e1a00a523bf5785673b16b9b3a1d3225fbc2815b33ac2ede"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.toml",
+      "beforeSha256": "02959098fdc56ee31152ce592241ffc7b0d13d67c1617d9f27199fd1d1097cbc",
+      "afterSha256": "d5ecd9e8a60f79da0acce7fc5ffad652f4973395215e164513e2b76c8bc6c5dc"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/📜️script.ts",
+      "beforeSha256": "c87bc43f699f8053a1b7cae84f19e7f50663ff9fe6a8ca2bb37e9c980c90af15",
+      "afterSha256": "17c98c020628a292caca20c8c2ee815f96e81a2120e426c37b3e9c1efd6f673c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧪️tests/📦️packages/🦀️rust/Cargo.toml",
+      "status": "created",
+      "afterSha256": "e31931f94f665c3c047a5f656e43f0555e7f0b5e9f8a5730979d10b8f7e51a65"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧪️tests/🦀️.rs",
+      "status": "created",
+      "afterSha256": "abbc93a736c2aecb6998918f1ce261c86380068e07e78a9c20bbf16ffbe915d3"
+    }
+  ],
+  "unchangedTests": [
+    {
+      "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/🦀️.rs",
+      "existingTest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/🧪️tests.rs",
+      "rootSha256": "253dc2033a57e59beaf190c3aa88887a53b998ac59dec234c2b4337a28454e69",
+      "testSha256": "ba55ef0642133982677a5d671b753e90dd6c226c0aba8b8bff9160aa88e540b3"
+    },
+    {
+      "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/👁️graph/🦀️.rs",
+      "existingTest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/👁️graph/🧪️tests.rs",
+      "rootSha256": "aecb3594782a3df933997280978cf5da288a87a0415ce56e03ecab5899786b0a",
+      "testSha256": "d79e516e7962e61f1b6894b865211d71b5c0f30a1dd65684c1b585fc5894e494"
+    },
+    {
+      "root": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/📖️source/🧷️reference/🦀️.rs",
+      "existingTest": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/📖️source/🧷️reference/🧪️tests.rs",
+      "rootSha256": "a7871fc6cfd9ed21ea9d563a71561bf8f547856128013a3f0ab5be59529b8f4d",
+      "testSha256": "c71493060be52b1e7bc5c86ebb9a6f593c267e1ad74df65fda20be5ec2666965"
+    }
+  ],
+  "testCount": 4
+}

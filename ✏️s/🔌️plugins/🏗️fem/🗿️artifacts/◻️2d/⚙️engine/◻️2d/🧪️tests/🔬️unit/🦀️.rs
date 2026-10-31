@@ -1,4 +1,8 @@
 use super::*;
+#[path = "../🧰️persisted/🦀️.rs"]
+mod persisted;
+use persisted::{drain, with};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 use semio_s_fem_model::Dof;
 use semio_s_fem_model::ElementResult;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
@@ -15,8 +19,8 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 
 // #region 🔖️Fixtures
-fn simply_supported_beam_doc() -> Fem2dSnapshot {
-    Fem2dSnapshot {
+fn simply_supported_beam_doc() -> Fem2dSnapshotValue {
+    Fem2dSnapshotValue {
         nodes: vec![FemNodeValue { id: "n1".into(), x: 0.0, y: 0.0 }, FemNodeValue { id: "n2".into(), x: 6.0, y: 0.0 }],
         elements: vec![FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }],
         regions: vec![],
@@ -29,8 +33,8 @@ fn simply_supported_beam_doc() -> Fem2dSnapshot {
     }
 }
 
-fn simply_supported_beam_two_span_doc() -> Fem2dSnapshot {
-    Fem2dSnapshot {
+fn simply_supported_beam_two_span_doc() -> Fem2dSnapshotValue {
+    Fem2dSnapshotValue {
         nodes: vec![FemNodeValue { id: "n1".into(), x: 0.0, y: 0.0 }, FemNodeValue { id: "n2".into(), x: 3.0, y: 0.0 }, FemNodeValue { id: "n3".into(), x: 6.0, y: 0.0 }],
         elements: vec![
             FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() },
@@ -51,8 +55,8 @@ fn simply_supported_beam_two_span_doc() -> Fem2dSnapshot {
     }
 }
 
-fn truss_doc() -> Fem2dSnapshot {
-    Fem2dSnapshot {
+fn truss_doc() -> Fem2dSnapshotValue {
+    Fem2dSnapshotValue {
         nodes: vec![FemNodeValue { id: "n1".into(), x: 0.0, y: 0.0 }, FemNodeValue { id: "n2".into(), x: 4.0, y: 0.0 }, FemNodeValue { id: "n3".into(), x: 4.0, y: 3.0 }],
         elements: vec![
             FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
@@ -76,8 +80,8 @@ fn truss_doc() -> Fem2dSnapshot {
 /// 🟩️ A 4x2m rectangular region (steel, 0.02m thick, 1m mesh) whose 4 corners are pre-placed as
 /// document nodes (so `build_nodes_and_elements`'s exact-position reuse binds the mesh boundary
 /// to them) — 2 adjacent corners fully pinned, enough to remove all 3 in-plane rigid-body modes.
-fn rectangle_region_doc() -> Fem2dSnapshot {
-    Fem2dSnapshot {
+fn rectangle_region_doc() -> Fem2dSnapshotValue {
+    Fem2dSnapshotValue {
         nodes: vec![FemNodeValue { id: "c0".into(), x: 0.0, y: 0.0 }, FemNodeValue { id: "c1".into(), x: 4.0, y: 0.0 }, FemNodeValue { id: "c2".into(), x: 4.0, y: 2.0 }, FemNodeValue { id: "c3".into(), x: 0.0, y: 2.0 }],
         elements: vec![],
         regions: vec![FemRegion { id: "r1".into(), name: "slab".into(), outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.02, material_id: "steel".into(), mesh_size: 1.0 }],
@@ -91,7 +95,7 @@ fn rectangle_region_doc() -> Fem2dSnapshot {
 }
 
 /// 🕳️ Same rectangle as `rectangle_region_doc` but with a small square hole near the center.
-fn rectangle_with_hole_region_doc() -> Fem2dSnapshot {
+fn rectangle_with_hole_region_doc() -> Fem2dSnapshotValue {
     let mut doc = rectangle_region_doc();
     doc.regions[0].holes = vec![vec![[1.5, 0.75], [2.5, 0.75], [2.5, 1.25], [1.5, 1.25]]];
     doc
@@ -101,25 +105,28 @@ fn rectangle_with_hole_region_doc() -> Fem2dSnapshot {
 // #region 🔖️BuildModel
 #[test]
 fn build_model_reports_dangling_material() {
-    let mut doc = simply_supported_beam_doc();
-    doc.materials.clear();
+    let mut doc = persisted::persist(&simply_supported_beam_doc());
+    drain(std::mem::take(&mut doc.materials));
     let err = build_model(&doc, "dead").unwrap_err();
+    drain(doc);
     assert!(err.to_string().contains("material"), "unexpected error: {err}");
 }
 
 #[test]
 fn build_model_reports_dangling_section() {
-    let mut doc = simply_supported_beam_doc();
+    let mut doc = persisted::persist(&simply_supported_beam_doc());
     doc.sections.clear();
     let err = build_model(&doc, "dead").unwrap_err();
+    drain(doc);
     assert!(err.to_string().contains("section"), "unexpected error: {err}");
 }
 
 #[test]
 fn build_model_reports_dangling_node() {
-    let mut doc = simply_supported_beam_doc();
-    doc.nodes.clear();
+    let mut doc = persisted::persist(&simply_supported_beam_doc());
+    drain(std::mem::take(&mut doc.nodes));
     let err = build_model(&doc, "dead").unwrap_err();
+    drain(doc);
     assert!(err.to_string().contains("node"), "unexpected error: {err}");
 }
 // #endregion 🔖️BuildModel
@@ -128,14 +135,14 @@ fn build_model_reports_dangling_node() {
 #[test]
 fn build_model_meshes_region_and_solves() {
     let doc = rectangle_region_doc();
-    let result = fem2d_solve(&doc, "self").expect("region solves");
+    let result = with(&doc, |d| fem2d_solve(d, "self")).expect("region solves");
     assert!(result.checks.residual_norm < 1e-6, "residual {}", result.checks.residual_norm);
 }
 
 #[test]
 fn region_with_hole_meshes_and_solves() {
     let doc = rectangle_with_hole_region_doc();
-    let result = fem2d_solve(&doc, "self").expect("region with hole solves");
+    let result = with(&doc, |d| fem2d_solve(d, "self")).expect("region with hole solves");
     assert!(result.checks.residual_norm < 1e-6, "residual {}", result.checks.residual_norm);
 }
 
@@ -143,7 +150,7 @@ fn region_with_hole_meshes_and_solves() {
 fn area_load_on_region_produces_reactions() {
     let mut doc = rectangle_region_doc();
     doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "pressure".into(), loads: vec![FemLoad::Area { id: "a1".into(), region_id: "r1".into(), pressure: 5000.0 }], self_weight: false }];
-    let result = fem2d_solve(&doc, "pressure").expect("area load solves");
+    let result = with(&doc, |d| fem2d_solve(d, "pressure")).expect("area load solves");
     assert!(result.checks.residual_norm < 1e-6, "residual {}", result.checks.residual_norm);
 
     let total_ty_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Ty).map(|r| r.value).sum();
@@ -158,7 +165,7 @@ fn area_load_on_region_produces_reactions() {
 fn self_weight_case_produces_nonzero_reactions() {
     let mut doc = simply_supported_beam_doc();
     doc.load_cases = vec![FemLoadCase { id: "self".into(), name: "self weight".into(), loads: vec![], self_weight: true }];
-    let result = fem2d_solve(&doc, "self").expect("self-weight solves");
+    let result = with(&doc, |d| fem2d_solve(d, "self")).expect("self-weight solves");
 
     let total_ty_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Ty).map(|r| r.value).sum();
     let (area, length) = (0.005381, 6.0);
@@ -176,7 +183,7 @@ fn self_weight_case_produces_nonzero_reactions() {
 #[test]
 fn region_self_weight_via_solve_all_matches_total_mass_times_gravity() {
     let doc = rectangle_region_doc();
-    let results = fem2d_solve_all(&doc).expect("region self-weight solves via solve_all");
+    let results = with(&doc, |d| fem2d_solve_all(d)).expect("region self-weight solves via solve_all");
     let result = results.get("self").unwrap();
     let total_ty_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Ty).map(|r| r.value).sum();
     let (thickness, area, rho) = (0.02, 4.0 * 2.0, 7850.0);
@@ -192,7 +199,7 @@ fn fem2d_solve_all_returns_case_and_combination_results() {
     doc.load_cases.push(FemLoadCase { id: "live".into(), name: "live".into(), loads: vec![FemLoad::Nodal { id: "l2".into(), node_id: "n1".into(), dof: FemDof::Ty, value: -2000.0 }], self_weight: false });
     doc.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] });
 
-    let results = fem2d_solve_all(&doc).expect("solves all");
+    let results = with(&doc, |d| fem2d_solve_all(d)).expect("solves all");
     assert_eq!(results.len(), 3, "expected 2 cases + 1 combination, got keys {:?}", results.keys().collect::<Vec<_>>());
     assert!(results.contains_key("dead"));
     assert!(results.contains_key("live"));
@@ -217,7 +224,7 @@ fn fem2d_solve_all_returns_case_and_combination_results() {
 #[test]
 fn simply_supported_beam_matches_analytical_udl_solution() {
     let doc = simply_supported_beam_doc();
-    let result = fem2d_solve(&doc, "dead").expect("solves");
+    let result = with(&doc, |d| fem2d_solve(d, "dead")).expect("solves");
 
     for reaction in result.reactions.iter().filter(|r| r.dof == Dof::Tx) {
         assert!(reaction.value.abs() < 1e-6, "horizontal reaction {reaction:?} should be ~0 (no horizontal load)");
@@ -234,7 +241,7 @@ fn simply_supported_beam_matches_analytical_udl_solution() {
 #[test]
 fn two_span_beam_matches_analytical_midspan_deflection_and_moment() {
     let doc = simply_supported_beam_two_span_doc();
-    let result = fem2d_solve(&doc, "dead").expect("solves");
+    let result = with(&doc, |d| fem2d_solve(d, "dead")).expect("solves");
 
     for reaction in result.reactions.iter().filter(|r| r.dof == Dof::Tx) {
         assert!(reaction.value.abs() < 1e-6, "horizontal reaction {reaction:?} should be ~0 (no horizontal load)");
@@ -257,7 +264,7 @@ fn two_span_beam_matches_analytical_midspan_deflection_and_moment() {
 #[test]
 fn truss_is_in_equilibrium_with_finite_bar_forces() {
     let doc = truss_doc();
-    let result = fem2d_solve(&doc, "dead").expect("solves");
+    let result = with(&doc, |d| fem2d_solve(d, "dead")).expect("solves");
 
     assert!(result.checks.reaction_sum[Dof::Tx.index()].abs() < 1e-6);
     assert!((result.checks.reaction_sum[Dof::Ty.index()]).abs() < 1e-6);
@@ -273,7 +280,7 @@ fn truss_is_in_equilibrium_with_finite_bar_forces() {
 #[test]
 fn unknown_load_case_returns_descriptive_error() {
     let doc = simply_supported_beam_doc();
-    let err = fem2d_solve(&doc, "missing").unwrap_err();
+    let err = with(&doc, |d| fem2d_solve(d, "missing")).unwrap_err();
     assert!(err.contains("load case not found"), "unexpected error: {err}");
 }
 // #endregion 🔖️UnknownCase

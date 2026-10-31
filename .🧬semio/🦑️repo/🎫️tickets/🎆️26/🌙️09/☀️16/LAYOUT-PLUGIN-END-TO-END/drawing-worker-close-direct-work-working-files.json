@@ -1,0 +1,22 @@
+[
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udc77\ufe0fworker/\ud83c\udf9f\ufe0fauthority/\ud83e\udd80\ufe0f.rs",
+    "sha256": "7958100897226d87f2a5286a52fc7ebada7057dc7e4ac5c9281d8c4f29523516",
+    "bytes": 56405
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udc77\ufe0fworker/\ud83c\udf9f\ufe0fauthority/\u267b\ufe0fretirement/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "sha256": "f418b39ab60b4811f31fa763aa2a3cbfcea9175318b0d95f18451a37d99393c7",
+    "bytes": 10006
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udc77\ufe0fworker/\ud83c\udf9f\ufe0fauthority/\u267b\ufe0fretirement/\ud83e\uddea\ufe0ftests/work.json",
+    "sha256": "fc30a1ecbc7270cf17be2d2c69698513d64b51f1cf3a20cce455c345bb37af4b",
+    "bytes": 559
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udc77\ufe0fworker/\ud83c\udf9f\ufe0fauthority/\u267b\ufe0fretirement/\ud83e\uddea\ufe0ftests/work.schema.json",
+    "sha256": "322f2a437c201594ae5103be262ceead5f76ec9d3cfba56a4a812bc4e809f63c",
+    "bytes": 999
+  }
+]

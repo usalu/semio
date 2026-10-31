@@ -1,0 +1,3 @@
+# Current IO Control Owning Baseline
+
+Normal defining all-targets/no-fail-fast request reached terminal outer26935 exit0. All31 original registrations passed, zero ignored/filtered. This validates existing physical wallet/grant/refusal/partial and nested receiving tests against current lower interfaces. The defining generic receive/drive/nested callbacks still return Result and are not a mandatory full callback-work carrier; NativeEncode work lending also remains open. These physical tests do not prove total SourceHost work accounting. Log SHA256 1ff7e0b35119082b74d177e8590fbd7000b2af9c52c284581e0f453333f678bf.

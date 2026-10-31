@@ -1,7 +1,6 @@
 //! 🔢️ number of `semio-s-artifact-stdio-json` — a path-preserving carve of the artifact root mounts.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 pub use crate::standards::v_rfc8259::subsets::base::io::sqlite::artifact_items_2::{JSON_ARTIFACT_SCHEMA_ID};
 

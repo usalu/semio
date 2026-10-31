@@ -1,0 +1,242 @@
+{
+  "commandSha256": "235f480ac04eae803fdef891afd4f811d4547e3de02dfe24ccf4a1d52ee3b4f6",
+  "currentInputs": 16,
+  "drift": [],
+  "observations": [
+    {
+      "kind": "test",
+      "receipt": {
+        "session": 86887,
+        "outerExit": 0,
+        "observedAt": "2026-10-30T21:23:32.913704+00:00",
+        "packetSha256": "235f480ac04eae803fdef891afd4f811d4547e3de02dfe24ccf4a1d52ee3b4f6",
+        "log": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-bytes-png/test/test.log",
+          "bytes": 3387,
+          "sha256": "ad8294655ecfefeb64c09e2b022b3c77b5e49ffcbd06aebc3bcf798d041c4a87"
+        },
+        "actualPass": 10,
+        "actualFail": 0,
+        "actualAssertions": 1912,
+        "inputCount": 16,
+        "allInputsMatch": true,
+        "inputs": [
+          {
+            "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-bytes-png.test.ts",
+            "bytes": 365,
+            "sha256": "d5cfd9ce2e43237d9bb287fdf5e34e5fd276cdf6719544fe4870ce698c9a70e2",
+            "matches": true
+          },
+          {
+            "path": "bun.lock",
+            "bytes": 603865,
+            "sha256": "b27bdace86f04889c66e59f5227d0bdef7568b22c550798705d3c911d1c88faf",
+            "matches": true
+          },
+          {
+            "path": "package.json",
+            "bytes": 21673,
+            "sha256": "9605466756ffe292a2e5c425e8beec9cda9b60967cadccc33fef9d20c617f98b",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts",
+            "bytes": 1306,
+            "sha256": "df52c0b627c95d224b6ba376fd0bc1a6ffff46dacbf5f2f0008106302dd05deb",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/📐️.json",
+            "bytes": 2381,
+            "sha256": "f10c01891b9a6a61ff6ba9d6ee4a7b6576c564936ca16eadc53158e143bbc518",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🔣️.json",
+            "bytes": 1618,
+            "sha256": "c940961a6a9b584d1f2f3b9988b9e01581cc28df6bd45766189e195398250a33",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+            "bytes": 3173,
+            "sha256": "67738d73708d16529b3d3c622e529ce53c5298755b34bf5fff088d6117cffe8c",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+            "bytes": 6217,
+            "sha256": "d531933024eb3627a1873797b84262cb3cb2c38de3c13642866198c104d35647",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+            "bytes": 15622,
+            "sha256": "b007808e5d97c62bbd877f44eac94df906ce8e8e7521a87819b4b1ce1f6b28ea",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts",
+            "bytes": 26554,
+            "sha256": "e265ef0a5a80c742cb72ef36d2e551472dc1ec6e8d199e4258c41d12a61852a8",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts",
+            "bytes": 11998,
+            "sha256": "d3967b1d1dc270c5d64641dfd69f4c654921eccafd32a544d2a3582d999f07d1",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/📐️.json",
+            "bytes": 2115,
+            "sha256": "2f09db171e8d934f747c28cd2d106c43b7a24152dbd423a1cb466026e05bec06",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🔣️.json",
+            "bytes": 1359,
+            "sha256": "af5f6c896a8ddcc278b5ab5454e15876ae2f81196d7fc9039efc730783fd4d71",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts",
+            "bytes": 7411,
+            "sha256": "c32f02290fc89a9f0e93bdba0818e1454679e0cedb74a5822d4f2f6620296b23",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.d.ts",
+            "bytes": 1549,
+            "sha256": "0da4d443c29ad9c58ee44dae4fe02ea580c0368fb763274f475d6803d165eff3",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js",
+            "bytes": 2426,
+            "sha256": "88cc37857ed7ebebdc426aff1812d52bcfd4caf3cccc41924e72a89e77173372",
+            "matches": true
+          }
+        ]
+      },
+      "actualLogBytes": 3387,
+      "actualLogSha256": "ad8294655ecfefeb64c09e2b022b3c77b5e49ffcbd06aebc3bcf798d041c4a87"
+    },
+    {
+      "kind": "strict",
+      "receipt": {
+        "session": 36068,
+        "outerExit": 0,
+        "observedAt": "2026-10-30T21:25:41.749659+00:00",
+        "packetSha256": "235f480ac04eae803fdef891afd4f811d4547e3de02dfe24ccf4a1d52ee3b4f6",
+        "log": {
+          "path": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-ts-bytes-png/strict/strict.log",
+          "bytes": 1096,
+          "sha256": "a68218ae94af85071674d818504f0da5eb834e2d75f32c20f1331ed710b9064d"
+        },
+        "inputCount": 16,
+        "allInputsMatch": true,
+        "inputs": [
+          {
+            "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-bytes-png.test.ts",
+            "bytes": 365,
+            "sha256": "d5cfd9ce2e43237d9bb287fdf5e34e5fd276cdf6719544fe4870ce698c9a70e2",
+            "matches": true
+          },
+          {
+            "path": "bun.lock",
+            "bytes": 603865,
+            "sha256": "b27bdace86f04889c66e59f5227d0bdef7568b22c550798705d3c911d1c88faf",
+            "matches": true
+          },
+          {
+            "path": "package.json",
+            "bytes": 21673,
+            "sha256": "9605466756ffe292a2e5c425e8beec9cda9b60967cadccc33fef9d20c617f98b",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts",
+            "bytes": 1306,
+            "sha256": "df52c0b627c95d224b6ba376fd0bc1a6ffff46dacbf5f2f0008106302dd05deb",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/📐️.json",
+            "bytes": 2381,
+            "sha256": "f10c01891b9a6a61ff6ba9d6ee4a7b6576c564936ca16eadc53158e143bbc518",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🔣️.json",
+            "bytes": 1618,
+            "sha256": "c940961a6a9b584d1f2f3b9988b9e01581cc28df6bd45766189e195398250a33",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+            "bytes": 3173,
+            "sha256": "67738d73708d16529b3d3c622e529ce53c5298755b34bf5fff088d6117cffe8c",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+            "bytes": 6217,
+            "sha256": "d531933024eb3627a1873797b84262cb3cb2c38de3c13642866198c104d35647",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+            "bytes": 15622,
+            "sha256": "b007808e5d97c62bbd877f44eac94df906ce8e8e7521a87819b4b1ce1f6b28ea",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts",
+            "bytes": 26554,
+            "sha256": "e265ef0a5a80c742cb72ef36d2e551472dc1ec6e8d199e4258c41d12a61852a8",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts",
+            "bytes": 11998,
+            "sha256": "d3967b1d1dc270c5d64641dfd69f4c654921eccafd32a544d2a3582d999f07d1",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/📐️.json",
+            "bytes": 2115,
+            "sha256": "2f09db171e8d934f747c28cd2d106c43b7a24152dbd423a1cb466026e05bec06",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🔣️.json",
+            "bytes": 1359,
+            "sha256": "af5f6c896a8ddcc278b5ab5454e15876ae2f81196d7fc9039efc730783fd4d71",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts",
+            "bytes": 7411,
+            "sha256": "c32f02290fc89a9f0e93bdba0818e1454679e0cedb74a5822d4f2f6620296b23",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.d.ts",
+            "bytes": 1549,
+            "sha256": "0da4d443c29ad9c58ee44dae4fe02ea580c0368fb763274f475d6803d165eff3",
+            "matches": true
+          },
+          {
+            "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js",
+            "bytes": 2426,
+            "sha256": "88cc37857ed7ebebdc426aff1812d52bcfd4caf3cccc41924e72a89e77173372",
+            "matches": true
+          }
+        ]
+      },
+      "actualLogBytes": 1096,
+      "actualLogSha256": "a68218ae94af85071674d818504f0da5eb834e2d75f32c20f1331ed710b9064d"
+    }
+  ]
+}

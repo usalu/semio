@@ -1,6 +1,6 @@
 //! 🪪️ Erased publication views retain genuine typed factory ownership through full closure.
 use super::{ReadLease,ReadLeaseId,ReadOwnershipRegistry};
-use crate::{ErasedSnapshotRetirement,FactoryAuthority,FactoryRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
+use crate::{RetainedWorkOutcome,ErasedSnapshotRetirement,FactoryAuthority,FactoryRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 use std::{any::Any,mem::ManuallyDrop,sync::Arc};
 
 trait Publication:FactoryRetirement+Any {
@@ -53,10 +53,10 @@ impl ReadAuthority {
     pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {if self.view.is_some(){Ok(RetirementDemand {depth:1,..Default::default()})}else{self.owner.demands(copy)}}
 }
 impl ErasedSnapshotRetirement for ReadAuthority {
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
-        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if self.view.is_some(){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"read view closure requires admitted depth"));}drop(self.view.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()}));}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome {
+        if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+        if grant.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+        if self.view.is_some(){if grant.maximum_depth==0{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"read view closure requires admitted depth")),work:0}}drop(self.view.take());return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
         self.owner.step(grant)
     }
     fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
@@ -68,7 +68,7 @@ impl ErasedSnapshotRetirement for ReadAuthority {
 }
 impl RetirementCursor for ReadAuthority {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.demands(body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {match ErasedSnapshotRetirement::close_step(self,grant){Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {let turn=ErasedSnapshotRetirement::close_step(self,grant);match turn.result{Ok(RetainedCloneStep::Complete(p))if p==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
     fn terminal_is_empty(&self)->bool {ErasedSnapshotRetirement::terminal_is_empty(self)}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
     fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.next_capacity_byte_demand(copy).ok()}

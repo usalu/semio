@@ -22,16 +22,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         layers: Vec::new(),
         frames: vec![Frame::Rect { id: "frame-1".into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: None, visible: None, fill: Some([1.0, 1.0, 1.0, 1.0]), stroke: None }],
         overrides: Vec::new(),
+        background_drawing: None,
     }];
     snapshot.background_drawing =
-        Some(LayoutDrawingChild { handle: store::os_store::artifact_child::ArtifactChild::new("child-drawing-1".to_string(), semio_framework_artifact_reference::ArtifactRef::parse_uri("doc-1!s.stdio.semio@v1/drawing").expect("valid child ref uri")), content: semio_framework_value::DslValue::Null });
+        Some(LayoutDrawingMember { handle: store::os_store::artifact_child::ArtifactChild::new("child-drawing-1".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "doc-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.draw.drawing".into(), standard: "1".into(), subset: "*".into() } }) });
     snapshot.referenced_model = Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "model".into() });
     snapshot
 }
 
-/// 🧪️ Every field on `LayoutSnapshot` — including the two new composition slots — must survive
-/// both hand-rolled codecs (text and binary), independently. Codec completeness is not caught by
-/// `cargo check`; this is the real round-trip proof the migration recipe requires.
+/// 🧪️ Genuine Drawing references and the model link survive both canonical text and binary codecs.
 #[semio_framework_async_macros::async_test]
 async fn background_drawing_and_referenced_model_round_trip_through_text_and_binary() {
     let snapshot = sample_with_composition();

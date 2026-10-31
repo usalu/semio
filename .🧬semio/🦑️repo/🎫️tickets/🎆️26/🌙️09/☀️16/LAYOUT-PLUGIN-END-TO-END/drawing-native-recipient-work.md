@@ -1,0 +1,3 @@
+# Native Decoder Recipient Close Work
+
+The closed language-neutral fixture and owning test precede the defining API migration. The actual recipient must preserve its reserved state on item/depth denial, record one CPU unit and one metadata item for the real reserved-state clear, and record zero on cached completion. No payload copy, capacity or release is attributed to that metadata operation. Serde parses the expected grant and independent observation tree. Child retirement outcomes must forward their own actual work unchanged, including failure. This is authored test-first work; no native result has been run.

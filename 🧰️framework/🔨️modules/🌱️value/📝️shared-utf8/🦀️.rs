@@ -18,18 +18,15 @@ impl SharedUtf8 {
     pub fn from_funded_arc(original:Arc<String>)->Self {Self(Some(original))}
     pub fn admission_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:0,capacity_bytes:shared_retirement_allocation_bytes::<String>(),depth:1,..Default::default()}}
     pub fn lease_demand()->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:0,depth:1,..Default::default()}}
-    pub fn admit(original:String,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,String)> {
-        let copied_bytes=0usize;
-        let retained_capacity_bytes=shared_retirement_allocation_bytes::<String>();
-        let refusal=if grant.maximum_items==0{Some((ValueRefusalKind::WorkLimit,"shared UTF8 requires one admitted item"))}else if grant.maximum_depth==0{Some((ValueRefusalKind::DepthLimit,"shared UTF8 requires admitted original depth"))}else if copied_bytes>grant.maximum_copy_bytes{Some((ValueRefusalKind::WorkLimit,"shared UTF8 original transfer exceeds admitted copy bytes"))}else if retained_capacity_bytes>grant.maximum_capacity_bytes{Some((ValueRefusalKind::OwnershipLimit,"shared UTF8 frame exceeds admitted capacity"))}else{None};
-        if let Some((kind,message))=refusal{return Err((ValueError::literal(kind,message),original));}
-        Ok((Self(Some(Arc::new(original))),RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes:0}))
+    pub fn admit(original:String,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,String)> {
+        let turn=crate::retirement::arc_custody::admit_shared_allocation(original,grant);
+        crate::RetainedWorkOutcome{result:turn.result.map(|(owner,progress)|(Self(Some(owner)),progress)),work:turn.work}
     }
-    pub fn admit_clone(&self,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError> {
+    pub fn admit_clone(&self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),ValueError> {let mut work=0;let result=(||{
         if grant.maximum_items==0{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"shared UTF8 lease requires one admitted item"));}
         if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"shared UTF8 lease requires admitted original depth"));}
-        Ok((Self(self.0.as_ref().map(Arc::clone)),RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()}))
-    }
+        work=1;Ok((Self(self.0.as_ref().map(Arc::clone)),RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()}))
+    })();crate::RetainedWorkOutcome{result,work}}
     pub fn as_str(&self)->&str {self.0.as_ref().map_or("",|source|source.as_str())}
     pub fn as_bytes(&self)->&[u8] {self.as_str().as_bytes()}
     pub fn as_ptr(&self)->*const u8 {self.as_str().as_ptr()}
@@ -67,3 +64,7 @@ impl RetireOwned for SharedUtf8 {
 #[path="🧬️clone/🦀️.rs"]
 mod original_clone;
 pub use original_clone::SharedUtf8CloneCursor;
+
+#[cfg(test)]#[path="🎟️admission/🧪️tests/🦀️.rs"]mod admission_tests;
+
+#[path="🎟️native/🦀️.rs"]mod native_receiving;

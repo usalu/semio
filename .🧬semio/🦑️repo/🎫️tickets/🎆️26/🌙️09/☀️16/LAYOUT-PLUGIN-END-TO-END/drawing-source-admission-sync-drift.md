@@ -1,0 +1,3 @@
+# Source Admission Sync Drift
+
+Helper gate151 captured admission body10618 bytes/SHA9c9d1d4ec51f0be06b66380eba9335304ad0c0e2f3c2fcecfe21ab308e44b0eb. Postcheck sees10842 bytes/SHAb1ac6fd24fe34bb8a4cb9bf7854a054a70ec5013b8c7ea468d6055d23071cefe. The only delta is a readonly Sync docstring plus the generic unsafe Sync implementation. Removing those224 bytes in memory reconstructs the entire prior hash exactly. No Source was copied or reverted. This lane and Cursor did not author that hunk. The owning result remains150/151 exact, not a full current seal; actual executed byte snapshot is not asserted for the changed source.

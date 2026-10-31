@@ -24,7 +24,7 @@ impl ProtocolConflictRetirement {
 }
 impl ErasedSnapshotRetirement for ProtocolConflictRetirement {
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{match &self.owner{ProtocolOwner::Conflict(owner)=>owner.next_demand(body),ProtocolOwner::Envelope(owner)=>owner.next_demand(body)}}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{match &mut self.owner{ProtocolOwner::Conflict(owner)=>owner.close_step(grant),ProtocolOwner::Envelope(owner)=>owner.close_step(grant)}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{let result=match &mut self.owner{ProtocolOwner::Conflict(owner)=>owner.close_step(grant),ProtocolOwner::Envelope(owner)=>owner.close_step(grant)};let work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=Default::default()));semio_framework_value::RetainedWorkOutcome{result,work}}
     fn terminal_is_empty(&self)->bool{match &self.owner{ProtocolOwner::Conflict(owner)=>owner.terminal_is_empty(),ProtocolOwner::Envelope(owner)=>owner.terminal_is_empty()}}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{match &self.owner{ProtocolOwner::Conflict(owner)=>owner.next_copy_byte_demand(),ProtocolOwner::Envelope(owner)=>owner.next_copy_byte_demand()}}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{match &self.owner{ProtocolOwner::Conflict(owner)=>owner.next_capacity_byte_demand(copy),ProtocolOwner::Envelope(owner)=>owner.next_capacity_byte_demand(copy)}}

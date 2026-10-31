@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "const": {
+    "version": 1,
+    "items": 4194304,
+    "copy": 268435456,
+    "capacity": 67108864,
+    "release": 67108864,
+    "depth": 64,
+    "maxTurns": 4194304,
+    "deniedAxes": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ],
+    "deniedEffects": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "retainedSource": true,
+    "heapEqualsReceipt": true,
+    "geometry": "existing shared stroke alpha vectors",
+    "primitiveQueue": 2,
+    "subdivisionFrames": 33,
+    "thirdPartyCases": [
+      "butt cap",
+      "square cap"
+    ],
+    "outerQuantum": 4096,
+    "maximumTurnItems": 1
+  }
+}

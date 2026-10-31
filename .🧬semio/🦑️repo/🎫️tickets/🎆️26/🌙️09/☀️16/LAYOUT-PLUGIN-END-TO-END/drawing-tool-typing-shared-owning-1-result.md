@@ -1,0 +1,3 @@
+# Typing Shared Owner 1
+
+Actual76150 terminated1 before tests on four old test callback shapes passed to the mandatory full-outcome original close port. Controlled retirement test/production callbacks now preserve their real last_turn_work on success and Err; the known terminal typing writer shell free directly reports its one actual deallocation. The actual resident window-close definer now emits a full outcome from its selected bounded slot withdrawal/empty-row transfer/empty-vector backing-release action, with denied/cache0 and real error work. No success/physical-item inference or opaque generic callback fee is added. All original iteration guards, physical stocks, cases and assertions remain; fresh complete typing owner required.

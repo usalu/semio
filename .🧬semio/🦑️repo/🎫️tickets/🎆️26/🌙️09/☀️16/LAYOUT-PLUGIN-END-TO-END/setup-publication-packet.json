@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "sourceReady": true,
+  "runtimeValidated": false,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🎛️owner/🟦️.ts",
+      "bytes": 63392,
+      "lines": 111,
+      "absolutePathUnits": 133,
+      "sha256": "bc933f7de5e0010ba41b67a8172b61a4f8515735edba0b124599215f0e48dde9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🌐️platform/🟦️.ts",
+      "bytes": 105905,
+      "lines": 173,
+      "absolutePathUnits": 136,
+      "sha256": "635b62c2e15593ae2ed985ba5b53e62aec5b51fa9db524fe6f02d97deffc2140"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧱️fixed/🟦️.ts",
+      "bytes": 6985,
+      "lines": 26,
+      "absolutePathUnits": 133,
+      "sha256": "c43528148e3bdba01a48ef2ed0d452099f5990c370cae9b39f62baba36f838bf"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧱️fixed/🧪️tests/🟦️.ts",
+      "bytes": 7360,
+      "lines": 49,
+      "absolutePathUnits": 142,
+      "sha256": "b32295d287b4075737d645fabde35f8400e4e0de7680565b03b2acf94dee250e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🟦️.ts",
+      "bytes": 3649,
+      "lines": 25,
+      "absolutePathUnits": 139,
+      "sha256": "6e73422a5348efc01c4edd68dbd0d0fd900e12f78a7ddb6d2d45741885b690a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🟦️.ts",
+      "bytes": 11294,
+      "lines": 25,
+      "absolutePathUnits": 148,
+      "sha256": "b0522fb572a0c3588df727cb66902353f05616e584b75cc411720f9b1b920f1d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🔣️.json",
+      "bytes": 1322,
+      "lines": 69,
+      "absolutePathUnits": 150,
+      "sha256": "2648965d64f2ed28888f1b56a9bfd73470b25e601e473d91401974920d252a68"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🧬️schema.json",
+      "bytes": 969,
+      "lines": 55,
+      "absolutePathUnits": 156,
+      "sha256": "a263b6ae199bf5522d7d539363e7ed810ed31f7c16bf43f2a77543e4bcf3c01d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/ordering.json",
+      "bytes": 877,
+      "lines": 61,
+      "absolutePathUnits": 155,
+      "sha256": "e7ea512211fe687db8b4ea1f456f7c4b8cdd3b4742267242b02accce8db2806b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/ordering.schema.json",
+      "bytes": 810,
+      "lines": 48,
+      "absolutePathUnits": 162,
+      "sha256": "33d4101e4685d593e9130d63bfc6726f218e51d7c54e1c6fe4c0a476b25410b0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+      "bytes": 200250,
+      "lines": 340,
+      "absolutePathUnits": 161,
+      "sha256": "c9ffd8c21e95301a03430a9cb08c6078cd3ed5d7f8de73a03be26b94d552b8f3"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🟦️.ts",
+      "bytes": 1478,
+      "lines": 14,
+      "absolutePathUnits": 169,
+      "sha256": "93c00cd0ce3a21c04f28de12eb8f86067172b2b691bd0aab01c8cd1ae5c7e940"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts",
+      "bytes": 18391,
+      "lines": 36,
+      "absolutePathUnits": 186,
+      "sha256": "6b40181f476e951127bdab4e036bb7fea584c83edfc0c99d13cfb9d4cb9f0508"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts",
+      "bytes": 48662,
+      "lines": 62,
+      "absolutePathUnits": 195,
+      "sha256": "20661e7a6eb1cd6850b97fd8395cc2e09d9133b468d67c0bbd2d424f51fdb6fd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🟦️.ts",
+      "bytes": 24543,
+      "lines": 127,
+      "absolutePathUnits": 118,
+      "sha256": "6db5a1603f9af7b9a3d4e34ac315d416a02c62edae2a4fc026890eb250cd63e8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts",
+      "bytes": 2565,
+      "lines": 15,
+      "absolutePathUnits": 141,
+      "sha256": "66fd2f40d1d345092049a9467367353715b6526ad5628849bdce078192646485"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎬️executor/🟦️.ts",
+      "bytes": 50411,
+      "lines": 323,
+      "absolutePathUnits": 128,
+      "sha256": "848ff36f9a5169fc2b9bb17b41430e808f7c88c6c03a30aa0ee477d6179187cd"
+    }
+  ]
+}

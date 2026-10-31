@@ -203,6 +203,7 @@ pub struct Inflater {
     pub(super) observed_distance_one: bool,
     pub(super) dynamic_repeat_codes: u8,
     pub(super) retained_close_phase: RetainedInflateClosePhase,
+    pub(super) last_retained_close_work:u64,
 }
 
 impl Default for Inflater {

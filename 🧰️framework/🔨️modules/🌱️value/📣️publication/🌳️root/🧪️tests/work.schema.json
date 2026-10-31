@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "states",
+    "fuel",
+    "byteStock",
+    "depth",
+    "body",
+    "maxTurns",
+    "deniedAxes",
+    "deniedWork",
+    "cachedWork"
+  ],
+  "properties": {
+    "states": {
+      "const": [
+        0,
+        1,
+        2
+      ]
+    },
+    "fuel": {
+      "const": 4096
+    },
+    "byteStock": {
+      "const": 16777216
+    },
+    "depth": {
+      "const": 128
+    },
+    "body": {
+      "const": 4096
+    },
+    "maxTurns": {
+      "const": 10000
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    }
+  }
+}

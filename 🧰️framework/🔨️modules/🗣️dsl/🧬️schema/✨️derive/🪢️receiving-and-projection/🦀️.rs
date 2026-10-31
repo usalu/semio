@@ -21,6 +21,16 @@ fn receiving_fields(fields:&Fields,construct:proc_macro2::TokenStream,frame:syn:
 
 pub(super) fn emit_receiving(input:DeriveInput)->proc_macro2::TokenStream{
  let name=&input.ident;
+ if let Data::Enum(data)=&input.data{if !data.variants.is_empty()&&data.variants.iter().all(|variant|matches!(variant.fields,Fields::Unit)){
+  let arms=data.variants.iter().enumerate().map(|(ordinal,variant)|{let ident=&variant.ident;let ordinal=ordinal as u32;quote!{#ordinal=>Ok(#name::#ident)}}).collect::<Vec<_>>();
+  let arms_owned=arms.clone();
+  return quote!{
+   impl ::semio_framework_dsl_record::DslReceivingField for #name{fn receive_value(value:&::semio_framework_dsl_record::FieldValue,owner:&mut ::semio_framework_dsl_record::receiving::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,::semio_framework_value::ValueError>{::semio_framework_dsl_record::receiving::work(owner,::core::mem::size_of::<Self>(),1)?;match value{::semio_framework_dsl_record::FieldValue::Enum(ordinal)=>match *ordinal{#(#arms,)* _=>Err(::semio_framework_dsl_record::receiving::owned::invalid())},_=>Err(::semio_framework_dsl_record::receiving::owned::invalid())}}}
+   impl ::semio_framework_dsl_record::receiving::owned::OwnedScalar for #name{fn take_source(source:&mut Option<::semio_framework_dsl_record::FieldValue>)->Result<Self,::semio_framework_value::ValueError>{let Some(::semio_framework_dsl_record::FieldValue::Enum(ordinal))=source.as_ref()else{return Err(::semio_framework_dsl_record::receiving::owned::invalid())};let output:Result<Self,::semio_framework_value::ValueError>=match *ordinal{#(#arms_owned,)* _=>Err(::semio_framework_dsl_record::receiving::owned::invalid())};let output=output?;source.take();Ok(output)}}
+   impl ::semio_framework_dsl_record::receiving::owned::DslOwnedReceivingField for #name{type Cursor=::semio_framework_dsl_record::receiving::owned::ScalarReceiving<Self>;}
+  };
+ }}
+ let name=&input.ident;
  let synchronous=match &input.data{
   Data::Struct(data)=>{
    if !matches!(data.fields,Fields::Named(_)|Fields::Unit){return syn::Error::new_spanned(&input,"DslReceiving records require named fields").to_compile_error()}

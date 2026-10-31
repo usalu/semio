@@ -1,0 +1,9 @@
+# Whole Original Flatten Caller Migration
+
+All17 original neutral vector registrations and every original literal law name are preserved. Numeric-only calls now use explicit finite same-bank Runtime steps; no production default authority or compatibility helper was restored. The asynchronous test driver takes its explicit bank/quantum and still proves timer yielding, abort/callback refusal and one genuine cleanup adoption.
+
+Completed output is explicitly transferred before producer cancellation; source coordinate identity/copy and output preservation remain. Every old retirement fixture remains physically unchanged. Its work field still verifies three structural roots plus actual contour row births observed at the defining paid push, while physical cleanup CPU is checked directly per actual cursor turn and all backing conserves in SQLite. Old fixed UnitRetirement iteration counts cannot represent the new real paged owner; no physical CPU parity is claimed from those fixture structural counts. Cached completion is now required to report zero actual work. This is a deliberate owning-law migration, not fixture rewriting.
+
+Original CoverageJob numeric algorithm remains in the exact old independent pixel comparison and its real existing cleanup is drained. That does not claim Coverage's funding closure; the defining Coverage owner is a mandatory next product boundary. Original all28 curve/flag/transform Sharp comparisons retain scale64 and delta2. Fresh whole owning/strict capture and actual execution remain pending.
+
+The existing domain retirement schema is validated against the exact actual work/done progress plus the pure domain phase projection (done ? complete : closing). Generic RetainedWorkRetirementCursor itself correctly remains the canonical work/done interface; no production phase compatibility wrapper is introduced.

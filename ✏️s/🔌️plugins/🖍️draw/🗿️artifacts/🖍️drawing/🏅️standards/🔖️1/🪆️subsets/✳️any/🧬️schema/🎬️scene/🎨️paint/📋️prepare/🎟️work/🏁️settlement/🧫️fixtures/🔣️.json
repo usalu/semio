@@ -1,0 +1,8 @@
+{
+  "source": "complete referenced difference",
+  "deniedItems": 0,
+  "resumeItems": 1,
+  "maxTurns": 2000000,
+  "expectedSemanticDelta": 0,
+  "expectedCpu": 1
+}

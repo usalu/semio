@@ -1,0 +1,24 @@
+STATUS: DONE (lib). Wasm --lib check pui-w4 rc=0: semio-framework-ui-locale GREEN, semio-framework-ui-raster-owner GREEN, plus upstream value-snapshot-projection, value-original-slot, value-retained-map GREEN. Test port written, NOT verified (see end).
+
+## Edits (all mirror the peer's current API)
+- ui-raster-owner `📦️pool`: `Complete(0)`, `Progress(.., 1)`.
+- ui-locale: `🏷️label/♻️retirement` (`Complete(0)`, `Failure(e,0)`, `Progress(..,1)`); `🧾️value` axis macro `NativeReceive` -> `fn receiver()`.
+- value `✨️derive/🛬️receive/🦀️.rs` (lines 31, 46): generated `advance` returns `OriginalReceivingPrimary`; child/bind `turn.result` (ValueError) now `.map_err(Into::into)`. Fixes every `derive(NativeReceive)` user (this was the 4 remaining ui-locale errors).
+- value-snapshot-projection `📽️projection/👁️post`: `OriginalPostRead` now stages `RetainedCloneSourceAdmission` (new `admission` field): Original mode = stage -> advance -> take_output; Mutable mode returns inputs via `return_inputs` while admission is in flight; demand/terminal/Drop updated. Public API unchanged.
+- value-original-slot `📦️original-slot`: `return_original` closure returned a RetainedWorkOutcome instead of `Result`; fixed. `🔗️source/🎟️admission`: `unsafe impl Sync for RetainedCloneSourceAdmission` (same justification as RetainedCloneSource; NO Sync added to RetirementCursor).
+- value-retained-map `🗺️ordered-map`: new `🎟️lease/🦀️.rs` `StagedLease<W>` (admission -> lease -> paid return via ControlledRetirement); remove + insert cursors use it: `admit` is now funding-free (constructor_capacity/copy_bytes = 0), the first cursor `advance` turns drive `advance_birth` (quote via `advance_retirement_demands` -> `birth_demand`), close returns the workspace through `return_inputs`. Callers of `admit` keep their signature.
+- ui-locale tests: `axis-value` ported (local `capture` drives `admission_owned`; `T::receiver()`; `.result` unwraps on advance/take/step; Closing::close_step returns RetainedWorkOutcome); `♻️localized-label-retirement` `Progress(receipt,_)`.
+
+## Not verified
+Tests cannot be built by the gate: `check --tests` loses dev-deps (serde_json, async-macros unresolved) and `cargo test` refuses (`ui-locale` not a workspace member). The axis-value/retire tests and the ordered-map remove/insert tests (which still call the old synchronous `admit` contract, e.g. `🗺️ordered-map/➖️remove/🧪️tests`, `🗂️ordered/...scratch`) are unported/unrun; ordered-map callers elsewhere (◻️2d booleans/trace, tool-run entities) call `admit` unchanged but see the funding-free constructor.
+Scripts: `C/1030-tools/pui/{wasm,native,nativetest}.sh`; logs `C/🗑️generated/1030/pui-*.txt`.
+
+## Follow-up 1 (StagedLease + ordered-map tests) DONE
+- StagedLease is the ordered-map's own staged state over the peer's CURRENT `RetainedCloneBorrowAuthorityAdmission` (admission -> lease -> paid return via `ControlledRetirement`); it wraps no removed API. Added one delegating method `next_return_demand` on that peer type (🔗️source packages 🦀️.rs) so close quotes match `return_inputs`; close also publishes a ready admission before returning.
+- Law tests (green, `maptest.sh 7`, `repo cargo test -p semio-framework-value-retained-map` via workspace `🧰️framework/Cargo.toml`: 17 passed): `staged_authority_birth_charges_exactly_the_previous_one_shot_quote` (remove) and `staged_insert_authority_birth_charges_exactly_the_previous_one_shot_quote` (insert): sum of charged capacity/copy over the birth `advance` turns == the old one-shot `constructor_capacity_bytes/copy_bytes` quote of `RetainedCloneBorrowAuthority`; admit is free (heap 0, receipt default).
+- Tests ported: shared helper `🧬️contract/🧪️tests/📥️admission/🦀️.rs` (`admit_owned`, replaces removed `RetainedCloneSource::admit_owned`) used by ordered-map unit, bounded-ord and the shared close-dispatch test; clone-cursor `take(grant)`; the old "admit refuses without an item" assertions replaced by the free-admission law; `birth_complete()` accessor on both cursors.
+
+## Follow-up 2 (derive(NativeReceive) zero-field/unit variant) DONE
+- Root cause: carrier struct of a unit variant has zero fields, so generated `match self.field{_=>return Err}` made the rest unreachable/uninferable. `✨️derive/🛬️receive/🦀️.rs`: `required_else`/`field_else` omit the dead else-branches when `count==0` (coexists with pio's `let flatten:bool=` typing). Enum file `🔀️enum/🦀️.rs`: advance returns `.map_err(Into::into)`.
+- Test added: `unit_and_struct_variants_derive_a_closable_receiver` in `🔀️enum/🧪️tests/🦀️.rs` (compile + construct). It is NOT run: `native-owned` test build is refused by source admission (`🔄️map/🦀️.rs` extent) - unrelated to this change.
+- Wasm --lib `pui-w9` rc=0: os-store-link-schema, replication-edit (MutationOrigin), ui-locale, ui-raster-owner all green. Notify pio (link-schema) and prepl (replication-edit): both compile.

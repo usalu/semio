@@ -81,7 +81,7 @@ impl<A: RasterWorkApp, const MERGE_DOWN:bool> ArtifactCommandWork<A> for LayerBa
             }.map(ArtifactCommandWorkStep::Complete);
         }
         if let Some(job)=self.compositing.as_mut() {
-            if job.advance(4096).map_err(|error|Fault::from(error.to_string()))?.done {
+            if semio_s_artifact_raster_raster_io::advance_stack(job,4096).map_err(Fault::from)?.done {
                 let result=self.compositing.take().unwrap().into_result().map_err(|error|Fault::from(error.to_string()))?;
                 if result.empty {return Err(Fault::from("raster.flatten-no-visible-pixels"));}
                 self.origin=result.origin;self.encoding=Some(PngEncodeJob::new(result.image).map_err(|error|Fault::from(error.to_string()))?);

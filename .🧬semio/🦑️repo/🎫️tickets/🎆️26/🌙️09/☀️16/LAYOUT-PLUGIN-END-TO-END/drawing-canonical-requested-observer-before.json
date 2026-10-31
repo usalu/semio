@@ -1,0 +1,17 @@
+[
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddea\ufe0ftesting/\ud83d\udcbe\ufe0fallocator/\ud83e\udd80\ufe0f.rs",
+    "bytes": 3663,
+    "sha256": "f981059700189c20989d6be0994b8b00aefc6a40ab49f19961290d12d28c3bb5"
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddea\ufe0ftesting/\ud83d\udcbe\ufe0fallocator/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/Cargo.toml",
+    "bytes": 727,
+    "sha256": "65548eb4d7608fc34c0e8b6eedd3a2ab4a7523c9b269b1562432ad4005659cb4"
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83e\uddea\ufe0ftesting/\ud83d\udcbe\ufe0fallocator/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "bytes": 1553,
+    "sha256": "23cff0aa198e8cb548cce41a6bfcba26ade5d7bdebe4846b012bddfb6af3c9f9"
+  }
+]

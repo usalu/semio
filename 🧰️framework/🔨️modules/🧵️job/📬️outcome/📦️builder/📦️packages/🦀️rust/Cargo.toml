@@ -4,7 +4,7 @@ name = "semio-framework-job-payload"
 version = "0.1.0"
 edition = "2021"
 rust-version.workspace = true
-description = "Job payload custody: the paid payload pages and operation ledger, the retained payload writer and grant, the in-place payload builder and its staged pages, funded through the job step."
+description = "Job payload custody: the paid payload pages and operation ledger, the in-place payload builder, staged source and original page handoff, funded through the job step."
 
 [package.metadata.semio]
 role = "framework"
@@ -23,9 +23,28 @@ name = "semio_framework_job_payload"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-retained-clone = { path = "../../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-control-contract = { path = "../../../../../🌱️value/🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }
-semio-framework-value = { workspace = true }
+semio-framework-value-retirement = { path = "../../../../../🌱️value/♻️retirement/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+serde_json = "1.0.140"
 semio-framework-trace-memory-testing = { path = "../../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true, features = ["testkit"] }
+
+[[test]]
+name = "original-page-transfer"
+path = "../../../📖️source/📦️page-transfer/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "dense-page-prefix"
+path = "../../📄️prefix/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "original-header-initialization"
+path = "../../🧪️tests/🏗️initialization/🦀️.rs"
+
+[[test]]
+name = "original-builder-close"
+path = "../../♻️close/🧪️tests/🦀️.rs"

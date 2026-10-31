@@ -1,0 +1,9 @@
+# Owned Prepared Fill Defining Source
+
+After the closed neutral contract and two owning laws were authored, Root replaced borrowed allocating preparation with allocation-free PreparedFill::new(owned FillStyle) and canonical advance(items, same ledger). Input remains owned on invalid geometry/stops, cancellation and partial preparation. Exact demand, CPU, semantic delta and settlement status are exposed without authority. Stop validation/copy, actual stop/scratch backing births and writes are funded before effects. Stable bottom-up merge sorting uses one bounded stop operation per turn and retains both real vector backings through close; duplicate-stop order and binary-search sampling remain unchanged.
+
+Single authored sample/constant queries now use bounded allocation-free scans preserving the same stable tie rules. The fill editor and SVG constant query use those direct query functions rather than constructing a retained clone/sort job. Their wider existing editing/serialization allocation behavior is not claimed funded by this narrow change.
+
+All existing exact sample/invalid-number/immutability/private-stop-retirement cases remain and now carry one finite wallet through actual cleanup. The ramp identity case explicitly separates the actual ramp while retaining and paying to close the remaining original input/preparation owner. Private tests now mount at the actual model defining module; their obsolete external companion mount is removed, avoiding any public private-storage test hook. The actual model unfiltered --lib owner is mandatory in addition to companion gates.
+
+PathRaster still needs hand migration to this canonical API and is explicitly not SourceReady. No compiler, Source-fit, TinySkia run or full Drawing/Layout/browser result is claimed. Native primitive2 actual24672 continues canonical admission with the selected290 frozen.

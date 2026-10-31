@@ -1,0 +1,9 @@
+# Native9 Root Release
+
+Root releases exactly ONE canonical full nineteen-owner Native9 request from layout-native-9-command.json, SHA 9804eb46ac5e755fa5dfcc343245f844c86a1a78a580f06094a93da54dad0db5. Rust is the sole execution and owning-handle observer. Native8 is authoritatively terminal; its compiler RED was repaired by exactly eleven token-separating spaces across four setter invocation lines. Root and Low independently reviewed the exact reconstructable patch. Literal argv and all nineteen owners/order are unchanged from Native8, with service-off/shared/prototype, library/testkit/nocapture and no test filter. No narrowed compiler probe replaces acceptance.
+
+Root freshly verified the captured sixty Source digests, all seven owned repair files, repaired setter hash, router/workspace/catalog and nine current checker inputs. Rust must repeat the current seal immediately before launch and stop on drift. Dedicated ticket artifact/temp paths remain under generated/layout-native-9. Genuine canonical machine/image/headroom owners alone decide admission; no manual quota, cache, lease or peer operation is authorized. Preserve the same actual process through observation timeout.
+
+This run follows a concrete Source repair, not a retry of unchanged failure. Setup8 stays unlaunched because fresh supported observations still corroborate two conflicting Dependencies shared holders. No setup or declared graph-backed JavaScript gate may overlap own Cargo. Freeze production and test Source during the owned run.
+
+The separately reviewed conditional postprocessor packet is d135534cafb3ed8062586528c4a4dc03cff0f8ce50bc78ba30f5c7132b92383a. Dep alone may later execute each of its three exact sequential commands once, only under the conditions in layout-native-9-oracle-authority.md. Full native tests, exact records, publication, remaining native/JavaScript gates and complete browser acceptance remain mandatory. No success is inferred now.

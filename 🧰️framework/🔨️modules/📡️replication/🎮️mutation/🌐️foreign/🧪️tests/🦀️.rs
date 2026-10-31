@@ -5,12 +5,12 @@ fn observe<T>(work:impl FnOnce()->T)->(T,usize,usize){let(value,heap)=semio_fram
 fn policy(law:&serde_json::Value)->RetainedCloneGrant{let p=&law["grant"];RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:p["maximumDepth"].as_u64().unwrap()as usize}}
 fn original(row:&serde_json::Value)->ForeignStep{ForeignStep{target:ForeignTarget{artifact_id:row["target"]["artifactId"].as_str().unwrap().into(),artifact_kind:row["target"]["artifactKind"].as_str().unwrap().into(),dialect:row["target"]["dialect"].as_str().map(String::from)},mutation_id:semio_framework_replication_ids::SchemaId(row["mutationId"].as_str().unwrap().into()),payload:row["payload"].as_array().unwrap().iter().map(|b|b.as_u64().unwrap()as u8).collect(),label:row["label"].as_str().unwrap().into()}}
 fn close(owner:&mut dyn ErasedSnapshotRetirement,grant:RetainedCloneGrant)->usize{
- let(step,born,freed)=observe(||owner.close_step(RetainedCloneGrant::default()).unwrap());assert_eq!((born,freed),(0,0));assert_eq!(step.progress(),Default::default());
+ let(step,born,freed)=observe(||owner.close_step(RetainedCloneGrant::default()).result.unwrap());assert_eq!((born,freed),(0,0));assert_eq!(step.progress(),Default::default());
  let mut released=0;
  for _ in 0..16{if owner.terminal_is_empty(){return released;}
   let(demand,born,freed)=observe(||owner.next_release_byte_demand().unwrap());assert_eq!((born,freed),(0,0));assert!(demand<=grant.maximum_release_bytes);
-  if demand>0{let short=RetainedCloneGrant{maximum_release_bytes:demand-1,..grant};let(step,born,freed)=observe(||owner.close_step(short).unwrap());assert_eq!((born,freed),(0,0));assert_eq!(step.progress(),Default::default());}
-  let(step,born,freed)=observe(||owner.close_step(grant).unwrap());assert_eq!(born,0);assert!(step.progress().fits(grant));assert_eq!(freed,step.progress().released_bytes);released+=freed;
+  if demand>0{let short=RetainedCloneGrant{maximum_release_bytes:demand-1,..grant};let(step,born,freed)=observe(||owner.close_step(short).result.unwrap());assert_eq!((born,freed),(0,0));assert_eq!(step.progress(),Default::default());}
+  let(step,born,freed)=observe(||owner.close_step(grant).result.unwrap());assert_eq!(born,0);assert!(step.progress().fits(grant));assert_eq!(freed,step.progress().released_bytes);released+=freed;
  }
  panic!("fixed original foreign closure policy did not reach terminal");
 }
@@ -50,8 +50,8 @@ fn original_foreign_collection_keeps_each_refused_row_and_real_backing_receipt()
   }
   owner.begin_close();let mut released=0;
   for _ in 0..64{if owner.terminal_is_empty(){break;}let(demand,born,freed)=observe(||owner.next_release_byte_demand().unwrap());assert_eq!((born,freed),(0,0));
-   if demand>0{let(step,born,freed)=observe(||owner.close_step(RetainedCloneGrant{maximum_release_bytes:demand-1,..grant}).unwrap());assert_eq!((born,freed),(0,0));assert_eq!(step.progress(),Default::default());}
-   let(step,born,freed)=observe(||owner.close_step(grant).unwrap());assert_eq!(born,0);assert!(step.progress().fits(grant));assert_eq!(freed,step.progress().released_bytes);released+=freed;
+   if demand>0{let(step,born,freed)=observe(||owner.close_step(RetainedCloneGrant{maximum_release_bytes:demand-1,..grant}).result.unwrap());assert_eq!((born,freed),(0,0));assert_eq!(step.progress(),Default::default());}
+   let(step,born,freed)=observe(||owner.close_step(grant).result.unwrap());assert_eq!(born,0);assert!(step.progress().fits(grant));assert_eq!(freed,step.progress().released_bytes);released+=freed;
   }
   assert!(owner.terminal_is_empty());assert_eq!(released,live);let(_,born,freed)=observe(||drop(owner));assert_eq!((born,freed),(0,0));
  }
@@ -70,12 +70,12 @@ fn original_indexed_foreign_preparation_retains_every_cancelled_partial_and_sequ
   }
   for(index,value)in originals.iter().enumerate(){assert_eq!(ForeignStepSource::borrowed(value).identity(),identities[index]);}
   cursor.begin_close();assert!(cursor.take_prepared(grant).is_none());let mut released=0;
-  for _ in 0..64{if cursor.terminal_is_empty(){break;}let release=cursor.next_release_byte_demand().unwrap();if release>0{let(step,born,freed)=observe(||cursor.close_step(RetainedCloneGrant{maximum_release_bytes:release-1,..grant}).unwrap());assert_eq!((born,freed),(0,0));assert_eq!(step.progress(),Default::default());}let(step,born,freed)=observe(||cursor.close_step(grant).unwrap());assert_eq!(born,0);assert!(step.progress().fits(grant));assert_eq!(freed,step.progress().released_bytes);released+=freed;}
+  for _ in 0..64{if cursor.terminal_is_empty(){break;}let release=cursor.next_release_byte_demand().unwrap();if release>0{let(step,born,freed)=observe(||cursor.close_step(RetainedCloneGrant{maximum_release_bytes:release-1,..grant}).result.unwrap());assert_eq!((born,freed),(0,0));assert_eq!(step.progress(),Default::default());}let(step,born,freed)=observe(||cursor.close_step(grant).result.unwrap());assert_eq!(born,0);assert!(step.progress().fits(grant));assert_eq!(freed,step.progress().released_bytes);released+=freed;}
   assert!(cursor.terminal_is_empty());assert_eq!(released,live);let(_,born,freed)=observe(||drop(cursor));assert_eq!((born,freed),(0,0));
  }
  let mut cursor=ForeignStepsPreparation::empty();let mut live=0;
  for _ in 0..160{let source=originals.get(cursor.source_index()).map(ForeignStepSource::borrowed);let(step,born,freed)=observe(||cursor.advance_source(source,grant).unwrap());assert_eq!(born,step.progress().retained_capacity_bytes);assert_eq!(freed,step.progress().released_bytes);live+=born;live-=freed;if matches!(step,RetainedCloneStep::Complete(_)){break;}}
- assert!(cursor.is_complete());let((rows,p),born,freed)=observe(||cursor.take_prepared(grant).unwrap());assert_eq!((born,freed),(0,0));assert!(p.fits(grant));assert_eq!(rows,originals);let mut owner=ForeignStepsOwner{values:ManuallyDrop::new(rows),child:None,closing:false};owner.begin_close();let mut released=0;for _ in 0..64{if owner.terminal_is_empty(){break;}let(step,born,freed)=observe(||owner.close_step(grant).unwrap());assert_eq!(born,0);assert_eq!(freed,step.progress().released_bytes);released+=freed;}assert!(owner.terminal_is_empty());assert_eq!(released,live);
+ assert!(cursor.is_complete());let((rows,p),born,freed)=observe(||cursor.take_prepared(grant).unwrap());assert_eq!((born,freed),(0,0));assert!(p.fits(grant));assert_eq!(rows,originals);let mut owner=ForeignStepsOwner{values:ManuallyDrop::new(rows),child:None,closing:false};owner.begin_close();let mut released=0;for _ in 0..64{if owner.terminal_is_empty(){break;}let(step,born,freed)=observe(||owner.close_step(grant).result.unwrap());assert_eq!(born,0);assert_eq!(freed,step.progress().released_bytes);released+=freed;}assert!(owner.terminal_is_empty());assert_eq!(released,live);
 }
 
 #[test]
@@ -98,7 +98,7 @@ fn original_foreign_source_boundaries_preserve_paid_rows_and_every_cancel_cut(){
    }
   }
   for (batch,originals)in batches.iter().enumerate(){for(index,row)in originals.iter().enumerate(){assert_eq!(ForeignStepSource::borrowed(row).identity(),identities[batch][index]);}}
-  if source+1==batches.len()&&cursor.is_complete(){let((rows,p),born,freed)=observe(||cursor.take_prepared(grant).unwrap());assert_eq!((born,freed),(0,0));assert!(p.fits(grant));assert_eq!(rows,expected);let mut rows=ForeignStepsOwner{values:ManuallyDrop::new(rows),child:None,closing:false};rows.begin_close();for _ in 0..80{if rows.terminal_is_empty(){break;}let(step,born,freed)=observe(||rows.close_step(grant).unwrap());assert_eq!(born,0);assert_eq!(freed,step.progress().released_bytes);live-=freed;}assert!(rows.terminal_is_empty());}
-  cursor.begin_close();for _ in 0..80{if cursor.terminal_is_empty(){break;}let(step,born,freed)=observe(||cursor.close_step(grant).unwrap());assert_eq!(born,0);assert_eq!(freed,step.progress().released_bytes);live-=freed;}assert!(cursor.terminal_is_empty());assert_eq!(live,0);let(_,born,freed)=observe(||drop(cursor));assert_eq!((born,freed),(0,0));
+  if source+1==batches.len()&&cursor.is_complete(){let((rows,p),born,freed)=observe(||cursor.take_prepared(grant).unwrap());assert_eq!((born,freed),(0,0));assert!(p.fits(grant));assert_eq!(rows,expected);let mut rows=ForeignStepsOwner{values:ManuallyDrop::new(rows),child:None,closing:false};rows.begin_close();for _ in 0..80{if rows.terminal_is_empty(){break;}let(step,born,freed)=observe(||rows.close_step(grant).result.unwrap());assert_eq!(born,0);assert_eq!(freed,step.progress().released_bytes);live-=freed;}assert!(rows.terminal_is_empty());}
+  cursor.begin_close();for _ in 0..80{if cursor.terminal_is_empty(){break;}let(step,born,freed)=observe(||cursor.close_step(grant).result.unwrap());assert_eq!(born,0);assert_eq!(freed,step.progress().released_bytes);live-=freed;}assert!(cursor.terminal_is_empty());assert_eq!(live,0);let(_,born,freed)=observe(||drop(cursor));assert_eq!((born,freed),(0,0));
  }
 }

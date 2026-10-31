@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Path Raster Original Retained Work Law",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "maxTurns",
+    "axes",
+    "width",
+    "height",
+    "color",
+    "expected",
+    "ownershipModes",
+    "stroke"
+  ],
+  "properties": {
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copy": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "release": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "maxTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "axes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "color": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "expected": {
+      "type": "array",
+      "minItems": 256,
+      "maxItems": 256,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "ownershipModes": {
+      "const": [
+        "fill",
+        "stroke",
+        "both"
+      ]
+    },
+    "stroke": {
+      "const": {
+        "color": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "width": 1,
+        "cap": "butt",
+        "join": "miter"
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "maximumPages": 256,
+  "headerInitializationTurns": 1,
+  "oldInitializationGuard": 257,
+  "emptyLivePages": 0,
+  "birthCopyBytes": 0,
+  "headerHeap": [
+    0,
+    0
+  ],
+  "pageCases": [
+    0,
+    1,
+    2,
+    255,
+    256
+  ],
+  "overflowPage": 257,
+  "sourceStockItems": 256,
+  "singlePageLifetimeMustFit": true,
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "depth",
+    "release"
+  ],
+  "custody": {
+    "pendingReservation": true,
+    "stagedAndIncoming": true,
+    "transferAliasBeforePop": true,
+    "indices": "dense-prefix-original-last",
+    "backingPointerUnchanged": true
+  },
+  "cancelCuts": [
+    "cold",
+    "header",
+    "reservation",
+    "allocated",
+    "staged",
+    "committed",
+    "sealed",
+    "transferred"
+  ],
+  "terminalDropHeap": [
+    0,
+    0
+  ]
+}

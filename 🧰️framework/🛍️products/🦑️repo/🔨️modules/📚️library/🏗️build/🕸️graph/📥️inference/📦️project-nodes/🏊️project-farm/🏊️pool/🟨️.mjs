@@ -72,8 +72,8 @@ export function choosePoolV1(pools) {
 }
 
 /** ♻️ Whether a worker that just answered a job is replaced before the next one: `memory` when its resident set passed the declared share of its budget (a project that grew it is the last one it runs), `projects` when it served the declared number of jobs (what a long-lived process keeps for itself is bounded by its lifetime, not by the project); undefined keeps it. */
-export function recycleReasonV1({ rssMegabytes, jobs, megabytes }, policy = P) {
-  if (rssMegabytes > megabytes * policy.recycleMemoryRatio) return "memory";
+export function recycleReasonV1({ rssMegabytes, baselineMegabytes, jobs, megabytes }, policy = P) {
+  if (rssMegabytes > megabytes || rssMegabytes > megabytes * policy.recycleMemoryRatio && (!Number.isFinite(baselineMegabytes) || rssMegabytes > baselineMegabytes * (1 + policy.recycleGrowthRatio))) return "memory";
   if (jobs >= policy.recycleAfterProjects) return "projects";
   return undefined;
 }
@@ -176,7 +176,7 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
     for (const job of queue.splice(0)) settle(job, { lost: "disabled: " + why });
   };
   const launch = slot => {
-    slot.state = "starting"; slot.generation++; slot.served = 0; stats.started++; slot.spawned = performance.now();
+    slot.state = "starting"; slot.generation++; slot.served = 0; slot.baseline = undefined; stats.started++; slot.spawned = performance.now();
     if (sessionFile === undefined) { sessionDirectory = createFarmTemporaryDirectoryV1("session", { policy }); sessionFile = join(sessionDirectory, "session.bin"); writeFileSync(sessionFile, serialize(session)); }
     let child, descriptor;
     try { descriptor = auxiliaryFile === undefined ? undefined : openSync(auxiliaryFile, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0)); child = spawnProcess(command, [...commandArguments, entry], { stdio: descriptor === undefined ? ["ignore", "inherit", "inherit", "ipc"] : ["ignore", "inherit", "inherit", descriptor, "ipc"], serialization: "json", env: childEnvironment }); }
@@ -200,11 +200,12 @@ export function createFarmV1({ entry, service, session, workers, megabytes, envi
         if (message.type === "result") {
           stats.replies++;
           settle(job, { reply: message.reply, slot: slot.index, generation: slot.generation });
+          if (slot.served === 0) slot.baseline = message.rssMegabytes;
         } else { stats.failures++; settle(job, { failure: { name: message.name, message: message.message, code: message.code ?? null } }); }
         stats.workedMilliseconds += performance.now() - job.dispatched;
         stats.peakRssMegabytes = Math.max(stats.peakRssMegabytes, message.rssMegabytes);
         slot.served++;
-        const reason = recycleReasonV1({ rssMegabytes: message.rssMegabytes, jobs: slot.served, megabytes }, policy);
+        const reason = recycleReasonV1({ rssMegabytes: message.rssMegabytes, baselineMegabytes: slot.baseline, jobs: slot.served, megabytes }, policy);
         if (reason !== undefined) { stats.recycled++; report("recycled", { worker: slot.index, megabytes: Math.round(message.rssMegabytes), reason }); retire(slot, true); }
         pump();
       }

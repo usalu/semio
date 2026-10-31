@@ -13,6 +13,9 @@ type Puzzle3dMounted = VcsArtifactApp<Puzzle3d>;
 
 const POLICY: MountedOwnerPolicyV1 = MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
 
+/// 🔒️ The worker-job retirement slots are process-global: a parked retirement of ANY mounted app keeps every other app's maintenance non-terminal, so mounted laws of one binary run one at a time.
+static SERIAL: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 async fn mounted() -> Box<Puzzle3dMounted> {
     let mut app = Box::new(new_app_with_registry::<Puzzle3d>(|| App { definition: create_puzzle3d_app(), examples: Vec::new() }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), POLICY, &mut fixture_identity()).await);
     app.bind_instance_id(1).await;
@@ -23,6 +26,15 @@ fn target_volumes(app: &Puzzle3dMounted) -> usize {
     semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(app.snapshot().expect("snapshot").typed())).get("targetVolumes").and_then(|volumes| volumes.as_array()).map_or(0, Vec::len)
 }
 
+async fn settle(app: &mut Puzzle3dMounted, scope: &mut OriginalFixtureScope) -> semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt {
+    match settle_registered_typed_operation(&mut *app, 1, POLICY, &mut fixture_identity(), scope.cx()).await {
+        Ok(receipt) => receipt,
+        Err(error) => {
+            panic!("the registered typed operation settles: {error:?}")
+        }
+    }
+}
+
 async fn follow_up(x: f64) -> Vec<u8> {
     let mut args = Some(serde_json::json!({ "origin": [x, 2.0, 3.0] }).into());
     let command = <Puzzle3d as ArtifactApp>::command_from_action("addTargetVolume", &mut args, &mut None).await.expect("addTargetVolume births its typed command");
@@ -31,6 +43,7 @@ async fn follow_up(x: f64) -> Vec<u8> {
 
 #[semio_framework_async_macros::async_test]
 async fn a_queued_task_resume_is_delivered_across_funded_turns_applies_once_and_undoes() {
+    let _serial = SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     let mut scope = OriginalFixtureScope::admit();
     let mut app = mounted().await;
     let before = target_volumes(&app);
@@ -51,7 +64,7 @@ async fn a_queued_task_resume_is_delivered_across_funded_turns_applies_once_and_
     outcome.expect("the follow-up mounted");
     assert!(app.take_task_resume_outcome().is_none(), "the follow-up answers exactly once");
 
-    let receipt = settle_registered_typed_operation(&mut *app, task_meta.instance_id, POLICY, &mut fixture_identity(), scope.cx()).await.expect("the mounted follow-up publishes");
+    let receipt = settle(&mut app, &mut scope).await;
     assert_eq!(target_volumes(&app), before + 1, "the follow-up applied exactly once");
     assert!(receipt.resume_outcomes.is_empty(), "settling after the answer was claimed owes no second answer");
     settle_history_verb(&mut *app, "undo", task_meta.instance_id, POLICY, &mut fixture_identity(), scope.cx()).await;
@@ -61,6 +74,7 @@ async fn a_queued_task_resume_is_delivered_across_funded_turns_applies_once_and_
 
 #[semio_framework_async_macros::async_test]
 async fn a_refused_task_resume_answers_with_a_fault_and_the_next_one_still_delivers() {
+    let _serial = SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     let mut scope = OriginalFixtureScope::admit();
     let mut app = mounted().await;
     let before = target_volumes(&app);
@@ -74,7 +88,7 @@ async fn a_refused_task_resume_answers_with_a_fault_and_the_next_one_still_deliv
         if !app.has_pending_typed_operations() { break; }
         app.advance_typed_operation_publication(&mut fixture_identity(), scope.cx()).await.expect("a refused delivery is an answer, not a failed turn");
         if let Some(outcome) = app.take_task_resume_outcome() { answers.push(outcome); }
-        settle_registered_typed_operation(&mut *app, 1, POLICY, &mut fixture_identity(), scope.cx()).await.expect("the mounted follow-up publishes");
+        settle(&mut app, &mut scope).await;
     }
     assert_eq!(answers.len(), 2, "every queued follow-up is answered, in order");
     let fault = answers[0].as_ref().expect_err("a follow-up for a foreign instance is refused");
@@ -86,6 +100,7 @@ async fn a_refused_task_resume_answers_with_a_fault_and_the_next_one_still_deliv
 
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_task_resume_queue_returns_every_owner_after_any_number_of_turns() {
+    let _serial = SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     for cut in [0, 1, 2, 4, 6] {
         let mut scope = OriginalFixtureScope::admit();
         let mut app = mounted().await;
@@ -106,4 +121,15 @@ async fn a_cancelled_task_resume_queue_returns_every_owner_after_any_number_of_t
         assert!(app.take_task_resume_outcome().is_none(), "cancel after {cut} units answered a cancelled follow-up");
         std::mem::forget(app);
     }
+}
+
+/// 🧹️ An idle mounted editor owes no maintenance: the ladder's terminal witness is `true` before any work, so a settle law's `while pending || !maintenance_terminal` loop ends (it used to spin forever on the private child group registry's allocation, which only the close ladder returns).
+#[semio_framework_async_macros::async_test]
+async fn a_freshly_mounted_editor_owes_no_maintenance() {
+    let _serial = SERIAL.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let mut scope = OriginalFixtureScope::admit();
+    let mut app = mounted().await;
+    assert!(app.maintenance_terminal_is_empty(), "a fresh mounted editor is maintenance-terminal");
+    assert!(!app.has_pending_typed_operations() && !app.has_runnable_typed_operations());
+    close_registered_fixture_app(&mut *app, POLICY, scope.cx()).expect("original caller paid app close");
 }

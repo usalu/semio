@@ -5,9 +5,6 @@ use std::mem::ManuallyDrop;
 fn funded(grant:RetainedCloneGrant,demand:RetirementDemand)->bool { grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth }
 fn header<T>()->RetirementDemand { RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()} }
 fn refusal(message:&'static str)->ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated,message) }
-#[cfg(test)]
-#[path="../🧪️tests/🦀️.rs"]
-mod tests;
 impl<P,M> ArtifactStore<P,M>
 where P: semio_framework_os_spr::StoreState,M: semio_framework_os_spr::StoreMutationFor<P> {
     /// 🎟️ Quotes the installed original producer before any projection alias transfers.

@@ -1,131 +1,121 @@
 {
-  "version": 1,
-  "prefix": "α🙂",
-  "stride": 2,
-  "firstRepeat": 10923,
-  "cases": [
-    0,
-    1,
-    16,
-    17,
-    257
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "prefix",
+    "stride",
+    "firstRepeat",
+    "cases",
+    "cuts",
+    "invalidRows",
+    "interactionQuantum",
+    "ownedWrapperCuts",
+    "bodyReservations",
+    "childCustody",
+    "stock",
+    "controlBatch"
   ],
-  "cuts": [
-    0,
-    1,
-    2,
-    3,
-    4,
-    6,
-    8,
-    16,
-    31,
-    64,
-    256,
-    1024
-  ],
-  "invalidRows": [
-    0,
-    16,
-    256
-  ],
-  "interactionQuantum": {
-    "copyBytes": 4096,
-    "workItems": 257,
-    "maximumTurns": 2048
-  },
-  "ownedWrapperCuts": [
-    0,
-    1,
-    2,
-    3,
-    4,
-    8,
-    16,
-    64,
-    256,
-    1024
-  ],
-  "bodyReservations": [
-    {
-      "bodyBytes": 4096,
-      "metadataBytes": 33,
-      "childBytes": 4063
+  "properties": {
+    "version": {
+      "type": "integer"
     },
-    {
-      "bodyBytes": 4063,
-      "metadataBytes": 8,
-      "childBytes": 4055
+    "prefix": {
+      "type": "string"
     },
-    {
-      "bodyBytes": 40,
-      "metadataBytes": 41,
-      "childBytes": 0
+    "stride": {
+      "type": "integer"
     },
-    {
-      "bodyBytes": 41,
-      "metadataBytes": 41,
-      "childBytes": 0
+    "firstRepeat": {
+      "type": "integer"
     },
-    {
-      "bodyBytes": 0,
-      "metadataBytes": 0,
-      "childBytes": 0
+    "cases": {
+      "type": "array"
     },
-    {
-      "bodyBytes": 512,
-      "metadataBytes": 33,
-      "childBytes": 479
+    "cuts": {
+      "type": "array"
     },
-    {
-      "bodyBytes": 479,
-      "metadataBytes": 8,
-      "childBytes": 471
-    }
-  ],
-  "childCustody": {
-    "storage": "stable-owned-allocation",
-    "rows": [
-      {
-        "event": "birth",
-        "childBytes": 1024,
-        "pointerBytes": 8,
-        "metadataBytes": 33,
-        "childCopyBytes": 1024,
-        "copyBytes": 2097,
-        "capacityBytes": 1024,
-        "releaseBytes": 0
-      },
-      {
-        "event": "terminal-release",
-        "childBytes": 1024,
-        "pointerBytes": 8,
-        "metadataBytes": 33,
-        "childCopyBytes": 0,
-        "copyBytes": 49,
-        "capacityBytes": 0,
-        "releaseBytes": 1024
-      },
-      {
-        "event": "birth",
-        "childBytes": 0,
-        "pointerBytes": 8,
-        "metadataBytes": 33,
-        "childCopyBytes": 0,
-        "copyBytes": 49,
-        "capacityBytes": 0,
-        "releaseBytes": 0
-      },
-      {
-        "event": "terminal-release",
-        "childBytes": 0,
-        "pointerBytes": 8,
-        "metadataBytes": 33,
-        "childCopyBytes": 0,
-        "copyBytes": 49,
-        "capacityBytes": 0,
-        "releaseBytes": 0
+    "invalidRows": {
+      "type": "array"
+    },
+    "interactionQuantum": {
+      "const": {
+        "copyBytes": 4096,
+        "workItems": 257,
+        "maximumTurns": 2048,
+        "workUnits": 257
       }
-    ]
+    },
+    "ownedWrapperCuts": {
+      "type": "array"
+    },
+    "bodyReservations": {
+      "type": "array"
+    },
+    "childCustody": {
+      "type": "object"
+    },
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "fuel",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "fuel": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "controlBatch": {
+      "const": {
+        "maximumChildPosts": 1,
+        "ownershipCopyBytes": 0,
+        "independentWork": true,
+        "matcherProbeBatch": true,
+        "recordControlBatch": true,
+        "sharedControlBatch": true,
+        "compositionLaw": {
+          "items": 2,
+          "value": 7,
+          "copiedItems": 1,
+          "copyBytes": 0,
+          "workBeforeFailure": 1,
+          "workLoanFromSameRemainingFuel": true,
+          "noItemToCpuConversion": true,
+          "independentProbeWork": 1,
+          "singleTurnWork": 1,
+          "batchTurnWork": 257
+        },
+        "custodyBatch": true
+      }
+    }
   }
 }

@@ -1,7 +1,7 @@
 import{createHash}from"node:crypto";
 import{basename,dirname,join,relative,resolve,sep}from"node:path";
-import schema from"./🧬️schema/🔣️.json";
-import descriptorSchema from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+import descriptorSchema from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🧬️schema/🔣️.json"with{type:"json"};
 import{validateJsonSchemaSubset}from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{withArtifactRelativeDirectoryV1,type ArtifactRelativeDirectoryV1,type ArtifactReadFileIdentityV1}from "../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{javascriptInstallSchemaV1 as installSchema}from"../🧱️schemas/🟦️.ts";

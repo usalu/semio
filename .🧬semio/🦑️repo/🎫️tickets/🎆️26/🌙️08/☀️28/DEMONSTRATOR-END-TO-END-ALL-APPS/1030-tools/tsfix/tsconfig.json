@@ -1,0 +1,13 @@
+{
+  "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+  "compilerOptions": { "noEmit": true, "types": ["bun", "node"], "allowJs": true },
+  "include": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🧪️tests/💼️job-funds/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/🧵️spawned-job/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/🛤️poll-lanes/🟦️.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/🛤️poll-lanes/🧪️tests/🟦️.ts",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🚪️io/💾️binary/🎒️record-document/🟦️.ts",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧪️tests/🎒️record-document/🟦️.ts"
+  ]
+}

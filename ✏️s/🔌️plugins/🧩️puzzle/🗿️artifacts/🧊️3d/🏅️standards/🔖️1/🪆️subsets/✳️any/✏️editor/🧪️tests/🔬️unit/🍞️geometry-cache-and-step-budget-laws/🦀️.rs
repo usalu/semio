@@ -198,7 +198,7 @@ fn measured_cold_runs(tool_id: &'static str, command: &Puzzle3dCommand, snapshot
 fn measured_view_state() -> semio_framework_plugin::ViewModel {
     semio_framework_plugin::ViewModel {
         window_id: Some(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID.to_string()),
-        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: main::WINDOW_KIND_ID.to_string(), window_kind_id: main::WINDOW_KIND_ID.to_string() }],
+        window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: WINDOW_KIND_ID.to_string(), window_kind_id: WINDOW_KIND_ID.to_string() }],
         ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     }
 }

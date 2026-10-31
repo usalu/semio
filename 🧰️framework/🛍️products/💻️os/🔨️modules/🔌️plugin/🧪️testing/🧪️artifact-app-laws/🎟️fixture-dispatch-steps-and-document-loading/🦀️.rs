@@ -2,8 +2,17 @@
 
 use super::*;
 
+/// 🪪️ Pays the cancellation issuer birth that the runtime performs while opening an instance: fixture constructors skip that opening, so a typed action could never obtain its cancellation lease.
+pub fn ensure_fixture_cancellation_issuer<P:PluginApp>(app:&mut P,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+    for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        if app.admit_cancellation_issuer(cx)?{return Ok(())}
+    }
+    Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture cancellation issuer birth exceeded its authored turn bound").into())
+}
+
 /// 🎟️ Drives the actual borrowed action endpoint and pays remaining original fixture sources under its authored close loan.
 pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Option<semio_framework_value::DslValue>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+    ensure_fixture_cancellation_issuer(app,cx)?;
     let mut original_args=args;let mut original_meta=Some(meta.clone());
     let mut result=Ok(None);
     for _ in 0..OriginalFixtureCaller::maximum_turns(){

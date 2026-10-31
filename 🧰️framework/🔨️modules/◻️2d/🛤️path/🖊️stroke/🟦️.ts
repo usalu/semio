@@ -1,165 +1,108 @@
-/** 🖊️ Stroke regions for https://www.w3.org/TR/SVG11/painting.html#StrokeProperties. */
+/** 🖊️ Original dash runs and positive polygon unions retain exact SVG geometry on actual caller-funded pages. */
 import type {Vec2} from "../../📐️drawing-contract/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "../../🧹️retire/🟦️.ts";
-export type StrokeGeometryStyle={width:number;cap:"butt"|"round"|"square";join:"miter"|"round"|"bevel";miterLimit:number;dash:readonly number[];dashOffset:number};
-export type StrokeOutlineInput={contours:readonly {points:readonly Vec2[];closed:boolean}[];transform:readonly number[];tolerance:number;style:StrokeGeometryStyle};
+import {RetainedWorkBuffer,RetainedWorkRetirement,retireRetainedWorkArchive,type RetainedWorkInputSequence,type RetainedWorkLedger,type RetainedWorkDemand,type RetainedWorkRetirementCursor} from "../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts";
+import {RetainedWorkProducerRuntime,type RetainedWorkProducerStep} from "../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts";
+import {publishStrokeContours,type StrokeContours} from "./📤️output/🟦️.ts";
+export type {StrokeContours} from "./📤️output/🟦️.ts";
+export type StrokeGeometryStyle={width:number;cap:"butt"|"round"|"square";join:"miter"|"round"|"bevel";miterLimit:number;dash:RetainedWorkInputSequence<number>;dashOffset:number};
+export type StrokeOutlineInput={contours:RetainedWorkInputSequence<{points:RetainedWorkInputSequence<Vec2>;closed:boolean}>;transform:RetainedWorkInputSequence<number>;tolerance:number;style:StrokeGeometryStyle};
 export type StrokeOutlineProgress={phase:"preparing"|"dashing"|"outlining"|"complete";completed:number;total:number;points:number;work:number;done:boolean};
-type Source={points:Vec2[];closed:boolean;raw:number};
-type Run={points:Vec2[];closed:boolean;capStart:boolean;capEnd:boolean;painted:boolean;tangent:Vec2};
-type Join=readonly [Vec2,Vec2,Vec2];
-type Primitive={kind:"polygon";points:Vec2[]}|{kind:"round";center:Vec2;a:number;b:number};
-type Round={center:Vec2;points:Vec2[];stack:{a:number;b:number;depth:number}[]};
-type Stage="prepare"|"source"|"offset"|"walk"|"finish"|"outline"|"done";
+type Source={points:RetainedWorkBuffer<Vec2>;closed:boolean;raw:number};
+type Run={points:RetainedWorkBuffer<Vec2>;closed:boolean;capStart:boolean;capEnd:boolean;painted:boolean;tx:number;ty:number;owned:boolean};
+type Seam={ax:number;ay:number;px:number;py:number;bx:number;by:number};
+type Primitive={kind:"polygon"|"round";points:RetainedWorkBuffer<Vec2>|null;cx:number;cy:number;a:number;b:number};
+type Node={a:number;b:number;depth:number};
+type Round={cx:number;cy:number;points:RetainedWorkBuffer<Vec2>;stack:RetainedWorkBuffer<Node>|null};
+type Stage="pattern"|"patternCopy"|"prepare"|"source"|"offset"|"walk"|"finish"|"outline"|"done";
+type Pending="prepare-point"|"prepare-pop"|"source-row"|"discard"|"run-a"|"run-b"|"run-row"|"active-point"|"active-pop"|"closed-pop"|"seam"|"emit"|"polygon-reverse-a"|"polygon-reverse-b"|"polygon-output"|"round-output"|"round-center"|"round-initial"|"round-node"|"round-right"|"round-left"|"round-final"|null;
 const MAX_POINTS=65536,MAX_CONTOURS=65536,MAX_COORDINATE=1e9;
-const valid=(v:number)=>Number.isFinite(v)&&Math.abs(v)<=MAX_COORDINATE;
+const valid=(value:number)=>Number.isFinite(value)&&Math.abs(value)<=MAX_COORDINATE;
 const same=(a:Vec2,b:Vec2)=>a[0]===b[0]&&a[1]===b[1];
 const invalid=(message:string):never=>{throw new RangeError(message);};
-function unit(a:Vec2,b:Vec2):Vec2 {const x=b[0]-a[0],y=b[1]-a[1],length=Math.hypot(x,y);return length?[x/length,y/length]:[1,0];}
+function unit(a:Vec2,b:Vec2):Vec2{const x=b[0]-a[0],y=b[1]-a[1],length=Math.hypot(x,y);return length?[x/length,y/length]:[1,0];}
 const normal=(t:Vec2):Vec2=>[-t[1],t[0]];
 const shifted=(p:Vec2,t:Vec2,d:number):Vec2=>[p[0]+t[0]*d,p[1]+t[1]*d];
-/** 🧱️ Budgeted dash runs and positive polygon unions retain crossings and short-segment joins. */
-export class StrokeOutlineJob {
- private sources:Source[]=[];private prepared:Vec2[]=[];private runs:Run[]=[];private seams:Join[]=[];private polygons:Vec2[][]=[];private queue:Primitive[]=[];private round:Round|null=null;
- private stage:Stage="prepare";private contour=0;private point=0;private source=0;private edge=0;private position=0;private pattern:number[];private patternTotal:number;private dash=0;private remaining=0;private offset=0;private active:Run|null=null;private first=-1;private last=-1;
- private run=0;private geomEdge=0;private cap=0;private seam=0;private count=0;private runPoints=0;private work=0;private cancelled=false;private transferred=false;private outputExposed=false;private failed:unknown=null;private readonly radius:number;private readonly roundBound:number;
- constructor(private input:StrokeOutlineInput) {
-  const s=input.style;
-  if(input.transform.length!==6||!input.transform.every(valid)||!Number.isFinite(input.tolerance)||input.tolerance<1e-6||input.tolerance>16||input.contours.length>4096||input.contours.reduce((n,c)=>n+c.points.length,0)>MAX_POINTS||!valid(s.width)||s.width<0||!["butt","round","square"].includes(s.cap)||!["miter","round","bevel"].includes(s.join)||!Number.isFinite(s.miterLimit)||s.miterLimit<1||s.miterLimit>1000||s.dash.length>1024||!s.dash.every(v=>valid(v)&&v>=0)||!valid(s.dashOffset))invalid("Invalid stroke geometry contract");
-  this.pattern=[...s.dash,...(s.dash.length%2?s.dash:[])];this.patternTotal=this.pattern.reduce((a,b)=>a+b,0);if(this.patternTotal===0||this.pattern.every((v,at)=>at%2===0||v===0))this.pattern=[];
-  this.radius=s.width/2;const m=input.transform;this.roundBound=this.radius*(Math.hypot(m[0]!,m[1]!)+Math.hypot(m[2]!,m[3]!));
- }
- private check(p:Vec2):void {
-  const m=this.input.transform;if(p.length!==2||!p.every(valid)||!valid(m[0]!*p[0]+m[2]!*p[1]+m[4]!)||!valid(m[1]!*p[0]+m[3]!*p[1]+m[5]!))invalid("Invalid stroke geometry point");
- }
- private runPoint(run:Run,p:Vec2):void {if(this.runPoints>=MAX_POINTS)invalid("Stroke dashing exceeds point budget");run.points.push(p);this.runPoints++;}
- private createRun(a:Vec2,b:Vec2,positive:boolean):void {
-  const src=this.sources[this.source]!,n=src.points.length,edge=Math.min(this.edge,src.closed?n-1:n-2),tangent=edge>=0?unit(src.points[edge]!,src.points[(edge+1)%n]!):[1,0] as Vec2;
-  const run:Run={points:[],closed:false,capStart:true,capEnd:true,painted:positive,tangent};this.runPoint(run,a);this.runPoint(run,b);this.runs.push(run);this.active=run;
-  if(positive){const at=this.runs.length-1;if(this.first<0)this.first=at;this.last=at;}
- }
- private location():Vec2 {
-  const src=this.sources[this.source]!,count=src.closed?src.points.length:src.points.length-1;
-  if(this.edge>=count)return src.closed?src.points[0]!:src.points.at(-1)!;
-  const a=src.points[this.edge]!,b=src.points[(this.edge+1)%src.points.length]!,length=Math.hypot(b[0]-a[0],b[1]-a[1]);
-  return this.position===0?a:[a[0]+(b[0]-a[0])*this.position/length,a[1]+(b[1]-a[1])*this.position/length];
- }
- private polygon(points:Vec2[]):void {
-  let area=0;const origin=points[0]!;for(let at=0;at<points.length;at++){this.check(points[at]!);const a=points[at]!,b=points[(at+1)%points.length]!;area+=(a[0]-origin[0])*(b[1]-origin[1])-(a[1]-origin[1])*(b[0]-origin[0]);}
-  if(area===0)return;if(this.count+points.length>MAX_POINTS||this.polygons.length>=MAX_CONTOURS)invalid("Stroke outline exceeds geometry budget");
-  this.count+=points.length;this.polygons.push(area<0?points.reverse():points);
- }
- private circlePoint(center:Vec2,angle:number):Vec2 {return [center[0]+this.radius*Math.cos(angle),center[1]+this.radius*Math.sin(angle)];}
- private roundPoint(p:Vec2):void {this.check(p);if(this.count>=MAX_POINTS)invalid("Stroke outline exceeds point budget");this.round!.points.push(p);this.count++;}
- private join([before,p,after]:Join):void {
-  const a=unit(before,p),b=unit(p,after),cross=a[0]*b[1]-a[1]*b[0],dot=Math.max(-1,Math.min(1,a[0]*b[0]+a[1]*b[1]));if(cross===0&&dot>0)return;
-  const side=cross<0?1:-1,n=normal(a),z=normal(b),from=shifted(p,n,side*this.radius),to=shifted(p,z,side*this.radius);
-  if(this.input.style.join==="round") {
-   const start=cross<0?to:from,theta=Math.atan2(start[1]-p[1],start[0]-p[0]),span=Math.atan2(Math.abs(cross),dot);
-   this.queue.push({kind:"round",center:p,a:theta,b:theta+span});return;
-  }
-  const denominator=1+dot,ratio=denominator>0?Math.sqrt(2/denominator):Infinity;
-  if(this.input.style.join==="miter"&&ratio<=this.input.style.miterLimit)this.queue.push({kind:"polygon",points:[p,from,[p[0]+side*this.radius*(n[0]+z[0])/denominator,p[1]+side*this.radius*(n[1]+z[1])/denominator],to]});
-  else this.queue.push({kind:"polygon",points:[p,from,to]});
- }
- private endpoint(p:Vec2,t:Vec2,start:boolean):void {
-  if(this.input.style.cap==="butt")return;const n=normal(t),a=shifted(p,n,this.radius),b=shifted(p,n,-this.radius);
-  if(this.input.style.cap==="square"){const extension=shifted([0,0],t,(start?-1:1)*this.radius);this.queue.push({kind:"polygon",points:[a,b,[b[0]+extension[0],b[1]+extension[1]],[a[0]+extension[0],a[1]+extension[1]]]});}
-  else {const theta=Math.atan2(start?n[1]:-n[1],start?n[0]:-n[0]);this.queue.push({kind:"round",center:p,a:theta,b:theta+Math.PI});}
- }
- private outline():void {
-  if(this.round) {
-   const node=this.round.stack.pop();if(!node){this.round=null;return;}
-   const span=node.b-node.a,error=2*this.roundBound*Math.sin(span/4)**2;
-   if(span<=Math.PI&&error<=this.input.tolerance){this.roundPoint(this.circlePoint(this.round.center,node.b));return;}
-   if(node.depth>=32)invalid("Stroke outline exceeds subdivision budget");const middle=(node.a+node.b)/2;
-   this.round.stack.push({a:middle,b:node.b,depth:node.depth+1},{a:node.a,b:middle,depth:node.depth+1});return;
-  }
-  const primitive=this.queue.shift();
-  if(primitive){if(primitive.kind==="polygon")this.polygon(primitive.points);else {if(this.polygons.length>=MAX_CONTOURS)invalid("Stroke outline exceeds contour budget");this.round={center:primitive.center,points:[],stack:[{a:primitive.a,b:primitive.b,depth:0}]};this.polygons.push(this.round.points);this.roundPoint(primitive.center);this.roundPoint(this.circlePoint(primitive.center,primitive.a));}return;}
-  const run=this.runs[this.run];
-  if(!run){const seam=this.seams[this.seam++];if(seam)this.join(seam);else this.stage="done";return;}
-  const points=run.points,count=run.closed?points.length:points.length-1;
-  if(points.length<2||same(points[0]!,points.at(-1)!)&&points.length===2) {
-   const p=points[0]!;if(this.input.style.cap==="round")this.queue.push({kind:"round",center:p,a:0,b:2*Math.PI});
-   else if(this.input.style.cap==="square"){const t=run.tangent,n=normal(t),a=shifted(p,t,-this.radius),b=shifted(p,t,this.radius);this.queue.push({kind:"polygon",points:[shifted(a,n,this.radius),shifted(b,n,this.radius),shifted(b,n,-this.radius),shifted(a,n,-this.radius)]});}
-   this.run++;return;
-  }
-  if(this.geomEdge<count){const at=this.geomEdge++,a=points[at]!,b=points[(at+1)%points.length]!,n=normal(unit(a,b));this.queue.push({kind:"polygon",points:[shifted(a,n,this.radius),shifted(b,n,this.radius),shifted(b,n,-this.radius),shifted(a,n,-this.radius)]});if(at>0||run.closed)this.join([points[(at-1+points.length)%points.length]!,a,b]);return;}
-  if(this.cap===0){this.cap++;if(!run.closed&&run.capStart)this.endpoint(points[0]!,unit(points[0]!,points[1]!),true);return;}
-  if(this.cap===1){this.cap++;if(!run.closed&&run.capEnd)this.endpoint(points.at(-1)!,unit(points.at(-2)!,points.at(-1)!),false);return;}
-  this.run++;this.geomEdge=0;this.cap=0;
- }
- private step():void {
-  switch(this.stage){
-   case "prepare":{
-    const contour=this.input.contours[this.contour];if(!contour){this.stage=this.radius===0?"done":"source";break;}
-    if(typeof contour.closed!=="boolean")invalid("Invalid stroke contour closure");
-    if(this.point<contour.points.length){const p=contour.points[this.point++]!;this.check(p);if(!this.prepared.length||!same(this.prepared.at(-1)!,p))this.prepared.push([p[0],p[1]]);}
-    else {if(contour.closed&&this.prepared.length>1&&same(this.prepared[0]!,this.prepared.at(-1)!))this.prepared.pop();if(this.prepared.length>=2||this.prepared.length===1&&(contour.points.length>=2||contour.closed))this.sources.push({points:this.prepared,closed:contour.closed,raw:contour.points.length});this.contour++;this.point=0;this.prepared=[];}break;
-   }
-   case "source":{
-    const src=this.sources[this.source];if(!src){this.stage="outline";break;}
-    if(this.pattern.length===0){this.runs.push({points:src.points,closed:src.closed,capStart:true,capEnd:true,painted:true,tangent:[1,0]});this.source++;break;}
-    this.edge=0;this.position=0;this.dash=0;this.offset=((this.input.style.dashOffset%this.patternTotal)+this.patternTotal)%this.patternTotal;this.active=null;this.first=-1;this.last=-1;this.stage="offset";break;
-   }
-   case "offset":{const length=this.pattern[this.dash]!;if(this.offset>0&&this.offset>=length){this.offset-=length;this.dash=(this.dash+1)%this.pattern.length;}else{this.remaining=length-this.offset;this.offset=0;this.stage="walk";}break;}
-   case "walk":{
-    const src=this.sources[this.source]!,count=src.closed?src.points.length:src.points.length-1;
-    if(this.remaining===0){if(this.dash%2===0&&!this.active){const p=this.location();this.createRun(p,p,false);}this.dash=(this.dash+1)%this.pattern.length;this.remaining=this.pattern[this.dash]!;break;}
-    if(this.dash%2===1)this.active=null;
-    if(this.edge>=count){if(src.points.length===1&&this.dash%2===0&&!this.active)this.createRun(src.points[0]!,src.points[0]!,false);this.stage="finish";break;}
-    const a=src.points[this.edge]!,b=src.points[(this.edge+1)%src.points.length]!,length=Math.hypot(b[0]-a[0],b[1]-a[1]),left=length-this.position,take=Math.min(left,this.remaining),from=this.location();
-    const endEdge=take===left,endDash=take===this.remaining;if(take>0&&this.position+take===this.position)invalid("Stroke dashing exceeds numeric limits");
-    this.position+=take;const to=endEdge?b:this.location();
-    if(this.dash%2===0){if(this.active){if(!this.active.painted){this.active.points.pop();this.active.painted=true;const at=this.runs.length-1;if(this.first<0)this.first=at;this.last=at;}this.runPoint(this.active,to);}else this.createRun(from,to,true);}
-    this.remaining-=take;if(endDash){this.dash=(this.dash+1)%this.pattern.length;this.remaining=this.pattern[this.dash]!;}
-    if(endEdge){this.edge++;this.position=0;}break;
-   }
-   case "finish":{
-    const src=this.sources[this.source]!;
-    if(src.closed&&this.first>=0&&this.last>=0){const first=this.runs[this.first]!,last=this.runs[this.last]!;
-     if(same(first.points[0]!,src.points[0]!)&&same(last.points.at(-1)!,src.points[0]!)){
-      if(first===last){first.closed=true;first.points.pop();}else{first.capStart=false;last.capEnd=false;this.seams.push([last.points.at(-2)!,src.points[0]!,first.points[1]!]);}
-     }
-    }
-    this.active=null;this.source++;this.stage="source";break;
-   }
-   case "outline":this.outline();break;
-   case "done":break;
-  }
- }
- advance(budget:number):StrokeOutlineProgress {
-  if(!Number.isSafeInteger(budget)||budget<=0)invalid("Stroke work grant must be a positive integer");if(this.cancelled)throw new DOMException("Stroke preparation cancelled","AbortError");if(this.failed)throw this.failed;
-  try{for(let at=0;at<budget&&this.stage!=="done";at++){this.step();this.work++;}}catch(error){this.failed=error;throw error;}
-  const phase=this.stage==="prepare"?"preparing":this.stage==="outline"?"outlining":this.stage==="done"?"complete":"dashing";
-  return {phase,completed:phase==="preparing"?this.contour:phase==="dashing"?this.source:this.run,total:phase==="preparing"?this.input.contours.length:phase==="dashing"?this.sources.length:this.runs.length,points:this.count,work:this.work,done:this.stage==="done"};
- }
- result():Vec2[][] {if(this.cancelled)throw new DOMException("Stroke preparation cancelled","AbortError");if(this.failed)throw this.failed;if(this.stage!=="done")throw Error("Stroke preparation is incomplete");this.outputExposed=true;return this.polygons;}
- /** 🧹️ Transfers completed polygons and drains actual private owners through structural work grants. */
- intoRetirement():{job:WorkRetirement;output:Vec2[][]|null}{
-  if(this.transferred)invalid("Stroke preparation ownership already transferred");this.transferred=true;const output=this.stage==="done"&&!this.cancelled&&!this.failed?this.polygons:null;if(output)this.polygons=[];this.cancelled=true;this.active=null;let slot=0;
-  const step=():boolean=>{let complete=true;switch(slot){
-   case 0:this.input={...this.input,contours:[],transform:[]};break;
-   case 1:if(this.sources.length){this.sources.pop();complete=false;}else this.sources=[];break;
-   case 2:this.prepared=[];break;
-   case 3:if(this.runs.length){this.runs.pop();complete=false;}else this.runs=[];break;
-   case 4:this.seams=[];break;
-   case 5:if(this.polygons.length){this.polygons.pop();complete=false;}else this.polygons=[];break;
-   case 6:if(this.queue.length){this.queue.pop();complete=false;}else this.queue=[];break;
-   case 7:this.round=null;break;
-   case 8:this.input={...this.input,style:{...this.input.style,dash:[]}};break;
-   case 9:this.pattern=[];break;
-  }if(complete)slot++;return slot===10;};return{job:new UnitRetirement(step),output};
- }
- cancel():void {this.cancelled=true;this.active=null;if(!this.transferred&&this.outputExposed)this.polygons=[];}
+class PrimitivePlan{
+ kind:"polygon"|"round"="polygon";count=0;x0=0;y0=0;x1=0;y1=0;x2=0;y2=0;x3=0;y3=0;cx=0;cy=0;a=0;b=0;
+ polygon(a:Vec2,b:Vec2,c:Vec2,d?:Vec2):void{this.kind="polygon";this.count=d===undefined?3:4;this.x0=a[0];this.y0=a[1];this.x1=b[0];this.y1=b[1];this.x2=c[0];this.y2=c[1];this.x3=d?.[0]??0;this.y3=d?.[1]??0;}
+ round(center:Vec2,a:number,b:number):void{this.kind="round";this.count=0;this.cx=center[0];this.cy=center[1];this.a=a;this.b=b;}
+ point(at:number):Vec2{return at===0?[this.x0,this.y0]:at===1?[this.x1,this.y1]:at===2?[this.x2,this.y2]:[this.x3,this.y3];}
 }
-
-export type StrokeOutlineOptions={signal?:AbortSignal;workBudget?:number;onProgress?:(progress:StrokeOutlineProgress)=>void};
-/** ⏳️ Yields between dash/outline grants and publishes only completed stroke candidates. */
-export async function prepareStroke(input:StrokeOutlineInput,options:StrokeOutlineOptions={}):Promise<Vec2[][]> {
- const abort=()=>{if(options.signal?.aborted)throw new DOMException("Stroke preparation cancelled","AbortError");};
- abort();const job=new StrokeOutlineJob(input);
- try {
-  for(;;){abort();const progress=job.advance(options.workBudget??4096);options.onProgress?.(progress);abort();if(progress.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}
- }catch(error){job.cancel();throw error;}finally{const retired=job.intoRetirement(),grant=Number.isSafeInteger(options.workBudget)&&options.workBudget!>0?options.workBudget!:4096;while(!retired.job.advance(grant).done)await new Promise<void>(resolve=>setTimeout(resolve,0));}
+/** 🧱️ One semantic decision stages bounded scalar plans; subsequent physical publications use the same unrenewed ledger. */
+export class StrokeOutlineJob{
+ private runtime=new RetainedWorkProducerRuntime();private demand:RetainedWorkDemand={copyBytes:0,capacityBytes:0,releaseBytes:0,depth:1};private output:StrokeContours|null=null;
+ private sources:RetainedWorkBuffer<Source>|null=new RetainedWorkBuffer<Source>(24);private prepared:RetainedWorkBuffer<Vec2>|null=new RetainedWorkBuffer<Vec2>(16);private runs:RetainedWorkBuffer<Run>|null=new RetainedWorkBuffer<Run>(64);private seams:RetainedWorkBuffer<Seam>|null=new RetainedWorkBuffer<Seam>(48);private polygons:RetainedWorkBuffer<RetainedWorkBuffer<Vec2>>|null=new RetainedWorkBuffer<RetainedWorkBuffer<Vec2>>(8);private queue:RetainedWorkBuffer<Primitive>|null=new RetainedWorkBuffer<Primitive>(48);private pattern:RetainedWorkBuffer<number>|null=new RetainedWorkBuffer<number>(8);
+ private round:Round|null=null;private roundClosing:RetainedWorkRetirementCursor|null=null;private discard:RetainedWorkRetirementCursor|null=null;private pendingRunPoints:RetainedWorkBuffer<Vec2>|null=null;private pendingRunPainted=false;private pendingRunTx=1;private pendingRunTy=0;private primitiveBuilder:RetainedWorkBuffer<Vec2>|null=null;private primitive:Primitive|null=null;
+ private plan0=new PrimitivePlan();private plan1=new PrimitivePlan();private planCount=0;private planAt=0;private planPoint=0;private planBuilding=false;
+ private stage:Stage="pattern";private pending:Pending=null;private contour=0;private point=0;private header=false;private inputPoints=0;private source=0;private edge=0;private position=0;private patternAt=0;private patternLength=0;private patternTotal=0;private gapPositive=false;private dash=0;private remaining=0;private offset=0;private active:Run|null=null;private first=-1;private last=-1;
+ private run=0;private geomEdge=0;private cap=0;private seam=0;private queueAt=0;private count=0;private runPoints=0;private work=0;private cancelled=false;private transferred=false;private failed:unknown=null;private readonly radius:number;private readonly roundBound:number;
+ private px=0;private py=0;private ax=0;private ay=0;private bx=0;private by=0;private nodeA=0;private nodeB=0;private nodeDepth=0;private middle=0;private reverseAt=0;private reversePoint:Vec2|null=null;private seamAx=0;private seamAy=0;private seamPx=0;private seamPy=0;private seamBx=0;private seamBy=0;
+ constructor(private input:StrokeOutlineInput|null){if(input===null)invalid("Invalid stroke geometry contract");const s=input!.style,m=input!.transform;if(m.length!==6||!Number.isFinite(input!.tolerance)||input!.tolerance<1e-6||input!.tolerance>16||input!.contours.length>4096||!valid(s.width)||s.width<0||!["butt","round","square"].includes(s.cap)||!["miter","round","bevel"].includes(s.join)||!Number.isFinite(s.miterLimit)||s.miterLimit<1||s.miterLimit>1000||s.dash.length>1024||!valid(s.dashOffset))invalid("Invalid stroke geometry contract");for(let at=0;at<6;at++){const value=m.at(at);if(value===undefined||!valid(value))invalid("Invalid stroke geometry contract");}this.radius=s.width/2;this.roundBound=this.radius*(Math.hypot(m.at(0)!,m.at(1)!)+Math.hypot(m.at(2)!,m.at(3)!));this.patternLength=s.dash.length*(s.dash.length%2?2:1);}
+ lastTurnWork():number{return this.runtime.lastTurnWork();}lastTurnSemanticWork():number{return this.runtime.lastTurnSemanticWork();}nextWorkDemand():RetainedWorkDemand{return this.demand;}failurePending():boolean{return this.failed!==null;}settlementPending():boolean{return this.pending!==null||this.roundClosing!==null||this.stage==="done"||this.round!==null&&this.round.stack?.length===0;}
+ progress():StrokeOutlineProgress{const phase=this.stage==="pattern"||this.stage==="patternCopy"||this.stage==="prepare"?"preparing":this.stage==="outline"?"outlining":this.stage==="done"?"complete":"dashing";return{phase,completed:phase==="preparing"?this.contour:phase==="dashing"?this.source:this.run,total:phase==="preparing"?this.input?.contours.length??0:phase==="dashing"?this.sources?.length??0:this.runs?.length??0,points:this.count,work:this.work,done:this.output!==null};}
+ private checkPoint(point:Vec2):void{const m=this.input!.transform;if(point.length!==2||!valid(point[0])||!valid(point[1])||!valid(m.at(0)!*point[0]+m.at(2)!*point[1]+m.at(4)!)||!valid(m.at(1)!*point[0]+m.at(3)!*point[1]+m.at(5)!))invalid("Invalid stroke geometry point");}
+ private pointClose(points:RetainedWorkBuffer<Vec2>):RetainedWorkRetirementCursor{let body:RetainedWorkBuffer<Vec2>|null=points;return new RetainedWorkRetirement((work,turn)=>{if(body===null)return true;if(!body.retireOne(work,turn)||turn.actualWork()>0)return false;if(!work.canStep())return false;body=null;turn.commitActualWork();return false;});}
+ private newRun(a:Vec2,b:Vec2,positive:boolean):void{if(this.runPoints+2>MAX_POINTS)invalid("Stroke dashing exceeds point budget");const source=this.sources!.at(this.source)!,n=source.points.length,edge=Math.min(this.edge,source.closed?n-1:n-2),tangent:Vec2=edge>=0?unit(source.points.at(edge)!,source.points.at((edge+1)%n)!):[1,0];this.pendingRunPoints=new RetainedWorkBuffer<Vec2>(16);this.pendingRunPainted=positive;this.pendingRunTx=tangent[0];this.pendingRunTy=tangent[1];this.ax=a[0];this.ay=a[1];this.bx=b[0];this.by=b[1];this.pending="run-a";}
+ private location():Vec2{const source=this.sources!.at(this.source)!,count=source.closed?source.points.length:source.points.length-1;if(this.edge>=count)return source.closed?source.points.at(0)!:source.points.at(-1)!;const a=source.points.at(this.edge)!,b=source.points.at((this.edge+1)%source.points.length)!,length=Math.hypot(b[0]-a[0],b[1]-a[1]);return this.position===0?a:[a[0]+(b[0]-a[0])*this.position/length,a[1]+(b[1]-a[1])*this.position/length];}
+ private join(plan:PrimitivePlan,before:Vec2,p:Vec2,after:Vec2):boolean{const a=unit(before,p),b=unit(p,after),cross=a[0]*b[1]-a[1]*b[0],dot=Math.max(-1,Math.min(1,a[0]*b[0]+a[1]*b[1]));if(cross===0&&dot>0)return false;const side=cross<0?1:-1,n=normal(a),z=normal(b),from=shifted(p,n,side*this.radius),to=shifted(p,z,side*this.radius);if(this.input!.style.join==="round"){const start=cross<0?to:from,theta=Math.atan2(start[1]-p[1],start[0]-p[0]),span=Math.atan2(Math.abs(cross),dot);plan.round(p,theta,theta+span);return true;}const denominator=1+dot,ratio=denominator>0?Math.sqrt(2/denominator):Infinity;if(this.input!.style.join==="miter"&&ratio<=this.input!.style.miterLimit)plan.polygon(p,from,[p[0]+side*this.radius*(n[0]+z[0])/denominator,p[1]+side*this.radius*(n[1]+z[1])/denominator],to);else plan.polygon(p,from,to);return true;}
+ private endpoint(plan:PrimitivePlan,p:Vec2,t:Vec2,start:boolean):boolean{if(this.input!.style.cap==="butt")return false;const n=normal(t),a=shifted(p,n,this.radius),b=shifted(p,n,-this.radius);if(this.input!.style.cap==="square"){const extension=shifted([0,0],t,(start?-1:1)*this.radius);plan.polygon(a,b,[b[0]+extension[0],b[1]+extension[1]],[a[0]+extension[0],a[1]+extension[1]]);}else{const theta=Math.atan2(start?n[1]:-n[1],start?n[0]:-n[0]);plan.round(p,theta,theta+Math.PI);}return true;}
+ private emit(count:number):void{this.planCount=count;this.planAt=0;this.planPoint=0;this.planBuilding=false;if(count)this.pending="emit";}
+ private publish(c:RetainedWorkProducerStep):void{switch(this.pending){
+ case"prepare-point":if(!c.slot(this.prepared!))return;c.push(this.prepared!,[this.px,this.py]);this.pending=null;return;
+ case"prepare-pop":if(!c.pop(this.prepared!))return;this.pending="source-row";return;
+ case"source-row":{const source=this.input!.contours.at(this.contour)!;if(this.prepared!.length>=2||this.prepared!.length===1&&(source.points.length>=2||source.closed)){if(!c.slot(this.sources!))return;c.push(this.sources!,{points:this.prepared!,closed:source.closed,raw:source.points.length});this.prepared=new RetainedWorkBuffer<Vec2>(16);this.contour++;this.point=0;this.header=false;this.pending=null;return;}if(!c.work.canStep())return;this.discard=this.pointClose(this.prepared!);this.prepared=null;this.pending="discard";c.commitControlWork();return;}
+ case"discard":{const child=this.discard!;if(!child.terminalIsEmpty()){try{child.advance(1,c.work);}finally{c.retainedTurn.commitActualWork(child.lastTurnWork());}if(!child.terminalIsEmpty()||c.hasActualWork())return;}if(!c.work.canStep())return;this.discard=null;this.prepared=new RetainedWorkBuffer<Vec2>(16);this.contour++;this.point=0;this.header=false;this.pending=null;c.commitControlWork();return;}
+ case"run-a":case"run-b":{const first=this.pending==="run-a";if(!c.slot(this.pendingRunPoints!))return;c.push(this.pendingRunPoints!,first?[this.ax,this.ay]:[this.bx,this.by]);this.runPoints++;this.pending=first?"run-b":"run-row";return;}
+ case"run-row":{if(!c.slot(this.runs!))return;const run:Run={points:this.pendingRunPoints!,closed:false,capStart:true,capEnd:true,painted:this.pendingRunPainted,tx:this.pendingRunTx,ty:this.pendingRunTy,owned:true};c.push(this.runs!,run);this.pendingRunPoints=null;this.active=run;if(run.painted){const at=this.runs!.length-1;if(this.first<0)this.first=at;this.last=at;}this.pending=null;return;}
+ case"active-pop":if(!c.pop(this.active!.points))return;this.active!.painted=true;{const at=this.runs!.length-1;if(this.first<0)this.first=at;this.last=at;}this.pending="active-point";return;
+ case"active-point":if(!c.slot(this.active!.points))return;c.push(this.active!.points,[this.px,this.py]);this.runPoints++;this.pending=null;return;
+ case"closed-pop":if(!c.pop(this.runs!.at(this.first)!.points))return;this.pending=null;return;
+ case"seam":if(!c.slot(this.seams!))return;c.push(this.seams!,{ax:this.seamAx,ay:this.seamAy,px:this.seamPx,py:this.seamPy,bx:this.seamBx,by:this.seamBy});this.pending=null;return;
+ case"emit":{const plan=this.planAt===0?this.plan0:this.plan1;if(plan.kind==="polygon"&&!this.planBuilding){if(!c.work.canStep())return;this.primitiveBuilder=new RetainedWorkBuffer<Vec2>(16);this.planBuilding=true;c.commitControlWork();return;}if(plan.kind==="polygon"&&this.planPoint<plan.count){if(!c.slot(this.primitiveBuilder!))return;c.push(this.primitiveBuilder!,plan.point(this.planPoint++));return;}if(!c.slot(this.queue!))return;c.push(this.queue!,{kind:plan.kind,points:plan.kind==="polygon"?this.primitiveBuilder:null,cx:plan.cx,cy:plan.cy,a:plan.a,b:plan.b});this.primitiveBuilder=null;this.planAt++;this.planPoint=0;this.planBuilding=false;if(this.planAt===this.planCount){this.pending=null;this.planCount=0;}return;}
+ case"polygon-reverse-a":{const points=this.primitive!.points!;if(this.reverseAt>=Math.floor(points.length/2)){if(!c.work.canStep())return;this.pending="polygon-output";c.commitControlWork();return;}const prior=points.at(this.reverseAt)!;if(!c.write(points,this.reverseAt,points.at(points.length-1-this.reverseAt)!))return;this.reversePoint=prior;this.pending="polygon-reverse-b";return;}
+ case"polygon-reverse-b":{const points=this.primitive!.points!;if(!c.write(points,points.length-1-this.reverseAt,this.reversePoint!))return;this.reversePoint=null;this.reverseAt++;this.pending="polygon-reverse-a";return;}
+ case"polygon-output":if(!c.slot(this.polygons!))return;c.push(this.polygons!,this.primitive!.points!);this.primitive!.points=null;this.primitive=null;this.pending=null;return;
+ case"round-output":if(!c.slot(this.polygons!))return;c.push(this.polygons!,this.round!.points);this.pending="round-center";return;
+ case"round-center":if(!c.slot(this.round!.points))return;c.push(this.round!.points,[this.round!.cx,this.round!.cy]);this.pending="round-initial";return;
+ case"round-initial":case"round-final":{const initial=this.pending==="round-initial";if(!c.slot(this.round!.points))return;c.push(this.round!.points,[this.px,this.py]);this.pending=initial?"round-node":null;return;}
+ case"round-node":case"round-right":case"round-left":{if(!c.slot(this.round!.stack!))return;const right=this.pending==="round-right",left=this.pending==="round-left";c.push(this.round!.stack!,{a:right?this.middle:this.nodeA,b:left?this.middle:this.nodeB,depth:this.nodeDepth+(right||left?1:0)});this.pending=right?"round-left":null;return;}
+ case null:return;
+ }}
+ private outline(c:RetainedWorkProducerStep):void{
+  if(this.roundClosing!==null){const child=this.roundClosing;if(!child.terminalIsEmpty()){try{child.advance(1,c.work);}finally{c.retainedTurn.commitActualWork(child.lastTurnWork());}if(!child.terminalIsEmpty()||c.hasActualWork())return;}if(!c.work.canStep())return;this.roundClosing=null;this.round=null;c.commitControlWork();return;}
+  if(this.round!==null){const round=this.round,stack=round.stack!;if(stack.length===0){if(!c.work.canStep())return;let body:RetainedWorkBuffer<Node>|null=stack;this.roundClosing=new RetainedWorkRetirement((work,turn)=>{if(body===null)return true;if(!body.retireOne(work,turn)||turn.actualWork()>0)return false;if(!work.canStep())return false;body=null;turn.commitActualWork();return false;});round.stack=null;c.commitControlWork();return;}const node=stack.at(-1)!;if(!c.pop(stack))return;c.postSemanticWork();this.nodeA=node.a;this.nodeB=node.b;this.nodeDepth=node.depth;const span=node.b-node.a,error=2*this.roundBound*Math.sin(span/4)**2;if(span<=Math.PI&&error<=this.input!.tolerance){const point:Vec2=[round.cx+this.radius*Math.cos(node.b),round.cy+this.radius*Math.sin(node.b)];this.checkPoint(point);if(this.count>=MAX_POINTS)invalid("Stroke outline exceeds point budget");this.count++;this.px=point[0];this.py=point[1];this.pending="round-final";return;}if(node.depth>=32)invalid("Stroke outline exceeds subdivision budget");this.middle=(node.a+node.b)/2;this.pending="round-right";return;}
+  const primitive=this.queue!.at(this.queueAt);if(primitive!==undefined){c.commitSemanticWork();this.queueAt++;if(primitive.kind==="polygon"){const points=primitive.points!,origin=points.at(0)!;let area=0;for(let at=0;at<points.length;at++){this.checkPoint(points.at(at)!);const a=points.at(at)!,b=points.at((at+1)%points.length)!;area+=(a[0]-origin[0])*(b[1]-origin[1])-(a[1]-origin[1])*(b[0]-origin[0]);}if(area===0)return;if(this.count+points.length>MAX_POINTS||this.polygons!.length>=MAX_CONTOURS)invalid("Stroke outline exceeds geometry budget");this.count+=points.length;this.primitive=primitive;this.reverseAt=0;this.pending=area<0?"polygon-reverse-a":"polygon-output";return;}if(this.polygons!.length>=MAX_CONTOURS)invalid("Stroke outline exceeds contour budget");const center:Vec2=[primitive.cx,primitive.cy],point:Vec2=[primitive.cx+this.radius*Math.cos(primitive.a),primitive.cy+this.radius*Math.sin(primitive.a)];this.checkPoint(center);this.checkPoint(point);if(this.count+2>MAX_POINTS)invalid("Stroke outline exceeds point budget");this.count+=2;this.round={cx:primitive.cx,cy:primitive.cy,points:new RetainedWorkBuffer<Vec2>(16),stack:new RetainedWorkBuffer<Node>(24)};this.px=point[0];this.py=point[1];this.nodeA=primitive.a;this.nodeB=primitive.b;this.nodeDepth=0;this.pending="round-output";return;}
+  const run=this.runs!.at(this.run);if(run===undefined){const seam=this.seams!.at(this.seam);if(seam===undefined){if(!c.work.canStep())return;this.stage="done";c.commitControlWork();return;}c.commitSemanticWork();this.seam++;this.emit(this.join(this.plan0,[seam.ax,seam.ay],[seam.px,seam.py],[seam.bx,seam.by])?1:0);return;}
+  const points=run.points,count=run.closed?points.length:points.length-1;
+  if(points.length<2||same(points.at(0)!,points.at(-1)!)&&points.length===2){c.commitSemanticWork();const p=points.at(0)!;let planned=0;if(this.input!.style.cap==="round"){this.plan0.round(p,0,2*Math.PI);planned=1;}else if(this.input!.style.cap==="square"){const t:Vec2=[run.tx,run.ty],n=normal(t),a=shifted(p,t,-this.radius),b=shifted(p,t,this.radius);this.plan0.polygon(shifted(a,n,this.radius),shifted(b,n,this.radius),shifted(b,n,-this.radius),shifted(a,n,-this.radius));planned=1;}this.run++;this.emit(planned);return;}
+  if(this.geomEdge<count){c.commitSemanticWork();const at=this.geomEdge++,a=points.at(at)!,b=points.at((at+1)%points.length)!,n=normal(unit(a,b));this.plan0.polygon(shifted(a,n,this.radius),shifted(b,n,this.radius),shifted(b,n,-this.radius),shifted(a,n,-this.radius));this.emit(1+(at>0||run.closed?Number(this.join(this.plan1,points.at((at-1+points.length)%points.length)!,a,b)):0));return;}
+  if(this.cap===0){c.commitSemanticWork();this.cap++;this.emit(!run.closed&&run.capStart&&this.endpoint(this.plan0,points.at(0)!,unit(points.at(0)!,points.at(1)!),true)?1:0);return;}
+  if(this.cap===1){c.commitSemanticWork();this.cap++;this.emit(!run.closed&&run.capEnd&&this.endpoint(this.plan0,points.at(-1)!,unit(points.at(-2)!,points.at(-1)!),false)?1:0);return;}
+  if(!c.work.canStep())return;this.run++;this.geomEdge=0;this.cap=0;c.commitControlWork();
+ }
+ private step(c:RetainedWorkProducerStep):void{if(this.pending!==null){this.publish(c);return;}switch(this.stage){
+ case"pattern":{if(this.patternAt<this.patternLength){c.commitSemanticWork();const value=this.input!.style.dash.at(this.patternAt%this.input!.style.dash.length);if(value===undefined||!valid(value)||value<0)invalid("Invalid stroke geometry contract");this.patternTotal+=value!;if(this.patternAt%2===1&&value!>0)this.gapPositive=true;this.patternAt++;return;}if(!c.work.canStep())return;if(this.patternTotal===0||!this.gapPositive){this.stage="prepare";}else{this.patternAt=0;this.stage="patternCopy";}c.commitControlWork();return;}
+ case"patternCopy":if(this.patternAt<this.patternLength){if(!c.slot(this.pattern!))return;c.push(this.pattern!,this.input!.style.dash.at(this.patternAt%this.input!.style.dash.length)!);this.patternAt++;return;}if(!c.work.canStep())return;this.stage="prepare";c.commitControlWork();return;
+ case"prepare":{const contour=this.input!.contours.at(this.contour);if(contour===undefined){if(!c.work.canStep())return;this.stage=this.radius===0?"done":"source";c.commitControlWork();return;}if(!this.header){c.commitSemanticWork();if(typeof contour.closed!=="boolean")invalid("Invalid stroke contour closure");this.inputPoints+=contour.points.length;if(this.inputPoints>MAX_POINTS)invalid("Invalid stroke geometry contract");this.header=true;return;}if(this.point<contour.points.length){c.commitSemanticWork();const p=contour.points.at(this.point++);if(p===undefined)invalid("Invalid stroke geometry point");this.checkPoint(p!);if(!this.prepared!.length||!same(this.prepared!.at(-1)!,p!)){this.px=p![0];this.py=p![1];this.pending="prepare-point";}return;}c.commitSemanticWork();this.pending=contour.closed&&this.prepared!.length>1&&same(this.prepared!.at(0)!,this.prepared!.at(-1)!)?"prepare-pop":"source-row";return;}
+ case"source":{const source=this.sources!.at(this.source);if(source===undefined){if(!c.work.canStep())return;this.stage="outline";c.commitControlWork();return;}if(this.pattern!.length===0){if(!c.slot(this.runs!))return;c.push(this.runs!,{points:source.points,closed:source.closed,capStart:true,capEnd:true,painted:true,tx:1,ty:0,owned:false});c.postSemanticWork();this.source++;return;}c.commitSemanticWork();this.edge=0;this.position=0;this.dash=0;this.offset=((this.input!.style.dashOffset%this.patternTotal)+this.patternTotal)%this.patternTotal;this.active=null;this.first=-1;this.last=-1;this.stage="offset";return;}
+ case"offset":{c.commitSemanticWork();const length=this.pattern!.at(this.dash)!;if(this.offset>0&&this.offset>=length){this.offset-=length;this.dash=(this.dash+1)%this.pattern!.length;}else{this.remaining=length-this.offset;this.offset=0;this.stage="walk";}return;}
+ case"walk":{c.commitSemanticWork();const source=this.sources!.at(this.source)!,count=source.closed?source.points.length:source.points.length-1;if(this.remaining===0){if(this.dash%2===0&&this.active===null){const p=this.location();this.newRun(p,p,false);}this.dash=(this.dash+1)%this.pattern!.length;this.remaining=this.pattern!.at(this.dash)!;return;}if(this.dash%2===1)this.active=null;if(this.edge>=count){if(source.points.length===1&&this.dash%2===0&&this.active===null)this.newRun(source.points.at(0)!,source.points.at(0)!,false);this.stage="finish";return;}const a=source.points.at(this.edge)!,b=source.points.at((this.edge+1)%source.points.length)!,length=Math.hypot(b[0]-a[0],b[1]-a[1]),left=length-this.position,take=Math.min(left,this.remaining),from=this.location(),endEdge=take===left,endDash=take===this.remaining;if(take>0&&this.position+take===this.position)invalid("Stroke dashing exceeds numeric limits");this.position+=take;const to=endEdge?b:this.location();if(this.dash%2===0){if(this.active!==null){if(this.runPoints>=MAX_POINTS)invalid("Stroke dashing exceeds point budget");this.px=to[0];this.py=to[1];this.pending=this.active.painted?"active-point":"active-pop";}else this.newRun(from,to,true);}this.remaining-=take;if(endDash){this.dash=(this.dash+1)%this.pattern!.length;this.remaining=this.pattern!.at(this.dash)!;}if(endEdge){this.edge++;this.position=0;}return;}
+ case"finish":{c.commitSemanticWork();const source=this.sources!.at(this.source)!;if(source.closed&&this.first>=0&&this.last>=0){const first=this.runs!.at(this.first)!,last=this.runs!.at(this.last)!;if(same(first.points.at(0)!,source.points.at(0)!)&&same(last.points.at(-1)!,source.points.at(0)!)){if(first===last){first.closed=true;this.pending="closed-pop";}else{first.capStart=false;last.capEnd=false;const a=last.points.at(-2)!,p=source.points.at(0)!,b=first.points.at(1)!;this.seamAx=a[0];this.seamAy=a[1];this.seamPx=p[0];this.seamPy=p[1];this.seamBx=b[0];this.seamBy=b[1];this.pending="seam";}}}this.active=null;this.source++;this.stage="source";return;}
+ case"outline":this.outline(c);return;
+ case"done":if(!c.work.canStep())return;this.output=publishStrokeContours(this.polygons!);this.polygons=null;c.commitControlWork();return;
+ }}
+ advance(items:number,work:RetainedWorkLedger):StrokeOutlineProgress{try{return this.runtime.advance(items,work,{maximumWork:Number.MAX_SAFE_INTEGER,workLimitMessage:"Stroke preparation work limit exceeded",validate:()=>{if(this.cancelled||this.transferred)throw new DOMException("Stroke preparation cancelled","AbortError");if(this.failed!==null)throw this.failed;},stopped:()=>this.output!==null,settlementPending:()=>this.settlementPending(),failurePending:()=>this.failurePending(),semanticWork:()=>this.work,recordSemanticWork:n=>{this.work+=n;},step:c=>{try{this.step(c);}catch(error){this.failed=error;throw error;}},progress:()=>this.progress()});}finally{this.demand=work.nextDemand;}}
+ result():StrokeContours{if(this.cancelled||this.transferred)throw new DOMException("Stroke preparation cancelled","AbortError");if(this.failed!==null)throw this.failed;if(this.output===null)throw Error("Stroke preparation is incomplete");return this.output;}
+ cancel():void{this.cancelled=true;}
+ intoRetirement():{job:RetainedWorkRetirementCursor;output:StrokeContours|null}{
+ if(this.transferred)invalid("Stroke preparation ownership already transferred");const output=!this.cancelled&&this.failed===null?this.output:null;this.cancelled=true;this.transferred=true;let rejected=output===null&&this.output!==null?this.output.intoRetirement():null;this.output=null;let phase=0;
+ const job=new RetainedWorkRetirement((work,turn)=>{for(;;){if(phase<3){const child=phase===0?this.discard:phase===1?this.roundClosing:rejected;if(child!==null){if(!child.terminalIsEmpty()){try{child.advance(1,work);}finally{turn.commitActualWork(child.lastTurnWork());}if(!child.terminalIsEmpty()||turn.actualWork()>0)return false;}if(!work.canStep())return false;if(phase===0)this.discard=null;else if(phase===1)this.roundClosing=null;else rejected=null;phase++;turn.commitActualWork();return false;}phase++;continue;}
+ if(phase===3){const values=this.round?.stack;if(values!==null&&values!==undefined){if(!values.retireOne(work,turn)||turn.actualWork()>0)return false;if(!work.canStep())return false;this.round!.stack=null;turn.commitActualWork();return false;}phase++;continue;}
+ if(phase===4){if(this.queue!==null){if(!retireRetainedWorkArchive(this.queue,work,turn,(value,work,turn)=>value.points===null||value.points.retireOne(work,turn)))return false;if(!work.canStep())return false;this.queue=null;phase++;turn.commitActualWork();return false;}phase++;continue;}
+ if(phase===5){if(this.runs!==null){if(!retireRetainedWorkArchive(this.runs,work,turn,(value,work,turn)=>!value.owned||value.points.retireOne(work,turn)))return false;if(!work.canStep())return false;this.runs=null;phase++;turn.commitActualWork();return false;}phase++;continue;}
+ if(phase===6){if(this.sources!==null){if(!retireRetainedWorkArchive(this.sources,work,turn,(value,work,turn)=>value.points.retireOne(work,turn)))return false;if(!work.canStep())return false;this.sources=null;phase++;turn.commitActualWork();return false;}phase++;continue;}
+ if(phase===7){if(this.polygons!==null){if(!retireRetainedWorkArchive(this.polygons,work,turn,(points,work,turn)=>points.retireOne(work,turn)))return false;if(!work.canStep())return false;this.polygons=null;phase++;turn.commitActualWork();return false;}phase++;continue;}
+ if(phase<12){const values=phase===8?this.prepared:phase===9?this.primitiveBuilder:phase===10?this.pendingRunPoints:this.pattern;if(values!==null&&values!==undefined){if(!values.retireOne(work,turn)||turn.actualWork()>0)return false;if(!work.canStep())return false;if(phase===8)this.prepared=null;else if(phase===9)this.primitiveBuilder=null;else if(phase===10)this.pendingRunPoints=null;else this.pattern=null;phase++;turn.commitActualWork();return false;}phase++;continue;}
+ if(phase===12){if(this.seams!==null){if(!this.seams.retireOne(work,turn)||turn.actualWork()>0)return false;if(!work.canStep())return false;this.seams=null;phase++;turn.commitActualWork();return false;}phase++;continue;}if(phase===13){if(!work.canStep())return false;this.input=null;this.round=null;this.primitive=null;this.reversePoint=null;this.active=null;this.pending=null;this.failed=null;phase++;turn.commitActualWork();return false;}return true;}});return{job,output};
+ }
 }

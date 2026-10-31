@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.job.original-cancel-alias-output",
+  "const": {
+    "version": 1,
+    "kind": "original-cancel-alias-output",
+    "source": {
+      "items": 1000000,
+      "copyBytes": 4194304,
+      "capacityBytes": 4194304,
+      "releaseBytes": 8388608,
+      "depth": 128,
+      "fuel": 1000000,
+      "deadlineUs": 1000000
+    },
+    "cases": [
+      {
+        "name": "items-denied",
+        "items": 0,
+        "depth": 128,
+        "work": 0
+      },
+      {
+        "name": "depth-denied",
+        "items": 1,
+        "depth": 0,
+        "work": 0
+      }
+    ],
+    "admitted": {
+      "items": 1,
+      "copyBytes": 0,
+      "work": 1,
+      "heap": 0
+    },
+    "postRefusal": "same-actual-alias-owned-before-fold",
+    "cached": {
+      "work": 0,
+      "heap": 0
+    },
+    "cancelledEmpty": {
+      "work": 0,
+      "heap": 0
+    }
+  }
+}

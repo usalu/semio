@@ -1,0 +1,179 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "posix",
+      "workspace": "/w",
+      "root": "/w/.cache/b/d/m",
+      "capsule": ".p8fba0a36",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"directory\":\"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":false}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".p8fba0a36\",\"kind\":\"directory\",\"identity\":{\"dev\":\"17\",\"ino\":\"2\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"8fba0a362dcdb6e68beaa0c72288bc187afaee90508c929a48e5ad4be8e5fadd\",\"sourceAbsent\":true,\"deletePayload\":false,\"adoptPayload\":false}\n",
+      "accepted": true,
+      "expected": {
+        "version": 1,
+        "purpose": "retained-unready-dependency-generation-data",
+        "authority": false,
+        "currentReady": false,
+        "capsule": ".p8fba0a36",
+        "generation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "scope": ".",
+        "originalDirectory": "/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa",
+        "recipeSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "intentSha256": "8fba0a362dcdb6e68beaa0c72288bc187afaee90508c929a48e5ad4be8e5fadd",
+        "receiptSha256": "5224a8532b3b54fb3d3ee8040f299ac555dbb85de6bbb8055a894e5ca77dfff8"
+      }
+    },
+    {
+      "id": "windows",
+      "workspace": "C:\\w",
+      "root": "C:\\w\\.cache\\b\\d\\m",
+      "capsule": ".p3ccfc14f",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"directory\":\"C:\\\\w\\\\.cache\\\\b\\\\d\\\\m\\\\j\\\\aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":false}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".p3ccfc14f\",\"kind\":\"directory\",\"identity\":{\"dev\":\"17\",\"ino\":\"2\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"3ccfc14f5a6342466d999eda6224642e51e595cad00c97f3c3c1ced8e0b04e8b\",\"sourceAbsent\":true,\"deletePayload\":false,\"adoptPayload\":false}\n",
+      "accepted": true,
+      "expected": {
+        "version": 1,
+        "purpose": "retained-unready-dependency-generation-data",
+        "authority": false,
+        "currentReady": false,
+        "capsule": ".p3ccfc14f",
+        "generation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "scope": ".",
+        "originalDirectory": "C:\\w\\.cache\\b\\d\\m\\j\\aaaaaaaaaaaaaaaaaaaa",
+        "recipeSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "intentSha256": "3ccfc14f5a6342466d999eda6224642e51e595cad00c97f3c3c1ced8e0b04e8b",
+        "receiptSha256": "f25a30b99c06a4e39d0a591d2c3c9666ff984f9e85795bf9617af75f5f6248f5"
+      }
+    },
+    {
+      "id": "foreign-intent-hash",
+      "workspace": "/w",
+      "root": "/w/.cache/b/d/m",
+      "capsule": ".p8fba0a36",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"directory\":\"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":false}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".p8fba0a36\",\"kind\":\"directory\",\"identity\":{\"dev\":\"17\",\"ino\":\"2\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"sourceAbsent\":true,\"deletePayload\":false,\"adoptPayload\":false}\n",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "foreign-capsule",
+      "workspace": "/w",
+      "root": "/w/.cache/b/d/m",
+      "capsule": ".p12345678",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"directory\":\"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":false}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".p8fba0a36\",\"kind\":\"directory\",\"identity\":{\"dev\":\"17\",\"ino\":\"2\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"8fba0a362dcdb6e68beaa0c72288bc187afaee90508c929a48e5ad4be8e5fadd\",\"sourceAbsent\":true,\"deletePayload\":false,\"adoptPayload\":false}\n",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "foreign-generation",
+      "workspace": "/w",
+      "root": "/w/.cache/b/d/m",
+      "capsule": ".pcb9720bb",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"directory\":\"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":false}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".pcb9720bb\",\"kind\":\"directory\",\"identity\":{\"dev\":\"17\",\"ino\":\"2\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"cb9720bbe0b447fcd634fc165e1bb36197f6d312a5fe90d1fbff36cc4b3fbf1c\",\"sourceAbsent\":true,\"deletePayload\":false,\"adoptPayload\":false}\n",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "foreign-root",
+      "workspace": "/w",
+      "root": "/foreign/m",
+      "capsule": ".p8fba0a36",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"directory\":\"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":false}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".p8fba0a36\",\"kind\":\"directory\",\"identity\":{\"dev\":\"17\",\"ino\":\"2\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"8fba0a362dcdb6e68beaa0c72288bc187afaee90508c929a48e5ad4be8e5fadd\",\"sourceAbsent\":true,\"deletePayload\":false,\"adoptPayload\":false}\n",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "unknown-intent-field",
+      "workspace": "/w",
+      "root": "/w/.cache/b/d/m",
+      "capsule": ".p094b0d62",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"directory\":\"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":false,\"foreign\":true}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".p094b0d62\",\"kind\":\"directory\",\"identity\":{\"dev\":\"17\",\"ino\":\"2\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"094b0d6228cbbecc485ed308e2185ae29af2165bb951d93be33152c71a2bde66\",\"sourceAbsent\":true,\"deletePayload\":false,\"adoptPayload\":false}\n",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "delete-payload",
+      "workspace": "/w",
+      "root": "/w/.cache/b/d/m",
+      "capsule": ".p8fba0a36",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"directory\":\"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":false}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".p8fba0a36\",\"kind\":\"directory\",\"identity\":{\"dev\":\"17\",\"ino\":\"2\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"8fba0a362dcdb6e68beaa0c72288bc187afaee90508c929a48e5ad4be8e5fadd\",\"sourceAbsent\":true,\"deletePayload\":true,\"adoptPayload\":false}\n",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "adopt-payload",
+      "workspace": "/w",
+      "root": "/w/.cache/b/d/m",
+      "capsule": ".p8fba0a36",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"directory\":\"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":false}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".p8fba0a36\",\"kind\":\"directory\",\"identity\":{\"dev\":\"17\",\"ino\":\"2\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"8fba0a362dcdb6e68beaa0c72288bc187afaee90508c929a48e5ad4be8e5fadd\",\"sourceAbsent\":true,\"deletePayload\":false,\"adoptPayload\":true}\n",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "claims-inactive",
+      "workspace": "/w",
+      "root": "/w/.cache/b/d/m",
+      "capsule": ".pcd8c2b7e",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"directory\":\"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":true}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".pcd8c2b7e\",\"kind\":\"directory\",\"identity\":{\"dev\":\"17\",\"ino\":\"2\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"cd8c2b7ecc88d028539b9291afd9b0c29ab23612a3ee5f8994525e22c3497413\",\"sourceAbsent\":true,\"deletePayload\":false,\"adoptPayload\":false}\n",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "foreign-identity",
+      "workspace": "/w",
+      "root": "/w/.cache/b/d/m",
+      "capsule": ".p8fba0a36",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"directory\":\"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":false}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".p8fba0a36\",\"kind\":\"directory\",\"identity\":{\"dev\":\"17\",\"ino\":\"9\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"8fba0a362dcdb6e68beaa0c72288bc187afaee90508c929a48e5ad4be8e5fadd\",\"sourceAbsent\":true,\"deletePayload\":false,\"adoptPayload\":false}\n",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "noncanonical-intent",
+      "workspace": "/w",
+      "root": "/w/.cache/b/d/m",
+      "capsule": ".p733c4aae",
+      "intentText": "{\"version\": 1, \"purpose\": \"retain-current-unready-dependency-generation\", \"scope\": \".\", \"generation\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\", \"directory\": \"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\", \"rootStamp\": \"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\", \"parentStamp\": \"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\", \"rosterSha256\": \"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\", \"sourceInputsSha256\": \"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\", \"sourceEndpointsSha256\": \"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\", \"recipeSha256\": \"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\", \"materializationSha256\": \"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\", \"fundingSha256\": \"0000000000000000000000000000000000000000000000000000000000000000\", \"readyAbsent\": true, \"directSourceReferences\": 0, \"inactivityProved\": false}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".p733c4aae\",\"kind\":\"directory\",\"identity\":{\"dev\":\"17\",\"ino\":\"2\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"733c4aae2f620a220f15c45d5f67470e0b36acccafd43d22d61c56392cbc2922\",\"sourceAbsent\":true,\"deletePayload\":false,\"adoptPayload\":false}\n",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "absent-source-false",
+      "workspace": "/w",
+      "root": "/w/.cache/b/d/m",
+      "capsule": ".p8fba0a36",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"directory\":\"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":false}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".p8fba0a36\",\"kind\":\"directory\",\"identity\":{\"dev\":\"17\",\"ino\":\"2\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"8fba0a362dcdb6e68beaa0c72288bc187afaee90508c929a48e5ad4be8e5fadd\",\"sourceAbsent\":false,\"deletePayload\":false,\"adoptPayload\":false}\n",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "file-payload",
+      "workspace": "/w",
+      "root": "/w/.cache/b/d/m",
+      "capsule": ".p8fba0a36",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"directory\":\"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":false}",
+      "receiptText": "{\"version\":1,\"purpose\":\"retain-current-ordinary-entry-without-binding\",\"name\":\"aaaaaaaaaaaaaaaaaaaa\",\"capsule\":\".p8fba0a36\",\"kind\":\"file\",\"identity\":{\"dev\":\"17\",\"ino\":\"2\",\"mode\":\"16832\",\"size\":\"32\",\"nlink\":\"2\",\"mtimeNs\":\"3\",\"ctimeNs\":\"5\"},\"intentSha256\":\"8fba0a362dcdb6e68beaa0c72288bc187afaee90508c929a48e5ad4be8e5fadd\",\"sourceAbsent\":true,\"deletePayload\":false,\"adoptPayload\":false}\n",
+      "accepted": false,
+      "expected": null
+    },
+    {
+      "id": "malformed-receipt",
+      "workspace": "/w",
+      "root": "/w/.cache/b/d/m",
+      "capsule": ".p8fba0a36",
+      "intentText": "{\"version\":1,\"purpose\":\"retain-current-unready-dependency-generation\",\"scope\":\".\",\"generation\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"directory\":\"/w/.cache/b/d/m/j/aaaaaaaaaaaaaaaaaaaa\",\"rootStamp\":\"[\\\"17\\\",\\\"2\\\",\\\"16832\\\",\\\"2\\\",\\\"32\\\",\\\"3\\\",\\\"4\\\"]\",\"parentStamp\":\"[\\\"17\\\",\\\"3\\\",\\\"16832\\\",\\\"2\\\",\\\"64\\\",\\\"5\\\",\\\"6\\\"]\",\"rosterSha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"sourceInputsSha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"sourceEndpointsSha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"recipeSha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"materializationSha256\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"fundingSha256\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"readyAbsent\":true,\"directSourceReferences\":0,\"inactivityProved\":false}",
+      "receiptText": "{",
+      "accepted": false,
+      "expected": null
+    }
+  ]
+}

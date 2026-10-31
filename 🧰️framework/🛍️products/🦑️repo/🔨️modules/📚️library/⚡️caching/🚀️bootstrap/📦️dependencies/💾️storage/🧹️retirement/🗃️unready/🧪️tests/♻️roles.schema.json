@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "roles",
+    "admissions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "roles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "container",
+          "parts",
+          "kind",
+          "members",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "container": {
+            "enum": [
+              "unready-generation",
+              "retained-unready"
+            ]
+          },
+          "parts": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "kind": {
+            "enum": [
+              "file",
+              "directory",
+              "link"
+            ]
+          },
+          "members": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "admissions": {
+      "type": "array",
+      "minItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "fault",
+          "accepted"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "unready-generation",
+              "retained-unready",
+              "unready-metadata"
+            ]
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "current",
+              "root",
+              "bindings",
+              "status",
+              "ready-receipt",
+              "generation",
+              "fingerprint",
+              "same-current-generation",
+              "payload"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

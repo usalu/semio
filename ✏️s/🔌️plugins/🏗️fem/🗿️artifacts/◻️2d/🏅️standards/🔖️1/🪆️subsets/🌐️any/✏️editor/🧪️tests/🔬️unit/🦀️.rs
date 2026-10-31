@@ -178,9 +178,9 @@ async fn retained_routes_cover_every_command_exactly_once() {
 /// refuses a completion whose emitted lane is absent from the contract.
 #[semio_framework_async_macros::async_test]
 async fn every_route_declares_the_lane_its_handler_emits() {
-    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("bundled demo loads"));
     let history = semio_framework_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&snapshot, &history);
+    let doc = ArtifactView::new(&*snapshot, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     for command in every_command() {

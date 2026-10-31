@@ -15,19 +15,12 @@ committed specification:
   (`document = artifact-mark schema-line spatial-line elements-line relations-line`, and the
   `spatial-kind`, `element-class`, `geometry-ref`, `pset-value`, `relation-kind`, `opt-str` and
   `transform` productions it declares, in the order it declares them);
-* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio`
-  (`format u8`, then the varint-length-prefixed UTF-8 `schema`), whose description then stops at the
-  repeated `spatial`/`elements`/`relations` records by its own admission and names only their shape —
-  "varint counts, per-field length-prefixes, real `f64` LE coordinates, u8 enum tags". That prose was
-  turned into the reader and writer below by taking the field ORDER from the DSL grammar and every
-  enum ORDINAL from the order that same grammar declares its alternatives in — `S|B|T|P`,
-  `WA|SL|CO|BE|DO|WI|RO|ST|FU|OT`, `N|B|M`, `T|N|B`, `AG|CI|CN|FV|VE|OT` — the same rule that turned
-  out to be right for `📊️table`'s `Z B I F S Y L M R` value tags. The committed
-  `🎒️.pack.semio` pins the ordinals it happens to carry (`S`, `T`, `WA`, `B`-brep, `T`/`N`/`B`
-  pset values, `CI`) and `pack_bytes` re-encodes that file byte for byte; the ordinals it does NOT
-  carry — `OT`, the `M` geometry reference, an absent `spatialId` — are derived from the grammar's
-  declared order alone, are exercised by the real artifact this case mutates, and a disagreement
-  about them would surface as a red `identity-round-trip` rather than as a silent one;
+* the pack body is the derived record document of the shared record-document codec
+  (`🧰️semio/🚪️io/💾️binary/🎒️record-document/🐍️.py`, driven by the committed record spec
+  `…/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json`): the SPK container, the fixed-Huffman deflate, the
+  BLAKE3 content hash and the schema-hashed record body are all specified by `🧰️framework/🔨️modules/🎒️pack`
+  and re-implemented there, not here. The committed `🎒️.pack.semio` files were written by the Rust
+  record pack, so `parse_pack`/`pack_bytes` reproducing them is a cross-language byte agreement;
 * the eleven verbs and their argument lists are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio` and the committed JSON schema, and what
   each verb MEANS is the committed `(before, mutation, after)` specification vector per kind in this
@@ -72,13 +65,44 @@ def _load(alias, folder):
 
 
 _load("mutate_semio_model_text", "📝️text-carrier")
-_load("mutate_semio_model_pack", "📦️pack-carrier")
 _load("mutate_semio_model_verbs", "🧬️mutation-verbs")
 
 from mutate_semio_model_text import parse_dsl, print_dsl
-from mutate_semio_model_pack import parse_pack, pack_bytes
 from mutate_semio_model_verbs import apply_mutation, inverse_mutation
 # endregion 🔖️Imports
+
+
+# region 🔖️Pack
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _load_shared(alias, *parts):
+    """🧬️ Loads a shared module from the `stdio.semio` artifact root, six folders above this case, and registers it under an importable name."""
+    if alias in sys.modules:
+        return sys.modules[alias]
+    path = os.path.join(_HERE, *[os.pardir] * 6, *parts)
+    spec = importlib.util.spec_from_file_location(alias, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[alias] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+record_document = _load_shared("record_document", "🚪️io", "💾️binary", "🎒️record-document", "🐍️.py")
+RECORD_SPEC = record_document.load_record_spec(os.path.join(_HERE, os.pardir, os.pardir, "🧬️schema", "📸️snapshot", "🗺️record-spec", "🔣️.json"))
+
+
+def parse_pack(data: bytes) -> dict:
+    """📦️ A `.pack.semio` file as the JSON snapshot its record document carries."""
+    return record_document.decode_pack(RECORD_SPEC, data)
+
+
+def pack_bytes(document: dict) -> bytes:
+    """🔍️ The writing direction of `parse_pack`, envelope included."""
+    return record_document.encode_pack(RECORD_SPEC, document)
+
+
+# endregion 🔖️Pack
 
 
 # region 🔖️Scenario input
@@ -155,10 +179,9 @@ def identity_round_trip(ctx: Context) -> Outcome:
     `.dsl.semio` is a fixed-layout record grammar and `.pack.semio` is its binary twin, so an exact
     re-emission is the CORRECT answer here and the wave's must-differ tripwire would be backwards.
     What keeps it from being vacuous is that each side is measured against bytes the OTHER one
-    emitted: the demo building's two files were written by the Rust codec and are reproduced here
-    from the grammar alone, while the capsule tower's two files were written by this implementation
-    and the Rust codec has to reproduce THOSE — including the `OT` element class, the `M` geometry
-    reference and the absent `spatialId`, three tags no committed pack had exercised before."""
+    emitted: both packs were written by the Rust record pack — the demo building's from its DSL twin
+    and the capsule tower's regenerated from its DSL twin, including the `OT` element class, the `M`
+    geometry reference and the absent `spatialId` — and are reproduced here from the record spec alone."""
     building_dsl = ctx.input_bytes(BUILDING_DSL)
     building = parse_dsl(building_dsl.decode("utf-8"))
     printed = print_dsl(building).encode("utf-8")

@@ -13,14 +13,14 @@ use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod change_glazing_material_visible_transmittance {
-    #[path = "../../🥂️window-layer/🥽️change-glazing-visible-transmittance/🦀️.rs"]
+    #[path = "../../🥂️window-layer/🥽️glazing-visible-transmittance/🦀️.rs"]
     mod component;
     pub use component::*;
-    #[path = "../../🥂️window-layer/🥽️change-glazing-visible-transmittance/🧊️reference/🦀️.rs"]
+    #[path = "../../🥂️window-layer/🥽️glazing-visible-transmittance/🧊️reference/🦀️.rs"]
     mod reference;
-    #[path = "../../🥂️window-layer/🥽️change-glazing-visible-transmittance/🔺️diff/🦀️.rs"]
+    #[path = "../../🥂️window-layer/🥽️glazing-visible-transmittance/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "../../🥂️window-layer/🥽️change-glazing-visible-transmittance/↩️inverse/🦀️.rs"]
+    #[path = "../../🥂️window-layer/🥽️glazing-visible-transmittance/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
 

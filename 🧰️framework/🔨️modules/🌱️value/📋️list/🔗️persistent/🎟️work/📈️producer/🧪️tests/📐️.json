@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "rules": {
+    "actualCpuFromIssuedTurn": true,
+    "semanticSeparateFromPhysicalPreparation": true,
+    "childCpuBeforeError": true,
+    "sameLedgerChildren": true,
+    "allCausesRetained": true,
+    "cachedAndDeniedZero": true,
+    "authBeforeTurnPropertyRead": true
+  },
+  "cases": [
+    {
+      "name": "paid-backing-preparation",
+      "capacity": 128,
+      "cpu": 1,
+      "semantic": 0
+    },
+    {
+      "name": "published-own-step",
+      "copy": 8,
+      "cpu": 1,
+      "semantic": 1
+    },
+    {
+      "name": "denied-zero",
+      "grant": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "cpu": 0,
+      "semantic": 0
+    },
+    {
+      "name": "actual-child-posting-error",
+      "capacity": 8,
+      "cpu": 1,
+      "semantic": 0,
+      "sameCause": true
+    },
+    {
+      "name": "unissued-step-token",
+      "propertyReads": 0,
+      "rejected": true
+    }
+  ],
+  "limits": {
+    "maximumWork": 1,
+    "quantum": 1
+  }
+}

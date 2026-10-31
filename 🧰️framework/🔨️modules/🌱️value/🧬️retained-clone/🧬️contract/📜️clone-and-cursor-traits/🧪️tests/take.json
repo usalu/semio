@@ -1,0 +1,53 @@
+{
+  "stock": {
+    "items": 4096,
+    "copy": 16777216,
+    "capacity": 16777216,
+    "release": 16777216,
+    "depth": 128
+  },
+  "maximumTurns": 4096,
+  "body": 256,
+  "handoffWork": 1,
+  "deniedWork": 0,
+  "cachedWork": 0,
+  "ownershipCopyBytes": 0,
+  "deniedAxes": [
+    "items",
+    "depth"
+  ],
+  "cases": {
+    "scalar": 41,
+    "text": "Grüße 🌳",
+    "optional": "original",
+    "vector": [
+      "one",
+      "zwei",
+      "三"
+    ],
+    "array": [
+      "left",
+      "right"
+    ],
+    "tuple": [
+      "alpha",
+      "beta"
+    ],
+    "boxed": "boxed",
+    "enumEmpty": true,
+    "enumRecord": {
+      "label": "enum original α",
+      "values": [
+        0,
+        41,
+        99
+      ]
+    },
+    "enumTuple": [
+      "variant",
+      42
+    ]
+  },
+  "oneBank": true,
+  "closeAllSourcesAndOutputs": true
+}

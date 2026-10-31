@@ -1,0 +1,101 @@
+[
+  {
+    "name": "fresh-completed",
+    "receipt": true,
+    "live": true,
+    "sameScope": true,
+    "action": "retain-allocation-payload",
+    "pending": false,
+    "files": true,
+    "bytes": 4,
+    "accept": true
+  },
+  {
+    "name": "observed-completed",
+    "receipt": true,
+    "live": true,
+    "sameScope": true,
+    "action": "retain-allocation-payload",
+    "pending": false,
+    "files": true,
+    "bytes": 6,
+    "accept": true
+  },
+  {
+    "name": "copied-receipt",
+    "receipt": false,
+    "live": true,
+    "sameScope": true,
+    "action": "retain-allocation-payload",
+    "pending": false,
+    "files": true,
+    "bytes": 4,
+    "accept": false
+  },
+  {
+    "name": "closed-parent",
+    "receipt": true,
+    "live": false,
+    "sameScope": true,
+    "action": "retain-allocation-payload",
+    "pending": false,
+    "files": true,
+    "bytes": 4,
+    "accept": false
+  },
+  {
+    "name": "foreign-scope",
+    "receipt": true,
+    "live": true,
+    "sameScope": false,
+    "action": "retain-allocation-payload",
+    "pending": false,
+    "files": true,
+    "bytes": 4,
+    "accept": false
+  },
+  {
+    "name": "terminal-action",
+    "receipt": true,
+    "live": true,
+    "sameScope": true,
+    "action": "retire-allocation",
+    "pending": false,
+    "files": true,
+    "bytes": 4,
+    "accept": false
+  },
+  {
+    "name": "pending-reader",
+    "receipt": true,
+    "live": true,
+    "sameScope": true,
+    "action": "retain-allocation-payload",
+    "pending": true,
+    "files": true,
+    "bytes": 4,
+    "accept": false
+  },
+  {
+    "name": "changed-inputs",
+    "receipt": true,
+    "live": true,
+    "sameScope": true,
+    "action": "retain-allocation-payload",
+    "pending": false,
+    "files": false,
+    "bytes": 4,
+    "accept": false
+  },
+  {
+    "name": "over-allocation",
+    "receipt": true,
+    "live": true,
+    "sameScope": true,
+    "action": "retain-allocation-payload",
+    "pending": false,
+    "files": true,
+    "bytes": 9,
+    "accept": false
+  }
+]

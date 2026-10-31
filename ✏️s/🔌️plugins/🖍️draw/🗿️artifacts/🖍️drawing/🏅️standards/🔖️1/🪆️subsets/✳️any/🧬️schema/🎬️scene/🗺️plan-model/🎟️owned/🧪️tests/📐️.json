@@ -1,0 +1,287 @@
+{
+  "version": 1,
+  "ownership": {
+    "source": "borrowed-read-sequence",
+    "producedPlan": "genuine-private-priced-pages",
+    "closeInput": "authentic-consumed-plan-owner",
+    "borrowedSourceMayMutate": false,
+    "ownedCellsMayRetireAfterTransfer": true,
+    "rawRecordMayClaimOwnership": false,
+    "privatePayloadRegistry": false
+  },
+  "rules": {
+    "noMaterializedReadAdapter": true,
+    "allBackingBornAfterRealGrant": true,
+    "realElementsInPages": true,
+    "sameOriginalBankThroughClose": true,
+    "cpuAtActualEffectBeforeFailure": true,
+    "semanticSeparateFromCpu": true,
+    "deniedAndCachedCpuZero": true,
+    "stagedChildFinalYields": true,
+    "noVmOrGcByteClaim": true,
+    "fixedControlClearCopyZero": true,
+    "sameReadonlyRowIdentity": true,
+    "allOriginalGlyph14Preserved": true,
+    "borrowedViewsExpireAfterConsumingClose": true,
+    "signedZeroMetadataPreserved": true,
+    "allSixPathTagsPreserved": true,
+    "originalDomainOwnerCountsPreserved": true
+  },
+  "representation": {
+    "referenceCellBytes": 8,
+    "groupRowBytes": 24,
+    "pointBytes": 16,
+    "stopRowBytes": 40,
+    "dashRowBytes": 8,
+    "sourceIndexBytes": 8,
+    "nodeRowBytes": 112,
+    "nodeFields": [
+      "sourcePath:owned-sequence-reference",
+      "lockedAncestors:u64",
+      "id:borrowed-string-reference",
+      "transform:inline-six-f64",
+      "visible:bool-word",
+      "opacity:f64",
+      "blendMode:borrowed-string-reference",
+      "groups:owned-sequence-reference",
+      "content:owned-content-reference"
+    ],
+    "contentRows": {
+      "path": 40,
+      "glyphs": 80,
+      "text": 72,
+      "image": 32,
+      "group": 24,
+      "boolean": 56,
+      "trace": 56
+    },
+    "interpretation": "declared-firstparty-logical-record-payload-and-fixed-inline-tuples-not-v8-layout",
+    "assetRowBytes": 32,
+    "matrixRowBytes": 48,
+    "colorBytes": 32,
+    "fillRows": {
+      "solid": 40,
+      "linearGradient": 48,
+      "radialGradient": 40
+    },
+    "strokeRows": {
+      "withoutDashProperty": 56,
+      "withDashProperty": 64
+    },
+    "booleanMatrix": "content row stores a reference to a separately genuine priced matrix48 row, never an unpriced clone",
+    "assetFields": [
+      "id:borrowed-string-reference",
+      "image:inline-width-height-and-borrowed-pixel-reference"
+    ],
+    "resourceRowBytes": 24,
+    "resourceFields": [
+      "genuine-owned-buffer-reference:8",
+      "closed-domain-owners-per-row:8",
+      "closed-domain-owners-at-final-header:8"
+    ],
+    "segmentUnionRowBytes": 64
+  },
+  "cases": [
+    {
+      "name": "empty-owned-plan",
+      "nodes": 0,
+      "assets": 0,
+      "expected": {
+        "ownedEmptyAfterClose": true,
+        "borrowedUnchanged": true
+      }
+    },
+    {
+      "name": "all-seven-content-kinds",
+      "kinds": [
+        "path",
+        "glyphs",
+        "text",
+        "image",
+        "group",
+        "boolean",
+        "trace"
+      ],
+      "expected": {
+        "semanticProjectionPreserved": true,
+        "borrowedUnchanged": true
+      }
+    },
+    {
+      "name": "node-page-boundary",
+      "nodes": 17,
+      "expected": {
+        "realSecondPage": true,
+        "realDirectoryRows": true,
+        "conserved": true
+      }
+    },
+    {
+      "name": "owned-paint-and-reference-cells",
+      "groups": 17,
+      "stops": 17,
+      "dashes": 17,
+      "children": 17,
+      "expected": {
+        "everyOwnedContainerClosed": true,
+        "borrowedColorsAndPathsUnchanged": true
+      }
+    },
+    {
+      "name": "borrowed-genuine-pages-are-not-transfer-proof",
+      "expected": {
+        "rejected": true,
+        "borrowedUnchanged": true
+      }
+    },
+    {
+      "name": "unissued-lookalike-owner",
+      "expected": {
+        "propertyReads": 0,
+        "rejected": true
+      }
+    },
+    {
+      "name": "partial-build-cancellation",
+      "phases": [
+        "source",
+        "node",
+        "groups",
+        "paint",
+        "dash",
+        "path",
+        "children",
+        "publication"
+      ],
+      "expected": {
+        "sameBankClose": true,
+        "noOutput": true,
+        "borrowedUnchanged": true
+      }
+    },
+    {
+      "name": "repeated-real-denial-resume",
+      "axes": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "expected": {
+        "deniedReceipt": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "deniedCpu": 0,
+        "sameBankResume": true
+      }
+    },
+    {
+      "name": "final-error-after-real-effect",
+      "expected": {
+        "positiveCurrentEffect": true,
+        "positiveCurrentCpu": true,
+        "ownerRetained": true,
+        "allCausesPreserved": true
+      }
+    },
+    {
+      "name": "cached-close",
+      "expected": {
+        "receipt": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "cpu": 0,
+        "done": true
+      }
+    },
+    {
+      "name": "duplicate-transfer",
+      "expected": {
+        "rejected": true,
+        "noSecondClose": true
+      }
+    }
+  ],
+  "source": {
+    "idPrefix": "node-",
+    "groupPrefix": "group-",
+    "text": "Grüße AV",
+    "fontFamily": "anta",
+    "transform": [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ],
+    "color": [
+      0.25,
+      0.5,
+      0.75,
+      1
+    ],
+    "x": 1,
+    "y": 2,
+    "size": 12,
+    "asset": {
+      "id": "image-source",
+      "width": 1,
+      "height": 1,
+      "pixels": [
+        255,
+        0,
+        0,
+        255
+      ]
+    },
+    "geometry": {
+      "move": [
+        0,
+        0
+      ],
+      "line": [
+        2,
+        3
+      ],
+      "quadCtrl": [
+        1,
+        4
+      ],
+      "quadTo": [
+        3,
+        5
+      ],
+      "cubicCtrl1": [
+        2,
+        1
+      ],
+      "cubicCtrl2": [
+        4,
+        6
+      ],
+      "cubicTo": [
+        5,
+        3
+      ],
+      "arc": {
+        "rx": 2,
+        "ry": 3,
+        "rotation": 15,
+        "largeArc": false,
+        "sweep": true,
+        "to": [
+          6,
+          4
+        ]
+      }
+    }
+  }
+}

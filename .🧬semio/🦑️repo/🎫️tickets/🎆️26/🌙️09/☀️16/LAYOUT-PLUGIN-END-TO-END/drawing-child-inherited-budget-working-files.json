@@ -1,0 +1,29 @@
+{
+  "status": "Source authored, not compiled/tested",
+  "before": {
+    "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🦀️.rs": "71f8696b4378ac884ad4381bc50bc0085d0430c2ba35bda44142881a79b3cd03",
+    "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/👶️child/🦀️.rs": "caa35324b893b8f964cdf6961b6d1c5d79c3b85c9f828dfa74d7d19a09fed456"
+  },
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🦀️.rs",
+      "sha256": "2942a241c37fdff147fe0b2e6429232ec4c820584203647eabbf5642a401f8b2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/👶️child/🦀️.rs",
+      "sha256": "541f9aab2eec489528094dbb9eec10a88211f55d9b05b23d105d4c71915953ee"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/👶️child/🎟️inherit/📐️.json",
+      "sha256": "90cb94d85fdab1dabeea5e3da0516c17c5173ff2deb0291bfdb5b4aa1a46c8be"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/👶️child/🎟️inherit/🔣️.json",
+      "sha256": "01783503e06f55edb2af0afb74463cd318635d98ee51eecae24d0a3300f110eb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/👶️child/🎟️inherit/🧪️tests/🦀️.rs",
+      "sha256": "91d11a55df3b3141484489aaf8880a95aa77f657825f9410ec4937961fdd9319"
+    }
+  ]
+}

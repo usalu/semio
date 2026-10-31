@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "pageBytes": 3072,
+  "referenceRowBytes": 8,
+  "maximumBytes": 8192,
+  "bytes": [
+    0,
+    1,
+    127,
+    128,
+    255
+  ],
+  "quanta": [
+    1,
+    7
+  ],
+  "publication": "single-authentic-issued-turn",
+  "source": "caller-keeps-borrow",
+  "zeroDenial": [
+    "items",
+    "copy",
+    "capacity",
+    "depth",
+    "release"
+  ],
+  "publicationGrantRequired": true,
+  "text": "AÄ🙂\r\n",
+  "logicalUtf16Bytes": 2,
+  "closeSelectionItems": 1
+}

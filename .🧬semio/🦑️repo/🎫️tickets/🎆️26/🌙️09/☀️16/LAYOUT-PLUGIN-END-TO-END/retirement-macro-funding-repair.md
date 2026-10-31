@@ -1,0 +1,7 @@
+# Physical Retirement Caller Authority Repair
+
+Root removed the shared numeric close convenience and advance_physical_work helper that minted byte/capacity/release/depth grants from demand. The canonical macro now takes only retired/job types and exposes explicit actual-grant close_step, demand and terminal queries. Construction retains typed ownership inline rather than panicking/dropping on unsupported ownership. No allocation claim is fabricated.
+
+All25 invocation sites are handcrafted to the two-argument contract; obsolete error-mapping closures are removed, so no dynamic to_string allocation hides in numeric close. Root used fresh whole-file equality checks and changed only invocation lines in peer-owned bodies. Exact Source path/hashes/scope are in retirement-macro-working-files.json. Domain workers must finish their numeric consumer/test migrations; this is not SourceReady or compilation proof.
+
+The existing Drawing testkit close macro already invokes explicit close_step and checks a denied item grant; its demand-derived grants are test fixture policy, not a production authority ingress or a claimed genuine Original composition law. New actual Original caller tests remain the production-seam proof. WorkRetirementCounter is unchanged pending the distinct actual CPU-only/callback caller review. The trace worker owns removal of its last production advance_physical_work caller. No test, compiler, runtime or cache operation ran for this Source change.

@@ -1131,6 +1131,47 @@
         },
         "context": {}
       }
+    },
+    "TypingState": {
+      "title": "TypingState",
+      "description": "Canonical transient typing state; position is the only leaf key.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "states",
+        "tool",
+        "actor",
+        "buffer",
+        "deadlineMs",
+        "transaction",
+        "net"
+      ],
+      "properties": {
+        "states": {
+          "const": [
+            "root",
+            "typing"
+          ]
+        },
+        "tool": {
+          "$ref": "#/$defs/ToolId"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "buffer": {
+          "$ref": "#/$defs/TypingBuffer"
+        },
+        "deadlineMs": {
+          "$ref": "#/$defs/U64"
+        },
+        "transaction": {
+          "$ref": "#/$defs/TransactionRef"
+        },
+        "net": {
+          "type": "array"
+        }
+      }
     }
   }
 }

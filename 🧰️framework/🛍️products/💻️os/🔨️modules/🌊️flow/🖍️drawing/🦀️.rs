@@ -57,7 +57,7 @@ mod kernel_impl;
 mod json_bridge;
 pub use json_bridge::{
     boolean_segments_json, dispose_drawing, export_pdf_json, export_svg_json, render_scene_json,
-    retain_drawing_handles, trace_bitmap_json, with_drawing_kernel,
+    retain_drawing_handles, with_drawing_kernel,
 };
 
 // #region 🔖️Engine

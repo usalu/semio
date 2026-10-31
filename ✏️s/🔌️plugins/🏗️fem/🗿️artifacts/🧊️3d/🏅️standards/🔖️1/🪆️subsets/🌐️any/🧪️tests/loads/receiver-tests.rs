@@ -290,3 +290,16 @@ fn identity_child_restores_original_finite_parent_stage_on_success_and_error() {
         assert_eq!(last.get(), (1, 1));
     }
 }
+#[test]
+fn a_row_failing_validation_is_never_used() {
+    for (case, damage) in [("material modulus", 0usize), ("node identity", 1usize)] {
+        let mut input = source();
+        match damage {
+            0 => input.materials[0].e = -1.0,
+            _ => input.nodes[0].id = String::new(),
+        }
+        let (result, _) = receive(&pack(&input), grant(), usize::MAX);
+        let error = result.err().unwrap_or_else(|| panic!("{case}: an invalid row produced a usable snapshot"));
+        assert_eq!(error.kind, ValueRefusalKind::InvalidValue, "{case}");
+    }
+}

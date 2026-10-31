@@ -384,7 +384,10 @@ macro_rules! sparse_record_diff {
         $crate::sparse_whole_diff! { record: $record, diff: $diff }
     };
     (record: $record:ident, diff: $diff:ident, fields: { $($field:ident : $ty:ty),+ $(,)? } $(,)?) => {
-        $crate::sparse_record_diff! { record: $record, diff: $diff, fields: { $($field: $ty),+ }, keyed: {} }
+        $crate::sparse_record_diff! { record: $record, diff: $diff, derives: [], fields: { $($field: $ty),+ }, keyed: {} }
+    };
+    (record: $record:ident, diff: $diff:ident, derives: [$($derive:path),* $(,)?], fields: { $($field:ident : $ty:ty),+ $(,)? } $(,)?) => {
+        $crate::sparse_record_diff! { record: $record, diff: $diff, derives: [$($derive),*], fields: { $($field: $ty),+ }, keyed: {} }
     };
     (
         record: $record:ident,
@@ -392,8 +395,17 @@ macro_rules! sparse_record_diff {
         fields: { $($field:ident : $ty:ty),+ $(,)? },
         keyed: { $($kf:ident : $kv:ty),* $(,)? } $(,)?
     ) => {
+        $crate::sparse_record_diff! { record: $record, diff: $diff, derives: [], fields: { $($field: $ty),+ }, keyed: { $($kf: $kv),* } }
+    };
+    (
+        record: $record:ident,
+        diff: $diff:ident,
+        derives: [$($derive:path),* $(,)?],
+        fields: { $($field:ident : $ty:ty),+ $(,)? },
+        keyed: { $($kf:ident : $kv:ty),* $(,)? } $(,)?
+    ) => {
         #[doc = concat!("🔺️ Sparse diff of [`", stringify!($record), "`]: one optional slot per field, keyed rows per map field.")]
-        #[derive(Clone, Debug, Default, PartialEq)]
+        #[derive(Clone, Debug, Default, PartialEq $(, $derive)*)]
         pub struct $diff {
             $(pub $field: Option<$ty>,)+
             $(pub $kf: $crate::KeyedRows<$kv>,)*

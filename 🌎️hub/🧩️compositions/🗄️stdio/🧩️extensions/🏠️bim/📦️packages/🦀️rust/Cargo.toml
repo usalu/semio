@@ -23,6 +23,7 @@ semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️mo
 semio-s-artifact-stdio-ifc = { workspace = true }
 semio-s-artifact-stdio-ifc-catalog = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base = { workspace = true }
+semio-s-artifact-stdio-ifc-2x3-viewer = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base-model = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base-mutations = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-cobie = { workspace = true }

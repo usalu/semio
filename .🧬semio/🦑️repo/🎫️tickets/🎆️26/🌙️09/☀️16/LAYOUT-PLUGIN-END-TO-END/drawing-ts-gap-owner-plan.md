@@ -1,0 +1,19 @@
+# Current Glyph Gap Ownership Readiness
+
+The defining FontWorkingMapping source is font/shape/context/apply/workspace in the emoji taxonomy. It currently sets the retained buffer length directly to maximum, stores through numeric properties, deletes by changing only gapCount, pops through Array, and casts FontMappedScalar-or-undefined slots to a glyph Array. These concrete operations do not survive genuine sealed page ownership. No old pass is current proof of this closure.
+
+The proposed replacement admits actual fixed page bodies and publishes gap cells through original funding, with each reached retained cell mutation separately paid. Gap position/count are existing fixed scalar control headers: item/depth and real CPU, copy zero. Deleted glyph values cannot disappear by merely widening a gap; actual cells must be cleared or retained in a private phased close frontier.
+
+A compacted result should have a defining first-party owned glyph sequence, checked readonly get/at/iteration and a funded close cursor retaining the actual original page owner. It must not cast undefined slots to glyph values or expose a raw Array, Proxy, copied body or compatibility adapter. A completed-work ownership handoff is semantic zero, item/depth and actual CPU; no invented byte grant or new wallet. All parent mapping/output/archive callers must explicitly consume and close this genuine owner.
+
+The exact parent producer and retirement API changes remain to be sealed before that deeper body implementation. This proposal does not claim implementation, test or runtime acceptance. Existing glyph corpus, third-party geometry comparisons, original stock/caps, cancellation and full error retention remain required.
+
+## Closed Test-First Contract
+
+The new canonical workspace/work schema and cases precede the proposed body. Five actual future-owner laws are authored: zero-size/header ownership; independent SQLite ordered mutations and sole original-page transfer; item/capacity/depth/copy/release denial; cancellation after the first actual destination store while the source clear is denied; and partial deletion retaining the exact operation through mismatch refusal. Every test closes the producer and transferred output from one predeclared finite bank, retaining both assertion and cleanup errors. Existing fourteen glyph corpus rows and three original glyph laws are unchanged.
+
+The semantic operations and SQL expected list are language-neutral. The credit profile explicitly names TypeScript declared logical row accounting; its 64-byte glyph row is the existing defining TypeScript workspace quote, not an invented Rust size, VM width or cross-language physical parity claim.
+
+FontGlyphSequence is a defining domain output owner over the same genuine page Buffer, with readonly length/get/at/iteration and nextCloseDemand/retireOne. It does not inherit Array or adopt raw data. WorkingMapping.take(work) is a funded header move that can return null on denial while keeping the exact pages resident. Mapping helper entry points expose lastTurnWork and lastTurnSemanticWork independently. A staged move writes its destination in one CPU turn with semantic zero, then clears the original source/commits the logical gap frontier in another genuine turn with semantic one; a denied second store preserves the original readable mapping. Delete(count,work) clears one actual row per turn and refuses a changed in-flight count. Compaction cannot move and clear a tail row in the same turn.
+
+Current direct mapping producers are Context Apply/FontClusterLayout and their original unit/retirement tests. FontClusterMapping, ClusterFace, scalar-output archives, ClusterLayout, Run and paragraph/Drawing output readers must hand-migrate owned glyph sequence publication/reads/close. No current raw numeric/cast path is accepted as completed custody.

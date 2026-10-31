@@ -2,6 +2,9 @@
 use super::*;
 use semio_framework_pixels::{compositing::{layers::{RasterStackContent,RasterStackInput,RasterStackJob,RasterStackLayer,RasterStackMask,RasterStackResult,RasterStackTransform},CompositeBlend},editing::PixelProgress,RasterImage as PixelImage};
 use std::collections::BTreeMap;
+use semio_framework_value::{work::RetainedWorkLedger,RetainedCloneGrant};
+
+const STOCK:RetainedCloneGrant=RetainedCloneGrant {maximum_items:1<<22,maximum_copy_bytes:1<<28,maximum_capacity_bytes:1<<25,maximum_release_bytes:1<<26,maximum_depth:256};
 
 fn transform(value:&TransformJson)->RasterStackTransform {RasterStackTransform {x:value.x,y:value.y,a:value.a,b:value.b,c:value.c,d:value.d}}
 fn mask(value:&Option<MaskJson>)->Option<RasterStackMask>{value.as_ref().map(|m|RasterStackMask {enabled:m.enabled,linked:m.linked,invert:m.invert,width:m.width,height:m.height,image_key:m.image_key.clone(),transform:transform(&m.transform)})}
@@ -86,14 +89,15 @@ impl RetainedComposite {
                 }
             }
         }
-        collect(&mut layers,buffers,&mut images);Ok(RasterStackInput {layers,images})
+        collect(&mut layers,buffers,&mut images);Ok(RasterStackInput {layers,images:images.into_iter().collect()})
     }
     pub fn advance(&mut self,budget:usize,layers:&[RasterStackLayer],buffers:&HashMap<String,Arc<PixelImage>>)->Result<PixelProgress,String>{
         if !(1..=1048576).contains(&budget){return Err("Compositing grant must be between 1 and 1048576".into());}
         if !self.pending{return self.error.clone().map_or_else(||Ok(self.progress.unwrap_or(PixelProgress {completed:0,total:0,done:true})),Err);}
         let result:Result<PixelProgress,String>=(||{
-            if self.job.is_none(){self.job=Some(RasterStackJob::new(self.input(layers,buffers)?).map_err(|e|e.to_string())?);}
-            let progress=self.job.as_mut().unwrap().advance(budget).map_err(|e|e.to_string())?;
+            if self.job.is_none(){self.job=Some(RasterStackJob::new(self.input(layers,buffers)?));}
+            let job=self.job.as_mut().ok_or_else(||String::from("Compositing lost its job"))?;let progress=job.advance(budget,&mut RetainedWorkLedger::new(STOCK)).map_err(|e|e.to_string())?;
+            if !progress.done&&job.last_turn_work()==0{return Err("Compositing made no progress under its ledger".into());}
             if progress.done{
                 let output=self.job.take().unwrap().into_result().map_err(|e|e.to_string())?;
                 self.image=(!output.empty).then(||Arc::new(image_from_rgba(output.image.width,output.image.height,output.image.pixels.clone())));

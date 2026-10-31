@@ -42,8 +42,10 @@ tune away.
 from __future__ import annotations
 
 # region 🔖️Imports
+import importlib.util
 import json
-import struct
+import os
+import sys
 
 from semio_repo_test import Adapter, Context, Outcome, digest
 
@@ -112,7 +114,7 @@ def hex_of(text: str) -> str:
 
 
 def text_of(hexed: str) -> str:
-    """🔡️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
+    """🪄️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
     if len(hexed) % 2 != 0:
         raise AssertionError("hex run %r has an odd digit count" % hexed)
     return bytes.fromhex(hexed).decode("utf-8")
@@ -127,7 +129,7 @@ def read_number(text: str) -> float:
 
 
 def print_number(value: float) -> str:
-    """🔢️ The writing direction of `number`: Rust's `{v}` Display for `f64`, which prints an
+    """🖨️ The writing direction of `number`: Rust's `{v}` Display for `f64`, which prints an
     integral value with no fractional part and otherwise the shortest round-tripping form."""
     if value == int(value):
         return "%d" % int(value)
@@ -171,14 +173,14 @@ def split_top_level(text: str) -> list:
 
 
 def bracketed(text: str) -> str:
-    """🔎️ The body of a `"[" … "]"` group, refusing anything that is not one."""
+    """🧍️ The body of a `"[" … "]"` group, refusing anything that is not one."""
     if len(text) < 2 or text[0] != "[" or text[-1] != "]":
         raise AssertionError("expected a bracketed group, got %r" % text)
     return text[1:-1]
 
 
 def field(lines: list, name: str) -> str:
-    """🔎️ The right-hand side of one `name "=" value` body line; a missing line is an error."""
+    """📛️ The right-hand side of one `name "=" value` body line; a missing line is an error."""
     prefix = name + "="
     for line in lines:
         if line.startswith(prefix):
@@ -305,192 +307,33 @@ def print_dsl(snapshot: dict) -> str:
 
 
 # region 🔖️Pack
-BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
-PACK_TOKEN = "stdio.semio.cad.pack v1"
-PACK_FORMAT = 1
+_HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-class Cursor:
-    """🔎️ A byte cursor over a pack body — the record framing is positional, so one cursor with a
-    varint reader and a fixed-width reader is the whole machine the frame needs."""
-
-    def __init__(self, payload: bytes) -> None:
-        self.payload = payload
-        self.at = 0
-
-    def take(self, count: int) -> bytes:
-        if self.at + count > len(self.payload):
-            raise AssertionError("the pack frame ends %d byte(s) early" % (self.at + count - len(self.payload)))
-        chunk = self.payload[self.at : self.at + count]
-        self.at += count
-        return chunk
-
-    def byte(self) -> int:
-        return self.take(1)[0]
-
-    def varint(self) -> int:
-        """🔢️ LEB128, seven bits per byte, little end first — `write_str_lp`'s own length prefix."""
-        value, shift = 0, 0
-        while True:
-            octet = self.byte()
-            value |= (octet & 0x7F) << shift
-            if octet & 0x80 == 0:
-                return value
-            shift += 7
-
-    def real(self) -> float:
-        return struct.unpack("<d", self.take(8))[0]
-
-    def string(self) -> str:
-        return self.take(self.varint()).decode("utf-8")
-
-    def done(self) -> None:
-        if self.at != len(self.payload):
-            raise AssertionError("%d trailing byte(s) after the pack body" % (len(self.payload) - self.at))
+def _load_shared(alias, *parts):
+    """🧬️ Loads a shared module from the `stdio.semio` artifact root, six folders above this case, and registers it under an importable name."""
+    if alias in sys.modules:
+        return sys.modules[alias]
+    path = os.path.join(_HERE, *[os.pardir] * 6, *parts)
+    spec = importlib.util.spec_from_file_location(alias, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[alias] = module
+    spec.loader.exec_module(module)
+    return module
 
 
-def put_varint(value: int) -> bytes:
-    if value < 0:
-        raise AssertionError("the pack frame writes a varint, which carries no sign; got %d" % value)
-    out = bytearray()
-    while True:
-        octet = value & 0x7F
-        value >>= 7
-        out.append(octet | (0x80 if value else 0))
-        if not value:
-            return bytes(out)
+record_document = _load_shared("record_document", "🚪️io", "💾️binary", "🎒️record-document", "🐍️.py")
+RECORD_SPEC = record_document.load_record_spec(os.path.join(_HERE, os.pardir, os.pardir, "🧬️schema", "📸️snapshot", "🗺️record-spec", "🔣️.json"))
 
 
-def put_string(text: str) -> bytes:
-    raw = text.encode("utf-8")
-    return put_varint(len(raw)) + raw
+def parse_pack(data: bytes) -> dict:
+    """📦️ A `.pack.semio` file as the JSON snapshot its record document carries."""
+    return record_document.decode_pack(RECORD_SPEC, data)
 
 
-def put_real(value: float) -> bytes:
-    return struct.pack("<d", float(value))
-
-
-def put_point2(point: dict) -> bytes:
-    return put_real(point["x"]) + put_real(point["y"])
-
-
-def take_point2(cursor: Cursor) -> dict:
-    return {"x": cursor.real(), "y": cursor.real()}
-
-
-#: 📐️ The per-variant tag byte of a packed `entity`, in the grammar's own `entity` production order
-#: — `line | arc | circle | ellipse | polyline | text-entity | insert | solid | dimension`. The
-#: committed drawing confirms every one of the nine: its `h1` arc carries `0x01`, its `h8` dimension
-#: `0x08`, and the `door` block's line `0x00`.
-PACK_TAGS = ("line", "arc", "circle", "ellipse", "polyline", "text", "insert", "solid", "dimension")
-
-
-def take_entity(cursor: Cursor) -> dict:
-    tag = cursor.byte()
-    if tag >= len(PACK_TAGS):
-        raise AssertionError("unknown packed entity tag %d — the grammar declares nine variants" % tag)
-    kind = PACK_TAGS[tag]
-    if kind == "line":
-        return {"kind": kind, "a": take_point2(cursor), "b": take_point2(cursor)}
-    if kind == "arc":
-        return {"kind": kind, "center": take_point2(cursor), "radius": cursor.real(), "startAngle": cursor.real(), "endAngle": cursor.real()}
-    if kind == "circle":
-        return {"kind": kind, "center": take_point2(cursor), "radius": cursor.real()}
-    if kind == "ellipse":
-        return {"kind": kind, "center": take_point2(cursor), "majorAxisEnd": take_point2(cursor), "ratio": cursor.real(), "startParam": cursor.real(), "endParam": cursor.real()}
-    if kind == "polyline":
-        return {"kind": kind, "vertices": [take_point2(cursor) for _ in range(cursor.varint())], "closed": cursor.byte() == 1}
-    if kind == "text":
-        return {"kind": kind, "position": take_point2(cursor), "height": cursor.real(), "rotation": cursor.real(), "content": cursor.string()}
-    if kind == "insert":
-        return {"kind": kind, "blockName": cursor.string(), "insertionPoint": take_point2(cursor), "scale": take_point2(cursor), "rotation": cursor.real()}
-    if kind == "solid":
-        return {"kind": kind, "p1": take_point2(cursor), "p2": take_point2(cursor), "p3": take_point2(cursor), "p4": take_point2(cursor)}
-    return {"kind": kind, "defPoint": take_point2(cursor), "textPosition": take_point2(cursor), "measurement": cursor.real(), "text": cursor.string()}
-
-
-def put_entity(entity: dict) -> bytes:
-    kind = entity["kind"]
-    if kind not in PACK_TAGS:
-        raise AssertionError("unknown entity kind %r" % kind)
-    out = bytes([PACK_TAGS.index(kind)])
-    if kind == "line":
-        return out + put_point2(entity["a"]) + put_point2(entity["b"])
-    if kind == "arc":
-        return out + put_point2(entity["center"]) + put_real(entity["radius"]) + put_real(entity["startAngle"]) + put_real(entity["endAngle"])
-    if kind == "circle":
-        return out + put_point2(entity["center"]) + put_real(entity["radius"])
-    if kind == "ellipse":
-        return out + put_point2(entity["center"]) + put_point2(entity["majorAxisEnd"]) + put_real(entity["ratio"]) + put_real(entity["startParam"]) + put_real(entity["endParam"])
-    if kind == "polyline":
-        return out + put_varint(len(entity["vertices"])) + b"".join(put_point2(one) for one in entity["vertices"]) + bytes([1 if entity["closed"] else 0])
-    if kind == "text":
-        return out + put_point2(entity["position"]) + put_real(entity["height"]) + put_real(entity["rotation"]) + put_string(entity["content"])
-    if kind == "insert":
-        return out + put_string(entity["blockName"]) + put_point2(entity["insertionPoint"]) + put_point2(entity["scale"]) + put_real(entity["rotation"])
-    if kind == "solid":
-        return out + put_point2(entity["p1"]) + put_point2(entity["p2"]) + put_point2(entity["p3"]) + put_point2(entity["p4"])
-    return out + put_point2(entity["defPoint"]) + put_point2(entity["textPosition"]) + put_real(entity["measurement"]) + put_string(entity["text"])
-
-
-def take_record(cursor: Cursor) -> dict:
-    return {"handle": cursor.string(), "layer": cursor.string(), "entity": take_entity(cursor)}
-
-
-def put_record(record: dict) -> bytes:
-    return put_string(record["handle"]) + put_string(record["layer"]) + put_entity(record["entity"])
-
-
-def parse_pack(payload: bytes) -> dict:
-    """📦️ The binary twin of the DSL. The committed protocol
-    `../../🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio`
-    fully describes the envelope and the `format u8` + varint-length-prefixed `schema` head, and
-    then declares the three collections one opaque trailing `payload` chain by its own admission.
-    That layer was therefore DERIVED from the committed `🎒️.pack.semio` bytes: varint counts,
-    `write_str_lp` length-prefixed UTF-8 strings, little-endian `f64` coordinates, a `u8` bool and a
-    per-variant `u8` entity tag in the grammar's own variant order, with field order taken from the
-    DSL grammar. The derivation is PINNED — `pack_bytes` re-encodes that committed file byte for
-    byte, which it could not do from a misreading."""
-    if not payload.startswith(BINARY_MAGIC):
-        raise AssertionError("the pack does not start with the semio binary magic")
-    at = len(BINARY_MAGIC)
-    (token_len,) = struct.unpack("<I", payload[at : at + 4])
-    at += 4
-    token = payload[at : at + token_len].decode("utf-8")
-    if token != PACK_TOKEN:
-        raise AssertionError("expected the %r envelope token, got %r" % (PACK_TOKEN, token))
-    cursor = Cursor(payload[at + token_len :])
-    if cursor.byte() != PACK_FORMAT:
-        raise AssertionError("unexpected pack format byte")
-    snapshot = {"schema": cursor.string(), "layers": [], "blocks": [], "entities": []}
-    for _ in range(cursor.varint()):
-        snapshot["layers"].append({"name": cursor.string(), "colorIndex": cursor.varint(), "lineType": cursor.string(), "visible": cursor.byte() == 1})
-    for _ in range(cursor.varint()):
-        name, base = cursor.string(), take_point2(cursor)
-        snapshot["blocks"].append({"name": name, "basePoint": base, "entities": [take_record(cursor) for _ in range(cursor.varint())]})
-    snapshot["entities"] = [take_record(cursor) for _ in range(cursor.varint())]
-    cursor.done()
-    return snapshot
-
-
-def pack_bytes(snapshot: dict) -> bytes:
-    """📦️ The same frame in the writing direction; `identity-round-trip` requires it to reproduce
-    the committed binary twin byte for byte."""
-    body = bytearray([PACK_FORMAT])
-    body += put_string(snapshot["schema"])
-    body += put_varint(len(snapshot["layers"]))
-    for layer in snapshot["layers"]:
-        body += put_string(layer["name"]) + put_varint(int(layer["colorIndex"])) + put_string(layer["lineType"]) + bytes([1 if layer["visible"] else 0])
-    body += put_varint(len(snapshot["blocks"]))
-    for block in snapshot["blocks"]:
-        body += put_string(block["name"]) + put_point2(block["basePoint"]) + put_varint(len(block["entities"]))
-        for record in block["entities"]:
-            body += put_record(record)
-    body += put_varint(len(snapshot["entities"]))
-    for record in snapshot["entities"]:
-        body += put_record(record)
-    token = PACK_TOKEN.encode("utf-8")
-    return BINARY_MAGIC + struct.pack("<I", len(token)) + token + bytes(body)
+def pack_bytes(document: dict) -> bytes:
+    """🔍️ The writing direction of `parse_pack`, envelope included."""
+    return record_document.encode_pack(RECORD_SPEC, document)
 
 
 # endregion 🔖️Pack
@@ -498,12 +341,12 @@ def pack_bytes(snapshot: dict) -> bytes:
 
 # region 🔖️Mutations
 def clone(value):
-    """🧬️ A structural copy, so applying a verb never writes through into the parsed document."""
+    """🏛️ A structural copy, so applying a verb never writes through into the parsed document."""
     return json.loads(json.dumps(value))
 
 
 def parts(mutation: dict) -> tuple:
-    """🔎️ Splits `{"mutation": "<camelTag>", …}` into its verb and its named arguments."""
+    """✂️ Splits `{"mutation": "<camelTag>", …}` into its verb and its named arguments."""
     tag = mutation.get("mutation")
     if tag not in KIND_OF_TAG:
         raise AssertionError("unknown verb %r — the vocabulary is %s" % (tag, ", ".join(sorted(KIND_OF_TAG))))
@@ -511,7 +354,7 @@ def parts(mutation: dict) -> tuple:
 
 
 def named(items: list, key: str, value: str, verb: str) -> int:
-    """🔎️ The position of the entry a name-keyed verb addresses. An unaddressable name is a
+    """🗝️ The position of the entry a name-keyed verb addresses. An unaddressable name is a
     refusal, never a silent no-op — a quietly skipped mutation would report as a pass."""
     for at, item in enumerate(items):
         if item[key] == value:
@@ -524,7 +367,7 @@ def block_named(snapshot: dict, args: dict, verb: str) -> dict:
 
 
 def apply_mutation(snapshot: dict, mutation: dict) -> dict:
-    """🧬️ Applies one verb, returning a NEW snapshot. `add-…` appends to its name-keyed collection,
+    """📱️ Applies one verb, returning a NEW snapshot. `add-…` appends to its name-keyed collection,
     which is what the committed specification vectors record and what the grammars leave open."""
     result = clone(snapshot)
     kind, args = parts(mutation)
@@ -624,7 +467,7 @@ def inverse_mutation(snapshot: dict, mutation: dict) -> dict:
 
 # region 🔖️Scenario input
 def doc_string(ctx: Context) -> str:
-    """📜️ The scenario's own parameters — the feature owns them, not the adapter, so the two
+    """🔌️ The scenario's own parameters — the feature owns them, not the adapter, so the two
     implementations cannot read two different transcriptions of the same verb."""
     for step in ctx.scenario["steps"]:
         if step.get("docString"):
@@ -633,7 +476,7 @@ def doc_string(ctx: Context) -> str:
 
 
 def drawing(ctx: Context) -> dict:
-    """📐️ The real committed drawing, read through this implementation's own DSL parser."""
+    """✏️ The real committed drawing, read through this implementation's own DSL parser."""
     return parse_dsl(ctx.input_bytes(DRAWING_DSL).decode("utf-8"))
 
 
@@ -653,7 +496,7 @@ def mutate(ctx: Context) -> Outcome:
 
 
 def inverse(ctx: Context) -> Outcome:
-    """↩️ The same verb, then this implementation's own undo of it. The restored snapshot must be
+    """🧲️ The same verb, then this implementation's own undo of it. The restored snapshot must be
     the drawing again — asserted here, and the MUTATED snapshot travels in the projection too, so
     the sixteen rows cannot all project the same restored value and compare vacuously."""
     snapshot = drawing(ctx)
@@ -666,7 +509,7 @@ def inverse(ctx: Context) -> Outcome:
 
 
 def spec_vector(ctx: Context) -> Outcome:
-    """🧫️ The same verb on its committed `(before, mutation, after)` vector — a THIRD statement of
+    """➡️ The same verb on its committed `(before, mutation, after)` vector — a THIRD statement of
     what the verb means, independent of both implementations, kept from before this oracle existed."""
     kind = ctx.row()
     committed = vector(ctx, kind)

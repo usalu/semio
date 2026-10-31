@@ -1,0 +1,25 @@
+{
+  "status": "authored unexecuted; caller migration ongoing",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🟦️.ts",
+      "beforeSha256": "595aa946bb3a21f1caf6b41828eb6fcf8f3005cac85daef43ca89d3018011909",
+      "sha256": "bc2d94de61d4109eaecc4a12ec90f7676b95f834572748d6bca403f70c3aac74"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🎟️work/📐️.json",
+      "status": "added",
+      "sha256": "210b28b32194ec42de7aee06397e37c95bc7653314a0e5455ee8073162978b6e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🎟️work/🔣️.json",
+      "status": "added",
+      "sha256": "232545e751de23d4cb27af3d75c7ac4fa83f2af632d94c3d129cbe68814e9ef8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🎟️work/🧪️tests/owned.test.ts",
+      "status": "added",
+      "sha256": "9c019896a046694993b84ec1c58702dca7147244cf5fc11fbfeb73af0c715b88"
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+# Original paint owner migration
+
+All original five registrations and original edit/sample/retirement data are preserved. Sampling now explicitly finishes the caller-funded owner before using logarithmic lookup; invalid preparation is observed through genuine advance and funded finally. Every original Sharp/Immer/Three comparison and tolerance is retained. Retirement sees actual copied source rows and scratch rows, checks source objects/colors are not adopted, drains both physical owners with actual CPU/receipts and same-bank conservation. Historical fixed row.work identities remain checked as original source-copy/header structural counts, separately from actual paid page operations. No stock or body quantum is increased.

@@ -1,0 +1,46 @@
+{
+  "status": "Source-authored, unexecuted, owning gates mandatory",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/🧱️inflate-state/🦀️.rs",
+      "bytes": 8370,
+      "sha256": "65ea15435b38b24140a8ddcf44745f18213b16261fafd00879b871bf680b6949"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/🚰️inflater/🦀️.rs",
+      "bytes": 23062,
+      "sha256": "55fafb94f33ea7905633865433ec3e08485e9457804cd84e27688e6ca57799a8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/🚰️inflater/♻️close/🔣️.json",
+      "bytes": 1479,
+      "sha256": "412fd98b328b83db081004023830f4c1bcca1070112e56c8ec9028717e8c5712"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/🚰️inflater/♻️close/📐️.json",
+      "bytes": 774,
+      "sha256": "bdca020fe9238ccde7b48a742d920623b3bccd7c5d00b08752442a92a6829995"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/🚰️inflater/♻️close/🧪️tests/🦀️.rs",
+      "bytes": 3001,
+      "sha256": "307bd2520422e8e4950481dc390fa2e8efd4d035dd81b97d57cdb5b09d099f19"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗜️deflate/🧪️tests/🔬️unit/🛫️controlled/🦀️.rs",
+      "bytes": 9804,
+      "sha256": "4986084d97014cfee0cccaa3286a21ccdfa997eba16051cf8856a9411b9e3ca8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/📥️decode/🦀️.rs",
+      "bytes": 21830,
+      "sha256": "452d80549e25cc2227111fb5638ad0f593500be0137d712011e0174143f329a5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📷️png/📥️decode/♻️close/🧪️tests/🦀️.rs",
+      "bytes": 2314,
+      "sha256": "8682d3082be115be4a254163a74586eb4f47d66dbd0de1a6e7e8f9bae4b88d91"
+    }
+  ],
+  "sharedHunk": "Existing Deflate controlled test file: one new module mount only"
+}

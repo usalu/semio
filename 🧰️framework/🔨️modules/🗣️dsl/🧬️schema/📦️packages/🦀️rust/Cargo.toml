@@ -79,3 +79,7 @@ path = "../../🫴️receiving/🧪️tests/🦀️.rs"
 [[test]]
 name = "required_inline"
 path = "../../🧪️tests/🏷️required-inline/🦀️.rs"
+
+[[test]]
+name = "scalar_enum_receiving"
+path = "../../🧪️tests/🎚️scalar-enum-receiving/🦀️.rs"

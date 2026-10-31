@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Controlled Retirement Actual Work Law",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "maximumTurns",
+    "axes",
+    "expected",
+    "birth",
+    "maximumCpuWork"
+  ],
+  "properties": {
+    "stock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "copy": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "release": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "axes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "deniedCpu",
+        "cachedCpu",
+        "newFailureCpu",
+        "terminalCpu",
+        "source"
+      ],
+      "properties": {
+        "deniedCpu": {
+          "const": 0
+        },
+        "cachedCpu": {
+          "const": 0
+        },
+        "newFailureCpu": {
+          "const": 1
+        },
+        "terminalCpu": {
+          "const": 0
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "birth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "refusedAttempts",
+        "refusalKind",
+        "factoryValue"
+      ],
+      "properties": {
+        "refusedAttempts": {
+          "const": 1
+        },
+        "refusalKind": {
+          "const": "allocationFailed"
+        },
+        "factoryValue": {
+          "const": 17
+        }
+      }
+    },
+    "maximumCpuWork": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

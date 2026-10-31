@@ -1,7 +1,6 @@
 //! 🧫️ Sqlite snapshot laws of the semio root artifact for the subsets model, kit, table, value: the original test files, mounted unchanged, and the `fixture` of each subset that the base union law reuses.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 #![allow(dead_code, unused_imports)]
 
 extern crate semio_framework_os_kernel as dsl;

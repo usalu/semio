@@ -1,0 +1,211 @@
+{
+  "status": "authored-uncompiled",
+  "productionReady": false,
+  "runtimeAttempts": 0,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🦀️.rs",
+      "sha256": "2aed7a236c32e9300b50d0d55df4ac22a0bbca00d6dbde3dc7a9bea7a6c51b52",
+      "bytes": 12933
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/📦️bytes/🦀️.rs",
+      "sha256": "2ee2fcf9f397ab63f09eecf2714bf3cf2f4664030edb123934756e7423041aa6",
+      "bytes": 14041
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/📦️bytes/🔣️.json",
+      "sha256": "79f7b18ff5a617cb08a64cbe6ba47c5b37cdde832ea2882d19973531031e4a80",
+      "bytes": 431
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/📦️bytes/🧬️schema/🔣️.json",
+      "sha256": "e496e0fe6103e8a1fd7b3860a0f759638799df75339b593421203fce08f1f212",
+      "bytes": 1052
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🧪️tests/🦀️.rs",
+      "sha256": "4efec68677aeabf2301bcf1590fb1f31604f996c0136715ff4ccb4039b58dacc",
+      "bytes": 14395
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🎟️admission/🔣️.json",
+      "sha256": "3d6afcf54ec0f3986c558088ac3cb218c2f2e723095cc31346ef5b5dd7aa761d",
+      "bytes": 532
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🎟️admission/🧬️schema/🔣️.json",
+      "sha256": "4facef7c5f3abee44e629d21c72fff7a4c299657cd095aa3b875b3363b0efe3f",
+      "bytes": 1300
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🎟️admission/🧪️tests/🦀️.rs",
+      "sha256": "a705b7a042dfaf41f03686cbde2a8b430017d16306724a89114e24dee2a6a680",
+      "bytes": 3475
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🏭️construction/🦀️.rs",
+      "sha256": "41f8b62c708e50f2b2e116a45b8ee33c6bf2e1284e6317515c8169ae2127f2bb",
+      "bytes": 6137
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🏭️construction/🧪️tests/🦀️.rs",
+      "sha256": "52b09c014db808e08c45be0d2996f63436cbf54e3c915f7d7e78739138b71ef2",
+      "bytes": 7435
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🏭️construction/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "62a4b3a2650c2347daac0021cefa8636a97a521bc06e73a6cf8ab567a2fa2244",
+      "bytes": 2643
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🏭️construction/🧪️tests/🧬️schema/🔣️.json",
+      "sha256": "a4be47d78d1fd76c47230a72fb093d70c6200655e4d2f0357498f08dc6515d71",
+      "bytes": 2037
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🧪️tests/⛽️staged-projection/🦀️.rs",
+      "sha256": "ad9b72241c9d0168ceff8bd16b44c3b568e26bc9b2265cc99b80d7a304aabf18",
+      "bytes": 14476
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🦀️.rs",
+      "sha256": "b429a3145ba2a587aaa61d5affc09ef25dc65eb90c45feae6c3426b4d84b5b68",
+      "bytes": 11972
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🦀️.rs",
+      "sha256": "7b74a90273c75249364b7e9ee20d3d77d93b8eeed59d9bfada401f17420e9611",
+      "bytes": 2719
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧪️tests/🦀️.rs",
+      "sha256": "82ad22b4f141bc43cd323fc53d79538a6cb86b2cee567e9c4eabb340219e0b75",
+      "bytes": 8278
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️invocation/🦀️.rs",
+      "sha256": "6f362c7c6ad8420ceb7ed060fdd90a201a607690c8232e2059d8e6bccdf0f558",
+      "bytes": 11057
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️source/🦀️.rs",
+      "sha256": "9a2da904745fd76ee48182219827f1cae8398565c5c33b85a0e12cbd46fef240",
+      "bytes": 39894
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+      "sha256": "7d72196fe3681a71f67e0e373c24b6952cbef2793d3f1dbe16755785965356b7",
+      "bytes": 54817
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🦀️.rs",
+      "sha256": "6f19e6cf7eb469f09623eb9ebdb8ca8a9c9257dd88b66ec801cf97356a59b4a6",
+      "bytes": 11845
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🦀️.rs",
+      "sha256": "5ccdc3668ab914d66e8649ec3432c66045f5d66d192c271000516fccfed9c063",
+      "bytes": 25023
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "910ae8cccac30c44e6707c16575ed52f3e4c981c1d24883bb2afed4112d72698",
+      "bytes": 1324
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/🦀️.rs",
+      "sha256": "75977bf9e749eb639e9ba96a90e3ed47021405f72eeecd1f2a9930fdf9ba7728",
+      "bytes": 8104
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/♻️close/🧪️tests/🦀️.rs",
+      "sha256": "57e35391e2ce5d2ec013734188be0cf4a19536a7500aef2d14c28bf3946ddf42",
+      "bytes": 3260
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🎟️work/⚠️posting/🧪️tests/🦀️.rs",
+      "sha256": "7b83b84f07131158c4dc933d6ed1a58847a2ac32e9b18d139ec011751c287f3f",
+      "bytes": 3006
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🎟️work/🔣️.json",
+      "sha256": "8fd6eb0e6d5ef4dd8bfb44bce20c6498ffc99a44b63412af22286f964de004e4",
+      "bytes": 1579
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "bee4ac523943d635cd34d3e50a8c6d39137b51c49bf3974c118e23683b542409",
+      "bytes": 2717
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "202aa12766293cfaa0bd70b9780512987bf50bace5f4313320e5726df053db71",
+      "bytes": 21503
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📄️payload-pages-and-ledger/🦀️.rs",
+      "sha256": "a92fb6d4b9a7f0eecb4ca82ac822d700f8a8706fa4dec6d76ca7814334efa022",
+      "bytes": 13281
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/⛽️staged/🦀️.rs",
+      "sha256": "32a1bf3df9042e7eef3a4477f361c9811fdf410c5e080bda9e2317cdc48a3d16",
+      "bytes": 9366
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️tests/🦀️.rs",
+      "sha256": "3943c79b9276c6bdba9c6f9b8e6096285baf1be0c530c4eb60d8d657978a68d6",
+      "bytes": 2906
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "42ee1a515302815acb701565818b2790f98a4576188dd58dca4323857c7d656c",
+      "bytes": 2360
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🦀️.rs",
+      "sha256": "ffbda8d9d1713546e1f7462f60cc8d75d6099a33867a4bd1bc80a735d2675c5b",
+      "bytes": 9121
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧪️tests/🦀️.rs",
+      "sha256": "5fce16844f07f7d266d19ca18a109567bdd9491eccf59191fda0fcdeb685b05c",
+      "bytes": 6840
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "dc7bfd67a551864ed24e27148a53a188a25a6297de04e643fdf5794d1e98db0f",
+      "bytes": 1047
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/🧪️tests/🧬️schema/🔣️.json",
+      "sha256": "f3f08515539fbc0d46eccb003bc24124b5dd0a3acaddea8e2077cc6dd5e61dbd",
+      "bytes": 2063
+    }
+  ],
+  "remaining": [
+    "Worker payload still has old allocating private-ledger initializer; genuine same-source adoption and real driver/worker receiver integration remain mandatory",
+    "Root owns ordinary Writer and StepContext old synchronous Writer helper/callers",
+    "remaining external generic native construction consumers",
+    "remaining normal Builder/Authority test and product consumers",
+    "typed domain reservation must use the actual returned owned continuation"
+  ],
+  "snapshotOnly": true,
+  "removed": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/✍️payload-writer-and-grant/🦀️.rs",
+      "sha256": "3e7056642b374145f2802f6276527b6638779bb5e00195bdd08d115af815a42c",
+      "bytes": 11372,
+      "ownership": "Root ordinary Writer slice; this snapshot is not a freeze",
+      "reason": "Root consolidation removed duplicate Writer/PageGrant source; canonical Builder/staged source owns the real path."
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/✍️writer/⛽️staged/🦀️.rs",
+      "sha256": "0bb0b5959a22317e6f85b2888fc3ea03c671f559115a8d16b99a94840b25aa4b",
+      "bytes": 10369,
+      "ownership": "Root ordinary Writer slice; this snapshot is not a freeze",
+      "reason": "Root consolidation removed duplicate Writer/PageGrant source; canonical Builder/staged source owns the real path."
+    }
+  ]
+}

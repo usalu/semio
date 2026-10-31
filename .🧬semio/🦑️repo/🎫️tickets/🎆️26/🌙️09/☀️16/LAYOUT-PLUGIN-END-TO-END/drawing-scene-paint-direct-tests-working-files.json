@@ -1,0 +1,29 @@
+{
+  "state": "source-migrated-no-runtime",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "cd00b36a725a5c5deb334bafbfea3b7dcb342d264c00c3b38fe256ce0fc5c33d",
+      "sha256": "0f639257222df199445061e27b0498720a33f6e2fdd7e02e54f338dc589637f0",
+      "scope": "ScenePaint calls only; one finite ledger per job from existing original stock; canonical paid close"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "dca689fe01329284926b8afaf7f3d2e70689f5880e125710e63c1a816952cd61",
+      "sha256": "f0461b182f2fd966d575119ee2fd760c72c1fd67d95a9e7168601eaaf86bce42",
+      "scope": "ScenePaint calls only; one finite ledger per job from existing original stock; canonical paid close"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🎛️selection-laws/🦀️.rs",
+      "beforeSha256": "17a3e68aaff3fa356bc44e49264b5b9a6d74c8c770c66ae39e3a26dbeb078345",
+      "sha256": "9bcc4c0f47e1472cd80b52f7c5569dd6072d93d896e27cc4f68f5b05680fd597",
+      "scope": "ScenePaint calls only; one finite ledger per job from existing original stock; canonical paid close"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️canvas-tool/🦀️.rs",
+      "beforeSha256": "67902a9bbb79248611b449b4a61316a44bdd13af8e6895257575359ed805c3f8",
+      "sha256": "3657af94a880af05d0800db93dd0024bcf18ad915198dc644673fcc5705c6764",
+      "scope": "ScenePaint calls only; one finite ledger per job from existing original stock; canonical paid close"
+    }
+  ]
+}

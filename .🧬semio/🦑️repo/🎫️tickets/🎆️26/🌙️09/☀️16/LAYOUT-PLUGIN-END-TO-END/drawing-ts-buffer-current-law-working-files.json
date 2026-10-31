@@ -1,0 +1,27 @@
+{
+  "state": "schema-first-eight-current-owning-laws-authored-not-executed",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧬️schema/🔣️.json",
+      "bytes": 3040,
+      "sha256": "ae5aa4bc19f6637fd77f4b11fd0e9e3a852630245a3be75b91e28e4d91cfa56c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 1889,
+      "sha256": "1639035fe0ad6327cce64e88d2fc7881dee9dca2a49c14f7e657b48c5207fc21"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/fixture.ts",
+      "bytes": 4477,
+      "sha256": "6852e075943499c0229b12ccc931cbe5a7a7dcc0bbdb8aa200e9b2310319ff29"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📚️pages/🧪️tests/🟦️.ts",
+      "bytes": 11474,
+      "sha256": "389eeb8de19180b1640a96509a146c1ede115b34d33e75d935866aa36a9238db"
+    }
+  ],
+  "priorTestFirstPacket": "drawing-ts-buffer-test-first-working-files.json",
+  "newCasesChronology": "Issued overwrite/pop case and law before those methods; published-undefined/vacancy rule and SQL law before private vacancy representation change."
+}

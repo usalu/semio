@@ -1,0 +1,27 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs",
+    "bytes": 38834,
+    "sha256": "ccec17243a3a7f35b41414db33a1f1d27dc531f5effb66a98671b55c5df28ea1"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🎟️work/📐️.json",
+    "bytes": 523,
+    "sha256": "423dc7a0dff2bce6178fe9e3a25ae570567e9f70492ad246997076b2f1906090"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🎟️work/🔣️.json",
+    "bytes": 980,
+    "sha256": "b0f7d0a1647969570ec70a81bcb720652c58445209323575dab6c2067da83fa5"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🎟️work/🧪️tests/🦀️.rs",
+    "bytes": 4160,
+    "sha256": "d7a3c5e7a6c67acf84334a32dfbab8578741b7db46f18d08c03a6ee2dd13518a"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🦀️.rs",
+    "bytes": 8009,
+    "sha256": "6706ca2f2f1c73232d69c77bbb224dc776986528c3c9a6a17a44129e9319f164"
+  }
+]

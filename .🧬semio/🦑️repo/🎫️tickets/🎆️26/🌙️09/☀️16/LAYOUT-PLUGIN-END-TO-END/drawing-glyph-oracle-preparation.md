@@ -1,0 +1,5 @@
+# Original Glyph Oracle Interface Preparation
+
+Disjoint from all156 held inputs. The original independentRun OpenType algorithm and its exact glyph-count assertion physically moved once to the adjacent oracle module, and its one actual original caller uses the byte+neutral-row→path interface. No foreign Font class is exported. All original latn/dflt positioning, explicit oracle glyph IDs/positions, canonical source normalization, precision17 and expected glyph counts remain unchanged; no coordinate/tolerance/fixture/stock change. The entire prior original test file reconstructs in memory from the one moved physical function, exact call substitution and removed import.
+
+The fourteen-row fixture SHA remains dd9582fd3d2964dfe71985c8f34c3b93455973810aba64004cd02bbb3d35def5. This is interface/source preparation only, not runtime or fourteen-row acceptance. Original actual vector/raster/SVG/PDF/Sharp/pick/export/cancellation assertions remain in the test file and must hand-migrate their actual first-party owner/ledger APIs; no raw-plan facade/adoption will be added to get old consumers through.

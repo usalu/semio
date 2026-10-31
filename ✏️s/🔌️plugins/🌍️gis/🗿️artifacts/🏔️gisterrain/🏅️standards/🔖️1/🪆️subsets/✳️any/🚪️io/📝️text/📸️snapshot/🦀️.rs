@@ -11,7 +11,7 @@ use crate::GisTerrainSnapshot;
 /// 🏔️ The bundled "reuse terrain" example document, handcrafted in the `.gisterrain` DSL.
 pub const REUSE_TERRAIN_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
-/// 📖️ Parses `.gisterrain` DSL text into a `GisTerrainSnapshot`.
+/// 🔍️ Parses `.gisterrain` DSL text into a `GisTerrainSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<GisTerrainSnapshot, semio_framework_diagnostic::TextError> {
     <GisTerrainSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
@@ -170,6 +170,7 @@ pub use snapshot_wire_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire2_codec {
 use super::*;
+use semio_s_artifact_gis_gisterrain_terrain_descriptor::standards::v1::subsets::any::schema::terrain_descriptor::GIS_3D_TERRAIN_TILE_URL_TEMPLATE;
 use crate::standards::v1::subsets::any::schema::imported_map;
 use crate::standards::v1::subsets::any::io::text::snapshot::REUSE_TERRAIN_EXAMPLE_TEXT;
 use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerrainSnapshot};
@@ -208,7 +209,7 @@ pub struct TerrainSceneStyleJson<'a> {
     max_zoom: u32,
 }
 
-/// 🏔️ Builds the `World3dScene.terrain_json` payload for a descriptor — the one place gis needs to
+/// 🏗️ Builds the `World3dScene.terrain_json` payload for a descriptor — the one place gis needs to
 /// reach into `semio_framework_surface::terrain` beyond the wasm session itself (for the generic engine's
 /// tile zoom bounds).
 pub fn build_terrain_scene_json(descriptor: &TerrainDescriptorJson) -> String {
@@ -237,7 +238,7 @@ impl ImportedMap {
 }
 }
 
-/// 🗺️ Admits bundled scenery before the semantic descriptor projection.
+/// 🚪️ Admits bundled scenery before the semantic descriptor projection.
 pub fn fixture_descriptor(document:&GisTerrainSnapshot)->crate::schema::terrain_descriptor::TerrainDescriptorJson {
  let map=crate::schema::imported_map::ImportedMap::from_json(include_str!("../../../🖼️assets/🎬️demo/🌍️scenery.json")).expect("handcrafted terrain scenery map");
  parse_descriptor(document,&map)
@@ -254,7 +255,7 @@ fn imported_positions(document: &GisTerrainSnapshot) -> Vec<TerrainPositionData>
     map_positions(map)
 }
 
-/// 🏔️ The full rendering descriptor (project origin + fixture pins + `map:in` overlay pins +
+/// 🈵️ The full rendering descriptor (project origin + fixture pins + `map:in` overlay pins +
 /// exaggeration) for the given document — `exaggeration` always mirrors the LIVE document, and the
 /// bundled fixture's own `gisterrain exaggeration=...` header only ever seeds it once via
 /// `crate::schema::default_terrain_document`.

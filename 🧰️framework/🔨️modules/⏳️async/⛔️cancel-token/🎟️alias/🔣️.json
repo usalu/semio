@@ -1,0 +1,30 @@
+{
+  "stock": {
+    "items": 32,
+    "copyBytes": 0,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 1,
+    "maximumTurns": 16
+  },
+  "denials": [
+    "items",
+    "depth"
+  ],
+  "work": {
+    "denied": 0,
+    "alias": 1,
+    "returned": 1,
+    "cached": 0
+  },
+  "receipt": {
+    "copied_items": 1,
+    "copied_bytes": 0,
+    "retained_capacity_bytes": 0,
+    "released_bytes": 0
+  },
+  "cancellation": [
+    false,
+    true
+  ]
+}

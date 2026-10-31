@@ -20,6 +20,7 @@
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+extern crate self as semio_s_artifact_procedural_3d_mutations;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -131,7 +132,7 @@ pub fn generation3d_widget_removal(host_snapshot: &FlowHostSnapshot, id: &str) -
     leaves
 }
 
-/// 🗑️ The leaves that delete a selection of wires and widgets: every selected wire is cut first, then every selected widget
+/// 👆️ The leaves that delete a selection of wires and widgets: every selected wire is cut first, then every selected widget
 /// goes with the wires it still holds; an id the document does not hold is skipped and no wire is cut twice.
 pub fn generation3d_selection_removal(host_snapshot: &FlowHostSnapshot, selected: &[String]) -> Vec<Generation3dMutation> {
     let mut cut: Vec<String> = Vec::new();
@@ -207,7 +208,7 @@ pub struct GraphEditor<'a> {
 }
 
 impl<'a> GraphEditor<'a> {
-    /// 🧭️ Opens a recorder over `host`.
+    /// 📂️ Opens a recorder over `host`.
     pub fn new(host: &'a mut FlowHost) -> Self {
         Self { host, leaves: Vec::new() }
     }
@@ -217,7 +218,7 @@ impl<'a> GraphEditor<'a> {
         &self.host.host_snapshot
     }
 
-    /// 👁️ The host itself, read-only, for the queries that need more than the graph (a widget's value form).
+    /// 🏠️ The host itself, read-only, for the queries that need more than the graph (a widget's value form).
     pub fn host(&self) -> &FlowHost {
         self.host
     }
@@ -227,7 +228,7 @@ impl<'a> GraphEditor<'a> {
         self.host.dag.graph.host_snapshot.nodes.iter().filter(|node| node.id != except).map(|node| [node.x, node.y, node.width, node.height]).collect()
     }
 
-    /// 📐️ The rendered size `[width, height]` of node `id`.
+    /// 🖼️ The rendered size `[width, height]` of node `id`.
     pub fn size_of(&self, id: &str) -> Option<[f64; 2]> {
         self.host.dag.graph.host_snapshot.nodes.iter().find(|node| node.id == id).map(|node| [node.width, node.height])
     }
@@ -334,7 +335,7 @@ impl<'a> GraphEditor<'a> {
         Ok(())
     }
 
-    /// ➕️ Opens an output port of variadic operator `id` at `index`; see [`GraphEditor::add_input_port`].
+    /// 🪪️ Opens an output port of variadic operator `id` at `index`; see [`GraphEditor::add_input_port`].
     pub fn add_output_port(&mut self, id: &str, index: usize) -> Result<(), String> {
         let before = self.host.host_snapshot.synapses.clone();
         self.host.add_output_port(id, index).map_err(|error| error.to_string())?;
@@ -343,7 +344,7 @@ impl<'a> GraphEditor<'a> {
         Ok(())
     }
 
-    /// 👁️ Sets operator `id`'s preview flag: one `update-widget` when it flips. Answers whether it did.
+    /// 🌀️ Sets operator `id`'s preview flag: one `update-widget` when it flips. Answers whether it did.
     pub fn set_preview(&mut self, id: &str, shown: bool) -> bool {
         let mut flipped = false;
         for widget in &mut self.host.host_snapshot.widgets {
@@ -376,7 +377,7 @@ impl<'a> GraphEditor<'a> {
     }
 }
 
-/// 🧊️ A recorder dropped with leaves still in hand — a command refused after it recorded — retires them cold: a recorded
+/// 💧️ A recorder dropped with leaves still in hand — a command refused after it recorded — retires them cold: a recorded
 /// `create-widget` owns a widget whose neural dictionary rejects a bare drop.
 impl Drop for GraphEditor<'_> {
     fn drop(&mut self) {
@@ -397,3 +398,9 @@ impl crate::GraphEditor<'_> {
 
 #[path = "../../../../../../🌉️apply/🦀️.rs"]
 pub mod central_apply;
+
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+pub mod text;
+
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+pub mod binary;

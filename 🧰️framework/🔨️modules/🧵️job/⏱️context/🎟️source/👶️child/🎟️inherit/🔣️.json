@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "childOperation",
+    "childGeneration",
+    "ownRouteRefused",
+    "borrowedRoute",
+    "unusedChildBankBound",
+    "stock"
+  ],
+  "properties": {
+    "operation": {
+      "const": 449
+    },
+    "generation": {
+      "const": 11
+    },
+    "childOperation": {
+      "const": 450
+    },
+    "childGeneration": {
+      "const": 12
+    },
+    "ownRouteRefused": {
+      "const": true
+    },
+    "borrowedRoute": {
+      "const": true
+    },
+    "unusedChildBankBound": {
+      "const": false
+    },
+    "stock": {
+      "const": {
+        "items": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 64,
+        "fuel": 100000,
+        "maximumTurns": 100000
+      }
+    }
+  }
+}

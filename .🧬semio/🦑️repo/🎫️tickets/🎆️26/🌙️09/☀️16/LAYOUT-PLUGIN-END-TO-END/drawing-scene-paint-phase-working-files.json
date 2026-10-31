@@ -1,0 +1,17 @@
+{
+  "state": "source-schema-and-cancellation-phase-updated-no-runtime",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧬️schema/🔣️.json",
+      "beforeSha256": "da6c8464c26097383d30eeb92fda9435d9d558081ab7ba425a3f08237ff62772",
+      "sha256": "b4acdeb44b5b171b580b4214df6a7b61a15e3f1aa2a2d154da37a227209d5f93"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/📋️prepare/🧹️retirement/🔣️.json",
+      "beforeSha256": "f409b8d5d0acb49c3d66b2afb0e0331796dbd45eeece2c2e33223749a2c949f0",
+      "sha256": "1a967cd2e7968bf5e9168c9d656f7a806407ffae58c40340f8b2f5faff1ab377"
+    }
+  ],
+  "newPhase": "pathInput",
+  "existingFivePhasesPreserved": true
+}

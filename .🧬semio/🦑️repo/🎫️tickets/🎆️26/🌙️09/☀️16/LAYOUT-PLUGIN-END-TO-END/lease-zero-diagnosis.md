@@ -1,0 +1,23 @@
+# Zero Timeout Admission Diagnosis
+
+## Actual Test Result
+
+The suspected zero-timeout preparation/deadline bug did not reproduce. No intended failure was fabricated: the first normal managed probe passed4tests/13assertions. It was then strengthened so the FIRST cold public lease acquisition, including fresh directory-admission database and resource initialization, also uses timeoutMs:0. The strengthened normal replay again passed4tests/13assertions. Exact input/environment and terminal summary: lease-zero-command.json; complete logs: 🗑️generated/lease-zero-first.log and 🗑️generated/lease-zero-cold.log.
+
+Schema-first inputs are lease-zero.schema.json and lease-zero.json. Ajv independently validates the closed language-neutral cases, and direct SQLite derives the expected free/held/cancel outcomes. lease-zero.test.ts uses the existing documented declareBuildTestEnvelopeV1 and withBuildTestInvocationV1 issuer, requires its actual issued Original, derives real issued resource controls, and calls the public acquireResourceLease. No environment envelope or private lease object is manufactured. This proves a genuine unit-test Original and actual isolated SQLite kernel leases; it does not claim a Native protected-maintenance grant. All five temporary/artifact environment values point inside ticket-generated/z; fixture-created trees are removed in finally/afterAll.
+
+Actual cold zero acquisition granted after7.139ms of fresh setup, followed by a1.226ms zero-timeout grant. A direct independent SQLite BEGIN reader held the exact initialized resource database: the public exclusive zero request refused in1.148ms with exactly Resource lease timed out: lease-zero. A genuinely issued control refined with an already-cancelled signal refused with the exact cancellation reason in0.043ms. This covers uncontended cold zero, actual kernel reader contention, and cancellation.
+
+## Defining Source
+
+remaining at leases/🟦️.ts:52–59 throws its elapsed requested deadline only when timeoutMs>0. acquireUngatedResourceLease:255–264 explicitly exempts zero both before the first transaction and after successful identity reads. Thus asynchronous database opening does not by itself consume away the legitimate first try. Actual SQLITE_BUSY is retried only if remaining allows it; zero correctly refuses after its first busy attempt.
+
+The directory admission gate is another real SQLite lease. directoryAdmission:299–300 uses the same zero policy unless explicit admissionPatienceMs is provided. acquireHoldingGate:374–376 normalizes an admission-resource timeout to the requested resource while retaining an own resourceLeaseAdmission context and cause. Native withProtectedMaintenanceParentV1 catches that normalized exact-resource timeout and returns acquired:false; its funding caller turns that into a generic busy error, losing the detailed target-versus-admission distinction. Therefore the generic busy text alone does not identify the precise blocked kernel lease.
+
+The existing acquireFreshResourceLeaseV1 at309 is a different documented contract: target timeout remains zero while directory admission receives the authored lease-order gate patience (currently5000ms). This is an existing bounded policy, not a proposed cap/deadline increase. The Native protected owner currently explicitly documents nonwaiting EX and calls raw acquireResourceLease(timeoutMs:0), without that fresh-admission option. Switching it would be an owner policy choice requiring separate assignment and laws; this investigation does not establish that raw behavior is defective, and no production source was changed.
+
+## Setup 3 Correlation
+
+Root supplied supported snapshot times: the zero-holder prepoint was1793314865955; a new peer79925 Dependencies shared claim began1793314892293. Actual retained metadata places setup-live-3-command.json birth at1793314898609.071ms, setup-live-3.log birth at1793314898640.006ms and final log modification at1793314903475.507ms. Thus the new reported reader began approximately6.35seconds BEFORE the actual setup log birth, not after the refusal. The zero prepoint did not persist through launch. This timing is consistent with real target contention and provides no evidence of a deterministic zero bug. The generic refusal still lacks a retained exact kernel error, so the detailed target-versus-gate cause is not retroactively invented.
+
+No setup retry, shared cache mutation, peer stop, compiler or Native effect ran. Only isolated ticket-fixture SQLite files were created by the authorized tests. Source remains unchanged; no minimal defining fix is justified by these results.

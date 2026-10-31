@@ -1,0 +1,21 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-fem-payload-turns"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Funded payload-builder turns shared by the fem numerical jobs and their contract tests"
+
+[package.metadata.semio]
+role = "s-module"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-job-payload = { workspace = true }
+semio-framework-value = { workspace = true }

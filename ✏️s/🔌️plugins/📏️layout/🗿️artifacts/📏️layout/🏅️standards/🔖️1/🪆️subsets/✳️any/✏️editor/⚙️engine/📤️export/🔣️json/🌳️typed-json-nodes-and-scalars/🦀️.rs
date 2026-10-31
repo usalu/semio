@@ -42,22 +42,6 @@ pub enum TypedJsonNode {
     ChildHandle,
     ArtifactRef { referenced: bool },
     Dialect { referenced: bool },
-    Drawing,
-    DrawCanvas,
-    DrawRgba(VectorRgba),
-    DrawStyles { index: usize, opened: bool },
-    DrawStyle(usize),
-    DrawLayers { index: usize, opened: bool },
-    DrawLayer(usize),
-    DrawNode { layer: usize, path: Vec<usize> },
-    DrawChildren { layer: usize, path: Vec<usize>, index: usize, opened: bool },
-    DrawSegments { layer: usize, path: Vec<usize>, index: usize, opened: bool },
-    DrawSegment { layer: usize, path: Vec<usize>, segment: usize },
-    DrawPoint2(VectorPoint2),
-    DrawPoint3(VectorPoint3),
-    DrawQuaternion(VectorQuaternion),
-    DrawTransform(VectorTransform),
-    DrawBytes { layer: usize, path: Vec<usize>, index: usize, opened: bool },
     ReferencedModel,
     LinkPin,
     BlobRef,
@@ -73,14 +57,6 @@ pub struct TypedJsonCursor {
     pub stack: Vec<TypedJsonNode>,
     pub emitted_nodes: usize,
     pub fragment_bytes: Option<usize>,
-    pub(super) drawing: Option<Arc<VectorScene>>,
-}
-
-fn typed_string_source_owned_bytes(source: &StringSource) -> usize {
-    match source {
-        StringSource::DrawNodeValue { path, .. } | StringSource::DrawNodeStyle { path, .. } | StringSource::DrawNodeMime { path, .. } => path.capacity().saturating_mul(size_of::<usize>()),
-        _ => 0,
-    }
 }
 
 pub fn typed_json_node_owned_bytes(node: &TypedJsonNode) -> usize {
@@ -88,11 +64,7 @@ pub fn typed_json_node_owned_bytes(node: &TypedJsonNode) -> usize {
         TypedJsonNode::Scalar { bytes, .. } => bytes.capacity(),
         TypedJsonNode::Dictionary(cursor) => cursor.owned_bytes(),
         TypedJsonNode::Child(cursor) => cursor.owned_bytes(),
-        TypedJsonNode::String { source, .. } => typed_string_source_owned_bytes(source),
         TypedJsonNode::OwnedString { value, .. } => value.capacity(),
-        TypedJsonNode::DrawNode { path, .. } | TypedJsonNode::DrawChildren { path, .. } | TypedJsonNode::DrawSegments { path, .. } | TypedJsonNode::DrawSegment { path, .. } | TypedJsonNode::DrawBytes { path, .. } => {
-            path.capacity().saturating_mul(size_of::<usize>())
-        }
         _ => 0,
     }
 }

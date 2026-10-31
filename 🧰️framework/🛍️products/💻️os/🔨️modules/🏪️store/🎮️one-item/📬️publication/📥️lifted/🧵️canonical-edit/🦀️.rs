@@ -36,7 +36,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreOneItemAuthorityRetirement {
     fn next_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError> { self.owner.next_capacity_byte_demand(maximum_body_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { self.owner.next_release_byte_demand() }
     fn next_depth_demand(&self) -> Result<usize, ValueError> { self.owner.next_depth_demand() }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.owner.step(grant) }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> { self.owner.step(grant) })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { self.owner.terminal_is_empty() }
 }
 
@@ -376,7 +376,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
         if let Some([a,b,c])=self.native_identities.take(){match semio_framework_value::retirement::controlled::ControlledRetirement::new((a,b,c)){Ok(owner)=>self.native_identities_close=Some(owner),Err((error,(a,b,c)))=>{self.native_identities=Some([a,b,c]);return Err(error);}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
         if let Some(owner)=self.native_identities_close.as_mut(){if owner.terminal_is_empty(){self.native_identities_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return owner.step(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active_retirement.is_some() { return artifact_retirement_box_close_step(&mut self.active_retirement, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active_retirement.is_some() { return artifact_retirement_box_close_step(&mut self.active_retirement, child).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(bytes) = self.identities.iter_mut().find(|bytes| bytes.capacity() != 0) {
             let released_bytes = bytes.capacity();
             *bytes = Vec::new();
@@ -398,7 +398,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
             };
         }
         if let Some(post) = self.post.take() {
-            return match self.snapshot_retirement.as_ref().expect("original snapshot factory").retire(post, child) {
+            return match self.snapshot_retirement.as_ref().expect("original snapshot factory").retire(post, child).result {
                 Ok((active, progress)) => { self.active_retirement = Some(active); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical sealer constructor changed its receipt")); } Ok(RetainedCloneStep::Progress(progress)) },
                 Err((error, original)) => { self.post = Some(original); Err(error) },
             };
@@ -426,7 +426,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
         }
         if let Some(slot) = self.factory_close.iter_mut().find(|slot| slot.is_some()) {
             let factory = slot.as_mut().unwrap();
-            let step = factory.step(child)?;
+            let step = factory.step(child).result?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "canonical sealer factory")?;
             if factory.terminal_is_empty() { *slot = None; }
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });

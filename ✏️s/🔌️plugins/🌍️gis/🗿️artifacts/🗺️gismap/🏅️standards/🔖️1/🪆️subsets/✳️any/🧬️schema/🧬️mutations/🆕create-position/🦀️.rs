@@ -4,17 +4,13 @@ use crate::diff::GisMapDiff;
 use crate::{GisMapSnapshot, MapFeature};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 //#region 🔹Payload
-/// 🆕️ Inserts `item` into `positions` at `index` (FINAL-state, per the taxonomy's index-addressing
+/// 📥️ Inserts `item` into `positions` at `index` (FINAL-state, per the taxonomy's index-addressing
 /// law). Diff/inverse delegate to the sibling `🔺️diff`/`↩️inverse` leaves.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-position")]
 pub struct CreatePosition {

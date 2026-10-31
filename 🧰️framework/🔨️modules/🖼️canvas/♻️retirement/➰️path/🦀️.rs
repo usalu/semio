@@ -1,7 +1,7 @@
 //! ➰️ Retains original first-party geometry storage under supplied physical retirement authority.
 use crate::{BezPath, PathEl};
 use std::mem::{size_of, ManuallyDrop};
-use semio_framework_value::{ErasedSnapshotRetirement, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{ErasedSnapshotRetirement, RetainedWorkOutcome, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
 
 pub struct CanvasPathRetirement {
     elements: ManuallyDrop<Vec<PathEl>>,
@@ -40,7 +40,8 @@ impl CanvasPathRetirement {
 impl ErasedSnapshotRetirement for CanvasPathRetirement {
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:if !self.elements.is_empty(){size_of::<PathEl>()}else if self.elements.capacity()!=0{2*size_of::<Vec<PathEl>>()}else{0},release_bytes:if self.elements.is_empty(){self.elements.capacity().checked_mul(size_of::<PathEl>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"Canvas path backing extent overflow"))?}else{0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+        let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -56,6 +57,9 @@ impl ErasedSnapshotRetirement for CanvasPathRetirement {
         if grant.maximum_release_bytes < release || grant.maximum_copy_bytes < copy { return Ok(RetainedCloneStep::Progress(empty)); }
         drop(std::mem::take(&mut *self.elements));
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: copy, released_bytes: release, ..empty }))
+        })();
+        let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != RetainedCloneProgress::default()));
+        RetainedWorkOutcome { result, work }
     }
 
     fn terminal_is_empty(&self) -> bool { self.elements.is_empty() && self.elements.capacity() == 0 }

@@ -1,3 +1,4 @@
+use semio_s_artifact_procedural_3d_geometry_compute::testing::step_with_fuel;
 use super::*;
 use semio_s_artifact_procedural_3d_geometry_compute::StartFn;
 use serde_json::json;
@@ -31,22 +32,22 @@ fn every_fixture_case_holds_at_fuel_one_and_at_unbounded_fuel() {
 fn a_compound_is_measured_one_solid_per_unit_of_fuel() {
     let kind = support::kind_of(catalogue(), "analysis.volume");
     let mut job = start_of("analysis.volume")(kind, pair_inputs(kind));
-    assert!(matches!(job.step(1), WidgetStep::Working { progress } if (progress - 0.5).abs() < 1e-6));
-    let WidgetStep::Done(evaluation) = job.step(1) else { panic!("the second unit concludes") };
+    assert!(matches!(step_with_fuel(&mut *job, 1), WidgetStep::Working { progress } if (progress - 0.5).abs() < 1e-6));
+    let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 1) else { panic!("the second unit concludes") };
     assert_eq!(evaluation.outputs.get("volume"), Some(&GeometryValue::Number(3.0)));
     let mut whole = start_of("analysis.volume")(kind, pair_inputs(kind));
-    assert!(matches!(whole.step(usize::MAX), WidgetStep::Done(_)));
+    assert!(matches!(step_with_fuel(&mut *whole, usize::MAX), WidgetStep::Done(_)));
 }
 
 #[test]
 fn a_cancelled_job_ends_with_a_localized_cancelled_fault_and_stays_ended() {
     let kind = support::kind_of(catalogue(), "analysis.volume");
     let mut job = start_of("analysis.volume")(kind, pair_inputs(kind));
-    assert!(matches!(job.step(1), WidgetStep::Working { .. }));
+    assert!(matches!(step_with_fuel(&mut *job, 1), WidgetStep::Working { .. }));
     job.cancel();
     job.cancel();
     for _ in 0..2 {
-        let WidgetStep::Done(evaluation) = job.step(1) else { panic!("a cancelled job answers Done") };
+        let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 1) else { panic!("a cancelled job answers Done") };
         let fault = evaluation.fault.expect("a fault");
         assert_eq!(fault.code, "generation3d.geometry.cancelled");
         assert!(!fault.message.en.is_empty() && fault.message.en != fault.message.de);

@@ -12,7 +12,7 @@ fn fixture_input(row: &semio_framework_pack_json::Value) -> (Vec<Point>, Vec<Vec
 
 #[semio_framework_async_macros::async_test]
 async fn language_neutral_rings_preserve_area_across_scale_and_orientation() {
-    let contract = semio_framework_pack_json::parse(include_str!("🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let contract = semio_framework_pack_json::parse(&fixture!("🕳️rings/🧪️tests/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in contract["cases"].as_array().unwrap() {
         for reversed in [false, true] { for scale in [1., 1e-120, 1e120] {
             let (mut vertices, mut rings) = fixture_input(row);
@@ -51,7 +51,7 @@ async fn invalid_rings_are_rejected() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_ring_control_interruption_propagates() {
-    let contract = semio_framework_pack_json::parse(include_str!("🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let contract = semio_framework_pack_json::parse(&fixture!("🕳️rings/🧪️tests/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let (vertices, rings) = fixture_input(&contract["cases"][0]);
     let mut work = 0;
     triangulate_rings(&vertices, &rings, &mut || { work += 1; Ok(()) }).unwrap();
@@ -65,7 +65,7 @@ async fn every_ring_control_interruption_propagates() {
 
 #[semio_framework_async_macros::async_test]
 async fn collinear_boundary_segments_remain_individually_incident() {
-    let contract = semio_framework_pack_json::parse(include_str!("🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let contract = semio_framework_pack_json::parse(&fixture!("🕳️rings/🧪️tests/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for row in &contract["cases"].as_array().unwrap()[3..] {
     let (vertices, mut rings) = fixture_input(row);
     let triangles = triangulate_rings(&vertices, &rings, &mut || Ok(())).unwrap();
@@ -83,7 +83,7 @@ async fn collinear_boundary_segments_remain_individually_incident() {
 
 #[semio_framework_async_macros::async_test]
 async fn oblique_holes_choose_visible_boundary_occurrences() {
-    let row = semio_framework_pack_json::parse(include_str!("📜️oblique.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let row = semio_framework_pack_json::parse(&fixture!("🕳️rings/🧪️tests/📜️oblique.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     for reversed in [false, true] { for scale in [1., 1e-90, 1e90] {
         let mut vertices = Vec::new();
         let mut source = Vec::new();

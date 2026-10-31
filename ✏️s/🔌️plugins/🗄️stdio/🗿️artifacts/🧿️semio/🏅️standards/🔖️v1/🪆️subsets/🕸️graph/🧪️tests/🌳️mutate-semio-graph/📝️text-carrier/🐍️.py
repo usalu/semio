@@ -8,23 +8,12 @@ import struct
 
 
 # region 🔖️Carrier
-BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 DSL_PREAMBLE = "semio s.stdio.semio.graph.dsl v1"
-PACK_TOKEN = "s.stdio.semio.graph.pack v1"
 DOCUMENT_SCHEMA = "s.stdio.semio.graph"
-PACK_FORMAT = 1
 
-#: 🔌️ `port-kind = "i" | "o" | "x"` in the grammar's own order, against the projection schema's
-#: `in|out|inOut` enum in the same order — which is also the pack ordinal, as the committed
-#: example's `out → 0x01` and `in → 0x00` show.
-PORT_ORDER = ("in", "out", "inOut")
 PORT_LETTER = {"in": "i", "out": "o", "inOut": "x"}
 LETTER_PORT = {letter: kind for kind, letter in PORT_LETTER.items()}
 
-#: 🏷️ `value = "Z" | "B" | "I" | "F" | "S" | "Y" | "L" | "M" | "R"` in the grammar's own order,
-#: against the value schema's `null|bool|int|float|str|bytes|list|map|ref` enum in the same order —
-#: which is also the pack ordinal, as the committed example's `int → 0x02` and `str → 0x04` show.
-VALUE_ORDER = ("null", "bool", "int", "float", "str", "bytes", "list", "map", "ref")
 VALUE_LETTER = {"null": "Z", "bool": "B", "int": "I", "float": "F", "str": "S", "bytes": "Y", "list": "L", "map": "M", "ref": "R"}
 LETTER_VALUE = {letter: kind for kind, letter in VALUE_LETTER.items()}
 
@@ -48,7 +37,7 @@ def hex_of(text: str) -> str:
 
 
 def text_of(hexed: str) -> str:
-    """🔡️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
+    """🪄️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
     if len(hexed) % 2 != 0:
         raise AssertionError("hex run %r has an odd digit count" % hexed)
     return bytes.fromhex(hexed).decode("utf-8")
@@ -69,12 +58,12 @@ def print_number(value: float) -> str:
 
 
 def word(value: float) -> dict:
-    """🔢️ A binary64 as the projection's declared geometry word: its IEEE 754 bits, big-endian, lowercase hex."""
+    """🗂️ A binary64 as the projection's declared geometry word: its IEEE 754 bits, big-endian, lowercase hex."""
     return {"bits": struct.pack(">d", float(value)).hex()}
 
 
 def number(geometry: dict) -> float:
-    """🔢️ The reading direction of `word`."""
+    """🌀️ The reading direction of `word`."""
     bits = geometry["bits"]
     if len(bits) != 16 or any(digit not in "0123456789abcdef" for digit in bits):
         raise AssertionError("a geometry word is 16 lowercase hex digits, got %r" % bits)
@@ -87,7 +76,7 @@ def point_word(point: dict) -> dict:
 
 
 def point_number(point: dict) -> dict:
-    """📍️ The projection's pair of words as a mutation payload's plain `{x, y}`."""
+    """📽️ The projection's pair of words as a mutation payload's plain `{x, y}`."""
     return {"x": number(point["x"]), "y": number(point["y"])}
 
 
@@ -183,7 +172,7 @@ def read_value(reader: Reader) -> dict:
 
 
 def print_value(value: dict) -> str:
-    """🏷️ The writing direction of the same production."""
+    """🌁️ The writing direction of the same production."""
     kind = value["kind"]
     if kind not in VALUE_LETTER:
         raise AssertionError("unknown value kind %r" % kind)
@@ -204,7 +193,7 @@ def print_value(value: dict) -> str:
 
 
 def read_properties(reader: Reader) -> list:
-    """🏷️ `"[" property-list? "]"` with `property = hex ":" value`."""
+    """📋️ `"[" property-list? "]"` with `property = hex ":" value`."""
     reader.take("[")
     properties = []
     while reader.peek() != "]":
@@ -218,7 +207,7 @@ def read_properties(reader: Reader) -> list:
 
 
 def print_properties(properties: list) -> str:
-    """🏷️ The writing direction of `read_properties`."""
+    """🌂️ The writing direction of `read_properties`."""
     return "[%s]" % ",".join("%s:%s" % (hex_of(entry["key"]), print_value(entry["value"])) for entry in properties)
 
 
@@ -250,7 +239,7 @@ def read_optional_text(reader: Reader):
 
 
 def print_optional_text(text) -> str:
-    """🫥️ The writing direction of `read_optional_text`."""
+    """🔘️ The writing direction of `read_optional_text`."""
     return "-" if text is None else "[%s]" % hex_of(text)
 
 

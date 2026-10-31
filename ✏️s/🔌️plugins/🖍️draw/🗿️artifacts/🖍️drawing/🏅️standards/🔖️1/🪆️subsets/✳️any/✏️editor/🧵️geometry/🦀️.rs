@@ -56,7 +56,7 @@ thread_local!{static MOUNTED:RefCell<Registry>=RefCell::new(Registry::new());}
 struct GeometryJob{shell:Rc<RefCell<Option<State>>>,slot:usize,identity:SceneIdentity,job:u64,input:Option<Vec<u8>>,restored:Option<Vec<u8>>}
 fn fail_current(identity:SceneIdentity,slot:usize){MOUNTED.with(|r|{if let Some(i)=r.borrow_mut().instances[identity.instance as usize%INSTANCES].as_mut().filter(|i|i.identity.matches(identity)&&i.candidate==Some(slot)){i.failed=true;}});}
 impl GeometryJob{
- fn advance(&mut self,cx:&StepContext<'_>)->JobStep{
+ fn advance(&mut self,cx:&mut StepContext<'_>)->JobStep{
   let current=MOUNTED.with(|r|r.borrow().instances[self.identity.instance as usize%INSTANCES].is_some_and(|i|i.identity.matches(self.identity)&&i.candidate==Some(self.slot)));
   let mut shell=match self.shell.try_borrow_mut(){Ok(shell)=>shell,Err(_)=>return JobStep::Running(None)};
   let Some(state)=shell.as_mut()else{return JobStep::Failed(b"drawing.geometry.owner-missing".to_vec())};
@@ -66,15 +66,15 @@ impl GeometryJob{
   for _ in 0..cx.fuel_remaining().min(65536){if deadline.is_some_and(|d|semio_framework_job::default_now_us().is_none_or(|t|t>=d)){break;}
    if state.cache.is_some(){
     if !state.producer.as_ref().is_some_and(|producer|producer.snapshot_authority_matches(self.identity.generation,self.identity.revision)){state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.stale-source".to_vec());}
-    match state.cache.as_mut().unwrap().advance(1){
-     Ok(progress)=>{state.work+=1;if progress.done{let authority=state.producer.as_ref().unwrap().snapshot_authority_matches(self.identity.generation,self.identity.revision);state.transfer(authority);if !authority{state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.stale-source".to_vec());}drop(shell);
+    let Some(cache)=state.cache.as_mut()else{return JobStep::Failed(b"drawing.geometry.owner-missing".to_vec())};let result=cache.advance_original(cx);let actual=cache.last_turn_work();state.work+=actual;match result{
+     Ok(progress)=>{if actual==0{return JobStep::Running(None);}if progress.done{let authority=state.producer.as_ref().is_some_and(|producer|producer.snapshot_authority_matches(self.identity.generation,self.identity.revision));state.transfer(authority);if !authority{state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.stale-source".to_vec());}drop(shell);
       MOUNTED.with(|r|{let mut r=r.borrow_mut();let index=self.identity.instance as usize%INSTANCES;if let Some(mut i)=r.instances[index]{if i.identity.matches(self.identity)&&i.candidate==Some(self.slot){if let Some(old)=i.visual.filter(|old|*old!=self.slot){r.retiring[old]=true;}i.visual=Some(self.slot);r.instances[index]=Some(i);}}});return JobStep::Done(Vec::new());}}
-     Err(error)=>{state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(error.into_bytes());}
+     Err(error)=>{state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(error.to_string().into_bytes());}
     }
    }else{
     let Some(producer)=&mut state.producer else{return JobStep::Done(Vec::new())};
-    match producer.advance(1){
-     Ok(progress)=>{state.work+=1;if progress.done{if !producer.snapshot_authority_matches(self.identity.generation,self.identity.revision){state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.stale-source".to_vec());}let plan=producer.result().expect("complete vector plan transfers once");state.cache=Some(ScenePaintJob::new(plan,0.001,paint_limits()));}}
+    match producer.advance_original(cx){
+     Ok(progress)=>{let actual=producer.last_turn_work();state.work+=actual;if actual==0{return JobStep::Running(None);}if progress.done{if !producer.snapshot_authority_matches(self.identity.generation,self.identity.revision){state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.stale-source".to_vec());}let Ok(plan)=producer.result()else{state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(b"drawing.geometry.owner-missing".to_vec())};state.cache=Some(ScenePaintJob::new(plan,0.001,paint_limits()));}}
      Err(error)=>{state.transfer(false);state.cancelled=true;fail_current(self.identity,self.slot);return JobStep::Failed(error.to_string().into_bytes());}
     }
    }

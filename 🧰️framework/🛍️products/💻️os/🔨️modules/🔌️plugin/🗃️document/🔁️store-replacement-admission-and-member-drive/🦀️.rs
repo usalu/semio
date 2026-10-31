@@ -17,6 +17,7 @@ where
         Self {
             operation,
             generation,
+            publication_token: semio_framework_plugin_ownership::store_lifecycle::DocumentStorePublicationToken::mint(operation, generation, base_child_content_generation),
             base_child_content_generation,
             cancel: ManuallyDrop::new(Some(cancel)),
             cancel_signal: ManuallyDrop::new(Some(cancel_signal)),
@@ -178,7 +179,7 @@ where
         Ok(item)
     }
 
-    /// 📏️ Quotes the exact next [`Self::drive_member_open`] turn.
+    /// 🧑️ Quotes the exact next [`Self::drive_member_open`] turn.
     pub fn member_open_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let item = RetirementDemand { depth: 1, ..Default::default() };
         let refused = |_| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "member open birth demand exceeds its fixed authority");

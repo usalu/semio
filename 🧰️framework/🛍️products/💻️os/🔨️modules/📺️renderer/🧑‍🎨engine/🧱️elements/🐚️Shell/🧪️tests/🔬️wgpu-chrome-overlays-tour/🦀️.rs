@@ -541,7 +541,7 @@ fn chrome_tour_complete_interaction_respects_order_and_dedups() {
     let mut shell = ShellState::new(Vec::new(), String::new(), semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     shell.chrome.chrome_build.start_introduction();
     let step = semio_framework::onboarding::IntroductionStepDefinition::new("viewport", LocalizedLabel::data("Viewport"), LocalizedLabel::data("…"))
-        .interact_ordered(vec![semio_framework_async::block_on(semio_framework::onboarding::IntroductionInteraction::zoom("main", "Zoom")), semio_framework_async::block_on(semio_framework::onboarding::IntroductionInteraction::pan("main", "Pan"))]);
+        .interact_ordered(vec![semio_framework_async::block_on(semio_framework::onboarding::IntroductionInteraction::zoom("main", semio_framework_ui_locale::LocalizedLabel::native("Zoom", "Zoomen"))), semio_framework_async::block_on(semio_framework::onboarding::IntroductionInteraction::pan("main", semio_framework_ui_locale::LocalizedLabel::native("Pan", "Verschieben")))]);
     shell.docs.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::onboarding::IntroductionInteractionKind::Pan(id) if id == "main"), &mut shell.chrome);
     assert_eq!(shell.chrome.chrome_build.tour_state.as_ref().unwrap().completed_interactions, Vec::<usize>::new());
     shell.docs.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework::onboarding::IntroductionInteractionKind::Zoom(id) if id == "main"), &mut shell.chrome);

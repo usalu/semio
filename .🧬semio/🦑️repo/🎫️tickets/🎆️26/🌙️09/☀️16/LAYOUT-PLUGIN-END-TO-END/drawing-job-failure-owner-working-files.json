@@ -1,0 +1,236 @@
+{
+  "state": "current-root-authored-owner-and-diagnostic-closure-after-owning6",
+  "files": [
+    {
+      "path": "📋️build-owners.json",
+      "bytes": 1677046,
+      "sha256": "bd630314d5577c32fe41922aa59ce837a090618c29c7edac404775205d7c1356",
+      "absoluteUtf16Units": 48
+    },
+    {
+      "path": "🧰️framework/Cargo.toml",
+      "bytes": 127123,
+      "sha256": "6c040a8c5eb5f80bd4f5724bab65d8d9bf850181c6df2196c242f2d85e73e4c1",
+      "absoluteUtf16Units": 51
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/⚠️failure/🦀️.rs",
+      "bytes": 1842,
+      "sha256": "c28f36a8f53c747dbaa74191914e5d35831241351be32cdd7459c35bbe00f278",
+      "absoluteUtf16Units": 85
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 3345,
+      "sha256": "236b73a10b38200451a913532dff33fb0c1ca8c30429ca1b31b7d8910d4341d7",
+      "absoluteUtf16Units": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs",
+      "bytes": 56903,
+      "sha256": "201c3d224bf7043f56c9baf9a105b19a450371a2b5ae8dafd660734d8cd7afed",
+      "absoluteUtf16Units": 75
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️context/case.json",
+      "bytes": 601,
+      "sha256": "90df0525c7f34fb60f51547481a9daf1060ce5608ee9590dcc5e32d3561d425b",
+      "absoluteUtf16Units": 89
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️context/case.schema.json",
+      "bytes": 1229,
+      "sha256": "147a56ba6844cb88d310da1af44bcd3b5fc2bb05d2151e17129c760d1907b2b6",
+      "absoluteUtf16Units": 96
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️context/🦀️.rs",
+      "bytes": 1286,
+      "sha256": "33c63cff6127d06a848fd3b80332f65733433896f627e953cf7b404b9628a476",
+      "absoluteUtf16Units": 86
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🦀️.rs",
+      "bytes": 5047,
+      "sha256": "245c775b7cc2015f276cfb57f18799d4decc7305114bd9fe3ec9faba8cc4079e",
+      "absoluteUtf16Units": 83
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 7362,
+      "sha256": "c29f9e6cf2c5b4556bee95329e1212f76c1636305d94d6c86fbc911eaa49d451",
+      "absoluteUtf16Units": 92
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 2085,
+      "sha256": "6f01954f42661682190fc753b7623d72451007d650e5d6d0f7ff0098895c5990",
+      "absoluteUtf16Units": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🧬️schema/🔣️.json",
+      "bytes": 2473,
+      "sha256": "6a257b7875b59c613ec472ebe462c76790d19cff45c454029476d080386ef97c",
+      "absoluteUtf16Units": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🎟️reservation/🧪️tests/owning.rs",
+      "bytes": 366,
+      "sha256": "8fc35340ec4fc5923b39300427a1d9b688ec55f37f69b9c80aaa853f71975426",
+      "absoluteUtf16Units": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🎟️reservation/🧪️tests/🦀️.rs",
+      "bytes": 17399,
+      "sha256": "2c48f7b92a6fbf9c89a03ff3ac2ce8373533170dceb6083f8a42156582bccb9c",
+      "absoluteUtf16Units": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🎟️reservation/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 2146,
+      "sha256": "b94c60e10a58a6aae044663dea3bdfed5945f4651d7ccd6740658fd961c45035",
+      "absoluteUtf16Units": 123
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🎟️reservation/🧬️schema/🔣️.json",
+      "bytes": 2946,
+      "sha256": "a0cc7eadeb8d8aaa56e65bd89c623deef5c19a71ea2aa3a4681d8cafa5552b73",
+      "absoluteUtf16Units": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🤝️closure/🦀️.rs",
+      "bytes": 1781,
+      "sha256": "2afb61dda7de55deff77e37ebedf5837ebee9eb446b3f146e069adc780f5553d",
+      "absoluteUtf16Units": 96
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🤝️closure/🧪️tests/🦀️.rs",
+      "bytes": 6380,
+      "sha256": "df5389ce23509a37226aa7cd555afa012719f6632302db8dd8769c22387ace50",
+      "absoluteUtf16Units": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🤝️closure/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 818,
+      "sha256": "63767e98994bab28ae84fe555b9ad0f051ae09c12ca67ffd2180da0eaac96f7c",
+      "absoluteUtf16Units": 119
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🤝️closure/🧬️schema/🔣️.json",
+      "bytes": 3708,
+      "sha256": "2793f7dde68888e9b48d92af75f7d80265be1a346a4d86b6f041a0a5730cd205",
+      "absoluteUtf16Units": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🦀️.rs",
+      "bytes": 16727,
+      "sha256": "786e64422caa4b9f547e2c70dbcdb56e97d9aeb359fb16c84cf1d1ddd13ddc02",
+      "absoluteUtf16Units": 85
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1768,
+      "sha256": "104a6f8fdcabbef5aaa29fa60aaeb9a3d8616062ad7364d88cec37028887377c",
+      "absoluteUtf16Units": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 103,
+      "sha256": "c29463b337ef16f82e16144a743fe4503256593d28e2bdc08279609bb45484b6",
+      "absoluteUtf16Units": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 133,
+      "sha256": "ca05d11b7c67ee344d797bfbd2de40075d1dd3167de4a55e1affa9f83109c660",
+      "absoluteUtf16Units": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🛬️receiving/🦀️.rs",
+      "bytes": 176,
+      "sha256": "30cf3210d2386728478d6693e06b69db5ad2a92b3248f9f0cc4b3444bfe08669",
+      "absoluteUtf16Units": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🦀️.rs",
+      "bytes": 5820,
+      "sha256": "d53411385f39989e10303325f1c862a26f33af6aea9a85243ef526ceb6833c9d",
+      "absoluteUtf16Units": 75
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🦀️.rs",
+      "bytes": 33213,
+      "sha256": "f4dc619175c88939666d537b1393df6605757822a553ae0250e93395c536bbe1",
+      "absoluteUtf16Units": 84
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🧫️fixtures/📦️domain.json",
+      "bytes": 607,
+      "sha256": "5632c296fcbc153d493b9b6bfea18a92bb701f7de56ce03a839f2a7769f05015",
+      "absoluteUtf16Units": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 7194,
+      "sha256": "d7bf8c15069d6e20b7372c140e1c547233b396e02ffa65332ae3b2915ca64841",
+      "absoluteUtf16Units": 98
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🧰️support/🦀️.rs",
+      "bytes": 4623,
+      "sha256": "55329d440a3fed578e61e8b82b16ef1c84db17de9b2f7790435ff4fdb63b759f",
+      "absoluteUtf16Units": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🧬️schema/📦️domain.json",
+      "bytes": 1298,
+      "sha256": "839f02c3e402ca2b4320df9dbb4ba668165afc785670b966e28705c76d6ced4e",
+      "absoluteUtf16Units": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🧬️schema/🔣️.json",
+      "bytes": 14459,
+      "sha256": "b2ffd5136c253a5f585b62d9c8863b9ec6d1a128a4f8b3564b88a70fc7e4041b",
+      "absoluteUtf16Units": 87
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🫴️projection/🦀️.rs",
+      "bytes": 10504,
+      "sha256": "43b94b565b64fa56da2db34ea866bcac58e6b581bf842769a9d77f8f570d67f1",
+      "absoluteUtf16Units": 89
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 4815,
+      "sha256": "df601bccf1cc552930f414ef868e4432167bd1a4b4ac112da08ffdabfee6a400",
+      "absoluteUtf16Units": 89
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧬️retirement/🦀️.rs",
+      "bytes": 4009,
+      "sha256": "627b7b059a24b6eb0692fe685996b6dc0e26eb6d175e3d22bbbedf7dfbe50a76"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧬️retirement/🎟️params/🦀️.rs",
+      "bytes": 4603,
+      "sha256": "94f3e325d5a288c49fbce1d85e333918a3563df14b7aa03950af5df84208040a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🧬️retirement/🎯️scope/🦀️.rs",
+      "bytes": 4192,
+      "sha256": "336988cd577a63e6376c1ebe529952856381b02c231cd45bad66baed220a3323"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🧫️fixtures/params-box.json",
+      "bytes": 729,
+      "sha256": "5a8b7c542f0d2a3b31d3f0be166c470206505c14b94418bae4cad0e9718ba894"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🧪️tests/🧫️fixtures/params-box.schema.json",
+      "bytes": 1290,
+      "sha256": "7a6f81285db489d9c50f749be4be44d2ca638f214f02c771cd0a292069a86c83"
+    }
+  ],
+  "scope": "One physical generic Job Failure owner and actual StepContext adapter, canonical reexport. Turn7/closure1/reservation2 lower owning tests, Context-private work1 retained. Shared manifests/code attribute only explicit Root hunks; all preexisting fixture bytes preserved except new closed protocol contract/read and explicit private-to-public observations. Original ten plus new parameter/scope boxed laws execute twelve PASS in owning6; no current whole Context/Host claim.",
+  "runtimeDependencies": "Canonical first-party only; no Context or Job runtime dependency/backedge; Context/Job/testing-caller are dev-only in owner."
+}

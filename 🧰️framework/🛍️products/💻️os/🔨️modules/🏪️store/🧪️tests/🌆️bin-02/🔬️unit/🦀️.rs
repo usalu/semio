@@ -9,9 +9,9 @@ struct ExactDemoInitialSnapshotRetirementFactory(#[factory_child] Arc<std::sync:
 
 impl ArtifactOwnedValueRetirementFactory<DemoSnapshot> for ExactDemoInitialSnapshotRetirementFactory {
     fn retirement_birth_bytes(&self, _: &DemoSnapshot) -> usize { std::mem::size_of::<ExactDemoSnapshotRetirement>() }
-    fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, DemoSnapshot)> {
+    fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, DemoSnapshot)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, DemoSnapshot)> {
         admit_artifact_retirement(value,grant,|original|ExactDemoSnapshotRetirement { owner: std::mem::ManuallyDrop::new(None),value: std::mem::ManuallyDrop::new(Some(original)),child: std::mem::ManuallyDrop::new(None),completed: std::mem::ManuallyDrop::new(Some(Arc::clone(&self.0))),completion_recorded: false })
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 
@@ -112,7 +112,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
     }
     impl<T: semio_framework_value::retirement::RetireOwned> ErasedSnapshotRetirement for Observed<T> {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.inner.next_demand(body) }
-        fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
             let depth = self.next_depth_demand()?;
             if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
             if grant.maximum_depth < depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "observed original owner depth is not funded")); }
@@ -120,7 +120,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
             let step = self.inner.step(child)?;
             if self.inner.terminal_is_empty() && !self.counted { self.count.fetch_add(1, Ordering::SeqCst); self.counted = true; }
             Ok(step)
-        }
+        })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
         fn terminal_is_empty(&self) -> bool { self.counted && self.inner.terminal_is_empty() }
         fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.inner.next_copy_byte_demand() }
         fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { self.inner.next_capacity_byte_demand(body) }
@@ -131,19 +131,19 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
     struct SnapshotFactory(#[factory_child] Arc<AtomicUsize>);
     impl ArtifactOwnedValueRetirementFactory<DemoSnapshot> for SnapshotFactory {
         fn retirement_birth_bytes(&self, _: &DemoSnapshot) -> usize { std::mem::size_of::<Observed<DemoSnapshot>>() }
-        fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, DemoSnapshot)> {
+        fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, DemoSnapshot)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, DemoSnapshot)> {
             if !<DemoSnapshot as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported() { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original observed typed owner has no controlled authority"), value)); }
             admit_artifact_retirement(value, grant, |value| Observed { inner: semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|_| panic!("pure supported original observed owner")), count: self.0.clone(), counted: false })
-        }
+        })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
     }
     #[derive(semio_framework_value::FactoryPayloadRetirement)]
     struct MutationFactory(#[factory_child] Arc<AtomicUsize>);
     impl ArtifactOwnedValueRetirementFactory<DemoMutation> for MutationFactory {
         fn retirement_birth_bytes(&self, _: &DemoMutation) -> usize { std::mem::size_of::<Observed<DemoMutation>>() }
-        fn retire_owned(&self, value: DemoMutation, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, DemoMutation)> {
+        fn retire_owned(&self, value: DemoMutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, DemoMutation)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, DemoMutation)> {
             if !<DemoMutation as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported() { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "original observed typed owner has no controlled authority"), value)); }
             admit_artifact_retirement(value, grant, |value| Observed { inner: semio_framework_value::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|_| panic!("pure supported original observed owner")), count: self.0.clone(), counted: false })
-        }
+        })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🧩️composition/🚪️open/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["retention"].as_array().unwrap() {
@@ -754,7 +754,7 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     assert_eq!(store.admit_finished_history_preview_read(&preview,&mut stale_read,exact).is_ok(),checkpoint_case["admission"]["stale"].as_bool().unwrap());
     assert!(stale_read.is_none());
     assert_eq!(Arc::as_ptr(preview.state.as_ref().unwrap()),selected_pointer);
-    let(mut read_source,_)=selected_read.take().unwrap().admit_retained_clone_source(grant).unwrap_or_else(|_|panic!("actual selected read close source"));
+    let mut read_source={let read=selected_read.take().unwrap();let mut admission=read.source_admission().unwrap_or_else(|_|panic!("actual selected read close source"));for _ in 0..16{if admission.phase()=="ready"{break;}admission.advance(grant).result.expect("actual selected read close source stage");}let mut output=None;admission.take_output(&mut output,grant).result.expect("actual selected read close source publication");output.expect("actual selected read close source output")};
     while !read_source.terminal_is_empty(){read_source.close_step(grant).expect("controlled original selected read return");}
     let mut preview=Some(preview);
     let mut preview_retirement=None;

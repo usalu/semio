@@ -1,0 +1,22 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🛠️tool-machine/🫧️scrub/🦀️.rs",
+    "sha256": "690d1c16664b3e0bcd186d500ca461a33b07086e21d33a51e652fe8937692152"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/🦀️.rs",
+    "sha256": "9982ec70ae1996f73921f7baf5f44121019d70cff284d47f006febf51862894d"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛠️tool-machine/🌊️gesture/🦀️.rs",
+    "sha256": "4665f0b41d5a9d3c4f25464852ddca9c3d219c7d81ecd9ab7e2583679cd65300"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛠️tool-machine/🔗️read/🧪️tests/🦀️.rs",
+    "sha256": "d8efd016a7befff2b81349923b6b0109b4accb4d6576a96cc131befe1f7f3dae"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🛠️tool-machine/🔗️read/🧪️tests/🧵️scrub/🦀️.rs",
+    "sha256": "f8e3152e7e00150e666502d05d070712f2ee8a6452be7ff8f839dba4eaeca6ca"
+  }
+]

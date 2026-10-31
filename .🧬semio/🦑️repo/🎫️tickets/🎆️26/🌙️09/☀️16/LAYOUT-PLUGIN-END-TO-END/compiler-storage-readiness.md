@@ -4,8 +4,8 @@ Read-only investigation using the build skill, repository README Recovery sectio
 
 ## Exact Declared Routes
 
-- `repo run repo-cache-retire:inactive-preview --output=stream`
-- `repo run repo-cache-retire:inactive --output=stream`
+- `repo --service=off run repo-cache-retirement:cache-retire-inactive-preview --output=stream`
+- `repo --service=off run repo-cache-retirement:cache-retire-inactive --output=stream`
 
 Owner: repo library/caching/pruning/budget project.json. Preview is cache:false diagnostic and forwards no caller arguments; retirement is side-effecting. Native bootstrap CLI recovery schema explicitly recognizes these exact owner/target pairs before graph admission and dispatches the original issued control into runInactiveCompilerMaintenanceV1. No guessed flag or raw command is needed.
 
@@ -24,3 +24,6 @@ There is also recoverCompactCompilerHeadroomV1 registered by the actual compiler
 ## Safe Next Action
 
 Keep the original command waiting while the active cohort drains. Its own admission loop already attempts the relevant collector without introducing a queued maintenance writer. If authoritative diagnostics are needed after shared activity settles, root can choose the exact declared preview and inspect its plan plus actual availableBytes. This reviewer obtained no current reclaimable-byte inventory and makes no claim that maintenance would free a particular amount. No exported helper that reaps stale ledger rows was invoked as a supposedly pure read. Custody refusal remains an owner diagnostic; it does not authorize raw deletion or cache receipt changes.
+
+## Current Diagnostic Boundary
+Canonical preview2session12746 endedEXIT0 with empty plan and28,874,031,104available bytes in its declared b/p+t/p scope. It did not retire units or report active exclusions. Writer4 used u/l/.../b/prototype, whose relationship to the preview scope remains a defining-source question; do not infer full-store coverage. compiler-preview-2.md retains the actual result.

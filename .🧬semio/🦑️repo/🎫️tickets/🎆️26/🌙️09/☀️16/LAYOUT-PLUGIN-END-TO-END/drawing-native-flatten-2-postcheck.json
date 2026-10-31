@@ -1,0 +1,14 @@
+{
+  "exitCode": 0,
+  "sessionId": 50312,
+  "log": {
+    "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-native-flatten-2/native.log",
+    "bytes": 606694,
+    "sha256": "6b9f0aa99f7ca9044ab4c0fdeb2150f63371d67f9787c8da1be424e11e3fd30f"
+  },
+  "inputs": 462,
+  "matching": 462,
+  "drift": [],
+  "inputPacketSha256": "b5291369641ebdd1beb49394b4b3be8f50fa49c4b965b57769f0e331f3ca21bc",
+  "commandSha256": "3db00d49725aa9cda0bfa6e1a39ec962b833e60a191d39e80cd0d3a73d1fd004"
+}

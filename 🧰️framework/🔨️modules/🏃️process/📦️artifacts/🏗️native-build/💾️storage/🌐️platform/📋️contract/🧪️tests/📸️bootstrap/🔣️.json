@@ -1,0 +1,72 @@
+[
+  {
+    "id": "darwin-mounted",
+    "platform": "darwin",
+    "backend": "mounted-image",
+    "fault": "none",
+    "accept": true
+  },
+  {
+    "id": "darwin-directory",
+    "platform": "darwin",
+    "backend": "directory-partition",
+    "fault": "none",
+    "accept": true
+  },
+  {
+    "id": "linux-directory",
+    "platform": "linux",
+    "backend": "directory-partition",
+    "fault": "none",
+    "accept": true
+  },
+  {
+    "id": "windows-directory",
+    "platform": "win32",
+    "backend": "directory-partition",
+    "fault": "none",
+    "accept": true
+  },
+  {
+    "id": "darwin-refuses-backing",
+    "platform": "darwin",
+    "backend": "mounted-image",
+    "fault": "backing",
+    "accept": false
+  },
+  {
+    "id": "darwin-refuses-receipt",
+    "platform": "darwin",
+    "backend": "mounted-image",
+    "fault": "receipt",
+    "accept": false
+  },
+  {
+    "id": "darwin-refuses-capacity",
+    "platform": "darwin",
+    "backend": "mounted-image",
+    "fault": "capacity",
+    "accept": false
+  },
+  {
+    "id": "darwin-refuses-root",
+    "platform": "darwin",
+    "backend": "mounted-image",
+    "fault": "root",
+    "accept": false
+  },
+  {
+    "id": "darwin-refuses-detached",
+    "platform": "darwin",
+    "backend": "mounted-image",
+    "fault": "detached",
+    "accept": false
+  },
+  {
+    "id": "darwin-refuses-custody",
+    "platform": "darwin",
+    "backend": "mounted-image",
+    "fault": "custody",
+    "accept": false
+  }
+]

@@ -599,7 +599,7 @@ struct PhysicalBorrowedPack{expression:RetainedExpressionCursor,symbols:PagedLis
 struct OriginalProjectedPackRetirement(std::mem::ManuallyDrop<BorrowedProjectedPackCursor>);
 impl semio_framework_value::retirement::RetirementCursor for OriginalProjectedPackRetirement{
     fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.0.retirement_demands()}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep as S;match self.0.close(grant){Err(failure)=>S::Failure(failure.reason),Ok(step) if step.complete&&step.progress==Default::default()=>S::Complete,Ok(step)=>S::Progress(step.progress)}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep as S;match self.0.close(grant){Err(failure)=>S::Failure(failure.reason,0),Ok(step) if step.complete&&step.progress==Default::default()=>S::Complete(0),Ok(step)=>S::Progress(step.progress,1)}}
     fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands()?.copy_bytes)}
     fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_byte_demand().ok()}

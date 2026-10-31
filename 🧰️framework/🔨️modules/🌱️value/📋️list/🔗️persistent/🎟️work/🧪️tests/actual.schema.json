@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "text",
+    "deniedWork",
+    "attemptWork",
+    "retryCpuStock",
+    "writeWork",
+    "heldWork",
+    "cachedWork",
+    "rules"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "text": {
+      "const": "Grüße 🌱"
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "attemptWork": {
+      "const": 1
+    },
+    "retryCpuStock": {
+      "const": 2
+    },
+    "writeWork": {
+      "const": 1
+    },
+    "heldWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "rules": {
+      "const": {
+        "workIndependentOfReceipt": true,
+        "sameInputPointerAfterNull": true,
+        "sameLedgerAcrossRetry": true,
+        "directPageWitness": true,
+        "serdeOracle": true
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "state": "schema-and-owning-laws-before-production-not-yet-mounted-or-executed",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "ee45643ffd1aac32f41622c20a27c0ce4b972474d0d9fcaadf4ad79b6a3231f5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "97d2912430194badd5985ee698e1a8b1f08bf470f061894ab03b4ed22be30caf"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "bc002d46c114f7b461dee71b20f3eb238fb8a8f94fbf022aa9fb525b066091c0"
+    }
+  ],
+  "newCanonicalInput": "owned vector image bindings; no BTreeMap interface or opaque new map allocations",
+  "requiredOwners": [
+    "semio-framework-pixels --lib",
+    "semio-framework-pixels-tests --lib"
+  ]
+}

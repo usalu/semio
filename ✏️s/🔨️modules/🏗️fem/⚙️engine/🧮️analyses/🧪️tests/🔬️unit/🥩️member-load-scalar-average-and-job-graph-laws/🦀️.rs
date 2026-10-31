@@ -89,7 +89,7 @@ fn fem_job_graph_checkpoint_resume_preserves_stage_order() {
     let checkpoint = loop {
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        match seen_of(graph.step(&mut context)) {
+        match seen_of(graph.step_plain(&mut context)) {
             Seen::Checkpoint(pages) => break pages_bytes(&pages),
             outcome => assert!(!matches!(outcome, Seen::Complete(_)), "graph must checkpoint before completing"),
         }
@@ -105,7 +105,7 @@ fn fem_job_graph_checkpoint_resume_preserves_stage_order() {
         }
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(3, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        if matches!(seen_of(resumed.step(&mut context)), Seen::Complete(_)) {
+        if matches!(seen_of(resumed.step_plain(&mut context)), Seen::Complete(_)) {
             break;
         }
     }

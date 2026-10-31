@@ -63,24 +63,115 @@
       "description": "What a Cargo manifest walk does not enter: whole paths below the workspace root and directory names.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["paths", "names"],
+      "required": [
+        "paths",
+        "names"
+      ],
       "properties": {
-        "paths": {"type": "array", "items": {"type": "string", "minLength": 1}},
-        "names": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       }
     },
     "SourceRootsQuestion": {
       "description": "The question of a TypeScript file walk: the files that entry globs name, or that the include globs of a tsconfig select below its excludes.",
       "oneOf": [
-        {"type": "object", "additionalProperties": false, "required": ["mode", "globs"], "properties": {"mode": {"const": "entries"}, "globs": {"type": "array", "items": {"type": "string", "minLength": 1}}}},
-        {"type": "object", "additionalProperties": false, "required": ["mode", "include", "exclude"], "properties": {"mode": {"const": "include"}, "include": {"type": "array", "items": {"type": "string", "minLength": 1}}, "exclude": {"type": "array", "items": {"type": "string", "minLength": 1}}}}
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "globs"
+          ],
+          "properties": {
+            "mode": {
+              "const": "entries"
+            },
+            "globs": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mode",
+            "include",
+            "exclude"
+          ],
+          "properties": {
+            "mode": {
+              "const": "include"
+            },
+            "include": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "exclude": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
       ]
     },
     "DerivedWalk": {
       "description": "The recipe of one repository walk that a derived fact stands for: the crate index of the Cargo manifests or the TypeScript files a question selects; a project that used it holds the digest of its answer instead of the directories the walk read.",
       "oneOf": [
-        {"type": "object", "additionalProperties": false, "required": ["fn", "skip"], "properties": {"fn": {"const": "crate-index"}, "skip": {"$ref": "#/definitions/ManifestWalkSkip"}}},
-        {"type": "object", "additionalProperties": false, "required": ["fn", "question"], "properties": {"fn": {"const": "source-roots"}, "question": {"$ref": "#/definitions/SourceRootsQuestion"}}}
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fn",
+            "skip"
+          ],
+          "properties": {
+            "fn": {
+              "const": "crate-index"
+            },
+            "skip": {
+              "$ref": "#/definitions/ManifestWalkSkip"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fn",
+            "question"
+          ],
+          "properties": {
+            "fn": {
+              "const": "source-roots"
+            },
+            "question": {
+              "$ref": "#/definitions/SourceRootsQuestion"
+            }
+          }
+        }
       ]
     },
     "Id": {
@@ -201,6 +292,9 @@
         },
         {
           "$ref": "#/definitions/RouterRead"
+        },
+        {
+          "$ref": "#/definitions/ManagerRead"
         }
       ]
     },
@@ -493,6 +587,9 @@
         },
         {
           "$ref": "#/definitions/RouterRead"
+        },
+        {
+          "$ref": "#/definitions/ManagerRead"
         }
       ]
     },
@@ -772,6 +869,36 @@
         },
         "de": {
           "programReportMilliseconds": "Die kleinste Zeit zwischen zwei Fortschrittsmeldungen eines Programmdurchlaufs."
+        }
+      }
+    },
+    "ManagerRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manager"
+      ],
+      "properties": {
+        "manager": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ecosystem",
+            "role"
+          ],
+          "properties": {
+            "ecosystem": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$",
+              "maxLength": 64
+            },
+            "role": {
+              "enum": [
+                "locks",
+                "scope"
+              ]
+            }
+          }
         }
       }
     }

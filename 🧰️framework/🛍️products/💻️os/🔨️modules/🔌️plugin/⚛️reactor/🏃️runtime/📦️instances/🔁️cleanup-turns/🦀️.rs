@@ -61,6 +61,9 @@ fn run_runtime_live_cleanup_turn<PA:PluginApp+'static>(cell:&std::sync::Arc<Runt
     runtime_live_cleanup_publish_turn(cell,status,elapsed);Ok(())
 }
 fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<RuntimeAppCell<PA>>, generation: semio_framework_job::Generation, pump: &mut RuntimeLiveCleanupPump<PA>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<RuntimeMaintenanceStatus,semio_framework_job::OriginalTurnFailure> {
+    if pump.rejected.as_ref().is_some_and(|source|source.terminal_is_empty()){semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::retire_empty(&mut pump.rejected,cx)?;return Ok(RuntimeMaintenanceStatus::Ready)}
+    if pump.terminal||cx.is_cancelled(){if let Some(source)=pump.rejected.as_mut(){source.close_step(cx)?;return Ok(RuntimeMaintenanceStatus::Ready)}}
+
     if cx.is_cancelled()||cx.deadline_exceeded(){
         let step=runtime_drain_maintenance_source(cell,cx)?;
         if !matches!(step,PluginLifecycleStep::Complete(progress) if progress==RetainedCloneProgress::default()){return Ok(RuntimeMaintenanceStatus::Ready)}
@@ -98,7 +101,7 @@ fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<
     if pump.session.is_none()&&pump.rejected.is_none(){let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RuntimeMaintenanceStatus::Ready)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);pump.rejected=Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(RuntimeLiveCleanupJob { instance_id: cell.id, generation, cell: Some(std::sync::Arc::downgrade(cell)), progress: None, contended: false, publication: semio_framework_plugin_job::reserved_job_outcomes::CleanupPublication::new(), closing: false },(cx.operation(),cx.generation())));}
     if let Some(pending)=pump.rejected.as_mut(){
         let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:cx.retained_grant(),site:"plugin_runtime_live_cleanup",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:RUNTIME_CLOSE_INNER_GRANT_US};
-        match pending.admit_pending_batch(config,cx)?{Some(session)=>{pump.session=Some(session);drop(pump.rejected.take());},None=>return Ok(RuntimeMaintenanceStatus::Ready)}
+        pending.admit_pending_batch(config,&mut pump.session,cx)?;
         return Ok(RuntimeMaintenanceStatus::Ready);
     }
     let Some(session) = pump.session.as_mut() else { return Ok(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::MissingSession)) };
@@ -247,6 +250,9 @@ pub fn runtime_close_fault<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, c
 }
 #[doc(hidden)]
 pub fn runtime_close_cleanup_pump_one<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>, pump: &mut RuntimeCloseCleanupPump<PA>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<RuntimeCloseStatus,semio_framework_job::OriginalTurnFailure> {
+    if pump.rejected.as_ref().is_some_and(|source|source.terminal_is_empty()){semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::retire_empty(&mut pump.rejected,cx)?;return Ok(RuntimeCloseStatus::Ready)}
+    if pump.terminal||cx.is_cancelled(){if let Some(source)=pump.rejected.as_mut(){source.close_step(cx)?;return Ok(RuntimeCloseStatus::Ready)}}
+
     runtime_close_phase(state, 0);
     if cx.is_cancelled()||cx.deadline_exceeded(){
         let app=runtime_close_owned_app_source(state,cx)?;
@@ -290,7 +296,7 @@ pub fn runtime_close_cleanup_pump_one<PA: PluginApp + 'static>(state: &std::sync
     if pump.session.is_none()&&pump.rejected.is_none(){let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RuntimeCloseStatus::Ready)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);pump.rejected=Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(RuntimeCloseCleanupJob { state: Some(std::sync::Arc::downgrade(state)), instance_id: state.instance_id, progress: None, contended: false, publication: semio_framework_plugin_job::reserved_job_outcomes::CleanupPublication::new(), closing: false },(cx.operation(),cx.generation())));}
     if let Some(pending)=pump.rejected.as_mut(){
         let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:cx.retained_grant(),site:"plugin_runtime_close_cleanup",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:RUNTIME_CLOSE_INNER_GRANT_US};
-        match pending.admit_pending_batch(config,cx)?{Some(session)=>{pump.session=Some(session);drop(pump.rejected.take());},None=>return Ok(RuntimeCloseStatus::Ready)}
+        pending.admit_pending_batch(config,&mut pump.session,cx)?;
         return Ok(RuntimeCloseStatus::Ready);
     }
     let Some(session) = pump.session.as_mut() else { return Ok(runtime_close_fault(state, RuntimeCleanupFault::MissingSession)) };

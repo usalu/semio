@@ -1,0 +1,7 @@
+# Native Path Row Grant Protocol
+
+The additive closed rows contract and genuine typed path-row law were authored before replacing the two cold 256-element Option arrays. Lengths 0/1/256, original input identity and overflow custody, all positive item/copy/release/depth denial frontiers, actual physical heap receipts, independent serde_json projection and terminal zero work use one finite original 1M/16MiB profile. Original input PathBuf birth precedes this public-port segment and is not claimed as Host or whole-case funding. No runtime/RED observed.
+
+The canonical NativeOwnedPrefix supplies real initialized-prefix storage. NativeIO must forward real grant outcomes and stage row removal separately from original heap release. No unpriced public push shim or invented grant is retained. Actual scan/modified/supplier/Renderer callers require direct source-owned input/output slots before receipt folding; all original owning cases remain mandatory.
+
+Original NativeIO cases now use real row push outcomes under their existing caller bank, including maximum+1 exact input custody and an explicitly paid release of that rejected original. Original materialization borrows the canonical dense slice rather than old optional slots. Missing modified-path setup drives the actual pop then metadata phase before testing the same original retained path. All eleven names/data/pointer/denial/physical-release assertions remain; direct job step and host fixture APIs are still awaiting genuine return-origin migration, so this source is uncompiled.

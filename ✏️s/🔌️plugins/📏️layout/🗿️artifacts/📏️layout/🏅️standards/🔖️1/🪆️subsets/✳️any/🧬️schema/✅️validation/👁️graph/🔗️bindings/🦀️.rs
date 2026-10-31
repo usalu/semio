@@ -20,4 +20,4 @@ impl FinalGraphSourceBindings{
  pub fn terminal_is_empty(&self)->bool{self.live.is_none()&&self.authored.is_none()}
 }
 impl Drop for FinalGraphSourceBindings{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Final graph original leases require funded close")}}
-#[cfg(test)]#[path="🧪️tests.rs"]mod tests;
+

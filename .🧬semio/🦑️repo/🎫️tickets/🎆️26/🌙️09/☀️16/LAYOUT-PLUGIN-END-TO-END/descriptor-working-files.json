@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "state": "source-ready-normal-verification-passed",
+  "owner": "rust",
+  "files": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/descriptor-generation-final.test.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/descriptor-publication.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/descriptor-working-files.json",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/📄️publication/🟦️.ts",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/📄️publication/🟦️.ts",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/📄️publication/🧵️lifecycle/🔣️.json",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/📄️publication/🧵️lifecycle/🟦️.ts",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/📄️publication/🧵️lifecycle/🪃️recovery.json"
+  ],
+  "verification": {
+    "admission": "normal-managed",
+    "session": 2958,
+    "exit": 0,
+    "tests": 26,
+    "failed": 0,
+    "assertions": 2020,
+    "strict": "passed-TypeScript-createProgram-ESNext",
+    "log": "🗑️generated/descriptor-generation-final.log",
+    "input": "descriptor-generation-final.test.ts"
+  },
+  "sourceSha256": {
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/📄️publication/🟦️.ts": "586ad0859276deb45f15c48c0e9279aaf31291adad52f58cd9327eeaa3a2cdf3",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts": "7e84eeae80f98e16ed3f1811bf1ade15b718da9c1e8e633ca277e6da3f842a5c",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🧬️schema/🔣️.json": "32e362fd322363d747f164c204d3582cde8206250a4d28081ca4ec81a81b4f78",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/📄️publication/🟦️.ts": "25edf4ed9b8f4d49086452d12cb97144786123dc96c63ad1c6abf62dc93deecf",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/📄️publication/🧵️lifecycle/🔣️.json": "e02913fd0d56f9ae28b80c1dbdb80791403ce2676456d8fe88cad7441e452538",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/📄️publication/🧵️lifecycle/🟦️.ts": "586d0132fd0cc74432ec8e255377b8e536e953e0755caeacf9e45fdc4411125a",
+    "🧰️framework/🔨️modules/📁️filesystem/🧾️observation/🧪️tests/📄️publication/🧵️lifecycle/🪃️recovery.json": "69867c9e2e3a030be6526ef3c3f6f9150e56045d8e310c85fb81530039045431"
+  }
+}

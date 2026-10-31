@@ -1,5 +1,5 @@
 use super::*;
-use flow_extension_sdk::{boolean_segments_json, build_manifest_json, dispose_drawing, export_pdf_json, export_svg_json, render_scene_json, retain_drawing_handles, trace_bitmap_json};
+use flow_extension_sdk::{boolean_segments_json, build_manifest_json, dispose_drawing, export_pdf_json, export_svg_json, render_scene_json, retain_drawing_handles};
 
 fn number_dictionary(value: f64) -> Dictionary {
     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
@@ -329,16 +329,10 @@ async fn retain_drawing_handles_disposes_unreferenced_drawings() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn trace_bitmap_json_returns_segments_for_a_filled_mask() {
-    let mask = vec![255u8; 16];
-    let json = semio_framework_pack_json::parse(&trace_bitmap_json(4, 4, &mask, 0.5, 0.0), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    assert!(json.get("segments").is_some());
-}
-
-#[semio_framework_async_macros::async_test]
-async fn boolean_segments_json_unions_two_traced_masks() {
-    let mask = vec![255u8; 16];
-    let segments_json = trace_bitmap_json(4, 4, &mask, 0.5, 0.0);
+async fn boolean_segments_json_unions_identical_neutral_trace_paths() {
+    let law=semio_framework_pack_json::parse(include_str!("../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🎞️actions-b/📤️drawing-export-and-snapshots/🔍️trace/📐️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let row=law.get("cases").and_then(|v|v.as_array()).unwrap().iter().find(|v|v.get("name").and_then(|v|v.as_str())==Some("former extension trace square")).unwrap();
+    let segments_json=semio_framework_pack_json::to_string(row.get("expected").unwrap());
     let result = semio_framework_pack_json::parse(&boolean_segments_json(&segments_json, &segments_json, "union"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     assert!(result.get("segments").is_some());
 }

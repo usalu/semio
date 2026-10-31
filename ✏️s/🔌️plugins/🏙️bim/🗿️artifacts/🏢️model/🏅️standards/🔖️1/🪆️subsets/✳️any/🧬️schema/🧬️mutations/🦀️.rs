@@ -4,8 +4,6 @@
 //! for [`ModelMutation`] by delegating each variant to its payload's `protocol::MutationKind` impl; the handcrafted logic lives in
 //! the triad leaves (`<slug>/{🦠️mutation,🔺️diff,↩️inverse}`). This file is dispatch-only.
 
-#![allow(long_running_const_eval)]
-
 use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff::ModelDiff;
 use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
@@ -31,7 +29,7 @@ mod occurrence_property_tests;
 
 
 //#region 🔖️Operations
-/// 🧬️ Every variant wraps exactly one `protocol::MutationKind<ModelSnapshot, ModelMutation>` payload struct declared in the
+/// 🎭️ Every variant wraps exactly one `protocol::MutationKind<ModelSnapshot, ModelMutation>` payload struct declared in the
 /// corresponding leaf's `🦠️mutation/🦀️.rs`.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]

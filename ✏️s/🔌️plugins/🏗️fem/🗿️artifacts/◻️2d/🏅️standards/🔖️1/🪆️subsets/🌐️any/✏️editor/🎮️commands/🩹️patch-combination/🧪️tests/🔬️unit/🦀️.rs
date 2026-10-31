@@ -86,16 +86,16 @@ fn combination_name_and_terms_preserve_independent_intent(){
     let name=emit(&base,PatchCombination{id:"c1".into(),field:"name".into(),value:"Independent".into()}).unwrap().artifact_mutations.remove(0);
     let first=emit(&base,PatchCombination{id:"c1".into(),field:format!("{TERM_FIELD_PREFIX}lc1"),value:"2".into()}).unwrap().artifact_mutations.remove(0);
     let second=emit(&base,PatchCombination{id:"c1".into(),field:format!("{TERM_FIELD_PREFIX}lc2"),value:"3".into()}).unwrap().artifact_mutations.remove(0);
-    let after_first=vcs::apply_mutation(&base,&first).unwrap().0;
-    let after_second=vcs::apply_mutation(&base,&second).unwrap().0;
-    let terms=vcs::apply_mutation(&after_first,&second).unwrap().0;
-    assert_eq!(terms,vcs::apply_mutation(&after_second,&first).unwrap().0);
-    let combined=vcs::apply_mutation(&terms,&name).unwrap().0;
-    let mut opposite=vcs::apply_mutation(&base,&name).unwrap().0;opposite=vcs::apply_mutation(&opposite,&second).unwrap().0;opposite=vcs::apply_mutation(&opposite,&first).unwrap().0;
+    let after_first=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&base,&first).unwrap().0;
+    let after_second=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&base,&second).unwrap().0;
+    let terms=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&after_first,&second).unwrap().0;
+    assert_eq!(terms,semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&after_second,&first).unwrap().0);
+    let combined=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&terms,&name).unwrap().0;
+    let mut opposite=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&base,&name).unwrap().0;opposite=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&opposite,&second).unwrap().0;opposite=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&opposite,&first).unwrap().0;
     assert_eq!(combined,opposite);assert_eq!(combined.combinations[0].name,"Independent");
     assert_eq!(combined.combinations[0].terms.iter().map(|term|(term.case_id.as_str(),term.factor)).collect::<Vec<_>>(),vec![("lc1",2.0),("lc2",3.0)]);
-    let mut undone=combined.clone();for inverse in protocol::ColdMutation::inverse(&first,&base).unwrap().iter().rev(){undone=vcs::apply_mutation(&undone,inverse).unwrap().0;}
-    assert_eq!(undone,vcs::apply_mutation(&after_second,&name).unwrap().0);
+    let mut undone=combined.clone();for inverse in protocol::ColdMutation::inverse(&first,&base).unwrap().iter().rev(){undone=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&undone,inverse).unwrap().0;}
+    assert_eq!(undone,semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&after_second,&name).unwrap().0);
     let mut sum=protocol::ColdMutation::diff(&first,&base).into_parts().0;protocol::ColdMutationDiff::absorb(&mut sum,protocol::ColdMutation::diff(&second,&base).into_parts().0);protocol::ColdMutationDiff::absorb(&mut sum,protocol::ColdMutation::diff(&name,&base).into_parts().0);
     assert_eq!(protocol::apply_diff_cold(&sum,&base).unwrap(),combined);
     assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);

@@ -19,7 +19,20 @@ impl<'operation,'decode> NativeRetirementDecodeControl<'operation,'decode>{
  /// 📏️ Quotes this original recipient once under the paid cleanup body span.
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.original.retirement.as_ref().ok_or_else(||invalid(ValueRefusalKind::UnsupportedOwner,"original retirement has no recipient"))?.next_demand(body)}
  /// 🚮️ Charges and closes the original returned owner after every independent caller currency admits it.
- pub fn close_retirement_recipient(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let demand=self.retirement_demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}if self.original.retirement.as_ref().unwrap().terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if self.original.retirement.as_ref().unwrap().owner.as_ref().is_some_and(|owner|owner.requires_original_control()){let mut owner=self.original.retirement.as_mut().unwrap().owner.take();let result=semio_framework_value_retirement::close_factory_ticket_controlled(&mut owner,grant,self);*self.original.retirement.as_mut().unwrap().owner=owner;result}else{self.charge(demand.capacity_bytes)?;self.original.retirement.as_mut().unwrap().close_step(grant)}}
+ pub fn close_retirement_recipient(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{
+  let d=match self.retirement_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};
+  if !retained_clone_grant_admits(grant,d){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+  if self.original.retirement.as_ref().unwrap().terminal_is_empty(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+  if self.original.retirement.as_ref().unwrap().owner.as_ref().is_some_and(|owner|owner.requires_original_control()){
+   let mut owner=self.original.retirement.as_mut().unwrap().owner.take();
+   let turn=semio_framework_value_retirement::close_factory_ticket_controlled(&mut owner,grant,self);
+   *self.original.retirement.as_mut().unwrap().owner=owner;turn
+  }else{
+   if let Err(error)=self.charge(d.capacity_bytes){return crate::RetainedWorkOutcome{result:Err(error),work:0}}
+   self.original.retirement.as_mut().unwrap().close_step(grant)
+  }
+ }
+
 }
 impl Drop for NativeRetirementDecodeControl<'_, '_>{fn drop(&mut self){if !self.original.receiving{self.original.maximum_bytes=self.previous_maximum;}}}
 impl semio_framework_value_retirement::OriginalRetirementControl for NativeRetirementDecodeControl<'_, '_>{

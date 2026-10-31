@@ -1,0 +1,23 @@
+{
+  "state": "test-first-source-unmounted-unexecuted",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🎟️work/🔣️.json",
+      "bytes": 2384,
+      "sha256": "8f61bfd34eb57d321b87092526279506ab3bac8a75037180086bb39c2d3daaf9",
+      "utf16PathUnits": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🎟️work/📐️.json",
+      "bytes": 1608,
+      "sha256": "b4f6a3915dc5094bdd0486ecc19eaf1e0bf079dab57ee04bd7feaebb34615a19",
+      "utf16PathUnits": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 6449,
+      "sha256": "cb62c0cbd98ca4490fb22a59cb063542ce05ac003fea4127f3e42b2bd2d1c4c4",
+      "utf16PathUnits": 120
+    }
+  ]
+}

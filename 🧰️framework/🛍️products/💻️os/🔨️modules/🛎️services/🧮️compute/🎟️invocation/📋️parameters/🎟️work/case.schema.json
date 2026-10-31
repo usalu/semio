@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "deniedAliasWork",
+    "actualAliasWork",
+    "publicationWork",
+    "cachedPublicationWork",
+    "paidCloseControlWork",
+    "copyOnOwnershipMove",
+    "scope"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "deniedAliasWork": {
+      "const": 0
+    },
+    "actualAliasWork": {
+      "const": 1
+    },
+    "publicationWork": {
+      "const": 1
+    },
+    "cachedPublicationWork": {
+      "const": 0
+    },
+    "paidCloseControlWork": {
+      "const": 1
+    },
+    "copyOnOwnershipMove": {
+      "const": 0
+    },
+    "scope": {
+      "const": "same-original-compute-parameter-port-not-new-source"
+    }
+  }
+}

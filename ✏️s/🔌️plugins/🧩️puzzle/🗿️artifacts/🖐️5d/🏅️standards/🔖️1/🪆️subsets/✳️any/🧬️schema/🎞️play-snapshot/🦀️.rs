@@ -20,6 +20,7 @@ pub mod play_codecs;
 pub struct Puzzle5dPlaySnapshot {
     typed: std::sync::Arc<Puzzle5dSnapshot>,
     value: std::sync::OnceLock<std::sync::Arc<DslValue>>,
+    projection: std::sync::OnceLock<std::sync::Arc<DslValue>>,
 }
 
 impl Puzzle5dPlaySnapshot {
@@ -30,12 +31,17 @@ impl Puzzle5dPlaySnapshot {
 
     /// 🧬️ A root produced by typed mutation application; its `Value` projection is deferred.
     pub fn from_typed(typed: Puzzle5dSnapshot) -> Self {
-        Self { typed: std::sync::Arc::new(typed), value: std::sync::OnceLock::new() }
+        Self { typed: std::sync::Arc::new(typed), value: std::sync::OnceLock::new(), projection: std::sync::OnceLock::new() }
     }
 
     /// 👁️ The intrinsic view, materialized once per immutable root.
     pub fn value(&self) -> &DslValue {
         self.value.get_or_init(|| std::sync::Arc::new(semio_framework_value::ToValue::to_value(self.typed.as_ref()))).as_ref()
+    }
+
+    /// 🪞️ The native editor document view, derived by `build` once per immutable root and shared by every later read of this root and its clones.
+    pub fn projection_with(&self, build: impl FnOnce(&Puzzle5dSnapshot) -> DslValue) -> &DslValue {
+        self.projection.get_or_init(|| std::sync::Arc::new(build(self.typed.as_ref()))).as_ref()
     }
 
     /// 🧬️ The typed authority, without materializing the legacy projection.
@@ -55,7 +61,11 @@ impl Clone for Puzzle5dPlaySnapshot {
         if let Some(projected) = self.value.get() {
             let _ = value.set(std::sync::Arc::clone(projected));
         }
-        Self { typed: std::sync::Arc::clone(&self.typed), value }
+        let projection = std::sync::OnceLock::new();
+        if let Some(projected) = self.projection.get() {
+            let _ = projection.set(std::sync::Arc::clone(projected));
+        }
+        Self { typed: std::sync::Arc::clone(&self.typed), value, projection }
     }
 }
 
@@ -104,6 +114,7 @@ impl ColdMutationDiff<Puzzle5dPlaySnapshot> for Puzzle5dDiff {
     fn apply(&self, projection: &mut Puzzle5dPlaySnapshot, capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         <Self as protocol::ColdMutationDiff<Puzzle5dSnapshot>>::apply(self, std::sync::Arc::make_mut(&mut projection.typed), capability).map_err(|error| error.under(["document"]))?;
         projection.value = std::sync::OnceLock::new();
+        projection.projection = std::sync::OnceLock::new();
         Ok(())
     }
 }
@@ -203,12 +214,12 @@ impl protocol::SemanticMutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
 /// ♻️ The typed authority retires through its own owner, then the deferred first-party host view, each as its own bounded cursor turn.
 impl semio_framework_value::retirement::RetireOwned for Puzzle5dPlaySnapshot {
     fn retirement(self) -> Box<dyn semio_framework_value::retirement::RetirementCursor> {
-        let Self { typed, value } = self;
-        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(typed), semio_framework_value::retirement::deferred(value.into_inner())])
+        let Self { typed, value, projection } = self;
+        semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(typed), semio_framework_value::retirement::deferred(value.into_inner()), semio_framework_value::retirement::deferred(projection.into_inner())])
     }
 
     fn retirement_birth_bytes(&self) -> Option<usize> {
-        semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.typed), semio_framework_value::retirement::deferred_birth_bytes::<Option<std::sync::Arc<DslValue>>>()])
+        semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.typed), semio_framework_value::retirement::deferred_birth_bytes::<Option<std::sync::Arc<DslValue>>>(), semio_framework_value::retirement::deferred_birth_bytes::<Option<std::sync::Arc<DslValue>>>()])
     }
 
     fn controlled_retirement_supported() -> bool {

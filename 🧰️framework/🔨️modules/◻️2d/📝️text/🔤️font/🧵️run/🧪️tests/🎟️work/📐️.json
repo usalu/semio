@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "font": "🚀️anta/🏛️latin/📖️regular",
+  "texts": [
+    "AV",
+    "A\nV"
+  ],
+  "size": 24,
+  "origin": [
+    3,
+    5
+  ],
+  "lineHeight": 1.2,
+  "quanta": [
+    1,
+    7
+  ],
+  "cancelPhases": [
+    "normalization",
+    "bidi",
+    "grapheme",
+    "clusterFont",
+    "clusterLayout",
+    "outline",
+    "glyphRecord",
+    "segments",
+    "childArchive",
+    "outlineArchive",
+    "normalizationTake",
+    "clusterFontTake",
+    "clusterLayoutTake",
+    "outlineTake",
+    "incomingArchive",
+    "mappingArchive"
+  ],
+  "rules": {
+    "sameOriginalCatalogBank": true,
+    "cpuBeforeReceiptFailure": true,
+    "childSemanticOnce": true,
+    "rowPublicationSemanticZero": true,
+    "seenMaskPaidWrite": true,
+    "soleGlyphSequenceTransfer": true,
+    "allResidentChildrenClosed": true,
+    "cachedZero": true,
+    "originalSourcesRemainBorrowed": true,
+    "reference": "opentype-glyph-metrics-kerning-and-sql-conservation",
+    "stagedChildClosesBeforeArchive": true,
+    "ownedOutlineClosedBeforeViewClear": true
+  },
+  "paint": {
+    "text": "AV",
+    "width": 128,
+    "height": 96,
+    "maximumChannelDelta": 1
+  },
+  "script": "latn",
+  "language": "dflt",
+  "catalogFaces": {
+    "family": "Anta",
+    "text": "AV",
+    "input": "genuine-owned-catalog-pages",
+    "borrowedUntilRunClose": true,
+    "sameOriginalBank": true
+  }
+}

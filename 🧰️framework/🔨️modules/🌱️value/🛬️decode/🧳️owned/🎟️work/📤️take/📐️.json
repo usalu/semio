@@ -1,0 +1,21 @@
+{
+  "stock": {
+    "items": 100000,
+    "fuel": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "maximumTurns": 10000
+  },
+  "value": true,
+  "deniedWork": 0,
+  "takeWork": 1,
+  "copyBytes": 0,
+  "cachedWork": 0,
+  "sequence": [
+    true,
+    false,
+    true
+  ]
+}

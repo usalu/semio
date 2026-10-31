@@ -1,0 +1,16 @@
+{
+  "scope": "11 page/completion/intrinsic ownership+quote laws and strict4 only; independent admission CPU unproved",
+  "logs": {
+    "test": {
+      "bytes": 1670,
+      "sha256": "356c258c9407a374fce14fd9bdd302267413ff6e151dcb80db9cad870c544dc3"
+    },
+    "strict": {
+      "bytes": 132,
+      "sha256": "9e7594937c8990482ec1248eccb87f8af03ee28d3cd270766b6c7d9c2b322350"
+    }
+  },
+  "matchingInputs": 18,
+  "drift": [],
+  "holdReleased": true
+}

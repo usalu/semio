@@ -1,0 +1,18 @@
+{
+  "state": "six controlled owning laws plus decoder-recipient and original-vector closed CPU laws authored; unrun",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "cdc5f82e6eb49d99e5dbfaa7fe3d19e5b4da8339af43390b2bf36e645ad441d6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "8eb2427ca0542a92acecf47de58e090a0d70003b5ef1964251bbe9b3f13a5234"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "409c014e5c50387388edb9a648b32df9c379c3840a8b0872d1a6a31a85719999"
+    }
+  ],
+  "runtime": "No owning law run after migration; current run is compile diagnostics only"
+}

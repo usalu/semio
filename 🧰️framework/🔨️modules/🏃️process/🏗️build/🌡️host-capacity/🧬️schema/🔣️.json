@@ -94,6 +94,10 @@
         "phasesSuffix": ".phases",
         "maximumPhaseTransitions": 64,
         "maximumPhaseMarkBytes": 4096,
+        "waitSuffix": ".wait.",
+        "waitReleaseGapMilliseconds": 3000,
+        "startCacheMilliseconds": 10000,
+        "maximumWaitMarkers": 64,
         "upgradeSuffix": ".upgrade",
         "upgradePollMilliseconds": 100,
         "maximumUpgradeBytes": 1024,
@@ -250,6 +254,16 @@
               "type": "integer",
               "minimum": 1,
               "maximum": 64
+            },
+            "rampIdleAfterMilliseconds": {
+              "type": "integer",
+              "minimum": 1000,
+              "description": "A grant that held its ramp slot this long without using the memory it reserved (below rampIdleObservedBasisPoints of it) stops counting toward maximumRamping: it is idle at an inner gate, not growing. Its unrealized reservation still counts as committed memory."
+            },
+            "rampIdleObservedBasisPoints": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
             },
             "maximumQuiet": {
               "type": "integer",

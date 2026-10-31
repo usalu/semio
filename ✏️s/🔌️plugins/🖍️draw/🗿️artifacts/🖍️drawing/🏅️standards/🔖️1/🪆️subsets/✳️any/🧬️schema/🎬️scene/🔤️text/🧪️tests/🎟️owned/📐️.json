@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "input": "genuine-consumed-ScenePlanOwner",
+  "output": "same-genuine-private-plan-body",
+  "authority": "mandatory-existing-ledger-and-controller-stock-no-default-credit",
+  "representation": {
+    "runInputBytes": 56,
+    "runInputFields": [
+      "text:8",
+      "size:8",
+      "origin:inline-two-f64:16",
+      "lineHeight:8",
+      "kerning:8",
+      "outlines:8"
+    ],
+    "borrowedGlyphSourceBytes": 80,
+    "stagedChild": "inline-fixed-control-no-body",
+    "faceCache": "four-explicit-nullable-owned-page-fields-no-raw-array",
+    "sameBodyContentReplacement": true
+  },
+  "rules": {
+    "allOriginalSceneGlyph14Unchanged": true,
+    "allOriginalFontCorpusAndOraclesRetained": true,
+    "sameNodeAndAssetPages": true,
+    "callerPlanAndSourcesUnchanged": true,
+    "catalogAndUnicodeBirthOnlyUnderActualTurn": true,
+    "runInputBornAfterRealSlot": true,
+    "childBeforeArchiveAndEveryError": true,
+    "cpuAndSemanticIndependent": true,
+    "sameStockForProducerThenOutputClose": true,
+    "noRawArrayCloseOrRawResult": true,
+    "noNumericBridgeOrReceiptCpuInference": true,
+    "zeroDeniedCachedWork": true,
+    "maximumSemanticWorkNeverRenewed": true,
+    "pureChildHandoffSemanticZero": true,
+    "pendingOwnersRetainedOnCloseRefusal": true,
+    "sameBodyOwnedPaintIdentityPreserved": true,
+    "noNewReplacementAlgorithmBirthAtSpentSemanticCeiling": true
+  },
+  "cases": [
+    {
+      "name": "owner-auth-before-getters-and-zero-authority"
+    },
+    {
+      "name": "real-catalog-run-same-body-glyph-replacement"
+    },
+    {
+      "name": "resident-cancellation",
+      "phases": [
+        "nodes",
+        "fontSources",
+        "unicode",
+        "fonts",
+        "run",
+        "geometryAdmission",
+        "geometry",
+        "publishing",
+        "complete"
+      ]
+    },
+    {
+      "name": "foreign-source-refusal-preserves-borrowed-array",
+      "variants": [
+        "family",
+        "id",
+        "count"
+      ]
+    },
+    {
+      "name": "current-final-error-effects-and-cpu"
+    },
+    {
+      "name": "exact-semantic-ceiling-and-settlement"
+    },
+    {
+      "name": "same-body-owned-paint-transfer",
+      "publicAdoptionFlag": false,
+      "requiredProof": "exact-identity-with-current-private-owned-node-paint"
+    },
+    {
+      "name": "run-complete-semantic-ceiling-before-replacement",
+      "allowed": "completed-run-custody-only",
+      "forbidden": "new-replacement-algorithm-owner"
+    }
+  ]
+}

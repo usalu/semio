@@ -1,0 +1,7 @@
+# Byte and PNG Concrete Root Release
+
+Root reviewed exact command packet SHA235f480ac04eae803fdef891afd4f811d4547e3de02dfe24ccf4a1d52ee3b4f6, actual two-import registration entry, both real test files and both declared Draft7 schemas. All16 captured input hashes match current bytes. The existing default Ajv dialect matches these actual schemas. The actual Byte laws retain independent SQLite output and all relevant denial axes; PNG retains Sharp output, one finite lifetime wallet/fuel through operation/private/output close, positive-axis refusal, cancellation, semantic-free publication and per-emitted-byte CPU law. Expected5+5 registrations are not test results.
+
+Release ONE normal managed repo tools Bun test request using the exact packet. Keep these16 frozen through terminal and postcheck. If green, run the exact strict4 request sequentially with no source changes, retaining its own actual handle and postcheck. No cap/profile/deadline changes, light semantic run, duplicate during queue, Source copies or private authority are allowed. The execution agent owns both actual runtime handles; Root does not poll its namespace. No Root Cargo/setup is live.
+
+A behavioral red must be retained and classified; any source fix needs narrow review/reseal rather than overwriting this immutable command/result. This scoped proof cannot stand in for remaining Drawing callers, Font/Scene/Text/Vector/Raster, full Layout19/publication or browser.

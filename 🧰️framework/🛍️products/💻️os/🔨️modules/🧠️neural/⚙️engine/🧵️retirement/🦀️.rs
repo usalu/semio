@@ -51,10 +51,10 @@ impl ValueRetirement {
     pub fn original_value(&self)->Option<&Value> {match self.root.as_ref()?.original()? {Owner::Value(value)=>Some(value),_=>None}}
     pub fn terminal_is_empty(&self)->bool {self.root.is_none()&&self.owners.terminal_is_empty()}
     pub fn next_reserve_capacity_byte_demand(&self)->Result<usize,ValueError> {self.owners.next_reserve_capacity_byte_demand()}
-    pub fn reserve_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {self.owners.reserve_step(grant)}
+    pub fn reserve_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {self.owners.reserve_step(grant).result}
     pub const fn domain_frame_birth_bytes()->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<Owner>()}
     fn admit_domain(&mut self,value:Owner,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Owner)> {
-        if self.root.is_some() {return self.owners.admit_owned(value,grant);}
+        if self.root.is_some() {return self.owners.admit_owned(value,grant).result;}
         if grant.maximum_items==0 {return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"Neural original handoff requires one admitted item"),value));}
         if grant.maximum_depth==0 {return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"Neural original handoff requires admitted depth"),value));}
         match ControlledRetirement::new(value) {Ok(owner)=>{self.root=Some(owner);Ok(RetainedCloneProgress {copied_items:1,..Default::default()})},Err(error)=>Err(error)}
@@ -73,13 +73,13 @@ impl ValueRetirement {
     pub fn text(&mut self,value:String,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,String)> {
         self.push_value(Value::Atom(Atom::String(value)),grant).map_err(|(error,value)|match value {Value::Atom(Atom::String(value))=>(error,value),_=>unreachable!("original string admission kind")})
     }
-    pub fn push_owned<T:RetireOwned>(&mut self,value:T,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,T)> {self.owners.admit_owned(value,grant)}
+    pub fn push_owned<T:RetireOwned>(&mut self,value:T,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,T)> {self.owners.admit_owned(value,grant).result}
     pub fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.owners.next_copy_byte_demand(),ControlledRetirement::next_copy_byte_demand)}
     pub fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.owners.next_capacity_byte_demand(copy),|owner|owner.next_capacity_byte_demand(copy))}
     pub fn next_release_byte_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.owners.next_release_byte_demand(),ControlledRetirement::next_release_byte_demand)}
     pub fn next_depth_demand(&self)->Result<usize,ValueError> {self.root.as_ref().map_or_else(||self.owners.next_depth_demand(),ControlledRetirement::next_depth_demand)}
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        let Some(root)=self.root.as_mut() else {return self.owners.step(grant);};
+        let Some(root)=self.root.as_mut() else {return self.owners.step(grant).result;};
         let step=root.step(grant)?;
         let progress=admit_retained_clone_close(grant,step,root.terminal_is_empty(),"Neural original inline root")?.progress();
         if root.terminal_is_empty() {self.root=None;}
@@ -96,7 +96,7 @@ impl RetirementCursor for ValueRetirement {
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.root.as_ref().map_or_else(||self.owners.next_demand(body),|owner|owner.next_demand(body))}
     fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep as Step;
-        match Self::close_step(self,grant) {Err(error)=>Step::Failure(error),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>Step::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Step::Progress(progress)}
+        match Self::close_step(self,grant) {Err(error)=>Step::Failure(error,0),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>Step::Complete(0),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Step::Progress(progress,1)}
     }
     fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
@@ -166,7 +166,12 @@ impl ColdDictionaryBuilder {
     pub fn insert(&mut self, key: String, value: Value) {
         let dictionary = self.dictionary.as_mut().unwrap();
         let mut update = dictionary.pairs.begin_set(key, value);
-        while !update.is_complete() { update.advance(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: update.next_capacity_byte_demand().expect("cold dictionary allocation demand"), maximum_release_bytes: 0, maximum_depth: update.next_depth_demand() }).expect("cold dictionary update"); }
+        let mut failed = false;
+        while !update.is_complete() {
+            let Ok(capacity) = update.next_capacity_byte_demand() else { failed = true; break };
+            if update.advance(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: capacity, maximum_release_bytes: 0, maximum_depth: update.next_depth_demand() }).result.is_err() { failed = true; break; }
+        }
+        if failed { update.begin_close(); retire_value_cold(ValueRetirement::from_update(update)); return; }
         let displaced = std::mem::replace(&mut dictionary.pairs, update.take_result().unwrap());
         retire_value_cold(ValueRetirement::from_map(displaced));
         update.begin_close();
@@ -189,7 +194,7 @@ impl ColdDictionaryBuilder {
         let dictionary = self.dictionary.as_mut().unwrap();
         let mut update = dictionary.pairs.begin_set(key, value.into_value());
         let result = (|| {
-            while !update.is_complete() { update.advance_insert_controlled(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: update.next_capacity_byte_demand()?, maximum_release_bytes: 0, maximum_depth: update.next_depth_demand() }, control)?; }
+            while !update.is_complete() { update.advance_insert_controlled(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: update.next_capacity_byte_demand()?, maximum_release_bytes: 0, maximum_depth: update.next_depth_demand() }, control).result.map_err(|error|error.primary.or(error.quote_refusal).or(error.allocation_refusal).unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original native construction refused")))?; }
             let displaced = std::mem::replace(&mut dictionary.pairs, update.take_result().unwrap());
             retire_value_cold(ValueRetirement::from_map(displaced));
             Ok(())
@@ -283,7 +288,7 @@ impl RetainedDictionaryInput {
                 self.phase="input-bind-retire";self.retirement=ValueRetirement::from_update(self.update.take().unwrap());self.closing_update=false;
             } else {
                 self.phase="input-bind-update";let update=self.update.as_mut().unwrap();
-                let step=update.advance(grant)?;
+                let step=update.advance(grant).result?;
                 progress=admit_retained_clone_close(grant,step,update.is_complete(),"Neural input update")?.progress();
                 if update.is_complete() {
                     let dictionary=&mut self.frames.last_mut().unwrap().dictionary;
@@ -295,9 +300,9 @@ impl RetainedDictionaryInput {
             self.phase="input-bind-value";
             if let Some(frame)=self.frames.last_mut() {
                 if self.shared_key.is_none() {
-                    match SharedOwner::admit(frame.key.take().unwrap(),grant) {Ok((owner,receipt))=>{self.shared_key=Some(owner);progress=receipt;},Err((error,key))=>{frame.key=Some(key);return Err(error);}}
+                    match SharedOwner::admit(frame.key.take().unwrap(),grant).result {Ok((owner,receipt))=>{self.shared_key=Some(owner);progress=receipt;},Err((error,key))=>{frame.key=Some(key);return Err(error);}}
                 } else if self.shared_value.is_none() {
-                    match SharedOwner::admit(self.value.take().unwrap(),grant) {Ok((owner,receipt))=>{self.shared_value=Some(owner);progress=receipt;},Err((error,value))=>{self.value=Some(value);return Err(error);}}
+                    match SharedOwner::admit(self.value.take().unwrap(),grant).result {Ok((owner,receipt))=>{self.shared_value=Some(owner);progress=receipt;},Err((error,value))=>{self.value=Some(value);return Err(error);}}
                 } else {
                     self.update=Some(frame.dictionary.pairs.begin_set_shared(self.shared_key.take().unwrap(),self.shared_value.take().unwrap()));
                 }
@@ -377,7 +382,7 @@ macro_rules! original_retirement_cursor {
     ($type:ty) => {impl ::semio_framework_value::retirement::RetirementCursor for $type {
         fn next_demand(&self,body:usize)->Result<::semio_framework_value::RetirementDemand,::semio_framework_value::ValueError>{Self::demands(self,body)}
 
-        fn close_step(&mut self,grant: ::semio_framework_value::retained_clone::RetainedCloneGrant)->::semio_framework_value::retirement::RetirementStep {match Self::close_step(self,grant){Err(error)=>::semio_framework_value::retirement::RetirementStep::Failure(error),Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) if progress==::semio_framework_value::retained_clone::RetainedCloneProgress::default()=>::semio_framework_value::retirement::RetirementStep::Complete,Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|::semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress))=>::semio_framework_value::retirement::RetirementStep::Progress(progress)}}
+        fn close_step(&mut self,grant: ::semio_framework_value::retained_clone::RetainedCloneGrant)->::semio_framework_value::retirement::RetirementStep {match Self::close_step(self,grant){Err(error)=>::semio_framework_value::retirement::RetirementStep::Failure(error,0),Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)) if progress==::semio_framework_value::retained_clone::RetainedCloneProgress::default()=>::semio_framework_value::retirement::RetirementStep::Complete(0),Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)|::semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress))=>::semio_framework_value::retirement::RetirementStep::Progress(progress,1)}}
         fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
         fn next_work_byte_demand(&self)->Result<usize,::semio_framework_value::ValueError> {self.next_copy_byte_demand()}
         fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.next_capacity_byte_demand(copy).ok()}

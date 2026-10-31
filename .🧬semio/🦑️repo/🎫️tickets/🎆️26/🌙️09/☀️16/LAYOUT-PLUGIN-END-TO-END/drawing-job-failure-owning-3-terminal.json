@@ -1,0 +1,18 @@
+{
+  "outer": 34114,
+  "exit": 1,
+  "nativeExit": 101,
+  "observedTests": 10,
+  "passed": 8,
+  "failed": 2,
+  "logBytes": 577993,
+  "logSha256": "557282f4a9df1bdde78f97e3cc52f1347acacc4eca1ee6099bcd4bd0d40539ef",
+  "inputs": 863,
+  "exact": 863,
+  "drift": [],
+  "testSummaries": [
+    "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+    "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s",
+    "test result: FAILED. 6 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s"
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "ownership",
+    "source",
+    "rules",
+    "cases",
+    "representation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "ownership": {
+      "const": "consume-genuine-plan-owner-retain-same-private-body"
+    },
+    "source": {
+      "const": "borrowed-replacement-content-never-adopted"
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "originalFiniteBankUnchanged",
+        "oldOwnerCannotBorrowOrCloseAfterTransfer",
+        "noFullPlanOrNodeArrayCopy",
+        "actualContentCellsAndNode112Write",
+        "oldContentCellsRemainInRealCloseStack",
+        "retiredOldDomainCountsClearedByPaidRowWrite",
+        "unchangedNodeAndAssetIdentitiesPreserved",
+        "borrowedBytesAndPathsUnchanged",
+        "cpuAndSemanticIndependent",
+        "completedCustodySemanticZero",
+        "sameStockCancellationErrorAndOutputClose",
+        "allOriginalScene6AndGlyph14Retained"
+      ],
+      "properties": {
+        "originalFiniteBankUnchanged": {
+          "const": true
+        },
+        "oldOwnerCannotBorrowOrCloseAfterTransfer": {
+          "const": true
+        },
+        "noFullPlanOrNodeArrayCopy": {
+          "const": true
+        },
+        "actualContentCellsAndNode112Write": {
+          "const": true
+        },
+        "oldContentCellsRemainInRealCloseStack": {
+          "const": true
+        },
+        "retiredOldDomainCountsClearedByPaidRowWrite": {
+          "const": true
+        },
+        "unchangedNodeAndAssetIdentitiesPreserved": {
+          "const": true
+        },
+        "borrowedBytesAndPathsUnchanged": {
+          "const": true
+        },
+        "cpuAndSemanticIndependent": {
+          "const": true
+        },
+        "completedCustodySemanticZero": {
+          "const": true
+        },
+        "sameStockCancellationErrorAndOutputClose": {
+          "const": true
+        },
+        "allOriginalScene6AndGlyph14Retained": {
+          "const": true
+        }
+      }
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "authentic-consume-before-properties"
+        },
+        {
+          "name": "all-seven-original-kinds-to-glyphs",
+          "indices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "name": "same-body-cached-borrow-and-unmodified-neighbours"
+        },
+        {
+          "name": "paid-old-domain-reclassification"
+        },
+        {
+          "name": "partial-cancel",
+          "phases": [
+            "source",
+            "path",
+            "children",
+            "paint",
+            "dash",
+            "nodeRewrite",
+            "reclassification",
+            "publication"
+          ]
+        },
+        {
+          "name": "repeated-five-axis-refusal",
+          "axes": [
+            "items",
+            "copy",
+            "capacity",
+            "release",
+            "depth"
+          ]
+        },
+        {
+          "name": "current-final-error-effects-and-cpu"
+        },
+        {
+          "name": "exact-semantic-ceiling-and-denied-settlement",
+          "quanta": [
+            1,
+            7
+          ]
+        },
+        {
+          "name": "duplicate-transfer-and-cached-close"
+        }
+      ]
+    },
+    "representation": {
+      "const": {
+        "nodeRewriteStagingBytes": 112,
+        "stagingCapacityReusableWithinSamePrivateBody": true,
+        "stagingDomainOwners": 0,
+        "oldDomainCounterFieldsWritten": 2,
+        "oldDomainCounterWriteBytes": 16,
+        "resourceRowBytes": 24
+      }
+    }
+  }
+}

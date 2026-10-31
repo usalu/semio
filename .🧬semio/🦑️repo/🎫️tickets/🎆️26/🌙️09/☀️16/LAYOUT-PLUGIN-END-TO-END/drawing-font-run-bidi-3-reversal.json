@@ -1,0 +1,7 @@
+{
+  "wholePriorRunLaw": "613f3c399c95e6320c8d33486907e80bdb1d397d7452e2bbfaf2c12e58d713cc",
+  "wholePriorBidiLaw": "a56b089d2f57db5820e7db436c4319675f6af6d2730c0a2274cb8a5833290a67",
+  "wholePriorCase": "1686e0a4cab30d18fb57be45d9ad14b67c19bdca168c48a999a5e2d5d1ca7d79",
+  "wholePriorSchema": "71939a23f4ecc98b6278489fd56731acaf169fa1e0eba39ad4dee2be001c4b8e",
+  "changes": "Only schema-pinned selector/test interface and closed mirror-pair guard; full prior bytes reconstructed in memory, no Source copies."
+}

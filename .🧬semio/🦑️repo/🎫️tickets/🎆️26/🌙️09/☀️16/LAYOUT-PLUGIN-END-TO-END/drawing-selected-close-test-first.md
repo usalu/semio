@@ -1,0 +1,3 @@
+# Selected Close Test First
+
+The neutral closed fixture and actual dynamic owner law precede the trait method. A five-byte owned clone is closed with body five and copy four: selected invocation must refuse with zero work and unchanged demand; the raw primitive legitimately removes four bytes with work one. serde_json values and a standard Vec truncation independently compare the selected observations and remaining length. Actual allocator observations, original identity and full physical conservation remain checked. Core6 is the retained genuine prior denial failure; this new law has not executed.

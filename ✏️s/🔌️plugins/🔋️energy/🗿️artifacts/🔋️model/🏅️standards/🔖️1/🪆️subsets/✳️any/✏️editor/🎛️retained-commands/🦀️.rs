@@ -16,7 +16,7 @@ pub(super) fn energy_model_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(ENERGY_MODEL_RETAINED_RAW_BYTES, ENERGY_MODEL_RETAINED_WORK_ITEMS, 1, 262_144, 7_500)
 }
 
-/// 🧮️ Refuses a first step whose document is larger than the declared retained extent, so an
+/// ⛔️ Refuses a first step whose document is larger than the declared retained extent, so an
 /// oversized model is rejected at admission rather than truncated mid-edit.
 pub(super) fn energy_model_extent(command: &EnergyModelEditorCommand, snapshot: &EnergyModelSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
     if !ENERGY_MODEL_RETAINED_TOOL_IDS.contains(&command.action_id()) {
@@ -113,4 +113,4 @@ const fn tool_id_matches(left: &str, right: &str) -> bool {
 }
 
 #[path="🧬️original/🦀️.rs"]mod original;
-pub(super)use original::EnergyModelCommandWork;
+pub(crate)use original::EnergyModelCommandWork;

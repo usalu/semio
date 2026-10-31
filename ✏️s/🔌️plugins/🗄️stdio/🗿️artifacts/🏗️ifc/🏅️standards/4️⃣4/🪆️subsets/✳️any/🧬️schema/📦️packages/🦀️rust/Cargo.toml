@@ -35,6 +35,8 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-ifc-4-catalog = { workspace = true }
+semio-s-artifact-stdio-ifc-geometry = { workspace = true }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

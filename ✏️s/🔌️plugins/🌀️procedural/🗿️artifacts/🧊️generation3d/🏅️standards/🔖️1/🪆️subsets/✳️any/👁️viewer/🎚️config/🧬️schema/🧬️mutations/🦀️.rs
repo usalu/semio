@@ -23,7 +23,7 @@ pub use set_preview_camera::SetPreviewCamera;
 pub use set_show_mode::SetShowMode;
 pub use set_sun::SetSun;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Generation3dViewConfig, diff = Generation3dViewConfigPatch, schema = "generation3dviewcfg", reference = Generation3dViewConfig, reference_diff = Generation3dViewConfigPatch)]
 pub enum Generation3dViewConfigMutation {

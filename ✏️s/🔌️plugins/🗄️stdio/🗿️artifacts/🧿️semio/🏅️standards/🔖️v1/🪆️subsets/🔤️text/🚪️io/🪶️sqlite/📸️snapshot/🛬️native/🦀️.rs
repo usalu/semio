@@ -12,15 +12,7 @@ pub(crate)fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotCon
 }
 
 /// 🧩️ Fills the retained text root from borrowed binary octets, inserting every run and mark before its fields.
-pub fn binary_into(output:&mut SemioTextSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
- crate::io::sqlite::snapshot::admit_binary(body,control,limits)?;let mut entities=0;native::entities(&mut entities,1,limits)?;let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Semio text native format"))}
- native::reader_text_into(&mut output.schema,&mut reader,control)?;
- native::binary_list_into(&mut output.runs,&mut reader,control,limits,&mut entities,Default::default,|run,reader,control,entities|{
-  native::reader_text_into(&mut run.language,reader,control)?;native::reader_text_into(&mut run.content,reader,control)?;
-  native::binary_list_into(&mut run.marks,reader,control,limits,entities,Default::default,|mark,reader,control,_|{mark.kind=crate::io::binary::snapshot::mark_kind_from_tag(reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;native::reader_text_into(&mut mark.href,reader,control)})
- })?;
- if reader.remaining()!=0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio text native trailing bytes"))}Ok(())
-}
+pub fn binary_into(output:&mut SemioTextSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::record_binary_into(output,body,control,limits)}
 /// 📝️ Fills the retained text root from the borrowed document body, inserting every run and mark before its fields.
 pub fn document_into(output:&mut SemioTextSnapshot,body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
  crate::io::sqlite::snapshot::admit_document(body,control,limits)?;let mut entities=0;native::entities(&mut entities,1,limits)?;let fields=native::fields(body,["schema","runs"],control)?;native::hex_text_into(&mut output.schema,fields[0].ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Semio text native schema field missing"))?,control)?;

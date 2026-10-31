@@ -4,3 +4,4 @@ include!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/
 include!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🔁️extension-round-trip/🦀️.rs");
 include!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/📈️hot-path-and-fault-laws/🦀️.rs");
 include!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🪄️mesh-component-laws/🦀️.rs");
+include!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🪧️pane-smoke/🦀️.rs");

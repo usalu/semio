@@ -1,0 +1,39 @@
+{
+  "phases": [
+    "bind-source-return-stock",
+    "claim-held-return-currencies",
+    "claim-slot",
+    "retain-source",
+    "ready",
+    "retain-original-path",
+    "publish-caller-slot",
+    "return-original-path",
+    "receive-held-return-witnesses",
+    "release-original-path",
+    "return-source",
+    "vacate-slot"
+  ],
+  "originalInputs": {
+    "samePathPointer": true,
+    "sameSourceIdentity": true,
+    "foreignSourceRefused": true
+  },
+  "currentTurn": {
+    "deniedWork": 0,
+    "cachedWork": 0,
+    "knownControlWork": 1,
+    "logicalMoveCopyBytes": 0,
+    "callerOwnsBeforeReceiptFailure": true
+  },
+  "partialCancellationKeepsOwners": true,
+  "sourceBankUnchanged": true,
+  "prepaidDropReturnRequiredForAcceptance": true,
+  "prepaidDrop": {
+    "heldItems": 2,
+    "heldFuel": 2,
+    "captureWork": 1,
+    "receivingWork": 1,
+    "freshStock": false,
+    "arbitraryWakeWorkQualified": false
+  }
+}

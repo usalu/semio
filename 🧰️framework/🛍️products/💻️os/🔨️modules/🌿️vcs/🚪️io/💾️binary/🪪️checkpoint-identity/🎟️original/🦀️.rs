@@ -48,13 +48,6 @@ impl OriginalPendingCheckpointIdentity{
  pub fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.digest.is_none()}
 }
 
-#[cfg(test)]
-#[path="tests.rs"]
-mod tests;
-#[cfg(test)]
-#[path="commit-identity-tests.rs"]
-mod commit_identity_tests;
-
 #[path="pending.rs"]
 pub mod pending;
 

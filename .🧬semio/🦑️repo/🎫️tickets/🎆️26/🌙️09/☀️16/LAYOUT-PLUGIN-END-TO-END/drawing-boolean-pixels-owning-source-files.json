@@ -1,0 +1,80 @@
+{
+  "status": "Authored, unexecuted, not SourceReady",
+  "inputs": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🦀️.rs",
+      "bytes": 44408,
+      "sha256": "a688bc754b8e95d52e655db35ee2598d9d4842505030f772fce02524452490b9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🧪️tests/🦀️.rs",
+      "bytes": 11196,
+      "sha256": "c6dfebe0a5aabcc37dbf13d27835a9ed15f894a33b0f88df7ec00bca0015070e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 8608,
+      "sha256": "3c14918410e9c975b03318563f70fa709ffa4b6db062934f33bf5d48f7df8652"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 5032,
+      "sha256": "81cc53b52b4d8f858c2f3ea57c486ee1689b724a747f1c2bb376c57c50e9ad1b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🎟️work/🔣️.json",
+      "bytes": 871,
+      "sha256": "3247c4308441c4966e3224e1c2f1b3e0011679c9845a9d415d98f334abc2ec70"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🎟️work/📐️.json",
+      "bytes": 362,
+      "sha256": "32237443102124868f28cca658270048348988022758974c4bc5119418227eb3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🦀️.rs",
+      "bytes": 13971,
+      "sha256": "6a4fdba24ef328ea98946e0ec2ed3125ff32158b3ccdcd89892ade74d97d4ebf"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🦀️.rs",
+      "bytes": 8711,
+      "sha256": "8cbc9c8fa1c6e13b846fe562fa57c967e7eae319de3776f66be5db7b9dad2de1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🔣️.json",
+      "bytes": 468,
+      "sha256": "f0af354a9d9aa2f7a7f4e9063333101b375d813e8ebf171423b21c9c36a301dc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/📐️.json",
+      "bytes": 287,
+      "sha256": "39df6c4d551547e79bce43973c6699972f0755c6bb1bd5eb04de29c24f89f9ea"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🦀️.rs",
+      "bytes": 19981,
+      "sha256": "9e4d9b94af2f4689598eb6fe6de4962d2e0c4f0bb2dcd73c9edc12fcc28623ad"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🧪️tests/🦀️.rs",
+      "bytes": 8980,
+      "sha256": "4c0d4256ea389c580c8cb96346d1fe1f00c60114726658bd0f1f88b9a0e36977"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🎟️work/🔣️.json",
+      "bytes": 474,
+      "sha256": "657fb5b5f16c3c3ef648de11907d7983577f626badca677d4fdcea92896303d3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🎟️work/📐️.json",
+      "bytes": 154,
+      "sha256": "3a99319cd07ec19d0a499350dfe81e71419e8975d77365e333c1aaaed8bb84ec"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/♻️retirement/🧪️tests/🦀️.rs",
+      "bytes": 19063,
+      "sha256": "a5240f9ffc81a2456fdc26ac92febf1df13a07a530cb7631cb27639a011035a2"
+    }
+  ]
+}

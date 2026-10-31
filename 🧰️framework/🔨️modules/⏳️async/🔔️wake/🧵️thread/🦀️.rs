@@ -16,11 +16,11 @@ impl RetirementCursor for ThreadWakeRetirement{
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:if self.terminal_is_empty(){0}else{size_of::<Option<std::thread::Thread>>()+size_of::<std::thread::Thread>()+size_of::<Option<std::thread::ThreadId>>()},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
 
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
-  if self.terminal_is_empty(){return RetirementStep::Complete}
+  if self.terminal_is_empty(){return RetirementStep::Complete(0)}
   let copy=self.next_work_byte_demand().unwrap();
   if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return RetirementStep::BudgetExhausted}
   if !ISSUER.with(|issuer|issuer.get()==self.id){return RetirementStep::BudgetExhausted}
-  drop(self.thread.take());self.id.take();RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})
+  drop(self.thread.take());self.id.take();RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()},1)
  }
  fn terminal_is_empty(&self)->bool{self.thread.is_none()&&self.id.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.terminal_is_empty(){0}else{size_of::<Option<std::thread::Thread>>()+size_of::<std::thread::Thread>()+size_of::<Option<std::thread::ThreadId>>()})}

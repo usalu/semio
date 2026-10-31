@@ -305,3 +305,10 @@ test("a farm leaves no abort listener on the long-lived signal of its invocation
  await made.close();
  expect(listeners.size).toBe(0);
 });
+
+test("a worker without a measured baseline is still recycled by the memory ratio, as the independent model decides",()=>{
+ const ratio=GRAPH_FARM_POLICY_V1.recycleMemoryRatio,megabytes=2048,rows=[1,Math.floor(megabytes*ratio),Math.floor(megabytes*ratio)+1,megabytes,megabytes+1].flatMap(rssMegabytes=>[undefined,Number.NaN,"x"].map(baselineMegabytes=>({rssMegabytes,jobs:1,megabytes,baselineMegabytes}))),
+ expected=rows.map(row=>row.rssMegabytes>megabytes||row.rssMegabytes>megabytes*ratio?"memory":null);
+ rows.forEach((row,index)=>expect(recycleReasonV1(row as never)??null,JSON.stringify(row)).toBe(expected[index]));
+ expect(expected.filter(value=>value==="memory").length).toBeGreaterThan(3);
+});

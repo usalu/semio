@@ -307,142 +307,13 @@ impl ArtifactOwnedToolJobFactory for PlaybookRetainedCommandJobFactory {
 //#region 📬️OneItemPreparation
 const PLAYBOOK_STORE_MAXIMUM_BYTES: usize = 32_768;
 
-#[derive(semio_framework_value::FactoryPayloadRetirement)]
-struct PlaybookOneItemPreparationFactory<P, M>(std::marker::PhantomData<fn() -> (P, M)>);
-
-impl<P, M> Default for PlaybookOneItemPreparationFactory<P, M> {
-    fn default() -> Self {
-        Self(std::marker::PhantomData)
+/// 📏️ The fixed 32 KiB Store envelope of every Playbook mutation and base, priced by its canonical JSON text.
+fn playbook_store_bounds<P: semio_framework_value::ToValue, M: semio_framework_value::ToValue>() -> store::ColdPreparationBounds<P, M> {
+    store::ColdPreparationBounds {
+        maximum_bytes: PLAYBOOK_STORE_MAXIMUM_BYTES,
+        mutation_bytes: |mutation| semio_framework_pack_json::to_json_string(mutation).len(),
+        snapshot_bytes: |snapshot| semio_framework_pack_json::to_json_string(snapshot).len(),
     }
-}
-
-struct PlaybookOneItemPreparation<P: 'static, M: 'static> {
-    owners: store::OneItemOwners<P, M>,
-    phase: u8,
-    retained_bytes: usize,
-    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
-    cancelled: bool,
-}
-
-// 🌉️ `protocol::json::to_json_string` (`pack`'s `ToValue`-keyed helper) has no streaming-writer
-// analog of `serde_json::to_writer` — it materializes the full JSON text before the length is
-// known. `PLAYBOOK_STORE_MAXIMUM_BYTES` is small (32KiB) so this is an accepted trade-off, not a
-// bounded/incremental check anymore.
-fn playbook_bounded_serialized_bytes<T: semio_framework_value::ToValue>(value: &T) -> Result<usize, String> {
-    let bytes = semio_framework_pack_json::to_json_string(value).len();
-    if bytes > PLAYBOOK_STORE_MAXIMUM_BYTES {
-        return Err("Playbook retained Store value exceeds its fixed envelope".to_string());
-    }
-    Ok(bytes)
-}
-
-impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M> for PlaybookOneItemPreparationFactory<P, M>
-where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: protocol::Mutation<P> + semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
-    M::Diff: protocol::MutationDiff<P>,
-{
-    fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<M>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<M>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::admit_artifact_batch_digest(edit, grant) }
-
-    fn preflight(&self, mutation: &M, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::os_store::store_schema::HistoryLane::Document {
-            return Err("Playbook retained preparation rejected its lane".into());
-        }
-        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, playbook_bounded_serialized_bytes(mutation)?))
-    }
-
-    fn begin_demand(&self, _mutation: &M, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<PlaybookOneItemPreparation<P, M>>(), depth: 1 })
-    }
-
-    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
-        let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
-        let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
-
-        if request.lane != store::os_store::store_schema::HistoryLane::Document
-            || request.operation != request.authority.operation()
-            || request.generation != request.authority.generation()
-            || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
-        {
-            return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "preparation rejected original publication authority"), request));
-        }
-        Ok((Box::new(PlaybookOneItemPreparation {
-            owners: store::OneItemOwners::from_request(request),
-            phase: 0,
-            retained_bytes: 0,
-            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
-            cancelled: false,
-        }), progress))
-    }
-}
-
-impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M> for PlaybookOneItemPreparation<P, M>
-where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M::Diff: protocol::MutationDiff<P>,
-{
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
-        }
-        if self.owners.refused.is_some() {
-            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
-        }
-        if self.owners.prepared.is_some() {
-            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
-        }
-        if self.phase >= 2 {
-            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
-        }
-        match self.phase {
-            0 => {
-                let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playbook retained preparation lost its exact base root"))?;
-                let retained_bytes = playbook_bounded_serialized_bytes(base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Playbook retained Store value exceeds its fixed envelope"))?;
-                if grant.maximum_copy_bytes < retained_bytes {
-                    return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
-                }
-                let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playbook retained preparation lost its mutation owner"))?;
-                let inverse = mutation.inverse(base.get())?;
-                let post = protocol::apply_diff_cold(mutation.diff(base.get()).diff(), base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation could not apply its original mutation"))?;
-                let forward = self.owners.mutation.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playbook retained preparation lost its mutation owner"))?;
-                *self.owners.candidate = Some((post, inverse, forward));
-                self.retained_bytes = retained_bytes;
-                self.phase = 1;
-                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes as u64, digest: [0; 32] };
-                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: retained_bytes, ..Default::default() }))
-            }
-            1 => {
-                let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playbook retained preparation lost its Store authority"))?;
-                let (post, inverse, mutation) = self.owners.candidate.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playbook retained preparation lost its semantic candidate"))?;
-                let prepared = match authority.prepare_one_item(authority.next_edit(mutation, inverse), std::sync::Arc::new(post)) {
-                    Ok(prepared) => prepared,
-                    Err((error, edit, post)) => {
-                        *self.owners.refused = Some((edit, post));
-                        return Err(error);
-                    }
-                };
-                self.phase = 2;
-                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
-                *self.owners.prepared = Some(prepared);
-                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
-            }
-            _ => Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())),
-        }
-    }
-
-    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<P, M>> { self.owners.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<P, M>> { self.owners.prepared.take() }
-    fn cancel(&mut self) { self.cancelled = true; }
-    fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
-    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
-    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.depth) }
-    fn terminal_is_empty(&self) -> bool { self.owners.terminal_is_empty() }
 }
 //#endregion 📬️OneItemPreparation
 
@@ -467,13 +338,13 @@ impl ArtifactEditor for PlaybookPlayApp {
     const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(std::sync::Arc::new(PlaybookOneItemPreparationFactory::<Self::Config, Self::ConfigMutation>::default()))
+        Some(store::bounded_cold_mutation_apply_preparation_factory::<Self::Config, Self::ConfigMutation>(playbook_store_bounds()))
     }
 
     /// 📬️ The ARTIFACT lane's publication authority for the parent's own `change-title` (`updatePlaybook`): a retained tool whose
     /// contract states `Artifact` has nowhere to stage its edit without it.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
+        Some(store::bounded_cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>(playbook_store_bounds()))
     }
 
     /// ♻️ The exact store owners and disposers every lane of this editor retires through. The app
@@ -596,7 +467,7 @@ impl ArtifactEditor for PlaybookPlayApp {
         command.dispatch(doc, cfg)
     }
 
-    /// 🕹️ `blocks` domain: `HierarchyProvider::Topology` from the composed playbook's step/block nesting — see
+    /// 🎮️ `blocks` domain: `HierarchyProvider::Topology` from the composed playbook's step/block nesting — see
     /// `playbook_blocks_topology`'s doc comment.
     fn interaction_topology(doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
         let spec = playbook_composed_spec(doc.snapshot, &doc.children).map_err(|fault| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("{}: {}", fault.code.0, fault.message)))?;
@@ -760,7 +631,7 @@ pub fn playbook_fault(code: &'static str, message: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::App, FaultCode::new(code), message)
 }
 
-/// 📣️ The localized notice of every refusal this artifact raises (design §20.12), declared by its editor and viewer.
+/// 🏡️ The localized notice of every refusal this artifact raises (design §20.12), declared by its editor and viewer.
 pub fn playbook_fault_notices() -> &'static [(&'static str, semio_framework_ui_locale::LocalizedLabel)] {
     use semio_framework_ui_locale::LocalizedLabel;
     static NOTICES: std::sync::LazyLock<[(&str, LocalizedLabel); 8]> = std::sync::LazyLock::new(|| {
@@ -778,12 +649,12 @@ pub fn playbook_fault_notices() -> &'static [(&'static str, semio_framework_ui_l
     &*NOTICES
 }
 
-/// 🪆️ The loaded-parent child projection: the one `flow` child `snapshot` names, so a reload restores exactly that member.
+/// 📤️ The loaded-parent child projection: the one `flow` child `snapshot` names, so a reload restores exactly that member.
 pub fn playbook_child_restore_projection(snapshot: &PlaybookSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
     semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| playbook_fault(PLAYBOOK_FLOW_PROJECTION, error.to_string()))
 }
 
-/// 🌊️ The `flow` child content `snapshot` names, read through `children` (design §20.15: readers compose on read, never through
+/// 👶️ The `flow` child content `snapshot` names, read through `children` (design §20.15: readers compose on read, never through
 /// the handle). A child that is not composed, or composed as anything but `s.stdio.semio@v1/flow`, is a named fault.
 pub fn playbook_flow_content<'a>(snapshot: &PlaybookSnapshot, children: &'a ChildContentView) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'a, SemioFlowSnapshot>, Fault> {
     let child_id = snapshot.flow.child_id.as_str();
@@ -801,7 +672,7 @@ pub fn playbook_composed_spec(snapshot: &PlaybookSnapshot, children: &ChildConte
     Ok(PlaybookSpec { schema: snapshot.schema.clone(), id: snapshot.id.clone(), version: snapshot.version.clone(), title: snapshot.title.clone(), steps })
 }
 
-/// 🌱️ The flow content a document's `flow` child `child_id` is composed from when no archive member carries it — answered by
+/// 📄️ The flow content a document's `flow` child `child_id` is composed from when no archive member carries it — answered by
 /// id from this plugin's own catalogue (the empty playbook's flow, every built-in example's), never from the parent.
 pub fn playbook_genesis_flow(child_id: &str) -> Option<SemioFlowSnapshot> {
     match child_id {
@@ -811,7 +682,7 @@ pub fn playbook_genesis_flow(child_id: &str) -> Option<SemioFlowSnapshot> {
     }
 }
 
-/// 🧩️ The genesis pack of `snapshot`'s `flow` child ([`playbook_genesis_flow`]) for a whole-document load whose archive carries
+/// 🎁️ The genesis pack of `snapshot`'s `flow` child ([`playbook_genesis_flow`]) for a whole-document load whose archive carries
 /// no such member.
 pub fn genesis_playbook_child_pack(snapshot: &PlaybookSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
     use pack::snapshot::ArtifactPack;
@@ -835,7 +706,7 @@ use semio_s_artifact_stdio_semio_flow::{schema::snapshot::FlowNode as SemioFlowN
 use std::collections::BTreeSet;
 
 //#region 🔖️ChildLane
-/// 🧬️ The `ChildEmit` that publishes `leaves` on `snapshot`'s `flow` child — the ONE lane every content edit takes.
+/// 📢️ The `ChildEmit` that publishes `leaves` on `snapshot`'s `flow` child — the ONE lane every content edit takes.
 pub fn playbook_flow_emit(snapshot: &PlaybookSnapshot, leaves: Vec<SemioFlowMutation>) -> semio_framework_plugin::app::ChildEmitPreparation {
     semio_framework_plugin::app::ChildEmitPreparation::of::<SemioFlowSnapshot, _>(PLAYBOOK_FLOW_SLOT, snapshot.flow.child_id.as_str(), leaves)
 }
@@ -904,7 +775,7 @@ pub fn playbook_move_step_leaves(content: &SemioFlowSnapshot, step_id: &str, ind
     Ok(playbook_chain_leaves(content, &order))
 }
 
-/// 🆕️ Inserts `block` into step `step_id` at `index` (appended when `None` or past the end): ONE `set-node-param` row.
+/// 🔟️ Inserts `block` into step `step_id` at `index` (appended when `None` or past the end): ONE `set-node-param` row.
 pub fn playbook_add_block_leaves(content: &SemioFlowSnapshot, step_id: &str, block: PlaybookBlock, index: Option<usize>) -> Result<Vec<SemioFlowMutation>, Fault> {
     let node = playbook_step_node_of(content, step_id)?;
     Ok(vec![playbook_insert_block_leaf(&playbook_block_rows(node), step_id, &block, index)?])

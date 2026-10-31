@@ -12,6 +12,7 @@ pub mod connect_synapse {
     pub mod inverse;
     pub use component::*;
 }
+pub use connect_synapse::connect_synapse;
 #[path = "."]
 pub mod replace_synapse {
     #[path = "../🔄️replace/🦀️.rs"]
@@ -22,6 +23,7 @@ pub mod replace_synapse {
     pub mod inverse;
     pub use component::*;
 }
+pub use replace_synapse::replace_synapse;
 #[path = "."]
 pub mod disconnect_synapse {
     #[path = "../✂️disconnect/🦀️.rs"]
@@ -32,3 +34,4 @@ pub mod disconnect_synapse {
     pub mod inverse;
     pub use component::*;
 }
+pub use disconnect_synapse::disconnect_synapse;

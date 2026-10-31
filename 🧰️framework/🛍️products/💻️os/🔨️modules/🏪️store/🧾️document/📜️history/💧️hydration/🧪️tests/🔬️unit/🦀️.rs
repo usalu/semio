@@ -66,13 +66,13 @@ fn persisted_hydration_release_store_entry_refuses_foreign_target_without_consum
 struct WholeAllocation { owner: Option<Vec<u8>> }
 impl ErasedSnapshotRetirement for WholeAllocation {
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { release_bytes: self.owner.as_ref().map_or(0,Vec::capacity), ..Default::default() })}
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let Some(owner) = self.owner.as_ref() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
         let extent = owner.capacity();
         if grant.maximum_items == 0 || grant.maximum_release_bytes < extent { return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.owner.take();
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..Default::default() }))
-    }
+    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.owner.as_ref().map_or(0, Vec::capacity)) }
@@ -184,7 +184,7 @@ fn persisted_hydration_release_refuses_extent_outside_existing_admission() {
 
 impl ErasedSnapshotRetirement for AllocationProbe {
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { release_bytes: self.owner.as_ref().map_or(0,|owner|owner.capacity()), ..Default::default() })}
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         self.observed.lock().unwrap().push((grant.maximum_items, grant.maximum_release_bytes));
         let Some(owner) = &self.owner else { return Ok(RetainedCloneStep::Complete(Default::default())) };
         if grant.maximum_items == 0 || Arc::strong_count(owner) != 1 || owner.capacity() > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -192,7 +192,7 @@ impl ErasedSnapshotRetirement for AllocationProbe {
         let released_bytes = owner.capacity();
         drop(owner);
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }))
-    }
+    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.owner.as_ref().map_or(0, |owner| owner.capacity())) }

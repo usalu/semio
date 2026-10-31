@@ -1,0 +1,20 @@
+{
+  "files": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udccb\ufe0flist/\ud83d\udd17\ufe0fpersistent/\ud83e\udd80\ufe0f.rs",
+      "before": "f495e24ef9601ae46c10ad64319f1936a2f02466b3ae35519dcdd4b60db481d1",
+      "after": "ece8233f8efcd831763e0a12386630e808ad8f08b69a6cff5152d7a95f4113d9"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udccb\ufe0flist/\ud83d\udd17\ufe0fpersistent/\ud83c\udfae\ufe0fsplice/\ud83e\udd80\ufe0f.rs",
+      "before": "d59a87ecf2ed149d0fec6ff646ed697064aa2cd4d4dd2a0088a948bbad0c761a",
+      "after": "7744e3a55b7bdb47ec1d20e1ff154006287e4f7406162430f833c785e6e59b76"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udccb\ufe0flist/\ud83d\udd17\ufe0fpersistent/\ud83e\uddf3\ufe0fread/\ud83e\udd80\ufe0f.rs",
+      "before": "e3c9a51c0c5cdef77ed118d169fd96c7f7dc188023ad761d0ec434faa990bc3d",
+      "after": "ca0ea851e9aa934865bb7a2c0723bec4a240574b56c008b5dfe43d5fc1d6cf37"
+    }
+  ],
+  "status": "Full actual child close outcomes authored. No compilation or test run. Normal producers and old owning callers remain to migrate."
+}

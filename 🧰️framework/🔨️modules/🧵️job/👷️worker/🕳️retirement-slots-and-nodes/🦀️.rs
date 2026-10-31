@@ -37,8 +37,12 @@ pub(super) static WORKER_JOB_RETIREMENT_SLOTS: [AtomicPtr<WorkerJobRetirementHea
 
 pub(super) static WORKER_JOB_RETIREMENT_WAKE: AtomicBool = AtomicBool::new(false);
 
-pub(super) fn reserve_worker_job_retirement_slot() -> Option<usize> {
-    WORKER_JOB_RETIREMENT_SLOTS.iter().enumerate().find_map(|(index, slot)| slot.compare_exchange(std::ptr::null_mut(), WORKER_JOB_RETIREMENT_RESERVED, Ordering::AcqRel, Ordering::Acquire).ok().map(|_| index))
+pub(super) fn release_reserved_worker_job_retirement_slot(index:usize)->bool{
+ WORKER_JOB_RETIREMENT_SLOTS[index].compare_exchange(WORKER_JOB_RETIREMENT_RESERVED,std::ptr::null_mut(),Ordering::AcqRel,Ordering::Acquire).is_ok()
+}
+
+pub(super) fn reserve_worker_job_retirement_slot_at(index:usize)->bool{
+ WORKER_JOB_RETIREMENT_SLOTS[index].compare_exchange(std::ptr::null_mut(),WORKER_JOB_RETIREMENT_RESERVED,Ordering::AcqRel,Ordering::Acquire).is_ok()
 }
 
 /// 🧹️ Whether any dropped worker-job session still parks a node in the process-wide retirement array.
@@ -90,7 +94,7 @@ pub(super) struct WorkerJobRetirementNode<J> {
     pub(super) inner: Option<session_return::SessionHandle<J>>,
 }
 
-pub(super) fn worker_authority_phase(phase:OriginalWorkerAuthorityPhase)->WorkerJobClosePhase{match phase{OriginalWorkerAuthorityPhase::QuarantinedOutcome=>WorkerJobClosePhase::QuarantinedOutcome,OriginalWorkerAuthorityPhase::Outcome=>WorkerJobClosePhase::Outcome,OriginalWorkerAuthorityPhase::OriginalFailure=>WorkerJobClosePhase::OriginalFailure,OriginalWorkerAuthorityPhase::AdmissionPage|OriginalWorkerAuthorityPhase::Fault=>WorkerJobClosePhase::PreadmittedFault,OriginalWorkerAuthorityPhase::BeginClose=>WorkerJobClosePhase::BeginClose,OriginalWorkerAuthorityPhase::Job=>WorkerJobClosePhase::Job,OriginalWorkerAuthorityPhase::JobRelease=>WorkerJobClosePhase::JobRelease,OriginalWorkerAuthorityPhase::Parameters=>WorkerJobClosePhase::ParamsRelease,OriginalWorkerAuthorityPhase::Ledger=>WorkerJobClosePhase::PayloadLedger,OriginalWorkerAuthorityPhase::Empty=>WorkerJobClosePhase::AuthorityRelease}}
+pub(super) fn worker_authority_phase(phase:OriginalWorkerAuthorityPhase)->WorkerJobClosePhase{match phase{OriginalWorkerAuthorityPhase::Outcome=>WorkerJobClosePhase::Outcome,OriginalWorkerAuthorityPhase::OriginalFailure=>WorkerJobClosePhase::OriginalFailure,OriginalWorkerAuthorityPhase::Payload=>WorkerJobClosePhase::Payload,OriginalWorkerAuthorityPhase::BeginClose=>WorkerJobClosePhase::BeginClose,OriginalWorkerAuthorityPhase::Job=>WorkerJobClosePhase::Job,OriginalWorkerAuthorityPhase::JobRelease=>WorkerJobClosePhase::JobRelease,OriginalWorkerAuthorityPhase::Parameters=>WorkerJobClosePhase::ParamsRelease,OriginalWorkerAuthorityPhase::Empty=>WorkerJobClosePhase::AuthorityRelease}}
 
 pub(super) unsafe fn worker_job_retirement_node_phase<J:InteractiveJob+'static>(pointer:*mut WorkerJobRetirementHeader)->WorkerJobClosePhase{
     let node=unsafe{&*pointer.cast::<WorkerJobRetirementNode<J>>()};

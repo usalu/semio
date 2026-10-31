@@ -1,0 +1,8 @@
+{
+  "state": "applied-root-authorized-no-runtime",
+  "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust/📜️script.ts",
+  "beforeSha256": "fcb4db54e0c6fccd5dfd0c01c1604d22a8fb033d7985ed0832b7d331eb09ab11",
+  "old": "\"semio-s-artifact-layout-layout-editor\"], commands: router",
+  "new": "\"semio-s-artifact-layout-layout-editor\", \"semio-s-artifact-layout-layout-model\", \"semio-s-artifact-layout-layout-engine-json\"], commands: router",
+  "afterSha256": "c87bc43f699f8053a1b7cae84f19e7f50663ff9fe6a8ca2bb37e9c980c90af15"
+}

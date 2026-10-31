@@ -1,0 +1,5 @@
+# Native11 Prepared Full Selection
+
+Prepared only, no runtime. Final command input SHA fe190d22ed1daeee0eb3e58797840a60cb1ff9ceddae935630c43c20543aae0a. Compared with Native10 argv, ONLY unsupported --keep-going was removed. Standard --no-fail-fast remains immediately before final -- --nocapture. All nineteen owners/order, canonical service-off/shared/prototype, actual Layout manifest, unfiltered library/testkit, and dedicated Native11 log/all five artifact/temp paths plus mode remain. No compatibility layer or Source edit.
+
+Native10 genuinely refused during unit-graph planning before selected Source or tests. Its actual Cargo diagnostic recommends --no-fail-fast; Root separately verified the official supported semantics. Nonzero still fails acceptance. Current sixty captured inputs, seven owned files, both syntax repairs, router/workspace/catalog match. Seal generated/layout-native-11/prelaunch-prepared.json. Root exact review and explicit release required before launch; genuine canonical owner determines actual admission.

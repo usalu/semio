@@ -1,0 +1,351 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "font",
+    "text",
+    "quanta",
+    "cancel",
+    "deniedBirthAxes",
+    "rules",
+    "zeroCopyBirth",
+    "deniedCopyRepeats",
+    "oracle"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "font": {
+      "const": "🚀️anta/🏛️latin/📖️regular"
+    },
+    "text": {
+      "const": "Aä"
+    },
+    "quanta": {
+      "const": [
+        1,
+        7
+      ]
+    },
+    "cancel": {
+      "const": [
+        0,
+        1,
+        7
+      ]
+    },
+    "deniedBirthAxes": {
+      "const": [
+        "maximumItems",
+        "maximumCapacityBytes",
+        "maximumDepth"
+      ]
+    },
+    "rules": {
+      "const": {
+        "sameFiniteCatalogStock": true,
+        "sourceIdentity": true,
+        "preparationSemanticZero": true,
+        "cpuFromActualOwner": true,
+        "paidRowWrites": true,
+        "separateFramePop": true,
+        "cachedZero": true,
+        "releaseDenial": true,
+        "producerThenOutputClose": true,
+        "oracle": "opentype-quadratic-commands-and-sql-conservation",
+        "exactSemanticCeiling": true,
+        "deniedFinalPublicationResumes": true
+      }
+    },
+    "zeroCopyBirth": {
+      "const": {
+        "semantic": 0,
+        "cpu": 1,
+        "capacityPositive": true,
+        "nextCopyBytes": 240
+      }
+    },
+    "deniedCopyRepeats": {
+      "const": 3
+    },
+    "oracle": {
+      "const": {
+        "base": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              0
+            ]
+          },
+          {
+            "kind": "quad",
+            "ctrl": [
+              3,
+              1
+            ],
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "equivalent": [
+          {
+            "kind": "move",
+            "to": [
+              2,
+              0
+            ]
+          },
+          {
+            "kind": "quad",
+            "ctrl": [
+              3,
+              1
+            ],
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              -0.0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              0
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "changedEdge": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2.000000000001,
+              0
+            ]
+          },
+          {
+            "kind": "quad",
+            "ctrl": [
+              3,
+              1
+            ],
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "changedControl": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              0
+            ]
+          },
+          {
+            "kind": "quad",
+            "ctrl": [
+              3,
+              1.000000000001
+            ],
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "reversed": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "quad",
+            "ctrl": [
+              3,
+              1
+            ],
+            "to": [
+              2,
+              0
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "constantLine": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              0
+            ]
+          },
+          {
+            "kind": "quad",
+            "ctrl": [
+              3,
+              1
+            ],
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "nonzeroLine": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              1e-12
+            ]
+          },
+          {
+            "kind": "quad",
+            "ctrl": [
+              3,
+              1
+            ],
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ],
+        "closedQuad": [
+          {
+            "kind": "move",
+            "to": [
+              0,
+              0
+            ]
+          },
+          {
+            "kind": "line",
+            "to": [
+              2,
+              0
+            ]
+          },
+          {
+            "kind": "quad",
+            "ctrl": [
+              2,
+              0
+            ],
+            "to": [
+              2,
+              0
+            ]
+          },
+          {
+            "kind": "quad",
+            "ctrl": [
+              3,
+              1
+            ],
+            "to": [
+              2,
+              2
+            ]
+          },
+          {
+            "kind": "close"
+          }
+        ]
+      }
+    }
+  }
+}

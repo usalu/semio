@@ -30,19 +30,19 @@ pub struct CompletionRetirement<A:ArtifactApp>{source:ManuallyDrop<Option<Comple
 impl<A:ArtifactApp> CompletionRetirement<A>{
     pub fn new(source:CompletionCell<A>)->Self{Self{source:ManuallyDrop::new(Some(source)),original:ManuallyDrop::new(None),child:ManuallyDrop::new(None)}}
     fn error()->ValueError{ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original completion payload has no declared physical retirement authority")}
-    fn child_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let child=self.child.as_mut().unwrap();if child.terminal_is_empty(){let bytes=size_of_val(&**child);if grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}drop(self.child.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()});}match child.close_step(grant){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress),Err(error)=>RetirementStep::Failure(error)}}
+    fn child_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let Some(child)=self.child.as_mut()else{return RetirementStep::Complete(0)};if child.terminal_is_empty(){let bytes=size_of_val(&**child);if grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}drop(self.child.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()},1);}let turn=child.close_step(grant);match turn.result{Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
 }
 impl<A:ArtifactApp> RetirementCursor for CompletionRetirement<A>{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if self.source.is_some(){return Ok(semio_framework_value::RetirementDemand{release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<Cell<A>>(),depth:1,..Default::default()})}if let Some(child)=self.child.as_ref(){return if child.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{release_bytes:size_of_val(&**child),depth:1,..Default::default()})}else{child.next_demand(maximum_body_bytes)}}if let Some(original)=self.original.as_ref(){let capacity_bytes=A::completion_retirement_birth_bytes(original).ok_or_else(Self::error)?;return Ok(semio_framework_value::RetirementDemand{capacity_bytes,depth:1,..Default::default()})}Ok(Default::default())}
 
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
-        if self.terminal_is_empty(){return RetirementStep::Complete;}if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}
+        if self.terminal_is_empty(){return RetirementStep::Complete(0);}if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}
         if self.source.is_some(){let bytes=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<Cell<A>>();if grant.maximum_release_bytes<bytes||grant.maximum_depth==0{return RetirementStep::BudgetExhausted;}
-            let original=self.source.take().unwrap().return_alias();let released=if let Some(original)=original{*self.original=original.value.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);drop(original.authoring.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner));bytes}else{0};return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()});
+            let original=self.source.take().and_then(|cell|cell.return_alias());let released=if let Some(original)=original{*self.original=original.value.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner);drop(original.authoring.into_inner().unwrap_or_else(std::sync::PoisonError::into_inner));bytes}else{0};return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()},1);
         }
         if self.child.is_some(){return self.child_step(grant);}
-        if self.original.is_some(){match A::admit_completion_retirement(&mut self.original,grant){Ok(Some((child,progress)))=>{*self.child=Some(child);return RetirementStep::Progress(progress);},Ok(None)=>return RetirementStep::BudgetExhausted,Err(error)=>return RetirementStep::Failure(error)}}
-        RetirementStep::Complete
+        if self.original.is_some(){let turn=A::admit_completion_retirement(&mut self.original,grant);return match turn.result{Ok(Some((child,progress)))=>{*self.child=Some(child);RetirementStep::Progress(progress,turn.work)},Ok(None)=>RetirementStep::Progress(Default::default(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)};}
+        RetirementStep::Complete(0)
     }
     fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.original.is_none()&&self.child.is_none()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.child.as_ref().map_or(Ok(0),|child|child.next_copy_byte_demand())}
@@ -62,12 +62,11 @@ impl<A:ArtifactApp> RetireOwned for ArtifactToolCompletion<A>{
 /// 📬️ Exact frame of the derived completion cleanup constructor.
 pub fn derived_completion_birth_bytes<A:ArtifactApp>(_value:&ArtifactToolCompletionValue<A>)->Option<usize>{Some(size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactToolCompletionValue<A>>>())}
 /// 🎟️ Admits the original completion payload through its derived typed retirement, retaining it on every unfunded route.
-pub fn derived_admit_completion_retirement<A:ArtifactApp>(value:&mut Option<ArtifactToolCompletionValue<A>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{
-    let Some(original)=value.as_ref()else{return Ok(None)};
-    let bytes=derived_completion_birth_bytes(original).unwrap_or(0);
-    if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes{return Ok(None);}
-    match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value.take().unwrap(),grant){
-        Ok((owner,progress))=>Ok(Some((owner as Box<dyn ErasedSnapshotRetirement>,progress))),
-        Err((error,original))=>{*value=Some(original);Err(error)}
-    }
+pub fn derived_admit_completion_retirement<A:ArtifactApp>(value:&mut Option<ArtifactToolCompletionValue<A>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>>{
+ let Some(original)=value.as_ref()else{return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0};};
+ let bytes=derived_completion_birth_bytes(original).unwrap_or(0);
+ if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<bytes{return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0};}
+ let Some(payload)=value.take()else{return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0};};
+ let turn=semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(payload,grant);
+ semio_framework_value::RetainedWorkOutcome{work:turn.work,result:match turn.result{Ok((owner,progress))=>Ok(Some((owner as Box<dyn ErasedSnapshotRetirement>,progress))),Err((error,original))=>{*value=Some(original);Err(error)}}}
 }

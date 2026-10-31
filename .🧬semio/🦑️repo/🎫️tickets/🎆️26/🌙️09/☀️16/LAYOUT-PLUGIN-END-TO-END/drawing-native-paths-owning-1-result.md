@@ -1,0 +1,5 @@
+# Native Paths Actual Owning Result
+
+Actual all-target session 70783 and subsequent docs session 75035 both completed with outer/native exit zero. The genuine row law passed all lengths 0/1/256, original pointer and overflow custody, meaningful independent grant denials, monotone item/CPU/copy/release accounting, physical close receipts, serde_json values and terminal zero work. No tests ignored/filtered; docs has zero cases.
+
+Owning log SHA256 3add2458ab1348c5e510e050cacad999b428f7f147087595df83168f015a0153; docs SHA256 0d3daa201f607e63e7456cae08dd631760ced66554909705e0dd16f5ac03365b. Owning conservative observations were 55/56 after canonical Root Cargo.lock refresh; docs refreshed all 56 observations and all remain current. There is no complete compiler input claim or unchanged original lock claim. The registered model owner has only Control/NativeStorage runtime dependencies; actual NativeIO main/host/worker/Renderer and original eleven integration laws are uncompiled and remain mandatory. Original input PathBuf birth precedes this public-port bank segment.

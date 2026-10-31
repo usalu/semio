@@ -1,0 +1,5 @@
+# Normal Neutral Schema Validation Preparation
+
+The actual shared schema/data regression imports Ajv2020 through its owning test boundary and checks the corrected exact data, unknown field refusal and a changed actual pixel. It reconstructs the whole original schema in memory by removing only const.reference and verifies its original SHA before proving that original schema rejects the intended reference. This is a guarded prior-schema counterexample, not a claimed historical executed RED. Data, stock and pixels remain unchanged on disk.
+
+Ajv strict validation remains enabled, with strictTypes lint disabled only because the top-level exact object const already fixes the instance type; no semantic keyword is disabled. The unmodified historical schema has object keywords without an explicit type annotation. The standard JSON Schema constraints, including complete const equality, still all execute. The source correction was explicitly authorized from the static contradiction; the actual validation command remains unexecuted.

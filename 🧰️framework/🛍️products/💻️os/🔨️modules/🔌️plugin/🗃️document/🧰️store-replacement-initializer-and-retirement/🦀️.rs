@@ -109,10 +109,11 @@ where
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(PluginLifecycleStep::Progress(Default::default()));}
         let business_cancelled=self.cancelled();
         if let Some(rejected)=self.session_rejected.as_mut(){
+            if rejected.terminal_is_empty()&&self.session.is_some(){let before=cx.retained_progress();semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::retire_empty(&mut self.session_rejected,cx)?;return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));}
             if rejected.admission_pending()&&!cx.is_cancelled()&&!business_cancelled{
                 let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"artifact_store_replacement",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
                 let before=cx.retained_progress();
-                if let Some(session)=rejected.admit_pending(config,cx)?{*self.session=Some(session);drop(self.session_rejected.take());}
+                rejected.admit_pending(config,&mut self.session,cx)?;
                 return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?));
             }
 
@@ -126,8 +127,8 @@ where
         }
         if self.outcome_pending{
             let session=self.session.as_mut().ok_or_else(||plugin_sdk_fault("store initializer original outcome acknowledgement lost its session"))?;
-            let step=session.acknowledge_checked_out_outcome(grant);
-            if matches!(step,RetainedCloneStep::Complete(_)){
+            let acknowledged=session.acknowledge_checked_out_outcome(cx)?;
+            if acknowledged{
                 self.outcome_pending=false;
                 if let Some(progress) = session.checked_out_job_mut().map(|job| job.progress()).filter(|(_, total)| *total > 0) {
                     self.fold_progress = progress;
@@ -153,7 +154,7 @@ where
                 }
                 self.resume_pending=true;
             }
-            return Ok(PluginLifecycleStep::retained(step,false));
+            return Ok(PluginLifecycleStep::Progress(Default::default()));
         }
         if self.resume_pending{
             if grant.maximum_copy_bytes<size_of::<bool>(){return Ok(PluginLifecycleStep::Progress(Default::default()));}

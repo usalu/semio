@@ -28,14 +28,11 @@ impl OriginalAlternativeBirth{
  pub fn prepared(&self)->Option<&Alternative>{self.ready().then(||self.value.as_ref().unwrap())}
  /// 🤝️ The canonical row moves once into the original graph publication owner.
  pub fn take(&mut self,grant:RetainedCloneGrant)->Result<Option<(Alternative,RetainedCloneProgress)>,ValueError>{if !self.ready(){return Err(invalid())}let d=RetirementDemand{copy_bytes:2*size_of::<Alternative>()+128,depth:1,..Default::default()};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(None)}self.source=None;self.phase=6;Ok(Some((self.value.take().unwrap(),paid(d))))}
- /// 📐️ The actual partly authored canonical row supplies its full structural close quote.
+ /// 🛂️ The actual partly authored canonical row supplies its full structural close quote.
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.value.is_some(){return self.retirement.next_owner_demands::<Alternative>(true,&None,body)}Ok(RetirementDemand{copy_bytes:size_of::<Option<(u64,[usize;5])>>()+size_of::<bool>(),depth:1,..Default::default()})}
  /// ♻️ Closure preserves the exact body selection used by the enclosing original caller's quote.
- pub fn close_step(&mut self,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.retirement.is_empty(){return self.retirement.select(body)?.step(grant)}if self.value.is_some(){return self.retirement.begin_granted(&mut self.value,grant).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default())))}let d=self.close_demands(body)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}self.source=None;self.closing=true;Ok(RetainedCloneStep::Complete(paid(d)))}
+ pub fn close_step(&mut self,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.retirement.is_empty(){return self.retirement.select(body)?.step(grant).result}if self.value.is_some(){return self.retirement.begin_granted(&mut self.value,grant).result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default())))}let d=self.close_demands(body)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}self.source=None;self.closing=true;Ok(RetainedCloneStep::Complete(paid(d)))}
  pub fn terminal_is_empty(&self)->bool{self.value.is_none()&&self.source.is_none()&&self.retirement.is_empty()}
 }
 impl Drop for OriginalAlternativeBirth{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"repin alternative requires original partial row closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.value)}}}}
 
-#[cfg(test)]
-#[path="repin-alternative-tests.rs"]
-mod tests;

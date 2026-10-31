@@ -1,0 +1,27 @@
+{
+  "bodyHashesUnchanged": {
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🦀️.rs": "6ad9d744a8ac8afafaef448a33d91d6ce1a610937de7fe8a792e0ab55f02419c",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️authority/🦀️.rs": "ab769bc53ba32e1a1cc9b032c9fe037457a1e12f8166a4bc64e8b88660386da5",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🪪️lease/🦀️.rs": "d70589e71b36ee92a29afc9d22adf09b0baf6e135408c9294a326236b4af65a9",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/🔗️read/🧬️clone/🦀️.rs": "a4e8eae5485d5f58a5fdf7960f925bd0f3551ac91d471f1872601f1ee2a4f5c0"
+  },
+  "catalogBeforeSha256": "21a99f6273fca5a3a5e411b376b20a04c869560410d7c3743906d7cae05e66f7",
+  "catalogAfterSha256": "5c84753badada9eb3192ee59230827f1baa06a5b250327f4d164b3057973b6ce",
+  "newOwner": {
+    "name": "@semio-tech/value-read-rs",
+    "root": "🧰️framework/🔨️modules/🌱️value/🔗️read/📦️packages/🦀️rust",
+    "manifest": "🧰️framework/🔨️modules/🌱️value/🔗️read/📦️packages/🦀️rust/📋️project.json",
+    "packages": []
+  },
+  "runtimeDependencies": [
+    "semio-framework-value-control-contract",
+    "semio-framework-value-retained-clone",
+    "semio-framework-value-retirement",
+    "semio-framework-value-factory"
+  ],
+  "policy": {
+    "bytes": 262144,
+    "files": 32,
+    "activeLines": 4000
+  }
+}

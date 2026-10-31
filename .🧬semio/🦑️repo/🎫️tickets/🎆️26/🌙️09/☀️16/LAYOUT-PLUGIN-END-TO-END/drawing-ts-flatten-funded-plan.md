@@ -1,0 +1,13 @@
+# TypeScript Flatten: Next Actual Raster Boundary
+
+PDF/SVG successor 3 completed 65 owning laws and strict 28 at exact 207 inputs. Its hold was released by Root after durable postcheck; no new acceptance is inherited after affected source edits.
+
+The next reached product blocker is the canonical PathFlattenJob. Raster, Vector, pick, trace and Boolean reach its numeric-only advance, raw contour/point/curve allocations and UnitRetirement. It is still unfunded; changing only Raster's wrapper would not close this boundary.
+
+The defining TypeScript repair keeps the existing path mathematics and all original fixture vectors, Sharp coverage tolerance 2, point/contour/depth limits and original cancellation cases. Retained output uses genuine paged contour rows and genuine paged coordinate pairs, with an explicit consuming output retirement cursor. Authored segments/transform remain borrowed readonly sequences; only their references clear on close. Five-axis work comes only from the caller's SAME neutral ledger and issued Runtime turns. CPU, semantic work and allocator preparation stay independent. Fixed source/control headers quote zero copy, while new actual payload rows quote their schema-defined logical widths. No V8/GC size claim is made.
+
+Subdivision is phased: observe the original curve, capture its existing owner through paid pop, admit/push each real child row in separate turns, and clear the captured header separately. Point and contour publication similarly retain the real pending owner until its exact row write admits. No raw intermediate array is created before the corresponding retained-row admission. A cached settlement may finish at the exact semantic maximum; no new algorithm step may start there.
+
+Original synchronous/numeric preparePath and actual callers must migrate to explicit finite caller funding and retained result custody; no convenience default/compatibility route remains. Before implementation, a closed TypeScript counterpart contract and genuine owning laws will cover original vectors, all five denials, real source preservation, cancellation frontiers, exact semantic ceilings and output release using SQLite conservation plus original independent Vector2/Sharp comparisons. Existing native work fixture remains physically unchanged; its exact-reference schema pin already passed an actual third-party validation law. Native physical heap laws are not relabeled as TypeScript logical storage proof.
+
+Remaining product ownership is explicit: PathFlatten first, then reached Stroke/Coverage/PreparedFill/PathRaster and actual Raster/Vector/pick/Trace/Boolean callers. Old image/data-URI and whole higher product gates remain mandatory. No further runtime is launched by this readiness report.

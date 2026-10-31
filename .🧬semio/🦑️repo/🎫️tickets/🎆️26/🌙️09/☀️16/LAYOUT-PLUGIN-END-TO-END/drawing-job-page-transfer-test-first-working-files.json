@@ -1,0 +1,22 @@
+{
+  "sourceOnly": true,
+  "unmountedBeforeImplementation": true,
+  "runtimeAttempts": 0,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/📦️page-transfer/case.json",
+      "sha256": "c7596bbba7570e56b48ed7b02344c1bbc993da1d5258b3db5e0e83aff4e57faa",
+      "bytes": 646
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/📦️page-transfer/case.schema.json",
+      "sha256": "39c7ef85051bd75e48e05fce77a9f3e1950467be06d63b6519a90128133ae070",
+      "bytes": 1324
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/📦️page-transfer/🧪️tests/🦀️.rs",
+      "sha256": "1111c80877815da9cbf01e173ba1fb2261cddbb4e0ee8dfa09437990665618c4",
+      "bytes": 4615
+    }
+  ]
+}

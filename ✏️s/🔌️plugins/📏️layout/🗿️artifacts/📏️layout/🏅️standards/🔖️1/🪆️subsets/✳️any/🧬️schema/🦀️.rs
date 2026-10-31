@@ -257,9 +257,7 @@ pub fn text_to_rgba(text: &str) -> Option<[f32; 4]> {
 //#endregion 🔖️DocumentHelpers
 
 //#region 🧪️DocumentTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️document/🦀️.rs"]
-mod document_tests;
+
 //#endregion 🧪️DocumentTests
 
 //#region 🧬️DerivedArtifactFacets
@@ -282,24 +280,10 @@ pub const LAYOUT_DOCUMENT_SCHEMA: &str = "layout.layout";
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️component.rs`'s own `#[artifact_schema(id =
 /// "s.layout.layout")]`; `standard`/`subset` match this file's own
 /// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — the canonical surface id is `s.layout.layout@1/*#editor`
-/// / `s.layout.layout@1/*#viewer`, exactly the contract §1 grammar. NOT the same type as
-/// `semio_framework_artifact_reference::ArtifactDialect` used a few lines below by `background_drawing_child_handle` (a
-/// wire `ArtifactDialect` describing STDIO's drawing subset for composition purposes, unrelated to
-/// this artifact's own surface identity) — this is the SDK's compile-time `Dialect`.
+/// / `s.layout.layout@1/*#viewer`, exactly the contract §1 grammar. This SDK compile-time
+/// `Dialect` identifies Layout; genuine Drawing member handles independently retain their
+/// wire `semio_framework_artifact_reference::ArtifactDialect` coordinates.
 pub const LAYOUT_DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", standard: StandardId("1"), subset: SubsetId::ANY };
-
-/// 🌉️ Layout carries one persisted background child (`LayoutSnapshot::background_drawing`), the imported plan a sheet is laid out on.
-/// The content is an opaque [`Value`]: layout never names the owner of the child's standard. Everything layout needs from it, validating, reading as a
-/// [`VectorScene`], writing one back, its SQLite DDL and its external formats, goes through the codec the composition root binds to
-/// [`LAYOUT_BACKGROUND_DRAWING`]. `LayoutSnapshot::referenced_model` is the forward `ArtifactLink` slot for a referenced `model` artifact, schema and codec
-/// complete but otherwise inert (no `LinkResolver` seam, no mutation dispatch).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
-#[value(rename_all = "camelCase", deny_unknown_fields, retire_with="crate::snapshot::drawing_child::retire")]
-pub struct LayoutDrawingChild {
-    pub handle: store::os_store::artifact_child::ArtifactChild<LayoutBackgroundDrawing>,
-    #[value(deserialize_with = "validated_drawing_content")]
-    pub content: Value,
-}
 
 /// 📄️ A page visits genuine Drawing references through its containing pages member slot.
 impl semio_framework_schema_composition::ChildFieldRefs for Page {
@@ -986,9 +970,7 @@ impl protocol::list_delta::Keyed for Frame {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/👁️layer-order/🦀️.rs"]
-mod layer_order_tests;
+
 
 #[path = "✅️validation/🦀️.rs"]
 pub mod validation;
@@ -999,9 +981,7 @@ pub mod story_splice;
 #[path="🟰️equality/🦀️.rs"]
 pub mod equality;
 
-#[cfg(test)]
-#[path="🧪️tests/🧵️drawing/🦀️.rs"]
-mod drawing_cursor_tests;
+
 
 #[cfg(any(test,feature="testkit"))]
 impl serde::Serialize for LayoutDrawingMember{fn serialize<S:serde::Serializer>(&self,serializer:S)->Result<S::Ok,S::Error>{serde::Serialize::serialize(&serde_json::Value::from(&self.to_value()),serializer)}}

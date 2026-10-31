@@ -1,0 +1,57 @@
+//! 🔗️ Shared records, defaults and flattened schemas exercise public owners from the same package.
+pub use semio_framework_value_native_owned::*;
+pub use semio_framework_value_native_owned::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,RetainedCloneClose,RetainedCloneCursor,retained_clone_grant_admits};
+pub use semio_framework_value_native_owned::retirement::RetireOwned;
+pub use semio_framework_value_derive::{RetireOwned,NativeReceive,ToValue};
+pub use semio_framework_value_intrinsic::{ToValue,NativeEncodeControl,ValueShape};
+pub fn observe_retirement_allocations<R>(run:impl FnOnce()->R)->(R,(usize,usize)){semio_framework_value_testing_allocator::observe_retirement_allocations(run)}
+pub use semio_framework_value_native_owned::shared_issuance::SealedShared;
+use semio_framework_test_fixtures::fixture_text;
+#[path="../../../🧪️tests/📥️admission/🦀️.rs"]pub(crate) mod source_fixture;
+#[path="../📥️driver/🦀️.rs"]mod driver;
+use driver::*;
+#[derive(crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate")]
+struct WideRecord{
+ a:SealedShared<String>,b:SealedShared<String>,c:SealedShared<String>,d:SealedShared<String>,e:SealedShared<String>,
+ f:SealedShared<String>,g:SealedShared<String>,h:SealedShared<String>,i:SealedShared<String>,j:SealedShared<String>,
+ k:SealedShared<String>,l:SealedShared<String>,m:SealedShared<String>,n:SealedShared<String>,o:SealedShared<String>,
+ p:SealedShared<String>,q:SealedShared<String>,r:SealedShared<String>,s:SealedShared<String>,t:SealedShared<String>,u:SealedShared<String>,
+ v:SealedShared<String>,w:SealedShared<String>,x:SealedShared<String>,y:SealedShared<String>,z:SealedShared<String>,
+ aa:SealedShared<String>,ab:SealedShared<String>,ac:SealedShared<String>,ad:SealedShared<String>,ae:SealedShared<String>,af:SealedShared<String>,
+}
+#[test]
+fn native_record32_single_active_child_fits4096_and_preserves_every_original_prefix(){let mut finished=0;for cut in 0..10000{let mut bank=bank();let keys=["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","aa","ab","ac","ad","ae","af"];let original=source(DslValue::Object(keys.into_iter().map(|key|(key.to_owned(),DslValue::String(format!("original {key} 🏠️")))).collect()),&mut bank);let mut receiver=<WideRecord as NativeReceive<DslValue>>::receiver();let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<24,&mut callback);let mut turns=0;while !receiver.output_ready()&&turns<cut{let d=receiver.demands(original.borrow(),4096).unwrap();deny(&mut receiver,original.borrow(),&mut control,&mut bank,d);let g=bank.loan(1,4096);original_turn(&mut receiver,original.borrow(),&mut control,g,&mut bank).unwrap();assert!(receiver.native_field_owner_count()<=1);turns+=1;}if receiver.output_ready(){finished=turns;let row=take(&mut receiver,&mut bank);assert_eq!(row.a.get(),"original a 🏠️");assert_eq!(row.q.get(),"original q 🏠️");assert_eq!(row.af.get(),"original af 🏠️");drain(row,&mut bank);}close(&mut receiver,&mut bank);drain(original,&mut bank);if finished>0&&cut>finished{break}}assert!(finished>0);}
+#[derive(crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate")]
+struct GroupName{name:SealedShared<String>}
+#[derive(crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate")]
+struct GroupVolume{volume:f64}
+
+#[derive(Default,crate::RetireOwned,crate::NativeReceive,crate::ToValue)]#[value(crate="crate")]
+enum OriginalDefaultMedia { #[default] Empty,Text(String) }
+#[derive(crate::RetireOwned,crate::NativeReceive,crate::ToValue)]#[value(crate="crate")]
+struct OriginalDeclaredDefaults {
+ id:String,
+ #[value(default)]values:Vec<String>,
+ #[value(default)]scale:f64,
+ #[value(default)]enabled:bool,
+ #[value(default)]media:OriginalDefaultMedia,
+ optional:Option<String>,
+}
+#[test]
+fn native_declared_defaults_keep_missing_fields_original_and_heapless(){let law:serde_json::Value=serde_json::from_str(fixture_text!("../../📥️default/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let mut finished=0;for cut in 0..2048{let mut bank=bank();let original=source(DslValue::from(&law["input"]),&mut bank);let mut receiver=<OriginalDeclaredDefaults as NativeReceive<DslValue>>::receiver();let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<24,&mut callback);let mut turns=0;while !receiver.output_ready()&&turns<cut{let d=receiver.demands(original.borrow(),4096).unwrap();deny(&mut receiver,original.borrow(),&mut control,&mut bank,d);let g=bank.loan(1,4096);original_turn(&mut receiver,original.borrow(),&mut control,g,&mut bank).unwrap();turns+=1;}if receiver.output_ready(){finished=turns;let output=take(&mut receiver,&mut bank);assert_eq!(output.scale.to_bits(),0.0_f64.to_bits());assert_eq!(serde_json::Value::from(crate::ToValue::to_value(&output.scale)),serde_json::to_value(0.0_f64).unwrap());assert_eq!(serde_json::Value::from(crate::ToValue::to_value(&output)),law["expected"]);drain(output,&mut bank);}close(&mut receiver,&mut bank);drain(original,&mut bank);if finished>0&&cut>finished{break}}assert!(finished>0);use crate::native_decoding::owned::{NativeDefault,NativeDefaultCursor};let mut bank=bank();let(mut cursor,h)=crate::observe_retirement_allocations(Vec::<String>::default_cursor);assert_eq!(h,(0,0));let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<24,&mut callback);let g=bank.loan(1,4096);let(t,h)=crate::observe_retirement_allocations(||cursor.advance(&mut control,4096,g));assert_eq!(h,(0,0));assert_eq!(t.result.as_ref().unwrap().progress().retained_capacity_bytes,0);post(&mut bank,t,g,h,crate::OriginalReceivingPrimary::retained_progress).unwrap();let g=bank.loan(1,4096);let(t,h)=crate::observe_retirement_allocations(||cursor.take(g));let(value,p)=t.result.unwrap().unwrap();bank.post(p,t.work,g,h);assert_eq!(value.capacity(),0);assert_eq!(p.retained_capacity_bytes,0);assert!(p.fits(g));drain(value,&mut bank);cursor.begin_close();assert!(cursor.terminal_is_empty());}
+#[derive(crate::RetireOwned,crate::NativeReceive)]#[value(crate="crate")]
+struct FlattenedRecord{
+ #[value(flatten)]name:SealedShared<GroupName>,
+ #[value(flatten)]volume:SealedShared<GroupVolume>,
+}
+#[test]
+fn native_flattened_original_record_preserves_source_schema_and_all_partial_custody(){let input=||DslValue::Object(vec![("name".into(),DslValue::String("original β".into())),("volume".into(),DslValue::Number(crate::Number::Float(123.5)))]);let mut finished=0;for cut in 0..2000{let mut bank=bank();let original=source(input(),&mut bank);let foreign=source(input(),&mut bank);let mut receiver=<FlattenedRecord as NativeReceive<DslValue>>::receiver();let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<24,&mut callback);let mut turns=0;let mut paid_binding=false;while !receiver.output_ready()&&turns<cut{let d=receiver.demands(original.borrow(),4096).unwrap();deny(&mut receiver,original.borrow(),&mut control,&mut bank,d);let g=bank.loan(1,4096);let(turn,h)=crate::observe_retirement_allocations(||source_fixture::receive(&mut control,g,bank.work_loan(1),|c|receiver.advance(original.borrow(),c,4096,g)));let actual_work=turn.work;let step=source_fixture::post_step(&mut bank,turn,g,h,OriginalReceivingPrimary::retained_progress).unwrap();if turns==0{assert_eq!(actual_work,1);assert_eq!(step.progress().copied_items,1);paid_binding=true;}turns+=1;if paid_binding&&!receiver.output_ready(){assert!(receiver.demands(foreign.borrow(),4096).is_err());}}if receiver.output_ready(){finished=turns;let row=take(&mut receiver,&mut bank);assert_eq!(row.name.get().name.get(),"original β");assert_eq!(row.volume.get().volume,123.5);drain(row,&mut bank);}close(&mut receiver,&mut bank);drain(original,&mut bank);drain(foreign,&mut bank);if finished>0&&cut>finished{break}}assert!(finished>0);for entries in [vec![("name",DslValue::String("a".into())),("volume",DslValue::Number(crate::Number::Float(1.0))),("unknown",DslValue::Null)],vec![("name",DslValue::String("a".into())),("name",DslValue::String("b".into())),("volume",DslValue::Number(crate::Number::Float(1.0)))],vec![("name",DslValue::String("a".into()))]]{let mut bank=bank();let original=source(DslValue::Object(entries.into_iter().map(|(key,value)|(key.to_owned(),value)).collect()),&mut bank);let mut receiver=<FlattenedRecord as NativeReceive<DslValue>>::receiver();let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<24,&mut callback);let mut refused=false;for _ in 0..2000{if receiver.output_ready(){break}let g=bank.loan(1,4096);if original_turn(&mut receiver,original.borrow(),&mut control,g,&mut bank).is_err(){refused=true;break}}assert!(refused);assert!(!receiver.output_ready());close(&mut receiver,&mut bank);drain(original,&mut bank);}}
+#[path="../🫙️empty/🦀️.rs"]mod empty_record;
+#[test]
+fn native_flattened_ordinals_refuse_ambiguous_declared_ids(){
+ use crate::native_decoding::owned::{NativeRecordFields,NativeRecordMatcher,NativeSchemaKeySource,NativeFieldMatch};
+ for(input,key,expected)in [(DslValue::String("name".into()),NativeSchemaKeySource::Text,NativeFieldMatch::Field(0)),(DslValue::String("volume".into()),NativeSchemaKeySource::Text,NativeFieldMatch::Field(1)),(DslValue::Number(crate::Number::UInt(0)),NativeSchemaKeySource::EnumOrdinal,NativeFieldMatch::Ambiguous),(DslValue::Number(crate::Number::UInt(1)),NativeSchemaKeySource::EnumOrdinal,NativeFieldMatch::Missing)]{
+  let maximum_work=fixture()["workLoan"]["batch"].as_u64().unwrap();let mut bank=bank();let original=source(input,&mut bank);let mut matcher=NativeRecordMatcher::new(FlattenedRecord::native_schema_field,FlattenedRecord::native_schema_count(),key);let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<24,&mut callback);let mut saw_probe_batch=false;
+  for _ in 0..10000{if matcher.result().is_some(){break}let g=bank.loan(257,4096);let(turn,h)=crate::observe_retirement_allocations(||source_fixture::receive(&mut control,g,bank.work_loan(maximum_work),|c|matcher.advance(original.borrow(),c,4096,g)));assert!(turn.work<=257);saw_probe_batch|=turn.work>1;let p=turn.result.as_ref().map(|s|s.progress()).unwrap_or_else(|e|e.retained_progress());bank.post(p,turn.work,g,h);turn.result.unwrap();}assert_eq!(matcher.result(),Some(expected));assert!(saw_probe_batch);matcher.begin_close();for _ in 0..10000{if matcher.terminal_is_empty(){break}let g=bank.loan(1,4096);let(turn,h)=crate::observe_retirement_allocations(||matcher.close_step(g));source_fixture::post_step(&mut bank,turn,g,h,crate::ValueError::retained_progress).unwrap();}assert!(matcher.terminal_is_empty());drop(matcher);drain(original,&mut bank);
+ }
+}

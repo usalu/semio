@@ -1,0 +1,98 @@
+{
+  "state": "all-four-whole-prior-files-reconstructed",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🧵️drawing/📐️geometry/🟦️.ts",
+      "beforeSha256": "1fa4f8ec78f91daf189b3e63f4d63054dd3a8450cbe13c8ae8daec47363e782a",
+      "sha256": "f3408af76100b60dc8757dc1b23127903945ffd221ccc2a3ad57a18797e7a23d",
+      "bytes": 8867,
+      "wholeInverseMatches": true,
+      "replacements": [
+        [
+          "export const matrixIdentity=",
+          "function matrixElement(source:ArrayLike<number>,index:number):number{const value=source[index];if(value===undefined)throw Error(\"drawing.matrix\");return value;}\nexport const matrixIdentity="
+        ],
+        [
+          "result[col*4+row]+=left[k*4+row]*rhs[col*4+k];",
+          "result[col*4+row]=matrixElement(result,col*4+row)+matrixElement(left,k*4+row)*matrixElement(rhs,col*4+k);"
+        ],
+        [
+          "return{xx:c[0],xy:c[4],yx:c[1],yy:c[5],dx:c[12],dy:c[13]};",
+          "return{xx:matrixElement(c,0),xy:matrixElement(c,4),yx:matrixElement(c,1),yy:matrixElement(c,5),dx:matrixElement(c,12),dy:matrixElement(c,13)};"
+        ],
+        [
+          "for(let[p,b,c]of[[p0.x,p1.x,p2.x],[p0.y,p1.y,p2.y]])",
+          "const axes:[number,number,number][]=[[p0.x,p1.x,p2.x],[p0.y,p1.y,p2.y]];for(let[p,b,c]of axes)"
+        ],
+        [
+          "for(let[a,b,c,d]of[[p0.x,p1.x,p2.x,p3.x],[p0.y,p1.y,p2.y,p3.y]])",
+          "const axes:[number,number,number,number][]=[[p0.x,p1.x,p2.x,p3.x],[p0.y,p1.y,p2.y,p3.y]];for(let[a,b,c,d]of axes)"
+        ]
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🚪️io/🔌️ports/🧵️lower/🟦️.ts",
+      "beforeSha256": "48736149938fdea29edc4c996e431ea16110be6391288b5c660a78398c161703",
+      "sha256": "6a0388a2e4618fbb6d7894138fccfe96e04f3050f9e3a5f24ed8c82f062d62ee",
+      "bytes": 14772,
+      "wholeInverseMatches": true,
+      "replacements": [
+        [
+          "if(this.depth)this.path[this.depth-1]++;else this.stage=4;",
+          "if(this.depth){const index=this.path[this.depth-1];if(index===undefined)throw Error('vector.index');this.path[this.depth-1]=index+1;}else this.stage=4;"
+        ],
+        [
+          "const index=this.path[depth];if(index===children.length",
+          "const index=this.path[depth];if(index===undefined)throw Error('vector.index');if(index===children.length"
+        ],
+        [
+          "node=rows(group.children)[this.path[i]];",
+          "const index=this.path[i];if(index===undefined)throw Error('vector.index');node=rows(group.children)[index];"
+        ]
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🗃️plan/🧪️tests/🟦️.ts",
+      "beforeSha256": "b2325727845a526e4ca948b09e9d0641cfd2d9bedf586ec2509290b349bd34dd",
+      "sha256": "f75ea9fe0980e6bdfe5be91852f0747190b1d5fdff85b02668a0497e66c26fbb",
+      "bytes": 4983,
+      "wholeInverseMatches": true,
+      "replacements": [
+        [
+          "const page=sheet.document.pages[0],expected=order(page.frames,page.layers),",
+          "const page=sheet.document.pages[0];if(page===undefined)throw Error('Original export page fixture absent');const expected=order(page.frames,page.layers),"
+        ]
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖼️canvas/🧵️paragraph-work/🟦️.ts",
+      "beforeSha256": "ad7bfe3bb2714241dbb63f7169f2d4fdf41258eaab8b80ab63c3738abb234765",
+      "sha256": "d7a0e0e26ad2f0d26b355e786d76b9771fcee23d79bc3c1ff23496e9bac559ba",
+      "bytes": 4011,
+      "wholeInverseMatches": true,
+      "replacements": [
+        [
+          "import type {FontParagraph} from \"../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🟦️.ts\";\n",
+          "import type {ParagraphGlyph} from \"../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🟦️.ts\";\nimport type {RetainedWorkInputSequence} from \"../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts\";\nexport interface OutlineParagraphSource{readonly glyphs:RetainedWorkInputSequence<Readonly<Pick<ParagraphGlyph,\"segmentStart\"|\"segmentCount\"|\"origin\">>>;readonly segments:RetainedWorkInputSequence<PathSegment>}\n"
+        ],
+        [
+          "private readonly original:FontParagraph",
+          "private readonly original:OutlineParagraphSource"
+        ],
+        [
+          "advance(source:FontParagraph,",
+          "advance(source:OutlineParagraphSource,"
+        ],
+        [
+          "this.original.glyphs.get(this.glyph)",
+          "this.original.glyphs.at(this.glyph)"
+        ],
+        [
+          "this.original.segments.get(glyph.segmentStart+this.segment)",
+          "this.original.segments.at(glyph.segmentStart+this.segment)"
+        ]
+      ]
+    }
+  ],
+  "scope": "Approved type tuples/defined guards/readonly direct at; no arithmetic/default/cast/suppression/golden/fixture/stock changes"
+}

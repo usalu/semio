@@ -1,0 +1,40 @@
+{
+  "state": "authored-not-run-boundary-integration-pending",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🦀️.rs",
+      "sha256": "0c5fd565f6a43d27a0d88876ad21684cacc8bcddb6d4977613e3df500b5a79ad",
+      "bytes": 44670
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🏭️message/🦀️.rs",
+      "sha256": "2d4daae1dd169999b769f6fe485e9fdcc1f5548ca5e95fc4013aba3162d28715",
+      "bytes": 6983
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🏭️message/🧪️tests/📐️.json",
+      "sha256": "4da680f487c37615c370625c2f2f00136eec47c43c2f1a02dfc174ee95aabbe9",
+      "bytes": 1929
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🏭️message/🧪️tests/🔣️.json",
+      "sha256": "06423f8c2829cedd49350dcf548bb51bd2a4185af3952c2dd30b0c41418d2fb3",
+      "bytes": 1703
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⚠️diagnostic/🏭️message/🧪️tests/🦀️.rs",
+      "sha256": "065c84d3da38016220b15d8378d02eb945c273af3ef815a198ea7deff1215b9a",
+      "bytes": 3333
+    }
+  ],
+  "thirdPartyInterface": "actual FaultWireCursor output parsed/compared by serde_json",
+  "cases": 3,
+  "positiveBirthDenials": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "owner": "private default-message Fault candidate; no arbitrary Fault adoption/mutation",
+  "runtimeAttempts": 0
+}

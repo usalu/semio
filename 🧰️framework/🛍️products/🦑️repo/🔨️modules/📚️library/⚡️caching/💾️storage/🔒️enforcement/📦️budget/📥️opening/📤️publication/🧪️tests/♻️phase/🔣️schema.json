@@ -1,0 +1,58 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "steps",
+          "events",
+          "refused"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "measure",
+                "recheck",
+                "complete",
+                "mutate",
+                "wrong-control"
+              ]
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "artifact-measure",
+                "artifact-read",
+                "inputs-measure",
+                "inputs-read"
+              ]
+            }
+          },
+          "refused": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

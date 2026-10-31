@@ -1,0 +1,3 @@
+# Flatten Isolated Repeat Review
+
+The actual prior gate failed only the old100-callback rejection observation. The exact test-only repair now uses the already declared finite turn_bound, retains the same stock/quantum/body/Tiny oracle and strengthens both guards with exact error/frontier/output assertions. Before this repeat, all other461 prior input paths match except the two Cargo lock files already changed during the prior run. The new packet captures current bytes of all462 inputs; it is a bounded metadata observation, not a complete compiler-input or admission claim. No other selected Source is released for editing until actual terminal and postcheck.

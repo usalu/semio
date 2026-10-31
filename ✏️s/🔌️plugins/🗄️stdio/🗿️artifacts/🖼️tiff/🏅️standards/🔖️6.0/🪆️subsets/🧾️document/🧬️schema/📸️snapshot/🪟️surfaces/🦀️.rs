@@ -1,7 +1,6 @@
 //! 🪟️ The editor config, editor presence and viewer presence schema mounts of `semio-s-artifact-stdio-tiff`'s snapshot, held by their own crate so the snapshot crate stays inside the source gate.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 #[path = "."]
 pub mod editor {

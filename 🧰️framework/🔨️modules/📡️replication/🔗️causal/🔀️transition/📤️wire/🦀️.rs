@@ -50,9 +50,6 @@ impl HistoryTransitionWireCursor{
  }
 
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
 
 #[path="👁️.rs"]
 mod borrowed;

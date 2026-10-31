@@ -9,7 +9,7 @@ extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_value_derive as value_derive;
 
 use semio_s_artifact_puzzle_3d_model::io::sqlite::snapshot::*;
-use pack::snapshot::ArtifactSqliteSnapshot as _;
+use semio_framework_io_sqlite_snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use semio_s_artifact_puzzle_3d_model::io::sqlite::snapshot::*;
 use std::collections::BTreeMap;

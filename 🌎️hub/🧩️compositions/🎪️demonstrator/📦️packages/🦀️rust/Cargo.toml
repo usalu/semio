@@ -67,6 +67,13 @@ semio-s-artifact-process-process3d-editor = { workspace = true }
 semio-s-artifact-process-process3d-viewer = { workspace = true }
 
 [dev-dependencies]
+# 🪞️ The six standalone hosts the bundle is compared with by `🧪️tests/🔬️standalone-parity` — each is the plugin the bundled apps are constructed like.
+semio-hub-cad = { path = "../../../📐️cad/📦️packages/🦀️rust" }
+semio-hub-gis = { path = "../../../🌍️gis/📦️packages/🦀️rust" }
+semio-hub-procedural = { path = "../../../🌀️procedural/📦️packages/🦀️rust" }
+semio-hub-process = { path = "../../../🏭️process/📦️packages/🦀️rust" }
+semio-hub-puzzle = { path = "../../../🧩️puzzle/📦️packages/🦀️rust" }
+semio-hub-sourcing = { path = "../../../🪵️sourcing/📦️packages/🦀️rust" }
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }
 serde.workspace = true
 serde_json.workspace = true

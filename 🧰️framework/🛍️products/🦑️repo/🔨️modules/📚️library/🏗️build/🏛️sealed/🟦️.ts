@@ -1,10 +1,11 @@
+import{selectPackageManagerV1}from"../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 import {noticeLanguagesV1} from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{createHash}from"node:crypto";
 import{chmodSync,closeSync,fstatSync,fsyncSync,lstatSync,mkdirSync,openSync,readFileSync,readSync,readdirSync,renameSync,rmSync,writeSync}from"node:fs";
 import{join,relative,resolve,sep}from"node:path";
 import policyData from"./🔣️.json"with{type:"json"};
 
-/** 🏛️ The sealed implementation store: the build tool runs from an immutable, content-addressed snapshot of its own sources, so a half-finished edit of the live tree never reaches a running or a new command. This file holds what every process needs before it can run anything: the closed policy, the mode switch, the store layout, the closed records and the cheap stat fingerprint that tells a fresh snapshot from a drifted one. It imports Node built-ins only (the front door loads it before any workspace dependency exists).
+/** 🏛️ The sealed implementation store: the build tool runs from an immutable, content-addressed snapshot of its own sources, so a half-finished edit of the live tree never reaches a running or a new command. This file holds what every process needs before it can run anything: the closed policy, the mode switch, the store layout, the closed records and the cheap stat fingerprint that tells a fresh snapshot from a drifted one. It imports only Node built-ins and the first-party descriptor accessor (the front door loads it before any workspace dependency exists).
  * @see ./🔣️.json the policy, ./🧬️schema/🔣️.json its schema, ./📤️promotion/🟦️.ts how a drifted tree is promoted, ./📥️execution/🟦️.ts the seam of a command */
 export type SealedLanguageV1="en"|"de";
 /** 🔀️ The implementation a command runs from: the sealed snapshot, the live tree, or a promotion of the live tree to a new snapshot. */
@@ -12,10 +13,13 @@ export type ImplementationModeV1="sealed"|"live"|"promote";
 /** 🌍️ One message of the policy in every declared language. */
 export type SealedTextV1=Readonly<Record<SealedLanguageV1,string>>;
 /** 📐️ The closed policy of the store exactly as its schema declares it: modes, languages, bounds, timings, lock, check and the bilingual texts. */
-export interface SealedPolicyV1{readonly version:1;readonly modeVariable:string;readonly defaultMode:"sealed"|"live";readonly modes:readonly ImplementationModeV1[];readonly languages:readonly SealedLanguageV1[];readonly cacheDirectory:string;readonly stampedFiles:readonly string[];readonly keepPrevious:number;readonly quietMilliseconds:number;readonly maximumBytes:number;readonly maximumTextCharacters:number;readonly maximumPathCharacters:number;readonly maximumCommandLineCharacters:number;readonly settleMilliseconds:number;readonly captureAttempts:number;readonly blockedRetryMilliseconds:number;readonly coalesceMilliseconds:number;readonly helpTokens:readonly string[];readonly leadingWords:readonly string[];readonly maximumBlockedRows:number;readonly shownBlockedRows:number;readonly lock:Readonly<{pollMilliseconds:number;busyTimeoutMilliseconds:number;waitMaximumMilliseconds:number}>;readonly light:Readonly<{freshMilliseconds:number;promoteAfterMilliseconds:number;refuseAfterMilliseconds:number;refreshDebounceMilliseconds:number}>;readonly promotion:Readonly<{rule:"explicit"|"drift";agedMilliseconds:number;noticeMilliseconds:number}>;readonly check:Readonly<{argument:string;maximumMilliseconds:number;maximumOutputBytes:number;commands:readonly(readonly string[])[];commandMilliseconds:number}>;readonly readyDescriptor:number;readonly codeLoaders:Readonly<Record<string,"ts"|"tsx"|"js"|"jsx">>;readonly texts:Readonly<Record<string,SealedTextV1|Readonly<Record<string,SealedTextV1>>>>}
+export interface SealedPolicyV1{readonly version:1;readonly modeVariable:string;readonly defaultMode:"sealed"|"live";readonly modes:readonly ImplementationModeV1[];readonly languages:readonly SealedLanguageV1[];readonly cacheDirectory:string;readonly stampedFiles:readonly(string|Readonly<{ecosystem:string;role:"locks"|"scope"}>)[];readonly keepPrevious:number;readonly quietMilliseconds:number;readonly maximumBytes:number;readonly maximumTextCharacters:number;readonly maximumPathCharacters:number;readonly maximumCommandLineCharacters:number;readonly settleMilliseconds:number;readonly captureAttempts:number;readonly blockedRetryMilliseconds:number;readonly coalesceMilliseconds:number;readonly helpTokens:readonly string[];readonly leadingWords:readonly string[];readonly maximumBlockedRows:number;readonly shownBlockedRows:number;readonly lock:Readonly<{pollMilliseconds:number;busyTimeoutMilliseconds:number;waitMaximumMilliseconds:number}>;readonly light:Readonly<{freshMilliseconds:number;promoteAfterMilliseconds:number;refuseAfterMilliseconds:number;refreshDebounceMilliseconds:number}>;readonly promotion:Readonly<{rule:"explicit"|"drift";agedMilliseconds:number;noticeMilliseconds:number}>;readonly check:Readonly<{argument:string;maximumMilliseconds:number;maximumOutputBytes:number;commands:readonly(readonly string[])[];commandMilliseconds:number}>;readonly readyDescriptor:number;readonly codeLoaders:Readonly<Record<string,"ts"|"tsx"|"js"|"jsx">>;readonly texts:Readonly<Record<string,SealedTextV1|Readonly<Record<string,SealedTextV1>>>>}
 
 /** 📜️ The closed policy of the store. */
 export const sealedPolicyV1:SealedPolicyV1=policyData as unknown as SealedPolicyV1;
+/** 🏷️ Resolves semantic manager roles through the defining accessor, retaining every selected file. */
+export function sealedStampedFilesV1(policy:SealedPolicyV1=sealedPolicyV1,environment:Readonly<Record<string,string|undefined>>=process.env):readonly string[]{const files:string[]=[];for(const entry of policy.stampedFiles){if(typeof entry==="string"){files.push(entry);continue;}const manager=selectPackageManagerV1(entry.ecosystem,environment);if(entry.role!=="locks"&&entry.role!=="scope")throw Error("Closed selected manager file role required");const names=entry.role==="locks"?manager.lockFileNames():manager.configurationNames("scope");for(const name of names){if(!name||name.includes("\\")||/[!*?{}]/u.test(name)||name.split("/").some(part=>!part||part==="."||part===".."))throw Error("Relative selected manager file required");files.push(name);}}return Object.freeze([...new Set(files)]);}
+
 
 /** 🧬️ One captured file of the live tree: its repository path, content digest and the stat stamp it had when it was captured. */
 export type SealedFileStampV1=readonly[path:string,sha256:string,stamp:string];
@@ -164,8 +168,8 @@ function listedV1(path:string):string|undefined{
  }catch{return undefined;}
 }
 /** 📢️ Tells whether the live tree still is the tree a snapshot was captured from, without reading a file that did not change: every file keeps its stat stamp (a changed stamp is settled by hashing that one file, so a touch or a restored checkout is no drift), every ancestor directory keeps its identity, every remembered listing and every remembered absence holds. */
-export function sealedTreeDriftV1(workspace:string,tree:SealedTreeV1):Readonly<{fresh:boolean;changed:readonly string[]}>{
- const root=resolve(workspace),changed:string[]=[];
+export function sealedTreeDriftV1(workspace:string,tree:SealedTreeV1,policy:SealedPolicyV1=sealedPolicyV1,environment:Readonly<Record<string,string|undefined>>=process.env):Readonly<{fresh:boolean;changed:readonly string[]}>{
+ const root=resolve(workspace),changed:string[]=[];for(const path of sealedStampedFilesV1({...policy,stampedFiles:policy.stampedFiles.filter(entry=>typeof entry!=="string")},environment))if(!tree.files.some(row=>row[0]===path)&&!tree.absent.includes(path))changed.push(path);
  for(const[path,sha256,recorded] of tree.files){
   const row=facts(absolute(root,path));if(!row||!row.isFile()){changed.push(path);continue;}
   if(stampOf(row)===recorded)continue;
@@ -179,12 +183,12 @@ export function sealedTreeDriftV1(workspace:string,tree:SealedTreeV1):Readonly<{
 /** 📸️ What a capture remembers beyond the bytes of its files: the directories it passed, the listings it read and the absences it found. */
 export interface SealedStructureV1{readonly directories:readonly Readonly<{path:string;dev:string;ino:string}>[];readonly observations:readonly(Readonly<{kind:"absent";path:string}>|Readonly<{kind:"directory";path:string;entries:readonly(readonly[string,"d"|"f"])[]}>|Readonly<{kind:"package"}>)[]}
 /** 📏️ Fingerprints the live closure of a capture right now: the stamp of every captured file and of the declared stamped files (a lock file moves installed packages), plus the structure the capture remembered. The sha-256 of a file is the one the capture recorded, never a second read. */
-export function sealedTreeOfCaptureV1(workspace:string,captured:readonly Readonly<{path:string;sha256:string}>[],structure:SealedStructureV1|undefined,policy:SealedPolicyV1=sealedPolicyV1):SealedTreeV1|undefined{
+export function sealedTreeOfCaptureV1(workspace:string,captured:readonly Readonly<{path:string;sha256:string}>[],structure:SealedStructureV1|undefined,policy:SealedPolicyV1=sealedPolicyV1,environment:Readonly<Record<string,string|undefined>>=process.env):SealedTreeV1|undefined{
  if(!structure)return undefined;
- const root=resolve(workspace),files:SealedFileStampV1[]=[];
+ const root=resolve(workspace),files:SealedFileStampV1[]=[],absent:string[]=[];
  for(const row of captured){const found=facts(absolute(root,row.path));if(!found||!found.isFile())return undefined;files.push([row.path,row.sha256,stampOf(found)]);}
- for(const path of policy.stampedFiles){const found=facts(absolute(root,path));if(found?.isFile())try{files.push([path,sealedHashV1(readLiveFileV1(absolute(root,path))),stampOf(found)]);}catch{return undefined;}}
- const listings:(readonly[string,string])[]=[],absent:string[]=[];
+ for(const path of sealedStampedFilesV1(policy,environment)){const found=facts(absolute(root,path));if(found?.isFile())try{files.push([path,sealedHashV1(readLiveFileV1(absolute(root,path))),stampOf(found)]);}catch{return undefined;}else if(!found)absent.push(path);else return undefined;}
+ const listings:(readonly[string,string])[]=[];
  for(const row of structure.observations){if(row.kind==="directory")listings.push([row.path,sealedListingDigestV1(row.entries)]);else if(row.kind==="absent")absent.push(row.path);}
  return Object.freeze({files,directories:structure.directories.map(row=>[row.path,row.dev,row.ino] as const),listings,absent});
 }

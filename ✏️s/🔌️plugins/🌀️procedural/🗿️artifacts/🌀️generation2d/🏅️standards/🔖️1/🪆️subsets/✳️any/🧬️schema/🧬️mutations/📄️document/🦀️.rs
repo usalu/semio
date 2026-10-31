@@ -12,6 +12,7 @@ pub mod update_camera {
     pub mod inverse;
     pub use component::*;
 }
+pub use update_camera::update_camera;
 #[path = "."]
 pub mod change_schema {
     #[path = "../🔤️change-schema/🦀️.rs"]
@@ -22,3 +23,4 @@ pub mod change_schema {
     pub mod inverse;
     pub use component::*;
 }
+pub use change_schema::change_schema;

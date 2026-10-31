@@ -15,11 +15,11 @@ pub const MAXIMUM_FIELDS: usize = 128;
 /// 🧮️ Preflight census units one snapshot-read opportunity may charge before yielding to the next
 /// refresh — each unit is one constant-cost owner or item, so a demo-sized census admits within the
 /// opportunity that opened it rather than one host refresh per unit.
-const PREFLIGHT_UNITS_PER_OPPORTUNITY: usize = 4_096;
+pub const PREFLIGHT_UNITS_PER_OPPORTUNITY: usize = 4_096;
 /// ⏱️ Wall-clock ceiling of one host job step (the interactive 8 ms contract) and the most session
 /// units the job bridge drives inside it — one host round trip per ceiling, never one per unit.
 pub const STEP_CEILING_MS: u64 = 8;
-const UNITS_PER_STEP: usize = 65_536;
+pub const UNITS_PER_STEP: usize = 65_536;
 pub const FAULT_BYTES: usize = WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY;
 pub const JOB_TAG: u64 = 0xf3d0_0000_0000_0000;
 pub const JOB_COUNTER_MAXIMUM: u64 = 0x000f_ffff_ffff_ffff;

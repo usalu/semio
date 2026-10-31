@@ -1,0 +1,245 @@
+{
+  "rustFilesScanned": 36675,
+  "limit": 60000,
+  "rows": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs",
+      "testOnly": false,
+      "sites": [
+        {
+          "line": 29,
+          "kind": "provider"
+        },
+        {
+          "line": 42,
+          "kind": "provider"
+        },
+        {
+          "line": 43,
+          "kind": "provider"
+        },
+        {
+          "line": 44,
+          "kind": "provider"
+        },
+        {
+          "line": 45,
+          "kind": "provider"
+        },
+        {
+          "line": 46,
+          "kind": "provider"
+        },
+        {
+          "line": 47,
+          "kind": "provider"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📖️source/🧪️tests/🦀️.rs",
+      "testOnly": true,
+      "sites": [
+        {
+          "line": 4,
+          "kind": "provider"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🦀️.rs",
+      "testOnly": false,
+      "sites": [
+        {
+          "line": 12,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 15,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 16,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 17,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 18,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 19,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 20,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 21,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 30,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 31,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 32,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 33,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 38,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 44,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 45,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 49,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 60,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 71,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 72,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 73,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 74,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 75,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 76,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 79,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 84,
+          "kind": "bulkConsumer"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/tests.rs",
+      "testOnly": false,
+      "sites": [
+        {
+          "line": 34,
+          "kind": "provider"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🛬️receive/🦀️.rs",
+      "testOnly": false,
+      "sites": [
+        {
+          "line": 4,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 17,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 18,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 19,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 20,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 21,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 22,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 33,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 37,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 42,
+          "kind": "bulkConsumer"
+        },
+        {
+          "line": 47,
+          "kind": "bulkConsumer"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🛬️receive/🦀️.rs",
+      "testOnly": false,
+      "sites": [
+        {
+          "line": 15,
+          "kind": "provider"
+        },
+        {
+          "line": 22,
+          "kind": "provider"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🧪️tests/🌐️axis-value/🦀️.rs",
+      "testOnly": true,
+      "sites": [
+        {
+          "line": 38,
+          "kind": "provider"
+        },
+        {
+          "line": 44,
+          "kind": "provider"
+        }
+      ]
+    }
+  ],
+  "limitation": "Lexical source/provider and generator map; not a type-resolved compile proof."
+}

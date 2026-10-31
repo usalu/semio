@@ -1,7 +1,6 @@
 //! 📈️ Series complexity measures: regularity, ordinal and Markov entropies, multiscale and Lempel-Ziv complexity, spectra, wavelets and resampling inference.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 #[path = "."]
 pub mod schema {

@@ -58,13 +58,6 @@ ${actorCodecRuntimeSourceV1()}
 const HOST_CHANNEL = ${APP_CHANNEL_VERSION};
 const admitGuestChannelVersion = ${admitGuestChannelVersion.toString()};
 
-/** 🎁️ jco lifts \`option<t>\` as a tagged \`{ tag: "none" | "some" }\` variant; every host-side reader
- * below wants the bare value (or nothing), so unwrap exactly that shape and pass anything else through. */
-function unwrapOption(value) {
-  if (value === null || value === undefined) return undefined;
-  if (typeof value === "object" && (value.tag === "none" || value.tag === "some")) return value.tag === "none" ? undefined : value.val;
-  return value;
-}
 
 function lifecycleBody(value) {
   return { lifetime: value.lifetime, requestSequence: BigInt(value.requestSequence), ...("closeGeneration" in value ? { closeGeneration: value.closeGeneration } : {}) };
@@ -91,19 +84,8 @@ function lifecycleEvent(kind, payload, activationGeneration) {
   return kind === "wake" ? ({ tag: kind }) : ({ tag: kind, val: payload });
 }
 
-// 🧩️ \`jobs::job-step\` reaches the worker as jco's raw \`{tag, val}\` variant; \`ShardJobStep\`
-// (\`📮️shard-client/🟦️.ts\`) is the \`{status, ...}\` shape every caller declares. Converting here — the
-// one place that owns the guest boundary — keeps that declaration honest instead of leaving the two
-// shapes silently different, which is what they were while nothing on this target ever stepped a job.
-function normalizeJobStep(step) {
-  if (step?.tag === "running") return { status: "running", progress: unwrapOption(step.val) };
-  if (step?.tag === "done") return { status: "done", value: step.val };
-  if (step?.tag === "failed") return { status: "failed", value: step.val };
-  throw new Error(\`unknown job-step shape: \${JSON.stringify(step)}\`);
-}
-
 function lifecycleReceipt(raw, activationGeneration) {
-  const value = unwrapOption(raw);
+  const value = optionValue(raw);
   if (value === undefined || value === null) return undefined;
   if (value.tag !== "captured" && value.tag !== "accepted" && value.tag !== "retired") throw new Error("actor-lifecycle.receipt-required");
   const body = value.val;
@@ -122,7 +104,7 @@ function normalizeCommandIngress(status) {
 
 function uiPatchReceipt(result, activationGeneration) {
   if (!Array.isArray(result.uiPatches)) throw new Error("actor-ui-patch.envelope");
-  const receipt = unwrapOption(result.uiPatchReceipt);
+  const receipt = optionValue(result.uiPatchReceipt);
   validateActorUiPatchPairing(result.uiPatches.length, receipt);
   if (receipt === undefined || receipt === null) return undefined;
   if (receipt.lifetime.activationGeneration !== activationGeneration) throw new Error("actor-ui-patch.activation-mismatch");
@@ -148,12 +130,16 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
     catch (failure) { if (receipt) originalReturn.receipt(receipt); originalSource.holdNativeRefusal(call); originalReturn.hold(call); throw failure; }
     originalReturn.receipt(receipt);
   }
+  const heldOutput = new Map();
+  let sourceTail = Promise.resolve();
+  const exclusive = (run) => { const work = sourceTail.then(run); sourceTail = work.then(() => {}, () => {}); return work; };
+  const fundedJob = (budget, run) => exclusive(() => originalSourceJob(originalSource, (receipt) => originalReturn.receipt(receipt), originalJobWallUs(budget), run));
   let contextReady = false;
   async function receiveContext(method) {
     const turn = originalSource.issue();
-    const call = await reactor[method](originalTurnWit(turn.input));
-    receiveOriginal(call, 0n);
-    if (unwrapOption(call.refusal) !== undefined) throw Object.assign(new Error("original-turn.context-refused"), { originalCall: call });
+    const call = await reactor[method](originalTurnWit(turn), originalGrantWit(turn.input.grant));
+    receiveOriginal(call, call.workUnitsSpent);
+    if (optionValue(call.refusal) !== undefined) throw Object.assign(new Error("original-turn.context-refused"), { originalCall: call });
     return call;
   }
   async function admitContext() {
@@ -183,7 +169,7 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
         if (call.blocked || (call.spent.copiedItems === 0n && call.spent.copiedBytes === 0n && call.spent.retainedCapacityBytes === 0n && call.spent.releasedBytes === 0n)) return { operation: originalSource.operation, generation: originalSource.generation, sourceClosed: false };
       }
     },
-    poll: async (events, commandPage, coldPairPage, budget) => {
+    poll: (events, commandPage, coldPairPage, budget) => exclusive(async () => {
       await admitContext();
       if (events.length > 1) throw new Error("actor-poll.event-count: a reactor turn admits at most one event");
       const wireEvents = events.map(({ kind, payload }) => lifecycleEvent(kind, payload, activationGeneration));
@@ -193,7 +179,7 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
       try {
         if (commandPage) await reactor.stageCommandPage(commandPage.cursor, commandPage.bytes);
         if (coldPairPage) await reactor.stageColdPairPage(coldPairPage);
-        result = await reactor.poll(wireEvents, { retained: originalTurnWit(turn.input), fuel: BigInt(turn.fuel), deadlineUs: turn.deadlineUs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: budget.maxFrames });
+        result = await reactor.poll(wireEvents, originalBudgetWit(turn, budget));
       } catch (failure) {
         try {
           if (failure && failure.input && failure.spent && typeof failure.workUnitsSpent === "bigint") receiveOriginal(failure, failure.workUnitsSpent);
@@ -205,21 +191,15 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
         throw failure;
       }
       let raw;
-      try { receiveOriginal(result.retainedReceipt, result.fuelUsed); }
+      try { receiveOriginal(result.retainedReceipt, result.retainedReceipt.workUnitsSpent); }
       finally { raw = hostShim.__returnOriginal(turn); if (raw !== undefined) { originalSource.holdProducerRefusal(raw); originalReturn.hold(raw); } }
       if (raw !== undefined) throw Object.assign(new Error("original-turn.producer-held"), { originalProducer: raw });
-      return { ...result, nextWake: unwrapOption(result.nextWake) ?? null, lifecycleReceipt: lifecycleReceipt(result.lifecycleReceipt, activationGeneration), uiPatchReceipt: uiPatchReceipt(result, activationGeneration), commandIngress: normalizeCommandIngress(result.commandIngress) };
-    },
-    startJob: async (job, kind, input) => jobs.startJob(job, kind, input),
-    stepJob: async (job, budget) => normalizeJobStep(await jobs.stepJob(job, budget)),
-    cancelJob: async (job) => jobs.cancelJob(job),
-    // 📤️ THE 2026-09-12 segmented-export fault: this export returns \`option<list<u8>>\`, and jco's flat
-    // lift of an option yields the TAGGED variant object (\`_liftFlatOption\` delegates to
-    // \`_liftFlatVariant\`, which builds \`{ tag }\`/\`{ tag, val }\`; only \`_liftFlatEnum\` reduces to
-    // \`.tag\`). Handed on raw it reached the shard worker as \`[object Object]\` — so chunk 0 faulted the
-    // worker and the terminal \`{ tag: "none" }\` was not \`undefined\` either. Every other guest option in
-    // this bridge already routes through \`unwrapOption\`; this one is no exception.
-    takeSegmentedDownloadChunk: async (instanceId, operationId) => unwrapOption(await jobs.takeSegmentedDownloadChunk(instanceId, operationId)),
+      return { ...result, nextWake: optionValue(result.nextWake) ?? null, lifecycleReceipt: lifecycleReceipt(result.lifecycleReceipt, activationGeneration), uiPatchReceipt: uiPatchReceipt(result, activationGeneration), commandIngress: normalizeCommandIngress(result.commandIngress) };
+    }),
+    startJob: async (job, kind, input) => fundedJob(undefined, (funds) => funds.start(jobs, job, kind, input)),
+    stepJob: async (job, budget, control = {}) => fundedJob(budget, (funds) => funds.step(jobs, job, { ...control, held: heldOutput })),
+    cancelJob: async (job) => fundedJob(undefined, (funds) => funds.cancel(jobs, job, { held: heldOutput })),
+    takeSegmentedDownloadChunk: async (instanceId, operationId) => optionValue(await jobs.takeSegmentedDownloadChunk(instanceId, operationId)),
     checkpoint: async () => checkpoint.checkpoint(),
     restore: async (state) => checkpoint.restore(state),
     describe: async () => describe.describe(),

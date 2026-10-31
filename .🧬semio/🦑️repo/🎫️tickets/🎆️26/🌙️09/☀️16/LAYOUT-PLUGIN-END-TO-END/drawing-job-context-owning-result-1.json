@@ -1,0 +1,9 @@
+{
+  "outerExitCode": 1,
+  "testsExecuted": 0,
+  "changedInputs": [
+    "🧰️framework/Cargo.lock",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️update/🧪️tests/🦀️.rs"
+  ],
+  "logSha256": "9aa63df432b65b6523ea1dccd2c3995b4be07801234e7c0a543d5833c7a42afa"
+}

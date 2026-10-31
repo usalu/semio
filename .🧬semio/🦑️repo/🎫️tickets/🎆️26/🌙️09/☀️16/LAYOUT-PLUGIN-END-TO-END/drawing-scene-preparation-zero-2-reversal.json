@@ -1,0 +1,13 @@
+{
+  "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🧪️tests/zero-authority.test.ts",
+  "before": "d29d59d5ae20ca220cd2c6c0fa5a8df6408c3df33d719434c13d26a35851aa78",
+  "after": "5fdfe57d4ebe0b33354855a87ff47d7a3012442d649303c3d697b1fe0730f700",
+  "inverseWholeFile": "d29d59d5ae20ca220cd2c6c0fa5a8df6408c3df33d719434c13d26a35851aa78",
+  "changes": {
+    "addedImport": "import {binary64} from \"@semio-tech/framework/value/ieee754\";\n",
+    "addedDecoder": "function lift(value:unknown):unknown{return typeof value===\"number\"?binary64(value):Array.isArray(value)?value.map(lift):value&&typeof value===\"object\"?Object.fromEntries(Object.entries(value).map(([key,item])=>[key,lift(item)])):value;}\n",
+    "beforeInput": "parseDrawingArtifact(row.document)",
+    "afterInput": "parseDrawingArtifact({...row.document,layers:lift(row.document.layers)})"
+  },
+  "semantics": "Same canonical original17 fixture decoder: lift only document.layers numeric fields through firstparty binary64; assets and original JSON unchanged."
+}

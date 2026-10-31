@@ -6,12 +6,7 @@ use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,RetirementCursor,RetirementStep,sequence,sequence_birth_bytes,deferred,deferred_birth_bytes,deferred_birth_bytes_for,arc_custody::SharedControlledRetirement}};
 use std::{mem::size_of,sync::Arc};
 
-struct OriginalRequestLease<T:RetireOwned+Sync>(Arc<T>);
-impl<T:RetireOwned+Sync> RetireOwned for OriginalRequestLease<T>{
- fn retirement(self)->Box<dyn RetirementCursor>{Box::new(SharedControlledRetirement::lease(self.0))}
- fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<SharedControlledRetirement<T>>())}
- fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
-}
+use semio_framework_plugin_original_job_ownership::OriginalRequestLease;
 fn lease_field_birth<T:RetireOwned+Sync>(_:&Arc<T>)->usize{deferred_birth_bytes::<OriginalRequestLease<T>>()}
 
 struct OriginalRequestWire(RetainedToolWireInput);
@@ -57,6 +52,4 @@ impl<A:ArtifactApp> RetireOwned for ArtifactOwnedToolJobRequest<A>{
  fn controlled_retirement_supported()->bool{<A::Command as RetireOwned>::controlled_retirement_supported()&&<A::Snapshot as RetireOwned>::controlled_retirement_supported()&&<A::Config as RetireOwned>::controlled_retirement_supported()}
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

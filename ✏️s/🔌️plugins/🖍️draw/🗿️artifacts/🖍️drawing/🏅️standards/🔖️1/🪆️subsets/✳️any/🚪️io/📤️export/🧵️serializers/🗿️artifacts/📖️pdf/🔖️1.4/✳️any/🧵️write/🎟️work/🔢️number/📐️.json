@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "value": 0,
+      "expected": "0"
+    },
+    {
+      "value": -0.0,
+      "expected": "0"
+    },
+    {
+      "value": 1e-17,
+      "expected": "0.00000000000000001"
+    },
+    {
+      "value": -6.763537510981779e-17,
+      "expected": "-0.00000000000000006763537510981779"
+    },
+    {
+      "value": 1e+21,
+      "expected": "1000000000000000000000"
+    },
+    {
+      "value": -1.25e+21,
+      "expected": "-1250000000000000000000"
+    },
+    {
+      "value": 1.5,
+      "expected": "1.5"
+    },
+    {
+      "value": -123.25,
+      "expected": "-123.25"
+    }
+  ],
+  "nonfiniteRefused": true,
+  "noExponent": true,
+  "numericValueUnchanged": true
+}

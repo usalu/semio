@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "arms": [
+    "outcome",
+    "continuation"
+  ],
+  "foreignReceive": {
+    "work": 0,
+    "heap": [
+      0,
+      0
+    ],
+    "retained": true
+  },
+  "sameSourceReceive": {
+    "retained": false
+  },
+  "terminalDropHeap": [
+    0,
+    0
+  ]
+}

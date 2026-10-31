@@ -1,0 +1,61 @@
+{
+  "state": "Source-only-sqlite-binding-type-fix-await-Root-v4",
+  "files": [
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/📚️pages/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/fixture.ts",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/outcomes.json",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/outcomes.schema.json"
+  ],
+  "source": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🟦️.ts",
+      "sha256": "5f0084ce50c7a5cefd620d1af9da127a62b61501c642d2850c3bddfd98b4577b",
+      "bytes": 18026,
+      "absoluteUtf16Units": 100
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/📚️pages/🟦️.ts",
+      "sha256": "033f098be59c11c8bc38d4ed9090cd0838348ca4f4ac63fb9c9b23b02822bd36",
+      "bytes": 4591,
+      "absoluteUtf16Units": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🟦️.ts",
+      "sha256": "489f948b2c246de6175055fb8c75c27671d013c95ce2788a49b53408992e1af0",
+      "bytes": 218,
+      "absoluteUtf16Units": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/🟦️.ts",
+      "sha256": "b4cecc0c5852bf245db1f0fc98138ed4aa1eb49ab3413821d10bb61451988ed0",
+      "bytes": 8519,
+      "absoluteUtf16Units": 117
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/fixture.ts",
+      "sha256": "210b1a5549c681add520133bd9d226b9d23f8299b36a3cf111368d83db6047f8",
+      "bytes": 2175,
+      "absoluteUtf16Units": 121
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/outcomes.json",
+      "sha256": "209a3395d95ca6ce14ff4650da175272a69350f994332aa33ca396c46e58bc14",
+      "bytes": 597,
+      "absoluteUtf16Units": 124
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🧪️tests/outcomes.schema.json",
+      "sha256": "ecf2b14de9fcb3ce1858c2c8fc3adc82ae5b06d167d59067a6bdbf491eb403d2",
+      "bytes": 1154,
+      "absoluteUtf16Units": 131
+    }
+  ],
+  "sharedInputs": [
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/📐️.json"
+  ],
+  "notes": "Only seven TypeScript numeric files belong to dependency_layout. Shared canonical insertion/removal cases/schema, neutral core/counter and native code belong to peers; no attribution claim. Scope is actual new funded cursor APIs + current tests; old retained Drawing/framework callsite migration still incomplete, no full Drawing SourceReady."
+}

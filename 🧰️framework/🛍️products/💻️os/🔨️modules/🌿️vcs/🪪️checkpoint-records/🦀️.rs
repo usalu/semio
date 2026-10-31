@@ -15,7 +15,7 @@ pub use protocol::Author;
 // every `f64`, and `Change` carries no float field regardless) and the
 // `ArtifactRepositoryHistoryEntryAuthority<T>: DeserializeOwned` reason (`📓️history-decoder-serde.md`
 // — that authority's bound is now `FromValue`, which `Change` already derives). `serde` stays
-// `cfg_attr(test, …)` rather than dropping outright, though: this file's own
+// `cfg_attr(any(test, feature = "testkit"), …)` rather than dropping outright, though: this file's own
 // `change_to_json_string_matches_serde_json_byte_for_byte` and
 // `content_addressed_checkpoint_id_composition_pins_are_deterministic_and_backward_compatible`
 // tests both compare `Change` against a real `serde_json` oracle, matching this ticket's own
@@ -26,14 +26,14 @@ pub use protocol::Author;
 // above). `crate::os_store::store_schema::ArtifactEnvelopeRead`'s hand-off reason was already stale before any of this
 // (converted off `Serialize` onto `ToValue` outright, see `📓️store-serde-final.md`).
 #[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct Change {
     pub id: String,
     pub edit_ids: Vec<String>,
     #[value(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+    #[cfg_attr(any(test, feature = "testkit"), serde(skip_serializing_if = "Option::is_none"))]
     pub description: Option<String>,
     pub saved_at: String,
 }

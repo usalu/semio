@@ -1,0 +1,17 @@
+# Retirement Queue Actual Work
+
+Six actual production compiler diagnostics expose discarded native frame and child outcomes. A closed neutral work case/schema and genuine real-null/denial/finite-bank actual payload/physical conservation/cached law precede defining edits. Queue reservation must quote its actual page path rather than use frame count as backing depth. Direct allocator/child work is preserved before errors; original frames remain in existing physical queue custody. No runtime pass yet.
+
+Queue reserve, native frame/typed transfer admission and step now carry full Outcomes. Reservation borrows the actual backing path plus queue wrapper depth and folds lower allocation success/error work. Native frame admission and child retirement forward direct work before result; inline transfer/frame removal reports its actual mutation. Empty page release reads lower work. Existing physical step_progress remains its mandatory receipt, independent from work; native RetirementStep forwards the same outcome. Production authored; owning tests and actual caller migrations still required.
+
+First isolated Queue lib attempt compiles production then reports34 old provider/Outcome test diagnostics, zero tests executed. The existing genuine excess-allocation child now forwards actual ControlledRetirement.last_turn_work rather than return only Result; its actual failure work is inspected. Queue/factory frame and turn test callers migrate full outcomes, and the genuine shared-turn callback preserves actual queue work. All original grants/fixtures/fuel remain. Root amended new work case/test and shared-turn definer after this failed terminal before postcheck; the four corresponding current hash drifts are explicit and no all-input exact terminal seal is claimed for attempt1. No tests passed yet.
+
+Second actual Queue command outer1 reports ten Root test-access errors: duplicated .result on five variable reads and five cold ControlledRetirement Result reads treated as Outcomes. Corrected exactly those ten compiler sites. All371 observed inputs matched pre/post, zero tests executed; no production/fixture/authority change.
+
+Third Queue command outer1 leaves one additional cold ControlledRetirement Result caller; exactly that call is corrected. All371 observed paths matched pre/post; no tests ran or defining Source changed. Fourth full unfiltered gate prepared.
+
+Fourth whole owning run executes7 laws:2pass/5fail, outer1, zero ignored/filtered; all371 observed paths exact. Genuine one-bank/null/physical wrapper law and actual failed-child receipt law pass. All five failures are old reservation test offers using literal1 or queue.len()+1 instead of the newly corrected actual backing traversal+wrapper depth. Test-local reservation callers now use reserve_demand.depth (preserving larger old len-based offers). This explicitly corrects those reservation depth offers; no claim that those local grant depths remain unchanged is made. All original payloads/cases/item-copy-capacity-release offers/fuel/fixture stock remain. Frame admission and transfer depth tests are untouched. No production depth truncation or added authority/fallback.
+
+## Fifth Actual Owning Gate
+
+Canonical Queue lib completed: 7 passed, 0 failed, 0 ignored, 0 filtered. All 371 captured inputs remained exact at postcheck. This follows the recorded actual 2/5 behavioral red and test-local backing-reservation depth offer corrections. Frame transfer/admission limits and the genuine finite bank remain unchanged. Factory and broader Value acceptance remain separate.

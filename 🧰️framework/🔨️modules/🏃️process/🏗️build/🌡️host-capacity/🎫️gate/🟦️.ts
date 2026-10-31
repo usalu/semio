@@ -1,12 +1,15 @@
 import {concurrentEditV1,retryOnConcurrentEditSyncV1,type ChurnOptionsV1} from "../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+
+import {spawnSync} from "node:child_process";
 import {randomBytes} from "node:crypto";
 import {appendFileSync,existsSync,mkdirSync,readdirSync,readFileSync,renameSync,rmSync,statSync,unlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {homedir,uptime} from "node:os";
 import {isAbsolute,join} from "node:path";
-import {beginAdmissionWaitV1,liveChildPidsV1,scriptProcessWaitEpisodeV1,waitingDelayV1 as delay} from "../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
+import {beginAdmissionWaitV1,liveChildPidsV1,onScriptProcessWaitEdgeV1,scriptProcessWaitEpisodeV1,waitingDelayV1 as delay} from "../../../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import {checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl} from "../../../🔒️leases/🎛️control/🟦️.ts";
 import {decideHostHandoverV1,describeHostBlockersV1,hostBlockersV1,hostBootAnchorV1,type HostBootAnchorV1,describeHostHandoverRefusalV1,describeHostReasonV1,evaluateHostCapacityV1,followHostGrantPlanV1,formatHostCapacityV1,hostCapacityErrorV1,isCurrentHostGrantV1,isHostCapacityV1,planHostCapacityV1,requireHostCapacityV1,resolveHostCapacityLanguageV1,softHostReasonV1,type HostCapacityPolicyV1,type HostEvaluationV1,type HostGrantV1,type HostGrowthSettleV1,type HostHandoverV1,type HostPlanV1,type HostReasonV1,type HostRequestV1,type HostSampleV1,type HostWaiterV1} from "../📏️decision/🟦️.ts";
 import {currentHostProbeV1,observeTreeMegabytesV1,readHostSampleV1,type HostSampleRecordV1} from "../📡️sampling/🟦️.ts";
+import {systemAncestryV1,WINDOWS_PROCESS_LISTING_V1} from "../../../🪪️agent-sessions/🧭️ancestry/🟦️.ts";
 import {hostDeclarationKeyV1} from "../🪞️profile/🟦️.ts";
 import {HOST_PHASES_V1,hostPhaseSegmentsV1,type HostPhaseTransitionV1,type HostPhaseV1} from "../🪜️phases/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
@@ -87,6 +90,80 @@ export function markHostCapacityPhaseV1(environment:Readonly<Record<string,strin
  const id=environment[protocol.grantEnvironment];
  if(!id||environment[protocol.marksEnvironment]==="off"||!(HOST_PHASES_V1 as readonly string[]).includes(phase)||!new RegExp(schema.definitions.Grant.properties.id.pattern,"u").test(id))return false;
  try{const directory=hostCapacityDirectoryV1(environment);if(!existsSync(grantPath(directory,id)))return false;appendFileSync(phasesPath(directory,id),`${phase} ${now()}\n`);return true;}catch{return false;}
+}
+const waitMarkerPath=(directory:string,id:string,pid:number)=>join(directory,"grants",`${id}${protocol.waitSuffix}${pid}`);
+/** 🕰️ The start time of a process as `ps` prints it (`lstart`), the identity that tells a process from a later one that reuses its pid; undefined when the process is gone or the table cannot be read. Linux reads `/proc` without a spawn; the own start never changes and is read once, the start of another process is remembered `startCacheMilliseconds` so a poll never forks `ps` twice for one pid. */
+const startCache=new Map<number,{start:string|undefined;at:number}>();
+export function processStartV1(pid:number,now:()=>number=Date.now):string|undefined{
+ const cached=startCache.get(pid),at=now();
+ if(cached&&(pid===process.pid&&cached.start!==undefined||at-cached.at<protocol.startCacheMilliseconds))return cached.start;
+ let start:string|undefined;
+ try{
+  if(process.platform==="linux")start=systemAncestryV1("linux",pid,1)[0]?.started;
+  else{const result=spawnSync(process.platform==="win32"?"powershell.exe":"ps",process.platform==="win32"?["-NoLogo","-NoProfile","-Command",`(Get-Process -Id ${pid}).StartTime.ToUniversalTime().ToString('o')`]:["-o","lstart=","-p",String(pid)],{encoding:"utf8",timeout:5000,windowsHide:true,env:{...process.env,TZ:"UTC",LC_ALL:"C"}}),text=(result.stdout??"").trim();start=result.status===0&&text?text:undefined;}
+ }catch{start=undefined;}
+ if(startCache.size>=protocol.maximumWaitMarkers*4)startCache.clear();
+ startCache.set(pid,{start,at});return start;
+}
+const sameProcess=(pid:number,start:string):boolean=>processStartV1(pid)===start;
+/** 🛌️ Publishes that THIS process waits (in a lease, claim, headroom or capacity queue) to the grant its environment carries: one marker file `<grant>.wait.<pid>` holding the start of the wait episode, removed `waitReleaseGapMilliseconds` after the wait ends so the polls of one queue do not flicker. The holder of the grant reads the markers to see that its whole process tree only waits and lends the reservation (see `holdHostGrantV1`): a run whose child sits at an inner gate no longer idles on memory other runs need. Returns the function that unbinds the process; false-y environment (no grant) binds nothing. */
+export function bindHostCapacityWaitMarkerV1(environment:Readonly<Record<string,string|undefined>>=process.env,pid:number=process.pid):()=>void{
+ const id=environment[protocol.grantEnvironment];
+ if(!id||!new RegExp(schema.definitions.Grant.properties.id.pattern,"u").test(id))return()=>undefined;
+ let release:ReturnType<typeof setTimeout>|undefined,directory:string;try{directory=hostCapacityDirectoryV1(environment);}catch{return()=>undefined;}
+ const path=waitMarkerPath(directory,id,pid);let written:number|undefined;
+ const drop=()=>{written=undefined;try{unlinkSync(path);}catch{}};
+ const off=onScriptProcessWaitEdgeV1((waiting,since)=>{
+  if(release){clearTimeout(release);release=undefined;}
+  if(waiting){
+   if(written===since)return;
+   try{const start=processStartV1(pid);if(start&&existsSync(grantPath(directory,id))){const temporary=`${path}.${randomBytes(4).toString("hex")}.tmp`;writeFileSync(temporary,JSON.stringify({since,start}));renameSync(temporary,path);written=since;}}catch{}
+   return;
+  }
+  release=setTimeout(drop,protocol.waitReleaseGapMilliseconds);release.unref?.();
+ });
+ process.once("exit",drop);
+ return()=>{off();if(release)clearTimeout(release);drop();process.removeListener("exit",drop);};
+}
+/** 👀️ The processes that currently wait under one grant and since when (start of their wait episode). A marker names the pid AND the start time of its process: the marker of a killed process (no exit handler ran) never counts a later process that reuses the pid. */
+export function readHostCapacityWaitMarkersV1(directory:string,id:string,alive:(pid:number,start:string)=>boolean=sameProcess):ReadonlyMap<number,number>{
+ const found=new Map<number,number>(),prefix=`${id}${protocol.waitSuffix}`;
+ let names:string[]=[];try{names=readdirSync(join(directory,"grants")).filter(file=>file.startsWith(prefix)&&!file.endsWith(".tmp")).slice(0,protocol.maximumWaitMarkers);}catch{return found;}
+ for(const name of names){
+  try{
+   const pid=Number(name.slice(prefix.length)),row=JSON.parse(readFileSync(join(directory,"grants",name),"utf8")) as {since?:unknown;start?:unknown};
+   if(Number.isSafeInteger(pid)&&pid>0&&typeof row.since==="number"&&Number.isFinite(row.since)&&typeof row.start==="string"&&alive(pid,row.start))found.set(pid,row.since);
+  }catch{}
+ }
+ return found;
+}
+/** 🌳️ The child lists of the live process table (`pid -> direct children`); undefined when the table cannot be read, so nothing is ever lent on a guess. */
+export function processChildrenTableV1():ReadonlyMap<number,readonly number[]>|undefined{
+ const table=new Map<number,number[]>(),add=(pid:number,parent:number)=>{if(Number.isSafeInteger(pid)&&Number.isSafeInteger(parent))(table.get(parent)??table.set(parent,[]).get(parent)!).push(pid);};
+ try{
+  if(process.platform==="linux"){
+   for(const name of readdirSync("/proc"))if(/^\d+$/u.test(name))try{const stat=readFileSync(`/proc/${name}/stat`,"utf8"),rest=stat.slice(stat.lastIndexOf(")")+2).split(" ");add(Number(name),Number(rest[1]));}catch{}
+   return table;
+  }
+  if(process.platform==="win32"){
+   const result=spawnSync("powershell.exe",["-NoLogo","-NoProfile","-NonInteractive","-Command",WINDOWS_PROCESS_LISTING_V1],{encoding:"utf8",timeout:10000,windowsHide:true,maxBuffer:33554432});if(result.status!==0)return undefined;
+   const rows=JSON.parse(result.stdout) as unknown,list=Array.isArray(rows)?rows:[rows];for(const row of list as {pid?:number;ppid?:number}[])add(row.pid!,row.ppid!);
+   return table;
+  }
+  const result=spawnSync("ps",["-axo","pid=,ppid="],{encoding:"utf8",timeout:3000,env:{...process.env,LC_ALL:"C"}});if(result.status!==0)return undefined;
+  for(const line of result.stdout.split("\n")){const [pid,parent]=line.trim().split(/\s+/u).map(Number);add(pid!,parent!);}
+  return table;
+ }catch{return undefined;}
+}
+/** 🛌️ Whether the whole process tree below the grant holder only waits, and since when (0 when it does not). A process waits when it published a wait marker itself or when it has children and every one of them waits: the wrapper that merely awaits its waiting child declares no wait of its own and still counts. A holder without children is not decided here (its own wait episode covers it). */
+export function hostTreeWaitsV1(children:ReadonlyMap<number,readonly number[]>|undefined,root:number,markers:ReadonlyMap<number,number>):number{
+ if(children===undefined)return 0;const direct=children.get(root)??[];if(direct.length===0)return 0;
+ const since=(pid:number,depth:number):number=>{
+  if(depth>64)return 0;const own=markers.get(pid),kids=children.get(pid)??[];
+  if(kids.length===0)return own??0;
+  let earliest=own??Infinity;for(const kid of kids){const value=since(kid,depth+1);if(value===0)return 0;earliest=Math.min(earliest,value);}return earliest;
+ };
+ let earliest=Infinity;for(const kid of direct){const value=since(kid,0);if(value===0)return 0;earliest=Math.min(earliest,value);}return earliest;
 }
 const queuePath=(directory:string,arrivedAtMs:number,id:string)=>join(directory,"queue",`${String(arrivedAtMs).padStart(15,"0")}-${id}.json`);
 
@@ -241,7 +318,7 @@ async function holdHostGrantV1<T>(options:HostCapacityOptionsV1,held:HostGrantV1
  const full=options.upgrade,quiet=held.quiet===true&&full!==undefined,growable=full!==undefined&&!adopted&&full.perJobMegabytes>0,upgradeFile=hostUpgradePathV1(directory,held.id);
  let growing=false,outgrown=false,settled:HostGrowthSettleV1|undefined,upgrading=false,stopped=false,attempted=-Infinity,holding=true,state:HostGrantV1=held,childless=false,checkedChildren=-Infinity,parked=false,peak=0,lentTotal=0,failure:unknown,failed=false,marks:(readonly [number,number,HostPhaseV1|undefined])[]=[],phase:HostPhaseV1|undefined,transitions:HostPhaseTransitionV1[]=[],markLines=0,markBytes=0;
  const startedAt=now();
- const cleanup=()=>{holding=false;try{unlinkSync(path);}catch{}try{unlinkSync(attachedPath(directory,held.id));}catch{}try{unlinkSync(phasesPath(directory,held.id));}catch{}try{unlinkSync(upgradeFile);}catch{}};
+ const cleanup=()=>{holding=false;try{unlinkSync(path);}catch{}try{unlinkSync(attachedPath(directory,held.id));}catch{}try{unlinkSync(phasesPath(directory,held.id));}catch{}try{unlinkSync(upgradeFile);}catch{}try{const prefix=`${held.id}${protocol.waitSuffix}`;for(const name of readdirSync(join(directory,"grants")))if(name.startsWith(prefix))unlinkSync(join(directory,"grants",name));}catch{}};
  process.once("exit",cleanup);
  const publish=(next:HostGrantV1):void=>{state=next;if(holding)writeJson(path,state);};
  const observeAll=async():Promise<number|null>=>{const observe=options.observe??observeTreeMegabytesV1,own=await observe(pid);if(own===null)return null;let total=own;for(const attached of readAttached(attachedPath(directory,held.id)))total+=await observe(attached).catch(()=>null)??0;return total;};
@@ -263,16 +340,19 @@ async function holdHostGrantV1<T>(options:HostCapacityOptionsV1,held:HostGrantV1
   }
  };
  const first=setTimeout(()=>heartbeat(),Math.min(limits.heartbeatFirstMilliseconds,policy.wait.heartbeatMilliseconds)),timer=setInterval(()=>heartbeat(),policy.wait.heartbeatMilliseconds);
+ let tableAt=-Infinity,tableRows:ReturnType<typeof processChildrenTableV1>;const treeTable=(at:number)=>{if(at-tableAt>=policy.wait.heartbeatMilliseconds||at<tableAt){tableAt=at;tableRows=(options.tree??processChildrenTableV1)(pid);}return tableRows;};
  const lender=setInterval(()=>{
   try{
    readPhases();
-   const at=now(),episode=(options.waited??scriptProcessWaitEpisodeV1)(at),lent=state.lentSinceMs!==undefined;
+   const at=now(),own=(options.waited??scriptProcessWaitEpisodeV1)(at),lent=state.lentSinceMs!==undefined;
+   const marked=(options.markers??readHostCapacityWaitMarkersV1)(directory,held.id),treeSince=marked.size?hostTreeWaitsV1(treeTable(at),pid,marked):0,episode=Math.max(own,treeSince>0?Math.max(1,at-treeSince):0);
    if(episode===0)checkedChildren=-Infinity;
    if(lent&&episode===0){const{lentSinceMs:since,...rest}=state;lentTotal+=at-since!;publish({...rest,resumedAtMs:at});return;}
    if(Math.min(episode,at-(state.resumedAtMs??state.admittedAtMs))<policy.wait.lendAfterMilliseconds&&!lent)return;
    if(at-checkedChildren>=policy.wait.heartbeatMilliseconds){checkedChildren=at;childless=((options.children??liveChildPidsV1)(pid)?.length??1)===0;}
-   if(!lent&&childless)publish({...state,lentSinceMs:at});
-   else if(lent&&!childless){const{lentSinceMs:since,...rest}=state;lentTotal+=at-since!;publish({...rest,resumedAtMs:at});}
+   const treeWaits=treeSince>0;
+   if(!lent&&(childless||treeWaits))publish({...state,lentSinceMs:at});
+   else if(lent&&!childless&&!treeWaits){const{lentSinceMs:since,...rest}=state;lentTotal+=at-since!;publish({...rest,resumedAtMs:at});}
   }catch{}
  },policy.wait.pollMilliseconds);
  const watcher=quiet?setInterval(()=>{

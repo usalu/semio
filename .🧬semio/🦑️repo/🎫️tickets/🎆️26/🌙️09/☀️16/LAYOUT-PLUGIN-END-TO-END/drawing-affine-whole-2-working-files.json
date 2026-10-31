@@ -1,0 +1,17 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "beforeSha256": "d640fa44c42ff71da064aa510aa6d7c61af99e7f9275155e916d0fde36890754",
+      "sha256": "64920f177ef23e572e39fcc09bee1ce79934fdb6d16ce7c0b82814b0752dd187",
+      "inverseVerified": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+      "beforeSha256": "ec6e313fccc01a5e4829b449b92d39d7b9008206f55a6a9c94d4207ac924a32a",
+      "sha256": "d357f86f63912500864d6c565811d7ca1f6f822bf1c1d2e6cd5617cabcceea95",
+      "inverseVerified": true
+    }
+  ],
+  "unchanged": "All original cases, assertions, geometry, oracle thresholds, banks, depth and item quanta."
+}

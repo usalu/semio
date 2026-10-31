@@ -1,0 +1,467 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "s.stdio.semio.document",
+ "schemaHash": "585f7bc64cc592d44d33c187f987571d93d1552adaed5fcaa5643bcf715012b2",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "styles",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 1
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "images",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 2
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "blocks",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "code",
+        3
+       ],
+       [
+        "heading",
+        4
+       ],
+       [
+        "image",
+        5
+       ],
+       [
+        "list",
+        6
+       ],
+       [
+        "page-break",
+        7
+       ],
+       [
+        "paragraph",
+        8
+       ],
+       [
+        "quote",
+        9
+       ],
+       [
+        "table",
+        10
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "name",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "based-on",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "mime",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "bytes",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "uint"
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "language",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "text",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "level",
+    "optional": false,
+    "shape": {
+     "kind": "uint"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "style-id",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "runs",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 11
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "image-id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "alt",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "width",
+    "optional": true,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "height",
+    "optional": true,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "ordered",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "items",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 9
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "style-id",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "runs",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 11
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "blocks",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "code",
+        3
+       ],
+       [
+        "heading",
+        4
+       ],
+       [
+        "image",
+        5
+       ],
+       [
+        "list",
+        6
+       ],
+       [
+        "page-break",
+        7
+       ],
+       [
+        "paragraph",
+        8
+       ],
+       [
+        "quote",
+        9
+       ],
+       [
+        "table",
+        10
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "rows",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 12
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "text",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "style",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 13
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "cells",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 9
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "bold",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "italic",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "underline",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "size",
+    "optional": true,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "font",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 5,
+    "key": "color",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 6,
+    "key": "link",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ]
+ ],
+ "annotations": {
+  "verbatim": [
+   [
+    0,
+    3
+   ],
+   [
+    9,
+    0
+   ]
+  ]
+ }
+}

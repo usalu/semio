@@ -39,7 +39,7 @@ pub const UPSTREAM: &str = "generation3d.geometry.upstream";
 //#endregion 🔖️Codes
 
 //#region 🔖️Inputs
-/// 🔌️ The resolved inputs of one widget, by catalogue input port name; an optional port without a value is absent.
+/// ⌨️ The resolved inputs of one widget, by catalogue input port name; an optional port without a value is absent.
 #[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct WidgetInputs {
     widget: String,
@@ -177,7 +177,7 @@ impl WidgetInputs {
         }
     }
 
-    /// 🔢️ The items of a list port as real numbers.
+    /// 📋️ The items of a list port as real numbers.
     pub fn numbers(&self, port: &str) -> Result<Vec<f64>, WidgetFault> {
         self.list(port)?.iter().map(|item| match item {
             GeometryValue::Number(value) => Ok(*value),
@@ -215,7 +215,7 @@ fn id_of(value: &DslValue) -> Option<u64> {
     }
 }
 
-pub(super) fn element_default(port_type: PortType, value: &DslValue) -> Option<GeometryValue> {
+pub fn element_default(port_type: PortType, value: &DslValue) -> Option<GeometryValue> {
     Some(match port_type {
         PortType::Number | PortType::Length | PortType::Angle => GeometryValue::Number(value.as_f64()?),
         PortType::Integer => {
@@ -236,7 +236,7 @@ pub(super) fn element_default(port_type: PortType, value: &DslValue) -> Option<G
     })
 }
 
-pub(super) fn element_literal(port_type: PortType, value: &NeuralValue) -> Option<GeometryValue> {
+pub fn element_literal(port_type: PortType, value: &NeuralValue) -> Option<GeometryValue> {
     let literal = value.as_dictionary()?;
     let schema = literal.schema()?;
     let scalar = literal.get("value");
@@ -484,7 +484,7 @@ fn selection_component(port: &Port, resolved: &Outputs) -> Result<Option<Selecti
     }))
 }
 
-/// 🔌️ Resolves every input port of `kind` for widget `widget`: wiring first (`wires` are the synapses ending at the widget), then the stored literal in `params`, then the catalogue default.
+/// 🏷️ Resolves every input port of `kind` for widget `widget`: wiring first (`wires` are the synapses ending at the widget), then the stored literal in `params`, then the catalogue default.
 /// `parent` answers the evaluation of a source widget. The first refusal is returned as a localized fault naming the port.
 pub fn resolve_inputs(kind: &Kind, widget: &str, params: &Dictionary, wires: &[&SynapseSpec], parent: &dyn Fn(&str) -> Option<Arc<WidgetEvaluation>>) -> Result<WidgetInputs, WidgetFault> {
     if let Some(unknown) = wires.iter().find(|wire| kind.input(&wire.to_port).is_none()) {
@@ -514,7 +514,7 @@ pub fn resolve_inputs(kind: &Kind, widget: &str, params: &Dictionary, wires: &[&
             }
         }
     }
-    Ok(WidgetInputs::new_cold(widget, kind, resolved))
+    Ok(WidgetInputs::new_cold(widget, kind, resolved.into_entries()))
 }
 //#endregion 🔖️Resolve
 

@@ -1,0 +1,24 @@
+{
+  "schema": "async.cancel-token.root.actual/v1",
+  "stock": {
+    "items": 32,
+    "copyBytes": 0,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 1,
+    "maximumTurns": 16
+  },
+  "work": {
+    "denied": 0,
+    "null": 1,
+    "born": 1,
+    "cached": 0
+  },
+  "laws": {
+    "sameBankNullRetry": true,
+    "realStandardArc": true,
+    "futuresInitialStateOracle": true,
+    "exactHeap": true,
+    "completeNativeClose": true
+  }
+}

@@ -27,6 +27,7 @@
         "staleImplementationCodes": ["SEMIO_STALE_IMPLEMENTATION", "BUILD_AUTHORITY_CHANGED"],
         "languages": ["en", "de"],
         "settleMilliseconds": 300,
+        "quiet": {"windowMilliseconds": 2000, "ceilingMilliseconds": 30000, "futureToleranceMilliseconds": 1000, "reasons": ["bytes", "identity", "length", "roster", "ancestry"]},
         "profiles": {
           "read": {"rank": 1, "maximumAttempts": 6, "backoffMs": [10, 40, 160, 640, 2560]},
           "snapshot": {"rank": 2, "maximumAttempts": 5, "backoffMs": [250, 1000, 4000, 12000]},

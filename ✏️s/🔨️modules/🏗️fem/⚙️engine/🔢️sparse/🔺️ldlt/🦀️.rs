@@ -1,7 +1,11 @@
 //! 🔺️ Envelope (skyline) sparse LDLT direct solver: the one-shot factor and its checkpointed interactive job.
 
-use semio_s_fem_sparse::{RowContributor, RowContributors, SPARSE_INDEX_SPACE, SparseColumns, advance_contributor_owner, advance_paged_f64_owner, advance_paged_pair_owner, advance_paged_u32_owner, advance_paged_u64_owner, close_paged_owner_step, numerical_grant_covers, numerical_restore_admit, numerical_restore_control, paged_from_values, paged_owner_retirement_demand, rcm_order, restore_contributor_entry, restore_paged_f64_entry, restore_paged_pair_entry, restore_paged_u32_entry, restore_paged_u64_entry, restore_paged_usize_entry, write_numerical_entry};
+use semio_s_fem_sparse::{RowContributor, RowContributors, SPARSE_INDEX_SPACE, SparseColumns, advance_contributor_owner, advance_paged_f64_owner, advance_paged_pair_owner, advance_paged_u32_owner, advance_paged_u64_owner, close_paged_owner_step, numerical_restore_admit, numerical_restore_control, paged_from_values, paged_owner_retirement_demand, rcm_order, restore_contributor_entry, restore_paged_f64_entry, restore_paged_pair_entry, restore_paged_u32_entry, restore_paged_u64_entry, restore_paged_usize_entry, write_numerical_entry};
+use semio_s_fem_payload_turns::{numerical_grant_covers};
 use semio_framework_job::InteractiveJob;
+use semio_framework_job::InteractiveJobStep;
+use semio_s_fem_payload_turns::NumericalStep;
+use semio_framework_job::OriginalJobReturnClaim;
 use semio_framework_value::ValueRefusalKind;
 use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value_edit::{sort::HeapSortCursor, sort::HeapSortWork};
@@ -27,7 +31,7 @@ use semio_framework_job::RetainedCloneProgress;
 
 use semio_framework_job_payload::RetainedJobPayload;
 
-use semio_framework_job_payload::RetainedJobPayloadWriter;
+use semio_framework_job_payload::RetainedPayloadBuilder;
 
 use semio_framework_job::StepContext;
 use semio_framework_value::RetirementDemand;
@@ -60,6 +64,12 @@ use semio_s_fem_algebra::VecD;
 
 use semio_framework_value::ValueError;
 use semio_s_fem_sparse::numerical_close_original;
+use semio_s_fem_payload_turns::NumericalPayloadSlot;
+use semio_s_fem_payload_turns::numerical_open_writer;
+use semio_s_fem_payload_turns::numerical_finish_writer;
+use semio_s_fem_payload_turns::numerical_begin_page;
+use semio_s_fem_payload_turns::numerical_commit_page;
+use semio_s_fem_payload_turns::numerical_post;
 use semio_s_fem_sparse::CscSym;
 use semio_s_fem_sparse::NUMERICAL_OWNER_PAGE_BYTES;
 use semio_s_fem_sparse::NumericalCheckpointFault;
@@ -85,8 +95,8 @@ use semio_s_fem_sparse::numerical_restore_close_due;
 use semio_s_fem_sparse::numerical_restore_frontier;
 use semio_s_fem_sparse::numerical_restore_payload_close;
 use semio_s_fem_sparse::numerical_rung_demand;
-use semio_s_fem_sparse::numerical_writer_close;
-use semio_s_fem_sparse::numerical_writer_demand;
+use semio_s_fem_payload_turns::numerical_writer_close;
+use semio_s_fem_payload_turns::numerical_writer_demand;
 use semio_s_fem_sparse::parse_numerical_page;
 use semio_s_fem_sparse::read_checkpoint_u64;
 use semio_s_fem_sparse::restore_f64_entry;

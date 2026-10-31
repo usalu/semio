@@ -223,7 +223,7 @@ impl<M: Clone + 'static> Host<TypingMachine<M>> for TypingHost {
 
 /// 📬️ One window's open typing run between dispatches (window transient, ephemeral local-only, never history): the
 /// configuration by stable ids, the authoring tool `<appId>#<verb>` and actor, the buffer, the idle deadline, and the open
-/// transaction with its net leaves.
+/// transaction with its ordered net leaves; positional machine keys are reconstructed only by reference execution.
 #[derive(Clone, Debug, PartialEq,semio_framework_value::RetireOwned)]
 pub struct TypingState<M> {
     pub states: Vec<String>,
@@ -405,7 +405,7 @@ impl<M: 'static> TypingLedger<M> {
         steps.map(|steps| other.into_iter().chain(steps).collect())
     }
 
-    /// 🏁️ Commits `window`'s open run as ONE edit (`reason`); `Idle` when the window does not type.
+    /// 🌬️ Commits `window`'s open run as ONE edit (`reason`); `Idle` when the window does not type.
     pub fn commit(&mut self, window: &str, reason: TypingCommit, clock: HybridLogicalTimestamp) -> Result<ToolStep<M>, ToolRefusal> where M:Clone {
         if self.original_write_pending()||self.retained_read_pending(window){return Err(ToolRefusal::Unclosed)}
         let Some(state)=self.cold_take(window)else{return Ok(ToolStep::Idle)};
@@ -418,13 +418,13 @@ impl<M: 'static> TypingLedger<M> {
         step
     }
 
-    /// 🏁️ Commits every open run (another verb needs the typed text first, the page is left): one step per window.
+    /// 🏃️ Commits every open run (another verb needs the typed text first, the page is left): one step per window.
     pub fn commit_all(&mut self, reason: TypingCommit, clock: HybridLogicalTimestamp) -> Vec<(String, Result<ToolStep<M>, ToolRefusal>)> where M:Clone {
         let windows: Vec<String> = self.windows().map(str::to_owned).collect();
         windows.into_iter().map(|window| (window.clone(), self.commit(&window, reason, clock))).collect()
     }
 
-    /// ⏱️ Fires the idle lapse of every run whose deadline `clock` reached: each commits as ONE edit, one step per lapsed window.
+    /// 💀️ Fires the idle lapse of every run whose deadline `clock` reached: each commits as ONE edit, one step per lapsed window.
     pub fn lapse(&mut self, clock: HybridLogicalTimestamp) -> Vec<(String, Result<ToolStep<M>, ToolRefusal>)> where M:Clone {
         if self.original_write_pending(){return Vec::new()}
         let lapsed: Vec<String> = self.windows.iter().filter(|row|!row.state.is_empty()&&!row.state.has_read()&&row.state.get().deadline_ms<=clock.physical_ms).map(|row|row.key.to_string()).collect();
@@ -478,3 +478,7 @@ impl<M:Send+Sync+'static> TypingLedger<M>{
  pub fn retained_read_return_demands(&self,window:&str,key:RetainedOriginalSlotKey,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.original_slot(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing source window absent"))?.return_demands(key,body)}
  pub fn return_retained_read(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<TypingState<M>>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.original_slot_mut(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing source window absent"))?.return_read(key,factory,grant)}
 }
+
+#[path="🗃️resident/🦀️.rs"]
+mod resident;
+use resident::TypingWindow;

@@ -1,7 +1,7 @@
 //! 🔗️ Immutable first-party aliases with admitted allocation identity and explicit final-header release.
 
 use crate::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
-use std::{alloc::Layout, mem::ManuallyDrop, ops::Deref, sync::Arc};
+use std::{mem::ManuallyDrop, ops::Deref, sync::Arc};
 
 /// 📥️ Owns a shared allocation whose aliases cannot create Weak or raw ownership.
 #[must_use = "shared ownership requires transfer or explicit granted release"]
@@ -12,7 +12,7 @@ pub struct SharedRelease<T> { pub value: Option<T>, pub progress: RetainedCloneP
 
 impl<T> SharedOwner<T> {
     /// 🧮️ Measures the complete system Arc allocation, including alignment padding.
-    pub fn allocation_bytes() -> usize { Layout::new::<[usize;2]>().extend(Layout::new::<T>()).expect("shared allocation layout").0.pad_to_align().size() }
+    pub fn allocation_bytes() -> usize { crate::retirement::arc_custody::shared_allocation_bytes::<T>() }
 
     /// 🛂️ Preserves an existing allocation only after exclusive strong and weak custody are proven together.
     pub fn admit_arc(mut value: Arc<T>) -> Result<Self, (ValueError, Arc<T>)> {
@@ -21,13 +21,7 @@ impl<T> SharedOwner<T> {
     }
 
     /// 🎟️ Admits one complete allocation before moving the original inline payload into it.
-    pub fn admit(value: T, grant: RetainedCloneGrant) -> Result<(Self, RetainedCloneProgress), (ValueError,T)> {
-        if grant.maximum_items==0 { return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"shared input requires one admitted item"),value)); }
-        if grant.maximum_depth==0 { return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"shared input requires admitted depth"),value)); }
-        let bytes=Self::allocation_bytes();
-        if bytes>grant.maximum_capacity_bytes { return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"shared input exceeds admitted capacity"),value)); }
-        Ok((Self::from_cold(value),RetainedCloneProgress {copied_items:1,retained_capacity_bytes:bytes,..Default::default()}))
-    }
+    pub fn admit(value:T,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Self,RetainedCloneProgress),(ValueError,T)>{let turn=crate::retirement::arc_custody::admit_shared_allocation(value,grant);crate::RetainedWorkOutcome{result:turn.result.map(|(value,progress)|(Self{value:ManuallyDrop::new(Some(value))},progress)),work:turn.work}}
 
     /// 🧊️ Constructs one shared allocation at an explicitly synchronous boundary.
     pub fn from_cold(value: T) -> Self { Self {value:ManuallyDrop::new(Some(Arc::new(value)))} }
@@ -37,16 +31,14 @@ impl<T> SharedOwner<T> {
     pub fn next_release_byte_demand(&self) -> usize { if self.value.is_some() {Self::allocation_bytes()} else {0} }
 
     /// ♻️ Admits the possible complete header before atomically releasing one immutable alias.
-    pub fn release_step(&mut self, grant: RetainedCloneGrant) -> Result<SharedRelease<T>,ValueError> {
-        let empty=SharedRelease {value:None,progress:RetainedCloneProgress::default()};
-        if self.value.is_none() || grant.maximum_items==0 {return Ok(empty);}
-        if grant.maximum_depth==0 {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"shared release requires admitted depth"));}
-        let bytes=Self::allocation_bytes();
-        if bytes>grant.maximum_release_bytes {return Ok(empty);}
-        let value=Arc::into_inner(self.value.take().unwrap());
-        let released_bytes=if value.is_some(){bytes}else{0};
-        Ok(SharedRelease {value,progress:RetainedCloneProgress {copied_items:1,released_bytes,..Default::default()}})
+    pub fn release_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<SharedRelease<T>>{
+        let empty=||SharedRelease{value:None,progress:Default::default()};
+        if self.value.is_none()||grant.maximum_items==0{return crate::RetainedWorkOutcome{result:Ok(empty()),work:0}}
+        if grant.maximum_depth==0{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"shared release requires admitted depth")),work:0}}
+        let bytes=Self::allocation_bytes();if bytes>grant.maximum_release_bytes{return crate::RetainedWorkOutcome{result:Ok(empty()),work:0}}
+        let value=Arc::into_inner(self.value.take().unwrap());let released_bytes=if value.is_some(){bytes}else{0};crate::RetainedWorkOutcome{result:Ok(SharedRelease{value,progress:RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}}),work:1}
     }
+
 }
 
 impl<T> Clone for SharedOwner<T> {
@@ -60,3 +52,5 @@ impl<T> Drop for SharedOwner<T> {
         unsafe {ManuallyDrop::drop(&mut self.value);}
     }
 }
+
+#[cfg(test)]#[path="🎟️work/🧪️tests/🦀️.rs"]mod work_tests;

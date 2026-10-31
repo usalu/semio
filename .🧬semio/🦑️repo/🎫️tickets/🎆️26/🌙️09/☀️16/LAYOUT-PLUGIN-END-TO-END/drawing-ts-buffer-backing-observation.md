@@ -1,0 +1,7 @@
+# TypeScript Buffer Backing Observation
+
+Bounded read during the frozen foundational-font run: the defining RetainedWorkBuffer extends Array. Its reserve method currently advances only private admitted capacity by sixteen and returns a retained-capacity receipt; it does not allocate or extend an explicit backing store. Ledger.slot then calls notePhysicalEffect when that admitted scalar changes. Contiguous similarly records admitted count without allocating explicit typed backing. Array.push later performs the actual array mutation. This differs from RetainedWorkBytes, whose admission visibly allocates an actual Uint8Array and whose exact byte backing was exercised in the standalone ten-law gate.
+
+Therefore generic TypeScript row-capacity receipts/physicalEpoch currently prove the declared slot accounting policy, not actual V8 allocator capacity. The current source also classifies that admitted-counter change as a physical epoch despite the settled exclusion for fixed control bookkeeping. This observation is not a claim about how much V8 internally allocates, nor an invented numeric size. It is a concrete defining-source distinction requiring Root/Cursor contract review before full physical-backing claims.
+
+No source edit, new test or gate retry was made. The live foundational-font request99901 keeps the same frozen22 bytes and must reach its actual outcome. The independent actual Uint8Array/PNG ten-law proof remains scoped to its checked behavior and source.

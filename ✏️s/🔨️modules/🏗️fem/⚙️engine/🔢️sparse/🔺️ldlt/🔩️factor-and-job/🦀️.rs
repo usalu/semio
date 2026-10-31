@@ -169,9 +169,9 @@ pub(super) const LDLT_MAXIMUM_ORDER: usize = u32::MAX as usize;
 pub struct LdltJob {
     pub(super) operation: Operation,
     pub(super) state: LdltCheckpoint,
-    pub(super) output_writer: Option<RetainedJobPayloadWriter>,
+    pub(super) output_writer: NumericalPayloadSlot,
     pub(super) output_page_cursor: usize,
-    pub(super) checkpoint_writer: Option<RetainedJobPayloadWriter>,
+    pub(super) checkpoint_writer: NumericalPayloadSlot,
     pub(super) checkpoint_cursor: NumericalPageCursor,
     pub(super) desk: NumericalOutcomeDesk,
     pub(super) terminal_published: bool,
@@ -521,7 +521,7 @@ impl LdltJob {
         Ok(())
     }
 
-    pub(super) fn advance_checkpoint_entry(state: &LdltCheckpoint, cursor: &mut NumericalPageCursor, writer: &mut RetainedJobPayloadWriter, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
+    pub(super) fn advance_checkpoint_entry(state: &LdltCheckpoint, cursor: &mut NumericalPageCursor, writer: &mut RetainedPayloadBuilder, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
         if advance_numerical_page_header(writer, b"FEMLCP1\0", 11, *cursor, context)? { return Ok(false); }
         let complete = match cursor.field {
             0 => {
@@ -544,25 +544,25 @@ impl LdltJob {
             14 => advance_u64_values(writer, &state.workspace.sort.snapshot(), cursor, context)?,
             _ => return Ok(true),
         };
-        if complete { if !writer.commit_staged_page_funded(context, size_of::<NumericalPageCursor>() + 3 * size_of::<usize>())? { return Ok(false); } cursor.item = 0; cursor.owner = 0; cursor.field = if cursor.field == 14 { u16::MAX } else { cursor.field + 1 }; }
+        if complete { if !numerical_commit_page(writer, context)? { return Ok(false); } cursor.item = 0; cursor.owner = 0; cursor.field = if cursor.field == 14 { u16::MAX } else { cursor.field + 1 }; }
         Ok(cursor.field == u16::MAX)
     }
 
-    pub(super) fn advance_output_entry(state: &mut LdltCheckpoint, operation: Operation, writer: &mut RetainedJobPayloadWriter, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
+    pub(super) fn advance_output_entry(state: &mut LdltCheckpoint, operation: Operation, writer: &mut RetainedPayloadBuilder, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
         let cursor = NumericalPageCursor { field: state.publication_stage as u16, owner: state.publication_outer, item: state.publication_inner };
         if advance_numerical_page_header(writer, b"FEMLDL2\0", 1, cursor, context)? { return Ok(false); }
         match state.publication_stage {
             0 => {
                 let values = [operation.operation.0, operation.base_revision.0, operation.generation.0, operation.seed, state.a.n as u64];
                 if let Some(value) = values.get(state.publication_outer) { if write_numerical_entry(writer, &value.to_le_bytes(), context)? { state.publication_outer += 1; } }
-                else { if !writer.commit_staged_page_funded(context, size_of::<NumericalPageCursor>() + 3 * size_of::<usize>())? { return Ok(false); } state.publication_outer = 0; state.publication_stage = 1; }
+                else { if !numerical_commit_page(writer, context)? { return Ok(false); } state.publication_outer = 0; state.publication_stage = 1; }
             }
             1 => {
                 if let Some(value) = state.d.get(state.publication_outer) { if write_numerical_entry(writer, &value.to_bits().to_le_bytes(), context)? { state.publication_outer += 1; } }
-                else { if !writer.commit_staged_page_funded(context, size_of::<NumericalPageCursor>() + 3 * size_of::<usize>())? { return Ok(false); } state.publication_outer = 0; state.publication_stage = 2; }
+                else { if !numerical_commit_page(writer, context)? { return Ok(false); } state.publication_outer = 0; state.publication_stage = 2; }
             }
             2 => {
-                if state.publication_outer == state.columns.len() { if !writer.commit_staged_page_funded(context, size_of::<NumericalPageCursor>() + 3 * size_of::<usize>())? { return Ok(false); } state.publication_stage = 3; }
+                if state.publication_outer == state.columns.len() { if !numerical_commit_page(writer, context)? { return Ok(false); } state.publication_stage = 3; }
                 else if state.publication_inner == 0 {
                     let length = state.columns.column_len(state.publication_outer).expect("published factor column");
                     if write_numerical_entry(writer, &(length as u64).to_le_bytes(), context)? { state.publication_inner = 1; }

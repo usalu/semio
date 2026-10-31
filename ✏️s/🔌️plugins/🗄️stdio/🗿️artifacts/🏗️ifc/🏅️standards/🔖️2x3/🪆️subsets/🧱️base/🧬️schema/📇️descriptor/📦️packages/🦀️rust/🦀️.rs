@@ -1,7 +1,6 @@
 //! 📇️ The IFC2x3 base schema descriptor: every schema facet leaf, for the schema registry.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 #[path = "."]
 pub mod standards {

@@ -1,0 +1,5 @@
+# Actual Setup 3 Independent Audit
+
+Read-only2026-10-30, no setup/retry/Cargo/maintenance/cache/source effects by reviewer. Owner69189 actual terminal EXIT1. Independently read generated/setup-live-3.log: genuine source admission then dependencies:maintenance-parent-observation, same Genuine dependency funding parent is busy at defining withFundingParentV1 and final OwnedCommandFailure status1. No producer/install/publication completion is observed. Root earlier no-holder snapshot does not confer actual exclusive admission, prove race-freedom or explain this new refusal; exact current ownership/physical lease cause remains to be diagnosed by root. Do not infer orphan, peer interference or stale receipt solely from the mismatch.
+
+The same source semantics audited in setup-live-2-independent-audit.md apply: acquired=false is the precise nonblocking EX lease timeout outcome under genuine live control, before callback body. No source/provider edit, deadline/cap change, automatic repetition, rawrelease or manualGC is authorized. Generation remains unrematerialized; all source/test passes and prior empty observation are distinct from actual setup success.

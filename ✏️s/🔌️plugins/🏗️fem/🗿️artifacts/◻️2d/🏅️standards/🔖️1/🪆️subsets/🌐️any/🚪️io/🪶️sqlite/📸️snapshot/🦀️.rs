@@ -1,17 +1,8 @@
 //! 🏗️ Literal finite-element entities, ordered ownership and exact binary64 words.
 use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
-use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
-use crate::standards::v1::subsets::any::schema::structure::FemCombination;
-use crate::standards::v1::subsets::any::schema::structure::FemCombinationTerm;
-use crate::standards::v1::subsets::any::schema::structure::FemDof;
-use crate::standards::v1::subsets::any::schema::structure::FemElement;
-use crate::standards::v1::subsets::any::schema::structure::FemLoad;
-use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use crate::standards::v1::subsets::any::schema::structure::{FemAnalysisSettings, FemCombination, FemCombinationTerm, FemDof, FemElement, FemLoad, FemLoadCase, FemRegion, FemSection, FemSupport};
 use semio_s_fem_material::planar::FemMaterialValue;
 use semio_s_fem_node::planar::FemNodeValue;
-use crate::standards::v1::subsets::any::schema::structure::FemRegion;
-use crate::standards::v1::subsets::any::schema::structure::FemSection;
-use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use semio_s_fem_sqlite as rows;
 use rows::*;
 use store::{os_store::serialization::ArtifactSqliteSnapshotHost,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{Cell,FloatColumn}}};

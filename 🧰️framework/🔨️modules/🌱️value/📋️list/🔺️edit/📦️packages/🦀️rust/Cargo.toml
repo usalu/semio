@@ -23,6 +23,7 @@ name = "semio_framework_value_edit"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-value-sort = { path = "../../../../📶️sort/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../✨️derive/📦️packages/🦀️rust" }
 semio-framework-value-intrinsic = { path = "../../../../🌳️intrinsic/📦️packages/🦀️rust" }

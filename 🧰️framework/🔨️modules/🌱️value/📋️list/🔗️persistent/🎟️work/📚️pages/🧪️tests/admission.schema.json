@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Direct Admission Work and Genuine Loan Resume",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "unit",
+    "elementLogicalBytes",
+    "pageElements",
+    "stock",
+    "turn",
+    "fuel",
+    "cases",
+    "rules"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "unit": {
+      "const": "explicit-firstparty-admission-work-separate-from-byte-authority"
+    },
+    "elementLogicalBytes": {
+      "const": 8
+    },
+    "pageElements": {
+      "const": 16
+    },
+    "stock": {
+      "const": [
+        64,
+        1024,
+        1024,
+        1024,
+        3
+      ]
+    },
+    "turn": {
+      "const": [
+        1,
+        128,
+        128,
+        128,
+        3
+      ]
+    },
+    "fuel": {
+      "const": 64
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "actual-body-birth",
+          "expectedWork": 1
+        },
+        {
+          "name": "actual-reference-publication",
+          "expectedWork": 1
+        },
+        {
+          "name": "denied",
+          "expectedWork": 0
+        },
+        {
+          "name": "cached-hold",
+          "expectedWork": 0
+        },
+        {
+          "name": "expired-before-effects",
+          "expectedWork": 0
+        },
+        {
+          "name": "paid-postfold-error",
+          "expectedWork": 1
+        },
+        {
+          "name": "same-ledger-fresh-loan-resume",
+          "expectedWork": 1
+        },
+        {
+          "name": "deeper-resume-refused",
+          "expectedWork": 0
+        },
+        {
+          "name": "actual-row-publication",
+          "expectedWork": 1
+        },
+        {
+          "name": "actual-row-overwrite",
+          "expectedWork": 1
+        },
+        {
+          "name": "actual-row-clear",
+          "expectedWork": 1
+        }
+      ]
+    },
+    "rules": {
+      "const": {
+        "noEpochInference": true,
+        "noReceiptInference": true,
+        "noCallbackEntryInference": true,
+        "sameFiniteStock": true,
+        "sameOriginalHold": true,
+        "freshAccountingLoanNotNewAuthority": true,
+        "currentDepthRechecked": true,
+        "paidWorkBeforeFallibleFold": true,
+        "oracle": "independent-sqlite-action-work-classification",
+        "definingRowCpu": true
+      }
+    }
+  }
+}

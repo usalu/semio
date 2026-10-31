@@ -83,7 +83,6 @@ pub mod examples {
 pub mod editor {
     #[path = "."]
     pub mod writer {
-        pub use semio_s_artifact_writer_writer_tests_2::editor::writer::*;
         #[path = "../../../../../✏️editor/🗣️terminology/🦀️.rs"]
         pub mod terminology;
         #[path = "../../../../../✏️editor/🌉️wasm/🦀️.rs"]

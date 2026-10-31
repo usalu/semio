@@ -42,7 +42,7 @@ pub fn spec_producer()->semio_framework_dsl_record::RecordSpecProducer{semio_fra
 pub fn to_record(snapshot:&JpgSnapshot)->semio_framework_dsl_record::RecordValue {
     
     semio_framework_dsl_record::RecordValue { fields: [
-        (1,semio_framework_dsl_record::FieldValue::Text(snapshot.schema.clone())),(2,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.width.into())),(3,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.height.into())),(4,semio_framework_dsl_record::FieldValue::Bytes64(snapshot.image.pixels.clone())),
+        (1,semio_framework_dsl_record::FieldValue::Text(snapshot.schema.clone())),(2,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.width.into())),(3,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.height.into())),(4,semio_framework_dsl_record::FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&snapshot.image.pixels).expect("cold JPG pixels fit their declared capacity"))),
         (5,semio_framework_dsl_record::FieldValue::Value(snapshot.image.jfif_version.to_value())),(6,semio_framework_dsl_record::FieldValue::Value(snapshot.image.jfif_density_units.to_value())),(7,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.jfif_x_density.into())),(8,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.jfif_y_density.into())),
         (9,semio_framework_dsl_record::FieldValue::Value(snapshot.image.jfif_thumbnail.to_value())),
         (10,semio_framework_dsl_record::FieldValue::Value(snapshot.image.other_segments.to_value())),
@@ -57,7 +57,7 @@ pub fn to_record_controlled(snapshot:&JpgSnapshot,control:&mut semio_framework_v
         record.insert(1,semio_framework_dsl_record::FieldValue::Text(control.copy_text(&snapshot.schema)?))?;control.step()?;
         record.insert(2,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.width.into()))?;control.step()?;
         record.insert(3,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.height.into()))?;control.step()?;
-        record.insert(4,semio_framework_dsl_record::FieldValue::Bytes64(control.copy_bytes(&snapshot.image.pixels)?))?;control.step()?;
+        record.insert(4,semio_framework_dsl_record::FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&control.copy_bytes(&snapshot.image.pixels)?)?))?;control.step()?;
         record.insert(5,project(&snapshot.image.jfif_version,control)?)?;control.step()?;
         record.insert(6,project(&snapshot.image.jfif_density_units,control)?)?;control.step()?;
         record.insert(7,semio_framework_dsl_record::FieldValue::UInt(snapshot.image.jfif_x_density.into()))?;control.step()?;
@@ -81,7 +81,7 @@ pub fn from_record(mut record:semio_framework_dsl_record::RecordValue)->Result<J
     if record.fields.len()!=10 || record.fields.keys().any(|id|!(1..=10).contains(id)) { return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "JPG owned snapshot requires exactly ten declared fields",semio_framework_diagnostic::TextSpan::at(1,1))); }
     let schema=match record.fields.remove(&1){Some(semio_framework_dsl_record::FieldValue::Text(value))=>value,_=>return Err(error("schema"))};
     let width=unsigned(&mut record,2,"width")?;let height=unsigned(&mut record,3,"height")?;
-    let pixels=match record.fields.remove(&4){Some(semio_framework_dsl_record::FieldValue::Bytes64(value))=>value,_=>return Err(error("pixels"))};
+    let pixels=match record.fields.remove(&4){Some(semio_framework_dsl_record::FieldValue::Bytes64(value))=>value.to_vec_owner(),_=>return Err(error("pixels"))};
     let jfif_version=value(&mut record,5,"jfifVersion")?;let jfif_density_units=value(&mut record,6,"jfifDensityUnits")?;
     let jfif_x_density=unsigned(&mut record,7,"jfifXDensity")?;let jfif_y_density=unsigned(&mut record,8,"jfifYDensity")?;let jfif_thumbnail=value(&mut record,9,"jfifThumbnail")?;
     let other_segments=value(&mut record,10,"otherSegments")?;
@@ -104,7 +104,7 @@ pub fn from_record_controlled(record:&semio_framework_dsl_record::RecordValue,co
     (||->Result<JpgSnapshot,ValueError>{if record.fields.len()!=10||record.fields.keys().any(|id|!(1..=10).contains(id)){return Err(ValueError::new(ValueRefusalKind::InvalidValue, "JPG owned snapshot requires exactly ten declared fields"));}control.begin_stage(10)?;
     let schema=match record.get(1){Some(semio_framework_dsl_record::FieldValue::Text(value))=>control.copy_text(value)?,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue, "JPG schema is not Text"))};control.step()?;
     let width=field_unsigned(record,2)?;control.step()?;let height=field_unsigned(record,3)?;control.step()?;
-    let pixels=match record.get(4){Some(semio_framework_dsl_record::FieldValue::Bytes64(value))=>control.copy_bytes(value)?,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue, "JPG pixels are not intrinsic octets"))};control.step()?;
+    let pixels=match record.get(4){Some(semio_framework_dsl_record::FieldValue::Bytes64(value))=>control.copy_bytes(&value.to_vec_owner())?,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue, "JPG pixels are not intrinsic octets"))};control.step()?;
     let jfif_version=match control.scoped_stage(|control|fixed::<u8,2>(field_value(record,5)?,control))?{[major,minor]=>(major,minor)};control.step()?;
     let jfif_density_units=match field_value(record,6)?{semio_framework_value::DslValue::String(value)if value=="aspect"=>JfifDensityUnits::Aspect,semio_framework_value::DslValue::String(value)if value=="pixelsPerInch"=>JfifDensityUnits::PixelsPerInch,semio_framework_value::DslValue::String(value)if value=="pixelsPerCm"=>JfifDensityUnits::PixelsPerCm,_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue, "JPG density unit is outside its declared enum"))};control.step()?;
     let jfif_x_density=field_unsigned(record,7)?;control.step()?;let jfif_y_density=field_unsigned(record,8)?;control.step()?;

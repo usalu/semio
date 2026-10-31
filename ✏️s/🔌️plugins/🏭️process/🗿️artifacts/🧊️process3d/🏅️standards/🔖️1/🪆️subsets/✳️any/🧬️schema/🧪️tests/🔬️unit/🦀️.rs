@@ -1,5 +1,6 @@
 extern crate semio_framework_schema as framework_schema;
 use pack::snapshot::ArtifactDsl;
+use semio_s_artifact_process_process3d_mutations::{insert_step_mutations, remove_step_mutations};
 use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::plate_document;
 use semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document;
 use semio_s_artifact_process_process3d_model::*;
@@ -336,7 +337,7 @@ fn new_step() -> ProcessStep {
     ProcessStep { id: "e".into(), label: "e".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.01, depth: 0.2, height: 0.2 }, pose: Pose::default() } }
 }
 
-/// 🧭️ The viewer's cursor is a COUNT of resolved steps (`replay_process` slices `step_payloads[..limit]`), so a
+/// 👁️ The viewer's cursor is a COUNT of resolved steps (`replay_process` slices `step_payloads[..limit]`), so a
 /// step added at cursor `c` must land AT index `c` and the viewer's cursor move to `c + 1` — the only pairing under
 /// which the step the user just added is the one that becomes visible. The document carries no cursor at all.
 #[semio_framework_async_macros::async_test]
@@ -365,7 +366,7 @@ async fn inserting_a_step_with_no_cursor_appends_and_leaves_the_cursor_unset() {
     assert_eq!(process3d_cursor_after_insert(&fixture, None), None);
 }
 
-/// 🧭️ Deleting the first UNRESOLVED step (index == cursor) leaves the resolved prefix untouched, so the viewer's
+/// 👣️ Deleting the first UNRESOLVED step (index == cursor) leaves the resolved prefix untouched, so the viewer's
 /// cursor must not move; only a deletion strictly inside the prefix pulls it back.
 #[semio_framework_async_macros::async_test]
 async fn removing_a_step_only_pulls_the_cursor_back_when_the_step_was_inside_the_resolved_prefix() {

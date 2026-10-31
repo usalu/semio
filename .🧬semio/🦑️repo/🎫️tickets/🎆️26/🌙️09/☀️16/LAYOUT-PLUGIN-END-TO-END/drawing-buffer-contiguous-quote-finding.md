@@ -1,0 +1,7 @@
+# Exact Contiguous Completion Quote Finding
+
+After actual contiguous(target=8) admits its one real 16-cell element body, the implementation unconditionally quotes values.nextStorageDemand(), whose force flag plans the next unused page. This reports a directory capacity demand of 128 even though target 8 is already met. The next contiguous call is only a cached completion with zero physical effects. A cached absolute demand consumer can therefore require unrelated extra capacity before revisiting already completed admission.
+
+This is a defining Ledger.contiguous post-admission quote issue, not permission to bypass a pending guard in FontWorkingMapping. Three separate schema/data/test files were authored before any production fix, preserving the eight-law root and all fifteen reviewed bytes. The proposed precise regression uses the actual existing API, one original finite wallet and funded finally, expecting actual page admission followed by a zero-byte cached-completion quote and zero-effect completion. It has not run, so no genuine RED or new runtime is claimed.
+
+Root should review the exact zero-physical-currency completion quote (including held parent copy and actual absolute frame depth) before a narrow defining-owner fix or one normal focused reproduction. The current actual nine-law page proof remains scoped to its unchanged fifteen inputs and does not cover this new case.

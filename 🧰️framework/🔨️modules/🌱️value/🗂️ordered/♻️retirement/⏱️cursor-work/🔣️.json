@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cursors",
+    "key",
+    "deniedWork",
+    "cachedWork",
+    "maximumTurnWork",
+    "stock"
+  ],
+  "properties": {
+    "cursors": {
+      "const": [
+        "update",
+        "lookup"
+      ]
+    },
+    "key": {
+      "const": "budgeted-key🧱"
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "maximumTurnWork": {
+      "const": 1
+    },
+    "stock": {
+      "const": {
+        "items": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 512,
+        "fuel": 100000,
+        "maximumTurns": 100000
+      }
+    }
+  }
+}

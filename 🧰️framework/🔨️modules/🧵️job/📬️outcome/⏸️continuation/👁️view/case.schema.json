@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source",
+    "maximumTurns",
+    "stages",
+    "borrowWork",
+    "borrowCapacityBytes",
+    "borrowReleaseBytes",
+    "renewsSource",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "const": {
+        "items": 4096,
+        "copyBytes": 1048576,
+        "capacityBytes": 1048576,
+        "releaseBytes": 1048576,
+        "depth": 64,
+        "fuel": 16384,
+        "deadlineUs": 1000000
+      }
+    },
+    "maximumTurns": {
+      "const": 4096
+    },
+    "stages": {
+      "const": [
+        "returned",
+        "received",
+        "inserted"
+      ]
+    },
+    "borrowWork": {
+      "const": 0
+    },
+    "borrowCapacityBytes": {
+      "const": 0
+    },
+    "borrowReleaseBytes": {
+      "const": 0
+    },
+    "renewsSource": {
+      "const": false
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "callback",
+          "view": [
+            "Original callback cause",
+            "Original receipt refusal",
+            "Original context refusal",
+            null,
+            null,
+            false
+          ]
+        },
+        {
+          "name": "receipt-qualification",
+          "view": [
+            null,
+            null,
+            null,
+            null,
+            "Original receipt qualification",
+            true
+          ]
+        }
+      ]
+    }
+  }
+}

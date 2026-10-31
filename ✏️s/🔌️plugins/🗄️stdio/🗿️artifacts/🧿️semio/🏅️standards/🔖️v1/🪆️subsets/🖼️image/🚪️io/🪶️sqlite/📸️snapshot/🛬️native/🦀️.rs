@@ -17,17 +17,7 @@ pub(crate)fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotCon
 }
 
 /// 🧩️ Fills the retained image root from borrowed binary octets, inserting every frame and metadata entry before its octets.
-pub fn binary_into(output:&mut SemioImageSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
- crate::io::sqlite::snapshot::admit_binary(body,control,limits)?;
- let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported image native format"));}
- native::reader_text_into(&mut output.schema,&mut reader,control)?;output.width=reader.read_u32_le().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;output.height=reader.read_u32_le().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;output.colorspace=crate::io::binary::snapshot::colorspace_from_tag(reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;output.bit_depth=reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;
- match reader.read_u8().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?{0=>{},1=>{output.icc=Some(Vec::new());native::reader_bytes_into(output.icc.as_mut().unwrap(),&mut reader,control)?;},_=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid image native ICC presence"))}
- let frame_count=length(&mut reader)?;rows(frame_count.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"image native entity overflow"))?,limits)?;output.frames=control.allocate_vec::<SemioImageFrame>(frame_count)?;control.begin_stage(frame_count)?;
- for _ in 0..frame_count{output.frames.push(SemioImageFrame::default());let frame=output.frames.last_mut().unwrap();frame.delay_ms=reader.read_u32_le().map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))?;native::reader_bytes_into(&mut frame.rgba8,&mut reader,control)?;control.step()?;}control.checkpoint()?;
- let metadata_count=length(&mut reader)?;rows(metadata_count.checked_add(frame_count).and_then(|v|v.checked_add(1)).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"image native entity overflow"))?,limits)?;output.metadata=control.allocate_vec::<SemioImageMetadataEntry>(metadata_count)?;control.begin_stage(metadata_count)?;
- for _ in 0..metadata_count{output.metadata.push(SemioImageMetadataEntry::default());let entry=output.metadata.last_mut().unwrap();native::reader_text_into(&mut entry.key,&mut reader,control)?;native::reader_text_into(&mut entry.value,&mut reader,control)?;control.step()?;}control.checkpoint()?;
- if reader.remaining()!=0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"image native trailing bytes"));}Ok(())
-}
+pub fn binary_into(output:&mut SemioImageSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::record_binary_into(output,body,control,limits)}
 
 #[derive(Clone)]
 pub(super)struct Items<'a>{remaining:&'a str}

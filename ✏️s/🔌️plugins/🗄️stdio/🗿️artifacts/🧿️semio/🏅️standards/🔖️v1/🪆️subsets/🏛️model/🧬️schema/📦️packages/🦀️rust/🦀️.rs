@@ -1,7 +1,6 @@
 //! 🧬️ schema of `semio-s-artifact-stdio-semio-model` — a path-preserving carve of the artifact root mounts.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_schema as framework_schema;

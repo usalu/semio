@@ -434,6 +434,7 @@ pub struct ArtifactCanonicalJsonTreeCursor {
     #[doc(hidden)] pub frames: PagedList<NativeFrame, {usize::MAX}>,
     #[doc(hidden)] pub pending: Option<RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>>,
     #[doc(hidden)] pub closing: bool,
+    last_turn_work:u64,
 }
 
 impl ArtifactCanonicalJsonTreeCursor {
@@ -441,7 +442,7 @@ impl ArtifactCanonicalJsonTreeCursor {
     pub fn admit(owner: RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>, grant: RetainedCloneGrant) -> Result<(Self, RetainedCloneProgress), (ValueError, RetainedOwnedProjection<dyn ArtifactCanonicalJsonTree>)> {
         let demand = Self::constructor_demand();
         if !Self::admitted(demand, grant) { return Err((ValueError::literal(ValueRefusalKind::WorkLimit, "canonical tree constructor requires original alias transfer admission"), owner)); }
-        Ok((Self { frames: PagedList::empty(), pending: Some(owner), closing: false }, RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
+        Ok((Self { frames: PagedList::empty(), pending: Some(owner), closing: false,last_turn_work:0 }, RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
     }
 
     fn admitted(demand: RetirementDemand, grant: RetainedCloneGrant) -> bool { grant.maximum_items != 0 && demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth }
@@ -476,24 +477,28 @@ impl ArtifactCanonicalJsonTreeCursor {
         Ok(RetirementDemand { release_bytes: self.frames.next_release_allocation_bytes().map_err(ValueError::from)?, depth: 1, ..Default::default() })
     }
 
+    pub fn last_turn_work(&self)->u64{self.last_turn_work}
     pub fn begin_close(&mut self) { self.closing = true; }
     pub fn terminal_is_empty(&self) -> bool { self.pending.is_none() && self.frames.is_empty() && self.frames.allocated_bytes() == 0 }
     pub fn is_complete(&self) -> bool { !self.closing && self.terminal_is_empty() }
 
     pub fn advance(&mut self, output: &mut [u8], grant: RetainedCloneGrant) -> Result<ArtifactCanonicalJsonTreeStep, ValueError> {
+        self.last_turn_work=0;
         if self.terminal_is_empty() { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Complete(Default::default()), written_bytes: 0 }); }
-        if grant.maximum_items == 0 { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
-        let demand = self.next_demand()?;
+        if grant.maximum_items == 0||grant.maximum_depth==0 { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
+        let demand = self.next_demand().map_err(|error|{self.last_turn_work=1;error})?;
         if !Self::admitted(demand, grant) { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
+        self.last_turn_work=1;
         let mut progress = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         let mut written_bytes = 0;
         if self.pending.is_some() {
             if self.closing {
-                if self.pending.as_ref().unwrap().terminal_is_empty() { self.pending = None; progress.copied_bytes = demand.copy_bytes; }
-                else { progress = self.pending.as_mut().unwrap().close_step(grant)?.progress(); }
+                if let Some(pending)=self.pending.as_mut().filter(|pending|!pending.terminal_is_empty()) { let turn=pending.close_step(grant);self.last_turn_work=turn.work;progress=turn.result?.progress(); }
+                else { self.pending = None; progress.copied_bytes = demand.copy_bytes; }
             } else if !self.frames.has_reserved_slot() {
-                let step = self.frames.reserve_one(grant.maximum_capacity_bytes).map_err(|error| ValueError::from(error.refusal()))?;
-                progress.retained_capacity_bytes = step.allocated_bytes;
+                let step=match self.frames.reserve_one(grant.maximum_capacity_bytes){Ok(step)=>step,Err(error)=>{self.last_turn_work=error.work;return Err(ValueError::from(error.refusal()).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}));}};
+                self.last_turn_work=step.work;
+                progress=RetainedCloneProgress{copied_items:usize::from(step.progressed),retained_capacity_bytes:step.allocated_bytes,..Default::default()};
             } else {
                 let frame = NativeFrame::new(self.pending.take().unwrap());
                 self.frames.push_reserved(frame).unwrap_or_else(|_| unreachable!("canonical frontier reserved its exact native slot"));
@@ -502,7 +507,7 @@ impl ArtifactCanonicalJsonTreeCursor {
         } else if let Some(frame) = self.frames.last_mut() {
             if self.closing || frame.phase == Phase::Complete {
                 if frame.owner.terminal_is_empty() { drop(self.frames.pop().unwrap()); progress.copied_bytes = demand.copy_bytes; }
-                else { progress = frame.owner.close_step(grant)?.progress(); }
+                else { let turn=frame.owner.close_step(grant);self.last_turn_work=turn.work;progress=turn.result?.progress(); }
             } else if let Some(written) = flat_run(frame, output, grant)? {
                 progress.copied_bytes = written;
                 written_bytes = written;
@@ -522,7 +527,9 @@ impl ArtifactCanonicalJsonTreeCursor {
                     Phase::ArrayChild | Phase::ObjectChild | Phase::ArrayNext if frame.phase != Phase::ArrayNext || frame.ordinal == 0 && frame.ordinal < frame.length => {
                         let ordinal = frame.ordinal;
                         frame.owner.borrow()?.get().canonical_tree_child(ordinal)?;
-                        let (child, alias_progress) = frame.owner.project(ordinal, |node| node.canonical_tree_child(ordinal).expect("checked immutable native canonical child"), grant)?;
+                        let turn = frame.owner.project(ordinal, |node| node.canonical_tree_child(ordinal).expect("checked immutable native canonical child"), grant);
+                        self.last_turn_work = turn.work;
+                        let (child, alias_progress) = turn.result?;
                         self.pending = Some(child);
                         progress = alias_progress;
                         frame.ordinal += 1;
@@ -530,7 +537,7 @@ impl ArtifactCanonicalJsonTreeCursor {
                         progress.copied_bytes = demand.copy_bytes;
                         None
                     }
-                    _ if output.is_empty() => { return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
+                    _ if output.is_empty() => { self.last_turn_work=0;return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(Default::default()), written_bytes: 0 }); }
                     Phase::Scalar => {
                         let byte = frame.scalar.bytes[frame.offset]; frame.offset += 1;
                         if frame.offset == frame.scalar.length { frame.phase = Phase::Complete; }

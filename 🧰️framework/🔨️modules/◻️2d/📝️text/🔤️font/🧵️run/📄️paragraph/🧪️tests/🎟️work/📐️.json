@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "font": "⌨️share-tech-mono/🏛️latin/📖️regular",
+  "quanta": [
+    1,
+    7
+  ],
+  "cancelPhases": [
+    "source",
+    "measure",
+    "childArchive",
+    "order",
+    "sort",
+    "metrics",
+    "wrap",
+    "emitLine",
+    "lineStyle",
+    "lineShape",
+    "glyph",
+    "segment",
+    "archive"
+  ],
+  "invalidSpan": {
+    "start": 1,
+    "end": 2,
+    "size": 12,
+    "tracking": 0,
+    "face": 32
+  },
+  "flow": {
+    "text": "one two three",
+    "width": 45,
+    "height": 16,
+    "origin": [
+      0,
+      0
+    ],
+    "expectedPauses": 2,
+    "expectedSourceEnds": [
+      4,
+      8
+    ],
+    "expectedLines": [
+      "one ",
+      "two ",
+      "three"
+    ]
+  },
+  "rules": {
+    "sameCatalogOriginalBank": true,
+    "actualLineBreakRunSources": true,
+    "sourceAnalysisOnce": true,
+    "realReadonlySpansNoArrayClone": true,
+    "paidMergeSortWrites": true,
+    "actualChildCpuSemantic": true,
+    "twoLineRowsSeparate": true,
+    "pausedCachedZero": true,
+    "linePlacementBorrowedReadonly": true,
+    "failureFinalCpuPositive": true,
+    "producerOutputSameBankClose": true,
+    "reference": "original-paragraph-goldens-opentype-sharp-sql"
+  }
+}

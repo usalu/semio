@@ -1,0 +1,17 @@
+{
+  "state": "partial-source-authored-unexecuted",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+      "beforeSha256": "bfb1d17da6e7a473fe3bee7cbd7c9c13f48259199af3a5571a44253a89b69442",
+      "sha256": "9822f5bbbd11c46366e3241c35376519f936ae5c9daaae07d0ce6220d4b9f939"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+      "beforeSha256": "5ffe64df319f0c0802846ac5d1106f2c9b98cfac80a61f9a4b73ce07a379d023",
+      "sha256": "adf6873b1adfa2b667cbe72468f11f989fd83a5675f56d1f39a2c4c4b39c418d"
+    }
+  ],
+  "chronology": "Initial closed TypeScript contract and five genuine laws authored first; original math functions retained in defining source. Actual caller/old owning-suite/async migrations are pending, so this is not SourceReady.",
+  "removedApi": "numeric advance and default-authority preparePath; callers must migrate"
+}

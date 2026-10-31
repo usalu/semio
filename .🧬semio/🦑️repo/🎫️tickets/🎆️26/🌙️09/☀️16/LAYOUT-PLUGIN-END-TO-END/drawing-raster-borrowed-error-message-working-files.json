@@ -1,0 +1,20 @@
+{
+  "state": "borrowed-error-publication-interface-source-only",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🦀️.rs",
+      "sha256": "7ef58707a90c807d7830c34c2bca973491bfcab3bde7c32ce074440f3cec2cdd",
+      "scope": "Only PixelEditError borrowed message getter/Display delegation; peer algorithm bodies not attributed"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🦀️.rs",
+      "sha256": "158bf12ffc75f859dc62d8b0b733c2b5cb31f549abc0dff17e489517300f2408",
+      "scope": "Root PathRaster defining and exact owning law"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "1d9a0737fbcae390816401ca3156e28d319d1f105c30046f5aba9bf226a54ddf",
+      "scope": "Root PathRaster defining and exact owning law"
+    }
+  ]
+}

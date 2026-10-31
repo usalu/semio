@@ -1,0 +1,21 @@
+{
+  "state": "root-independently-verified-terminal-red-hold-released",
+  "commandSha256": "8f00a6c67c05b8fdb16fc9688c5898f7fe98131c33bdbd59d04d816dc159170b",
+  "actualTest": {
+    "session": 4516,
+    "exitCode": 1,
+    "pass": 46,
+    "fail": 3,
+    "tests": 49,
+    "assertions": 9096
+  },
+  "actualStrict": {
+    "session": 97211,
+    "exitCode": 2,
+    "diagnostics": 2
+  },
+  "inputs": 54,
+  "allInputsMatchPreBothTerminalAndCurrent": true,
+  "hold": "released",
+  "permittedNext": "Narrow test/importer corrections only, fresh captured repeat required"
+}

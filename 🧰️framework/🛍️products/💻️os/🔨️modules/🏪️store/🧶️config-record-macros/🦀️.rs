@@ -101,6 +101,10 @@ macro_rules! field_set_mutations {
                 };
                 Self::DESCRIPTORS.iter().find(|descriptor| descriptor.aggregate_variant == variant).expect("every set mutation variant declares its descriptor")
             }
+        }
+
+        impl $crate::ColdMutation<$record> for $set {
+            type ReferenceDiff = $diff;
 
             fn diff(&self, base: &$record) -> $crate::MutationOutcome<$diff> {
                 match self {
@@ -158,7 +162,7 @@ macro_rules! config_record {
     };
 }
 
-/// 🎯️ Declares a config record's `ConfigRecord` mark and sparse diff ([`sparse_record_diff!`]) for a config whose mutation enum is
+/// ⚙️ Declares a config record's `ConfigRecord` mark and sparse diff ([`sparse_record_diff!`]) for a config whose mutation enum is
 /// hand-written: `config_diff! { record: X, diff: XDiff, fields: { field: Type, … } [, keyed: { map_field: ValueType, … }] }`.
 #[macro_export]
 macro_rules! config_diff {

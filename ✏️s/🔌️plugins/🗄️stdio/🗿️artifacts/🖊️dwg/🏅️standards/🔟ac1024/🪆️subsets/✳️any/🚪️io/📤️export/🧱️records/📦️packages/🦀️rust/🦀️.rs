@@ -1,7 +1,6 @@
 //! 🧱️ `stdio.dwg` writer records: the R2004 container writer, the bit-stream writer, field writers, file-level sections and entity records.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 #[path = "."]
 pub mod standards {

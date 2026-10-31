@@ -1,0 +1,211 @@
+{
+  "sourceOnly": true,
+  "mounts": [
+    {
+      "mount": "⏱️context/🦀️.rs",
+      "path": "⏱️context/🎟️cancel/🧪️tests/🦀️.rs",
+      "bytes": 3313,
+      "testDeclarations": 1,
+      "privateLexicalImports": [
+        "use super::*;"
+      ]
+    },
+    {
+      "mount": "⏱️context/🦀️.rs",
+      "path": "⚠️failure/🧪️tests/🧰️support/🦀️.rs",
+      "bytes": 4581,
+      "testDeclarations": 0,
+      "privateLexicalImports": [
+        "use crate::{OriginalDomainFailure,OriginalDomainProjection,OriginalDomainView as V,close_original_retained_step};",
+        "pub(crate) fn close<T:RetireOwned>(value:T,cx:&mut crate::StepContext<'_>,bound:usize){"
+      ]
+    },
+    {
+      "mount": "⏱️context/🦀️.rs",
+      "path": "⏱️context/🧪️testing/🎟️caller/🦀️.rs",
+      "bytes": 11875,
+      "testDeclarations": 0,
+      "privateLexicalImports": [
+        "use super::{CancelToken,JobPayloadAuthority,OperationId,Generation,RetainedCloneGrant,RetainedCloneProgress,StepContext,StepBudget,OriginalTurnFailure,OriginalCallerSourceParent};",
+        "use super::{RetainedCloneStep,RetirementDemand,ValueError,ValueRefusalKind};"
+      ]
+    },
+    {
+      "mount": "⏱️context/🦀️.rs",
+      "path": "📬️outcome/📦️builder/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 21503,
+      "testDeclarations": 6,
+      "privateLexicalImports": [
+        "use super::*;"
+      ]
+    },
+    {
+      "mount": "⏱️context/🎟️source/🦀️.rs",
+      "path": "⏱️context/🎟️source/♻️close/🧪️tests/🦀️.rs",
+      "bytes": 3068,
+      "testDeclarations": 1,
+      "privateLexicalImports": [
+        "use super::*;"
+      ]
+    },
+    {
+      "mount": "⏱️context/🎟️source/🦀️.rs",
+      "path": "⏱️context/🎟️source/♻️close/🪢️loan/🧪️tests/🦀️.rs",
+      "bytes": 2448,
+      "testDeclarations": 1,
+      "privateLexicalImports": [
+        "use super::*;",
+        " let mut caller=crate::OriginalJobFixtureCaller::admit(OperationId(row[\"operation\"].as_u64().unwrap()),Generation(row[\"generation\"].as_u64().unwrap()),stock,||Some(1),u64::MAX,s[\"fuel\"].as_u64().unwrap());let mut pending=None;caller.turn(quantum,|cx|cx.original_source_parent()?.admit_loan(&mut pending,cx)).unwrap();let mut loan=pending.unwrap();let clock=loan.clock_authority.unwrap();let identity=loan.original.as_ref().unwrap().identity();"
+      ]
+    },
+    {
+      "mount": "⏱️context/🎟️source/🦀️.rs",
+      "path": "⏱️context/🎟️source/🎟️return/🧪️tests/🦀️.rs",
+      "bytes": 1940,
+      "testDeclarations": 1,
+      "privateLexicalImports": [
+        "use super::*;",
+        " let mut caller=crate::OriginalJobFixtureCaller::admit(OperationId(row[\"operation\"].as_u64().unwrap()),Generation(row[\"generation\"].as_u64().unwrap()),stock,||Some(1),u64::MAX,s[\"fuel\"].as_u64().unwrap());"
+      ]
+    },
+    {
+      "mount": "⏱️context/🎟️source/🦀️.rs",
+      "path": "⏱️context/🎟️source/🎟️loan/🧪️tests/🦀️.rs",
+      "bytes": 6119,
+      "testDeclarations": 2,
+      "privateLexicalImports": [
+        "use super::*;",
+        "#[test]fn genuine_original_loan_admission_keeps_real_alias_before_receipt_refusal(){let row:serde_json::Value=serde_json::from_str(include_str!(\"../📐️.json\")).unwrap();let s=&row[\"stock\"];let stock=RetainedCloneGrant{maximum_items:s[\"items\"].as_u64().unwrap()as usize,maximum_copy_bytes:s[\"copyBytes\"].as_u64().unwrap()as usize,maximum_capacity_bytes:s[\"capacityBytes\"].as_u64().unwrap()as usize,maximum_release_bytes:s[\"releaseBytes\"].as_u64().unwrap()as usize,maximum_depth:s[\"depth\"].as_u64().unwrap()as usize};let quantum=RetainedCloneGrant{maximum_items:1,..stock};for refuse in [false,true]{let mut caller=crate::OriginalJobFixtureCaller::admit(OperationId(row[\"operation\"].as_u64().unwrap()),Generation(row[\"generation\"].as_u64().unwrap()),stock,||Some(1),u64::MAX,s[\"fuel\"].as_u64().unwrap());let mut loan=None;caller.turn(RetainedCloneGrant{maximum_items:0,..quantum},|cx|{let before=cx.fuel_remaining();assert!(!cx.original_source_parent()?.admit_loan(&mut loan,cx)?);assert_eq!(before-cx.fuel_remaining(),row[\"deniedWork\"].as_u64().unwrap());assert!(loan.is_none());Ok(())}).unwrap();caller.turn(quantum,|cx|{let before=cx.fuel_remaining();let maximum=cx.retained.maximum_items;REFUSE_NEXT_RECEIPT.with(|flag|flag.set(refuse));let result=cx.original_source_parent()?.admit_loan(&mut loan,cx);cx.retained.maximum_items=maximum;assert_eq!(before-cx.fuel_remaining(),row[\"admittedWork\"].as_u64().unwrap());assert!(loan.is_some());assert_eq!(loan.as_ref().unwrap().source_identity()?,cx.original_source_parent()?.source_identity()?);if refuse{let failure=result.unwrap_err();assert_eq!(failure.retained_progress().copied_items,1);assert_eq!(failure.retained_progress().copied_bytes,row[\"copiedBytes\"].as_u64().unwrap()as usize);}else{assert!(result.unwrap());}assert_eq!(serde_json::to_value(loan.is_some()).unwrap(),row[\"receiptRefusalRetainsLoan\"]);Ok(())}).unwrap();caller.turn(quantum,|cx|{let before=cx.fuel_remaining();assert!(cx.original_source_parent()?.admit_loan(&mut loan,cx)?);assert_eq!(before-cx.fuel_remaining(),row[\"cachedWork\"].as_u64().unwrap());Ok(())}).unwrap();for _ in 0..s[\"maximumTurns\"].as_u64().unwrap(){if loan.as_ref().unwrap().terminal_is_empty(){break}caller.turn(quantum,|cx|loan.as_mut().unwrap().close_step(cx.original_source_parent()?,cx)).unwrap();}assert!(loan.as_ref().unwrap().terminal_is_empty());drop(loan);caller.retire(stock);}}",
+        "  let mut caller=crate::OriginalJobFixtureCaller::admit(OperationId(17),Generation(9),bank,||Some(1000),12345,s[\"fuel\"].as_u64().unwrap());",
+        "   cx.bind_original_source_epoch(19)?;let view=cx.retained_grant();cx.narrow_original_work_budget(crate::StepBudget::new(row[\"initialFuel\"].as_u64().unwrap(),12345,view))?;"
+      ]
+    },
+    {
+      "mount": "⏱️context/🎟️source/👶️child/🦀️.rs",
+      "path": "⏱️context/🎟️source/👶️child/♻️close/🧪️tests/🦀️.rs",
+      "bytes": 2744,
+      "testDeclarations": 1,
+      "privateLexicalImports": [
+        "use super::*;",
+        " let mut caller=crate::OriginalJobFixtureCaller::admit(OperationId(row[\"operation\"].as_u64().unwrap()),generation,stock,||Some(1),u64::MAX,s[\"fuel\"].as_u64().unwrap());let mut foreign=crate::OriginalJobFixtureCaller::admit(OperationId(row[\"foreignOperation\"].as_u64().unwrap()),generation,stock,||Some(1),u64::MAX,s[\"fuel\"].as_u64().unwrap());"
+      ]
+    },
+    {
+      "mount": "⏱️context/🎟️source/👶️child/🦀️.rs",
+      "path": "⏱️context/🎟️source/👶️child/🎟️inherit/🧪️tests/🦀️.rs",
+      "bytes": 2368,
+      "testDeclarations": 1,
+      "privateLexicalImports": [
+        "use super::*;",
+        "#[test]fn genuine_child_cannot_open_an_unused_owned_budget_and_relends_the_actual_parent(){let row:serde_json::Value=serde_json::from_str(include_str!(\"../📐️.json\")).unwrap();let s=&row[\"stock\"];let stock=RetainedCloneGrant{maximum_items:s[\"items\"].as_u64().unwrap()as usize,maximum_copy_bytes:s[\"copyBytes\"].as_u64().unwrap()as usize,maximum_capacity_bytes:s[\"capacityBytes\"].as_u64().unwrap()as usize,maximum_release_bytes:s[\"releaseBytes\"].as_u64().unwrap()as usize,maximum_depth:s[\"depth\"].as_u64().unwrap()as usize};let quantum=RetainedCloneGrant{maximum_items:1,..stock};let mut caller=crate::OriginalJobFixtureCaller::admit(OperationId(row[\"operation\"].as_u64().unwrap()),Generation(row[\"generation\"].as_u64().unwrap()),stock,||Some(1),u64::MAX,s[\"fuel\"].as_u64().unwrap());caller.turn(quantum,|cx|cx.original_source_parent()?.admit_return_origin(cx)).unwrap();let mut child=caller.turn(quantum,|cx|Ok(OriginalCallerChildSource::new(cx.original_source_parent()?,cx,OperationId(row[\"childOperation\"].as_u64().unwrap()),Generation(row[\"childGeneration\"].as_u64().unwrap()))?)).unwrap();for _ in 0..s[\"maximumTurns\"].as_u64().unwrap(){if child.ready{break}caller.turn(quantum,|cx|child.admit_step(cx.original_source_parent()?,cx)).unwrap();}assert!(child.ready);let mut sequence=0;let mut recipient=RetainedCloneProgress::default();let owned=child.parent().unwrap().borrow_context(StepBudget{fuel:s[\"fuel\"].as_u64().unwrap(),deadline_us:u64::MAX,retained:stock},||Some(1),&mut sequence,&mut recipient);assert_eq!(serde_json::to_value(owned.is_err()).unwrap(),row[\"ownRouteRefused\"]);drop(owned);assert_eq!(child.parent().unwrap().return_source().unwrap().try_borrow().unwrap().get().is_bound(),row[\"unusedChildBankBound\"].as_bool().unwrap());caller.turn(quantum,|cx|{let returned=child.with_context(cx.original_source_parent()?,cx,quantum,|nested|{assert_eq!(matches!(nested.return_budget.as_ref(),Some(OriginalReturnBudgetReference::Borrowed(_))),row[\"borrowedRoute\"].as_bool().unwrap());Ok(())})?;returned.into_original().map_err(|_|refused(\"genuine inherited child receipt refused\"))??;Ok(())}).unwrap();for _ in 0..s[\"maximumTurns\"].as_u64().unwrap(){if child.terminal_is_empty(){break}caller.turn(quantum,|cx|child.close_step(cx.original_source_parent()?,cx)).unwrap();}assert!(child.terminal_is_empty());drop(child);caller.retire(stock);}"
+      ]
+    },
+    {
+      "mount": "♻️retirement/📄️payload/🦀️.rs",
+      "path": "♻️retirement/📄️payload/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 1590,
+      "testDeclarations": 1,
+      "privateLexicalImports": [
+        "use super::*;"
+      ]
+    },
+    {
+      "mount": "♻️retirement/📄️payload/🦀️.rs",
+      "path": "♻️retirement/📄️payload/🎟️work/⚠️posting/🧪️tests/🦀️.rs",
+      "bytes": 3006,
+      "testDeclarations": 1,
+      "privateLexicalImports": [
+        "use super::*;",
+        " let mut caller=crate::OriginalJobFixtureCaller::admit(crate::OperationId(row[\"operation\"].as_u64().unwrap()),crate::Generation(row[\"generation\"].as_u64().unwrap()),bank,||Some(1),u64::MAX,s[\"fuel\"].as_u64().unwrap());let mut builder=crate::RetainedPayloadBuilder::new(JobPayloadStream::Fault);",
+        " for _ in 0..s[\"maximumTurns\"].as_u64().unwrap(){if builder.is_initialized(){break;}caller.turn(quantum,|cx|{let turn=builder.advance_initialization(cx);crate::receive_original_retained_work(cx,turn)?;Ok(())}).unwrap();}assert!(builder.is_initialized());for _ in 0..8{if builder.staged_page_len().is_some(){break;}caller.turn(quantum,|cx|{let turn=builder.begin_staged_page_funded(cx);crate::receive_original_retained_work(cx,turn)?;Ok(())}).unwrap();}assert!(builder.staged_page_len().is_some());let backing=builder.staged_backing_identity();assert!(backing.is_some());",
+        "  let policy=cx.retained_policy;cx.narrow_original_work_budget(crate::StepBudget::new(fuel,cx.deadline_us(),RetainedCloneGrant{maximum_release_bytes:0,..cx.retained_grant()}))?;",
+        "  let failure=crate::OriginalWorkFailure::<crate::original_failure_test_support::BodyFailure>::fold(cx,None,progress,turn.work).unwrap_err();cx.retained_policy=policy;",
+        "  crate::original_failure_test_support::close(failure,cx,s[\"maximumTurns\"].as_u64().unwrap()as usize);Ok(())",
+        " for _ in 0..s[\"maximumTurns\"].as_u64().unwrap(){if builder.terminal_is_empty(){break;}let demand=builder.retirement_demands().unwrap();caller.turn(quantum,|cx|{crate::close_original_retained_step(cx,demand,|actual|builder.close_step_granted(actual))?;Ok(())}).unwrap();}assert!(builder.terminal_is_empty());drop(builder);caller.retire(bank);"
+      ]
+    },
+    {
+      "mount": "♻️retirement/🎟️context/🦀️.rs",
+      "path": "♻️retirement/🎟️context/🧪️tests/🎟️work/🦀️.rs",
+      "bytes": 11564,
+      "testDeclarations": 2,
+      "privateLexicalImports": [
+        "use crate::{OriginalJobFixtureCaller,OriginalTurnFailure,OriginalTurnPrimary,OperationId,Generation,close_original_retained_step,close_original_nested_step};",
+        "use crate::original_failure_test_support::{wire_value,wire_progress,projected};",
+        "fn message(cx:&mut crate::StepContext<'_>,text:&str)->FaultMessageOwner{let(turn,heap)=observe(||FaultMessageOwner::construct(text,cx.retained_grant()));cx.consume_fuel(turn.work);let(owner,p)=turn.result.unwrap();assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));cx.consume_retained(p).unwrap();owner}",
+        "fn close<T:semio_framework_value::retirement::RetireOwned>(value:T,cx:&mut crate::StepContext<'_>,bound:usize){let mut owner=ControlledRetirement::retain(value);for _ in 0..bound{if owner.terminal_is_empty(){break}let d=owner.next_demand(cx.retained_grant().maximum_copy_bytes).unwrap();let before=cx.fuel_remaining();let(result,heap)=observe(||close_original_retained_step(cx,d,|grant|{let result=owner.step(grant);RetainedWorkOutcome{result,work:owner.last_turn_work()}}));let p=result.unwrap().progress();assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert_eq!(before-cx.fuel_remaining(),owner.last_turn_work());}assert!(owner.terminal_is_empty());let(_,heap)=observe(||drop(owner));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}",
+        "  let mut occupied=None;let mut occupied_source=message(cx,text);let source_pointer=occupied_source.fault().unwrap().message.as_ptr();let fuel=cx.fuel_remaining();let(result,heap)=observe(||close_original_nested_step(cx,|same,grant|{let turn=occupied_source.take_step(&mut occupied,grant);same.consume_fuel(turn.work);let p=turn.result?.progress();same.consume_retained(p)?;Ok(crate::InteractiveJobCloseStep::Pending{progress:p})}));result?;assert_eq!(fuel-cx.fuel_remaining(),law[\"headerTransferWork\"].as_u64().unwrap());assert_eq!(occupied.as_ref().unwrap().message.as_ptr(),source_pointer);assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(_,heap)=observe(||drop(occupied_source));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let mut candidate=message(cx,text);let pointer=candidate.fault().unwrap().message.as_ptr();let occupied_pointer=occupied.as_ref().unwrap().message.as_ptr();",
+        "  cx.retained.maximum_capacity_bytes=before.retained_capacity_bytes-1;cx.operation=OperationId(policy[\"foreignOperation\"].as_u64().unwrap());let(result,heap)=observe(||crate::receive_original_retained_work(cx,turn));cx.operation=operation;cx.retained=saved;let failure=result.unwrap_err();assert_eq!(fuel-cx.fuel_remaining(),law[\"receiverValidationWork\"].as_u64().unwrap());assert_eq!(cx.retained_progress(),before);assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(candidate.fault().unwrap().message.as_ptr(),pointer);"
+      ]
+    },
+    {
+      "mount": "⚠️failure/🎟️work/🦀️.rs",
+      "path": "⚠️failure/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 7239,
+      "testDeclarations": 1,
+      "privateLexicalImports": [
+        "use crate::{OriginalWorkFailure,OriginalDomainReservation,OriginalDomainView as V,OriginalJobFixtureCaller,OperationId,Generation,admit_original_domain_failure};",
+        "use crate::original_failure_test_support::*;",
+        "   for _ in 0..bound{if reservation.terminal_is_empty(){break}let d=reservation.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;crate::close_original_retained_step(cx,d,|grant|reservation.close_step(grant))?;}assert!(reservation.terminal_is_empty());"
+      ]
+    },
+    {
+      "mount": "⚠️failure/📦️domain/🦀️.rs",
+      "path": "⚠️failure/📦️domain/🎟️reservation/🧪️tests/🦀️.rs",
+      "bytes": 17094,
+      "testDeclarations": 2,
+      "privateLexicalImports": [
+        "use super::*;",
+        "use crate::{OriginalWorkFailure,OriginalJobFixtureCaller,OriginalDomainProjection,OperationId,Generation,close_original_retained_step};",
+        "use crate::original_failure_test_support::{BodyFailure,projected,wire_value,wire_progress,independent_body};",
+        "   let before=cx.retained_progress();let fuel=cx.fuel_remaining();let((result,refused),heap)=observe_retirement_allocations(||refuse_one_allocation_on_this_thread(||frame.prepare(cx)));let failure=result.unwrap_err();assert_eq!(refused,1);assert_eq!(heap,(0,0));assert_eq!(cx.fuel_remaining()+1,fuel);assert_eq!(cx.retained_progress(),before);assert!(!frame.ready());assert!(matches!(&failure.primary,crate::OriginalTurnPrimary::Value(error)if error.kind==semio_framework_value::ValueRefusalKind::AllocationFailed&&error.message==\"original domain frame allocation refused\"));assert_eq!(failure.effects,P::default());assert_eq!(input.as_ptr(),input_pointer);",
+        "   let before=cx.retained_progress();let fuel=cx.fuel_remaining();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1};let mut output=None;let(result,heap)=observe(||cx.with_retained_loan(grant,|same|{output=admit_original_domain_failure(&mut frame,same)?;Ok(())}));result?;let failure=output.expect(\"paid reserved header transfers\");assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(fuel-cx.fuel_remaining(),1);assert_eq!(cx.retained_progress().copied_items-before.copied_items,1);assert_eq!(cx.retained_progress().copied_bytes,before.copied_bytes);assert_eq!(cx.retained_progress().retained_capacity_bytes,before.retained_capacity_bytes);assert_eq!(cx.retained_progress().released_bytes,before.released_bytes);assert!(frame.terminal_is_empty());let projection=failure.primary_domain().unwrap().projection();assert_eq!(projection.projection_identity(),projection_pointer);assert_eq!(projected(projection,&mut Vec::new()),expected);assert_eq!(failure.effects,P::default());crate::original_failure_test_support::close(failure,cx,bound);Ok(())",
+        "  close_frame(&mut frame,&mut caller,stock,bound);let(_,heap)=observe(||drop(frame));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if occupied.is_some(){caller.turn(stock,|cx|{crate::original_failure_test_support::close(occupied.take(),cx,bound);Ok(())}).unwrap();}foreign.retire(stock);caller.retire(stock);",
+        " caller.turn(stock,|cx|{let mut reservation=OriginalDomainReservation::<Failure>::new();assert!(reservation.prepare(cx)?);assert!(reservation.with_body(cx,|same,slot|{let turn=FaultMessageOwner::construct(law[\"cases\"][0][\"message\"].as_str().unwrap(),same.retained_grant());let work=turn.work;let(owner,p)=turn.result?;let failure=OriginalWorkFailure::fold(same,Some(BodyFailure{ordinal:0,owner,progress:p}),p,work).unwrap_err();*slot=Some(failure);Ok(())})?.is_some());assert!(reservation.pending());crate::original_failure_test_support::close(reservation,cx,bound);Ok(())}).unwrap();caller.retire(stock);"
+      ]
+    },
+    {
+      "mount": "📬️outcome/⏸️continuation/🦀️.rs",
+      "path": "📬️outcome/⏸️continuation/🧪️tests/🎟️source/🦀️.rs",
+      "bytes": 11032,
+      "testDeclarations": 2,
+      "privateLexicalImports": [
+        "use super::*;",
+        "use crate::{OriginalJobFixtureCaller,OperationId,Generation};",
+        " let corpus:Value=serde_json::from_str(include_str!(\"../🧫️fixtures/🔣️.json\")).unwrap();let source=&corpus[\"source\"];let stock=RetainedCloneGrant{maximum_items:source[\"items\"].as_u64().unwrap()as usize,maximum_copy_bytes:source[\"copyBytes\"].as_u64().unwrap()as usize,maximum_capacity_bytes:source[\"capacityBytes\"].as_u64().unwrap()as usize,maximum_release_bytes:source[\"releaseBytes\"].as_u64().unwrap()as usize,maximum_depth:source[\"depth\"].as_u64().unwrap()as usize};let q=RetainedCloneGrant{maximum_items:1,..stock};let mut caller=OriginalJobFixtureCaller::admit(OperationId(7520),Generation(7),stock,clock,source[\"deadlineUs\"].as_u64().unwrap(),source[\"fuel\"].as_u64().unwrap());caller.turn(q,|cx|{assert!(cx.original_source_parent()?.admit_return_origin(cx)?);Ok(())}).unwrap();let expected=corpus[\"nativeConstruction\"][\"text\"].as_str().unwrap();let mut input=Some(expected.to_owned());let mut output=None;let mut decoder=crate::OriginalJobDecodeOwner::empty();",
+        " caller.turn_with_decoder(q,&mut decoder,|cx|{let before=cx.return_budget.as_ref().unwrap().get().snapshot();let(turn,heap)=observe(||cx.with_native_receiving::<_,semio_framework_value::ValueError>(|control|Ok(control.receive_shared(&mut input,&mut output,semio_framework_value::shared_issuance::SharedIssuer::owned()))));let turn=turn?;cx.consume_fuel(turn.work);let p=turn.result.map_err(crate::OriginalTurnFailure::from)?;assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));let posted=cx.return_budget.as_ref().unwrap().get().snapshot();assert_eq!(posted.spent,before.spent.checked_add(p)?);assert_eq!(posted.work,before.work+u128::from(turn.work));assert_eq!(cx.receiving_child_progress(),p);cx.consume_receiving_retained(cx.receiving_issued_grant().unwrap(),p)?;assert_eq!(cx.return_budget.as_ref().unwrap().get().snapshot(),posted);assert_eq!(serde_json::to_value(output.as_ref().unwrap().get()).unwrap(),corpus[\"nativeConstruction\"][\"text\"]);Ok(())}).unwrap();",
+        " caller.turn(stock,|cx|{super::super::original_failure_test_support::close(output.take(),cx,4096);for _ in 0..4096{if decoder.terminal_is_empty(){break}let demand=decoder.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;crate::close_original_retained_step(cx,demand,|grant|decoder.close_step(grant))?;}assert!(decoder.terminal_is_empty());Ok(())}).unwrap();assert!(input.is_none());caller.retire(stock);"
+      ]
+    },
+    {
+      "mount": "📬️outcome/⏸️continuation/🦀️.rs",
+      "path": "📬️outcome/⏸️continuation/🧪️tests/🎟️origin/🦀️.rs",
+      "bytes": 8406,
+      "testDeclarations": 2,
+      "privateLexicalImports": [
+        "use super::*;",
+        "use crate::{OriginalJobFixtureCaller,OperationId,Generation};",
+        " let(now,deadline)=origin.original_clock().unwrap();{let(parent,receiver)=origin.context_parts().unwrap();let mut sequence=0;let mut p=crate::RetainedCloneProgress::default();let cx=parent.borrow_context(crate::StepBudget::new(1,deadline,q),now,&mut sequence,&mut p).unwrap();assert_eq!(cx.fuel_remaining(),1);assert!(cx.original_total_fuel_remaining()>1);assert!(cx.original_total_retained_grant().maximum_items>1);let claim=receiver.enter_body(&cx).unwrap().expect(\"actual frozen-source worker entry\");claim.qualify(&cx).unwrap();}",
+        " let stock=RetainedCloneGrant{maximum_items:1000000,maximum_copy_bytes:4194304,maximum_capacity_bytes:4194304,maximum_release_bytes:8388608,maximum_depth:128};let mut caller=OriginalJobFixtureCaller::admit(OperationId(7524),Generation(7),stock,||Some(0),1000000,1000000);let mut child=None;let mut origin=origin::OriginalJobReturnOrigin::empty();caller.turn(stock,|cx|{child=Some(crate::OriginalCallerChildSource::new(cx.original_source_parent()?,cx,OperationId(7525),Generation(8))?);Ok(())}).unwrap();let mut ready=false;for _ in 0..64{caller.turn(stock,|cx|{ready=child.as_mut().unwrap().admit_step(cx.original_source_parent()?,cx)?;Ok(())}).unwrap();if ready{break}}assert!(ready);"
+      ]
+    },
+    {
+      "mount": "📬️outcome/⏸️continuation/🦀️.rs",
+      "path": "📬️outcome/⏸️continuation/🧪️tests/📦️capsule/🦀️.rs",
+      "bytes": 21564,
+      "testDeclarations": 6,
+      "privateLexicalImports": [
+        "use super::*;",
+        "use crate::{InteractiveJob,OriginalJobFixtureCaller,OperationId,Generation,OriginalTurnFailure,OriginalDomainProjection,OriginalDomainView};",
+        "use super::super::original_failure_test_support::{projected,wire_value,wire_progress,independent_body};",
+        " fn projection_view(&self,path:&[usize])->Result<OriginalDomainView<'_>,ValueError>{crate::project_original_turn_failure(self.0,path)}",
+        " fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{crate::key_original_turn_failure(self.0,path,index)}",
+        " let mut pending=None;caller.turn(q,|cx|cx.with_original_work_loan(1,cx.original_absolute_deadline_us(),|cx|{let claim=origin.enter_body(cx)?.expect(\"admitted actual return receiver\");let mut fault=None;let(turn,heap)=observe(||owner.as_mut().unwrap().take_step(&mut fault,cx.retained_grant()));let p=turn.result?.progress();cx.consume_retained(p)?;cx.consume_fuel(turn.work);assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes));assert_eq!(cx.fuel_remaining(),0);assert_eq!(cx.retained_grant().maximum_items,0);let mut failure=OriginalTurnFailure::from(fault.take().unwrap());failure.effects=p;let operation=cx.operation;cx.operation=OperationId(operation.0+1);let bank=cx.return_budget.as_ref().unwrap().get().snapshot();let(returned,heap)=observe(||claim.finish(cx,capsule::InteractiveJobStep::Continuation(failure),None));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));pending=Some(match returned{capsule::OriginalJobReturn::Continuation(continuation)=>continuation,_=>panic!(\"actual native return must own its continuation\")});assert_eq!(cx.return_budget.as_ref().unwrap().get().snapshot(),bank);assert_eq!((bank.held_items,bank.held_fuel),(2,2));let mut sequence=0;let mut recipient=P::default();let(result,heap)=observe(||origin.parent().unwrap().borrow_context(crate::StepBudget::new(1,cx.original_absolute_deadline_us(),q),cx.clock_source(),&mut sequence,&mut recipient));match result{Err(error)=>assert_eq!(error.kind,semio_framework_value::ValueRefusalKind::WorkLimit),Ok(_)=>panic!(\"genuine source gate is already borrowed by the callback\")};assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(pending.is_some());let before=cx.retained_progress();let work=cx.work_units_spent;assert!(origin.receive_continuation(cx,&mut pending).is_err());assert!(pending.is_some());assert_eq!(cx.retained_progress(),before);assert_eq!(cx.work_units_spent,work);cx.operation=operation;for invalid in [usize::MAX-1,usize::MAX]{let posted=*cx.retained_progress;cx.retained_progress.copied_items=invalid;let result=origin.receive_continuation(cx,&mut pending);*cx.retained_progress=posted;assert!(result.is_err());assert!(pending.is_some());assert_eq!(cx.return_budget.as_ref().unwrap().get().snapshot(),bank);}cx.original_cancel_token().cancel_now();let(result,heap)=observe(||origin.receive_continuation(cx,&mut pending));assert!(result?);assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(pending.is_none());assert_eq!(cx.reserved_return_work(),law[\"ownedCapsule\"][\"receiverActualReservedWork\"].as_u64().unwrap());assert_eq!(cx.fuel_remaining(),0);let capsule=origin.continuation().unwrap();let callback=capsule.callback().unwrap();assert_eq!(callback.primary_fault().unwrap().message.as_ptr()as usize,pointer);assert_eq!(projected(&NativeProjection(callback),&mut Vec::new()),serde_json::json!({\"primary\":{\"kind\":\"fault\",\"original\":independent_body(0,message)[\"fault\"]},\"effects\":wire_progress(p)}));let qualifier=capsule.qualification().unwrap();assert_eq!(projected(&NativeProjection(qualifier),&mut Vec::new()),serde_json::json!({\"primary\":{\"kind\":\"value\",\"original\":wire_value(\"invariantViolated\",law[\"ownedCapsule\"][\"qualificationMessage\"].as_str().unwrap(),P::default())},\"effects\":wire_progress(P::default())}));Ok(())})).unwrap();",
+        "impl crate::InteractiveJob for ActualFailureJob{",
+        " fn step<'job>(&'job mut self,cx:&mut crate::StepContext<'_>,_:&mut crate::OriginalJobReturnClaim<'_>)->crate::InteractiveJobStep<'job>{self.calls+=1;crate::InteractiveJobStep::from_callback((||{let mut output=None;let turn=self.owner.take_step(&mut output,cx.retained_grant());let result=turn.result;cx.consume_fuel(turn.work);let p=result?.progress();cx.consume_retained(p)?;let mut failure=OriginalTurnFailure::from(output.take().expect(\"actual owned Fault transfer\"));failure.effects=p;Err(failure)})())}",
+        " fn borrow_outcome<'job>(&'job self,_:&'job crate::JobOutcomeDescriptor)->Result<crate::JobOutcomeView<'job>,ValueError>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,\"owned continuation has no semantic payload loan\"))}",
+        " fn close_step(&mut self,cx:&mut crate::StepContext<'_>)->Result<crate::InteractiveJobCloseStep,OriginalTurnFailure>{let demand=self.owner.close_demand();crate::close_original_retained_step(cx,demand,|grant|self.owner.close_step(grant))}"
+      ]
+    }
+  ]
+}

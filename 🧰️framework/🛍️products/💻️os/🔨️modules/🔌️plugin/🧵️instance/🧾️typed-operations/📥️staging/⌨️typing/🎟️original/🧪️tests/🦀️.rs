@@ -29,7 +29,7 @@ fn original_typing_policy_and_move_only_rows_match_the_neutral_contract(){
    let(mut transaction,mut values)=(None,None);assert!(turn(&mut caller,&mut decoder,grant(),|cx|source.as_mut().unwrap().take_into(&ledger,&mut transaction,&mut values,cx)));assert_eq!(transaction.as_ref().unwrap().id.as_ptr(),tx);assert_eq!(values.as_ref().unwrap().iter().map(|value|value.as_ptr()).collect::<Vec<_>>(),identities);assert_eq!(values.as_ref().unwrap().as_ptr(),backing);assert_eq!(values.as_ref().unwrap().capacity(),capacity);assert!(ledger.open(window).is_none());
    windows.push(window.to_owned());tools.push(transaction.as_ref().unwrap().tool.clone());leaves.push(values.as_ref().unwrap().clone());close(&mut source,&mut caller,&mut decoder);retire(transaction,&mut caller,&mut decoder);retire(values,&mut caller,&mut decoder);
   }
-  assert_eq!(serde_json::json!(windows),case["expected"]);assert_eq!(suppress,case["suppress"].as_bool().unwrap());println!("[DEBUG] [original-typing] {}",serde_json::json!({"name":case["name"],"result":{"windows":windows,"leaves":leaves,"tools":tools,"suppress":suppress}}));finish(caller,&mut decoder);
+  assert_eq!(serde_json::json!(windows),case["expected"]);assert_eq!(suppress,case["suppress"].as_bool().unwrap());finish(caller,&mut decoder);
  }
 }
 #[test]

@@ -1,0 +1,5 @@
+# Coverage and Affected Flatten: First Whole Pair
+
+Actual owning47532 exited1:64 pass,1 fail,2,629,203 assertions in1.99s. All18 exact/independent coverage rows, original96 seeded crossings, all async/retirement/publication cases, genuine parent exact-ceiling/denials, and all33 affected Flatten laws pass. Sole failure: the old malformed-point law expects one advance(100) to reach the invalid point, but genuine allocator preparation can return pending first. It returned preparing/work1 without yet reaching that point. The dedicated final invalid-point turn already genuinely refuses with CPU1/semantic1, so this is the original test's single-call scheduling assumption, not weakened production validation.
+
+Sequential strict15 session32406 exited0 without diagnostics. All51 inputs match pre/testPost/strictPost/current. Exact logs/full hashes remain in generated/drawing-coverage-flatten-whole/launch-receipt.json. Proposed narrow test-only successor polls the same real owner/bank until completion or genuine error; it preserves the same refusal assertion, inputs, fuel/stock, numerical constraints and producer body. No silent retry or production change.

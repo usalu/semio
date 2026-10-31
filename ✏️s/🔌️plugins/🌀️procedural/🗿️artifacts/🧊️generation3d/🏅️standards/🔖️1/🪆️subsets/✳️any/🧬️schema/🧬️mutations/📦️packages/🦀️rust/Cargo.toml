@@ -35,6 +35,8 @@ semio-s-artifact-procedural-3d-mut-generations = { workspace = true }
 semio-s-artifact-procedural-3d-mut-synapses = { workspace = true }
 semio-s-artifact-procedural-3d-mut-transforms = { workspace = true }
 semio-s-artifact-procedural-3d-mut-widgets = { workspace = true }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

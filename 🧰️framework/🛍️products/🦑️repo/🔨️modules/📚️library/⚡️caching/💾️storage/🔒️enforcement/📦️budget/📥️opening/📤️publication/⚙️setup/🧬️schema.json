@@ -1,0 +1,382 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/repository/dependency-bootstrap/v1",
+  "definitions": {
+    "PreparationRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "parent"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "prepare-current-dependency-bootstrap"
+        },
+        "parent": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/ProtectedMaintenanceRequest"
+        }
+      }
+    },
+    "TransitionPolicy": {
+      "const": {
+        "version": 1,
+        "order": [
+          "observe-current-authority",
+          "retain-actual-predecessor-funding",
+          "qualify-current-all-scope-producer",
+          "retire-inactive-obsolete-generations",
+          "canonical-envelope-publication",
+          "fresh-published-backing-observation",
+          "reserve-capacity-delta",
+          "atomic-funding-settlement",
+          "allocation-marker-cas",
+          "ordinary-reader"
+        ],
+        "normalCompletion": "exact-current-funding",
+        "ordinaryReader": "exact-current-funding",
+        "usableFilesystemClaim": "unchanged",
+        "interruption": "retain-or-replay-exact-durable-association"
+      }
+    },
+    "AllocationMarker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "allocation",
+        "owner",
+        "bytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "allocation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "owner": {
+          "const": "repository:dependencies-store"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ReadyOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "sourceSha256",
+        "recipeSha256",
+        "installedQualified",
+        "wholeAllocationRetired"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "qualified-current-dependency-bootstrap"
+        },
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "recipeSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "installedQualified": {
+          "const": true
+        },
+        "wholeAllocationRetired": {
+          "const": false
+        }
+      }
+    },
+    "ResumeOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "inputSha256",
+        "sourceSha256",
+        "recipeSha256",
+        "bindingsSha256",
+        "scopes",
+        "bindingsChanged",
+        "wholeAllocationRetired",
+        "installedQualified"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "current-dependency-bootstrap-resume"
+        },
+        "inputSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "sourceSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "recipeSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "bindingsSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "scopes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scope",
+              "generation",
+              "readySha256",
+              "installedPathsSha256"
+            ],
+            "properties": {
+              "scope": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "generation": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "readySha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "installedPathsSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "bindingsChanged": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "wholeAllocationRetired": {
+          "const": false
+        },
+        "installedQualified": {
+          "const": true
+        }
+      }
+    },
+    "ResumeModeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "roots",
+        "ready",
+        "mode"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "roots": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "ready": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "mode": {
+          "enum": [
+            "fresh",
+            "unready",
+            "ready"
+          ]
+        }
+      }
+    },
+    "MarkerPublicationIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "allocation",
+        "contextSha256",
+        "backingStamp",
+        "expectedSequence",
+        "prepared"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "publish-current-dependency-funding-marker"
+        },
+        "allocation": {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/Allocation"
+        },
+        "contextSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "backingStamp": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "expectedSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "prepared": {
+          "allOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/filesystem/observation/descriptor/component.json#/definitions/RelativePreparedFilePublication"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "const": "dependencies.json"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "MarkerPublicationProtocol": {
+      "const": {
+        "version": 1,
+        "name": "funding.json",
+        "maximumBytes": 32768,
+        "target": "dependencies.json",
+        "intentLocation": "partition-metadata-directory",
+        "effects": "actual-settled-funding-and-native-exclusive-custody",
+        "unknown": "retain-refuse"
+      }
+    },
+    "FundingReadinessCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "presence",
+        "accept"
+      ],
+      "properties": {
+        "presence": {
+          "enum": [
+            "absent",
+            "present",
+            "unreadable"
+          ]
+        },
+        "accept": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MarkerPublicationJournal": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": [
+        {
+          "$ref": "https://semio.tech/framework/process/native-storage/v1#/definitions/FundingMetadataBaseline"
+        },
+        {
+          "$ref": "#/definitions/MarkerPublicationIntent"
+        }
+      ],
+      "additionalItems": false
+    },
+    "MarkerJournalCase": {
+      "type": "object",
+      "required": [
+        "id",
+        "change",
+        "accept"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "change": {
+          "enum": [
+            "baseline",
+            "prepared",
+            "unprepared-stage",
+            "foreign-plan",
+            "foreign-allocation",
+            "foreign-prior",
+            "extra-record",
+            "partial-record"
+          ]
+        },
+        "accept": {
+          "type": "boolean"
+        }
+      }
+    },
+    "InitializationDispatchCase": {
+      "type": "object",
+      "required": [
+        "id",
+        "current",
+        "pending",
+        "accept"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "current": {
+          "type": "boolean"
+        },
+        "pending": {
+          "type": "boolean"
+        },
+        "accept": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

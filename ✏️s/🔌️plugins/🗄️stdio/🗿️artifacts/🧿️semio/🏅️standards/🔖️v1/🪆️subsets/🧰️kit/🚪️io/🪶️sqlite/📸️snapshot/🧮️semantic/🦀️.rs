@@ -22,40 +22,6 @@ fn text(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)-
 fn byte(reader:&mut store::ByteReader<'_>)->Result<u8>{reader.read_u8().map_err(|_|invalid())}
 fn scalar(value:f64)->usize{if value.is_nan(){11}else if value.is_infinite(){32}else{22}}
 fn digits(mut value:u64)->usize{let mut count=1;while value>=10{value/=10;count+=1;}count}
-fn binary_list(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut NativeDecodeControl<'_>,mut visit:impl FnMut(&mut store::ByteReader<'_>,&mut Census,&mut NativeDecodeControl<'_>)->Result<()>)->Result<()>{
- let count=native::length(reader)?;census.future(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{visit(reader,census,control)?;control.step()?;}control.checkpoint()})
-}
-fn binary_reference(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut NativeDecodeControl<'_>)->Result<()>{
- let mut bytes=8;for _ in 0..4{bytes=add(bytes,text(reader,control)?)?;}census.row(bytes)
-}
-fn binary_child(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut NativeDecodeControl<'_>,ordered:bool)->Result<()>{
- let id=text(reader,control)?;binary_reference(reader,census,control)?;census.row(add(if ordered{32}else{24},id)?)
-}
-/// 📦️ Counts the actual catalog, design, child and pin field order without materializing a Kit.
-pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
- layout(limits)?;control.scoped_stage(|control|{
-  let mut reader=store::ByteReader::new(body);if byte(&mut reader)?!=1{return Err(invalid())}let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,text(&mut reader,control)?)?)?;
-  binary_list(&mut reader,&mut census,control,|reader,census,control|{let mut bytes=24;for _ in 0..3{bytes=add(bytes,text(reader,control)?)?;}census.row(bytes)})?;
-  binary_list(&mut reader,&mut census,control,|reader,census,control|{
-   census.row(add(add(24,text(reader,control)?)?,text(reader,control)?)?)?;
-   binary_list(reader,census,control,|reader,census,control|{
-    let mut bytes=add(32,text(reader,control)?)?;text(reader,control)?;for _ in 0..10{bytes=add(bytes,scalar(reader.read_f64_le().map_err(|_|invalid())?))?;}census.row(bytes)
-   })?;
-   binary_list(reader,census,control,|reader,census,control|{
-    let mut bytes=add(40,text(reader,control)?)?;text(reader,control)?;bytes=add(bytes,text(reader,control)?)?;text(reader,control)?;bytes=add(bytes,text(reader,control)?)?;census.row(bytes)
-   })
-  })?;
-  binary_list(&mut reader,&mut census,control,|reader,census,control|binary_child(reader,census,control,true))?;
-  binary_list(&mut reader,&mut census,control,|reader,census,control|binary_child(reader,census,control,true))?;
-  match byte(&mut reader)?{0=>{},1=>binary_child(&mut reader,&mut census,control,false)?,_=>return Err(invalid())}
-  binary_list(&mut reader,&mut census,control,|reader,census,control|{
-   binary_reference(reader,census,control)?;let bytes=match byte(reader)?{
-    0=>44,1=>add(50,text(reader,control)?)?,2=>{let hash=text(reader,control)?;let size=reader.read_varint_u64().map_err(|_|invalid())?;let media=text(reader,control)?;census.row(add(add(add(8,hash)?,digits(size))?,media)?)?;56},_=>return Err(invalid())
-   };text(reader,control)?;census.row(bytes)
-  })?;
-  if reader.remaining()!=0{return Err(invalid())}control.checkpoint()
- })
-}
 fn document_list(value:&str,census:&mut Census,control:&mut NativeDecodeControl<'_>,mut visit:impl FnMut(&str,&mut Census,&mut NativeDecodeControl<'_>)->Result<()>)->Result<()>{
  let mut items=native::Items::new(value)?;let count=items.count(control,census.limits.max_rows)?;census.future(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(value)=items.next(control)?{visit(value,census,control)?;control.step()?;}control.checkpoint()})
 }

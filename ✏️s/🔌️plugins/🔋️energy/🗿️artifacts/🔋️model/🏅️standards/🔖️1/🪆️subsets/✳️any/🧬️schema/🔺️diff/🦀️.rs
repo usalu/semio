@@ -25,6 +25,9 @@ pub mod entities;
 
 pub use entities::*;
 
+#[path = "🌉️native-cold/🦀️.rs"]
+mod native_cold;
+
 //#region 🔖️LinkSlotDelta
 /// 🔗️ A link slot's delta. The field is `Option<EnergyLinkSlotDelta>`, and ABSENT means the slot did
 /// not change at all — a typed three-state instead of the `Option<Option<ArtifactLink>>` double
@@ -38,7 +41,7 @@ pub enum EnergyLinkSlotDelta {
 }
 
 impl EnergyLinkSlotDelta {
-    /// 🔗️ The delta that leaves a slot holding `link`.
+    /// 🌀️ The delta that leaves a slot holding `link`.
     pub fn leaving(link: &Option<store::ArtifactLink>) -> Self {
         link.as_ref().map_or(Self::Detached, |link| Self::Attached { link: link.clone() })
     }
@@ -139,7 +142,7 @@ impl ColdDiffAlgebra<EnergyModelSnapshot> for ReferenceEnergyModelDiff {
 mod tests;
 
 //#region 🧬️Facet
-/// 🧬️ The diff facet's five handcrafted language leaves, owned here beside the diff they describe; the artifact schema
+/// 🔀️ The diff facet's five handcrafted language leaves, owned here beside the diff they describe; the artifact schema
 /// descriptor (`semio_s_artifact_energy_model_schema`) assembles them.
 pub const FACET: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves {
     rust: include_str!("🦀️.rs"),

@@ -416,6 +416,7 @@ semio-s-artifact-stdio-ifc-2x3-base-inferences = { path = "../✏️s/🔌️plu
 semio-s-artifact-stdio-ifc-2x3-base-mutations = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc-2x3-base-model = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc-2x3-base = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-ifc-2x3-viewer = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/👁️viewer/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc-2x3-cobie = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc-2x3-cv20 = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc-2x3-sav = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/📦️packages/🦀️rust" }

@@ -1,0 +1,17 @@
+{
+  "phase": "before-body",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🎟️work/🟦️ts/📐️.json",
+      "sha256": "bfca2c77d1913b3aef5e9727f59bbdeae76306fe568a2e1d3e79ecabad449d24"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🎟️work/🟦️ts/🔣️.json",
+      "sha256": "cc0ada33f2dec15fea15d2ec18fe61ceab5f3b48390582108ee8fe58c7be63e8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🎟️work/🟦️ts/owned.test.ts",
+      "sha256": "06e8adecae579f0e2d537763be3da2e8d9882b87a21e566a29283a2a4b873542"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 //! 👁️ Original generation leases, immutable reads and bounded return/retirement custody.
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory, ValueError};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, RetainedWorkOutcome, SnapshotRetirementFactory, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
 use std::{marker::PhantomData, mem::{size_of, size_of_val}, sync::Arc};
@@ -16,6 +16,22 @@ pub const SNAPSHOT_READ_RELEASE_PAGE_BYTES: usize = 4096;
 pub const SNAPSHOT_READ_SLOT_PAGE: usize = 128;
 /// 📖️ Lease generation words per page: exactly one release page.
 pub const SNAPSHOT_READ_GENERATION_PAGE: usize = SNAPSHOT_READ_RELEASE_PAGE_BYTES / size_of::<std::sync::atomic::AtomicU64>();
+
+/// ⏱️ One bounded cursor action costs one work unit when it moved any currency; refusals and starved turns cost none.
+pub fn bounded_outcome(result: Result<RetainedCloneStep, ValueError>) -> RetainedWorkOutcome {
+    let work = result.as_ref().map_or(0, |step| u64::from(step.progress() != RetainedCloneProgress::default()));
+    RetainedWorkOutcome { result, work }
+}
+
+/// 🪜️ Maps one original work outcome onto the cursor step that carries its exact work.
+pub fn outcome_retirement_step(turn: RetainedWorkOutcome) -> semio_framework_value::retirement::RetirementStep {
+    use semio_framework_value::retirement::RetirementStep;
+    match turn.result {
+        Err(error) => RetirementStep::Failure(error, turn.work),
+        Ok(RetainedCloneStep::Complete(progress)) if progress == RetainedCloneProgress::default() => RetirementStep::Complete(turn.work),
+        Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => RetirementStep::Progress(progress, turn.work),
+    }
+}
 
 pub struct SnapshotReadLeaseSlot {
     pub(crate) generation: u64,
@@ -364,8 +380,14 @@ impl SnapshotReadLeaseRegistry {
         Ok(demand(&owner))
     }
 
-    pub fn try_admit_one_returned<T: Send + Sync + 'static, R>(&self, grant: RetainedCloneGrant, admission: impl FnOnce(Arc<T>, RetainedCloneGrant) -> Result<(R, RetainedCloneProgress), (ValueError, Arc<T>)>) -> Result<(Option<R>, RetainedCloneProgress), SnapshotReadLeaseRefusal> {
-        use semio_framework_value::retained_clone::RetainedCloneProgress;
+    pub fn try_admit_one_returned<T: Send + Sync + 'static, R>(&self, grant: RetainedCloneGrant, admission: impl FnOnce(Arc<T>, RetainedCloneGrant) -> RetainedWorkOutcome<(R, RetainedCloneProgress), (ValueError, Arc<T>)>) -> RetainedWorkOutcome<(Option<R>, RetainedCloneProgress), SnapshotReadLeaseRefusal> {
+        let mut spent = 0;
+        let result = self.admit_one_returned(grant, admission, &mut spent);
+        let moved = u64::from(result.as_ref().is_ok_and(|(_, progress)| *progress != RetainedCloneProgress::default()));
+        RetainedWorkOutcome { result, work: spent.max(moved) }
+    }
+
+    fn admit_one_returned<T: Send + Sync + 'static, R>(&self, grant: RetainedCloneGrant, admission: impl FnOnce(Arc<T>, RetainedCloneGrant) -> RetainedWorkOutcome<(R, RetainedCloneProgress), (ValueError, Arc<T>)>, spent: &mut u64) -> Result<(Option<R>, RetainedCloneProgress), SnapshotReadLeaseRefusal> {
         if grant.maximum_items == 0 { return Ok((None, Default::default())); }
         if grant.maximum_depth == 0 { return Err(SnapshotReadLeaseRefusal::Admission(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "returned read admission requires depth"))); }
         let mut state = match self.state.try_lock() {
@@ -400,7 +422,9 @@ impl SnapshotReadLeaseRegistry {
         }
         let slot = unsafe { state.slots[index].assume_init_read() };
         let original = slot.owner.downcast::<T>().expect("validated original returned read type");
-        let (result, progress) = match admission(original, grant) {
+        let turn = admission(original, grant);
+        *spent = turn.work;
+        let (result, progress) = match turn.result {
             Ok(admitted) => admitted,
             Err((error, original)) => { state.slots[index].write(SnapshotReadLeaseSlot { generation: slot.generation, owner: original }); return Err(SnapshotReadLeaseRefusal::Admission(error)); },
         };
@@ -546,13 +570,13 @@ impl<T: ?Sized> SnapshotRead<T> {
         self.lease.as_ref().is_some_and(|lease| lease.registry.authority_matches(generation, revision))
     }
 
-    /// 🧬️ Admits this original captured lease as source authority without replacing its registry.
-    pub fn admit_retained_clone_source(self,grant:RetainedCloneGrant) -> Result<(semio_framework_value::retained_clone::RetainedCloneSource<T,Self>,RetainedCloneProgress),(ValueError,Self)>
+    /// 🧬️ Stages this original captured lease as source authority without replacing its registry.
+    pub fn source_admission(self) -> Result<semio_framework_value::retained_clone::RetainedCloneSourceAdmission<T, Self>, (ValueError, Self)>
     where
         T: Sized + semio_framework_value::retirement::RetireOwned + Sync,
     {
-
-        semio_framework_value::retained_clone::RetainedCloneSource::admit_borrowed(self,|read:&Self|read.get(),grant)
+        if self.owner.is_none() { return Err((ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "snapshot read source requires its captured root"), self)); }
+        Ok(semio_framework_value::retained_clone::RetainedCloneSource::admission_borrowed(self, |read: &Self| read.get()))
     }
 
     /// 🧹 Returns this lease to its exact registry while the registry retains the snapshot
@@ -741,22 +765,27 @@ pub fn artifact_retirement_box_depth(owner: &Box<dyn ErasedSnapshotRetirement>) 
     owner.next_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "boxed retirement depth overflow"))
 }
 
-pub fn artifact_retirement_box_close_step(slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep, admit_retained_clone_close};
+pub fn artifact_retirement_box_close_step(slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    use semio_framework_value::retained_clone::admit_retained_clone_close;
     let empty = RetainedCloneProgress::default();
-    let Some(owner) = slot.as_mut() else { return Ok(RetainedCloneStep::Complete(empty)); };
-    if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-    if grant.maximum_depth < artifact_retirement_box_depth(owner)? { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "boxed retirement exceeds admitted depth")); }
+    let refuse = |error: ValueError, work: u64| RetainedWorkOutcome { result: Err(error), work };
+    let Some(owner) = slot.as_mut() else { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(empty)), work: 0 }; };
+    if grant.maximum_items == 0 { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(empty)), work: 0 }; }
+    let depth = match artifact_retirement_box_depth(owner) { Ok(depth) => depth, Err(error) => return refuse(error, 0) };
+    if grant.maximum_depth < depth { return refuse(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "boxed retirement exceeds admitted depth"), 0); }
     if owner.terminal_is_empty() {
         let extent = size_of_val(owner.as_ref());
-        if grant.maximum_release_bytes < extent { return Ok(RetainedCloneStep::Progress(empty)); }
+        if grant.maximum_release_bytes < extent { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(empty)), work: 0 }; }
         drop(slot.take());
-        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..empty }));
+        return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..empty })), work: 1 };
     }
     let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-    let step = owner.close_step(child_grant)?;
-    admit_retained_clone_close(child_grant, step, owner.terminal_is_empty(), "boxed retirement child")?;
-    Ok(RetainedCloneStep::Progress(step.progress()))
+    let RetainedWorkOutcome { result, work } = owner.close_step(child_grant);
+    let step = match result { Ok(step) => step, Err(error) => return refuse(error, work) };
+    match admit_retained_clone_close(child_grant, step, owner.terminal_is_empty(), "boxed retirement child") {
+        Ok(step) => RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(step.progress())), work },
+        Err(error) => refuse(error, work),
+    }
 }
 
 pub fn artifact_retirement_owned_birth_demands<T: semio_framework_value::retirement::RetireOwned>(pending: &Option<T>) -> Result<semio_framework_value::RetirementDemand, ValueError> {
@@ -765,25 +794,31 @@ pub fn artifact_retirement_owned_birth_demands<T: semio_framework_value::retirem
     Ok(semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(), depth: 2, ..Default::default() })
 }
 
-pub fn artifact_retirement_admit_owned<T: semio_framework_value::retirement::RetireOwned>(pending: &mut Option<T>, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    let empty = RetainedCloneProgress::default();
-    if active.is_some() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "typed admission requires an empty original child slot")); }
-    if pending.is_none() { return Ok(RetainedCloneStep::Complete(empty)); }
-    if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-    let demand = artifact_retirement_owned_birth_demands(pending)?;
-    if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "typed child birth exceeds admitted parent depth")); }
-    if grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-    let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-    let original = pending.take().expect("typed birth retains its observed original owner");
-    match semio_framework_value::retirement::admit_owned_retirement(original, child) {
-        Ok((owner, progress)) => {
-            *active = Some(owner);
-            semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "typed child birth")?;
-            if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "typed child birth receipt differs from its exact current frame quote")); }
-            Ok(RetainedCloneStep::Progress(progress))
+pub fn artifact_retirement_admit_owned<T: semio_framework_value::retirement::RetireOwned>(pending: &mut Option<T>, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    let mut work = 0;
+    let result = (|| {
+        let empty = RetainedCloneProgress::default();
+        if active.is_some() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "typed admission requires an empty original child slot")); }
+        if pending.is_none() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        let demand = artifact_retirement_owned_birth_demands(pending)?;
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "typed child birth exceeds admitted parent depth")); }
+        if grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        let original = pending.take().expect("typed birth retains its observed original owner");
+        let turn = semio_framework_value::retirement::admit_owned_retirement(original, child);
+        work += turn.work;
+        match turn.result {
+            Ok((owner, progress)) => {
+                *active = Some(owner);
+                semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "typed child birth")?;
+                if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "typed child birth receipt differs from its exact current frame quote")); }
+                Ok(RetainedCloneStep::Progress(progress))
+            }
+            Err((error, original)) => { *pending = Some(original); Err(error) }
         }
-        Err((error, original)) => { *pending = Some(original); Err(error) }
-    }
+    })();
+    RetainedWorkOutcome { result, work }
 }
 
 pub fn artifact_retirement_shared_lease_birth_demands<T: semio_framework_value::retirement::RetireOwned + Sync>(pending: &Option<Arc<T>>) -> Result<semio_framework_value::RetirementDemand, ValueError> {
@@ -792,19 +827,35 @@ pub fn artifact_retirement_shared_lease_birth_demands<T: semio_framework_value::
     Ok(semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<T>(), depth: 2, ..Default::default() })
 }
 
-pub fn artifact_retirement_admit_shared_lease<T: semio_framework_value::retirement::RetireOwned + Sync>(pending: &mut Option<Arc<T>>, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    let empty = RetainedCloneProgress::default();
-    if active.is_some() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "lease admission requires an empty original child slot")); }
-    if pending.is_none() { return Ok(RetainedCloneStep::Complete(empty)); }
-    if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
-    let demand = artifact_retirement_shared_lease_birth_demands(pending)?;
-    if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "lease birth exceeds admitted parent depth")); }
-    if grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-    let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-    match semio_framework_value::retirement::arc_custody::admit_shared_retirement(pending.take().expect("lease birth retains its observed original"), child, true) {
-        Ok((owner, progress)) => { *active = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }
-        Err((error, original)) => { *pending = Some(original); Err(error) }
-    }
+pub fn artifact_retirement_admit_shared_lease<T: semio_framework_value::retirement::RetireOwned + Sync>(pending: &mut Option<Arc<T>>, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+    let mut work = 0;
+    let result = (|| {
+        let empty = RetainedCloneProgress::default();
+        if active.is_some() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "lease admission requires an empty original child slot")); }
+        if pending.is_none() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        let demand = artifact_retirement_shared_lease_birth_demands(pending)?;
+        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "lease birth exceeds admitted parent depth")); }
+        if grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+        let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
+        let turn = semio_framework_value::retirement::arc_custody::admit_shared_retirement(pending.take().expect("lease birth retains its observed original"), child, true);
+        work += turn.work;
+        match turn.result {
+            Ok((owner, progress)) => { *active = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }
+            Err((error, original)) => { *pending = Some(original); Err(error) }
+        }
+    })();
+    RetainedWorkOutcome { result, work }
+}
+
+fn admit_returned_root<P: Send + Sync + 'static>(registry: &SnapshotReadLeaseRegistry, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant, admission: impl FnOnce(Arc<P>, RetainedCloneGrant) -> RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<P>)>) -> RetainedWorkOutcome {
+    let turn = registry.try_admit_one_returned::<P, _>(grant, admission);
+    let result = match turn.result {
+        Ok((owner, receipt)) => { *active = owner; if !receipt.fits(grant) { Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned read admission exceeded its original grant")) } else { Ok(RetainedCloneStep::Progress(receipt)) } },
+        Err(SnapshotReadLeaseRefusal::Busy) => Ok(RetainedCloneStep::Progress(Default::default())),
+        Err(reason) => Err(reason.into_value_error()),
+    };
+    RetainedWorkOutcome { result, work: turn.work }
 }
 
 pub fn advance_returned_snapshot_read<P: Send + Sync + 'static>(
@@ -812,16 +863,14 @@ pub fn advance_returned_snapshot_read<P: Send + Sync + 'static>(
     active: &mut Option<Box<dyn ErasedSnapshotRetirement>>,
     factory: &Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,
     grant: RetainedCloneGrant,
-) -> Result<RetainedCloneStep, ValueError> {
-    use semio_framework_value::retained_clone::RetainedCloneStep;
-    if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-    if active.is_some() { return artifact_retirement_box_close_step(active, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
-    if !registry.has_returned() { return Ok(RetainedCloneStep::Complete(Default::default())); }
-    match registry.try_admit_one_returned::<P, _>(grant, |root, grant| match ReturnedSnapshotReadRetirement::admit(root, factory.clone(), grant) { Ok(admitted) => Ok(admitted), Err((error, root, alias)) => { drop(alias); Err((error, root)) } }) {
-        Ok((owner, receipt)) => { *active = owner; if !receipt.fits(grant) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned read admission exceeded its original grant")); } Ok(RetainedCloneStep::Progress(receipt)) },
-        Err(SnapshotReadLeaseRefusal::Busy) => Ok(RetainedCloneStep::Progress(Default::default())),
-        Err(reason) => Err(reason.into_value_error()),
-    }
+) -> RetainedWorkOutcome {
+    if grant.maximum_items == 0 { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }; }
+    if active.is_some() { return artifact_retirement_box_close_step(active, grant); }
+    if !registry.has_returned() { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }; }
+    admit_returned_root::<P>(registry, active, grant, |root, grant| match ReturnedSnapshotReadRetirement::admit(root, factory.clone(), grant) {
+        Ok(admitted) => RetainedWorkOutcome { result: Ok(admitted), work: 1 },
+        Err((error, root, alias)) => { drop(alias); RetainedWorkOutcome { result: Err((error, root)), work: 0 } }
+    })
 }
 
 pub fn advance_returned_snapshot_read_root<P: Send + Sync + 'static>(
@@ -829,16 +878,11 @@ pub fn advance_returned_snapshot_read_root<P: Send + Sync + 'static>(
     active: &mut Option<Box<dyn ErasedSnapshotRetirement>>,
     factory: &dyn SnapshotRetirementFactory<P>,
     grant: RetainedCloneGrant,
-) -> Result<RetainedCloneStep, ValueError> {
-    use semio_framework_value::retained_clone::RetainedCloneStep;
-    if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-    if active.is_some() { return artifact_retirement_box_close_step(active, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
-    if !registry.has_returned() { return Ok(RetainedCloneStep::Complete(Default::default())); }
-    match registry.try_admit_one_returned::<P, _>(grant, |root, grant| factory.retire(root, grant)) {
-        Ok((owner, receipt)) => { *active = owner; if !receipt.fits(grant) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned read admission exceeded its original grant")); } Ok(RetainedCloneStep::Progress(receipt)) },
-        Err(SnapshotReadLeaseRefusal::Busy) => Ok(RetainedCloneStep::Progress(Default::default())),
-        Err(reason) => Err(reason.into_value_error()),
-    }
+) -> RetainedWorkOutcome {
+    if grant.maximum_items == 0 { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }; }
+    if active.is_some() { return artifact_retirement_box_close_step(active, grant); }
+    if !registry.has_returned() { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }; }
+    admit_returned_root::<P>(registry, active, grant, |root, grant| factory.retire(root, grant))
 }
 
 #[path = "../../../../🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/♻️retirement/🦀️.rs"]
@@ -870,6 +914,10 @@ mod returned_retirement_tests;
 #[cfg(test)]
 #[path="🧪️tests/🔒️registry-lock/🦀️.rs"]
 mod registry_lock_tests;
+
+#[path="🪜️staging/🦀️.rs"]
+pub mod source_staging;
+pub use source_staging::SnapshotReadSourceStaging;
 
 #[path="🔗️source/🦀️.rs"]
 pub mod captured_snapshot_source;

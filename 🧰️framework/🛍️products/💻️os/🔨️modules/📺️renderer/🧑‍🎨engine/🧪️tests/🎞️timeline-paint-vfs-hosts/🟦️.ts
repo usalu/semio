@@ -468,7 +468,7 @@ describe("framework renderer hosts", () => {
   });
 
   it("mounts localized raw virtual file system controls, owns expansion, and dispatches navigateUri only on double-click", async () => {
-    const previousLocale = detectShellLocale(uiI18n.resolvedLanguage || uiI18n.language);
+    const previousLocale = detectShellLocale(uiI18n.resolvedLanguage || uiI18n.language) ?? "en";
     await uiI18n.changeLanguage("en");
     const onAction = vi.fn();
     const view = render(

@@ -27,10 +27,10 @@ static MUTATION: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture
 static OUTCOME: std::sync::LazyLock<String> = semio_s_fem_test_support::fixture!("../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🔄️replace-region/🪪️denies-rename-574c91/🎯️outcome/🔣️.json");
 
 fn before() -> Fem2dSnapshotValue {
-    semio_framework_pack_json::from_json_str(BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
+    semio_framework_pack_json::from_json_str(&BEFORE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("before snapshot decodes")
 }
 fn expected_after() -> Fem2dSnapshotValue {
-    semio_framework_pack_json::from_json_str(AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
+    semio_framework_pack_json::from_json_str(&AFTER, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("after snapshot decodes")
 }
 fn mutation() -> Fem2dMutation {
     semio_framework_pack_json::from_json_str(MUTATION.as_str(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("mutation decodes")
@@ -58,7 +58,7 @@ fn the_refusal_is_the_declared_diagnostic() {
     assert_eq!(messages[0].code.0, "mutation.target-mismatch", "replace-region/denies-rename-574c91: the refusal is reported as mutation.target-mismatch");
     assert_eq!(messages[0].level, semio_framework_diagnostic::Severity::Error, "a replacement that renames its target contradicts the target it selects — the state-dependent Error");
     assert_eq!(messages[0].target, vec!["wall1".to_string(), "wall2".to_string()], "the diagnostic addresses the target first, then every referrer");
-    let semantics = <Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshotValue>>::semantics(&mutation());
+    let semantics = <Fem2dMutation as protocol::SemanticMutation<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot>>::semantics(&mutation());
     assert_eq!(semantics.kind, "replace-region", "the fixture must be bound to replace-region's own descriptor");
 }
 
@@ -94,7 +94,7 @@ fn declared_outcome_holds() {
 /// 🔣️ Both committed snapshots are already canonical: decode→encode is a fixed point.
 #[test]
 fn committed_json_is_canonical() {
-    for (label, text) in [("before", BEFORE), ("after", AFTER)] {
+    for (label, text) in [("before", &*BEFORE), ("after", &*AFTER)] {
         let decoded: Fem2dSnapshotValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes");
         let reencoded = semio_framework_value::ToValue::to_value(&decoded);
         let original: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot reparses");

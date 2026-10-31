@@ -1,0 +1,11 @@
+{
+  "state": "source-authored-caller-test-migration-pending-no-runtime",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🦀️.rs",
+      "beforeSha256": "fadec79ecf8054e178602f97f63e1ba133b6d8368906cb392ea2a9298e2071f5",
+      "sha256": "f304e27c8b3caffc095470b4c5a9f3b145a26e524e13086f709d024598fb65d9",
+      "bytes": 17062
+    }
+  ]
+}

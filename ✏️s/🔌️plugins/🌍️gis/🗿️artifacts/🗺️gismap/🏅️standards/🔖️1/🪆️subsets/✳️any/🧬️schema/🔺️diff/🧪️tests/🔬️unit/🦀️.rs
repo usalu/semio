@@ -81,7 +81,7 @@ async fn inverse_restores_the_base() {
     let base = GisMapSnapshot { positions: vec![feature("p1"), feature("p2"), feature("p3")], ..Default::default() };
     let removed = GisMapDiff { positions: Some(GisMapFeaturesDelta::removal(&base.positions, 1)), ..Default::default() };
     let after = protocol::apply_diff_cold(&removed, &base).expect("delete applies");
-    assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&removed, &base), &after).expect("negative diff applies"), base);
+    assert_eq!(protocol::apply_diff_cold(&protocol::ColdDiffAlgebra::inverse(&removed, &base), &after).expect("negative diff applies"), base);
 }
 
 /// ↕️ A move is one positional row; it inverts to the opposite row and composes with a following removal at the base index.
@@ -91,7 +91,7 @@ async fn moves_are_positional_rows_that_invert_and_compose() {
     let moved = GisMapDiff { positions: Some(GisMapFeaturesDelta::relocation(&base.positions, 0, 2)), ..Default::default() };
     let after = protocol::apply_diff_cold(&moved, &base).expect("move applies");
     assert_eq!(after.positions.iter().map(|f| f.id.as_str()).collect::<Vec<_>>(), ["p2", "p3", "p1"]);
-    assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&moved, &base), &after).expect("negative diff applies"), base);
+    assert_eq!(protocol::apply_diff_cold(&protocol::ColdDiffAlgebra::inverse(&moved, &base), &after).expect("negative diff applies"), base);
     let mut sum = moved.clone();
     sum.absorb(GisMapDiff { positions: Some(GisMapFeaturesDelta::removal(&after.positions, 2)), ..Default::default() });
     let removed = protocol::apply_diff_cold(&sum, &base).expect("composed diff applies");
@@ -135,14 +135,14 @@ async fn property_patches_apply_absorb_and_invert_with_key_order() {
     let removal = property_diff("p1", vec![remove_edit("b")]);
     let removed = protocol::apply_diff_cold(&removal, &base).expect("removal applies");
     assert_eq!(removed.positions[0].data, object_feature("p1", &[("a", "1"), ("c", "3")]).data);
-    let negative = protocol::DiffAlgebra::inverse(&removal, &base);
+    let negative = protocol::ColdDiffAlgebra::inverse(&removal, &base);
     let restored = protocol::apply_diff_cold(&negative, &removed).expect("inverse applies");
     assert_eq!(restored, base, "removing the middle key and undoing it restores its position");
     let mut sum = removal.clone();
     sum.absorb(property_diff("p1", vec![set_edit("z", "9", Some("c")), set_edit("a", "one", None)]));
     let summed = protocol::apply_diff_cold(&sum, &base).expect("composed edits apply");
     assert_eq!(summed.positions[0].data, object_feature("p1", &[("a", "one"), ("z", "9"), ("c", "3")]).data);
-    let undone = protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum, &base), &summed).expect("composed inverse applies");
+    let undone = protocol::apply_diff_cold(&protocol::ColdDiffAlgebra::inverse(&sum, &base), &summed).expect("composed inverse applies");
     assert_eq!(undone, base, "the composed inverse restores values and key order");
     let replacement = GisMapDiff { positions: Some(GisMapFeaturesDelta::modification("p1", crate::MapFeaturePatch { data: Some(semio_framework_value::DslValue::String("whole".into())), ..Default::default() })), ..Default::default() };
     let mut superseded = removal;

@@ -1,0 +1,3 @@
+# Native Modification Input Ownership
+
+The closed modifiedInput contract precedes the native input union body. The actual Renderer receives one existing PathBuf; it must submit that original directly, instead of performing an unpriced fixed-row push inside its path receiver. NativePathInput exposes explicit single and bounded-row input forms for the same metadata operation. The single form transfers into the producer's paid metadata stages; the rows form keeps its canonical granted prefix. No fake grant, synchronous push facade or legacy request adapter is added. Existing many-row, overflow, original-pointer and close cases remain mandatory; original round-trip checks the same filesystem timestamp and path for both forms. No runtime or Host proof yet.

@@ -1,7 +1,6 @@
 //! 👁️ Replaces the app-local Generation2d preview output.
 
 use super::{Generation2dTransientPatch, Generation2dTransient, Generation2dTransientMutation};
-use crate::Generation2dPreviewTextChange;
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -26,7 +25,7 @@ impl protocol::MutationKind<Generation2dTransient, Generation2dTransientMutation
 
 impl protocol::ColdMutationKind<Generation2dTransient, Generation2dTransientMutation> for SetGenerationPreview {
     fn diff(&self, _base: &Generation2dTransient) -> protocol::MutationOutcome<Generation2dTransientPatch> {
-        protocol::MutationOutcome::new(Generation2dTransientPatch { generation_preview_text: Some(Generation2dPreviewTextChange { text: self.preview_text.clone() }), ..Default::default() })
+        protocol::MutationOutcome::new(Generation2dTransientPatch { generation_preview_text: Some(self.preview_text.clone()) })
     }
     fn inverse(&self, base: &Generation2dTransient) -> Result<Vec<Generation2dTransientMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -35,3 +34,5 @@ impl protocol::ColdMutationKind<Generation2dTransient, Generation2dTransientMuta
     })())
 }
 }
+
+protocol::retained_set_field!(SetGenerationPreview => Generation2dTransient, Generation2dTransientPatch, Generation2dTransientMutation { preview_text: Option<String> => generation_preview_text @ 0 });

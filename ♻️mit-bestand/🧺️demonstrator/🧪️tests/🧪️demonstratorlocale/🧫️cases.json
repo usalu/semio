@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "catalog": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🌐️locale/🔣️.json",
+  "schema": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🌐️locale/🧬️schema/🔣️.json",
+  "html": "♻️mit-bestand/🧺️demonstrator/🌐️.html",
+  "componentSources": [
+    "♻️mit-bestand/🧺️demonstrator/🟦️.tsx",
+    "♻️mit-bestand/🧺️demonstrator/⚛️demonstrator-card.tsx",
+    "♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx"
+  ],
+  "forbiddenSourcePatterns": [
+    {
+      "id": "locale-ternary",
+      "pattern": "locale\\s*===\\s*[\"'](de|en)[\"']"
+    },
+    {
+      "id": "literal-attribute",
+      "pattern": "\\b(alt|aria-label|aria-description|title|label|placeholder)=\"[^\"{][^\"]*\""
+    }
+  ],
+  "composedManifests": [
+    {
+      "path": "🌎️hub/🧩️compositions/🎪️demonstrator/🧩️component/🔣️.json",
+      "minLabelCells": 2000
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🔋️energy/🧩️component/🔣️.json",
+      "minLabelCells": 500
+    },
+    {
+      "path": "🌎️hub/🧩️compositions/🏗️fem/🧩️component/🔣️.json",
+      "minLabelCells": 700
+    }
+  ],
+  "noticeFixtures": [
+    {
+      "path": "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/🧫️fixtures/🧫️framework-notices/🔣️.json",
+      "minRows": 90,
+      "requiredCodes": [
+        "interactive-job.task-resume-command",
+        "interactive-job.task-resume-queue",
+        "interactive-job.task-resume-delivery",
+        "plugin.document-load.failed",
+        "plugin.document-load.busy",
+        "artifact-envelope.stale-publication"
+      ]
+    }
+  ],
+  "pluginRoots": {
+    "paths": [
+      "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d",
+      "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d",
+      "✏️s/🔌️plugins/📐️cad",
+      "✏️s/🔌️plugins/🪵️sourcing",
+      "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d",
+      "✏️s/🔌️plugins/🌍️gis",
+      "✏️s/🔌️plugins/🔋️energy",
+      "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d"
+    ],
+    "minPairs": 900,
+    "pairPattern": "LocalizedLabel::native\\(\\s*\"((?:[^\"\\\\]|\\\\.)*)\"\\s*,\\s*\"((?:[^\"\\\\]|\\\\.)*)\"\\s*\\)",
+    "skipDirectories": [
+      "🧪️tests",
+      "tests",
+      "node_modules",
+      "target"
+    ],
+    "forbiddenPatterns": [
+      "IntroductionInteraction::\\w+\\(\\s*(?:\"[^\"]*\"|[\\w:]+)\\s*,\\s*\""
+    ],
+    "introductionLabelPattern": "IntroductionInteraction::\\w+\\(\\s*(?:\"[^\"]*\"|[\\w:]+)\\s*,\\s*LocalizedLabel::native\\(",
+    "minIntroductionLabels": 5
+  },
+  "brandSources": {
+    "paths": [
+      "♻️mit-bestand/🧺️demonstrator/🪧️brand.ts"
+    ],
+    "keyPrefix": "demonstrator.brand.",
+    "keyPattern": "demonstrator(?:Label|Text)\\(\\s*\"(demonstrator\\.brand\\.[A-Za-z0-9.]+)\"",
+    "forbiddenPattern": "\\b(title|body|label|description|text|tagline):\\s*\"[^\"]",
+    "forbiddenPatternMultiline": "\\b(title|body|label|description|text|tagline):\\s*\\n\\s*\"",
+    "minKeys": 90,
+    "identicalAllowed": [
+      "demonstrator.brand.pane.generator.label",
+      "demonstrator.brand.pane.aggregator.label"
+    ]
+  },
+  "frameworkSources": [
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️i18n/🟦️.ts",
+      "forbidden": [
+        "fallbackLanguage:\\s*\"",
+        "\\?\\?\\s*\"en\"",
+        "\\|\\|\\s*\"en\"",
+        ": \"en\";"
+      ],
+      "required": [
+        "requireShellLocale",
+        "supportedLanguages"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🌐️i18n/🔡️instance/🟦️.ts",
+      "forbidden": [
+        "fallbackLanguage:\\s*string;"
+      ],
+      "required": [
+        "fallbackLanguage\\?: string",
+        "language\\?: string"
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎓️onboarding/🖱️introduction-interaction/🦀️.rs",
+      "forbidden": [
+        "pub label: String",
+        "impl Into<String>\\)\\s*->\\s*Self\\s*\\{\\s*Self::new\\([^)]*\\),\\s*label"
+      ],
+      "required": [
+        "pub label: LocalizedLabel"
+      ]
+    }
+  ]
+}

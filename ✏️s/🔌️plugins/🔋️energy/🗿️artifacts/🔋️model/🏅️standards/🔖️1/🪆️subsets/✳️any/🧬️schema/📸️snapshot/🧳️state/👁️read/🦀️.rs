@@ -105,3 +105,87 @@ impl semio_s_plugin_energy_engine_scene::EnergySceneModel for EnergyModelView<'_
  fn shading_surfaces(&self)->impl Iterator<Item=semio_s_plugin_energy_engine_scene::EnergySceneShading<'_>>{self.shading_surfaces.iter().map(|row|semio_s_plugin_energy_engine_scene::EnergySceneShading{id:row.id,name:&row.name,vertices_m:&row.vertices_m})}
  fn zones(&self)->impl Iterator<Item=semio_s_plugin_energy_engine_scene::EnergySceneZone<'_>>{self.zones.iter().map(|row|semio_s_plugin_energy_engine_scene::EnergySceneZone{id:row.id,name:&row.name})}
 }
+
+/// 🚨️ Latches the first row that failed to project, so a consumer surfaces it as one typed fault instead of treating the row as absent.
+#[derive(Default)]
+pub struct ProjectionFault(std::cell::RefCell<Option<semio_framework_value::ValueError>>);
+impl ProjectionFault{
+ fn record(&self,error:semio_framework_value::ValueError){let mut slot=self.0.borrow_mut();if slot.is_none(){*slot=Some(error);}}
+ /// 🧾️ The first latched projection failure, if any row failed.
+ pub fn finish(&self)->Result<(),semio_framework_value::ValueError>{match self.0.borrow_mut().take(){Some(error)=>Err(error),None=>Ok(())}}
+}
+
+/// 📋️ One native list read as engine rows: every access projects exactly the rows it touches and never the whole list.
+pub struct Rows<'a,S:semio_framework_value::retirement::RetireOwned+semio_framework_value::ToValue+Send+Sync+'static,E>{list:&'a PersistentList<S>,fault:&'a ProjectionFault,engine:std::marker::PhantomData<fn()->E>}
+impl<'a,S:semio_framework_value::retirement::RetireOwned+semio_framework_value::ToValue+Send+Sync+'static,E:semio_framework_value::FromValue+'a> Rows<'a,S,E>{
+ fn over(list:&'a PersistentList<S>,fault:&'a ProjectionFault)->Self{Self{list,fault,engine:std::marker::PhantomData}}
+ fn project(fault:&ProjectionFault,row:&S)->Option<E>{match E::from_value(row.to_value()){Ok(value)=>Some(value),Err(error)=>{fault.record(error);None}}}
+ /// 🔁️ Lazily projects the rows in list order.
+ pub fn iter(&self)->impl Iterator<Item=E>+'a{let fault=self.fault;self.list.iter().filter_map(move |row|Self::project(fault,row))}
+ /// 🗂️ Projects exactly the row at `index`.
+ pub fn get(&self,index:usize)->Option<E>{self.list.get(index).and_then(|row|Self::project(self.fault,row))}
+ /// 📍️ The positions of the rows a native predicate keeps, without projecting any row.
+ pub fn positions(&self,keep:impl Fn(&S)->bool)->Vec<usize>{self.list.iter().enumerate().filter(|(_,row)|keep(row)).map(|(index,_)|index).collect()}
+ /// ➖️ Whether any native row satisfies the predicate, without projecting any row.
+ pub fn holds(&self,keep:impl Fn(&S)->bool)->bool{self.list.iter().any(keep)}
+ /// 🔭️ The first row a native predicate keeps, projecting only that row.
+ pub fn find(&self,keep:impl Fn(&S)->bool)->Option<E>{self.list.iter().find(|row|keep(row)).and_then(|row|Self::project(self.fault,row))}
+ /// 📖️ Iterates the native rows themselves, for consumers that read only their cheap fields.
+ pub fn native(&self)->impl Iterator<Item=&'a S>+'a{self.list.iter()}
+ /// 🔢️ The row count, without projecting any row.
+ pub fn len(&self)->usize{self.list.len()}
+ /// ⭕️ Whether the list holds no row.
+ pub fn is_empty(&self)->bool{self.list.is_empty()}
+}
+
+/// 🔷️ The engine-shaped bounded read port over the native state: scalar leaves are borrowed, row collections project lazily.
+pub struct EnergyRowsView<'a>{
+ pub name:&'a str,
+ pub version:&'a str,
+ pub site:&'a StateSite,
+ pub run_period:crate::calendar::RunPeriod,
+ pub zones:Rows<'a,StateZone,Zone>,
+ pub spaces:Rows<'a,StateSpace,Space>,
+ pub surfaces:Rows<'a,StateSurface,Surface>,
+ pub fenestrations:Rows<'a,StateFenestration,Fenestration>,
+ pub shading_surfaces:Rows<'a,StateShadingSurface,ShadingSurface>,
+ pub materials:Rows<'a,StateMaterial,Material>,
+ pub glazing_materials:Rows<'a,StateGlazingMaterial,GlazingMaterial>,
+ pub gas_materials:Rows<'a,StateGasMaterial,GasMaterial>,
+ pub constructions:Rows<'a,StateConstruction,Construction>,
+ pub people:Rows<'a,StatePeopleGain,PeopleGain>,
+ pub lighting:Rows<'a,StateLightingGain,LightingGain>,
+ pub equipment:Rows<'a,StateEquipmentGain,EquipmentGain>,
+ pub infiltrations:Rows<'a,StateInfiltration,Infiltration>,
+ pub thermostats:Rows<'a,StateThermostat,Thermostat>,
+ pub humidistats:Rows<'a,StateHumidistat,Humidistat>,
+ pub ideal_loads:Rows<'a,StateIdealLoadsSystem,IdealLoadsSystem>,
+ pub air_loops:Rows<'a,StateModelAirLoop,ModelAirLoop>,
+ pub plant_loops:Rows<'a,StatePlantLoopConfig,PlantLoopConfig>,
+ pub schedules:&'a StateScheduleSet,
+}
+impl EnergyModelView<'_>{
+ /// 🤲️ Reads the borrowed native fields as engine-shaped rows without copying the document.
+ pub fn rows<'b>(&'b self,fault:&'b ProjectionFault)->EnergyRowsView<'b>{EnergyRowsView{
+  name:self.name,version:self.version,site:self.site,run_period:*self.run_period,
+  zones:Rows::over(self.zones,fault),
+  spaces:Rows::over(self.spaces,fault),
+  surfaces:Rows::over(self.surfaces,fault),
+  fenestrations:Rows::over(self.fenestrations,fault),
+  shading_surfaces:Rows::over(self.shading_surfaces,fault),
+  materials:Rows::over(self.materials,fault),
+  glazing_materials:Rows::over(self.glazing_materials,fault),
+  gas_materials:Rows::over(self.gas_materials,fault),
+  constructions:Rows::over(self.constructions,fault),
+  people:Rows::over(self.people,fault),
+  lighting:Rows::over(self.lighting,fault),
+  equipment:Rows::over(self.equipment,fault),
+  infiltrations:Rows::over(self.infiltrations,fault),
+  thermostats:Rows::over(self.thermostats,fault),
+  humidistats:Rows::over(self.humidistats,fault),
+  ideal_loads:Rows::over(self.ideal_loads,fault),
+  air_loops:Rows::over(self.air_loops,fault),
+  plant_loops:Rows::over(self.plant_loops,fault),
+ schedules:self.schedules,
+ }}
+}

@@ -1,0 +1,22 @@
+{
+  "contract": "affine-same-bank-v1",
+  "quanta": [
+    1,
+    7,
+    4096
+  ],
+  "maximumTurns": 1000000,
+  "sourceCases": 21,
+  "scratchBytes": 448,
+  "pairCopyBytes": 16,
+  "pixelCopyBytes": 4,
+  "deniedCpu": 0,
+  "cachedCpu": 0,
+  "oracleTolerance": 2,
+  "cancelPhases": [
+    "coverage",
+    "coverageCleanup",
+    "sampling",
+    "complete"
+  ]
+}

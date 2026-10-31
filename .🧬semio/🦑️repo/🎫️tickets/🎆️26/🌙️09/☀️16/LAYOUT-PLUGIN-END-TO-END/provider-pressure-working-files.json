@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "owner": "rust",
+  "state": "source-ready-full-owning-normal-and-current-strict-green",
+  "files": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/pressure.test.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/pressure.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/pressure.schema.json"
+  ],
+  "sha256": {
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/🟦️.ts": "51e45d972ecb95e282ac98c9de1bf7ce3d3115eaa8f3807b7305907b1621bd67",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/pressure.test.ts": "93cc6d68df50d79fbae29aa05d4ff1e45fbeb3e0c66a4f99c829773b5c763f99",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/pressure.json": "2087100513dcb6dede2f819247a3b559d7f6b10d17732af35efbe8704cf8b534",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/pressure.schema.json": "1dc60e638c14783e49c5067885f7873fd001ca98be74d17687785ae10a254b01"
+  },
+  "sourcePathMaximum": 165,
+  "productionOwner": "dependency_layout",
+  "productionChangedByThisPacket": false,
+  "report": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/provider-pressure.md",
+  "red": {
+    "session": 68115,
+    "exitCode": 1,
+    "failure": "Declared execution work capacity exceeded",
+    "normalManagedAdmission": true,
+    "log": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-pressure/pressure-red-3.log"
+  },
+  "green": {
+    "session": 94230,
+    "exitCode": 0,
+    "tests": 4,
+    "failures": 0,
+    "assertions": 268,
+    "normalManagedAdmission": true,
+    "owner": "dependency_layout",
+    "log": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-pressure/provider-green-current.log"
+  },
+  "strict": {
+    "currentSession": 26304,
+    "currentExitCode": 0,
+    "currentState": "terminal",
+    "normalManagedAdmission": true,
+    "rootCount": 3,
+    "owner": "dependency_layout",
+    "log": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-pressure/provider-strict-current.log"
+  },
+  "historicalGreen": {
+    "session": 44023,
+    "exitCode": 0,
+    "tests": 4,
+    "failures": 0,
+    "assertions": 267,
+    "normalManagedAdmission": true,
+    "log": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-pressure/provider-green-1.log"
+  },
+  "historicalStrict": {
+    "owner": "dependency_layout",
+    "priorSession": 89849,
+    "priorExitCode": 2,
+    "priorFailure": "new fixture literal artifacts type; honest value narrowing authored",
+    "currentState": "terminal",
+    "currentSession": 92788,
+    "currentExitCode": 0,
+    "normalManagedAdmission": true,
+    "log": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-pressure/provider-strict-2.log"
+  },
+  "sharedHunks": {
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/🟦️.ts": "Rust mounts pressure module; peer independent Node provider resolution assertion retained; current full4/268 validates both."
+  },
+  "currentVerification": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/source-provider-current-verification.json"
+}

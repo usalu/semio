@@ -69,13 +69,13 @@ impl DagInputCursor{
                     let ports=array(field(row,"ports")?)?;if self.index==ports.len(){self.phase=3;}else{let DagNodeEvaluationStatus::Blocked{ports:output}=self.pending_status.as_mut().unwrap()else{unreachable!()};output.push(take_text(&mut ports[self.index],true)?);self.index+=1;}
                 }else if self.phase==3{
                     let bytes=SharedOwner::<String>::allocation_bytes();control.charge(bytes)?;let value=std::mem::take(id);
-                    match SharedOwner::admit(value,grant){Ok((owner,_))=>self.pending_key=Some(owner),Err((error,value))=>{*id=value;return Err(error)}}self.phase=4;
+                    match SharedOwner::admit(value,grant).result{Ok((owner,_))=>self.pending_key=Some(owner),Err((error,value))=>{*id=value;return Err(error)}}self.phase=4;
                 }else if self.phase==4{
                     let bytes=SharedOwner::<DagNodeEvaluationStatus>::allocation_bytes();control.charge(bytes)?;let value=self.pending_status.take().unwrap();
-                    match SharedOwner::admit(value,grant){Ok((owner,_))=>self.pending_value=Some(owner),Err((error,value))=>{self.pending_status=Some(value);return Err(error)}}self.phase=5;
+                    match SharedOwner::admit(value,grant).result{Ok((owner,_))=>self.pending_value=Some(owner),Err((error,value))=>{self.pending_status=Some(value);return Err(error)}}self.phase=5;
                 }else if self.phase==5{self.pending_update=Some(facts.begin_set_shared(self.pending_key.take().unwrap(),self.pending_value.take().unwrap()));self.phase=6;}
                 else if self.phase==6{
-                    let cursor=self.pending_update.as_mut().unwrap();self.progress=match cursor.advance_insert_controlled(grant,control)?{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};if cursor.is_complete(){self.phase=7;}
+                    let cursor=self.pending_update.as_mut().unwrap();self.progress=match cursor.advance_insert_controlled(grant,control).result.map_err(|error|error.primary.or(error.quote_refusal).or(error.allocation_refusal).unwrap_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original native construction refused")))?{RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress)=>progress};if cursor.is_complete(){self.phase=7;}
                 }else{
                     let mut cursor=self.pending_update.take().unwrap();let next=cursor.take_result().expect("completed admitted ordered status root");let previous=std::mem::replace(facts,next);self.pending_retired=Some((previous,cursor));self.field+=1;self.phase=1;
                 }

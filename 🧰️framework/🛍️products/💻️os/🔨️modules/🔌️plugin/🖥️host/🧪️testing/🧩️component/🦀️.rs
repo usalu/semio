@@ -102,7 +102,7 @@ where FixtureApps:From<VcsArtifactApp<RefusalApp<C,false>>>+From<VcsArtifactApp<
  let dialect=<RefusalApp<C,VIEWER> as ArtifactApp>::DIALECT;
  let mut definition=if VIEWER{Viewer::builder(dialect).document(["fixture","neutral-host-fixture","snapshot-refusal"]).mode("view",LocalizedLabel::native("View","Ansicht"),"eye").window_kind("main",LocalizedLabel::native("Refusal","Ablehnung"),"fixture.snapshot-refusal",SurfaceKind::Canvas2d,IconName::AppWindow).build_definition()}else{Editor::builder(dialect).document(["fixture","neutral-host-fixture","snapshot-refusal"]).mode("edit",LocalizedLabel::native("Edit","Bearbeiten"),"pencil").window_kind("main",LocalizedLabel::native("Refusal","Ablehnung"),"fixture.snapshot-refusal",SurfaceKind::Canvas2d,IconName::AppWindow).build_definition()};
  definition.io.artifact_schema=refusal::KIND.into();
- SurfaceDeclaration{definition,original_factory:None,factory:if VIEWER{viewer::<C>}else{editor::<C>},app_schema:||None,document_schema:refusal::KIND,codec:semio_framework_plugin::app::artifact_codec_table::<RefusalApp<C,VIEWER>>(),mutation_roster:None,rights:if VIEWER{Rights::Read}else{Rights::Write}}
+ SurfaceDeclaration{definition,original_factory:None,factory:Some(if VIEWER{viewer::<C>}else{editor::<C>}),app_schema:||None,document_schema:refusal::KIND,codec:semio_framework_plugin::app::artifact_codec_table::<RefusalApp<C,VIEWER>>(),mutation_roster:None,rights:if VIEWER{Rights::Read}else{Rights::Write}}
 }
 fn refusal_subset<C:RefusalOwner>()->SubsetDeclaration<FixtureApps>
 where FixtureApps:From<VcsArtifactApp<RefusalApp<C,false>>>+From<VcsArtifactApp<RefusalApp<C,true>>>{

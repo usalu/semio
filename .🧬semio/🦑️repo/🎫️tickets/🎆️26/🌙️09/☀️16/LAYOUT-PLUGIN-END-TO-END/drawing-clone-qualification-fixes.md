@@ -1,0 +1,3 @@
+# Compiler-Suggested Clone Qualification Cleanup
+
+The next whole owning invocation refused the unchanged Source boundary before compiler after explicit test interface migration. Root is applying the actual compiler's unnecessary-qualification suggestions where the entire old source text still matches uniquely. These are binding-preserving idiomatic import uses, with no semantic/fixture/authority/law changes or manifest boundary increase. The exact original/proposed text is retained as a reviewable ticket input. Canonical Source admission remains the fit authority; no separate light-mode source-fit census is used.

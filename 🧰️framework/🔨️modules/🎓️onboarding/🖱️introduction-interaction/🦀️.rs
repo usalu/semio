@@ -71,8 +71,8 @@ pub enum IntroductionInteractionKind {
 #[value(rename_all = "camelCase")]
 pub struct IntroductionInteraction {
     pub on: IntroductionInteractionKind,
-    /// 🏷️ Short checklist label shown in the step's info box.
-    pub label: String,
+    /// 🏷️ Short checklist label shown in the step's info box, locale×terminology-checked like the step's `title`.
+    pub label: LocalizedLabel,
     /// 🎉️ Element id stamped `data-celebrated` on completion; `None` falls back to the step's `introduce`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -80,47 +80,47 @@ pub struct IntroductionInteraction {
 }
 
 impl IntroductionInteraction {
-    pub(super) async fn new(on: IntroductionInteractionKind, label: impl Into<String>) -> Self {
+    pub(super) async fn new(on: IntroductionInteractionKind, label: impl Into<LocalizedLabel>) -> Self {
         Self { on, label: label.into(), celebrate: None }
     }
 
     /// 🧑️ An interaction completing when the user activates action `id`.
-    pub async fn action(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn action(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::new(IntroductionInteractionKind::Action(ActionRef::new(id.into())), label).await
     }
 
     /// 👤️ An interaction completing when the user activates utility `id`.
-    pub async fn utility(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn utility(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::new(IntroductionInteractionKind::Utility(UtilityRef::new(id.into())), label).await
     }
 
     /// 🔧️ An interaction completing when the user activates tool `id`.
-    pub async fn tool(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn tool(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::new(IntroductionInteractionKind::Tool(ToolRef::new(id.into()).await), label).await
     }
 
     /// 📂️ An interaction completing when panel tab `id` opens.
-    pub async fn panel(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn panel(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::new(IntroductionInteractionKind::Panel(id.into()), label).await
     }
 
     /// 🌳️ An interaction completing when tree section/item `id` expands.
-    pub async fn expand(id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn expand(id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::new(IntroductionInteractionKind::Expand(id.into()), label).await
     }
 
     /// 🔭️ An interaction completing when the user pans 3D window `window_kind_id`.
-    pub async fn pan(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn pan(window_kind_id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::new(IntroductionInteractionKind::Pan(window_kind_id.into()), label).await
     }
 
     /// 🔎️ An interaction completing when the user zooms 3D window `window_kind_id`.
-    pub async fn zoom(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn zoom(window_kind_id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::new(IntroductionInteractionKind::Zoom(window_kind_id.into()), label).await
     }
 
     /// 🪐️ An interaction completing when the user orbits 3D window `window_kind_id`.
-    pub async fn orbit(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
+    pub async fn orbit(window_kind_id: impl Into<String>, label: impl Into<LocalizedLabel>) -> Self {
         Self::new(IntroductionInteractionKind::Orbit(window_kind_id.into()), label).await
     }
 

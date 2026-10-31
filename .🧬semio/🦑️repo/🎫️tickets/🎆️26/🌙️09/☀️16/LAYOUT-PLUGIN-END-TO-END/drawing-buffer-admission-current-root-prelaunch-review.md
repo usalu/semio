@@ -1,0 +1,7 @@
+# Affected TS Admission Gate — Root Prelaunch Review
+
+Reviewed exact command 8f00a6c67c05b8fdb16fc9688c5898f7fe98131c33bdbd59d04d816dc159170b. All 54 listed current inputs match, all 90 literal edges resolve to those exact captured inputs, all 16 strict roots are present, and all paths stay within 256 UTF-16 units. Both commands use normal managed repo Bun admission with separate ticket generated outputs and all five temporary/artifact environment paths.
+
+The actual importer registers the affected original Core/turn/absolute/helper/page/admission/provenance laws, unchanged intrinsic rejection, both original primitive law functions, Byte/PNG and numeric laws. The expected 49 registrations are declarations, not results. The owning fixture and direct admission fixture observe issued Counter CPU without epoch, receipt or entry fallback. Counter provenance checks membership before reading foreign methods. Actual storage mutations commit CPU before later receipt fold; no Array-inherited mutable body is restored.
+
+Authorized one exact captured owning invocation followed sequentially by its captured strict invocation. Hold precisely the 54 listed input bytes through both terminals and independent postchecks; disjoint Font and native work may continue. Preserve any actual failure and paid cleanup output. This review establishes no pass, V8 allocator/pointer parity, wider Font/Drawing or end-to-end Layout result.

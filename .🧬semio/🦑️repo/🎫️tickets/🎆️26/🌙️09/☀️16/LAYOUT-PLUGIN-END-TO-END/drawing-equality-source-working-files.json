@@ -1,0 +1,54 @@
+{
+  "state": "definer-and-existing-selected-owning-callers-authored-uncompiled",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🟰️equality/🦀️.rs",
+      "sha256": "232364584009b2b7722141c9512361c2e9af21a836294164b4bfa07c0c0eaa38"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🎚️record/🦀️.rs",
+      "sha256": "eb57cef82008ffaf24e8569d32611e90a0e450cccf06e5657d6da246a7d6aa31"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/📋️sequence/🦀️.rs",
+      "sha256": "5f40e8cffe880a8a0f429526f8ef4dad2e7e37a0ffd2729fa6117bb0cc2ed183"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🤝️tuple/🦀️.rs",
+      "sha256": "ad8534b75f79a7e772af593aa859899b07c27afb7e75893a7d57a797b081d5dc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🦀️.rs",
+      "sha256": "d3337d5126e67184f5da87d671d0dbfde8f040aaf1328d2f3529e136b22da0c0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/actual.json",
+      "sha256": "90133954fbb0489fa39b4c7d5a6ec353947951bc1adf3bbff0d2de5364543bc8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/actual.rs",
+      "sha256": "70e6fc2be5fdad8548e776fc18a1548f2a109cc21ef962e43623a370f8e7c8a5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/actual.schema.json",
+      "sha256": "cc3f412913b94ed361170c929059da499e38c2c9d125f9a665812244e3960de8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/🦀️.rs",
+      "sha256": "034c0ec23948b7217c92a08436ff3cb029dce3a0bf10d5a5336ce8d7e878fcfb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "4c65baaa52ce5819381acae5ce773285f91ff4d184adba499d91f0689031cd34"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🦀️.rs",
+      "sha256": "2839a6abe84a6dce8ea07aeef9359d2f1ee9c51b7b98b59d9b4946c5be97b142"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧪️tests/🦀️.rs",
+      "sha256": "7cd74775ac1a1fbb27ebede5e074fef868046f306f17e6a633a81247ae10f64e"
+    }
+  ],
+  "runtime": "none"
+}

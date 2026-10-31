@@ -1,0 +1,585 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "stdio.semio.model",
+ "schemaHash": "95c965ea066c9769d77eadd907f89185700aaafb417dc04bec12cfc427777ff8",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "spatial",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 1
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "elements",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 2
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "relations",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 3
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "kind",
+    "optional": false,
+    "shape": {
+     "kind": "enum",
+     "variants": [
+      [
+       0,
+       "site"
+      ],
+      [
+       1,
+       "building"
+      ],
+      [
+       2,
+       "storey"
+      ],
+      [
+       3,
+       "space"
+      ]
+     ]
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "name",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "parent-id",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "placement",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "class",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "beam",
+        5
+       ],
+       [
+        "column",
+        5
+       ],
+       [
+        "door",
+        5
+       ],
+       [
+        "furniture",
+        5
+       ],
+       [
+        "other",
+        6
+       ],
+       [
+        "roof",
+        5
+       ],
+       [
+        "slab",
+        5
+       ],
+       [
+        "stair",
+        5
+       ],
+       [
+        "wall",
+        5
+       ],
+       [
+        "window",
+        5
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "placement",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "geometry",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "brep",
+        7
+       ],
+       [
+        "mesh",
+        8
+       ],
+       [
+        "none",
+        5
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "spatial-id",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 5,
+    "key": "psets",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 9
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "kind",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "aggregates",
+        5
+       ],
+       [
+        "connects-to",
+        5
+       ],
+       [
+        "contained-in",
+        5
+       ],
+       [
+        "fills-void",
+        5
+       ],
+       [
+        "other",
+        10
+       ],
+       [
+        "voids-element",
+        5
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "from",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "to",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "translation",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 11
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "rotation",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 12
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "scale",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 11
+    }
+   }
+  ],
+  [],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "name",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "brep-id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "mesh-id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "name",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "properties",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 13
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "label",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "x",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "y",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "z",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "x",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "y",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "z",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "w",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "key",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "boolean",
+        14
+       ],
+       [
+        "number",
+        15
+       ],
+       [
+        "text",
+        16
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ]
+ ],
+ "annotations": {
+  "single": [
+   [
+    2,
+    1
+   ],
+   [
+    2,
+    3
+   ],
+   [
+    3,
+    1
+   ],
+   [
+    13,
+    1
+   ]
+  ],
+  "verbatim": [
+   [
+    2,
+    1
+   ],
+   [
+    3,
+    1
+   ],
+   [
+    13,
+    1
+   ]
+  ]
+ }
+}

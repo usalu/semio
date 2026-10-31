@@ -67,11 +67,11 @@ impl<P,M> ReplayRetirement<P,M> {
         let demand=self.demands(grant.maximum_copy_bytes)?;
         if !permits(grant,demand){return Ok(RetainedCloneStep::Progress(empty));}
         let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        if self.active.is_some(){return close_factory_ticket(&mut self.active,child);}
+        if self.active.is_some(){return close_factory_ticket(&mut self.active,child).result;}
         if self.snapshot.is_some(){match self.factory.as_ref().unwrap().snapshot(self.snapshot.take().unwrap(),child){Ok((owner,progress))=>{*self.active=Some(owner);return admit_birth(progress,child,demand.capacity_bytes);},Err((error,owner))=>{*self.snapshot=Some(owner);return Err(error);}}}
         if self.mutations.is_some(){match self.factory.as_ref().unwrap().mutations(self.mutations.take().unwrap(),child){Ok((owner,progress))=>{*self.active=Some(owner);return admit_birth(progress,child,demand.capacity_bytes);},Err((error,owner))=>{*self.mutations=Some(owner);return Err(error);}}}
         if self.factory.is_some(){let factory:Arc<dyn semio_framework_value::FactoryRetirement>=self.factory.take().unwrap();*self.closing_factory=Some(FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}
-        let factory=self.closing_factory.as_mut().unwrap();let step=factory.step(child)?;if factory.terminal_is_empty(){drop(self.closing_factory.take());}
+        let factory=self.closing_factory.as_mut().unwrap();let step=factory.step(child).result?;if factory.terminal_is_empty(){drop(self.closing_factory.take());}
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
 }
@@ -97,12 +97,13 @@ impl<M> ReplayMutationsRetirement<M>{
 }
 impl<M:Send+'static> ErasedSnapshotRetirement for ReplayMutationsRetirement<M>{
     fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demands(body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{
+        let result=(||->Result<RetainedCloneStep,ValueError>{
         let empty=RetainedCloneProgress::default();if self.empty(){return Ok(RetainedCloneStep::Complete(empty));}if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
         let demand=self.demands(grant.maximum_copy_bytes)?;if !permits(grant,demand){return Ok(RetainedCloneStep::Progress(empty));}
         let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        if self.active.is_some(){return close_factory_ticket(&mut self.active,child);}
-        if self.pending.is_some(){match self.factory.as_ref().unwrap().retire_owned(self.pending.take().unwrap(),child){Ok((owner,progress))=>{*self.active=Some(owner);return admit_birth(progress,child,demand.capacity_bytes);},Err((error,owner))=>{*self.pending=Some(owner);return Err(error);}}}
+        if self.active.is_some(){return close_factory_ticket(&mut self.active,child).result;}
+        if self.pending.is_some(){match self.factory.as_ref().unwrap().retire_owned(self.pending.take().unwrap(),child).result{Ok((owner,progress))=>{*self.active=Some(owner);return admit_birth(progress,child,demand.capacity_bytes);},Err((error,owner))=>{*self.pending=Some(owner);return Err(error);}}}
         if let Some(owners)=self.owners.as_mut(){
             if !owners.is_empty(){*self.pending=owners.pop();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<M>(),..empty}));}
             if owners.terminal_is_empty(){drop(self.owners.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
@@ -110,8 +111,11 @@ impl<M:Send+'static> ErasedSnapshotRetirement for ReplayMutationsRetirement<M>{
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:usize::from(progress.progressed),released_bytes:progress.released_allocation_bytes,..empty}));
         }
         if self.factory.is_some(){let factory:Arc<dyn semio_framework_value::FactoryRetirement>=self.factory.take().unwrap();*self.closing_factory=Some(FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}
-        let factory=self.closing_factory.as_mut().unwrap();let step=factory.step(child)?;if factory.terminal_is_empty(){drop(self.closing_factory.take());}
+        let factory=self.closing_factory.as_mut().unwrap();let step=factory.step(child).result?;if factory.terminal_is_empty(){drop(self.closing_factory.take());}
         Ok(if self.empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+        })();
+        let work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=RetainedCloneProgress::default()));
+        semio_framework_value::RetainedWorkOutcome{result,work}
     }
     fn terminal_is_empty(&self)->bool{self.empty()}
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}

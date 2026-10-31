@@ -139,4 +139,7 @@ declare const protectedArtifactInputGroupBrandV1:unique symbol;
 /** 🏁️ Identifies actual whole-group durable completion within the same unchanged live funding scope. */
 export type NativeProtectedArtifactInputGroupReceiptV1=Readonly<{readonly[protectedArtifactInputGroupBrandV1]:true}>;
 /** 🔬️ Reports verified staged group inputs without installed, Source binding or allocation-retirement authority. */
-export type NativeProtectedArtifactInputGroupObservationV1=Readonly<{version:1;purpose:"staged-immutable-artifact-input-group";inputSha256:string;roots:number;files:number;directories:number;bytes:number;installedQualified:false;allocationRetired:false}>;
+export type NativeProtectedArtifactInputGroupObservationV1=Readonly<{version:1;purpose:"staged-immutable-artifact-input-group"|"observed-current-artifact-input-group";inputSha256:string;roots:number;files:number;directories:number;bytes:number;installedQualified:false;allocationRetired:false}>;
+
+/** 📹️ Captures an explicit existing-input observation request without issuing freshness or readiness. */
+export function readNativeProtectedArtifactExistingInputGroupV1(value:unknown):NativeProtectedArtifactInputGroupV1{const fields=protectedArtifactInputFieldsV1(value,["version","purpose","group"]),definition=protectedMaintenanceSchemaV1.definitions.ProtectedArtifactExistingInputGroup;if(fields.version!==definition.properties.version.const||fields.purpose!==definition.properties.purpose.const)throw Error("Closed distinct current artifact input observation required");return readNativeProtectedArtifactInputGroupV1(fields.group);}

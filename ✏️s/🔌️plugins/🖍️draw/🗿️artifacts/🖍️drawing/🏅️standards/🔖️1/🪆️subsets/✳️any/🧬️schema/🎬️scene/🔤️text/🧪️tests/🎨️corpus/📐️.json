@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "sourceSha256": "dd9582fd3d2964dfe71985c8f34c3b93455973810aba64004cd02bbb3d35def5",
+  "caseNames": [
+    "Real German Glyph Paint",
+    "Reflected Multiline Glyph Paint",
+    "Authored Kelly Slab Glyph Paint",
+    "Authored Share Tech Mono Glyph Paint",
+    "Authored Noto Emoji Glyph Paint",
+    "Canonical Source Glyph Paint",
+    "Across Grapheme Ligature Scene",
+    "Joined Emoji Profession Scene",
+    "Original Positioned Mark Scene",
+    "Regional Context Scene",
+    "Unsupported Country Context Scene",
+    "Original Right Direction Glyph Scene",
+    "Original Right Direction Ligature Scene",
+    "Original Mirrored Direction Glyph Scene"
+  ],
+  "quanta": [
+    1,
+    7,
+    4096
+  ],
+  "independentMaskNames": [
+    "Real German Glyph Paint",
+    "Authored Kelly Slab Glyph Paint",
+    "Authored Share Tech Mono Glyph Paint",
+    "Authored Noto Emoji Glyph Paint",
+    "Canonical Source Glyph Paint",
+    "Across Grapheme Ligature Scene",
+    "Joined Emoji Profession Scene",
+    "Original Positioned Mark Scene",
+    "Regional Context Scene",
+    "Unsupported Country Context Scene",
+    "Original Right Direction Glyph Scene",
+    "Original Right Direction Ligature Scene",
+    "Original Mirrored Direction Glyph Scene"
+  ],
+  "mask": {
+    "minimumAlpha": 5,
+    "maximumAlpha": 250,
+    "stride": 2,
+    "minimumCompared": 100
+  },
+  "rules": {
+    "actualPrivateSceneOwner": true,
+    "sameNodeAndAssetPages": true,
+    "originalOwnedPaintIdentity": true,
+    "originalCallerSourceUnchanged": true,
+    "actualRunGlyphCount": true,
+    "sameOriginalFiniteBank": true,
+    "fundedProducerThenOutputClose": true,
+    "allOriginalTextFieldsPreserved": true,
+    "foreignLatnDfltGlyphsAndPositionsUnchanged": true,
+    "noRasterProductAcceptanceClaim": true,
+    "exactZeroRotationAuthoredMatrix": true
+  }
+}

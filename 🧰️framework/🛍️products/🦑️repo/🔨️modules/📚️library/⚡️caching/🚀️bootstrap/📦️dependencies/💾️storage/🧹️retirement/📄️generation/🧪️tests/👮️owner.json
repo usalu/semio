@@ -1,0 +1,77 @@
+[
+  {
+    "mode": "valid",
+    "accepted": true,
+    "bodies": 1
+  },
+  {
+    "mode": "empty",
+    "accepted": true,
+    "bodies": 1
+  },
+  {
+    "mode": "absent-pin",
+    "accepted": false,
+    "bodies": 0
+  },
+  {
+    "mode": "historical-alias",
+    "accepted": false,
+    "bodies": 0
+  },
+  {
+    "mode": "unknown-alias",
+    "accepted": false,
+    "bodies": 0
+  },
+  {
+    "mode": "unknown-graph",
+    "accepted": true,
+    "bodies": 1
+  },
+  {
+    "mode": "referenced-obsolete",
+    "accepted": false,
+    "bodies": 0
+  },
+  {
+    "mode": "unqualified",
+    "accepted": false,
+    "bodies": 0
+  },
+  {
+    "mode": "alias-drift",
+    "accepted": false,
+    "bodies": 1
+  },
+  {
+    "mode": "metadata-drift",
+    "accepted": false,
+    "bodies": 1
+  },
+  {
+    "mode": "release-error",
+    "accepted": false,
+    "bodies": 1
+  },
+  {
+    "mode": "frozen-primary",
+    "accepted": false,
+    "bodies": 1
+  },
+  {
+    "mode": "present-prefix-target",
+    "accepted": false,
+    "bodies": 0
+  },
+  {
+    "mode": "absent-reference-pin",
+    "accepted": false,
+    "bodies": 0
+  },
+  {
+    "mode": "absent-target-drift",
+    "accepted": false,
+    "bodies": 1
+  }
+]

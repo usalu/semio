@@ -1,0 +1,3 @@
+import{readNativeStorageDataV1}from"../../📜️journal/🟦️.ts";
+/** 📐️ Admits measured whole-artifact bytes against only its actual retained charge. */
+export function readNativeStorageFundedArtifactUsageV1(value:unknown):Readonly<{version:1;purpose:"current-artifact-funding-usage";allocation:string;bytes:number;maximumBytes:number;authority:false}>{const row=readNativeStorageDataV1<{version:1;purpose:"current-artifact-funding-usage";allocation:string;bytes:number;maximumBytes:number;authority:false}>("FundedArtifactUsage",value);if(row.bytes>row.maximumBytes)throw Error("Actual whole artifact exceeds its retained Native funding");return Object.freeze({...row});}

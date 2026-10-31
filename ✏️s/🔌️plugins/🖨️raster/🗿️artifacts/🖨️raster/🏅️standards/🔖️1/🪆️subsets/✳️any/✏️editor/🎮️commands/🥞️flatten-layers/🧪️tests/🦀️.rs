@@ -22,7 +22,7 @@ fn flatten_preserves_the_composite_and_restores_every_original_layer() {
     let before=document.clone();
     let mut preparation=prepare(&FlattenLayers {name:"Flattened Image".into()},&document).unwrap();
     while !preparation.advance(&document,1).unwrap() {}
-    let mut job=preparation.into_job().unwrap();while !job.advance(1).unwrap().done {}
+    let mut job=preparation.into_job().unwrap();while !semio_s_artifact_raster_raster_io::advance_stack(&mut job,1).unwrap().done {}
     let composite=job.into_result().unwrap();
     assert_eq!(serde_json::to_value(&composite.image.pixels).unwrap(),fixture["expected"]["pixels"]);
     let origin=composite.origin;

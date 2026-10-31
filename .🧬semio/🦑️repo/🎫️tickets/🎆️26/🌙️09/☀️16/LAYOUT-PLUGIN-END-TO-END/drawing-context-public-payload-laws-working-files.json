@@ -1,0 +1,40 @@
+{
+  "sourceOnly": true,
+  "noRuntime": true,
+  "sameOwningPackage": "semio-framework-job-context",
+  "mandatoryDoor": "test --all-targets --features=testkit -- --nocapture",
+  "testNames": [
+    "genuine_payload_authority_raw_null_keeps_stock_and_admits_exact_ledger_on_retry",
+    "genuine_payload_builder_normal_metadata_posts_full_work_once_and_cached_zero",
+    "genuine_payload_page_counter_null_retry_and_publication_keep_one_original_wallet",
+    "genuine_partial_source_error_keeps_initialized_page_and_posts_actual_work_before_error",
+    "genuine_boxed_builder_null_then_admitted_output_keeps_actual_work_and_paid_backing",
+    "genuine_incoming_page_keeps_both_exact_backings_and_closes_each_only_when_paid"
+  ],
+  "bodyChanges": [
+    "lexical super import to actual public Context API",
+    "private CPU counter observations to identical public original_work_units_spent getter",
+    "one canonical allocator for this standalone integration test binary"
+  ],
+  "fixturesUnchanged": true,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🎟️work/🧪️tests/🦀️.rs",
+      "beforeSha256": "202aa12766293cfaa0bd70b9780512987bf50bace5f4313320e5726df053db71",
+      "sha256": "76325a357886eb488bd18381ff1b84ed344b7d75c40f15c4149c39efa9e6a27b",
+      "bytes": 21932
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs",
+      "beforeSha256": "775567c8ef06cd28b3d1126fbbca7e442b3eb9858721bb5aa99846c2c4b7a359",
+      "sha256": "f7356fbc512a59adafeacbf31054558a5213f375ee13319dcdc9c30fa36605a9",
+      "bytes": 52215
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/Cargo.toml",
+      "beforeSha256": "accc36d82124d91850d81e546c684a5d37644327de4258acc0ef52096a101e50",
+      "sha256": "84d4a4c97293ddee4b9b36abab1c941eb06318f7fb5f3e8f92710156b4da394e",
+      "bytes": 2254
+    }
+  ]
+}

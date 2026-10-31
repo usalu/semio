@@ -1,0 +1,62 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-framework-plugin-decl-views-child-tests"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Companion tests of the decl-views child editor: original member lookup, vector read qualification, source custody and admission against the public surface"
+publish = false
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-decl-views-child-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value-snapshot-read = { path = "../../../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
+semio-framework-io-ports = { path = "../../../../../../../../../../🔨️modules/🚪️io/🔌️ports/📦️packages/🦀️rust" }
+semio-framework-tool-run-presentation = { workspace = true }
+semio-framework-plugin-interaction = { path = "../../../../../../🕹️interaction/📦️packages/🦀️rust" }
+semio-framework-plugin-operation = { path = "../../../../../../♻️cancellation/📦️packages/🦀️rust" }
+semio-framework-plugin-window-config = { path = "../../../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
+semio-framework-plugin-window-config-registry = { path = "../../../../../../🪟️window/🎚️config/🗂️registry/📦️packages/🦀️rust" }
+semio-framework = { path = "../../../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-plugin-mounted-owner = { path = "../../../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
+semio-framework-plugin-ownership = { path = "../../../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-schema-composition = { path = "../../../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-tool-contract = { path = "../../../../../👁️view/🛬️lifted/👷️job/📦️packages/🦀️rust" }
+semio-framework-tool-machine = { workspace = true }
+semio-framework-tool-run = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-registry = { path = "../../../../../../../../../../🔨️modules/🌱️value/📋️registry/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio_framework_ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+serde_json = "1.0.140"
+semio-framework-pack = { workspace = true }
+semio-framework-plugin-decl-views = { path = "../../../../../👁️view/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-job = { path = "../../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"], package = "semio-framework-job" }
+semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", features = ["mutation-testing"], package = "semio-framework-os-kernel" }
+semio-framework-async = { path = "../../../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", features = ["entrypoint"], package = "semio-framework-async" }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

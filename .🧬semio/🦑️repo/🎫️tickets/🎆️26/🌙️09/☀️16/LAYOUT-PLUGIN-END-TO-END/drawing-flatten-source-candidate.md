@@ -1,0 +1,11 @@
+# Held Flatten Native Source Candidate
+
+The defining Flatten owner, all old/new owning laws, exact message getter, truthful final-publication status and shared finite wallet are held for Root's actual native gate preparation. The exact manifest, workspace, unfiltered --lib operands and seven current hashes are in drawing-flatten-source-candidate.json. No feature or filter is needed. No Cargo was launched by Rust.
+
+This scoped candidate has an allocation-free retaining Self constructor; canonical same-ledger advance; absolute cached demands; real geometric Vec growth; separate actual CPU/semantic progress; final metadata publication semantic0; and original input pointer/cancel/output/physical-close assertions plus neutral heap/denial laws. The same wallet follows actual work and close. Borrowed error messages preserve every previous literal and category.
+
+Literal direct production dependencies are value facade, persistent,2d-engine and2d-retire. Devdependencies are Trace and serde_json. There is no declared Pixels, Boolean or Drawing dependency. The value facade may reach lower Numeric/tree/encoder work beyond the earlier persistent290 gate; Root is deriving the full bounded manifest/source snapshot and Cursor has been asked to identify current stability. No all-transitive-stable, fit, compiler or test claim is made by this seven-file owner packet. Exact canonical admission remains authoritative. Work on separate Job publication and other Drawing/2d owners continues only outside the selected closure once Root freezes it.
+
+All Stroke/Pixels/Boolean/Drawing/Job/Flow and original Layout owners remain mandatory. This candidate does not replace any full gate or independent oracle.
+
+Root prelaunch review found the invalid-input helper could accept Incomplete. The exact helper now advances the actual job under the same wallet and declared bound until a real Invalid refusal; completed geometry, another error category, missing refusal and Incomplete-as-proof are rejected. All old invalid inputs remain. The test-only correction before SHA was 5d7221474433c94473babe291ba1584ff0f47228279a1f3d639a69b4507b5cf1; current hash is in the refreshed seven-file packet. No runtime or body/wallet change accompanied it.

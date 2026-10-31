@@ -24,8 +24,24 @@ name = "load_combination_kinds"
 path = "../../../../../🏋️load/🧪️tests/🔬️combination-kinds/🦀️.rs"
 
 [[test]]
+name = "load_combination_kinds_2"
+path = "../../../../../🏋️load/🧪️tests/🔬️combination-kinds-2/🦀️.rs"
+
+[[test]]
+name = "load_combination_kinds_3"
+path = "../../../../../🏋️load/🧪️tests/🔬️combination-kinds-3/🦀️.rs"
+
+[[test]]
+name = "load_combination_kinds_4"
+path = "../../../../../🏋️load/🧪️tests/🔬️combination-kinds-4/🦀️.rs"
+
+[[test]]
 name = "load_kinds"
 path = "../../../../../🏋️load/🧪️tests/🔬️load-kinds/🦀️.rs"
+
+[[test]]
+name = "load_kinds_2"
+path = "../../../../../🏋️load/🧪️tests/🔬️load-kinds-2/🦀️.rs"
 
 [[test]]
 name = "analysis_kinds"
@@ -36,8 +52,24 @@ name = "mesh_region_kinds"
 path = "../../../../../🕸️mesh/🧪️tests/🔬️region-kinds/🦀️.rs"
 
 [[test]]
+name = "mesh_region_kinds_2"
+path = "../../../../../🕸️mesh/🧪️tests/🔬️region-kinds-2/🦀️.rs"
+
+[[test]]
+name = "mesh_region_kinds_3"
+path = "../../../../../🕸️mesh/🧪️tests/🔬️region-kinds-3/🦀️.rs"
+
+[[test]]
 name = "mesh_section_kinds"
 path = "../../../../../🕸️mesh/🧪️tests/🔬️section-kinds/🦀️.rs"
+
+[[test]]
+name = "mesh_section_kinds_2"
+path = "../../../../../🕸️mesh/🧪️tests/🔬️section-kinds-2/🦀️.rs"
+
+[[test]]
+name = "mesh_section_kinds_3"
+path = "../../../../../🕸️mesh/🧪️tests/🔬️section-kinds-3/🦀️.rs"
 
 [[test]]
 name = "mesh_selection_kinds"
@@ -52,6 +84,10 @@ name = "mesh_topology_kinds_2"
 path = "../../../../../🕸️mesh/🧪️tests/🔬️topology-kinds-2/🦀️.rs"
 
 [[test]]
+name = "mesh_topology_kinds_3"
+path = "../../../../../🕸️mesh/🧪️tests/🔬️topology-kinds-3/🦀️.rs"
+
+[[test]]
 name = "mutation_grammar_conformance"
 path = "../../../../🚪️io/📝️text/🧬️mutations/🧪️tests/🔬️mutation-grammar-conformance/🦀️.rs"
 
@@ -62,6 +98,14 @@ path = "../../../../../🛡️boundary/🧪️tests/🔬️support-kinds/🦀️
 [[test]]
 name = "material_kinds"
 path = "../../../../../🧱️material/🧪️tests/🔬️material-kinds/🦀️.rs"
+
+[[test]]
+name = "material_kinds_2"
+path = "../../../../../🧱️material/🧪️tests/🔬️material-kinds-2/🦀️.rs"
+
+[[test]]
+name = "material_kinds_3"
+path = "../../../../../🧱️material/🧪️tests/🔬️material-kinds-3/🦀️.rs"
 
 [dependencies]
 semio-framework-dsl = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }

@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+dashboard_build_graph = { path = "../../../../../📚️library/🏗️build/🕸️graph/🦀️rust/📦️packages/🦀️rust", package = "semio-framework-repo-library-build-graph" }
 dashboard_core = { path = "../../../../🧱️invocation-catalog/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-core" }
 dashboard_launch = { path = "../../../../🧾️launch/📦️packages/🦀️rust", package = "semio-framework-repo-dashboard-launch" }
 serde = { workspace = true }

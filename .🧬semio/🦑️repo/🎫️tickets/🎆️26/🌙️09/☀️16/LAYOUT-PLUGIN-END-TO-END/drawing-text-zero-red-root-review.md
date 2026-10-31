@@ -1,0 +1,5 @@
+# Drawing Text Behavioral RED Root Review
+
+Root read the prepared focused test and old production step before release, then independently matched actual final log16,932bytes/SHA19ac90471fd0c228c214d1873039c2f42ef3d35f4b2c90cd2489bf53cc130c09 and rehashed all eight captured inputs/bytes after terminal. The actual normal Bun run94026 exited1 with0pass/1fail/4assertions. It reached the existing public work assertion and observed1 where zero original authority requires0, before any proposed new API. The three finally cleanup assertions completed; no import/bootstrap/cleanup failure is reported. This is genuine behavioral RED rather than a missing-API inference.
+
+No production changed. Native11's separate font compiler RED remains retained. Implementation still requires review of the actual native StepContext composition test-first seal and a genuine TypeScript high-level grant/receipt/close owner. Green/full glyph/heap/CPU/controlled-close, owning Drawing Native and full Layout19/runtime/browser acceptance remain unproved. No further runtime is released by this review.

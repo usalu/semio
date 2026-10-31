@@ -1,0 +1,20 @@
+{
+  "state": "source-authored-not-SourceReady",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🟦️.ts",
+      "bytes": 19613,
+      "sha256": "4e1aebd566b055c01db45f87081b94525723c62bce5592e1c4dd186b2eee69f3",
+      "state": "authored-unexecuted-partial-caller-migration"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🟦️.ts",
+      "bytes": 1250,
+      "sha256": "7d43782db0f68ad1f0c25bb21595c458dc8cea23c531a356b462b7b44154009e",
+      "state": "authored-unexecuted-partial-caller-migration",
+      "beforeSha256": "376aa68320d60232f7366e14fb028c49eb6b0e359a0980c3bc72cd6532cb2d0c"
+    }
+  ],
+  "testFirst": "drawing-scene-owned-plan-test-first.json",
+  "remaining": "Hand-migrate the actual preparation/Text/Boolean/trace/SVG/PDF and owning tests. No numeric compatibility close remains; no runtime claimed."
+}

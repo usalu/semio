@@ -69,10 +69,7 @@ mod entry_draft;
 use entry_draft::*;
 
 // #region 🔖️RunPolicy
-#[path = "../../📚️library/🏗️build/🕸️graph/🦀️rust/🦀️.rs"]
-mod publication;
-pub use publication::graph_file;
-
+pub use dashboard_build_graph::graph_file;
 // #endregion 🔖️RunPolicy
 
 #[path = "🔎️source-discovery/🦀️.rs"]

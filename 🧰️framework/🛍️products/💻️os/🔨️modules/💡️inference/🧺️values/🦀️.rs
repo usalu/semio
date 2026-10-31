@@ -62,7 +62,7 @@ impl<V:RetireOwned> InferenceValues<V> {
             return Ok(false)
         }
         let owner=self.parents_retirement.as_mut().unwrap();
-        if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok(false)}
+        if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let r=owner.step(grant);semio_framework_value::RetainedWorkOutcome{work:u64::from(r.is_ok()),result:r}})?;return Ok(false)}
         if !metadata(cx,size_of::<Option<ControlledRetirement<Vec<V>>>>(),1)?{return Ok(false)}self.parents_retirement=None;Ok(true)
     }
 
@@ -78,7 +78,7 @@ impl<V:RetireOwned> InferenceValues<V> {
         if self.source.is_some() { return Ok(true); }
         let scope=OriginalInferenceScope::capture(cx)?;
         let parent=cx.original_source_parent()?;
-        let Some(source)=parent.admit_loan(cx)? else { return Ok(false); };
+        let mut loan=None;parent.admit_loan(&mut loan,cx)?;let Some(source)=loan else { return Ok(false); };
         self.scope=Some(scope);self.source=Some(source);Ok(false)
     }
 
@@ -135,7 +135,7 @@ impl<V:RetireOwned> InferenceValues<V> {
         if let Some(owner)=self.retirement.as_mut() {
             if !owner.terminal_is_empty() {
                 let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;
-                semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;
+                semio_framework_job::close_original_retained_step(cx,demand,|grant|{let r=owner.step(grant);semio_framework_value::RetainedWorkOutcome{work:u64::from(r.is_ok()),result:r}})?;
                 return Ok(false);
             }
             self.retirement=None;

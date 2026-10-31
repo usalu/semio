@@ -1,0 +1,5 @@
+# Actual Multi-page Byte Read Contract
+
+Two existing owner cases contradict: the NativeIO 96 KiB+17 round-trip expects ReadBytes to fail under a hardcoded single-page guard, while the genuine Renderer invocation case requires ReadBytes of two pages plus seven bytes to succeed. The defining operation already admits up to its genuine original payload extent. The clean greenfield contract is full ReadBytes within that admitted extent, bounded ReadPage and original oversize refusal unchanged.
+
+Before removing the single-page runtime branch, Root added the neutral fullRead row and strengthened the same original NativeIO round-trip case to materialize and compare every original 98,321 filesystem byte, with an independent serde_json representation comparison. All eleven names, remaining cases, all source/stock limits and cancellation/identity assertions remain. This deliberately replaces a contradictory old expected failure; it is not claimed to be an unchanged assertion or an observed RED. The runtime has not been compiled or run.

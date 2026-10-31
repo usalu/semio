@@ -1,0 +1,23 @@
+{
+  "state": "root-independently-verified-scoped-green-hold-released",
+  "commandSha256": "11e4fca70d6858f3e65473ccff11a99330b8286c0d9f558fe2b4eda7d587ff54",
+  "actualTest": {
+    "exitCode": 0,
+    "pass": 49,
+    "fail": 0,
+    "assertions": 9104,
+    "milliseconds": 384
+  },
+  "actualStrict": {
+    "exitCode": 0,
+    "roots": 16,
+    "diagnostics": 0
+  },
+  "inputs": 54,
+  "allMatchPreBothTerminalAndCurrent": true,
+  "hold": "released",
+  "limitations": [
+    "Logical backing/reference accounting and explicit defining CPU; no V8 physical allocation or pointer parity claim",
+    "Wider Font/Drawing/native/controller/full Layout/browser remain open"
+  ]
+}

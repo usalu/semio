@@ -1,0 +1,17 @@
+{
+  "requiredOriginalLawCount": 26,
+  "privateUnitExpected": 21,
+  "publicBulkOriginalNames": [
+    "bulk_clone_logical_body_survives_expanded_physical_headers",
+    "bulk_vector_clone_equals_the_clone_oracle_for_every_bitwise_element_shape",
+    "non_bitwise_vector_clones_keep_the_per_element_path",
+    "derived_bitwise_structs_clone_in_pages_and_plain_structs_stay_elementwise",
+    "bulk_run_elements_obeys_every_grant_axis"
+  ],
+  "newTakeNames": [
+    "original_clone_take_owns_work_quote_denial_cached_and_every_output_close"
+  ],
+  "expectedAllTargetTests": 27,
+  "scope": "all declared Cargo tests/doc targets, no --lib-only acceptance",
+  "evidence": "law ownership metadata, not execution or Source-fit proof"
+}

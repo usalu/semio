@@ -20,6 +20,7 @@ use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
 use semio_s_artifact_procedural_3d_geometry_compute::KernelSession;
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
+use semio_s_artifact_procedural_3d_geometry_compute::{spend, unfunded, OriginalTurnFailure, StepContext};
 use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
 use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
 use semio_s_artifact_procedural_3d_geometry_value::outputs;
@@ -54,12 +55,12 @@ pub(crate) fn unsupported(port: &str, en: &str, de: &str) -> WidgetFault {
     WidgetFault::new("generation3d.geometry.measure-unsupported", en, de).at(port)
 }
 
-/// 🚫️ A bare curve or surface has no topology to analyse.
+/// ➰️ A bare curve or surface has no topology to analyse.
 pub(crate) fn no_topology(port: &str) -> WidgetFault {
     WidgetFault::new("generation3d.geometry.no-topology", "A bare curve or surface has no topology to analyse; use a shape built from edges or faces.", "Eine reine Kurve oder Fläche hat keine Topologie zum Analysieren; verwende eine Form aus Kanten oder Flächen.").at(port)
 }
 
-/// 🚫️ The job lost the state it needs; it cannot happen unless the job is stepped after it ended.
+/// 💼️ The job lost the state it needs; it cannot happen unless the job is stepped after it ended.
 pub fn lost_state() -> WidgetFault {
     WidgetFault::new("generation3d.geometry.pipeline", "The computation was set up without the value it needs.", "Die Berechnung wurde ohne den benötigten Wert aufgesetzt.")
 }
@@ -91,7 +92,7 @@ pub(crate) fn nth<T: Copy>(items: &[T], index: usize) -> Result<T, WidgetFault> 
 type Work<S> = fn(&mut S, usize) -> Result<(), WidgetFault>;
 type Conclude<S> = fn(S, Quality) -> Result<(Outputs, Quality), WidgetFault>;
 
-/// 🪜️ A widget job of `total` independent units over one state: each call to `step` runs up to `fuel` units, the last one concludes into outputs.
+/// 🪜️ A widget job of `total` independent units over one state: each call to `step` runs units while the caller's `StepContext` funds them, the last one concludes into outputs.
 ///
 /// A panic inside a unit becomes a `generation3d.geometry.kernel` fault instead of tearing the engine down.
 pub(crate) struct UnitJob<S: Send> {
@@ -117,27 +118,32 @@ impl<S: Send> UnitJob<S> {
 }
 
 impl<S: Send> WidgetJob for UnitJob<S> {
-    fn step(&mut self, fuel: usize) -> WidgetStep {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> Result<Option<WidgetStep>, OriginalTurnFailure> {
         if let Some(evaluation) = &self.finished {
-            return WidgetStep::Done(evaluation.clone());
+            return Ok(Some(WidgetStep::Done(evaluation.clone())));
         }
-        let mut budget = fuel.max(1);
-        while self.done < self.total && budget > 0 {
+        if unfunded(cx) {
+            return Ok(None);
+        }
+        while self.done < self.total {
             let (work, index) = (self.work, self.done);
-            let Some(state) = self.state.as_mut() else { return self.end(Err(lost_state())) };
+            let Some(state) = self.state.as_mut() else { return Ok(Some(self.end(Err(lost_state())))) };
             if let Err(fault) = catch_unwind(AssertUnwindSafe(|| work(state, index))).unwrap_or_else(|_| Err(panicked())) {
-                return self.end(Err(fault));
+                return Ok(Some(self.end(Err(fault))));
             }
             self.done += 1;
-            budget -= 1;
+            spend(cx, 1);
+            if cx.should_yield() {
+                break;
+            }
         }
         if self.done < self.total {
-            return WidgetStep::Working { progress: (self.done as f32 / self.total as f32).min(0.999) };
+            return Ok(Some(WidgetStep::Working { progress: (self.done as f32 / self.total as f32).min(0.999) }));
         }
         let (conclude, quality) = (self.conclude, self.quality);
-        let Some(state) = self.state.take() else { return self.end(Err(lost_state())) };
+        let Some(state) = self.state.take() else { return Ok(Some(self.end(Err(lost_state())))) };
         let result = catch_unwind(AssertUnwindSafe(|| conclude(state, quality))).unwrap_or_else(|_| Err(panicked()));
-        self.end(result)
+        Ok(Some(self.end(result)))
     }
 
     fn cancel(&mut self) {
@@ -176,7 +182,7 @@ fn solids_of(shape: &ShapeValue, port: &str) -> Result<Vec<SolidId>, WidgetFault
     Ok(scope_of(shape, port)?.members(&shape.body).map_err(query_fault)?.solids)
 }
 
-/// 🧱️ The faces a shape reaches, ascending by arena index.
+/// 🙂️ The faces a shape reaches, ascending by arena index.
 fn faces_of(shape: &ShapeValue, port: &str) -> Result<Vec<FaceId>, WidgetFault> {
     Ok(scope_of(shape, port)?.members(&shape.body).map_err(query_fault)?.faces)
 }
@@ -216,7 +222,7 @@ struct Area {
     total: f64,
 }
 
-/// 🧱️ The state of an area sum over `faces` of `shape`, one face per unit.
+/// 🔄️ The state of an area sum over `faces` of `shape`, one face per unit.
 fn area_state(shape: Arc<ShapeValue>, faces: Vec<FaceId>) -> Result<(Area, usize), WidgetFault> {
     let total = faces.len();
     Ok((Area { shape, faces, total: 0.0 }, total))
@@ -228,12 +234,12 @@ fn add_face_area(state: &mut Area, index: usize) -> Result<(), WidgetFault> {
     Ok(())
 }
 
-/// 🧮️ Concludes an area sum into the `area` output.
+/// 🔶️ Concludes an area sum into the `area` output.
 fn area_output(state: Area, quality: Quality) -> Result<(Outputs, Quality), WidgetFault> {
     Ok((outputs([("area", GeometryValue::Number(finite(state.total)?))]), quality))
 }
 
-/// 🧊️ The total area of all faces of a shape, one face per unit.
+/// 🔷️ The total area of all faces of a shape, one face per unit.
 fn area(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     let prepared = (|| {
         let shape = inputs.shape("shape")?.clone();
@@ -266,7 +272,7 @@ fn selection_area(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 //#endregion 🔖️Area
 
 //#region 🔖️Length
-/// 📏️ The length of a curve, wire or edge: a shape imported into a fresh session and measured there, where bare curves are measured too.
+/// 🔗️ The length of a curve, wire or edge: a shape imported into a fresh session and measured there, where bare curves are measured too.
 fn length(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     finish(
         kind,
@@ -287,7 +293,7 @@ struct Pieces {
     pieces: Vec<InertiaPiece>,
 }
 
-/// 🧱️ The state of a mass sum over the solids of `shape`, one solid per unit.
+/// 📊️ The state of a mass sum over the solids of `shape`, one solid per unit.
 fn pieces_state(shape: &Arc<ShapeValue>, port: &str) -> Result<(Pieces, usize), WidgetFault> {
     let solids = solids_of(shape, port)?;
     if solids.is_empty() {
@@ -297,7 +303,7 @@ fn pieces_state(shape: &Arc<ShapeValue>, port: &str) -> Result<(Pieces, usize), 
     Ok((Pieces { shape: shape.clone(), solids, pieces: Vec::new() }, total))
 }
 
-/// 🧮️ Integrates the solid a unit names into one rigid piece at unit density.
+/// 📛️ Integrates the solid a unit names into one rigid piece at unit density.
 fn add_piece(state: &mut Pieces, index: usize) -> Result<(), WidgetFault> {
     let mass = solid_mass_properties(&state.shape.body, nth(&state.solids, index)?, TOLERANCE).map_err(query_fault)?;
     state.pieces.push(InertiaPiece { mass: mass.volume, centroid: [mass.centroid.x, mass.centroid.y, mass.centroid.z], about_centroid: mass.inertia });
@@ -309,12 +315,12 @@ fn combined(state: &Pieces, port: &str) -> Result<InertiaPiece, WidgetFault> {
     combine(&state.pieces).ok_or_else(|| unsupported(port, "The shape encloses no volume.", "Die Form schließt kein Volumen ein."))
 }
 
-/// 🎯️ The `centroid` output holding one point.
+/// 🌀️ The `centroid` output holding one point.
 fn centroid_output(value: [f64; 3]) -> Result<Outputs, WidgetFault> {
     Ok(outputs([("centroid", GeometryValue::Point(value))]))
 }
 
-/// 🎯️ The center of mass: of the enclosed volume for solids, compounds and closed shells, of the surface for open shells and faces, the position of a vertex.
+/// 🏋️ The center of mass: of the enclosed volume for solids, compounds and closed shells, of the surface for open shells and faces, the position of a vertex.
 fn centroid(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     let shape = match inputs.shape("shape") {
         Ok(shape) => shape.clone(),
@@ -348,7 +354,7 @@ struct Massive {
     density: f64,
 }
 
-/// 🛞️ Mass, volume, centroid, inertia tensor about the centroid and principal frame of a solid or compound of uniform density, one solid per unit.
+/// 🎞️ Mass, volume, centroid, inertia tensor about the centroid and principal frame of a solid or compound of uniform density, one solid per unit.
 fn mass_properties_compute(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     let prepared = (|| {
         let density = inputs.number("density")?;
@@ -400,7 +406,7 @@ fn box_solid(min: [f64; 3], max: [f64; 3]) -> Result<Option<ShapeValue>, WidgetF
     session.export(&placed).map(Some)
 }
 
-/// 📦️ The tight axis-aligned bounds of a shape: the corners, the extent and, when it has volume, the box as a solid. Bounds that rest on a NURBS entity are reported as approximate.
+/// 🌁️ The tight axis-aligned bounds of a shape: the corners, the extent and, when it has volume, the box as a solid. Bounds that rest on a NURBS entity are reported as approximate.
 fn bounding_box_compute(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     finish_with_quality(
         kind,
@@ -410,7 +416,7 @@ fn bounding_box_compute(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob>
             let size = sub(bounds.max, bounds.min);
             let mut found = outputs([("min", GeometryValue::Point(bounds.min)), ("max", GeometryValue::Point(bounds.max)), ("size", GeometryValue::Vector(size))]);
             if let Some(solid) = box_solid(bounds.min, bounds.max)? {
-                found.insert("box".to_string(), GeometryValue::shape(solid));
+                found.cold_insert("box".to_string(), GeometryValue::shape(solid));
             }
             Ok((found, if bounds.exact { kind.quality } else { Quality::Approximate }))
         })(),
@@ -448,7 +454,7 @@ fn distance(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     )
 }
 
-/// 🔎️ The `index`-th imported handle.
+/// 🔖️ The `index`-th imported handle.
 fn nth_handle(handles: &[GeometryHandle], index: usize) -> Result<GeometryHandle, WidgetFault> {
     handles.get(index).cloned().ok_or_else(lost_state)
 }
@@ -507,7 +513,7 @@ fn classify_point(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 //#endregion 🔖️Pairs
 
 //#region 🔖️Angle
-/// 🧭️ What an angle is measured between: the outward normal of a planar face or the line of a straight edge.
+/// 🌂️ What an angle is measured between: the outward normal of a planar face or the line of a straight edge.
 enum Direction {
     Normal([f64; 3]),
     Line([f64; 3]),
@@ -521,7 +527,7 @@ fn not_straight(port: &str) -> WidgetFault {
     WidgetFault::new("generation3d.geometry.not-straight", "The edge is not straight and has no single direction.", "Die Kante ist nicht gerade und hat keine einheitliche Richtung.").at(port)
 }
 
-/// 🧭️ The direction a face or edge shape stands for, refusing curved faces, curved edges and every other shape.
+/// 🌃️ The direction a face or edge shape stands for, refusing curved faces, curved edges and every other shape.
 fn direction_of(shape: &ShapeValue, port: &str) -> Result<Direction, WidgetFault> {
     let scope = scope_of(shape, port)?;
     match &shape.root {

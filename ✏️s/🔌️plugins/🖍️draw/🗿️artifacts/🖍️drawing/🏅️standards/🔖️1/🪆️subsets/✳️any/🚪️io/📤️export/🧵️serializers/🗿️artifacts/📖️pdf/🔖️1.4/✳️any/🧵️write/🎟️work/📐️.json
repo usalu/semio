@@ -1,0 +1,136 @@
+{
+  "version": 1,
+  "pageBytes": 3072,
+  "logicalScalarBytes": 8,
+  "logicalUtf16Bytes": 2,
+  "objectReferenceBytes": 8,
+  "offsetBytes": 8,
+  "bodyRowBytes": 40,
+  "recordRowBytes": 48,
+  "spanRowBytes": 32,
+  "quanta": [
+    1,
+    7,
+    4096
+  ],
+  "caseNames": [
+    "rectangle",
+    "linear gradient",
+    "radial gradient",
+    "multiply blend",
+    "isolated group opacity",
+    "evenodd hole",
+    "gradient alpha",
+    "duplicate stops"
+  ],
+  "cancelPhases": [
+    "init",
+    "node",
+    "parent",
+    "call",
+    "layerState",
+    "preparePaint",
+    "spans",
+    "paintState",
+    "shade",
+    "functionStart",
+    "functionPieces",
+    "functionBounds",
+    "functionEncode",
+    "maskForm",
+    "maskState",
+    "bodyStart",
+    "stroke",
+    "fill",
+    "path",
+    "pathPaint",
+    "leafEnd",
+    "next",
+    "catalog",
+    "pages",
+    "page",
+    "resources",
+    "resourceEntries",
+    "fileHeader",
+    "objectHeader",
+    "objectData",
+    "freeChain",
+    "xref",
+    "complete"
+  ],
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "depth",
+    "release"
+  ],
+  "sourceCustody": "borrowed-and-unchanged",
+  "outputCustody": "owned-byte-pages",
+  "arcRecordBytes": 56,
+  "arcCase": {
+    "name": "funded original half-circle arc",
+    "segments": [
+      {
+        "kind": "move",
+        "to": [
+          0,
+          1
+        ]
+      },
+      {
+        "kind": "arc",
+        "rx": 1,
+        "ry": 1,
+        "rotation": 0,
+        "largeArc": false,
+        "sweep": true,
+        "to": [
+          2,
+          1
+        ]
+      },
+      {
+        "kind": "close"
+      }
+    ],
+    "svg": "M0 1 A1 1 0 0 1 2 1 Z",
+    "expected": [
+      255,
+      0,
+      0,
+      255,
+      255,
+      0,
+      0,
+      255
+    ],
+    "channelTolerance": 2
+  },
+  "pathAdmissionSegments": [
+    {
+      "kind": "move",
+      "to": [
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "line",
+      "to": [
+        2,
+        0
+      ]
+    },
+    {
+      "kind": "line",
+      "to": [
+        2,
+        1
+      ]
+    },
+    {
+      "kind": "close"
+    }
+  ]
+}

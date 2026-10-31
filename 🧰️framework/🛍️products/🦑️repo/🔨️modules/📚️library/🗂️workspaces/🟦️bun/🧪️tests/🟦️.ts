@@ -10,6 +10,7 @@ import {compare} from "fast-json-patch";
 import ts from "typescript";
 import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,existsSync,realpathSync,renameSync,rmSync,symlinkSync} from "node:fs";
 import {join} from "node:path";
+import {spawnSync} from "node:child_process";
 import {parseBunWorkspaceDeclaration,discoverBunWorkspaces,bunWorkspacePackages,bunWorkspaceNativePatterns} from "../🟦️.ts";
 const corpus=JSON.parse(readFileSync(new URL("./🧫️fixtures/🔣️.json",import.meta.url),"utf8")),validate=new Ajv({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")));
 const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw new Error("SEMIO_TEST_ARTIFACT_DIR is required");mkdirSync(output,{recursive:true});
@@ -266,4 +267,15 @@ test("neutral ownership and generation states retain exact bigint filesystem ide
  const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")),validate=new Ajv({strict:true}).compile({$defs:schema.$defs,$ref:"#/$defs/FrontierStateCase"}),source=readFileSync(new URL("../🟨️.cjs",import.meta.url),"utf8"),tree=ts.createSourceFile("ownership.cjs",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),state=tree.statements.flatMap(node=>ts.isVariableStatement(node)?node.declarationList.declarations:[]).find(node=>node.name.getText(tree)==="ownershipStateV1")!.initializer!,own=new Function("kindOf","return "+state.getText(tree))(()=>"file");
  const generationSource=readFileSync(new URL("../../../⚡️caching/🚀️bootstrap/📦️dependencies/🧾️generation/🟦️.ts",import.meta.url),"utf8"),generationTree=ts.createSourceFile("generation.ts",generationSource,ts.ScriptTarget.Latest,true),definition=generationTree.statements.flatMap(node=>ts.isVariableStatement(node)?node.declarationList.declarations:[]).find(node=>node.name.getText(generationTree)==="stateTuple")!.initializer!,generation=new Function("stateKind",ts.transpileModule("return "+definition.getText(generationTree),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText)(()=>"file"),db=new Database(":memory:");
  try{for(const row of corpus.frontierStates){expect(validate(row)).toBe(true);const oracle=JSON.parse((db.query("select json_array('file',?1,?2,?3) wire").get(row.dev,row.ino,row.mode)as{wire:string}).wire),facts={dev:BigInt(row.dev),ino:BigInt(row.ino),mode:BigInt(row.mode)};expect(oracle).toEqual(row.expected);expect(own(facts)).toEqual(oracle);expect(JSON.parse(generation(facts))).toEqual(oracle);}}finally{db.close();}
+});
+test("gitignored generated package directories under a glob are never workspace members",async()=>{
+ const row=corpus.gitignoredOutputPackages,root=independentRoot("outputs-");put(root,"package.json",scope("outputs-workspace",[row.pattern]));
+ for(const path of row.authored)put(root,path+"/package.json",{name:"authored-"+path.replaceAll("/","-"),version:"1.0.0"});
+ for(const path of row.outputs)put(root,path+"/package.json",{name:"generated-"+path.replaceAll("/","-"),version:"0.1.0"});
+ const report=await ownership.publishBunWorkspaceOwnership(root,{kind:"all"},{signal:cancellation.signal,advance:async()=>{}}),expected=glob.sync(row.pattern+"/package.json",{cwd:root,onlyFiles:true,followSymbolicLinks:false}).map(path=>path.replace(/\/package.json$/u,"")).filter(path=>row.authored.includes(path));
+ expect(expected).toEqual(row.authored);expect(report.packages).toEqual(row.authored);expect(JSON.parse(readFileSync(join(root,"package.json"),"utf8")).workspaces).toEqual(row.authored);
+});
+test("generated package output names are listed by the schema and ignored by git",()=>{
+ const names:string[]=JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json",import.meta.url),"utf8")).$defs.OutputDirectories.const,root=join(import.meta.dir,"../../../../../../../../");
+ for(const name of corpus.gitignoredOutputPackages.ignoredNames){expect(names).toContain(name);expect(spawnSync("git",["check-ignore","-q","--no-index",name+"/package.json"],{cwd:root}).status,name).toBe(0);}
 });

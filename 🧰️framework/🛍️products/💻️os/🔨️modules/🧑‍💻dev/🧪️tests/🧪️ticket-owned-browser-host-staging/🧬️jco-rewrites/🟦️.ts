@@ -7,7 +7,6 @@ export async function registerJcoRewriteTests(vitest: NonNullable<ImportMeta["vi
   const { describe, expect, it } = vitest;
   const { itLong, generatedBridge, retainedGuestSource } = createTestKit(vitest, dependencies, source);
 
-  //#region 🔖️T-P8-tests
   describe("rewriteJcoComponentAssetUrls", () => {
     itLong("keeps generated host imports and replies isolated across same-package activations", async () => {
       const fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧫️fixtures/⚡️host-activation.json"), "utf8")) as { activations: Array<{ actorId: string; generation: string; value: string }> };
@@ -22,7 +21,7 @@ export async function registerJcoRewriteTests(vitest: NonNullable<ImportMeta["vi
       try {
         const apis = [];
         for (const row of fixture.activations) apis.push(await bridge.activate(BigInt(row.generation), row.actorId));
-        const pending = apis.map((api) => api.poll([], undefined, undefined, { fuel: 1, wallMs: 4, maxEffects: 8, maxPatchBytes: 4096 }));
+        const pending = apis.map((api) => api.poll([], undefined, undefined, { maxEffects: 8, maxPatchBytes: 4096, maxFrames: 8 }));
         const isRequest = (message: any): boolean => message.frame.envelope.payload.kind === "effect-request";
         for (let attempt = 0; sent.filter(isRequest).length < apis.length; attempt += 1) {
           if (attempt > 500) throw new Error("the activations never requested their storage read");
@@ -208,5 +207,4 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       }
     });
   });
-  //#endregion 🔖️T-P8-tests
 }

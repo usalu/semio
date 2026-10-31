@@ -1,3 +1,4 @@
+use semio_s_artifact_procedural_3d_geometry_compute::testing::step_with_fuel;
 use super::*;
 use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
 use semio_framework_3d_brep_analysis::{edge_table, face_table, ShapeScope};
@@ -41,6 +42,29 @@ fn a_pipeline_imports_runs_and_exports_with_monotone_progress() {
 }
 
 #[test]
+fn an_unfunded_turn_does_no_work_and_a_funded_turn_does_at_most_its_fuel() {
+    let ran = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let build = |ran: &Arc<std::sync::atomic::AtomicUsize>| {
+        let units = (0..6).fold(Pipeline::new(kind()).import(&cube(2.0)), |pipeline, _| {
+            let ran = Arc::clone(ran);
+            pipeline.once(move |_| {
+                ran.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                Ok(())
+            })
+        });
+        units.exported("shape")
+    };
+    let mut job = build(&ran);
+    assert!(matches!(step_with_fuel(&mut *job, 0), WidgetStep::Working { progress } if progress == 0.0));
+    assert_eq!(ran.load(std::sync::atomic::Ordering::SeqCst), 0, "zero fuel runs no unit");
+    for fuel in [1usize, 2, 3] {
+        let before = ran.load(std::sync::atomic::Ordering::SeqCst);
+        step_with_fuel(&mut *job, fuel);
+        assert!(ran.load(std::sync::atomic::Ordering::SeqCst) - before <= fuel, "{fuel} fuel runs at most {fuel} units");
+    }
+}
+
+#[test]
 fn unbounded_fuel_finishes_in_one_slice_and_equals_the_stepped_run() {
     let shape = cube(2.0);
     let build = |shape: &Arc<ShapeValue>| Pipeline::new(kind()).import(shape).operation(|work| Ok(BrepOperation::Fillet { shape: work.handle(0)?, radius: 0.25 })).exported("shape");
@@ -56,11 +80,11 @@ fn unbounded_fuel_finishes_in_one_slice_and_equals_the_stepped_run() {
 fn cancelling_releases_the_work_and_every_later_step_reports_the_cancellation() {
     let shape = cube(2.0);
     let mut job = Pipeline::new(kind()).import(&shape).operation(|work| Ok(BrepOperation::Fillet { shape: work.handle(0)?, radius: 0.25 })).exported("shape");
-    assert!(matches!(job.step(1), WidgetStep::Working { .. }));
+    assert!(matches!(step_with_fuel(&mut *job, 1), WidgetStep::Working { .. }));
     job.cancel();
     job.cancel();
     for _ in 0..2 {
-        let WidgetStep::Done(evaluation) = job.step(4) else { panic!("a cancelled job is finished") };
+        let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 4) else { panic!("a cancelled job is finished") };
         let fault = evaluation.fault.expect("cancellation is a fault");
         assert_eq!(fault.code, CANCELLED);
         assert!(fault.message.en != fault.message.de && evaluation.outputs.is_empty());
@@ -75,21 +99,21 @@ fn a_finished_job_keeps_answering_with_the_same_evaluation() {
         Ok(())
     }).exported("shape");
     let first = loop {
-        if let WidgetStep::Done(evaluation) = job.step(8) {
+        if let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 8) {
             break evaluation;
         }
     };
-    let WidgetStep::Done(second) = job.step(1) else { panic!("finished") };
+    let WidgetStep::Done(second) = step_with_fuel(&mut *job, 1) else { panic!("finished") };
     assert_eq!(first, second);
     job.cancel();
-    let WidgetStep::Done(third) = job.step(1) else { panic!("finished") };
+    let WidgetStep::Done(third) = step_with_fuel(&mut *job, 1) else { panic!("finished") };
     assert_eq!(first, third, "cancelling a finished job changes nothing");
 }
 
 #[test]
 fn a_panic_inside_the_kernel_becomes_a_localized_kernel_fault() {
     let shape = cube(2.0);
-    let job = Pipeline::new(kind()).import(&shape).once(|_| -> Result<(), WidgetFault> { panic!("[DEBUG] simulated kernel panic") }).exported("shape");
+    let job = Pipeline::new(kind()).import(&shape).once(|_| -> Result<(), WidgetFault> { panic!("simulated kernel panic") }).exported("shape");
     let (_, evaluation) = drive_all(job, usize::MAX);
     let fault = evaluation.fault.expect("fault");
     assert_eq!(fault.code, KERNEL);
@@ -159,4 +183,25 @@ fn several_operations_run_in_order_and_collect_their_results_in_group_zero() {
     let GeometryValue::List(items) = &*evaluation.outputs.get("both").unwrap() else { panic!("list") };
     assert_eq!(items.len(), 2);
     assert!(items.iter().all(|item| volume_of(item) < 8.0));
+}
+
+#[test]
+fn every_funded_export_turn_advances_even_when_the_grant_is_already_exhausted() {
+    let shape = cube(2.0);
+    let mut job = Pipeline::new(kind()).import(&shape).once(|work| {
+        let first = work.handle(0)?;
+        let second = work.session.brep().translate_sync(&first, [1.0, 0.0, 0.0]).map_err(|error| kernel_fault(&error))?;
+        let third = work.session.brep().translate_sync(&first, [2.0, 0.0, 0.0]).map_err(|error| kernel_fault(&error))?;
+        work.groups = vec![vec![first, second, third]];
+        Ok(())
+    }).export_groups().finish(|work| Ok(outputs([("count", GeometryValue::Number(work.values[0].len() as f64))])));
+    let mut turns = 0;
+    let evaluation = loop {
+        turns += 1;
+        assert!(turns <= 64, "a zero-fuel turn must still advance, never livelock");
+        if let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 0) {
+            break evaluation;
+        }
+    };
+    assert!(evaluation.fault.is_none());
 }

@@ -131,7 +131,7 @@
   "w/0/package.json": "{\"name\":\"a\",\"version\":\"1.0.0\",\"dependencies\":{\"b\":\"workspace:*\",\"leaf\":\"1.0.0\"},\"exports\":{\".\":\"./a.js\"},\"description\":\"a\"}",
   "w/1/package.json": "{\"name\":\"b\",\"version\":\"1.0.0\",\"bin\":{\"b\":\"./bin.js\"},\"main\":\"b.js\"}",
   "bun.lock": "{\"lockfileVersion\": 1}\n",
-  "bunfig.toml": "[install]\nlinker = \"isolated\"\n",
+  "bunfig.toml": "[install]\nlinker = \"hoisted\"\n",
   "patches/0.patch": "--- a\n+++ b\n"
  },
  "projection": [

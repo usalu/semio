@@ -1,0 +1,157 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "s.stdio.semio.image",
+ "schemaHash": "45c033e2ab69d1ef2438616c7ec8676fc32ba810f7a6dfeb753b2153bc8e1232",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "width",
+    "optional": false,
+    "shape": {
+     "kind": "uint"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "height",
+    "optional": false,
+    "shape": {
+     "kind": "uint"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "colorspace",
+    "optional": false,
+    "shape": {
+     "kind": "enum",
+     "variants": [
+      [
+       0,
+       "rgb"
+      ],
+      [
+       1,
+       "rgba"
+      ],
+      [
+       2,
+       "grayscale"
+      ],
+      [
+       3,
+       "grayscale-alpha"
+      ],
+      [
+       4,
+       "indexed"
+      ]
+     ]
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "bit-depth",
+    "optional": false,
+    "shape": {
+     "kind": "uint"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 5,
+    "key": "frames",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 1
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 6,
+    "key": "icc",
+    "optional": true,
+    "shape": {
+     "item": {
+      "kind": "uint"
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 7,
+    "key": "metadata",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 2
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "delay-ms",
+    "optional": false,
+    "shape": {
+     "kind": "uint"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "rgba8",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "uint"
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "key",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ]
+ ]
+}

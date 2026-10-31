@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "stock",
+    "maximumCpu",
+    "maximumTurns",
+    "quantum",
+    "nullFrontiers",
+    "deniedAxes",
+    "expected",
+    "phases",
+    "nullResume",
+    "foreignContext"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "stock": {
+      "const": {
+        "maximumItems": 20000,
+        "maximumCopyBytes": 16777216,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 16777216,
+        "maximumDepth": 128
+      }
+    },
+    "maximumCpu": {
+      "const": 20000
+    },
+    "maximumTurns": {
+      "const": 65536
+    },
+    "quantum": {
+      "const": 1
+    },
+    "nullFrontiers": {
+      "const": [
+        "frame",
+        "node"
+      ]
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "capacity",
+        "depth"
+      ]
+    },
+    "expected": {
+      "const": {
+        "deniedWork": 0,
+        "nullWork": 1,
+        "nullAllocations": 1,
+        "handoffWork": 1,
+        "ownershipCopyBytes": 0,
+        "terminalDropBytes": 0,
+        "foreignWork": 0
+      }
+    },
+    "phases": {
+      "const": [
+        "source",
+        "authority",
+        "slot",
+        "frame",
+        "node",
+        "handoff",
+        "admissionClose",
+        "output",
+        "empty",
+        "returning"
+      ]
+    },
+    "nullResume": {
+      "const": [
+        "cancel",
+        "retry"
+      ]
+    },
+    "foreignContext": {
+      "const": "same-operation-generation-distinct-real-source"
+    }
+  }
+}

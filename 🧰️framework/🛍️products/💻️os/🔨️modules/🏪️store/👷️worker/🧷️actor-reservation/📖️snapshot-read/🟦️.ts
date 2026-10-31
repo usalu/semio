@@ -1,6 +1,6 @@
 /** 📖️ Reads one immutable native snapshot through its exact original media-export owner. */
 import type { MediaExportHandle, MediaExportStatus } from "../../../../../../../🔨️modules/🪢️wire-contracts/🟦️.ts";
-import policy from "./🔣️.json";
+import policy from "./🔣️.json" with {type:'json'};
 
 export type SnapshotPackPort = Readonly<{
  submit(port: string, documentId: string, revision: bigint): Promise<MediaExportHandle>;

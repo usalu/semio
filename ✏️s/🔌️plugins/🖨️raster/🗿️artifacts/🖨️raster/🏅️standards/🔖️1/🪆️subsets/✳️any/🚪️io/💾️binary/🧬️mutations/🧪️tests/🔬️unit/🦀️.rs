@@ -54,7 +54,7 @@ async fn raster_document_text_round_trips_store_with_applied_operation() {
 
     let envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "doc-text-test", empty_raster_document(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.install_document_store_owners_exact(raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
+    store.install_document_store_owners_exact(raster_document_store_owners().expect("the Raster owner catalog funds")).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store
         .dispatch(store::os_store::store_schema::ArtifactCommand::Apply {
             mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
@@ -522,7 +522,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     let envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "command-envelope-demo", empty_raster_document(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.install_document_store_owners_exact(raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
+    store.install_document_store_owners_exact(raster_document_store_owners().expect("the Raster owner catalog funds")).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store
         .dispatch(store::os_store::store_schema::ArtifactCommand::Apply {
             mutations: vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer {
@@ -642,7 +642,7 @@ async fn raster_close_diagnosis_direct_store_add_layer_releases_all_owners() {
     let document=semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot();
     let envelope=store::os_store::document_materialize::create_document_envelope::<RasterSnapshot,RasterMutation>(RASTER_DOCUMENT_SCHEMA,"close-owner-law",document,None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut document=store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope,protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
-    document.install_document_store_owners_exact(raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
+    document.install_document_store_owners_exact(raster_document_store_owners().expect("the Raster owner catalog funds")).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     document.dispatch(store::os_store::store_schema::ArtifactCommand::Apply{mutations:vec![RasterMutation::CreateLayer(create_layer::mutation::CreateLayer{parent_id:None,index:0,layer:Box::new(semio_s_artifact_raster_raster_model::create_pixel_layer("Close",512,512))})],transaction:None}, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
     store::os_store::test_support::close_plain_test_store(&mut document);
     assert!(document.close_owned_store_terminal_is_empty(),"direct store AddLayer closure must release all owners");

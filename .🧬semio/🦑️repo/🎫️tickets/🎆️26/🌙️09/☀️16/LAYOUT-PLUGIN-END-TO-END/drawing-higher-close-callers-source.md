@@ -1,0 +1,11 @@
+# Higher Physical Close Caller Migration
+
+The old self-funded production adapter is gone. Eleven current files now carry a genuine finite caller through physical close: the shared test profile, shared prepared helper, fifteen prepared unit/engine law functions, clipboard three laws, prepared physical three laws, the raw retained-command oracle, the Board empty-fill naming law, and the Icon GPU packet helper. The exact files/hashes are in drawing-higher-close-callers-working-files.json.
+
+The prepared close helper requires an explicit held OriginalJobFixtureCaller. Its actual consumers pass the same caller for all callbacks of a law. The Icon GPU helper threads its existing genuine caller through packet close. No caller is created in the per-turn helper or inside a grant loop. No output/heap/pointer/cancellation assertion was removed. The raw oracle gates its shared fixture import under the existing test/artifact-app-testing feature; no new runtime test dependency was introduced.
+
+The shared TEST-ONLY stock is independent and explicit: 20,000 items, 16 MiB each physical byte axis, depth128, 100,000 CPU, clock1 and absolute deadline12345. The physical stock matches the existing worker test stock; no production policy is changed. It is not computed from a requested demand or renewed quantum. Each caller closes its own source under the same remaining bank. This is a physical-close fixture for preexisting test inputs, not proof that an unrelated Host originally admitted them.
+
+Remaining removed-API consumers are retained in the packet as concrete blockers. The worker session law and relay helpers have no genuine admitting payer because their old source-less worker ingress is still unmigrated; substituting an independent fresh close source would be invalid. The World model/host helpers still use old raw semantic context/StepOutcome entry. Those require one genuine source through semantic admission, body, returned-arm receipt and close, rather than a local close-only replacement. Existing cases remain present and mandatory.
+
+Prepared semantic helper raw StepContext construction is also an existing compile-facing migration blocker beyond the close-only change. No SourceReady, compilation, owning pass or Host authority claim is made. No Cargo or semantic runtime was launched by this lane.

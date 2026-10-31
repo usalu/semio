@@ -1,0 +1,67 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🦀️.rs",
+    "bytes": 25579,
+    "sha256": "f6a042dbb93f518f95e9ed15cc32dd67ac54a1a85bdcec20c5cccd3d5959de8e"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🦀️.rs",
+    "bytes": 18772,
+    "sha256": "213ff924366ebc8f33df8f3ad80a09db2623e09388dc856c0028a8957acba808"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🦀️.rs",
+    "bytes": 14064,
+    "sha256": "5e60e22407260228e7fc4ca2b68bd0d295a59d622099d1decfb53fc8c9d4253f"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🦀️.rs",
+    "bytes": 81494,
+    "sha256": "e1437f7c2014ae66e99d8deaf127a3787d649badb4792451a135709d1843a31a"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🟦️.ts",
+    "bytes": 13160,
+    "sha256": "5acc74b612e96cd5d98556cda27c643f361bfdc3fbd9d165d9eadc8ea35f5179"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+    "bytes": 42670,
+    "sha256": "902b5eb60c12ec8f0a928d8e6f8784b410da78ea18beaa5f59bcd23934c7a0d9"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧵️job/🦀️.rs",
+    "bytes": 58297,
+    "sha256": "db2dde537e54f040dbfae989bb1a27c5542592118d7c0d863e7fe4497a964377"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧪️tests/🎟️work/workspace.ts",
+    "bytes": 2577,
+    "sha256": "c3a1c5fff2ba0efbc79c24ae93410d87642736838a5ba60364a17a9adf0b4196"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧪️tests/🎟️work/workspace.test.ts",
+    "bytes": 195,
+    "sha256": "d056e0969ae38375b320a4e57246729960c3e2563abdcec84ec955871f01a360"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🎟️work/🔣️.json",
+    "bytes": 1657,
+    "sha256": "630576844e27ea0d3d0f7bf338f8e21b890eacb1be355d98c9e11330948a2377"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🎟️work/📐️.json",
+    "bytes": 725,
+    "sha256": "247a9d630b76c3cd8537813948ed6a8f0751320fc736fc80044ce701a6307a26"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🎟️work/🧪️tests/🦀️.rs",
+    "bytes": 6009,
+    "sha256": "e985e929cdc16503a453d4c97af751e87ab5f028d5bbd710abc763bd4533e15f"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🧪️tests/🔬️unit/🦀️.rs",
+    "bytes": 3846,
+    "sha256": "5d31856317ed2d04655a4b2afef87f00522ba4e41ab86bc90d6242fdaa7e3a28"
+  }
+]

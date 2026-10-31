@@ -37,6 +37,7 @@ pub mod create_widget {
     pub mod inverse;
     pub use component::*;
 }
+pub use create_widget::create_widget;
 #[path = "."]
 pub mod delete_widget {
     #[path = "../🗑️delete-widget/🦀️.rs"]
@@ -47,6 +48,7 @@ pub mod delete_widget {
     pub mod inverse;
     pub use component::*;
 }
+pub use delete_widget::delete_widget;
 #[path = "."]
 pub mod replace_widget {
     #[path = "../🔁️replace-widget/🦀️.rs"]
@@ -57,6 +59,7 @@ pub mod replace_widget {
     pub mod inverse;
     pub use component::*;
 }
+pub use replace_widget::replace_widget;
 #[path = "."]
 pub mod move_widget {
     #[path = "../📍️move/🦀️.rs"]
@@ -67,6 +70,7 @@ pub mod move_widget {
     pub mod inverse;
     pub use component::*;
 }
+pub use move_widget::move_widget;
 #[path = "."]
 pub mod clear_widget_layout {
     #[path = "../🧹clear-widget-layout/🦀️.rs"]
@@ -77,6 +81,7 @@ pub mod clear_widget_layout {
     pub mod inverse;
     pub use component::*;
 }
+pub use clear_widget_layout::clear_widget_layout;
 #[path = "."]
 pub mod change_slider_value {
     #[path = "../🎚️change-slider-value/🦀️.rs"]
@@ -87,6 +92,7 @@ pub mod change_slider_value {
     pub mod inverse;
     pub use component::*;
 }
+pub use change_slider_value::change_slider_value;
 #[path = "."]
 pub mod move_nodes {
     #[path = "../🚚️move-nodes/🦀️.rs"]
@@ -97,3 +103,4 @@ pub mod move_nodes {
     pub mod inverse;
     pub use component::*;
 }
+pub use move_nodes::move_nodes;

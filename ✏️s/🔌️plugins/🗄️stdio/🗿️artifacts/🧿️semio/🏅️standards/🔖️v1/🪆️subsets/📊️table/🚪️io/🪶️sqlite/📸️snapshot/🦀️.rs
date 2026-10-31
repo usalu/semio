@@ -22,11 +22,9 @@ mod reconstruction;
 pub(crate)fn admit_values(snapshot:&SemioTableSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;projection::admit(snapshot,phase,control)}
 /// 🏛️ Checks the exact authored layout before native ownership.
 pub(crate)fn admit_layout(limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
-/// 📦️ Counts actual binary primitive cells before typed construction.
-pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
 /// 📃️ Counts actual document primitive cells before typed construction.
 pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
-/// 📊️ Visits independent declarations and every cell without imposing a rectangular shape.
+/// 🔋️ Visits independent declarations and every cell without imposing a rectangular shape.
 pub fn visit_rows(snapshot:&SemioTableSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key("semio_table_document",1,&[Cell::Text(&snapshot.schema)])?;
  for(ordinal,column)in snapshot.columns.iter().enumerate(){out.insert("semio_table_column",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&column.name),Cell::Text(kind(column.kind))])?;}
@@ -66,7 +64,7 @@ impl SemioTableSnapshot {
     /// 🧩️ Projects owned semantic fields with typed relational refusals.
     pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::layout(control.limits())?;projection::project(self,Self::SQLITE_SCHEMA,control)}
 
-    /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
+    /// 🔤️ Restores the owned typed subset inside its independently declared relational composition.
     pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{reconstruction::reconstruct(database,control,declared_schema)}
 }
 

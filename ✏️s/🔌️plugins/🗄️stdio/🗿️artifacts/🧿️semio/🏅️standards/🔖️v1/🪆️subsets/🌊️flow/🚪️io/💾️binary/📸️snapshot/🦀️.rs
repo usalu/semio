@@ -361,24 +361,25 @@ impl SemioFlowSnapshotDecode {
 }
 
 impl ErasedSnapshotRetirement for SemioFlowSnapshotDecode {
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
-        use semio_framework_value::{retained_clone::{RetainedCloneProgress, RetainedCloneStep}, ValueError, ValueRefusalKind};
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
+        use semio_framework_value::{retained_clone::{RetainedCloneProgress, RetainedCloneStep}, RetainedWorkOutcome, ValueError, ValueRefusalKind};
         let empty = RetainedCloneProgress::default();
-        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
-        if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        let refuse = |error: ValueError| RetainedWorkOutcome { result: Err(error), work: 0 };
+        if self.terminal_is_empty() { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(empty)), work: 0 }; }
+        if grant.maximum_items == 0 { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(empty)), work: 0 }; }
         let body = if grant.maximum_copy_bytes == 0 { grant.maximum_release_bytes } else { grant.maximum_copy_bytes };
-        let demand = self.retirement_demands(body)?;
-        if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "Flow decoder close exceeds original admitted depth")); }
-        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
+        let demand = match self.retirement_demands(body) { Ok(demand) => demand, Err(error) => return refuse(error) };
+        if grant.maximum_depth < demand.depth { return refuse(ValueError::literal(ValueRefusalKind::DepthLimit, "Flow decoder close exceeds original admitted depth")); }
+        if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(empty)), work: 0 }; }
         self.reject(MemberOpenDiagnostic::Cancelled);
         if self.active.is_some() { return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant); }
         if self.snapshot.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, grant); }
-        if let Some(request) = self.request.as_mut() { return request.close_step(grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if let Some(request) = self.request.as_mut() { let turn = ErasedSnapshotRetirement::close_step(request, grant);
+            return RetainedWorkOutcome { result: turn.result.map(|step| RetainedCloneStep::Progress(step.progress())), work: turn.work }; }
         self.scalar.fill(0);
         self.terminal = true;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty }))
+        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..empty })), work: 0 }
     }
-
     fn terminal_is_empty(&self) -> bool { self.terminal && self.request.is_none() && self.snapshot.is_none() && self.active.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }

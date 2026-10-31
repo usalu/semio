@@ -1,7 +1,6 @@
 //! 🤝️ Dependence measures over table columns: divergences, mutual and transfer information, partial information decomposition, matrix entropies and Fisher criteria.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 #[path = "."]
 pub mod schema {

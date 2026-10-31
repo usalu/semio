@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "stock": {
+    "items": 4096,
+    "copyBytes": 16777216,
+    "capacityBytes": 16777216,
+    "releaseBytes": 16777216,
+    "depth": 128,
+    "fuel": 16384
+  },
+  "maximumTurns": 4096,
+  "quantum": 1,
+  "phases": [
+    "owner",
+    "alias",
+    "payload",
+    "lease",
+    "publication"
+  ],
+  "allocationPhases": [
+    "owner",
+    "payload",
+    "lease"
+  ],
+  "deniedAxes": [
+    "items",
+    "capacity",
+    "depth"
+  ],
+  "cancelCuts": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "nullWork": 1,
+  "deniedWork": 0,
+  "cachedWork": 0,
+  "moveCopyBytes": 0,
+  "texts": [
+    "",
+    "owned λ",
+    "🌿 source"
+  ],
+  "sharedQuote": {
+    "threads": 2,
+    "iterations": 16,
+    "states": [
+      "admitting",
+      "returning"
+    ],
+    "childCallbacks": 0,
+    "heapBytes": 0
+  }
+}

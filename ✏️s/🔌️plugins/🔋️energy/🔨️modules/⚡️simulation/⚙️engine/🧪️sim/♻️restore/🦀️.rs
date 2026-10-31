@@ -482,11 +482,11 @@ impl EnergyRestoreJob {
         if self.replay_retiring.is_none()&&self.replay_checkpoint_lease.is_none()&&self.packet.is_none(){
             if let Some(rebuild)=self.rebuild.as_mut(){
                 if !rebuild.terminal_is_empty(){let grant=cx.retained_grant();if grant.maximum_depth<2{return Ok(energy_idle())}return cx.with_retained_loan(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant},|cx|rebuild.close_step(cx));}
-                return semio_framework_job::close_original_retained_step(cx,RetirementDemand{copy_bytes:size_of::<Option<EnergyJob>>(),depth:1,..Default::default()},|_|{drop(self.rebuild.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<EnergyJob>>(),..Default::default()}))});
+                return crate::retirement::energy_retained_step(cx,RetirementDemand{copy_bytes:size_of::<Option<EnergyJob>>(),depth:1,..Default::default()},|_|{drop(self.rebuild.take());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<EnergyJob>>(),..Default::default()}))});
             }
         }
         let demand=self.close_demands()?;
-        semio_framework_job::close_original_retained_step(cx,demand,|loan|self.close_owned_frontier(loan).map(|step|RetainedCloneStep::Progress(step.progress())))
+        crate::retirement::energy_retained_step(cx,demand,|loan|self.close_owned_frontier(loan).map(|step|RetainedCloneStep::Progress(step.progress())))
     }
 
     fn close_owned_frontier(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {

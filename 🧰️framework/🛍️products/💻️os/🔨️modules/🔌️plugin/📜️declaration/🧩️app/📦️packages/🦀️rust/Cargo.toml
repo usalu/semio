@@ -22,10 +22,12 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-reserved-producer-testing = ["dep:serde_json", "dep:semio-framework-trace"]
+reserved-producer-testing = ["semio-framework-plugin-original-job-ownership/reserved-producer-testing", "dep:serde_json", "dep:semio-framework-trace"]
 artifact-app-testing = []
 
 [dependencies]
+semio-framework-plugin-original-job-ownership = { path = "../../../👷️job/🧱️ownership/📦️packages/🦀️rust" }
+semio-framework-tool-typing-edit = { path = "../../../../../../../../🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust" }
 semio-framework-job-payload = { path = "../../../../../../../../🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-plugin-actor-host = { path = "../../../../🌐host/📦️packages/🦀️rust" }
 semio-framework-actor = { workspace = true }

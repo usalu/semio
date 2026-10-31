@@ -16,16 +16,12 @@ format's own committed specification:
   — `document = artifact-mark schema-line masters-line layouts-line slides-line`, the four
   single-letter `shape` tags, the seven `placeholder-kind` letters, and document's own `block`
   family verbatim, with every numeric leaf printed as the decimal of `f64::to_bits()`;
-* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio` and
-  its Kaitai mirror, which state the `format` byte and the varint-length-prefixed `schema` and then
-  declare the collections an opaque `payload` chain — naming, though, exactly what is inside it:
-  *"a data-carrying tagged `SlideShape` union whose `TextBox`/`Table` variants further embed
-  document's own recursive `DocBlock` union, real-tag-byte-encoded, with every `DocBlock` leaf
-  reusing document's real `enc_block`/`dec_block` TEXT codec embedded as a length-prefixed UTF-8
-  blob"*. The record layout below was DERIVED from that description together with the committed
-  `✉️base/📚️examples/📽️deck/🖼️assets/🎒️.pack.semio` bytes, whose DSL twin pins every field
-  against a readable spelling; the derivation is then pinned by re-encoding that committed file byte
-  for byte, which a misreading could not do;
+* the pack body is the derived record document of the shared record-document codec
+  (`🧿️semio/🚪️io/💾️binary/🎒️record-document/🐍️.py`), driven by this subset's committed record spec
+  `…/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json`: the SPK container, the fixed-Huffman deflate, the BLAKE3
+  content hash and the schema-hashed record body are specified by `🧰️framework/🔨️modules/🎒️pack` and
+  re-implemented there, not here. The committed `🎒️.pack.semio` files were written by the Rust record
+  pack, so `parse_pack`/`pack_bytes` reproducing them is a cross-language byte agreement;
 * the fifteen verbs, their argument lists and their JSON wire form are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, the committed proto/JSON schema
   mirrors and the committed `(before, mutation, after)` specification vectors in this case's own
@@ -39,8 +35,11 @@ tune away.
 from __future__ import annotations
 
 # region 🔖️Imports
+import importlib.util
 import json
+import os
 import struct
+import sys
 
 from semio_repo_test import Adapter, Context, Outcome, digest
 
@@ -48,22 +47,13 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 
 
 # region 🔖️Carrier
-BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 DSL_PREAMBLE = "semio s.stdio.semio.presentation.dsl v1"
-PACK_TOKEN = "s.stdio.semio.presentation.pack v1"
-PACK_FORMAT = 1
 
-#: 🧩️ `shape = "X"… | "P"… | "T"… | "H"…` in the grammar's own order, which is also the tag ordinal
-#: the pack frame writes — the committed deck's text box, picture, table and placeholder carry
-#: `0x00`, `0x01`, `0x02` and `0x03` in exactly that order.
-SHAPE_ORDER = ("textBox", "picture", "table", "placeholder")
+#: 🧩️ `shape = "X"… | "P"… | "T"… | "H"…`.
 SHAPE_LETTER = {"textBox": "X", "picture": "P", "table": "T", "placeholder": "H"}
 LETTER_SHAPE = {letter: kind for kind, letter in SHAPE_LETTER.items()}
 
-#: 🏷️ `placeholder-kind = "T" | "S" | "B" | "F" | "N" | "D" | "O" "[" hex "]"`, and the same order
-#: as the pack ordinal — the committed deck's `T` master placeholder is `0x00`, its `S` layout
-#: placeholder `0x01` and its `O[custom]` slide placeholder `0x06`.
-PLACEHOLDER_ORDER = ("title", "subtitle", "body", "footer", "slideNumber", "dateTime", "other")
+#: 🏷️ `placeholder-kind = "T" | "S" | "B" | "F" | "N" | "D" | "O" "[" hex "]"`.
 PLACEHOLDER_LETTER = {"title": "T", "subtitle": "S", "body": "B", "footer": "F", "slideNumber": "N", "dateTime": "D", "other": "O"}
 LETTER_PLACEHOLDER = {letter: kind for kind, letter in PLACEHOLDER_LETTER.items()}
 
@@ -83,7 +73,7 @@ def hex_of_text(text: str) -> str:
 
 
 def text_of_hex(hexed: str) -> str:
-    """🔡️ The grammar's `hex` macro in the reading direction, for a string leaf."""
+    """🪄️ The grammar's `hex` macro in the reading direction, for a string leaf."""
     return bytes.fromhex(hexed).decode("utf-8")
 
 
@@ -93,7 +83,7 @@ def bits_of(value: float) -> str:
 
 
 def float_of(bits: str) -> float:
-    """🔢️ `enc_f64` in the reading direction."""
+    """🌀️ `enc_f64` in the reading direction."""
     return struct.unpack("<d", struct.pack("<Q", int(bits)))[0]
 
 
@@ -123,26 +113,26 @@ def split_top_level(text: str) -> list:
 
 
 def strip_brackets(text: str, what: str) -> str:
-    """📜️ Unwraps one `[...]` group, refusing anything the grammar does not admit there."""
+    """🚪️ Unwraps one `[...]` group, refusing anything the grammar does not admit there."""
     if len(text) < 2 or text[0] != "[" or text[-1] != "]":
         raise AssertionError("%s must be a bracketed group, found %r" % (what, text[:60]))
     return text[1:-1]
 
 
 def items_of(text: str, what: str) -> list:
-    """📜️ The members of a bracketed list, or nothing at all for `[]`."""
+    """🧑️ The members of a bracketed list, or nothing at all for `[]`."""
     return split_top_level(strip_brackets(text, what))
 
 
 def tagged_group(text: str, what: str) -> tuple:
-    """📜️ A `<letter>[...]` alternative — its tag letter and the body inside its brackets."""
+    """🧍️ A `<letter>[...]` alternative — its tag letter and the body inside its brackets."""
     if len(text) < 1:
         raise AssertionError("%s must carry a tag letter, found %r" % (what, text[:60]))
     return text[0], text[1:]
 
 
 def parse_option_hex(text: str, what: str):
-    """📜️ `option-hex = "[" "0" "]" | "[" "1" "," hex "]"`, read as an optional string."""
+    """🔘️ `option-hex = "[" "0" "]" | "[" "1" "," hex "]"`, read as an optional string."""
     parts = items_of(text, what)
     if parts == ["0"]:
         return None
@@ -152,12 +142,12 @@ def parse_option_hex(text: str, what: str):
 
 
 def print_option_hex(value) -> str:
-    """📜️ `option-hex` in the writing direction."""
+    """🌁️ `option-hex` in the writing direction."""
     return "[0]" if value is None else "[1,%s]" % hex_of_text(value)
 
 
 def parse_option_num(text: str, what: str):
-    """📜️ `option-num = "[" "0" "]" | "[" "1" "," INT "]"`, read as an optional `f64`."""
+    """🔟️ `option-num = "[" "0" "]" | "[" "1" "," INT "]"`, read as an optional `f64`."""
     parts = items_of(text, what)
     if parts == ["0"]:
         return None
@@ -167,19 +157,19 @@ def parse_option_num(text: str, what: str):
 
 
 def print_option_num(value) -> str:
-    """📜️ `option-num` in the writing direction."""
+    """🌂️ `option-num` in the writing direction."""
     return "[0]" if value is None else "[1,%s]" % bits_of(value)
 
 
 def parse_bool(text: str, what: str) -> bool:
-    """📜️ `bool = "0" | "1"`."""
+    """🔀️ `bool = "0" | "1"`."""
     if text not in ("0", "1"):
         raise AssertionError("%s is not a well-formed bool: %r" % (what, text[:20]))
     return text == "1"
 
 
 def print_bool(value: bool) -> str:
-    """📜️ `bool` in the writing direction."""
+    """🌃️ `bool` in the writing direction."""
     return "1" if value else "0"
 
 
@@ -204,7 +194,7 @@ def parse_run_style(text: str) -> dict:
 
 
 def print_run_style(style: dict) -> str:
-    """✍️ `run-style` in the writing direction."""
+    """🏃️ `run-style` in the writing direction."""
     return "[%s,%s,%s,%s,%s,%s,%s]" % (
         print_bool(style["bold"]),
         print_bool(style["italic"]),
@@ -217,7 +207,7 @@ def print_run_style(style: dict) -> str:
 
 
 def parse_run(text: str) -> dict:
-    """✍️ `run = "[" hex "," run-style "]"`."""
+    """🌄️ `run = "[" hex "," run-style "]"`."""
     parts = items_of(text, "a run")
     if len(parts) != 2:
         raise AssertionError("a run carries a text and a style, found %d leaves" % len(parts))
@@ -225,7 +215,7 @@ def parse_run(text: str) -> dict:
 
 
 def print_run(run: dict) -> str:
-    """✍️ `run` in the writing direction."""
+    """🌅️ `run` in the writing direction."""
     return "[%s,%s]" % (hex_of_text(run["text"]), print_run_style(run["style"]))
 
 
@@ -254,17 +244,17 @@ def parse_block(text: str) -> dict:
 
 
 def parse_doc_row(text: str) -> dict:
-    """📄️ `doc-row = "[" "[" doc-cell-items? "]" "]"` — one wrapper more than this subset's own row."""
+    """📚️ `doc-row = "[" "[" doc-cell-items? "]" "]"` — one wrapper more than this subset's own row."""
     return {"cells": [{"blocks": [parse_block(block) for block in items_of(strip_brackets(cell, "a doc cell"), "doc cell blocks")]} for cell in items_of(strip_brackets(text, "a doc row"), "doc cells")]}
 
 
 def print_doc_row(row: dict) -> str:
-    """📄️ `doc-row` in the writing direction."""
+    """🧾️ `doc-row` in the writing direction."""
     return "[[%s]]" % ",".join("[[%s]]" % ",".join(print_block(block) for block in cell["blocks"]) for cell in row["cells"])
 
 
 def print_block(block: dict) -> str:
-    """📄️ document's own `block` union in the writing direction."""
+    """🧱️ document's own `block` union in the writing direction."""
     kind = block["kind"]
     if kind == "paragraph":
         return "P[%s,[%s]]" % (print_option_hex(block.get("style_id")), ",".join(print_run(run) for run in block.get("runs", [])))
@@ -299,7 +289,7 @@ def parse_frame(text: str) -> dict:
 
 
 def print_frame(frame: dict) -> str:
-    """📐️ `frame` in the writing direction."""
+    """🌆️ `frame` in the writing direction."""
     return "[[%s,%s],%s,%s]" % (bits_of(frame["origin"]["x"]), bits_of(frame["origin"]["y"]), bits_of(frame["width"]), bits_of(frame["height"]))
 
 
@@ -317,7 +307,7 @@ def parse_placeholder_kind(text: str) -> dict:
 
 
 def print_placeholder_kind(kind: dict) -> str:
-    """🏷️ `placeholder-kind` in the writing direction."""
+    """🌇️ `placeholder-kind` in the writing direction."""
     if kind["kind"] == "other":
         return "O[%s]" % hex_of_text(kind["value"])
     return PLACEHOLDER_LETTER[kind["kind"]]
@@ -348,12 +338,12 @@ def parse_table_row(text: str) -> dict:
 
 
 def print_table_row(row: dict) -> str:
-    """➖️ `row` in the writing direction."""
+    """🌈️ `row` in the writing direction."""
     return "[%s]" % ",".join("[%s]" % ",".join(print_block(block) for block in cell["blocks"]) for cell in row["cells"])
 
 
 def print_shape(shape: dict) -> str:
-    """🧩️ `shape` in the writing direction."""
+    """🔷️ `shape` in the writing direction."""
     kind = shape["shapeKind"]
     frame = print_frame(shape["frame"])
     if kind == "textBox":
@@ -373,7 +363,7 @@ def print_shape(shape: dict) -> str:
 
 # region 🔖️Dsl
 def strip_preamble(text: str) -> str:
-    """📜️ Splits the mandatory text envelope preamble off and checks it names this artifact."""
+    """✂️ Splits the mandatory text envelope preamble off and checks it names this artifact."""
     line, _, body = text.partition("\n")
     if line != DSL_PREAMBLE:
         raise AssertionError("the text envelope preamble is %r, expected %r" % (line, DSL_PREAMBLE))
@@ -381,7 +371,7 @@ def strip_preamble(text: str) -> str:
 
 
 def read_field(body: str, name: str) -> tuple:
-    """📜️ Reads one `name=value` line off the front of the body, in the grammar's fixed order."""
+    """📛️ Reads one `name=value` line off the front of the body, in the grammar's fixed order."""
     line, _, rest = body.partition("\n")
     prefix = name + "="
     if not line.startswith(prefix):
@@ -390,7 +380,7 @@ def read_field(body: str, name: str) -> tuple:
 
 
 def parse_dsl(text: str) -> dict:
-    """📜️ `document = artifact-mark schema-line masters-line layouts-line slides-line`."""
+    """🌉️ `document = artifact-mark schema-line masters-line layouts-line slides-line`."""
     body = strip_preamble(text)
     schema_hex, body = read_field(body, "schema")
     masters, body = read_field(body, "masters")
@@ -413,7 +403,7 @@ def parse_master(text: str) -> dict:
 
 
 def parse_layout(text: str) -> dict:
-    """📐️ `layout = "[" hex "," hex "," "[" shape-items? "]" "]"`."""
+    """🌊️ `layout = "[" hex "," hex "," "[" shape-items? "]" "]"`."""
     parts = items_of(text, "a layout")
     return {"id": text_of_hex(parts[0]), "masterId": text_of_hex(parts[1]), "shapes": [parse_shape(entry) for entry in items_of(parts[2], "layout shapes")]}
 
@@ -430,7 +420,7 @@ def parse_slide(text: str) -> dict:
 
 
 def print_dsl(document: dict) -> str:
-    """📜️ The committed DSL grammar in the writing direction, line for line in its declared order."""
+    """🌋️ The committed DSL grammar in the writing direction, line for line in its declared order."""
     masters = ",".join("[%s,[%s]]" % (hex_of_text(master["id"]), ",".join(print_shape(shape) for shape in master["shapes"])) for master in document["masters"])
     layouts = ",".join("[%s,%s,[%s]]" % (hex_of_text(layout["id"]), hex_of_text(layout["masterId"]), ",".join(print_shape(shape) for shape in layout["shapes"])) for layout in document["layouts"])
     slides = ",".join(
@@ -443,235 +433,33 @@ def print_dsl(document: dict) -> str:
 
 
 # region 🔖️Pack
-def read_varint(data: bytes, at: int) -> tuple:
-    """🔢️ LEB128, the `varint` every count and length prefix below uses."""
-    value = 0
-    shift = 0
-    while True:
-        byte = data[at]
-        at += 1
-        value |= (byte & 0x7F) << shift
-        if byte & 0x80 == 0:
-            return value, at
-        shift += 7
+_HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def write_varint(value: int) -> bytes:
-    """🔢️ LEB128 in the writing direction."""
-    out = bytearray()
-    while True:
-        byte = value & 0x7F
-        value >>= 7
-        if value:
-            out.append(byte | 0x80)
-            continue
-        out.append(byte)
-        return bytes(out)
+def _load_shared(alias, *parts):
+    """🧬️ Loads a shared module from the `stdio.semio` artifact root, six folders above this case, and registers it under an importable name."""
+    if alias in sys.modules:
+        return sys.modules[alias]
+    path = os.path.join(_HERE, *[os.pardir] * 6, *parts)
+    spec = importlib.util.spec_from_file_location(alias, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[alias] = module
+    spec.loader.exec_module(module)
+    return module
 
 
-def read_blob(data: bytes, at: int) -> tuple:
-    """🔢️ A varint-length-prefixed byte run."""
-    length, at = read_varint(data, at)
-    return data[at : at + length], at + length
-
-
-def write_blob(payload: bytes) -> bytes:
-    """🔢️ A varint-length-prefixed byte run in the writing direction."""
-    return write_varint(len(payload)) + payload
-
-
-def read_f64(data: bytes, at: int) -> tuple:
-    """🔢️ One little-endian `f64`."""
-    return struct.unpack_from("<d", data, at)[0], at + 8
-
-
-def read_frame(data: bytes, at: int) -> tuple:
-    """📐️ The four `f64` leaves of a frame, origin first."""
-    x, at = read_f64(data, at)
-    y, at = read_f64(data, at)
-    width, at = read_f64(data, at)
-    height, at = read_f64(data, at)
-    return {"origin": {"x": x, "y": y}, "width": width, "height": height}, at
-
-
-def write_frame(frame: dict) -> bytes:
-    """📐️ A frame in the writing direction."""
-    return struct.pack("<dddd", frame["origin"]["x"], frame["origin"]["y"], frame["width"], frame["height"])
-
-
-def read_blocks(data: bytes, at: int) -> tuple:
-    """📄️ A varint-counted run of `DocBlock`s, each one an `enc_block` TEXT blob."""
-    count, at = read_varint(data, at)
-    blocks = []
-    for _ in range(count):
-        blob, at = read_blob(data, at)
-        blocks.append(parse_block(blob.decode("utf-8")))
-    return blocks, at
-
-
-def write_blocks(blocks: list) -> bytes:
-    """📄️ The same run in the writing direction."""
-    out = bytearray(write_varint(len(blocks)))
-    for block in blocks:
-        out += write_blob(print_block(block).encode("utf-8"))
-    return bytes(out)
-
-
-def read_shape(data: bytes, at: int) -> tuple:
-    """🧩️ One tag byte, one frame, then the variant's own payload."""
-    tag = data[at]
-    at += 1
-    if tag >= len(SHAPE_ORDER):
-        raise AssertionError("the pack shape tag %d is outside the declared union" % tag)
-    kind = SHAPE_ORDER[tag]
-    frame, at = read_frame(data, at)
-    if kind == "textBox":
-        blocks, at = read_blocks(data, at)
-        return {"shapeKind": "textBox", "frame": frame, "blocks": blocks}, at
-    if kind == "picture":
-        asset, at = read_blob(data, at)
-        mime, at = read_blob(data, at)
-        payload, at = read_blob(data, at)
-        return {"shapeKind": "picture", "frame": frame, "image": {"assetId": asset.decode("utf-8"), "mime": mime.decode("utf-8"), "bytes": list(payload)}}, at
-    if kind == "table":
-        rows, at = read_varint(data, at)
-        table = []
-        for _ in range(rows):
-            cells, at = read_varint(data, at)
-            row = []
-            for _ in range(cells):
-                blocks, at = read_blocks(data, at)
-                row.append({"blocks": blocks})
-            table.append({"cells": row})
-        return {"shapeKind": "table", "frame": frame, "rows": table}, at
-    ordinal = data[at]
-    at += 1
-    if ordinal >= len(PLACEHOLDER_ORDER):
-        raise AssertionError("the pack placeholder ordinal %d is outside the declared union" % ordinal)
-    if PLACEHOLDER_ORDER[ordinal] != "other":
-        return {"shapeKind": "placeholder", "frame": frame, "kind": {"kind": PLACEHOLDER_ORDER[ordinal]}}, at
-    value, at = read_blob(data, at)
-    return {"shapeKind": "placeholder", "frame": frame, "kind": {"kind": "other", "value": value.decode("utf-8")}}, at
-
-
-def write_shape(shape: dict) -> bytes:
-    """🧩️ One shape in the writing direction."""
-    kind = shape["shapeKind"]
-    out = bytearray([SHAPE_ORDER.index(kind)])
-    out += write_frame(shape["frame"])
-    if kind == "textBox":
-        out += write_blocks(shape.get("blocks", []))
-        return bytes(out)
-    if kind == "picture":
-        image = shape["image"]
-        out += write_blob(image["assetId"].encode("utf-8"))
-        out += write_blob(image["mime"].encode("utf-8"))
-        out += write_blob(bytes(image.get("bytes", [])))
-        return bytes(out)
-    if kind == "table":
-        rows = shape.get("rows", [])
-        out += write_varint(len(rows))
-        for row in rows:
-            out += write_varint(len(row["cells"]))
-            for cell in row["cells"]:
-                out += write_blocks(cell["blocks"])
-        return bytes(out)
-    placeholder = shape["kind"]
-    out.append(PLACEHOLDER_ORDER.index(placeholder["kind"]))
-    if placeholder["kind"] == "other":
-        out += write_blob(placeholder["value"].encode("utf-8"))
-    return bytes(out)
-
-
-def read_shapes(data: bytes, at: int) -> tuple:
-    """🧩️ A varint-counted shape tree."""
-    count, at = read_varint(data, at)
-    shapes = []
-    for _ in range(count):
-        shape, at = read_shape(data, at)
-        shapes.append(shape)
-    return shapes, at
-
-
-def write_shapes(shapes: list) -> bytes:
-    """🧩️ A shape tree in the writing direction."""
-    out = bytearray(write_varint(len(shapes)))
-    for shape in shapes:
-        out += write_shape(shape)
-    return bytes(out)
+record_document = _load_shared("record_document", "🚪️io", "💾️binary", "🎒️record-document", "🐍️.py")
+RECORD_SPEC = record_document.load_record_spec(os.path.join(_HERE, os.pardir, os.pardir, "🧬️schema", "📸️snapshot", "🗺️record-spec", "🔣️.json"))
 
 
 def parse_pack(data: bytes) -> dict:
-    """🎒️ The committed binary envelope and the pack frame it wraps."""
-    if data[:8] != BINARY_MAGIC:
-        raise AssertionError("the binary envelope magic is %r, expected %r" % (data[:8], BINARY_MAGIC))
-    token_length = int.from_bytes(data[8:12], "little")
-    token = data[12 : 12 + token_length].decode("utf-8")
-    if token != PACK_TOKEN:
-        raise AssertionError("the binary envelope token is %r, expected %r" % (token, PACK_TOKEN))
-    at = 12 + token_length
-    if data[at] != PACK_FORMAT:
-        raise AssertionError("the pack format byte is %d, expected %d" % (data[at], PACK_FORMAT))
-    at += 1
-    schema, at = read_blob(data, at)
-    count, at = read_varint(data, at)
-    masters = []
-    for _ in range(count):
-        identifier, at = read_blob(data, at)
-        shapes, at = read_shapes(data, at)
-        masters.append({"id": identifier.decode("utf-8"), "shapes": shapes})
-    count, at = read_varint(data, at)
-    layouts = []
-    for _ in range(count):
-        identifier, at = read_blob(data, at)
-        master, at = read_blob(data, at)
-        shapes, at = read_shapes(data, at)
-        layouts.append({"id": identifier.decode("utf-8"), "masterId": master.decode("utf-8"), "shapes": shapes})
-    count, at = read_varint(data, at)
-    slides = []
-    for _ in range(count):
-        identifier, at = read_blob(data, at)
-        present = data[at]
-        at += 1
-        layout = None
-        if present == 1:
-            blob, at = read_blob(data, at)
-            layout = blob.decode("utf-8")
-        elif present != 0:
-            raise AssertionError("the layout-id presence byte is %d, expected 0 or 1" % present)
-        shapes, at = read_shapes(data, at)
-        notes, at = read_blocks(data, at)
-        slides.append({"id": identifier.decode("utf-8"), "layoutId": layout, "shapes": shapes, "notes": notes})
-    if at != len(data):
-        raise AssertionError("the pack frame ends %d bytes before its envelope does" % (len(data) - at))
-    return {"schema": schema.decode("utf-8"), "masters": masters, "layouts": layouts, "slides": slides}
+    """📦️ A `.pack.semio` file as the JSON snapshot its record document carries."""
+    return record_document.decode_pack(RECORD_SPEC, data)
 
 
 def pack_bytes(document: dict) -> bytes:
-    """🎒️ The pack frame in the writing direction, inside the shared binary envelope."""
-    body = bytearray([PACK_FORMAT])
-    body += write_blob(document["schema"].encode("utf-8"))
-    body += write_varint(len(document["masters"]))
-    for master in document["masters"]:
-        body += write_blob(master["id"].encode("utf-8"))
-        body += write_shapes(master["shapes"])
-    body += write_varint(len(document["layouts"]))
-    for layout in document["layouts"]:
-        body += write_blob(layout["id"].encode("utf-8"))
-        body += write_blob(layout["masterId"].encode("utf-8"))
-        body += write_shapes(layout["shapes"])
-    body += write_varint(len(document["slides"]))
-    for slide in document["slides"]:
-        body += write_blob(slide["id"].encode("utf-8"))
-        if slide["layoutId"] is None:
-            body.append(0)
-        else:
-            body.append(1)
-            body += write_blob(slide["layoutId"].encode("utf-8"))
-        body += write_shapes(slide["shapes"])
-        body += write_blocks(slide["notes"])
-    token = PACK_TOKEN.encode("utf-8")
-    return BINARY_MAGIC + len(token).to_bytes(4, "little") + token + bytes(body)
+    """🔍️ The writing direction of `parse_pack`, envelope included."""
+    return record_document.encode_pack(RECORD_SPEC, document)
 
 
 # endregion 🔖️Pack
@@ -696,7 +484,7 @@ TAG_TO_KIND = {
 
 
 def kind_of(mutation: dict) -> str:
-    """🏷️ The kebab-case kind a wire payload names, refusing anything outside the vocabulary."""
+    """🌌️ The kebab-case kind a wire payload names, refusing anything outside the vocabulary."""
     tag = mutation.get("mutation")
     if tag not in TAG_TO_KIND:
         raise AssertionError("%r is not one of this subset's sixteen declared verbs" % (tag,))
@@ -704,19 +492,19 @@ def kind_of(mutation: dict) -> str:
 
 
 def clone(value):
-    """🧬️ A deep copy, so no arm ever aliases the document it was handed."""
+    """📑️ A deep copy, so no arm ever aliases the document it was handed."""
     return json.loads(json.dumps(value))
 
 
 def slide_at(document: dict, index: int, verb: str) -> dict:
-    """🎞️ The slide a positional verb addresses, refusing an index the deck does not hold."""
+    """🔖️ The slide a positional verb addresses, refusing an index the deck does not hold."""
     if index < 0 or index >= len(document["slides"]):
         raise AssertionError("%s addresses slide %d of a %d-slide deck" % (verb, index, len(document["slides"])))
     return document["slides"][index]
 
 
 def shape_at(document: dict, slide_index: int, shape_index: int, verb: str) -> dict:
-    """🧩️ The shape a positional verb addresses, refusing an index the slide does not hold."""
+    """🌍️ The shape a positional verb addresses, refusing an index the slide does not hold."""
     slide = slide_at(document, slide_index, verb)
     if shape_index < 0 or shape_index >= len(slide["shapes"]):
         raise AssertionError("%s addresses shape %d of a %d-shape slide" % (verb, shape_index, len(slide["shapes"])))
@@ -875,7 +663,7 @@ def inverse_mutation(document: dict, mutation: dict) -> dict:
 
 # region 🔖️Scenario input
 def doc_string(ctx: Context) -> str:
-    """📜️ The scenario's own doc string. The Python `Context` exposes the raw plan, not a helper."""
+    """🧵️ The scenario's own doc string. The Python `Context` exposes the raw plan, not a helper."""
     for step in ctx.scenario.get("steps", []):
         if step.get("docString"):
             return step["docString"]
@@ -888,7 +676,7 @@ def step_uris(ctx: Context, prefix: str) -> list:
 
 
 def snapshot_json(ctx: Context, uri: str):
-    """🧫️ A declared fixture read as JSON."""
+    """🪑️ A declared fixture read as JSON."""
     return json.loads(ctx.input_bytes(uri).decode("utf-8"))
 
 
@@ -915,14 +703,14 @@ def projection_of(document: dict) -> dict:
 
 # region 🔖️Handlers
 def mutate(ctx: Context) -> Outcome:
-    """🎯️ One verb applied to the real derived talk deck by this implementation alone."""
+    """📱️ One verb applied to the real derived talk deck by this implementation alone."""
     document = talk(ctx)
     mutation = payload(ctx)
     return Outcome(projection_of(apply_mutation(document, mutation)))
 
 
 def inverse(ctx: Context) -> Outcome:
-    """↩️ The metamorphic inverse law on the real deck: the verb followed by its OWN computed inverse
+    """⚖️ The metamorphic inverse law on the real deck: the verb followed by its OWN computed inverse
     must restore the deck exactly, slide and shape ORDER included."""
     document = talk(ctx)
     mutation = payload(ctx)
@@ -935,7 +723,7 @@ def inverse(ctx: Context) -> Outcome:
 
 
 def spec_vector(ctx: Context) -> Outcome:
-    """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector, whose
+    """➡️ The same verb on its committed handcrafted `(before, mutation, after)` vector, whose
     before-state is the committed `📽️deck` example artifact — a THIRD statement of what the verb
     means, independent of both implementations."""
     uris = step_uris(ctx, "shared://📽️mutate-semio-presentation/")

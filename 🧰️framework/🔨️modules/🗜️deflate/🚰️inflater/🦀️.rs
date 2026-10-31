@@ -14,6 +14,7 @@ impl Inflater {
             observed_distance_one: false,
             dynamic_repeat_codes: 0,
             retained_close_phase: RetainedInflateClosePhase::Open,
+            last_retained_close_work:0,
         }
     }
 
@@ -28,6 +29,7 @@ impl Inflater {
             observed_distance_one: false,
             dynamic_repeat_codes: 0,
             retained_close_phase: RetainedInflateClosePhase::Open,
+            last_retained_close_work:0,
         })
     }
 
@@ -112,7 +114,11 @@ impl Inflater {
         }
     }
 
+    /// ⏱️ Reads actual bounded retained-close effects independently of logical item and release receipts.
+    pub fn last_retained_close_work(&self)->u64{self.last_retained_close_work}
+
     pub fn close_retained_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> RetainedInflateCloseStep {
+        self.last_retained_close_work=0;
         if self.retained_close_phase == RetainedInflateClosePhase::Closed {
             return RetainedInflateCloseStep::Complete;
         }
@@ -124,6 +130,7 @@ impl Inflater {
                 if maximum_items == 0 {
                     return RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 };
                 }
+                self.last_retained_close_work=1;
                 if let InflateHistory::Retained(history) = &mut self.history {
                     history.reset();
                 }
@@ -134,6 +141,7 @@ impl Inflater {
                 if maximum_items == 0 {
                     return RetainedInflateCloseStep::Pending { released_items: 0, released_bytes: 0 };
                 }
+                self.last_retained_close_work=1;
                 self.reader = BitReader::new();
                 self.phase = Phase::Done;
                 self.final_block = false;
@@ -141,6 +149,8 @@ impl Inflater {
                 RetainedInflateCloseStep::Pending { released_items: 1, released_bytes: 0 }
             }
             RetainedInflateClosePhase::HistoryPhysical => {
+                if matches!(&self.history,InflateHistory::Retained(history) if history.allocated_bytes()>maximum_bytes){return RetainedInflateCloseStep::Pending{released_items:0,released_bytes:0};}
+                self.last_retained_close_work=1;
                 let step = match &mut self.history {
                     InflateHistory::Cold(_) => RetainedInflateCloseStep::Complete,
                     InflateHistory::Retained(history) => history.release(maximum_bytes),

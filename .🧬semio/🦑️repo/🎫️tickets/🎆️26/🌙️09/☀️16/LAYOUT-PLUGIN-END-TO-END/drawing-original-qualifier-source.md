@@ -1,0 +1,7 @@
+# Exact Readonly Original Qualifier
+
+Root approved narrowing validate_borrowed_context to Result<(),ValueError> after inspection proved its two actual branches are zero-effect ValueError literals. The physical-retirement and foreign-receiver kinds/messages are unchanged; matching roots and all authority predicates are unchanged. Work qualification and owned polling explicitly lift the same ValueError into complete surrounding OriginalTurnFailure. Existing ? callsites retain their native lift.
+
+The new neutral qualifier fixture/schema and genuine owning law were authored before the signature hunk. It mounts inside the defining actual FixtureCaller module so it can use its existing real parent, not expose a production private hook. It checks an active parent, actual operation drift restored on the issued context, and a second genuinely issued parent whose physical retirement actually started. Both error trees are independently serialized through serde_json with exact kind/message/effects; qualification changes no heap, original receipt, CPU or identity. Both real parents finish paid closure.
+
+Shared native failure test helpers moved once into a cfg(test)-only support module; there is no Source copy or new issuer. This law and the current surrounding Job changes are authored, uncompiled/unexecuted. No semantic/runtime probe ran. Core retirement CPU and prepaid reservation integration remain in progress.

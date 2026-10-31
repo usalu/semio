@@ -10,8 +10,9 @@ const churn = Object.freeze(require("../../../../../../🔨️modules/📁️fil
 const edited = (message) => { const split = message.indexOf(": "); return Object.assign(Error(message), { code: churn.concurrentEditCode, reason: /membership|manifests changed/u.test(message) ? "roster" : "bytes", path: split < 0 ? "bun workspace ownership" : message.slice(split + 2).split(";")[0], rank: churn.profiles.snapshot.rank - 1 }); };
 const policySourceFields = Object.freeze([...require("./🧬️schema/🔣️.json").$defs.PhysicalPolicySource.required].sort());
 const {workspaceTestingCollectionRoot: collectionRoot} = require("../🟨️.cjs");
-const opaque = new Set(["🗑️generated", "🤖️generated", "node_modules", "target", "dist", "📤️dist", "build", "storybook-static", "temp", "coverage", "__pycache__", "🔌️plugin-modules", "compose"]);
-const outputName = name => opaque.has(name) || /^target(?:-[a-z0-9]+)*$/u.test(name);
+const opaque = new Set(require("./🧬️schema/🔣️.json").$defs.OutputDirectories.const);
+const outputPattern = new RegExp(require("./🧬️schema/🔣️.json").$defs.OutputDirectoryPattern.const, "u");
+const outputName = name => opaque.has(name) || outputPattern.test(name);
 const outputDirectory = (root, directory) => relative(root, directory).split(/[\\/]/u).some(outputName);
 
 /** 🧬️ Admits authored native patterns independently of package identity or product roles.

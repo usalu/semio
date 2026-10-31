@@ -3,7 +3,6 @@
   "original": "actor-original-雪",
   "deniedAxes": [
     "items",
-    "copy",
     "capacity",
     "depth"
   ],
@@ -14,11 +13,19 @@
       0
     ],
     "birth": "actual-shared-arc-frame",
-    "copy": "native-owner-word-layout",
+    "copy": "none",
     "prebornFrame": "same-queued-shell",
     "terminalHeap": [
       0,
       0
     ]
+  },
+  "work": {
+    "admit": 1,
+    "lease": 1,
+    "denied": 0,
+    "null": 1,
+    "nullCapacityBytes": 0,
+    "failureKeepsOriginal": true
   }
 }

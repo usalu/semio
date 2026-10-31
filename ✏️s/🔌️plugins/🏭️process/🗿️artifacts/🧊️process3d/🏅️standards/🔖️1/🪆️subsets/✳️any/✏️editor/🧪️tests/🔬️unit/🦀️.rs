@@ -86,6 +86,9 @@ use semio_framework_plugin::{artifact_app_laws, ContextMenuRequest, ContextMenuS
 #[path = "🏭️production-envelope/🦀️.rs"]
 mod production_envelope;
 
+#[path = "🪧️pane-smoke/🦀️.rs"]
+mod pane_smoke;
+
 //#region 🔖️CommandSurface
 
 #[path = "🧵️command-surface/🦀️.rs"]

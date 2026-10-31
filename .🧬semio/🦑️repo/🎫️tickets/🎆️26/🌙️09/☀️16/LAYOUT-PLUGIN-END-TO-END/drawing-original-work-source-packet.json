@@ -1,0 +1,38 @@
+{
+  "status": "Authored, uncompiled and unexecuted; Drawing ingress migration pending",
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+      "sha256": "b83f46e1e01dc131c4b03cdbfb116819420915b57578392beff2c14759b50081",
+      "bytes": 50872
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/🦀️.rs",
+      "sha256": "dd4d35d6805795d4fcadb0d4988c045125ff5411bd245baedd39319f5526434e",
+      "bytes": 5544
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🦀️.rs",
+      "sha256": "001a302ca25a3a6cd8ce7e841efbef1dcfb9dde9cd774282a1a62fad38e0349c",
+      "bytes": 4976
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "6a257b7875b59c613ec472ebe462c76790d19cff45c454029476d080386ef97c",
+      "bytes": 2473
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "956a7341cd29739e7068503f26bcd43a5aaac296c47c45670c2a8b4c067d5d64",
+      "bytes": 10796
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "6f01954f42661682190fc753b7623d72451007d650e5d6d0f7ff0098895c5990",
+      "bytes": 2085
+    }
+  ],
+  "owner": "semio-framework-job",
+  "manifest": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+  "requiredGate": "unfiltered --lib plus existing original-turn-failure integration/testkit"
+}

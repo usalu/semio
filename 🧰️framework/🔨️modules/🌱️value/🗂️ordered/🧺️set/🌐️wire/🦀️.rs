@@ -1,5 +1,5 @@
 //! 🌐️ Canonical membership Value traits consume the actual immutable set owner.
-use crate::ordered::{OrderedMap,OrderedSet};
+use crate::ordered::OrderedSet;
 use crate::{DslValue,FromValue,ToValue,ValueError};
 //#region 🔁️ValueCodec
 /// 🔁️ Mirrors the hand-written `Serialize`/`Deserialize` below: a plain string array.
@@ -14,9 +14,6 @@ impl ToValue for OrderedSet {
 }
 
 impl FromValue for OrderedSet {
-    fn from_value_controlled(value: &DslValue, control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> { native_controlled::decode(value, control) }
-    fn default_value_controlled(control: &mut crate::NativeDecodeControl<'_>) -> Result<Self, ValueError> { control.checkpoint()?; Ok(Self::new()) }
-    fn retire_decoded(self) { self.retire_cold() }
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let DslValue::Array(items) = value else { return Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, "expected an array for OrderedSet")) };
         items.into_iter().map(String::from_value).collect()

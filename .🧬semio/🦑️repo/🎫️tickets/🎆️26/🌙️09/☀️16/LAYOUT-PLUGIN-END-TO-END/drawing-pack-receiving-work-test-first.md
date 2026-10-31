@@ -1,0 +1,5 @@
+# Pack Receiving Actual Work Test First
+
+The closed neutral contract precedes production edits and selects actual current physical quotes, mandatory independent CPU outcomes, zero denied/cached work, fallible-null attempt work1 with actual capacity0, and logical move copy0/work1. The first real defining law exercises existing Body/Document header quote functions on unchanged production and independently validates contract/schema through Serde_json. It must expose the existing2*sizeof header copy and prepaid future Document Box allocation before changing them. Full source/Serde/Document codecs0/1/CRC/hash/null/cancellation/independent retirement original laws remain required.
+
+Root owns RetainedRecordReceiving, its private RecordCursor and reached defining parser/Document work instrumentation; Cursor owns the exact downstream full Outcome/cause consumers. Full Source/current CPU admission remains open until the actual NativeDecodeControl work loan boundary is implemented. No wrapper-entry work1 or copied_items inference is accepted.

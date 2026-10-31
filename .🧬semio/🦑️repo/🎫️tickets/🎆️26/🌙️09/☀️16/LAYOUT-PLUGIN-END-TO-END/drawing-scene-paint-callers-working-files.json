@@ -1,0 +1,17 @@
+{
+  "state": "original-seam-source-migrated-fault-publication-still-blocked-no-runtime",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🦀️.rs",
+      "beforeSha256": "aa7ee1d65eb9f99224624c5181e1ff194e4a7ae0ce978275df9b6e09f3be6a45",
+      "sha256": "c74b1188369bdee9034711469d38fbc9334f47309265bb16c5af31d15ea215db",
+      "scope": "vector-paint original turn only; Fault staging remains Rust-owned blocker"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️geometry/🦀️.rs",
+      "beforeSha256": "9bb4ec74a821f63d278fd28b3630453a970aeff5f60c9eea143c4bbf5792f699",
+      "sha256": "571e8690ee0049879978daec57a15ee459dea4099288f2d8cbfc0df2e40b977e",
+      "scope": "cache original turn/CPU only; actual failure payload staging remains Rust-owned blocker"
+    }
+  ]
+}

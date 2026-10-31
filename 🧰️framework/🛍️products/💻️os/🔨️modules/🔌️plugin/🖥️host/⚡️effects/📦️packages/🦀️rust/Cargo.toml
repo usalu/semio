@@ -44,7 +44,6 @@ semio-framework-actor = { workspace = true }
 # the same shape `ComputePool`/`TokioHostRuntime` bridges use, per `semio-framework-async`'s own
 # `block_on` gate doc.
 semio-framework-async = { workspace = true, features = ["entrypoint"] }
-semio-framework-async-testkit = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-os-services = { workspace = true }

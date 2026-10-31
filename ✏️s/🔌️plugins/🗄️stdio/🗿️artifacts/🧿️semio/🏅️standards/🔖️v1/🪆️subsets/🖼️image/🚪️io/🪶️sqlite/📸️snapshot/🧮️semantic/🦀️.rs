@@ -25,19 +25,6 @@ fn octets(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>
 fn hex(value:&str,control:&mut NativeDecodeControl<'_>)->Result<usize>{if !value.len().is_multiple_of(2){return Err(invalid())}control.scoped_stage(|control|{control.begin_stage(value.len()/2)?;for pair in value.as_bytes().chunks_exact(2){if !pair.iter().all(u8::is_ascii_hexdigit){return Err(invalid())}control.step()?;}control.checkpoint()?;Ok(value.len()/2)})}
 fn colorspace(value:u8)->Result<usize>{match value{0=>Ok(3),1=>Ok(4),2=>Ok(9),3=>Ok(15),4=>Ok(7),_=>Err(invalid())}}
 fn document_colorspace(value:Option<&str>)->Result<usize>{match value{None|Some("r")=>Ok(3),Some("a")=>Ok(4),Some("g")=>Ok(9),Some("y")=>Ok(15),Some("i")=>Ok(7),_=>Err(invalid())}}
-/// 📦️ Counts every frame byte as its authored five-INTEGER sample row.
-pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
- layout(limits)?;control.scoped_stage(|control|{
-  let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}
-  let schema=text(&mut reader,control)?;reader.read_u32_le().map_err(|_|invalid())?;reader.read_u32_le().map_err(|_|invalid())?;let colorspace=colorspace(reader.read_u8().map_err(|_|invalid())?)?;reader.read_u8().map_err(|_|invalid())?;
-  let icc=match reader.read_u8().map_err(|_|invalid())?{0=>0,1=>octets(&mut reader,control)?,_=>return Err(invalid())};let mut census=Census{limits,rows:0,bytes:0};census.row(add(add(add(32,schema)?,colorspace)?,icc)?)?;
-  let count=native::length(&mut reader)?;census.future(count)?;control.begin_stage(count)?;
-  for _ in 0..count{reader.read_u32_le().map_err(|_|invalid())?;census.row(32)?;let count=octets(&mut reader,control)?;census.samples(count,control)?;control.step()?;}
-  let count=native::length(&mut reader)?;census.future(count)?;control.begin_stage(count)?;
-  for _ in 0..count{census.row(add(add(24,text(&mut reader,control)?)?,text(&mut reader,control)?)?)?;control.step()?;}
-  if reader.remaining()!=0{return Err(invalid())}control.checkpoint()
- })
-}
 /// 📝️ Preserves the original Image list grammar, u32 lexemes and nullable ICC presence.
 pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{

@@ -1,0 +1,12 @@
+{
+  "sourceOnly": true,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🦀️.rs",
+      "beforeSha256": "cf5a0bc95a2f51df45e6aa389b41caff3b6be8a71fc0090352f1615202b9c3b0",
+      "sha256": "c407428852c09f3f1be2d7d975e2174ddabfec46a8c167eecddcd37ae1204a92",
+      "bytes": 13026
+    }
+  ],
+  "change": "Use actual public payload defining owner for identical ledger demand/close functions after Context split; private Context module is not reexported."
+}

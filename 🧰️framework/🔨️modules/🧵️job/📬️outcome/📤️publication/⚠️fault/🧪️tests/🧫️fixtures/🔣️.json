@@ -14,5 +14,10 @@
     8192,
     65536,
     9
-  ]
+  ],
+  "closeCpu": {
+    "denied": 0,
+    "admitted": 1,
+    "cached": 0
+  }
 }

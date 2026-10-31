@@ -21,36 +21,8 @@ impl Census{
 fn text(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)->Result<usize>{Ok(control.borrow_text(native::bytes(reader)?)?.len())}
 fn byte(reader:&mut store::ByteReader<'_>)->Result<u8>{reader.read_u8().map_err(|_|invalid())}
 fn scalar(value:f64)->usize{if value.is_nan(){11}else if value.is_infinite(){32}else{22}}
-fn binary_scalar(reader:&mut store::ByteReader<'_>,bits32:bool)->Result<usize>{Ok(if bits32{scalar(f64::from(f32::from_bits(reader.read_u32_le().map_err(|_|invalid())?)))}else{scalar(reader.read_f64_le().map_err(|_|invalid())?)})}
 fn topology(tag:u8)->Result<usize>{match tag{0=>Ok(6),1=>Ok(5),2=>Ok(10),3=>Ok(9),4=>Ok(14),5=>Ok(12),_=>Err(invalid())}}
-fn binary_optional(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)->Result<usize>{match byte(reader)?{0=>Ok(0),1=>text(reader,control),_=>Err(invalid())}}
-fn binary_list(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut NativeDecodeControl<'_>,mut visit:impl FnMut(&mut store::ByteReader<'_>,&mut Census,&mut NativeDecodeControl<'_>)->Result<()>)->Result<()>{
- let count=native::length(reader)?;census.future(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{visit(reader,census,control)?;control.step()?;}control.checkpoint()})
-}
-fn binary_numbers(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut NativeDecodeControl<'_>,width:usize,bits32:bool)->Result<()>{
- binary_list(reader,census,control,|reader,census,_|{let mut bytes=24;for _ in 0..width{bytes=add(bytes,binary_scalar(reader,bits32)?)?;}census.row(bytes)})
-}
 fn octets(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)->Result<usize>{let bytes=native::bytes(reader)?;control.scoped_stage(|control|{control.begin_stage(bytes.len())?;for _ in bytes{control.step()?;}control.checkpoint()?;Ok(bytes.len())})}
-/// 📦️ Reads the actual primitive order and both IEEE word widths without constructing geometry.
-pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
- layout(limits)?;control.scoped_stage(|control|{
-  let mut reader=store::ByteReader::new(body);if byte(&mut reader)?!=1{return Err(invalid())}let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,text(&mut reader,control)?)?)?;
-  binary_list(&mut reader,&mut census,control,|reader,census,control|{
-   census.row(add(24,text(reader,control)?)?)?;
-   binary_list(reader,census,control,|reader,census,control|{
-    let mut bytes=add(add(24,text(reader,control)?)?,topology(byte(reader)?)?)?;
-    binary_numbers(reader,census,control,3,false)?;binary_numbers(reader,census,control,3,false)?;binary_numbers(reader,census,control,2,false)?;binary_numbers(reader,census,control,4,true)?;
-    binary_list(reader,census,control,|reader,census,_|{reader.read_u32_le().map_err(|_|invalid())?;census.row(32)})?;
-    bytes=add(bytes,binary_optional(reader,control)?)?;census.row(bytes)
-   })
-  })?;
-  binary_list(&mut reader,&mut census,control,|reader,census,control|{
-   let mut bytes=add(24,text(reader,control)?)?;for _ in 0..6{bytes=add(bytes,binary_scalar(reader,true)?)?;}for _ in 0..5{bytes=add(bytes,binary_optional(reader,control)?)?;}census.row(bytes)
-  })?;
-  binary_list(&mut reader,&mut census,control,|reader,census,control|{let mut bytes=add(add(24,text(reader,control)?)?,text(reader,control)?)?;bytes=add(bytes,octets(reader,control)?)?;census.row(bytes)})?;
-  if reader.remaining()!=0{return Err(invalid())}control.checkpoint()
- })
-}
 fn document_optional(value:&str,control:&mut NativeDecodeControl<'_>)->Result<usize>{if value=="[0]"{return Ok(0)}let[tag,value]=native::record(value,control)?;if tag!="1"{return Err(invalid())}native::hex_text_extent(value,control)}
 fn document_list(value:&str,census:&mut Census,control:&mut NativeDecodeControl<'_>,mut visit:impl FnMut(&str,&mut Census,&mut NativeDecodeControl<'_>)->Result<()>)->Result<()>{
  let mut items=native::Items::new(value)?;let count=items.count(control,census.limits.max_rows)?;census.future(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(value)=items.next(control)?{visit(value,census,control)?;control.step()?;}control.checkpoint()})

@@ -29,7 +29,8 @@ use crate::editor_commands::{
     SET_SURFACE_PROPERTY_ACTION_ID, SET_THERMOSTAT_SETPOINTS_ACTION_ID, SET_ZONE_PROPERTY_ACTION_ID, SURFACE_CLASS_IDS, SURFACE_ROUGHNESS_IDS,
 };
 use crate::editor_edit::windows::simulation::SET_RESULT_FIELD_ACTION_ID;
-use crate::model::{Construction, Fenestration, GasMaterial, GlazingMaterial, Material, Model, ShadingSurface, Space, Surface, Thermostat, Zone};
+use crate::model::{Construction, Fenestration, GasMaterial, GlazingMaterial, Material, ShadingSurface, Space, Surface, Thermostat, Zone};
+use crate::snapshot::state::EnergyRowsView;
 use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{InputKind};
 use semio_framework_plugin::{Buildable, HasBase, HasChildren};
@@ -197,14 +198,24 @@ fn select_row(suffix: &str, label: &str, value: &str, options: Vec<(String, Stri
 //#endregion 🔖️Controls
 
 //#region 🔖️Options
-fn construction_options(model: &Model) -> Vec<(String, String)> {
-    model.constructions.iter().map(|construction| (energy_target_id(construction.id), construction.name.clone())).collect()
+fn construction_options(model: &EnergyRowsView<'_>) -> Vec<(String, String)> {
+    model.constructions.native().take(SELECT_ITEMS_MAX + 1).map(|construction| (energy_target_id(construction.id), construction.name.get().clone())).collect()
+}
+
+/// 🏠️ The zones a reference select offers — read from the cheap native fields, never beyond the select's own bound.
+fn zone_options(model: &EnergyRowsView<'_>) -> Vec<(String, String)> {
+    model.zones.native().take(SELECT_ITEMS_MAX + 1).map(|zone| (energy_target_id(zone.id), zone.name.get().clone())).collect()
+}
+
+/// 🟫️ The surfaces a reference select offers — bounded like [`zone_options`].
+fn surface_options(model: &EnergyRowsView<'_>) -> Vec<(String, String)> {
+    model.surfaces.native().take(SELECT_ITEMS_MAX + 1).map(|surface| (energy_target_id(surface.id), surface.name.get().clone())).collect()
 }
 
 /// 🧊️ A window's glazing stack is optional, so its select carries an explicit empty option that
 /// clears the binding — an empty `value` is exactly what `set_fenestration_property` reads as
 /// `clear-fenestration-glazing-construction`.
-fn glazing_construction_options(model: &Model, locale: Locale) -> Vec<(String, String)> {
+fn glazing_construction_options(model: &EnergyRowsView<'_>, locale: Locale) -> Vec<(String, String)> {
     let mut options = vec![(String::new(), say(locale, "None (simple glazing)", "Keine (einfache Verglasung)").to_string())];
     options.extend(construction_options(model));
     options
@@ -223,10 +234,10 @@ fn boundary_options() -> Vec<(String, String)> {
     OUTSIDE_BOUNDARY_KIND_IDS.iter().filter(|id| **id != "interzone").map(|id| ((*id).to_string(), (*id).to_string())).collect()
 }
 
-/// 🚧️ The other surfaces of the model — the interzone partner picker's options. A surface is never
+/// 🏞️ The other surfaces of the model — the interzone partner picker's options. A surface is never
 /// offered its own id.
-fn partner_options(model: &Model, surface: &Surface) -> Vec<(String, String)> {
-    model.surfaces.iter().filter(|entry| entry.id != surface.id).map(|entry| (energy_target_id(entry.id), entry.name.clone())).collect()
+fn partner_options(model: &EnergyRowsView<'_>, surface: &Surface) -> Vec<(String, String)> {
+    model.surfaces.native().filter(|entry| entry.id != surface.id).take(SELECT_ITEMS_MAX + 1).map(|entry| (energy_target_id(entry.id), entry.name.get().clone())).collect()
 }
 
 fn roughness_options() -> Vec<(String, String)> {
@@ -238,31 +249,30 @@ fn roughness_options() -> Vec<(String, String)> {
 /// exchanged (`add-construction-layer` admits nothing else), but a glazing or gas layer already in
 /// the stack still has to display its own name, so all three are offered and the editor refuses a
 /// non-opaque pick loudly.
-fn layer_options(model: &Model, locale: Locale) -> Vec<(String, String)> {
-    let mut options: Vec<(String, String)> = model.materials.iter().map(|material| (energy_target_id(material.id), material.name.clone())).collect();
-    options.extend(model.glazing_materials.iter().map(|material| (energy_target_id(material.id), format!("{} · {}", material.name, say(locale, "glazing", "Verglasung")))));
-    options.extend(model.gas_materials.iter().map(|material| (energy_target_id(material.id), format!("{} · {}", material.name, say(locale, "gas", "Gas")))));
+fn layer_options(model: &EnergyRowsView<'_>, locale: Locale) -> Vec<(String, String)> {
+    let mut options: Vec<(String, String)> = model.materials.native().take(SELECT_ITEMS_MAX + 1).map(|material| (energy_target_id(material.id), material.name.get().clone())).collect();
+    options.extend(model.glazing_materials.native().take(SELECT_ITEMS_MAX + 1).map(|material| (energy_target_id(material.id), format!("{} · {}", material.name.get(), say(locale, "glazing", "Verglasung")))));
+    options.extend(model.gas_materials.native().take(SELECT_ITEMS_MAX + 1).map(|material| (energy_target_id(material.id), format!("{} · {}", material.name.get(), say(locale, "gas", "Gas")))));
+    options.truncate(SELECT_ITEMS_MAX + 1);
     options
 }
 
-fn schedule_options(model: &Model) -> Vec<(String, String)> {
-    let schedules = &model.schedules;
-    let mut options: Vec<(String, String)> = Vec::new();
-    for schedule in &schedules.constants {
-        options.push((schedule.id.0.to_string(), format!("{} · {}", schedule.id.0, schedule.value)));
-    }
-    for id in schedules.daily.iter().map(|schedule| schedule.id).chain(schedules.weekly.iter().map(|schedule| schedule.id)).chain(schedules.annual.iter().map(|schedule| schedule.id)).chain(schedules.time_series.iter().map(|schedule| schedule.id))
-    {
-        options.push((id.0.to_string(), id.0.to_string()));
-    }
-    options
+fn schedule_options(model: &EnergyRowsView<'_>) -> Vec<(String, String)> {
+    let schedules = model.schedules;
+    schedules
+        .constants
+        .iter()
+        .map(|schedule| (schedule.id.0.to_string(), format!("{} · {}", schedule.id.0, schedule.value)))
+        .chain(schedules.daily.iter().map(|schedule| schedule.id).chain(schedules.weekly.iter().map(|schedule| schedule.id)).chain(schedules.annual.iter().map(|schedule| schedule.id)).chain(schedules.time_series.iter().map(|schedule| schedule.id)).map(|id| (id.0.to_string(), id.0.to_string())))
+        .take(SELECT_ITEMS_MAX + 1)
+        .collect()
 }
 //#endregion 🔖️Options
 
 //#region 🔖️Geometry
 /// 📐️ A surface's plan area, tilt and azimuth — read-only, derived from its own polygon, so the
 /// inspector reports the geometry the 3d window draws instead of inventing a second source.
-fn surface_geometry(model: &Model, surface: &Surface) -> (f64, f64, f64) {
+fn surface_geometry(model: &EnergyRowsView<'_>, surface: &Surface) -> (f64, f64, f64) {
     let area = crate::geometry::surface_area_m2(&surface.vertices_m);
     let orientation = crate::geometry::surface_tilt_azimuth(crate::geometry::polygon_normal(&surface.vertices_m), model.site.north_axis_deg);
     (area, orientation.tilt_deg, orientation.azimuth_deg)
@@ -270,7 +280,7 @@ fn surface_geometry(model: &Model, surface: &Surface) -> (f64, f64, f64) {
 //#endregion 🔖️Geometry
 
 //#region 🔖️Sections
-fn surface_rows(model: &Model, surface: &Surface, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn surface_rows(model: &EnergyRowsView<'_>, surface: &Surface, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let id = energy_target_id(surface.id);
     let (area, tilt, azimuth) = surface_geometry(model, surface);
     let mut rows = UiFixedList::default();
@@ -289,7 +299,7 @@ fn surface_rows(model: &Model, surface: &Surface, locale: Locale) -> UiAssemblyR
             &id,
         ),
     )?;
-    let zones = model.zones.iter().map(|zone| (energy_target_id(zone.id), zone.name.clone())).collect();
+    let zones = zone_options(model);
     push(&mut rows, select_row("surface.zone", say(locale, "Thermal zone", "Thermische Zone"), &energy_target_id(surface.zone_id), zones, SET_SURFACE_PROPERTY_ACTION_ID, "zone", &id))?;
     let partners = partner_options(model, surface);
     if !partners.is_empty() {
@@ -317,7 +327,7 @@ fn surface_rows(model: &Model, surface: &Surface, locale: Locale) -> UiAssemblyR
     Ok(rows)
 }
 
-/// 📐️ Windowed coordinate rows keep arbitrary polygon sizes inside the shared tree capacity.
+/// 🪟️ Windowed coordinate rows keep arbitrary polygon sizes inside the shared tree capacity.
 fn geometry_section(builder: PanelTreeBuilder, windows: &TreeWindows<'_>, entity: &str, id: &str, vertices: &[[f64; 3]], action: &str, locale: Locale) -> UiAssemblyResult<PanelTreeBuilder> {
     let polygon = vertices.iter().map(|vertex| format!("{},{},{}", vertex[0], vertex[1], vertex[2])).collect::<Vec<_>>().join("; ");
     let builder = if UiText::try_from_str(&polygon).is_some() {
@@ -340,13 +350,13 @@ fn geometry_section(builder: PanelTreeBuilder, windows: &TreeWindows<'_>, entity
     )
 }
 
-fn fenestration_rows(model: &Model, window: &Fenestration, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn fenestration_rows(model: &EnergyRowsView<'_>, window: &Fenestration, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let id = energy_target_id(window.id);
     let action = SET_FENESTRATION_PROPERTY_ACTION_ID;
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("fenestration.id", say(locale, "Id", "Id"), &id))?;
     push(&mut rows, text_row("fenestration.name", say(locale, "Name", "Bezeichnung"), &window.name, action, "name", &id))?;
-    let surfaces = model.surfaces.iter().map(|surface| (energy_target_id(surface.id), surface.name.clone())).collect();
+    let surfaces = surface_options(model);
     push(&mut rows, select_row("fenestration.surface", say(locale, "Surface", "Fläche"), &energy_target_id(window.surface_id), surfaces, action, "surface", &id))?;
     push(&mut rows, number_row("fenestration.u-value", say(locale, "U-value (W/m²K)", "U-Wert (W/m²K)"), window.u_value_w_m2k, 0.1, action, "uValueWM2K", &id))?;
     push(&mut rows, slider_row("fenestration.shgc", say(locale, "SHGC", "g-Wert"), window.shgc, (0.0, 1.0, 0.01), action, "shgc", &id))?;
@@ -378,35 +388,35 @@ fn zone_rows(zone: &Zone, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltN
     Ok(rows)
 }
 
-/// 🧱️ A material's WHOLE addressable record: its name, its roughness class and its seven SI scalars.
+/// 📛️ A material's WHOLE addressable record: its name, its roughness class and its seven SI scalars.
 /// `set-material-property` now carries TEXT, and `change-material-roughness` is a real mutation kind,
 /// so nothing here is read-only any more.
 /// 🪑️ Space records retain their own identity while their thermal zone assignment remains editable.
-fn space_rows(model: &Model, space: &Space, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn space_rows(model: &EnergyRowsView<'_>, space: &Space, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut rows = UiFixedList::default();
     let id = energy_target_id(space.id);
     push(&mut rows, read_only_row("space.id", say(locale, "Id", "Id"), &id))?;
     push(&mut rows, text_row("space.name", say(locale, "Name", "Bezeichnung"), &space.name, SET_SPACE_PROPERTY_ACTION_ID, "name", &id))?;
-    let zones = model.zones.iter().map(|zone| (energy_target_id(zone.id), zone.name.clone())).collect();
+    let zones = zone_options(model);
     push(&mut rows, select_row("space.zone", say(locale, "Thermal zone", "Thermische Zone"), &energy_target_id(space.zone_id), zones, SET_SPACE_PROPERTY_ACTION_ID, "zone", &id))?;
     push(&mut rows, number_row("space.floor-area", say(locale, "Floor area (m²)", "Grundfläche (m²)"), space.floor_area_m2, 0.1, SET_SPACE_PROPERTY_ACTION_ID, "floorAreaM2", &id))?;
     Ok(rows)
 }
 
 /// 🔌️ Every load family shares admitted zone and schedule reference controls.
-fn load_reference_rows(model: &Model, id: &str, zone: crate::model::EntityId, schedule: u32, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn load_reference_rows(model: &EnergyRowsView<'_>, id: &str, zone: crate::model::EntityId, schedule: u32, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("load.id", say(locale, "Id", "Id"), id))?;
-    let zones = model.zones.iter().map(|zone| (energy_target_id(zone.id), zone.name.clone())).collect();
+    let zones = zone_options(model);
     push(&mut rows, select_row("load.zone", say(locale, "Thermal zone", "Thermische Zone"), &energy_target_id(zone), zones, SET_LOAD_PROPERTY_ACTION_ID, "zone", id))?;
     push(&mut rows, select_row("load.schedule", say(locale, "Schedule", "Profil"), &schedule.to_string(), schedule_options(model), SET_LOAD_PROPERTY_ACTION_ID, "schedule", id))?;
     Ok(rows)
 }
 
 /// 💨️ Loads and infiltration expose their own complete native scalar records.
-fn load_rows(model: &Model, entity: crate::model::EntityId, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn load_rows(model: &EnergyRowsView<'_>, entity: crate::model::EntityId, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let id = energy_target_id(entity);
-    if let Some(target) = model.people.iter().find(|row| row.id == entity) {
+    if let Some(target) = model.people.find(|row| row.id == entity) {
         let mut rows = load_reference_rows(model, &id, target.zone_id, target.schedule_id.0, locale)?;
         push(&mut rows, select_row("load.activity", say(locale, "Activity schedule", "Aktivitätsprofil"), &target.activity_schedule_id.0.to_string(), schedule_options(model), SET_LOAD_PROPERTY_ACTION_ID, "activitySchedule", &id))?;
         for (field, en, de, value, fraction) in [
@@ -421,7 +431,7 @@ fn load_rows(model: &Model, entity: crate::model::EntityId, locale: Locale) -> U
         }
         return Ok(rows);
     }
-    if let Some(target) = model.lighting.iter().find(|row| row.id == entity) {
+    if let Some(target) = model.lighting.find(|row| row.id == entity) {
         let mut rows = load_reference_rows(model, &id, target.zone_id, target.schedule_id.0, locale)?;
         for (field, en, de, value, fraction) in [
             ("wattsPerArea", "Power (W/m²)", "Leistung (W/m²)", target.watts_per_area, false),
@@ -435,7 +445,7 @@ fn load_rows(model: &Model, entity: crate::model::EntityId, locale: Locale) -> U
         }
         return Ok(rows);
     }
-    if let Some(target) = model.equipment.iter().find(|row| row.id == entity) {
+    if let Some(target) = model.equipment.find(|row| row.id == entity) {
         let mut rows = load_reference_rows(model, &id, target.zone_id, target.schedule_id.0, locale)?;
         for (field, en, de, value, fraction) in [
             ("wattsPerArea", "Power (W/m²)", "Leistung (W/m²)", target.watts_per_area, false),
@@ -448,7 +458,7 @@ fn load_rows(model: &Model, entity: crate::model::EntityId, locale: Locale) -> U
         }
         return Ok(rows);
     }
-    if let Some(target) = model.infiltrations.iter().find(|row| row.id == entity) {
+    if let Some(target) = model.infiltrations.find(|row| row.id == entity) {
         let mut rows = load_reference_rows(model, &id, target.zone_id, target.schedule_id.0, locale)?;
         use crate::air_exchange::InfiltrationMethod;
         let method = match target.method { InfiltrationMethod::ScheduledAch => "scheduledAch", InfiltrationMethod::PerExteriorArea => "perExteriorArea", InfiltrationMethod::EffectiveLeakageArea => "effectiveLeakageArea", InfiltrationMethod::WindAndStack => "windAndStack" };
@@ -475,11 +485,11 @@ fn load_rows(model: &Model, entity: crate::model::EntityId, locale: Locale) -> U
 }
 
 /// 🌡️ Ideal loads include supply air temperatures, outdoor air and optional capacity limits.
-fn hvac_rows(model: &Model, entity: crate::model::EntityId, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
-    let target = model.ideal_loads.iter().find(|row| row.id == entity).ok_or_else(|| ui_error("ui.document"))?;
+fn hvac_rows(model: &EnergyRowsView<'_>, entity: crate::model::EntityId, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let target = model.ideal_loads.find(|row| row.id == entity).ok_or_else(|| ui_error("ui.document"))?;
     let mut rows = UiFixedList::default();
     let id = energy_target_id(entity);
-    let zones = model.zones.iter().map(|zone| (energy_target_id(zone.id), zone.name.clone())).collect();
+    let zones = zone_options(model);
     push(&mut rows, read_only_row("hvac.id", say(locale, "Id", "Id"), &id))?;
     push(&mut rows, select_row("hvac.zone", say(locale, "Thermal zone", "Thermische Zone"), &energy_target_id(target.zone_id), zones, SET_HVAC_PROPERTY_ACTION_ID, "zone", &id))?;
     for (field, en, de, value, step) in [
@@ -516,7 +526,7 @@ fn material_rows(material: &Material, locale: Locale) -> UiAssemblyResult<UiFixe
     Ok(rows)
 }
 
-/// 🧊️ Glazing material. The six fields `change-glazing-material-*`/`rename-glazing-material` name
+/// 🌾️ Glazing material. The six fields `change-glazing-material-*`/`rename-glazing-material` name
 /// are editable; the four reflectances and the infrared transmittance have NO mutation kind, so they
 /// are reported read-only rather than offered as a control that would refuse on change.
 fn glazing_material_rows(material: &GlazingMaterial, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
@@ -536,7 +546,7 @@ fn glazing_material_rows(material: &GlazingMaterial, locale: Locale) -> UiAssemb
     Ok(rows)
 }
 
-/// 💨️ Gas gap: thickness, fill gas and name — the record's whole addressable surface.
+/// 🪣️ Gas gap: thickness, fill gas and name — the record's whole addressable surface.
 fn gas_material_rows(material: &GasMaterial, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let id = energy_target_id(material.id);
     let action = SET_GAS_MATERIAL_PROPERTY_ACTION_ID;
@@ -549,10 +559,10 @@ fn gas_material_rows(material: &GasMaterial, locale: Locale) -> UiAssemblyResult
     Ok(rows)
 }
 
-/// 🧱️ A construction: its name, the `select` that APPENDS a layer and the U-value the stack implies.
+/// 👆️ A construction: its name, the `select` that APPENDS a layer and the U-value the stack implies.
 /// The stack itself is the windowed [`construction_layers_section`] beside this one, because a stack
 /// is a list of unbounded length and this section is a fixed form.
-fn construction_rows(model: &Model, construction: &Construction, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn construction_rows(model: &EnergyRowsView<'_>, construction: &Construction, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let id = energy_target_id(construction.id);
     let action = SET_CONSTRUCTION_PROPERTY_ACTION_ID;
     let options = layer_options(model, locale);
@@ -566,7 +576,7 @@ fn construction_rows(model: &Model, construction: &Construction, locale: Locale)
     Ok(rows)
 }
 
-/// 🧱️ One row of a construction's layer stack: the layer's own catalogue `select`, or its remove
+/// ➖️ One row of a construction's layer stack: the layer's own catalogue `select`, or its remove
 /// verb. Two rows per layer over ONE flat list, so the section stamps the stack's whole extent and
 /// the host streams the slice it shows — a 40-layer construction is scrollable, not a "+N" count.
 enum LayerRow {
@@ -578,11 +588,11 @@ fn layer_rows(construction: &Construction) -> Vec<LayerRow> {
     construction.layer_material_ids.iter().enumerate().flat_map(|(index, layer)| [LayerRow::Pick { index, material: energy_target_id(*layer) }, LayerRow::Remove { index }]).collect()
 }
 
-/// 🧱️ The EDITABLE layer stack as its own windowed section. Each layer costs TWO argument maps (the
+/// 🥞️ The EDITABLE layer stack as its own windowed section. Each layer costs TWO argument maps (the
 /// `replaceLayer:<index>` select and the `removeLayer` button) — the arena budget this panel shares
 /// with the tree (`📓️UiValue Map Ascending Keys & One-Page Arena`) is why the move-up/move-down verbs
 /// of `set-construction-property` stay reachable from the palette rather than as two more buttons.
-fn construction_layers_section(builder: PanelTreeBuilder, windows: &TreeWindows<'_>, model: &Model, construction: &Construction, locale: Locale) -> UiAssemblyResult<PanelTreeBuilder> {
+fn construction_layers_section(builder: PanelTreeBuilder, windows: &TreeWindows<'_>, model: &EnergyRowsView<'_>, construction: &Construction, locale: Locale) -> UiAssemblyResult<PanelTreeBuilder> {
     let id = energy_target_id(construction.id);
     let options = layer_options(model, locale);
     let rows = layer_rows(construction);
@@ -609,7 +619,7 @@ fn construction_layers_section(builder: PanelTreeBuilder, windows: &TreeWindows<
     )
 }
 
-/// 🔘️ One layer verb that carries its own operand: an `Activate` button merges NO value, so the index
+/// 🧩️ One layer verb that carries its own operand: an `Activate` button merges NO value, so the index
 /// travels in the authored map beside the property.
 fn layer_button(row_id_suffix: &str, label: &str, id: &str, property: &str, index: usize) -> UiAssemblyResult<BuiltNode> {
     let row_id = format!("{ROOT}.{row_id_suffix}");
@@ -625,10 +635,10 @@ fn layer_button(row_id_suffix: &str, label: &str, id: &str, property: &str, inde
 /// has no `Material` row for that layer, and this helper takes opaque layers only, so such a
 /// construction reports honestly that its U-value is not derivable here instead of printing a number
 /// computed from the layers it happened to resolve.
-fn construction_u_value_text(model: &Model, construction: &Construction, locale: Locale) -> String {
+fn construction_u_value_text(model: &EnergyRowsView<'_>, construction: &Construction, locale: Locale) -> String {
     let mut layers: Vec<Material> = Vec::with_capacity(construction.layer_material_ids.len());
     for layer in &construction.layer_material_ids {
-        let Some(material) = model.materials.iter().find(|material| material.id == *layer) else {
+        let Some(material) = model.materials.find(|material| material.id == *layer) else {
             return say(locale, "— (non-opaque layer)", "— (nicht-opake Schicht)").to_string();
         };
         layers.push(material.clone());
@@ -640,13 +650,13 @@ fn construction_u_value_text(model: &Model, construction: &Construction, locale:
     format!("{u:.3}")
 }
 
-/// 🌡️ A thermostat's four fields, all carried by ONE `set-thermostat-setpoints` payload — so each
+/// 🌀️ A thermostat's four fields, all carried by ONE `set-thermostat-setpoints` payload — so each
 /// control has to restate the other three, which `patch_args` cannot express. They are therefore
 /// bound with the full payload map instead of the flat `{field, id}` one.
-fn thermostat_rows(model: &Model, thermostat: &Thermostat, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn thermostat_rows(model: &EnergyRowsView<'_>, thermostat: &Thermostat, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("thermostat.id", say(locale, "Id", "Id"), energy_target_id(thermostat.id)))?;
-    let zones = model.zones.iter().map(|zone| (energy_target_id(zone.id), zone.name.clone())).collect();
+    let zones = zone_options(model);
     push(&mut rows, thermostat_select("thermostat.zone", say(locale, "Thermal zone", "Thermische Zone"), thermostat, "zone", &energy_target_id(thermostat.zone_id), zones))?;
     let options = schedule_options(model);
     push(
@@ -662,7 +672,7 @@ fn thermostat_rows(model: &Model, thermostat: &Thermostat, locale: Locale) -> Ui
     Ok(rows)
 }
 
-/// 🌡️ The WHOLE `set-thermostat-setpoints` payload at its current values, PLUS `field` naming the one
+/// 🌁️ The WHOLE `set-thermostat-setpoints` payload at its current values, PLUS `field` naming the one
 /// slot this control edits. The host merges the typed scalar under `value`, and the bridge copies it
 /// into the named slot.
 ///
@@ -714,7 +724,7 @@ fn bind_full<B: HasBase>(builder: B, thermostat: &Thermostat, field: &str) -> Ui
 }
 
 /// 📍️ The site's five scalars, each a continuous control that presses exactly its own `change-site-<field>` leaf.
-fn site_rows(model: &Model, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn site_rows(model: &EnergyRowsView<'_>, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let site = &model.site;
     let mut rows = UiFixedList::default();
     push(&mut rows, site_number("site.latitude", say(locale, "Latitude (°)", "Breitengrad (°)"), "latitudeDeg", site.latitude_deg))?;
@@ -725,7 +735,7 @@ fn site_rows(model: &Model, locale: Locale) -> UiAssemblyResult<UiFixedList<Buil
     Ok(rows)
 }
 
-/// 📍️ A site control authors only the `field` marker the bridge routes the host-merged `value` to: one press sets one
+/// 🛂️ A site control authors only the `field` marker the bridge routes the host-merged `value` to: one press sets one
 /// field (`change-site-<field>`), and the other site fields are never re-sent from a render that may be stale.
 fn site_args(edited: &str) -> UiAssemblyResult<UiValue> {
     let mut args = UiMapBuilder::try_new().ok_or_else(|| ui_error("ui.value.map"))?;
@@ -744,7 +754,7 @@ fn site_number(suffix: &str, label: &str, field: &str, value: f64) -> UiAssembly
     control_row(&row_id, label, ui_build(control)?)
 }
 
-fn shading_rows(model: &Model, shading: &ShadingSurface, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn shading_rows(model: &EnergyRowsView<'_>, shading: &ShadingSurface, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("shading.id", say(locale, "Id", "Id"), energy_target_id(shading.id)))?;
     let id = energy_target_id(shading.id);
@@ -786,7 +796,7 @@ fn results_rows(config: &EnergyModelConfig, locale: Locale) -> UiAssemblyResult<
     Ok(rows)
 }
 
-/// 🎨️ The Results section every body carries — the document summary AND every entity form's footer,
+/// 🧍️ The Results section every body carries — the document summary AND every entity form's footer,
 /// so the colour field is one click away whatever is selected.
 fn results_section(builder: PanelTreeBuilder, config: &EnergyModelConfig, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     builder.section(format!("{ROOT}.results"), Some(ui_label(say(locale, "Results", "Ergebnisse"))?), true, results_rows(config, locale)?)?.build()
@@ -796,7 +806,7 @@ fn results_section(builder: PanelTreeBuilder, config: &EnergyModelConfig, locale
 /// 📋️ What the `"energyModel"` domain shows when it selects nothing: what this document is, how much
 /// of it there is, and the site — which is a singleton with no `EntityId` and therefore has no other
 /// place to be edited from.
-fn summary(model: &Model, config: &EnergyModelConfig, locale: Locale) -> UiAssemblyResult<BuiltNode> {
+fn summary(model: &EnergyRowsView<'_>, config: &EnergyModelConfig, locale: Locale) -> UiAssemblyResult<BuiltNode> {
     let mut counts = UiFixedList::default();
     push(&mut counts, read_only_row("summary.name", say(locale, "Model", "Modell"), &model.name))?;
     for (suffix, label, count) in [
@@ -831,11 +841,19 @@ fn action_rows(id: &str, kind: &str, locale: Locale) -> UiAssemblyResult<Option<
     Ok(Some(rows))
 }
 
-/// 🔍️ The panel body: the first resolvable selected entity's editable fields, or the document +
+/// 🗂️ The panel body: the first resolvable selected entity's editable fields, or the document +
 /// site summary. Every group title is the entity's own noun, so the panel reads as "Window" /
 /// "Construction" rather than as a generic "Properties".
 pub fn render(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, config: &EnergyModelConfig, locale: Locale, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
-    let model = &snapshot.model;
+    let latch = crate::snapshot::state::ProjectionFault::default();
+    let view = snapshot.model.read();
+    let rows = view.rows(&latch);
+    let tree = render_rows(&rows, snapshot, interaction, config, locale, windows);
+    latch.finish().map_err(|_| ui_error("ui.document"))?;
+    tree
+}
+
+fn render_rows(model: &EnergyRowsView<'_>, snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteractionSnapshot, config: &EnergyModelConfig, locale: Locale, windows: &TreeWindows<'_>) -> UiAssemblyResult<BuiltNode> {
     let Some((id, kind)) = interaction.selected_ids.iter().find_map(|id| energy_entity_kind(snapshot, id).map(|kind| (id.as_str(), kind))) else {
         return summary(model, config, locale);
     };
@@ -848,47 +866,47 @@ pub fn render(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteracti
     }
     builder = match kind {
         ENERGY_GRANULARITY_SURFACE => {
-            let surface = model.surfaces.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            geometry_section(builder.section(format!("{ROOT}.surface"), Some(ui_label(say(locale, "Surface", "Fläche"))?), true, surface_rows(model, surface, locale)?)?, windows, "surface", &id, &surface.vertices_m, SET_SURFACE_PROPERTY_ACTION_ID, locale)?
+            let surface = model.surfaces.find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
+            geometry_section(builder.section(format!("{ROOT}.surface"), Some(ui_label(say(locale, "Surface", "Fläche"))?), true, surface_rows(model, &surface, locale)?)?, windows, "surface", &id, &surface.vertices_m, SET_SURFACE_PROPERTY_ACTION_ID, locale)?
         }
         ENERGY_GRANULARITY_FENESTRATION => {
-            let window = model.fenestrations.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            geometry_section(builder.section(format!("{ROOT}.fenestration"), Some(ui_label(say(locale, "Window", "Fenster"))?), true, fenestration_rows(model, window, locale)?)?, windows, "fenestration", &id, &window.vertices_m, SET_FENESTRATION_PROPERTY_ACTION_ID, locale)?
+            let window = model.fenestrations.find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
+            geometry_section(builder.section(format!("{ROOT}.fenestration"), Some(ui_label(say(locale, "Window", "Fenster"))?), true, fenestration_rows(model, &window, locale)?)?, windows, "fenestration", &id, &window.vertices_m, SET_FENESTRATION_PROPERTY_ACTION_ID, locale)?
         }
         ENERGY_GRANULARITY_ZONE => {
-            let zone = model.zones.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            builder.section(format!("{ROOT}.zone"), Some(ui_label(say(locale, "Zone", "Zone"))?), true, zone_rows(zone, locale)?)?
+            let zone = model.zones.find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
+            builder.section(format!("{ROOT}.zone"), Some(ui_label(say(locale, "Zone", "Zone"))?), true, zone_rows(&zone, locale)?)?
         }
         ENERGY_GRANULARITY_SPACE => {
-            let space = model.spaces.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            builder.section(format!("{ROOT}.space"), Some(ui_label(say(locale, "Space", "Raum"))?), true, space_rows(model, space, locale)?)?
+            let space = model.spaces.find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
+            builder.section(format!("{ROOT}.space"), Some(ui_label(say(locale, "Space", "Raum"))?), true, space_rows(model, &space, locale)?)?
         }
         ENERGY_GRANULARITY_HVAC => builder.section(format!("{ROOT}.hvac"), Some(ui_label(say(locale, "Ideal loads system", "Ideales Lastsystem"))?), true, hvac_rows(model, entity, locale)?)?,
         ENERGY_GRANULARITY_LOAD => builder.section(format!("{ROOT}.load"), Some(ui_label(say(locale, "Load", "Last"))?), true, load_rows(model, entity, locale)?)?,
         ENERGY_GRANULARITY_MATERIAL => {
-            let material = model.materials.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            builder.section(format!("{ROOT}.material"), Some(ui_label(say(locale, "Material", "Material"))?), true, material_rows(material, locale)?)?
+            let material = model.materials.find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
+            builder.section(format!("{ROOT}.material"), Some(ui_label(say(locale, "Material", "Material"))?), true, material_rows(&material, locale)?)?
         }
         ENERGY_GRANULARITY_GLAZING_MATERIAL => {
-            let material = model.glazing_materials.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            builder.section(format!("{ROOT}.glazing"), Some(ui_label(say(locale, "Glazing material", "Verglasungsmaterial"))?), true, glazing_material_rows(material, locale)?)?
+            let material = model.glazing_materials.find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
+            builder.section(format!("{ROOT}.glazing"), Some(ui_label(say(locale, "Glazing material", "Verglasungsmaterial"))?), true, glazing_material_rows(&material, locale)?)?
         }
         ENERGY_GRANULARITY_GAS_MATERIAL => {
-            let material = model.gas_materials.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            builder.section(format!("{ROOT}.gas"), Some(ui_label(say(locale, "Gas gap", "Gasfüllung"))?), true, gas_material_rows(material, locale)?)?
+            let material = model.gas_materials.find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
+            builder.section(format!("{ROOT}.gas"), Some(ui_label(say(locale, "Gas gap", "Gasfüllung"))?), true, gas_material_rows(&material, locale)?)?
         }
         ENERGY_GRANULARITY_CONSTRUCTION => {
-            let construction = model.constructions.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            let builder = builder.section(format!("{ROOT}.construction"), Some(ui_label(say(locale, "Construction", "Konstruktion"))?), true, construction_rows(model, construction, locale)?)?;
-            construction_layers_section(builder, windows, model, construction, locale)?
+            let construction = model.constructions.find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
+            let builder = builder.section(format!("{ROOT}.construction"), Some(ui_label(say(locale, "Construction", "Konstruktion"))?), true, construction_rows(model, &construction, locale)?)?;
+            construction_layers_section(builder, windows, model, &construction, locale)?
         }
         ENERGY_GRANULARITY_THERMOSTAT => {
-            let thermostat = model.thermostats.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            builder.section(format!("{ROOT}.thermostat"), Some(ui_label(say(locale, "Thermostat", "Thermostat"))?), true, thermostat_rows(model, thermostat, locale)?)?
+            let thermostat = model.thermostats.find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
+            builder.section(format!("{ROOT}.thermostat"), Some(ui_label(say(locale, "Thermostat", "Thermostat"))?), true, thermostat_rows(model, &thermostat, locale)?)?
         }
         ENERGY_GRANULARITY_SHADING => {
-            let shading = model.shading_surfaces.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            geometry_section(builder.section(format!("{ROOT}.shading"), Some(ui_label(say(locale, "Shading surface", "Verschattungsfläche"))?), true, shading_rows(model, shading, locale)?)?, windows, "shading", id, &shading.vertices_m, SET_SHADING_PROPERTY_ACTION_ID, locale)?
+            let shading = model.shading_surfaces.find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
+            geometry_section(builder.section(format!("{ROOT}.shading"), Some(ui_label(say(locale, "Shading surface", "Verschattungsfläche"))?), true, shading_rows(model, &shading, locale)?)?, windows, "shading", id, &shading.vertices_m, SET_SHADING_PROPERTY_ACTION_ID, locale)?
         }
         _ => return summary(model, config, locale),
     };

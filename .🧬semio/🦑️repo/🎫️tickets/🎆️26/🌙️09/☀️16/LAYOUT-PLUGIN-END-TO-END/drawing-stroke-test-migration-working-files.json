@@ -1,0 +1,40 @@
+{
+  "state": "authored-not-run",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧪️tests/🦀️.rs",
+      "sha256": "44c280f356a3c2219f153a3dd137fb0d020ba612b6adcab8a41e5d5d9b0f1fe9",
+      "bytes": 8457
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧪️tests/🎟️work/🦀️.rs",
+      "sha256": "8f4f60c2841a9bba956d5e8d6d0219c9b6635f6838074aba12755995494b55b6",
+      "bytes": 8075
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🦀️.rs",
+      "sha256": "5f1a59a695687f25f20533274f90e4e61bc4d909b38c0c452c9c4d065c35a848",
+      "bytes": 32199
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🦀️.rs",
+      "sha256": "4059ac758ebfdd70631dd08f5f3e40e035add4f24f36c892e6bd0b62465e1573",
+      "bytes": 24895
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🦀️.rs",
+      "sha256": "37d200aa3b388e3a9fac89cb4813b816f7e6499bd6e116abb4e6ab06e8c35998",
+      "bytes": 14174
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧪️tests/🎟️work/📐️.json",
+      "sha256": "0776b901ef034a38dd178a6ae913ade4eab8a5aa5c3930bf4fed2e021fa953aa",
+      "bytes": 698
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧪️tests/🎟️work/🔣️.json",
+      "sha256": "78012a468add09b5060b06018bbda2a7094a60950a07f682319262b6c1618895",
+      "bytes": 558
+    }
+  ]
+}

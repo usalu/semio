@@ -5,7 +5,8 @@
   "required": [
     "axes",
     "cases",
-    "bindings"
+    "bindings",
+    "workLaw"
   ],
   "properties": {
     "axes": {
@@ -71,6 +72,15 @@
             "type": "boolean"
           }
         }
+      }
+    },
+    "workLaw": {
+      "const": {
+        "deniedWork": 0,
+        "attemptWork": 1,
+        "failedItems": 0,
+        "successItems": 1,
+        "value": 7
       }
     }
   },

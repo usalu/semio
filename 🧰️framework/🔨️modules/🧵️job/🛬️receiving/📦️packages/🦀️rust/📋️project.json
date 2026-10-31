@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/job-receiving-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

@@ -48,8 +48,6 @@ Ok(())}/// 🎟️ Admits all typed CAD cells before native forecasting or mater
 pub fn admit_values(snapshot:&SemioCadSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
 /// 🏛️ Admits the exact authored table and column layout before native ownership.
 pub(crate)fn admit_layout(limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
-/// 📦️ Counts the actual native primitive cells before typed ownership.
-pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
 /// 📝️ Counts the actual native primitive cells before typed ownership.
 pub fn admit_document(body:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
 
@@ -59,7 +57,7 @@ fn boolean(value:i64)->Result<bool,ValueError>{match value{0=>Ok(false),1=>Ok(tr
 fn optional_integer(row:SqliteRow<'_>,index:usize)->Result<Option<i64>,ValueError>{if row.is_null(index)?{Ok(None)}else{row.integer(index).map(Some)}}
 /// 🚫️ Reports an authored CAD relational refusal.
 fn cad_invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
-/// 📐️ Restores only the declared binary64 point words.
+/// 🌀️ Restores only the declared binary64 point words.
 fn point(row:SqliteRow<'_>,x:usize)->Result<SemioPoint2,ValueError>{Ok(SemioPoint2{x:row.real(x)?,y:row.real(x+1)?})}
 impl ArtifactSqliteSnapshotHost for SemioCadSnapshot{
 fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}

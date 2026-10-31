@@ -1,0 +1,16 @@
+--- a/🧰️framework/🔨️modules/🏃️process/🔒️leases/⚖️fairness/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/🔒️leases/⚖️fairness/🟦️.ts
+@@ -16,10 +16,10 @@
+  return match?.milliseconds??fairness.writerPreferenceMilliseconds??Infinity;
+ }
+ 
+-/** 🚦️ Whether the requester may try its kernel lease now: every earlier ticket that does not stand aside is a shared cohort ticket of a shared cohort request, a shared ticket when the requester's process or its owning ancestor already holds the resource shared (shared tickets never conflict, the owner may wait for this very request, as an Nx daemon waits behind its loader's held ticket, and a waiting writer ahead cannot hold while the owner does, so it waits for this very tree: the tree is admitted past it, otherwise holder and writer wait for each other until the writer preference ends), or there is none. */
+-export function queueMayProceedV1(requester:QueueRequesterV1,ahead:readonly QueueTicketV1[],nowMs:number,writerPreferenceMilliseconds:number):boolean{
++/** 🚦️ Whether the requester may try its kernel lease now: every earlier ticket that does not stand aside is a shared cohort ticket of a shared cohort request, a shared ticket when the requester's process or its owning ancestor already holds the resource shared (shared tickets never conflict, the owner may wait for this very request, as an Nx daemon waits behind its loader's held ticket, and a waiting writer ahead cannot hold while the owner does, so it waits for this very tree: the tree is admitted past it, otherwise holder and writer wait for each other until the writer preference ends; but only for `holderPassCeilingMilliseconds` of the writer's wait: a tree that keeps passing a writer for hours is stuck or never ends, and from then on it queues behind the writer like everyone else, so the stall is reported by the wait-for graph instead of starving the writer for ever), or there is none. */
++export function queueMayProceedV1(requester:QueueRequesterV1,ahead:readonly QueueTicketV1[],nowMs:number,writerPreferenceMilliseconds:number,holderPassCeilingMilliseconds:number=Infinity):boolean{
+  const blocking=ahead.filter(row=>!queueTicketDefersV1(requester,row,nowMs,writerPreferenceMilliseconds));
+  return blocking.length===0
+   ||requester.sharedCohort&&blocking.every(row=>row.mode==="shared"&&row.sharedCohort)
+-  ||requester.mode==="shared"&&requester.holdsShared;
++  ||requester.mode==="shared"&&requester.holdsShared&&blocking.every(row=>row.mode==="shared"||nowMs-row.arrivedAtMs<holderPassCeilingMilliseconds);
+ }

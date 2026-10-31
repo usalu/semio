@@ -1,0 +1,32 @@
+{
+  "state": "producer-and-genuine-staged-close-authored-not-executed",
+  "files": [
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/catalog.json",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/catalog.schema.json",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/catalog.test.ts"
+  ],
+  "inputs": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "sha256": "a000755b683e47740432776e259082bfab4c2fff6a49e1aee9d8ed69e2817384",
+      "bytes": 11166
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/catalog.json",
+      "sha256": "191b403d19b1fa430aaf0997df62b93e22e873d5b00432119a3734c1d7e9b70e",
+      "bytes": 459
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/catalog.schema.json",
+      "sha256": "264a80594ec811bb773e62ae063cd82f3a513b849909662e93762cbdb868d58e",
+      "bytes": 987
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/catalog.test.ts",
+      "sha256": "a8642fcb1e6f6bd2f4c5cf10346b2dff7c29b46abdb2da8ae4b5822e85ca3515",
+      "bytes": 3245
+    }
+  ],
+  "notes": "Own producer/registry selectors; Cursor authored genuine staged advance/CPU/finalclear close hunk and separate actual shipped-font custody test, not claimed as own test edits. Raw async source-loading boundary remains unclosed."
+}

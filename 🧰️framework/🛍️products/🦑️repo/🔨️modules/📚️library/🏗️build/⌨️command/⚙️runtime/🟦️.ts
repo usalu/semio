@@ -41,7 +41,7 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
         return;
       }
     }
-    const command=resolved.args[0];
+    const command=resolved.args[0];if(command===undefined)throw Error("Build command required");
     if(["run","run-many","affected","exec","watch"].includes(command)){
       const {validateBuildTaskArgumentsV1}=await import("../../🧭️selection/🟦️.ts");
       profilePhaseV1("selection.validate",()=>validateBuildTaskArgumentsV1(resolved.args));
@@ -65,6 +65,7 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       return;
     }
     if(command==="tools"&&resolved.args[1]==="verify"){const{runToolsVerifyV1}=await import("../../🧰️tool-setup/⌨️command/🟦️.ts");process.exitCode=await runToolsVerifyV1(root,phaseControl,resolved.args.slice(2));return;}
+    if(command==="tools"&&resolved.args.length===3&&resolved.args[1]==="setup"&&resolved.args[2]==="all")await(await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🟦️.ts")).setupRepositoryDependencyPublicationV1(invocation,phaseControl);
     const {withRepositoryCacheStoreV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");
     profileMarkV1("dependencies.opening");await withRepositoryCacheStoreV1(root,"dependencies",parent,phaseControl,async(_dependencies,phaseControl)=>{profileMarkV1("dependencies.opened");
     if(command==="tools"){

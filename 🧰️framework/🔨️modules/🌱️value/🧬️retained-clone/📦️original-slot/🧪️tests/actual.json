@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "text": "Original α 🌱",
+  "deniedWork": 0,
+  "nullWork": 1,
+  "birthWork": 1,
+  "cpuStock": 4096,
+  "copyStock": 16777216,
+  "capacityStock": 16777216,
+  "releaseStock": 16777216,
+  "maximumDepth": 128,
+  "maximumTurns": 10000,
+  "originalPointer": true,
+  "serdeOracle": true,
+  "itemStock": 4096,
+  "sourceAdmissionBaseControls": 2,
+  "sourceAdmissionCuts": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "returnStart": {
+    "work": 1,
+    "copyBytes": 0,
+    "capacityBytes": 0,
+    "releaseBytes": 0,
+    "depth": 1
+  }
+}

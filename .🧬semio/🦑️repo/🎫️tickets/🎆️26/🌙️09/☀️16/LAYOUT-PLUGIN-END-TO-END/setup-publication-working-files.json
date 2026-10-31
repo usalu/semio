@@ -1,0 +1,357 @@
+{
+  "files": [
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/📸️bootstrap/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/📸️bootstrap/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/📸️bootstrap/🧬️schema.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🌱️initialization/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/📏️usage/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/📋️model/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/📸️backing/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🧪️tests/issuer.test.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🧪️tests/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🧪️tests/🧬️schema.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🧾️metadata/🎛️owner/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🧾️metadata/📋️model/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🧾️metadata/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🌐️platform/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🎛️owner/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🧪️tests/name-diagnostic.test.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/budget-ports.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/group-freshness.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/group.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/ordering.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/ordering.schema.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🧬️schema.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧱️fixed/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧱️fixed/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📋️readiness/💰️funding/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/💰️funding/📋️intent/📜️journal/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/💰️funding/📋️intent/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/💰️funding/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/📋️contract/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧪️tests/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧬️schema.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎬️executor/🟦️.ts"
+  ],
+  "reportsInputs": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/setup-publication.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/setup-publication-packet.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/setup-publication-commands.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/setup-publication-readiness-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/setup-publication-lifetime-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/setup-bootstrap-transition.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/setup-unready-receiver-admission.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/setup-live-failure.md"
+  ],
+  "notes": "Touched paths only; preserve unrelated peer hunks in shared files. Live publication remains unverified.",
+  "sourceReady": true,
+  "runtimeEndToEndProven": false,
+  "inventoryMeaning": "Working Source/schema/tests, not a captured runtime Source closure or cap claim",
+  "hashes": [
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts",
+      "bytes": 34451,
+      "sha256": "b3acb3072cb08584ae686fb9bbdfef1e9a165c432888cdcb9abf62bcd65e6b50"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/📸️bootstrap/🔣️.json",
+      "bytes": 1445,
+      "sha256": "355d679a33444aa10a1f0158d41e039560f38a8f58ea871c483bd620d163d6b5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/📸️bootstrap/🟦️.ts",
+      "bytes": 3439,
+      "sha256": "b7fbfaa7915fdb2960e382e3f81dc3c1eaf42db23fc19f40fb7b3421cc075c27"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🧪️tests/📸️bootstrap/🧬️schema.json",
+      "bytes": 823,
+      "sha256": "184273a65f20374e9f727aaf609ffb7698b395062d1f7b204201e86ea33cdb87"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🌱️initialization/🟦️.ts",
+      "bytes": 2183,
+      "sha256": "a501ad54b0eeefe624338e885eb72be843b326b54b3bbf78b6bdd9c2bd0785b0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/📏️usage/🟦️.ts",
+      "bytes": 683,
+      "sha256": "e99ad2f5abb16f467517195708ab7ab3efe016b8c5e58bfc07c8f870dc910791"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/📋️model/🟦️.ts",
+      "bytes": 5649,
+      "sha256": "5cbdcdbf8c2f9ca88a46d8c34db9cd3dc41814c89022d5c5925ac9aa7d5e4a6f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/📸️backing/🟦️.ts",
+      "bytes": 3687,
+      "sha256": "2ea88d0f07cb73d5bf940af3f44145ccf58974dab4169899b8f7f0d18ca7bcb2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🟦️.ts",
+      "bytes": 9536,
+      "sha256": "69253cadbe834ee0e8e4e8a5a0fc66d7e51205b595352617b78b03af9cf3f9ba"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🧪️tests/issuer.test.ts",
+      "bytes": 5995,
+      "sha256": "98712443db3b46491afa8b1951662a5c3acfc646e19acc214057d003257a461b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🧪️tests/🔣️.json",
+      "bytes": 15103,
+      "sha256": "c34eda9db05da13a210467587d0c8d3696d663a0c03a9ff5fedcbbcaa5e6142d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🧪️tests/🟦️.ts",
+      "bytes": 21090,
+      "sha256": "c5a79cda2918da2e39138004746ac183c1edad96315e2166d0b6d0e81177a320"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🧪️tests/🧬️schema.json",
+      "bytes": 8996,
+      "sha256": "e12ddf6f5a65cb2e098aa3a097edeb4226d4390a72c72c910d6819bbdb5b83fa"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🧾️metadata/🎛️owner/🟦️.ts",
+      "bytes": 15277,
+      "sha256": "9ff388363b75bed1cd19940fd64f346052a7f8d9c3671d3258bc1a2fdc65c14c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🧾️metadata/📋️model/🟦️.ts",
+      "bytes": 13591,
+      "sha256": "82e384011de92df777e23666c6479fe2038e0e672e0f9e5f906bf6d8194a17b9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🧾️metadata/🟦️.ts",
+      "bytes": 5243,
+      "sha256": "174ada778fcfd6c4264d53fab77359d8c88723e45e4e88191132bbc464472665"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts",
+      "bytes": 15536,
+      "sha256": "a45c9726a0451c55cf214d787ee9338be641ebf4d74ae8c84dfaed45a7f252fe"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🌐️platform/🟦️.ts",
+      "bytes": 121194,
+      "sha256": "122cec5305efa57873759205001394f93ce33c14f4e80ca48dd9f5427fc5985d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🎛️owner/🟦️.ts",
+      "bytes": 68286,
+      "sha256": "d85cde63162d8b2590df0de5bc1e853109c7779f6bf9a5c5d4ababc7f6b16fcd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🟦️.ts",
+      "bytes": 32615,
+      "sha256": "4285c6f50de446323c95b9e73b8b531a5f56f1ed145b4645ea3aa859175dc5f9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🧪️tests/name-diagnostic.test.ts",
+      "bytes": 2654,
+      "sha256": "1c32a66455326d36e41170bdd00702a159b46c2c2daec10bf4a0ff7bd1b20c07"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🧪️tests/🟦️.ts",
+      "bytes": 169293,
+      "sha256": "05ecad8bec9a8c9f0ae2a1acd56da6f5d8c46479d76fbeaf08b62b477963c353"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🟦️.ts",
+      "bytes": 3649,
+      "sha256": "6e73422a5348efc01c4edd68dbd0d0fd900e12f78a7ddb6d2d45741885b690a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/budget-ports.json",
+      "bytes": 454,
+      "sha256": "365ae8138f04cc28828dda4c1ab59bf5db0f971d8efc84a6925215d114dfae34"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/group-freshness.json",
+      "bytes": 512,
+      "sha256": "618a16fbc982d070ff0e24b98817b6995426b5af375c69a99fe1f9ad49699a25"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/group.json",
+      "bytes": 432,
+      "sha256": "1f0cb695a2fe7f25726186a09f43e93e1d3444d3f1495f3c1bd2beb32f33cd0a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/ordering.json",
+      "bytes": 3538,
+      "sha256": "7d58328cb33921bdf049db023b120d46cd1ccaf2799aae71468675b872572265"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/ordering.schema.json",
+      "bytes": 1258,
+      "sha256": "8097da1cf733e380e09d5a921bc1ed8fa791d8e306cfdae5477fda06090279ee"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🔣️.json",
+      "bytes": 1322,
+      "sha256": "2648965d64f2ed28888f1b56a9bfd73470b25e601e473d91401974920d252a68"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🟦️.ts",
+      "bytes": 18133,
+      "sha256": "6949afa9e6936ba46b287ae83bc2006b3e7bd61d11f34c7d87ee2bf7ef5ec1df"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🧬️schema.json",
+      "bytes": 969,
+      "sha256": "a263b6ae199bf5522d7d539363e7ed810ed31f7c16bf43f2a77543e4bcf3c01d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧬️schema/🔣️.json",
+      "bytes": 20717,
+      "sha256": "e76ceeb8da659219aed0a1ffbbdcfb9ec37ceddb973b6005c758fbccaa69f132"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧱️fixed/🟦️.ts",
+      "bytes": 6985,
+      "sha256": "c43528148e3bdba01a48ef2ed0d452099f5990c370cae9b39f62baba36f838bf"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧱️fixed/🧪️tests/🟦️.ts",
+      "bytes": 7360,
+      "sha256": "b32295d287b4075737d645fabde35f8400e4e0de7680565b03b2acf94dee250e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts",
+      "bytes": 77306,
+      "sha256": "2aab87585070d284ac12c1a6c685330418c5ab818e497209401d7ca8c3e72306"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🔣️.json",
+      "bytes": 77128,
+      "sha256": "e7395fade51d0b7986c98422d53f09a03ea1aaef858271fb2d7e2192af4d65e5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧱️fixed/🟦️.ts",
+      "bytes": 133177,
+      "sha256": "bcd884053409f263e1cf962033efdb0bbfda64dd352bfefa3ef1ae4d65fe00dc"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📋️readiness/💰️funding/🟦️.ts",
+      "bytes": 788,
+      "sha256": "f83f25ddad488675ce626e9e1dc8242fb591fb408d32e19f7b474e89f98f77d0"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/💰️funding/📋️intent/📜️journal/🟦️.ts",
+      "bytes": 7440,
+      "sha256": "ac5f11d78893712c74432d9b2878ddc729080f30814ecc1f35aa9747448612c9"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/💰️funding/📋️intent/🟦️.ts",
+      "bytes": 5982,
+      "sha256": "27869d26819826a45b0db0c3b54fee762bade4db65b26258587101dcde251983"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/💰️funding/🟦️.ts",
+      "bytes": 14095,
+      "sha256": "429a0aa2e6e289162247dfb920b4b025c595480219a889918bd966d2c144a83e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/📋️contract/🟦️.ts",
+      "bytes": 2193,
+      "sha256": "e4bb0ee5f1b19bca0a2a28ce6586ce45756a1e35927cd90e78910cda7dd6d88e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🟦️.ts",
+      "bytes": 4295,
+      "sha256": "17fccd66c2e742de13d8ba4cb41a0e33fb27cc3a2960f543275725481b0fc748"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧪️tests/🔣️.json",
+      "bytes": 6543,
+      "sha256": "b9d2e2777a79b26b8bff16ebb7c95e05d43ceda9c8488513290e999684863c2e"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧪️tests/🟦️.ts",
+      "bytes": 20248,
+      "sha256": "e8119a27b201c2926348ca20e1761323ab37e6235d99d3b81964148e0a968ab6"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧬️schema.json",
+      "bytes": 9252,
+      "sha256": "9b93c18cf899824e7d4166e93e98cf83eb276356ab0e893ba9d436adc160f76b"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+      "bytes": 220789,
+      "sha256": "1f810809b8d129775cc7414e4e60573adbdae912114258e04fb6bbfd888748da"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts",
+      "bytes": 48662,
+      "sha256": "20661e7a6eb1cd6850b97fd8395cc2e09d9133b468d67c0bbd2d424f51fdb6fd"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/🟦️.ts",
+      "bytes": 18202,
+      "sha256": "fdefcf3ba495476524ec8938dcd8da84504335f65a45045c5d1c76f2307ab16d"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts",
+      "bytes": 23416,
+      "sha256": "a8b4be3b47129c541c8d9183eebdf2e4b7cb2de35630900ce64fd30058cd4c9f"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🟦️.ts",
+      "bytes": 24543,
+      "sha256": "6db5a1603f9af7b9a3d4e34ac315d416a02c62edae2a4fc026890eb250cd63e8"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts",
+      "bytes": 2565,
+      "sha256": "66fd2f40d1d345092049a9467367353715b6526ad5628849bdce078192646485"
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🎬️executor/🟦️.ts",
+      "bytes": 50411,
+      "sha256": "848ff36f9a5169fc2b9bb17b41430e808f7c88c6c03a30aa0ee477d6179187cd"
+    }
+  ],
+  "maximumAbsolutePathUnits": 201,
+  "verification": {
+    "focused": {
+      "session": 59750,
+      "exitCode": 0,
+      "passed": 26,
+      "expectations": 943,
+      "log": "🗑️generated/setup-bootstrap-final-focused.log",
+      "admission": "normal-managed"
+    },
+    "strict": {
+      "session": 10910,
+      "exitCode": 0,
+      "log": "🗑️generated/setup-bootstrap-strict-7.log",
+      "admission": "normal-managed"
+    },
+    "livePublicationProven": false,
+    "sourceOnly": true
+  }
+}

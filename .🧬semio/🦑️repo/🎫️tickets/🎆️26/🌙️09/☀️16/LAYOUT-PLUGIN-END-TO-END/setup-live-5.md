@@ -1,0 +1,9 @@
+# Canonical Setup Attempt 5
+
+Root conditionally authorized one canonical setup after fresh Dependencies quiescence. Own supported point1793317450333 showed zero relevant image/bindings/JavaScript-build/sync holders and is retained in 🗑️generated/setup-live-5-admission-current.json/.log. The direct prototype command was launched immediately as session51286 with all five artifact/temporary variables inside ticket-generated/setup-live-5(/tmp); input is setup-live-5-command.json. No Source/provider edit or parallel own runtime occurred while it ran.
+
+Own authoritative session51286 terminated EXIT1. It passed admission, staged/read inputs, and emitted two actual native-artifact-funding-measured events, advancing past the prior Started-token failure. The new failure was Quiescent immutable input completion required from the completed-group reader invoked by the producer Source context recheck inside a Native maintenance read. This is a nested-reader composition refusal, not a reason to weaken the zero-pending guard. No sync-qualified or publication completion event was observed.
+
+Exact streamed log hash, terminal record and six new retentions are at 🗑️generated/setup-live-5-receipt.json; complete log is 🗑️generated/setup-live-5.log. The incomplete DATA again reports zero bindings changed, no unresolved Source transition, no whole allocation retirement, and six completed generation retentions. Prior attempt4 records remain retained separately; no previous or new partial artifact was cleaned, rewritten or adopted. The records establish observations from each attempt, not current inactivity or a cleanup grant.
+
+No automatic retry, peer stop, raw cleanup or receipt rewrite ran. Root assigned a Source-only caller ordering correction with defining Native quiescence review; actual rematerialization, readiness, publication and Layout build/browser remain unproved.

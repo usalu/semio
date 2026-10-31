@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "work": {
+    "ineligible": 0,
+    "denied": 0,
+    "returned": 1,
+    "cached": 0
+  },
+  "receipt": {
+    "items": 1,
+    "copyBytes": 0
+  },
+  "handbacks": 1
+}

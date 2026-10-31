@@ -289,7 +289,7 @@ fn close_original_recipient(recipient:&mut semio_framework_value_native_owned::n
     let base=semio_framework_value::RetainedCloneGrant{maximum_items:ceiling.max(1),maximum_copy_bytes:ceiling,maximum_capacity_bytes:ceiling,maximum_release_bytes:ceiling,maximum_depth:ORIGINAL_CLOSE_DEPTH};
     let mut grant=base;let mut idle=0usize;
     while !recipient.terminal_is_empty(){
-        match recipient.close_step(grant){
+        match recipient.close_step(grant).result{
             Ok(step) if step.progress()!=semio_framework_value::RetainedCloneProgress::default()=>{idle=0;grant=base;continue;}
             Ok(_)=>{if idle>=2{return Err(ownership_limit("SQLite snapshot original retirement stopped progressing"));}}
             Err(error)=>{if idle>=2{return Err(error);}}

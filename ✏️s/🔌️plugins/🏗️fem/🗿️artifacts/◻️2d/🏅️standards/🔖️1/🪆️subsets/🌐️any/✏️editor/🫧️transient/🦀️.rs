@@ -21,14 +21,14 @@ use std::collections::BTreeMap;
 
 //#region 🔖️State
 /// 🫧️ Every open gumball gesture of one FEM artifact instance, by owning window id.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct FemGumballTransient {
     pub gestures: BTreeMap<String, FemGumballGesture>,
 }
 
 /// 💾️ One window's in-flight gumball gesture.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct FemGumballGesture {
     pub states: Vec<String>,
@@ -40,7 +40,7 @@ pub struct FemGumballGesture {
 }
 
 /// 🧷️ One provisional entry of the open transaction, its mutation in value form.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct FemGumballEntry {
     pub key: String,
@@ -123,6 +123,13 @@ pub fn fem_gumball_drive<T: GestureTool<Gesture = FemGumballGesture>>(
 }
 //#endregion 🛠️Drive
 
+impl semio_framework_value_snapshot_projection::SnapshotProjection for FemGumballTransient {
+    type Output = Self;
+    type Projection = semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
+    fn projection_birth_demand() -> semio_framework_value::RetirementDemand { Self::Projection::birth_demand() }
+    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_value::ValueError> { Self::Projection::begin(grant) }
+}
+
 //#region 🔖️Mutation
 semio_framework_plugin::transient_root! {
     state: FemGumballTransient,
@@ -134,6 +141,7 @@ semio_framework_plugin::transient_root! {
     payload_schema: "🧬️schema/🔣️.json",
     envelope: "fem.gumballtransient",
     extension: "femgumballtransient",
+    retained: true,
     fields: { gestures: BTreeMap<String, FemGumballGesture> },
 }
 //#endregion 🔖️Mutation

@@ -40,6 +40,8 @@ semio-s-artifact-cad-cad-inferences = { workspace = true }
 semio-s-artifact-cad-cad-interaction = { workspace = true }
 semio-s-artifact-cad-cad-io = { workspace = true }
 semio-s-artifact-cad-cad-kit = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
 semio-s-artifact-cad-cad-model = { workspace = true }
 semio-s-artifact-cad-cad-modes = { workspace = true }
 semio-s-artifact-cad-cad-mutations = { workspace = true }

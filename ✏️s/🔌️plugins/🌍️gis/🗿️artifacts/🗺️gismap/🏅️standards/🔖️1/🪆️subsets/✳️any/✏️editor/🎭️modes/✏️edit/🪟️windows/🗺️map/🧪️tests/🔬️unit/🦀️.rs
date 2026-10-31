@@ -41,7 +41,7 @@ use semio_framework_plugin::{PluginApp, INTERACTION_HOVER_ACTION_ID, INTERACTION
 /// the reserved job it spawns so the next render reads the published interaction state.
 async fn interact(app: &mut Gis2dTestApp, action: &str, args: serde_json::Value) {
     let admitted = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, Some(semio_framework_value::DslValue::from(&args)), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.unwrap_or_else(|error| panic!("{action} admission: {error:?}"));
-    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await.unwrap_or_else(|error| panic!("{action} settles its reserved job: {error:?}"));
+    semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()).await.unwrap_or_else(|error| panic!("{action} settles its reserved job: {error:?}"));
 }
 
 fn feature_targets(ids: &[&str]) -> String {

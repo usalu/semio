@@ -1,0 +1,30 @@
+{
+  "state": "schema-and-six-new-laws-before-body-unexecuted",
+  "existingSixRegisteredByOriginalPhysicalImport": true,
+  "expectedCombinedLaws": 12,
+  "beforeHelperExportSha256": "3092f13c3ef883338eb6e78c5804a60fb6e56abc3b9057c50a3cdb78649f459b",
+  "afterHelperExportSha256": "afee7dca46de39ecda626d5efc8bfb5570e8878bf58a5b5e4d2e55f031844299",
+  "helperExportWholeInverseMatches": true,
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+      "bytes": 19076,
+      "sha256": "afee7dca46de39ecda626d5efc8bfb5570e8878bf58a5b5e4d2e55f031844299"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/🔣️.json",
+      "bytes": 3423,
+      "sha256": "7c6cf8f59829beab9096f6a5dbae659b005a39634561da8f50b2c7719e41bb78"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/📐️.json",
+      "bytes": 1778,
+      "sha256": "df2721cace565e493f175765b500c4414e7fc64cf9f3928513fd8dc17a1acf49"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+      "bytes": 8575,
+      "sha256": "b8750152343252572092533aa61f8b0e41999b373166c07530a2dc6067fdee25"
+    }
+  ]
+}

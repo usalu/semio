@@ -1,0 +1,12 @@
+{
+  "RunLaw": {
+    "before": "613f3c399c95e6320c8d33486907e80bdb1d397d7452e2bbfaf2c12e58d713cc",
+    "after": "a34b38a9678f8598267e1426e9bf8a472361568741b92933a813a363e6fb8e84"
+  },
+  "BidiLaw": {
+    "before": "a56b089d2f57db5820e7db436c4319675f6af6d2730c0a2274cb8a5833290a67",
+    "after": "88c4ad8518ac361787d8314b366c1b8438dd8dc7981b9a2ea68ee93f2b517fc4"
+  },
+  "scope": "Schema selector latn/dflt; independent library per-lookup sum; closed foreign mirror-pair guard; all production/stock/tolerance unchanged",
+  "runtime": false
+}

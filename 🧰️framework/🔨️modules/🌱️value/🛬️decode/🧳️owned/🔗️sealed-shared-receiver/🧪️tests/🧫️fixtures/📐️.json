@@ -1,0 +1,42 @@
+{
+  "schema": "semio.native-shared-receive/v1",
+  "maximumCopyBytes": 4096,
+  "cases": [
+    {
+      "id": "empty",
+      "original": "",
+      "expected": ""
+    },
+    {
+      "id": "unicode",
+      "original": "Wohnraum 🏠️\nÅngström \\\"",
+      "expected": "Wohnraum 🏠️\nÅngström \\\""
+    }
+  ],
+  "laws": [
+    "original-source-binding",
+    "paid-child-birth",
+    "child-close-before-seal",
+    "original-intrinsic-issuer",
+    "denied-zero-allocation",
+    "prefix-cancellation",
+    "exact-physical-receipts",
+    "original-output-transfer"
+  ],
+  "stock": {
+    "items": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "fuel": 100000
+  },
+  "ownershipCopyBytes": 0,
+  "deniedWork": 0,
+  "ownedHandoffWork": 1,
+  "workLoan": {
+    "single": 1,
+    "batch": 257,
+    "origin": "same-wallet-remaining-fuel"
+  }
+}

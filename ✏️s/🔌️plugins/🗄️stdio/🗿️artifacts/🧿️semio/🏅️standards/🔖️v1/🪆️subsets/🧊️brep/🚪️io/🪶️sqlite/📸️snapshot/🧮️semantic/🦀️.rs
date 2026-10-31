@@ -23,35 +23,9 @@ impl Census{
 fn byte(reader:&mut store::ByteReader<'_>)->Result<u8>{reader.read_u8().map_err(|_|invalid())}
 fn text(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)->Result<usize>{Ok(control.borrow_text(native::bytes(reader)?)?.len())}
 fn scalar(value:f64)->usize{if value.is_nan(){11}else if value.is_infinite(){32}else{22}}
-fn binary_f64(reader:&mut store::ByteReader<'_>)->Result<usize>{Ok(scalar(reader.read_f64_le().map_err(|_|invalid())?))}
-fn binary_words(reader:&mut store::ByteReader<'_>,count:usize)->Result<usize>{let mut bytes=0;for _ in 0..count{bytes=add(bytes,binary_f64(reader)?)?;}Ok(bytes)}
 fn boolean(reader:&mut store::ByteReader<'_>)->Result<bool>{match byte(reader)?{0=>Ok(false),1=>Ok(true),_=>Err(invalid())}}
 fn uint32(reader:&mut store::ByteReader<'_>)->Result<()>{u32::try_from(reader.read_varint_u64().map_err(|_|invalid())?).map(|_|()).map_err(|_|invalid())}
 fn digits(mut value:u64)->usize{let mut count=1;while value>=10{value/=10;count+=1;}count}
-fn binary_list(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut NativeDecodeControl<'_>,mut visit:impl FnMut(&mut store::ByteReader<'_>,&mut Census,&mut NativeDecodeControl<'_>)->Result<()>)->Result<()>{
- let count=native::length(reader)?;census.future(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{visit(reader,census,control)?;control.step()?;}control.checkpoint()})
-}
-fn binary_numbers(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut NativeDecodeControl<'_>)->Result<()>{binary_list(reader,census,control,|reader,census,_|census.row(add(24,binary_f64(reader)?)?))}
-fn binary_points(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut NativeDecodeControl<'_>,width:usize)->Result<()>{binary_list(reader,census,control,|reader,census,_|census.row(add(24,binary_words(reader,width)?)?))}
-fn binary_curve(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut NativeDecodeControl<'_>,width:usize)->Result<()>{
- let tag=byte(reader)?;let(kind,words)=match(tag,width){(0,3)=>(4,6),(0,2)=>(4,4),(1,3)=>(6,7),(1,2)=>(6,3),(2,3)=>(7,8),(2,2)=>(7,6),(3,_)=>{census.row(21)?;binary_points(reader,census,control,width)?;binary_numbers(reader,census,control)?;uint32(reader)?;binary_numbers(reader,census,control)?;return Ok(())},_=>return Err(invalid())};census.row(add(add(8,kind)?,binary_words(reader,words)?)?)
-}
-fn binary_surface(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut NativeDecodeControl<'_>)->Result<()>{
- let(kind,words)=match byte(reader)?{0=>(5,6),1=>(8,7),2=>(4,8),3=>(6,4),4=>(5,8),5=>{census.row(45)?;binary_points(reader,census,control,3)?;binary_numbers(reader,census,control)?;for _ in 0..4{uint32(reader)?;}binary_numbers(reader,census,control)?;binary_numbers(reader,census,control)?;return Ok(())},_=>return Err(invalid())};census.row(add(add(8,kind)?,binary_words(reader,words)?)?)
-}
-/// 📦️ Counts original BRep binary topology and geometry before typed construction.
-pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
- layout(limits)?;control.scoped_stage(|control|{
-  let mut reader=store::ByteReader::new(body);if byte(&mut reader)?!=1{return Err(invalid())}let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,text(&mut reader,control)?)?)?;
-  binary_list(&mut reader,&mut census,control,|reader,census,control|census.row(add(add(24,text(reader,control)?)?,binary_words(reader,4)?)?))?;
-  binary_list(&mut reader,&mut census,control,|reader,census,control|{let mut bytes=32;for _ in 0..3{bytes=add(bytes,text(reader,control)?)?;}binary_curve(reader,census,control,3)?;census.row(add(bytes,binary_f64(reader)?)?)})?;
-  binary_list(&mut reader,&mut census,control,|reader,census,control|{census.row(add(24,text(reader,control)?)?)?;binary_list(reader,census,control,|reader,census,control|{let bytes=add(32,text(reader,control)?)?;boolean(reader)?;census.row(bytes)})})?;
-  binary_list(&mut reader,&mut census,control,|reader,census,control|{let bytes=add(add(40,text(reader,control)?)?,text(reader,control)?)?;binary_list(reader,census,control,|reader,census,control|census.row(add(24,text(reader,control)?)?))?;binary_surface(reader,census,control)?;boolean(reader)?;census.row(add(bytes,binary_f64(reader)?)?)})?;
-  for _ in 0..2{binary_list(&mut reader,&mut census,control,|reader,census,control|{census.row(add(24,text(reader,control)?)?)?;binary_list(reader,census,control,|reader,census,control|{let bytes=add(32,text(reader,control)?)?;boolean(reader)?;census.row(bytes)})})?;}
-  binary_list(&mut reader,&mut census,control,|reader,census,control|{let mut bytes=add(add(32,text(reader,control)?)?,text(reader,control)?)?;boolean(reader)?;if boolean(reader)?{binary_curve(reader,census,control,2)?;bytes=add(bytes,8)?;}bytes=add(bytes,binary_words(reader,2)?)?;for _ in 0..3{bytes=add(bytes,text(reader,control)?)?;}census.row(bytes)})?;
-  census.extra(digits(reader.read_varint_u64().map_err(|_|invalid())?))?;if reader.remaining()!=0{return Err(invalid())}control.checkpoint()
- })
-}
 fn document_f64(value:&str,control:&mut NativeDecodeControl<'_>)->Result<usize>{Ok(scalar(native::float(value,control)?))}
 fn document_u32(value:&str,control:&mut NativeDecodeControl<'_>)->Result<()>{control.scoped_stage(|control|{control.begin_stage(value.len())?;for _ in value.bytes(){control.step()?;}value.parse::<u32>().map(|_|()).map_err(|_|invalid())})}
 fn document_label(value:&str,control:&mut NativeDecodeControl<'_>)->Result<usize>{control.scoped_stage(|control|{control.begin_stage(value.len())?;for _ in value.bytes(){control.step()?;}value.parse::<u64>().map(digits).map_err(|_|invalid())})}

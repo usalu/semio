@@ -1,7 +1,6 @@
 //! 🧬️ The IFC2x3 base model: schema, snapshot and diff with their text, binary, SQLite and Part-21 codecs, and the shared model-view-definition editing primitives.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
@@ -28,8 +27,7 @@ pub mod standards {
                     pub use component::*;
                     #[path = "../../📐️geometry/🦀️.rs"]
                     pub mod geometry;
-                    #[path = "../../📚️catalog/🦀️.rs"]
-                    pub mod catalog;
+                    pub use semio_s_artifact_stdio_ifc_2x3_base_catalog as catalog;
                     #[path = "."]
                     pub mod snapshot {
                         #[path = "../../📸️snapshot/🦀️.rs"]

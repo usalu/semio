@@ -67,15 +67,13 @@ pub mod standards {
                     pub mod binary {
                         #[path = "../../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
                         pub mod mutations;
-                        #[path = "../../../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
-                        pub mod diff;
+                        pub use semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::io::binary::diff;
                     }
                     #[path = "."]
                     pub mod text {
                         #[path = "../../../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
                         pub mod mutations;
-                        #[path = "../../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
-                        pub mod diff;
+                        pub use semio_s_artifact_gis_gisterrain_inferences::standards::v1::subsets::any::io::text::diff;
                     }
                 }
             }

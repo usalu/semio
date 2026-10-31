@@ -1,0 +1,150 @@
+{
+  "state": "current-coauthored-input-attribution-only-not-current-runtime-seal",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs",
+      "bytes": 51343,
+      "sha256": "b5129fca91c96e2c7bf81e2b0bb0b5d80797bd72421c412c84faffdbf43cc23c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧬️clone/🦀️.rs",
+      "bytes": 8744,
+      "sha256": "e32d8a24cde7b2c826b4011185e42933a2c2918a0f55b463ca0dfc597098321c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🦀️.rs",
+      "bytes": 11053,
+      "sha256": "fa4a2d0fbf00f46c331f75a507833abd19f2eb71166aa1db857aa3be7d7f1411"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🦀️.rs",
+      "bytes": 11536,
+      "sha256": "4ca3041f397790c685b6f1571b5dc12e27f38c2e2004429c016cb372bce8bbfe"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/📦️owned/🦀️.rs",
+      "bytes": 5347,
+      "sha256": "dc35f12b83fae7199203489f772362531aeb2f7feca9e50ffe4591ae81fe1682"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🦀️.rs",
+      "bytes": 17436,
+      "sha256": "8d4c6dab63808bed44f698aee5a13ad5ac6a47ff8a12d0f242d21e627258e3da"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️field/🦀️.rs",
+      "bytes": 6400,
+      "sha256": "dcd0c72cb007f198a14041b32954ea8295b5e64cee5a638589be6bdbb4607547"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🦀️.rs",
+      "bytes": 13199,
+      "sha256": "6c84ed80918f809be55e8c8921075c3aa8b0708728fdf89b56a77d7b823cab99"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 49327,
+      "sha256": "6d80cdbe90a726dc646eec38538150583451e4cf8a114e6e1725a26b21a866f1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs",
+      "bytes": 37652,
+      "sha256": "8b1e367d4b782eb482f24b355b9654fb7db889afc8579661ef72fdfd3b64464f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs",
+      "bytes": 7538,
+      "sha256": "d4daa85c1c4dadc9d8aedfdc0491a37c764b64e86e2be01956277bf25505af3d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs",
+      "bytes": 21861,
+      "sha256": "6c8e34c10e90c1339407158010084ce830c95087579531d879057d1558509728"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/logical-body.json",
+      "bytes": 1319,
+      "sha256": "11d9634531c49f89a8cd70c8ce2cade44067713c5f80246369892e5ab864cf91"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/logical-body.rs",
+      "bytes": 11697,
+      "sha256": "5be241ba79433d4d4506de2ed5eac590b7bfc5eb1a6c0a47ba16faa5ce58bb83"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/logical-body.schema.json",
+      "bytes": 2338,
+      "sha256": "b9728cb8662543c9e9e4fe8a3cba2be011b1fb1744eded28f1fe4c63c8d434fd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🦀️.rs",
+      "bytes": 15232,
+      "sha256": "6067e7f0b5017b730b18f5e720df9fbac4464bbc4ff41d189b6b1f153904b6bd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🎁️option-cursor/🦀️.rs",
+      "bytes": 9806,
+      "sha256": "1ffdb73372102184a0ffc2da432bd008e4452362367c71d20c686c553a1144c9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs",
+      "bytes": 14379,
+      "sha256": "ab6ae817bae59aac996e962444a6984b98c19f7f089b85d0bdd8c8c011194133"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs",
+      "bytes": 6931,
+      "sha256": "26416ea6524471e17102aab146ea620d1741e7a86eb36088fa0d0c7d2ad25242"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔗️alias/🦀️.rs",
+      "bytes": 4694,
+      "sha256": "d067cb6f1aea21ff4b221d1645da4b56147b796d3df113c1dc49e5cc17f9ac37"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔢️scalar-cursor/🦀️.rs",
+      "bytes": 6056,
+      "sha256": "4b741c134cde1ff0b3fc94390ddf2818ec1e0813e7f7b2860984788c1e72fcbc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🦀️.rs",
+      "bytes": 8562,
+      "sha256": "a62a355fbb924a4e9569363915b4114afb15208ec71d375fb97b3386617b4c69"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🗃️box-cursor/🦀️.rs",
+      "bytes": 12291,
+      "sha256": "ef69b70adbae8c8356052ed89a49b0df5f558895da871d53d0de9dfb081c1a26"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs",
+      "bytes": 4443,
+      "sha256": "7ca67b792550a7f58a6f73201a110ae1d7fdb9d7ed8ac81a9781c96548079c06"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs",
+      "bytes": 13128,
+      "sha256": "cd5ad26781dc0a4e596ec896b32ca0a4f1ff6a31f11c93dd3babbf668b9d0276"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧱️tuple-cursors/🦀️.rs",
+      "bytes": 11492,
+      "sha256": "a902695d0b7708323ca8e29f8af919618381678138ff9bc84ff9dec764c24b8f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🦀️.rs",
+      "bytes": 7948,
+      "sha256": "3c21c3306985a3342a18801b43ae1d17abf1ce9628951da8446449d10f536659"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧳️owner/🦀️.rs",
+      "bytes": 4225,
+      "sha256": "5e41bdb5823f174f765f132e84a0bba60c4cbbf8c1f0f0116d032b766a161e46"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🦀️.rs",
+      "bytes": 21344,
+      "sha256": "a59aaad9009d4069b0995bb9764f655bc0335d433171679f8b827c02c4301355"
+    }
+  ]
+}

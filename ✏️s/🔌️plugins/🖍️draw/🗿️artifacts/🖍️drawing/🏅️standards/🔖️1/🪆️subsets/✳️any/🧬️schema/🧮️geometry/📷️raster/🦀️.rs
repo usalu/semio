@@ -1,129 +1,111 @@
-//! 📷️ Resumable authored path coverage and local paint into straight RGBA.
-use semio_s_artifact_draw_drawing_model::{FillStyle, StrokeStyle, PathSegment};
-use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
-use semio_s_artifact_draw_drawing_model::stroke::{StrokeCap, StrokeJoin};
-use semio_s_artifact_draw_drawing_model::fill::sampling::{PreparedFill, PreparedFillRetirement};
-use semio_framework_2d::physical_work_retirement;
-use semio_framework_2d::{flatten::{PathFlattenJob,PathFlattenInput,PathFlattenRetirement,FlatContour},stroke::{StrokeOutlineJob,StrokeOutlineInput,StrokeOutlineRetirement,StrokeGeometryStyle,StrokeGeometryCap,StrokeGeometryJoin,StrokeContour}};
-use semio_framework_pixels::{RasterImage,coverage::{CoverageJob,CoverageInput,CoverageMask,CoverageRule,CoverageRetirement},editing::validate_extent};
-#[derive(Clone,Debug)]
-pub struct PathRasterInput {pub width:u32,pub height:u32,pub origin:[f64;2],pub segments:Vec<PathSegment>,pub transform:[f64;6],pub tolerance:f64,pub fill_rule:FillRule,pub fill:Option<FillStyle>,pub stroke:Option<StrokeStyle>}
+//! 📷️ Funded authored path coverage and local paint into retained straight RGBA.
+use semio_s_artifact_draw_drawing_model::{FillStyle,StrokeStyle,PathSegment};
+use semio_s_artifact_draw_drawing_model::{fill_rule::FillRule,stroke::{StrokeCap,StrokeJoin},fill::sampling::{PreparedFill,PreparedFillRetirement}};
+use semio_framework_2d::{physical_work_retirement,flatten::{PathFlattenJob,PathFlattenInput,PathFlattenError,PathFlattenRetirement,FlatContour},stroke::{StrokeOutlineJob,StrokeOutlineInput,StrokeOutlineError,StrokeOutlineRetirement,StrokeGeometryStyle,StrokeGeometryCap,StrokeGeometryJoin,StrokeContour}};
+use semio_framework_pixels::{RasterImage,coverage::{CoverageJob,CoverageInput,CoverageMask,CoverageRule,CoverageRetirement},editing::{validate_extent,PixelEditError}};
+use semio_framework_value::{work::RetainedWorkLedger,RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement}};
+use std::{borrow::Cow,sync::Arc};
+#[derive(Clone,Debug,semio_framework_value::RetireOwned)]
+pub struct PathRasterInput{pub width:u32,pub height:u32,pub origin:[f64;2],pub segments:Vec<PathSegment>,pub transform:[f64;6],pub tolerance:f64,pub fill_rule:FillRule,pub fill:Option<FillStyle>,pub stroke:Option<StrokeStyle>}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub enum PathRasterPhase {Preparing,Flattening,FlattenCleanup,Contours,ContoursCleanup,Stroke,StrokeCleanup,FillCoverage,FillCoverageCleanup,StrokeCoverage,StrokeCoverageCleanup,Painting,Complete}
+pub enum PathRasterPhase{Preparing,Flattening,FlattenCleanup,Contours,ContoursCleanup,Stroke,StrokeCleanup,FillCoverage,FillCoverageCleanup,StrokeCoverage,StrokeCoverageCleanup,Painting,Complete}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub struct PathRasterProgress {pub phase:PathRasterPhase,pub completed:usize,pub total:usize,pub work:u64,pub done:bool}
-#[derive(Clone,Debug,PartialEq,Eq)]
-#[derive(semio_framework_value::RetireOwned)]
-pub enum PathRasterError {Invalid(String),Incomplete,Cancelled}
-impl std::fmt::Display for PathRasterError {
- fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result {match self {Self::Invalid(message)=>f.write_str(message),Self::Incomplete=>f.write_str("Path raster is incomplete"),Self::Cancelled=>f.write_str("Path raster cancelled")}}
+pub struct PathRasterProgress{pub phase:PathRasterPhase,pub completed:usize,pub total:usize,pub work:u64,pub done:bool}
+#[derive(Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
+pub struct PathRasterRetirementCause{pub kind:&'static str,pub message:String,pub posting_refusal:Option<&'static str>}
+#[derive(Clone,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
+pub enum PathRasterError{Invalid(&'static str),Flatten(PathFlattenError),Stroke(StrokeOutlineError),Pixels(PixelEditError),Retirement{kind:&'static str,message:&'static str,posting_refusal:Option<&'static str>},OwnedRetirement(Arc<PathRasterRetirementCause>),Incomplete,Cancelled}
+impl PathRasterError{
+ pub fn held()->Self{Self::Invalid("Path raster lost its working state")}
+ /// 📢️ Borrows complete literal or shared failure prose without formatting or copying retained payload.
+ pub fn message(&self)->&str{match self{Self::Invalid(message)|Self::Retirement{message,..}=>message,Self::OwnedRetirement(cause)=>&cause.message,Self::Flatten(error)=>error.message(),Self::Stroke(error)=>error.message(),Self::Pixels(error)=>error.message(),Self::Incomplete=>"Path raster is incomplete",Self::Cancelled=>"Path raster cancelled"}}
 }
-impl std::error::Error for PathRasterError {}
-fn invalid(error:impl std::fmt::Display)->PathRasterError {PathRasterError::Invalid(error.to_string())}
-fn coordinate(v:f64)->bool {v.is_finite()&&v.abs()<=1e9}
-fn style(stroke:&StrokeStyle)->Result<StrokeGeometryStyle,PathRasterError> {
- PreparedFill::new(&FillStyle::Solid {color:stroke.color}).map_err(invalid)?;
- if !coordinate(stroke.width)||stroke.width<0.0||stroke.dash.as_ref().is_some_and(|d|d.len()>1024||d.iter().any(|v|!coordinate(*v)||*v<0.0)) {return Err(invalid("Invalid raster stroke"));}
- Ok(StrokeGeometryStyle {width:stroke.width,cap:match stroke.cap {StrokeCap::Butt=>StrokeGeometryCap::Butt,StrokeCap::Round=>StrokeGeometryCap::Round,StrokeCap::Square=>StrokeGeometryCap::Square},join:match stroke.join {StrokeJoin::Miter=>StrokeGeometryJoin::Miter,StrokeJoin::Round=>StrokeGeometryJoin::Round,StrokeJoin::Bevel=>StrokeGeometryJoin::Bevel},miter_limit:4.0,dash:stroke.dash.as_ref().map(|dash|dash.iter().copied().collect()).unwrap_or_default(),dash_offset:0.0})
+impl std::fmt::Display for PathRasterError{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.write_str(self.message())}}
+
+impl std::error::Error for PathRasterError{}
+fn coordinate(v:f64)->bool{v.is_finite()&&v.abs()<=1e9}
+fn invalid(message:&'static str)->PathRasterError{PathRasterError::Invalid(message)}
+fn grow<T>(values:&mut Vec<T>,extra:usize,limit:usize,ledger:&mut RetainedWorkLedger)->Result<bool,PathRasterError>{let needed=values.len().checked_add(extra).ok_or_else(||invalid("Path raster vector extent overflow"))?;if needed>limit{return Err(invalid("Path raster geometry exceeds point budget"))}if values.capacity()>=needed{return Ok(true)}ledger.reserve_vec(values,needed.max(values.capacity().saturating_mul(2).min(limit))).map_err(invalid)}
+struct CloseTurn{cpu:u64,items:usize,error:Option<ValueError>,posting_refusal:Option<&'static str>}
+fn close_one<T:RetireOwned>(owner:&mut ControlledRetirement<T>,ledger:&mut RetainedWorkLedger)->CloseTurn{
+ let grant=ledger.child_grant();let d=match owner.next_demand(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return CloseTurn{cpu:1,items:0,error:Some(error),posting_refusal:None}};
+ if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return match ledger.require_child(d){Ok(())=>CloseTurn{cpu:0,items:0,error:None,posting_refusal:None},Err(message)=>CloseTurn{cpu:1,items:0,error:Some(ValueError::literal(ValueRefusalKind::InvariantViolated,message)),posting_refusal:None}}}
+ let result=owner.step(grant);let used=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};let posting=ledger.consume_child(used).err();let(error,posting_refusal)=match result{Err(error)=>(Some(error),posting),Ok(_)=>(posting.map(|message|ValueError::literal(ValueRefusalKind::InvariantViolated,message)),None)};CloseTurn{cpu:1,items:used.copied_items,error,posting_refusal}
 }
-/// 🧱️ Private raster candidate with per-segment/point conversion and bounded geometry/paint grants.
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
-pub struct PathRasterJob {
- width:u32,height:u32,count:usize,transform:[f64;6],tolerance:f64,rule:CoverageRule,inverse:Option<[f64;6]>,
+pub struct PathRasterJob{
+ width:u32,height:u32,count:usize,origin:[f64;2],transform:[f64;6],tolerance:f64,rule:CoverageRule,inverse:Option<[f64;6]>,validated:bool,fill_ready:bool,stroke_ready:bool,pixels_ready:bool,raw_fill:Option<FillStyle>,raw_stroke:Option<StrokeStyle>,dash_at:usize,
  fill:Option<PreparedFill>,stroke_color:Option<[f64;4]>,style:Option<StrokeGeometryStyle>,source:Vec<PathSegment>,segments:Vec<semio_framework_2d::PathSegment>,flat:Vec<FlatContour>,fill_contours:Vec<Vec<[f64;2]>>,stroke_contours:Vec<StrokeContour>,
  flatten:Option<PathFlattenJob>,outline:Option<StrokeOutlineJob>,coverage:Option<CoverageJob>,fill_mask:Option<CoverageMask>,stroke_mask:Option<CoverageMask>,candidate:Option<RasterImage>,phase:PathRasterPhase,at:usize,point:usize,work:u64,completed:usize,total:usize,cancelled:bool,failed:Option<PathRasterError>,
- outline_retirement:Option<StrokeOutlineRetirement>,stroke_polygons:Vec<Vec<[f64;2]>>,
- coverage_retirement:Option<CoverageRetirement>,retired_coverages:Vec<CoverageRetirement>,
- flatten_retirement:Option<PathFlattenRetirement>,flat_retirement:Option<FlatContourRetirement>,
- fill_retirement:Option<PreparedFillRetirement>,
+ outline_retirement:Option<StrokeOutlineRetirement>,stroke_polygons:Vec<Vec<[f64;2]>>,coverage_retirement:Option<CoverageRetirement>,flatten_retirement:Option<PathFlattenRetirement>,flat_retirement:Option<FlatContourRetirement>,fill_retirement:Option<PreparedFillRetirement>,
+ demand:RetirementDemand,last_turn_work:u64,last_turn_semantic_work:u64,nested_turn:bool,pending_close_error:Option<PathRasterRetirementCause>,cleanup_work:u64,flat_points:usize,step_semantic_error:u64,
 }
-impl PathRasterJob {
- pub fn new(input:PathRasterInput)->Result<Self,PathRasterError> {
-  let count=validate_extent(input.width,input.height).map_err(invalid)?;
-  if !input.origin.into_iter().all(coordinate)||!input.transform.into_iter().all(coordinate)||input.segments.len()>65536||!input.tolerance.is_finite()||!(1e-6..=16.0).contains(&input.tolerance) {return Err(invalid("Invalid painted path contract"));}
-  let mut transform=input.transform;transform[4]-=input.origin[0];transform[5]-=input.origin[1];if !transform.into_iter().all(coordinate) {return Err(invalid("Path raster origin exceeds coordinate budget"));}
-  if let Some(fill)=&input.fill {let valid=match fill {FillStyle::Solid {..}=>true,FillStyle::LinearGradient {x1,y1,x2,y2,..}=>[*x1,*y1,*x2,*y2].into_iter().all(coordinate),FillStyle::RadialGradient {cx,cy,r,..}=>[*cx,*cy,*r].into_iter().all(coordinate)};if !valid {return Err(invalid("Paint coordinates exceed raster budget"));}}
-  let fill=input.fill.as_ref().map(PreparedFill::new).transpose().map_err(invalid)?;let style=input.stroke.as_ref().map(style).transpose()?;let stroke_color=input.stroke.as_ref().map(|s|s.color);
-  let [a,b,c,d,e,f]=transform;let det=a*d-b*c;if !det.is_finite() {return Err(invalid("Path raster transform exceeds numeric limits"));}
-  let inverse=(det!=0.0).then(||[d/det,-b/det,-c/det,a/det,(c*f-d*e)/det,(b*e-a*f)/det]);if inverse.is_some_and(|m|!m.into_iter().all(f64::is_finite)) {return Err(invalid("Path raster inverse exceeds numeric limits"));}
-  let total=input.segments.len();
-  Ok(Self {width:input.width,height:input.height,count,transform,tolerance:input.tolerance,rule:match input.fill_rule {FillRule::Nonzero=>CoverageRule::NonZero,FillRule::Evenodd=>CoverageRule::EvenOdd},inverse,fill,stroke_color,style,source:input.segments,segments:Vec::new(),flat:Vec::new(),fill_contours:Vec::new(),stroke_contours:Vec::new(),flatten:None,flatten_retirement:None,flat_retirement:None,outline:None,outline_retirement:None,stroke_polygons:Vec::new(),coverage:None,coverage_retirement:None,retired_coverages:Vec::new(),fill_retirement:None,fill_mask:None,stroke_mask:None,candidate:Some(RasterImage {width:input.width,height:input.height,pixels:vec![0;count*4]}),phase:PathRasterPhase::Preparing,at:0,point:0,work:0,completed:0,total,cancelled:false,failed:None})
+impl PathRasterJob{
+ pub fn new(input:PathRasterInput)->Self{Self{width:input.width,height:input.height,count:0,origin:input.origin,transform:input.transform,tolerance:input.tolerance,rule:match input.fill_rule{FillRule::Nonzero=>CoverageRule::NonZero,FillRule::Evenodd=>CoverageRule::EvenOdd},inverse:None,validated:false,fill_ready:false,stroke_ready:false,pixels_ready:false,raw_fill:input.fill,raw_stroke:input.stroke,dash_at:0,fill:None,stroke_color:None,style:None,total:input.segments.len(),source:input.segments,segments:Vec::new(),flat:Vec::new(),fill_contours:Vec::new(),stroke_contours:Vec::new(),flatten:None,outline:None,coverage:None,fill_mask:None,stroke_mask:None,candidate:Some(RasterImage{width:input.width,height:input.height,pixels:Vec::new()}),phase:PathRasterPhase::Preparing,at:0,point:0,work:0,completed:0,cancelled:false,failed:None,outline_retirement:None,stroke_polygons:Vec::new(),coverage_retirement:None,flatten_retirement:None,flat_retirement:None,fill_retirement:None,demand:RetirementDemand{depth:1,..Default::default()},last_turn_work:0,last_turn_semantic_work:0,nested_turn:false,pending_close_error:None,cleanup_work:0,flat_points:0,step_semantic_error:0}}
+ fn enter(&mut self,phase:PathRasterPhase,total:usize){self.phase=phase;self.completed=0;self.total=total;self.cleanup_work=0;}
+ fn validate(&mut self)->Result<(),PathRasterError>{
+  self.count=validate_extent(self.width,self.height).map_err(PathRasterError::Pixels)?;
+  if !self.origin.into_iter().all(coordinate)||!self.transform.into_iter().all(coordinate)||self.source.len()>65536||!self.tolerance.is_finite()||!(1e-6..=16.).contains(&self.tolerance){return Err(invalid("Invalid painted path contract"))}
+  let mut transform=self.transform;transform[4]-=self.origin[0];transform[5]-=self.origin[1];if !transform.into_iter().all(coordinate){return Err(invalid("Path raster origin exceeds coordinate budget"))}
+  if let Some(fill)=&self.raw_fill{let valid=match fill{FillStyle::Solid{..}=>true,FillStyle::LinearGradient{x1,y1,x2,y2,..}=>[*x1,*y1,*x2,*y2].into_iter().all(coordinate),FillStyle::RadialGradient{cx,cy,r,..}=>[*cx,*cy,*r].into_iter().all(coordinate)};if !valid{return Err(invalid("Paint coordinates exceed raster budget"))}}
+  let[a,b,c,d,e,f]=transform;let det=a*d-b*c;if !det.is_finite(){return Err(invalid("Path raster transform exceeds numeric limits"))}let inverse=(det!=0.).then(||[d/det,-b/det,-c/det,a/det,(c*f-d*e)/det,(b*e-a*f)/det]);if inverse.is_some_and(|m|!m.into_iter().all(f64::is_finite)){return Err(invalid("Path raster inverse exceeds numeric limits"))}
+  if let Some(stroke)=&self.raw_stroke{if !stroke.color.into_iter().all(|v|v.is_finite()&&(0.0..=1.).contains(&v)){return Err(invalid("Invalid fill color"))}if !coordinate(stroke.width)||stroke.width<0.||stroke.dash.as_ref().is_some_and(|dash|dash.len()>1024){return Err(invalid("Invalid raster stroke"))}self.stroke_color=Some(stroke.color);self.style=Some(StrokeGeometryStyle{width:stroke.width,cap:match stroke.cap{StrokeCap::Butt=>StrokeGeometryCap::Butt,StrokeCap::Round=>StrokeGeometryCap::Round,StrokeCap::Square=>StrokeGeometryCap::Square},join:match stroke.join{StrokeJoin::Miter=>StrokeGeometryJoin::Miter,StrokeJoin::Round=>StrokeGeometryJoin::Round,StrokeJoin::Bevel=>StrokeGeometryJoin::Bevel},miter_limit:4.,dash:Vec::new(),dash_offset:0.});}
+  self.transform=transform;self.inverse=inverse;self.validated=true;Ok(())
  }
- fn enter(&mut self,phase:PathRasterPhase,total:usize) {self.phase=phase;self.completed=0;self.total=total;}
- fn start_fill(&mut self)->Result<(),PathRasterError> {
-  if self.fill.is_some()&&self.inverse.is_some() {self.coverage=Some(CoverageJob::new(CoverageInput {width:self.width,height:self.height,transform:self.transform,rule:self.rule,contours:std::mem::take(&mut self.fill_contours)}).map_err(invalid)?);self.enter(PathRasterPhase::FillCoverage,0);}
-  else {self.start_stroke()?;}Ok(())
+ fn prepare(&mut self,ledger:&mut RetainedWorkLedger)->Result<bool,PathRasterError>{
+  if !self.validated{self.step_semantic_error=1;self.validate()?;return Ok(true)}
+  if !self.fill_ready{if let Some(fill)=self.raw_fill.take(){self.fill=Some(PreparedFill::new(fill));return Ok(false)}if let Some(fill)=&mut self.fill{if fill.progress().done{self.fill_ready=true;return Ok(false)}self.nested_turn=true;let result=fill.advance(1,ledger);self.last_turn_work+=fill.last_turn_work();self.last_turn_semantic_work+=fill.last_turn_semantic_work();result.map_err(invalid)?;return Ok(false)}self.fill_ready=true;return Ok(false)}
+  if !self.stroke_ready{if let Some(dash)=self.raw_stroke.as_ref().and_then(|stroke|stroke.dash.as_ref()){if let Some(value)=dash.get(self.dash_at){if !coordinate(*value)||*value<0.{self.step_semantic_error=1;return Err(invalid("Invalid raster stroke"))}let output=&mut self.style.as_mut().ok_or_else(PathRasterError::held)?.dash;if !ledger.reserve_vec(output,dash.len()).map_err(invalid)?||!ledger.copy_bytes(std::mem::size_of::<f64>()){return Ok(false)}output.push(*value);self.dash_at+=1;return Ok(true)}}self.stroke_ready=true;return Ok(false)}
+  if !self.pixels_ready{let pixels=&mut self.candidate.as_mut().ok_or_else(PathRasterError::held)?.pixels;let bytes=self.count.checked_mul(4).ok_or_else(||invalid("Path raster pixel extent overflow"))?;if !ledger.reserve_vec(pixels,bytes).map_err(invalid)?{return Ok(false)}if pixels.len()<bytes{let next=(pixels.len()+4096).min(bytes);if !ledger.copy_bytes(next-pixels.len()){return Ok(false)}pixels.resize(next,0);return Ok(false)}self.pixels_ready=true;return Ok(false)}
+  if let Some(segment)=self.source.get(self.at){if !grow(&mut self.segments,1,65536,ledger)?||!ledger.copy_bytes(std::mem::size_of::<semio_framework_2d::PathSegment>()){return Ok(false)}self.segments.push(crate::to_kernel_segment(segment));self.at+=1;self.completed=self.at;Ok(false)}
+  else{self.flatten=Some(PathFlattenJob::new(PathFlattenInput{segments:std::mem::take(&mut self.segments),transform:self.transform,tolerance:self.tolerance}));self.at=0;self.enter(PathRasterPhase::Flattening,0);Ok(false)}
  }
- fn start_stroke(&mut self)->Result<(),PathRasterError> {
-  if self.style.is_some()&&self.inverse.is_some() {let contours=std::mem::take(&mut self.stroke_polygons);self.coverage=Some(CoverageJob::new(CoverageInput {width:self.width,height:self.height,transform:self.transform,rule:CoverageRule::NonZero,contours}).map_err(invalid)?);self.enter(PathRasterPhase::StrokeCoverage,0);}
-  else {self.at=0;self.enter(PathRasterPhase::Painting,self.count);}Ok(())
- }
- fn step(&mut self)->Result<(),PathRasterError> {
-  match self.phase {
-   PathRasterPhase::Preparing=>{
-    if let Some(segment)=self.source.get(self.at) {self.segments.push(crate::to_kernel_segment(segment));self.at+=1;self.completed=self.at;}
-    else {self.flatten=Some(PathFlattenJob::new(PathFlattenInput {segments:std::mem::take(&mut self.segments),transform:self.transform,tolerance:self.tolerance}).map_err(invalid)?);self.at=0;self.enter(PathRasterPhase::Flattening,0);}
-   }
-   PathRasterPhase::Flattening=>{
-    let p=self.flatten.as_mut().unwrap().advance(1).map_err(invalid)?;self.completed=p.completed;self.total=p.total;
-    if p.done {let(retired,output)=self.flatten.take().unwrap().into_retirement();self.flat=output.expect("complete flatten output");self.flatten_retirement=Some(retired);self.enter(PathRasterPhase::FlattenCleanup,p.points+self.flat.len());}
-   }
-   PathRasterPhase::FlattenCleanup=>{self.enter(PathRasterPhase::Contours,self.total);}
+ fn start_fill(&mut self){if self.fill.is_some()&&self.inverse.is_some(){self.coverage=Some(CoverageJob::new(CoverageInput{width:self.width,height:self.height,transform:self.transform,rule:self.rule,contours:std::mem::take(&mut self.fill_contours)}));self.enter(PathRasterPhase::FillCoverage,0)}else{self.start_stroke()}}
+ fn start_stroke(&mut self){if self.stroke_color.is_some()&&self.inverse.is_some(){self.coverage=Some(CoverageJob::new(CoverageInput{width:self.width,height:self.height,transform:self.transform,rule:CoverageRule::NonZero,contours:std::mem::take(&mut self.stroke_polygons)}));self.enter(PathRasterPhase::StrokeCoverage,0)}else{self.at=0;self.enter(PathRasterPhase::Painting,self.count)}}
+ fn stage_close_error(&mut self,error:ValueError){let kind=error.kind.as_str();match error.message{Cow::Borrowed(message)=>self.failed=Some(PathRasterError::Retirement{kind,message,posting_refusal:None}),Cow::Owned(message)=>self.pending_close_error=Some(PathRasterRetirementCause{kind,message,posting_refusal:None})}}
+ fn accept_close(&mut self,turn:CloseTurn)->Result<(),PathRasterError>{self.nested_turn=true;self.last_turn_work+=turn.cpu;self.cleanup_work+=turn.items as u64;if let Some(error)=turn.error{self.stage_close_error(error);if let Some(refusal)=turn.posting_refusal{if let Some(cause)=&mut self.pending_close_error{cause.posting_refusal=Some(refusal)}if let Some(PathRasterError::Retirement{posting_refusal,..})=&mut self.failed{*posting_refusal=Some(refusal)}}if let Some(error)=&self.failed{return Err(error.clone())}}Ok(())}
+ fn step(&mut self,ledger:&mut RetainedWorkLedger)->Result<bool,PathRasterError>{
+  if self.pending_close_error.is_some(){if !ledger.arc_ready::<PathRasterRetirementCause>().map_err(invalid)?{return Ok(false)}let cause=self.pending_close_error.take().ok_or_else(PathRasterError::held)?;self.nested_turn=true;self.last_turn_work+=1;let shared=match ledger.arc_new(cause){Ok(shared)=>shared,Err((message,cause))=>{self.pending_close_error=Some(cause);return Err(invalid(message))}};return Err(PathRasterError::OwnedRetirement(shared))}
+  match self.phase{
+   PathRasterPhase::Preparing=>return self.prepare(ledger),
+   PathRasterPhase::Flattening=>{let child=self.flatten.as_mut().ok_or_else(PathRasterError::held)?;if child.result().is_ok(){let(retired,output)=self.flatten.take().ok_or_else(PathRasterError::held)?.into_retirement();self.flat=output.ok_or_else(PathRasterError::held)?;self.flatten_retirement=Some(retired);self.enter(PathRasterPhase::FlattenCleanup,self.flat_points+self.flat.len());}else{self.nested_turn=true;let result=child.advance(1,ledger);self.last_turn_work+=child.last_turn_work();self.last_turn_semantic_work+=child.last_turn_semantic_work();let p=result.map_err(PathRasterError::Flatten)?;self.completed=p.completed;self.total=p.total;self.flat_points=p.points;}return Ok(false)}
+   PathRasterPhase::FlattenCleanup=>{if let Some(owner)=&mut self.flatten_retirement{if !owner.terminal_is_empty(){let turn=close_one(&mut owner.owner,ledger);self.accept_close(turn)?;return Ok(false)}self.flatten_retirement=None;}self.enter(PathRasterPhase::Contours,self.flat_points+self.flat.len());return Ok(false)}
    PathRasterPhase::Contours=>{
-    if let Some(c)=self.flat.get(self.at) {
-     if self.point==0 {if self.fill.is_some() {self.fill_contours.push(Vec::new());}if self.style.is_some() {self.stroke_contours.push(StrokeContour {points:Vec::new(),closed:c.closed});}}
-     if let Some(p)=c.points.get(self.point) {if self.fill.is_some() {self.fill_contours[self.at].push(*p);}if self.style.is_some() {self.stroke_contours[self.at].points.push(*p);}self.point+=1;}
-     else {self.at+=1;self.point=0;}self.completed+=1;
-    } else {self.flat_retirement=Some(FlatContourRetirement::new(std::mem::take(&mut self.flat)));self.enter(PathRasterPhase::ContoursCleanup,0);}
+    if self.at==self.flat.len(){self.flat_retirement=Some(FlatContourRetirement::new(std::mem::take(&mut self.flat)));self.enter(PathRasterPhase::ContoursCleanup,0);return Ok(false)}
+    if self.fill.is_some()&&self.fill_contours.len()==self.at{if !grow(&mut self.fill_contours,1,4096,ledger)?||!ledger.copy_bytes(std::mem::size_of::<Vec<[f64;2]>>()){return Ok(false)}self.fill_contours.push(std::mem::take(&mut self.flat[self.at].points));return Ok(false)}
+    if self.stroke_color.is_some()&&self.stroke_contours.len()==self.at{if !grow(&mut self.stroke_contours,1,4096,ledger)?||!ledger.copy_bytes(std::mem::size_of::<StrokeContour>()){return Ok(false)}let closed=self.flat[self.at].closed;let points=if self.fill.is_some(){Vec::new()}else{std::mem::take(&mut self.flat[self.at].points)};self.stroke_contours.push(StrokeContour{points,closed});return Ok(false)}
+    if self.fill.is_some()&&self.stroke_color.is_some(){let points=&self.fill_contours[self.at];if let Some(point)=points.get(self.point){if !grow(&mut self.stroke_contours[self.at].points,1,65536,ledger)?||!ledger.copy_bytes(std::mem::size_of::<[f64;2]>()){return Ok(false)}self.stroke_contours[self.at].points.push(*point);self.point+=1;self.completed+=1;return Ok(false)}self.completed+=1;}
+    else{let count=if self.fill.is_some(){self.fill_contours[self.at].len()}else if self.stroke_color.is_some(){self.stroke_contours[self.at].points.len()}else{self.flat[self.at].points.len()};self.completed+=count+1;}
+    self.at+=1;self.point=0;return Ok(false)
    }
-   PathRasterPhase::ContoursCleanup=>{
-    if let Some(style)=self.style.clone(){self.outline=Some(StrokeOutlineJob::new(StrokeOutlineInput{contours:std::mem::take(&mut self.stroke_contours),transform:self.transform,tolerance:self.tolerance,style}).map_err(invalid)?);self.enter(PathRasterPhase::Stroke,0);}else{self.start_fill()?;}
-   }
-   PathRasterPhase::Stroke=>{
-    let p=self.outline.as_mut().unwrap().advance(1).map_err(invalid)?;self.completed=p.completed;self.total=p.total;
-    if p.done {let(retired,output)=self.outline.take().unwrap().into_retirement();self.stroke_polygons=output.expect("complete stroke output");self.outline_retirement=Some(retired);self.enter(PathRasterPhase::StrokeCleanup,0);}
-   }
-   PathRasterPhase::StrokeCleanup=>{self.start_fill()?;}
-   PathRasterPhase::FillCoverage|PathRasterPhase::StrokeCoverage=>{
-    let p=self.coverage.as_mut().unwrap().advance(1).map_err(invalid)?;self.completed=p.completed;self.total=p.total;
-    if p.done {let fill=self.phase==PathRasterPhase::FillCoverage;let(retired,output)=self.coverage.take().unwrap().into_retirement();if let Some(prior)=self.coverage_retirement.take(){self.retired_coverages.push(prior);}self.coverage_retirement=Some(retired);let mask=output.expect("complete coverage output");if fill {self.fill_mask=Some(mask);} else {self.stroke_mask=Some(mask);}self.enter(if fill {PathRasterPhase::FillCoverageCleanup} else {PathRasterPhase::StrokeCoverageCleanup},0);}
-   }
-   PathRasterPhase::FillCoverageCleanup|PathRasterPhase::StrokeCoverageCleanup=>{
-    if self.phase==PathRasterPhase::FillCoverageCleanup{self.start_stroke()?;}else{self.at=0;self.enter(PathRasterPhase::Painting,self.count);}
-   }
-   PathRasterPhase::Painting=>{
-    if self.at==self.count {self.enter(PathRasterPhase::Complete,self.count);self.completed=self.count;return Ok(());}
-    let at=self.at;self.at+=1;let fa=self.fill_mask.as_ref().map_or(0,|m|m.coverage[at]);let sa=self.stroke_mask.as_ref().map_or(0,|m|m.coverage[at]);let mut color=[0.0;4];
-    if fa>0 {if let (Some(fill),Some(m))=(&self.fill,self.inverse) {let x=(at%self.width as usize) as f64+0.5;let y=(at/self.width as usize) as f64+0.5;color=fill.sample([m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]]).map_err(invalid)?;color[3]*=f64::from(fa)/255.0;}}
-    let stroke=self.stroke_color.unwrap_or([0.0;4]);let alpha=stroke[3]*f64::from(sa)/255.0;let output_alpha=alpha+color[3]*(1.0-alpha);
-    if output_alpha>0.0 {let pixels=&mut self.candidate.as_mut().unwrap().pixels;for c in 0..3 {pixels[at*4+c]=(255.0*(alpha*stroke[c]+(1.0-alpha)*color[3]*color[c])/output_alpha).round() as u8;}pixels[at*4+3]=(output_alpha*255.0).round() as u8;}
-    self.completed=self.at;
-   }
-   PathRasterPhase::Complete=>{}
-  }Ok(())
+   PathRasterPhase::ContoursCleanup=>{if let Some(owner)=&mut self.flat_retirement{if !owner.terminal_is_empty(){let turn=close_one(&mut owner.owner,ledger);self.accept_close(turn)?;return Ok(false)}self.flat_retirement=None;}if let Some(style)=self.style.take(){self.outline=Some(StrokeOutlineJob::new(StrokeOutlineInput{contours:std::mem::take(&mut self.stroke_contours),transform:self.transform,tolerance:self.tolerance,style}));self.enter(PathRasterPhase::Stroke,0)}else{self.start_fill()}return Ok(false)}
+   PathRasterPhase::Stroke=>{let child=self.outline.as_mut().ok_or_else(PathRasterError::held)?;if child.result().is_ok(){let(retired,output)=self.outline.take().ok_or_else(PathRasterError::held)?.into_retirement();self.stroke_polygons=output.ok_or_else(PathRasterError::held)?;self.outline_retirement=Some(retired);self.enter(PathRasterPhase::StrokeCleanup,0)}else{self.nested_turn=true;let result=child.advance(1,ledger);self.last_turn_work+=child.last_turn_work();self.last_turn_semantic_work+=child.last_turn_semantic_work();let p=result.map_err(PathRasterError::Stroke)?;self.completed=p.completed;self.total=p.total;}return Ok(false)}
+   PathRasterPhase::StrokeCleanup=>{if let Some(owner)=&mut self.outline_retirement{if !owner.terminal_is_empty(){let turn=close_one(&mut owner.owner,ledger);self.accept_close(turn)?;return Ok(false)}self.outline_retirement=None;}self.start_fill();return Ok(false)}
+   PathRasterPhase::FillCoverage|PathRasterPhase::StrokeCoverage=>{let child=self.coverage.as_mut().ok_or_else(PathRasterError::held)?;if child.result().is_ok(){let fill=self.phase==PathRasterPhase::FillCoverage;let(retired,output)=self.coverage.take().ok_or_else(PathRasterError::held)?.into_retirement();self.coverage_retirement=Some(retired);let mask=output.ok_or_else(PathRasterError::held)?;if fill{self.fill_mask=Some(mask)}else{self.stroke_mask=Some(mask)}self.enter(if fill{PathRasterPhase::FillCoverageCleanup}else{PathRasterPhase::StrokeCoverageCleanup},0)}else{self.nested_turn=true;let result=child.advance(1,ledger);self.last_turn_work+=child.last_turn_work();self.last_turn_semantic_work+=child.last_turn_semantic_work();let p=result.map_err(PathRasterError::Pixels)?;self.completed=p.completed;self.total=p.total;}return Ok(false)}
+   PathRasterPhase::FillCoverageCleanup|PathRasterPhase::StrokeCoverageCleanup=>{if let Some(owner)=&mut self.coverage_retirement{if !owner.terminal_is_empty(){let turn=close_one(&mut owner.owner,ledger);self.accept_close(turn)?;return Ok(false)}self.coverage_retirement=None;}if self.phase==PathRasterPhase::FillCoverageCleanup{self.start_stroke()}else{self.at=0;self.enter(PathRasterPhase::Painting,self.count)}return Ok(false)}
+   PathRasterPhase::Painting=>{if self.at==self.count{self.enter(PathRasterPhase::Complete,self.count);self.completed=self.count;return Ok(false)}let at=self.at;let fa=self.fill_mask.as_ref().map_or(0,|mask|mask.coverage[at]);let sa=self.stroke_mask.as_ref().map_or(0,|mask|mask.coverage[at]);if fa==0&&sa==0{self.at+=1;self.completed=self.at;return Ok(true)}if !ledger.copy_bytes(4){return Ok(false)}self.step_semantic_error=1;let mut color=[0.;4];if fa>0{if let(Some(fill),Some(m))=(&self.fill,self.inverse){let x=(at%self.width as usize)as f64+0.5;let y=(at/self.width as usize)as f64+0.5;color=fill.sample([m[0]*x+m[2]*y+m[4],m[1]*x+m[3]*y+m[5]]).map_err(invalid)?;color[3]*=f64::from(fa)/255.;}}let stroke=self.stroke_color.unwrap_or([0.;4]);let alpha=stroke[3]*f64::from(sa)/255.;let output_alpha=alpha+color[3]*(1.-alpha);let pixels=&mut self.candidate.as_mut().ok_or_else(PathRasterError::held)?.pixels;if output_alpha>0.{for c in 0..3{pixels[at*4+c]=(255.*(alpha*stroke[c]+(1.-alpha)*color[3]*color[c])/output_alpha).round()as u8;}pixels[at*4+3]=(output_alpha*255.).round()as u8;}else{pixels[at*4..at*4+4].fill(0);}self.at+=1;self.completed=self.at;}
+   PathRasterPhase::Complete=>return Ok(false)
+  }Ok(true)
  }
- pub fn advance(&mut self,budget:usize)->Result<PathRasterProgress,PathRasterError> {
-  if budget==0||budget as u128>9_007_199_254_740_991 {return Err(invalid("Path raster work grant must be a positive integer"));}
-  if self.cancelled {return Err(PathRasterError::Cancelled);}if let Some(error)=&self.failed {return Err(error.clone());}
-  for _ in 0..budget {if self.phase==PathRasterPhase::Complete {break;}if let Err(error)=self.step() {self.failed=Some(error.clone());return Err(error);}self.work+=1;}
-  Ok(PathRasterProgress {phase:self.phase,completed:self.completed,total:self.total,work:self.work,done:self.phase==PathRasterPhase::Complete})
+ pub fn progress(&self)->PathRasterProgress{PathRasterProgress{phase:self.phase,completed:self.completed,total:self.total,work:self.work,done:self.phase==PathRasterPhase::Complete}}
+ pub fn next_work_demand(&self)->RetirementDemand{self.demand}
+ pub fn last_turn_work(&self)->u64{self.last_turn_work}
+ pub fn last_turn_semantic_work(&self)->u64{self.last_turn_semantic_work}
+ pub fn failure_pending(&self)->bool{self.failed.is_some()||self.pending_close_error.is_some()}
+ pub fn settlement_pending(&self)->bool{if self.cancelled||self.failed.is_some(){return false}if self.pending_close_error.is_some(){return true}match self.phase{PathRasterPhase::Complete=>true,PathRasterPhase::Preparing=>{if !self.validated{false}else if !self.fill_ready{self.raw_fill.is_some()||self.fill.as_ref().is_none_or(|fill|fill.progress().done||fill.settlement_pending())}else if !self.stroke_ready{self.raw_stroke.as_ref().and_then(|stroke|stroke.dash.as_ref()).is_none_or(|dash|self.dash_at==dash.len())}else{true}},PathRasterPhase::Contours=>true,PathRasterPhase::Painting=>self.at==self.count,PathRasterPhase::Flattening=>self.flatten.as_ref().is_some_and(|child|child.result().is_ok()||child.settlement_pending()),PathRasterPhase::Stroke=>self.outline.as_ref().is_some_and(|child|child.result().is_ok()||child.settlement_pending()),PathRasterPhase::FillCoverage|PathRasterPhase::StrokeCoverage=>self.coverage.as_ref().is_some_and(|child|child.result().is_ok()||child.settlement_pending()),PathRasterPhase::FlattenCleanup|PathRasterPhase::ContoursCleanup|PathRasterPhase::StrokeCleanup|PathRasterPhase::FillCoverageCleanup|PathRasterPhase::StrokeCoverageCleanup=>true}}
+ pub fn advance(&mut self,items:usize,ledger:&mut RetainedWorkLedger)->Result<PathRasterProgress,PathRasterError>{
+  self.last_turn_work=0;self.last_turn_semantic_work=0;if items==0||items as u128>9_007_199_254_740_991{return Err(invalid("Path raster work grant must be a positive integer"))}if self.cancelled{return Err(PathRasterError::Cancelled)}if let Some(error)=&self.failed{return Err(error.clone())}
+  for _ in 0..items{if self.phase==PathRasterPhase::Complete{break}if !ledger.admits_absolute(self.demand){ledger.require_absolute(self.demand);break}let Some(root)=ledger.enter()else{self.demand=ledger.next_demand();break};self.nested_turn=false;self.step_semantic_error=0;let before=ledger.receipt();let cpu=self.last_turn_work;let semantic=self.last_turn_semantic_work;let result=self.step(ledger);if !self.nested_turn&&(ledger.receipt()!=before||!ledger.blocked()){self.last_turn_work+=1;self.last_turn_semantic_work+=match &result{Ok(true)=>1,Err(_)=>self.step_semantic_error,_=>0};}if self.last_turn_work>cpu{ledger.note_source(root)}self.work+=self.last_turn_semantic_work-semantic;ledger.exit();self.demand=ledger.next_demand();if let Err(error)=result{self.failed=Some(error.clone());return Err(error)}if ledger.blocked()||self.last_turn_work==cpu{break}}
+  Ok(self.progress())
  }
- pub fn cancel(&mut self) {self.cancelled=true;}
- pub fn result(&self)->Result<&RasterImage,PathRasterError> {if self.cancelled {return Err(PathRasterError::Cancelled);}if let Some(error)=&self.failed {return Err(error.clone());}if self.phase!=PathRasterPhase::Complete {return Err(PathRasterError::Incomplete);}Ok(self.candidate.as_ref().unwrap())}
- /// 🧹️ Transfers complete pixels and adopts the actual active or closing child owners before private retirement.
- pub fn into_retirement(mut self)->(PathRasterRetirement,Option<RasterImage>){
-  let output=if self.phase==PathRasterPhase::Complete&&!self.cancelled&&self.failed.is_none(){self.candidate.take()}else{None};self.cancelled=true;
-  if let Some(mut child)=self.flatten.take(){child.cancel();self.flatten_retirement=Some(child.into_retirement().0);}
-  if let Some(mut child)=self.outline.take(){child.cancel();self.outline_retirement=Some(child.into_retirement().0);}
-  if let Some(mut child)=self.coverage.take(){child.cancel();if let Some(prior)=self.coverage_retirement.take(){self.retired_coverages.push(prior);}self.coverage_retirement=Some(child.into_retirement().0);}
-  self.fill_retirement=self.fill.take().map(PreparedFill::into_retirement);(PathRasterRetirement::new(self),output)
- }
+ pub fn cancel(&mut self){self.cancelled=true;}
+ pub fn result(&self)->Result<&RasterImage,PathRasterError>{if self.cancelled{return Err(PathRasterError::Cancelled)}if let Some(error)=&self.failed{return Err(error.clone())}if self.phase!=PathRasterPhase::Complete||self.pending_close_error.is_some(){return Err(PathRasterError::Incomplete)}Ok(self.candidate.as_ref().ok_or_else(PathRasterError::held)?)}
+ pub fn into_retirement(mut self)->(PathRasterRetirement,Option<RasterImage>){let output=if self.phase==PathRasterPhase::Complete&&!self.cancelled&&!self.failure_pending(){self.candidate.take()}else{None};self.cancelled=true;if let Some(mut child)=self.flatten.take(){child.cancel();self.flatten_retirement=Some(child.into_retirement().0)}if let Some(mut child)=self.outline.take(){child.cancel();self.outline_retirement=Some(child.into_retirement().0)}if let Some(mut child)=self.coverage.take(){child.cancel();self.coverage_retirement=Some(child.into_retirement().0)}self.fill_retirement=self.fill.take().map(PreparedFill::into_retirement);(PathRasterRetirement::new(self),output)}
 }
-physical_work_retirement!(FlatContourRetirement,Vec<FlatContour>,PathRasterError,invalid);
-/// 🧽️ Whole path private owners with exact structural grants and an empty terminal destructor.
+physical_work_retirement!(FlatContourRetirement,Vec<FlatContour>);
 semio_framework_value::artifact_retire_leaf!(PathRasterPhase);
-physical_work_retirement!(PathRasterRetirement,PathRasterJob,PathRasterError,invalid);
+physical_work_retirement!(PathRasterRetirement,PathRasterJob);
 #[cfg(test)]
 #[path="🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;

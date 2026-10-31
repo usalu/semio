@@ -1,0 +1,30 @@
+{
+  "stock": {
+    "items": 4194304,
+    "copy": 268435456,
+    "capacity": 33554432,
+    "release": 67108864,
+    "depth": 256
+  },
+  "turn": {
+    "items": 1,
+    "copy": 64,
+    "capacity": 33554432,
+    "release": 67108864,
+    "depth": 256
+  },
+  "generation": 17,
+  "deadline": 1500,
+  "fuel": 4194304,
+  "maxTurns": 262144,
+  "operation": 2599,
+  "expected": {
+    "paidCloseCpu": true,
+    "deniedCloseCpu": 0
+  },
+  "input": {
+    "handle": "empty-mesh",
+    "tolerance": 0.1
+  },
+  "encodedOutputCloseCpu": true
+}

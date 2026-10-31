@@ -1,0 +1,8 @@
+{
+  "definition": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🦀️.rs",
+  "removedNewTestFile": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🧪️tests/🦀️.rs",
+  "sameLawBodySha256": "1ebbadb3e7eabbea06ecde3b648362c02fb7b7819c23f4742e24a37633b1c8db",
+  "bodyPreservedExactly": true,
+  "cases": "same original storage JSON5 rows",
+  "reason": "actual owning10 Source filecap; private exact placement law stays with actual private definer"
+}

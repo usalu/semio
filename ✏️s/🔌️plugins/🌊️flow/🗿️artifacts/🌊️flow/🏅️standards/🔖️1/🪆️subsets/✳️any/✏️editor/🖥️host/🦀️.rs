@@ -20,15 +20,35 @@ pub fn seed_host_catalogue(host: &mut FlowHost, extra_sections_json: &str) {
     host.set_host_catalogue_json(&serde_json::to_string(&sections).unwrap_or_else(|_| "[]".into()));
 }
 
+/// 🛍️ The palette sections one catalogue render reads: extension plus host-supplied plus static sections, built once per extension-registry generation and `extra_sections_json`, then shared. A catalogue is a pure projection of the registry, never of the document, so a render needs no host rebuilt from the snapshot.
+pub fn catalogue_sections(extra_sections_json: &str) -> std::sync::Arc<serde_json::Value> {
+    static CACHE: std::sync::LazyLock<std::sync::Mutex<Option<(u64, String, std::sync::Arc<serde_json::Value>)>>> = std::sync::LazyLock::new(|| std::sync::Mutex::new(None));
+    let generation = flow::flow_extension_registry_generation();
+    let mut cache = CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    if let Some((cached_generation, cached_extra, sections)) = cache.as_ref() {
+        if *cached_generation == generation && cached_extra == extra_sections_json {
+            return std::sync::Arc::clone(sections);
+        }
+    }
+    let mut sections = flow::flow_catalogue_sections();
+    if let Ok(extra) = serde_json::from_str::<Vec<flow::CatalogueSection>>(extra_sections_json) {
+        sections.extend(extra);
+    }
+    sections.extend(flow::catalogue::static_catalogue_sections());
+    let sections = std::sync::Arc::new(serde_json::to_value(&sections).unwrap_or_else(|_| serde_json::Value::Array(Vec::new())));
+    *cache = Some((generation, extra_sections_json.to_string(), std::sync::Arc::clone(&sections)));
+    sections
+}
+
 /// 🎚️ Pushes the view-state canvas options (LOD mode, proximity distance, grid) onto a freshly built host.
 pub fn apply_canvas_options(host: &mut FlowHost, config: &FlowMainWindowConfig) {
     if config.lod_mode != FLOW_LOD_MODE_AUTOMATIC && DagDrawLod::from_id(&config.lod_mode).is_some() {
-        host.dag.set_automatic_lod(false);
-        host.dag.set_forced_draw_lod_label(&config.lod_mode);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label(&config.lod_mode);
     } else {
-        host.dag.set_automatic_lod(true);
+        host.set_automatic_lod(true);
     }
-    host.dag.set_proximity_distance(config.proximity_distance);
+    host.set_proximity_distance(config.proximity_distance);
     host.set_grid_visible(config.grid_visible);
     host.set_grid_snap_enabled(config.grid_snap_enabled);
     let _ = host.set_grid_factor(config.grid_factor);
@@ -59,7 +79,7 @@ pub fn host_from_snapshot(snapshot: &FlowSnapshot, config: &FlowMainWindowConfig
     host
 }
 
-/// 🏠️ Runs `body` against a host rebuilt by [`host_from_snapshot`], then retires that host — the ONE
+/// 🏃️ Runs `body` against a host rebuilt by [`host_from_snapshot`], then retires that host — the ONE
 /// shape every render, probe and evaluation step that only needs a host for the length of a call must
 /// use. A `FlowHost` owns a `FlowHostSnapshot` whose `layout: OrderedMap<WidgetLayout>` aborts the
 /// guest on a bare drop, so a host is closed, never dropped (the twin of `FlowHost::with_host_snapshot`).
@@ -109,10 +129,10 @@ pub fn sync_host_selection(host: &mut FlowHost, selected: &[String]) {
 
 pub fn sync_host_selection_domains(host: &mut FlowHost, nodes: &[String], edges: &[String], handles: &[String]) {
     if nodes.is_empty() && edges.is_empty() && handles.is_empty() {
-        let _ = host.dag.cancel_area_select();
+        let _ = host.cancel_area_select();
         return;
     }
-    host.dag.set_selection_domains(&infinite_canvas::board::schema::dag_input::DagSelectionDomains {nodes:nodes.to_vec(),edges:edges.to_vec(),handles:handles.to_vec()});
+    host.set_selection_domains(&infinite_canvas::board::schema::dag_input::DagSelectionDomains {nodes:nodes.to_vec(),edges:edges.to_vec(),handles:handles.to_vec()});
 }
 
 /// 🔍️ The camera that frames the given node selection (the "graph" domain's live selection, read by
@@ -123,8 +143,8 @@ pub fn focus_selection_camera(snapshot: &FlowSnapshot, config: &FlowMainWindowCo
         return None;
     }
     with_host_from_snapshot(snapshot, config, session, |host| {
-        host.dag.set_viewport(1280, 800, 1.0);
-        host.dag.set_selection(selected_node_ids);
+        host.set_viewport(1280, 800, 1.0);
+        host.set_selection(selected_node_ids);
         host.focus_selection_camera(1.2)
     })
 }

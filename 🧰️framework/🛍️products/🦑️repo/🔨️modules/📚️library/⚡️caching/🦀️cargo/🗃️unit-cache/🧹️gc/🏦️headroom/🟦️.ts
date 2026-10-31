@@ -5,6 +5,7 @@ import {UNIT_CACHE_POLICY_V1} from "../../🔏️key/🟦️.ts";
 import {processAliveV1,sleepV1} from "../../🔒️lock/🟦️.ts";
 import {collectGarbageSingleFlightV1,measureVolumeV1} from "../🟦️.ts";
 import {ensureBallastV1,releaseBallastV1,tryClaimWithBallastV1} from "../🛟️ballast/🟦️.ts";
+import {enterScriptProcessWaitV1} from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 const policy=schema.definitions.Policy.const,messages=schema.definitions.Messages.const,layout=UNIT_CACHE_POLICY_V1.layout,GIB=1024**3;
@@ -37,7 +38,7 @@ export function headroomQuantileV1(values:readonly number[],basisPoints:number):
  return sorted[Math.min(sorted.length,rank)-1]!;
 }
 
-/** 🔮️ What a command of these classes (general to specific) is expected to write and how long it takes: the quantile of the most specific class with enough samples plus the margin, else the prior; the bytes never exceed the maximum share of the image and the ramp stays inside its bounds. Pure and deterministic. */
+/** 🎮️ What a command of these classes (general to specific) is expected to write and how long it takes: the quantile of the most specific class with enough samples plus the margin, else the prior; the bytes never exceed the maximum share of the image and the ramp stays inside its bounds. Pure and deterministic. */
 export function headroomEstimateV1(history:HeadroomHistoryV1,classes:readonly string[],prior:HeadroomPriorV1,volumeBytes:number,rules:Pick<typeof policy,"maximumShareBasisPoints"|"minimumBytes"|"estimate">=policy):HeadroomEstimateV1{
  const ceiling=Math.floor(volumeBytes*rules.maximumShareBasisPoints/10000),bytesOf=(bytes:number)=>clamp(bytes,rules.minimumBytes,ceiling),rampOf=(ms:number)=>clamp(ms,rules.estimate.minimumRampMilliseconds,rules.estimate.maximumRampMilliseconds);
  for(const name of [...classes].reverse()){
@@ -54,14 +55,15 @@ export function headroomOutstandingV1(row:HeadroomRowV1,nowMs:number):number{
  return Math.floor(row.reservedBytes*Math.floor(left*10000/ramp)/10000);
 }
 
-/** 🚦️ Decides whether a command may start: the free space minus the floor, minus what running commands are still expected to write and minus the reservations of the waiting commands that arrived before it must cover its own reservation. A command that does not fit waits, except the only one left (nothing runs, nothing is ahead) once a cleanup has run: waiting can free nothing more, so it goes on and the out-of-space retry handles a real shortfall. Pure and deterministic. */
-export function decideHeadroomV1(input:HeadroomInputV1,rules:Pick<typeof policy,"floorBasisPoints"|"floorMinimumBytes">=policy):HeadroomDecisionV1{
+/** 🚦️ Decides whether a command may start: the free space minus the floor, minus what running commands are still expected to write and minus the reservations of the waiting commands that arrived before it must cover its own reservation. A command that does not fit waits, except the only one left (nothing runs or every running row outlived its ramp by the stranded grace, nothing is ahead) once a cleanup has run: waiting can free nothing more, so it goes on and the out-of-space retry handles a real shortfall. Pure and deterministic. */
+export function decideHeadroomV1(input:HeadroomInputV1,rules:Pick<typeof policy,"floorBasisPoints"|"floorMinimumBytes"|"strandedGraceMilliseconds">=policy):HeadroomDecisionV1{
  const others=input.rows.filter(row=>row.id!==input.request.id),running=others.filter(row=>row.state==="running"),floorBytes=headroomFloorBytesV1(input.volumeBytes,rules);
  const heldBytes=running.reduce((sum,row)=>sum+headroomOutstandingV1(row,input.nowMs),0);
  const ahead=others.filter(row=>row.state==="waiting"&&(row.arrivedMs<input.request.arrivedMs||row.arrivedMs===input.request.arrivedMs&&row.id<input.request.id)),aheadBytes=ahead.reduce((sum,row)=>sum+row.reservedBytes,0);
  const room=input.freeBytes-floorBytes-heldBytes-aheadBytes,shortfallBytes=Math.max(0,input.request.reservedBytes-room),facts={floorBytes,heldBytes,aheadBytes,shortfallBytes,running:running.length};
  if(shortfallBytes===0)return Object.freeze({verdict:"admit",reason:"fits",...facts});
- if(running.length===0&&ahead.length===0&&input.reclaimed)return Object.freeze({verdict:"admit",reason:"alone",...facts});
+ const active=running.filter(row=>row.admittedMs===null||input.nowMs-row.admittedMs<=row.rampMilliseconds+rules.strandedGraceMilliseconds);
+ if(active.length===0&&ahead.length===0&&input.reclaimed)return Object.freeze({verdict:"admit",reason:"alone",...facts});
  return Object.freeze({verdict:"wait",reason:aheadBytes>0&&input.freeBytes-floorBytes-heldBytes>=input.request.reservedBytes?"queue":"space",...facts});
 }
 
@@ -114,7 +116,7 @@ function readRows(directory:string,realMs:number):HeadroomRowV1[]{
 export function readHeadroomLedgerV1(root:string,realMs:number=Date.now()):HeadroomRowV1[]{return readRows(join(root,layout.headroom),realMs);}
 
 /** 🎟️ An admitted command's hold on the image: `release` ends the reservation and records what the command wrote (`grown`, measured after it ended) under its classes. */
-export type HeadroomLeaseV1=Readonly<{id:string;reservedBytes:number;waitedMs:number;release(grown?:()=>number):Promise<void>}>;
+export type HeadroomLeaseV1=Readonly<{id:string;reservedBytes:number;waitedMs:number;release(grown?:()=>number,temperature?:"warm"|"cold"):Promise<void>}>;
 type SleepV1=(milliseconds:number,signal?:AbortSignal)=>Promise<void>;
 /** 🔌️ What admission touches, replaceable by tests. `reclaim` frees the bytes it is given on demand and answers whether a collection ran. */
 export type HeadroomPortsV1=Readonly<{now?:()=>number;sleep?:SleepV1;measure?:typeof measureVolumeV1;reclaim?:(demandBytes:number)=>Promise<boolean>;pid?:number;id?:string}>;
@@ -129,12 +131,18 @@ async function withClaim<T>(root:string,body:()=>T,sleep:SleepV1,attempts:number
  return undefined;
 }
 
-/** 🏦️ Admits one Cargo command to the compiler image. The command reserves what its classes (`classes` general to specific, `temperature` of the lane it runs in) wrote before; while the free space does not cover that on top of what the running commands are still expected to write and the floor, it waits in arrival order, frees what it can on demand (idle lanes, incremental sessions and cold units, never anything a running command holds) and reports its wait; a cancellation withdraws it. Once admitted, the lease watches the image every `monitorMilliseconds` and frees on demand the moment the free space falls below the floor, and `release` ends the reservation and learns what the command wrote. An image that cannot be measured admits at once (nothing to protect). */
+/** 📜️ The prior of a command: that of the first class prefix the policy lists for its classes, else the general one of its temperature. */
+export function headroomPriorV1(classes:readonly string[],temperature:"warm"|"cold",rules:Pick<typeof policy,"prior"|"classPriors">=policy):HeadroomPriorV1{
+ const row=rules.classPriors.find(entry=>classes.some(name=>name.startsWith(entry.prefix)));
+ return row?row[temperature]:rules.prior[temperature];
+}
+
+/** 🏦️ Admits one Cargo command to the compiler image. The command reserves what its classes (`classes` general to specific, `temperature` of the lane it runs in) wrote before; while the free space does not cover that on top of what the running commands are still expected to write and the floor, it waits in arrival order, frees what it can on demand (idle lanes, incremental sessions and cold units, never anything a running command holds) and reports its wait; a cancellation withdraws it. Once admitted, the lease watches the image every `monitorMilliseconds` and frees on demand the moment the free space falls below the floor, and `release` ends the reservation and learns what the command wrote (under the temperature of the lane it actually ran in, when given). An image that cannot be measured admits at once (nothing to protect). */
 export async function admitImageHeadroomV1(options:Readonly<{root:string;capacityBytes:number;classes:readonly string[];temperature:"warm"|"cold";label:string;language:"en"|"de";report:(line:string)=>void;signal?:AbortSignal}&HeadroomPortsV1>):Promise<HeadroomLeaseV1>{
  const now=options.now??Date.now,sleep=options.sleep??sleepV1,measure=options.measure??measureVolumeV1,directory=join(options.root,layout.headroom),start=measure(options.root,options.capacityBytes);
  const unlimited:HeadroomLeaseV1=Object.freeze({id:"-",reservedBytes:0,waitedMs:0,release:async()=>{}});
  if(start.unmeasured)return unlimited;
- const names=options.classes.map(name=>className(name,options.temperature)),estimate=headroomEstimateV1(readHeadroomHistoryV1(directory),names,policy.prior[options.temperature],start.volumeBytes);
+ const names=options.classes.map(name=>className(name,options.temperature)),estimate=headroomEstimateV1(readHeadroomHistoryV1(directory),names,headroomPriorV1(options.classes,options.temperature),start.volumeBytes);
  const reclaim=options.reclaim??(async(demandBytes:number)=>!(await collectGarbageSingleFlightV1(options.root,options.capacityBytes,{demandBytes,signal:options.signal})).running);
  const id=options.id??randomBytes(8).toString("hex"),file=join(directory,id+".json"),arrivedMs=now(),pid=options.pid??process.pid;
  ensureBallastV1(options.root);
@@ -161,7 +169,7 @@ export async function admitImageHeadroomV1(options:Readonly<{root:string;capacit
     lastReclaim=at;try{if(await reclaim(decision.shortfallBytes))reclaimed=true;}catch(error){if(options.signal?.aborted)throw error;}
     continue;
    }
-   await sleep(poll,options.signal);poll=Math.min(policy.pollMaximumMilliseconds,Math.ceil(poll*policy.pollBackoffBasisPoints/10000));
+   {const leave=enterScriptProcessWaitV1();try{await sleep(poll,options.signal);}finally{leave();}}poll=Math.min(policy.pollMaximumMilliseconds,Math.ceil(poll*policy.pollBackoffBasisPoints/10000));
   }
  }catch(error){clearInterval(beat);rmSync(file,{force:true});throw error;}
  let inFlight=false;
@@ -173,12 +181,12 @@ export async function admitImageHeadroomV1(options:Readonly<{root:string;capacit
   }catch{}
  },policy.monitorMilliseconds);monitor.unref?.();
  let released=false;
- return Object.freeze({id,reservedBytes:estimate.reservedBytes,waitedMs:admittedMs-arrivedMs,async release(grown?:()=>number){
+ return Object.freeze({id,reservedBytes:estimate.reservedBytes,waitedMs:admittedMs-arrivedMs,async release(grown?:()=>number,temperature?:"warm"|"cold"){
   if(released)return;released=true;clearInterval(beat);clearInterval(monitor);rmSync(file,{force:true});
   if(grown===undefined||options.signal?.aborted)return;
   try{
    const sample:HeadroomSampleV1={bytes:clamp(Math.floor(grown()),0,549755813888),wallMs:clamp(now()-admittedMs,0,86400000),atMs:now()};
-   await withClaim(options.root,()=>roomy(options.root,()=>writeAtomic(historyPath(directory),JSON.stringify(recordHeadroomSampleV1(readHeadroomHistoryV1(directory),names,sample)))),sleep,policy.claimAttempts);
+   await withClaim(options.root,()=>roomy(options.root,()=>writeAtomic(historyPath(directory),JSON.stringify(recordHeadroomSampleV1(readHeadroomHistoryV1(directory),temperature===undefined?names:options.classes.map(name=>className(name,temperature)),sample)))),sleep,policy.claimAttempts);
   }catch{}
  }});
 }

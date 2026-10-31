@@ -1,0 +1,137 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🪪️identity/🦀️.rs",
+    "line": 4,
+    "excerpt": "use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,ErasedSnapshotRetirement,paged::{PagedUtf8,PagedUtf8AppendCursor,Utf8Text},retirement::controlled::ControlledRetirement,retained_clone::{RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🪪️identity/🦀️.rs",
+    "line": 17,
+    "excerpt": "pub struct ArtifactCanonicalEditIdentityCursor<M:Send+Sync+'static>{authority:Option<RetainedOwnedProjection<dyn ArtifactCanonicalEditAuthority>>,edit:Option<RetainedOwnedProjection<Edit<M>>>,output:Option<Identities>,append:Option<PagedUtf8AppendCursor>,retirement:Option<ControlledRetirement<RetiringIdentities>>,field:usize,chunk:usize,append_closing:bool,closing:bool}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🪪️identity/🦀️.rs",
+    "line": 29,
+    "excerpt": "   if owner.terminal_is_empty(){return Ok(copy(size_of::<Option<PagedUtf8AppendCursor>>()));}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🪪️identity/🦀️.rs",
+    "line": 31,
+    "excerpt": "   let text=self.text()?;let chunk=if text.text_bytes()==0{\"\"}else{text.text_chunk(self.chunk).ok_or_else(||refusal(\"canonical identity native input chunk missing\"))?};return nested(owner.next_advance_demand(chunk,&self.output.as_ref().unwrap()[self.field])?);"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🪪️identity/🦀️.rs",
+    "line": 36,
+    "excerpt": "  }else if self.field<3{return Ok(copy(size_of::<PagedUtf8AppendCursor>()));}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🪪️identity/🦀️.rs",
+    "line": 49,
+    "excerpt": "  else if !self.closing&&self.field<3{self.append=Some(PagedUtf8AppendCursor::default());RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 55,
+    "excerpt": "        let (mut cursor, birth) = observe_retirement_allocations(crate::paged::PagedUtf8AppendCursor::default);"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🦀️.rs",
+    "line": 169,
+    "excerpt": "pub use append::PagedUtf8AppendCursor;"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+    "line": 7,
+    "excerpt": "pub struct PagedUtf8AppendCursor {"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+    "line": 21,
+    "excerpt": "impl PagedUtf8AppendCursor {"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+    "line": 28,
+    "excerpt": "        if let Some(message)=self.advance_fault{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,message)),work:0}}let d=match self.next_advance_demand(source,destination,body){Ok(d)=>d,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};if self.complete{return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}if !crate::retained_clone::retained_clone_grant_admits(grant,d){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}let control=||RetainedCloneProgress{copied_items:1,..Default::default()};"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+    "line": 75,
+    "excerpt": "impl ErasedSnapshotRetirement for PagedUtf8AppendCursor {"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+    "line": 78,
+    "excerpt": "    fn terminal_is_empty(&self) -> bool { PagedUtf8AppendCursor::terminal_is_empty(self) }"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+    "line": 85,
+    "excerpt": "impl Drop for PagedUtf8AppendCursor {"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🧪️tests/🦀️.rs",
+    "line": 11,
+    "excerpt": "  let source=text.as_str().unwrap().repeat(repeat);let pointer=source.as_ptr();let mut destination=PagedUtf8::<{usize::MAX}>::new();let(mut cursor,heap)=observe(PagedUtf8AppendCursor::default);assert_eq!(heap,(0,0));let mut turns=0;let mut complete=false;"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🧪️tests/🦀️.rs",
+    "line": 12,
+    "excerpt": "  loop{assert!(turns<100000);if pause==Some(turns){break;}let(demand,heap)=observe(||cursor.next_advance_demand(&source,&destination).unwrap());assert_eq!(heap,(0,0));let admitted=grant(demand);let(step,heap)=observe(||cursor.advance(&source,&mut destination,Default::default()).unwrap());exact(step,heap,Default::default());assert_eq!(step.progress(),Default::default());"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🎟️work/🧪️tests/🦀️.rs",
+    "line": 5,
+    "excerpt": "fn finish(mut append:PagedUtf8AppendCursor,value:PagedUtf8<8192>,bank:&mut Bank,max:u64){append.begin_close();for _ in 0..max{if append.terminal_is_empty(){break}let g=bank.loan(append.next_demand(4096).unwrap());let(turn,heap)=observed(||append.close_step(g));let step=bank.post(turn,heap).unwrap();if matches!(step,RetainedCloneStep::Complete(_)){assert!(append.terminal_is_empty());}}assert!(append.terminal_is_empty());assert_eq!(observed(||drop(append)).1,(0,0));let mut close=crate::retirement::controlled::ControlledRetirement::new(value).map_err(|(e,_)|e).unwrap();for _ in 0..max{if close.terminal_is_empty(){break}let g=bank.loan(close.next_demand(4096).unwrap());let(result,heap)=observed("
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🎟️work/🧪️tests/🦀️.rs",
+    "line": 6,
+    "excerpt": "#[test]fn actual_append_normal_uses_real_work_with_partial_utf8_and_original_stock_through_close(){let f:serde_json::Value=serde_json::from_str(include_str!(\"../📐️.json\")).unwrap();assert_eq!(PAGED_UTF8_CHUNK_BYTES,f[\"chunkBytes\"].as_u64().unwrap()as usize);for text in f[\"texts\"].as_array().unwrap(){let source=text.as_str().unwrap().to_owned();for body in f[\"bodies\"].as_array().unwrap(){let body=body.as_u64().unwrap()as usize;for cut in f[\"cancelCuts\"].as_array().unwrap().iter().map(|n|Some(n.as_u64().unwrap())).chain([None]){let mut bank=Bank::new(&f[\"stock\"]);let mut value=PagedUtf8::<8192>::new();let(mut append,heap)=observed(PagedUtf8AppendCursor::default);assert_eq!(heap,(0,0));let mut "
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🎟️work/🧪️tests/🦀️.rs",
+    "line": 7,
+    "excerpt": "#[test]fn actual_append_rejects_changed_source_utf8_before_publishing_and_caches_only_the_real_fault(){let f:serde_json::Value=serde_json::from_str(include_str!(\"../📐️.json\")).unwrap();let mut bank=Bank::new(&f[\"stock\"]);let mut source=f[\"changedSource\"][\"before\"].as_str().unwrap().to_owned();let pointer=source.as_ptr();let mut value=PagedUtf8::<8192>::new();let mut append=PagedUtf8AppendCursor::default();for _ in 0..10000{if append.position==1{break}let g=bank.loan(append.next_advance_demand(&source,&value,1).unwrap());let(turn,heap)=observed(||append.advance(&source,&mut value,1,g));bank.post(turn,heap).unwrap();}assert_eq!(append.position,1);source.replace_range(..,f[\"changedSource\"][\"aft"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/♻️close/🧪️tests/🦀️.rs",
+    "line": 5,
+    "excerpt": " let mut owner=PagedUtf8AppendCursor{source:Some((17,3)),destination:Some((29,7)),..Default::default()};"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🛬️receive/🦀️.rs",
+    "line": 2,
+    "excerpt": "use super::{PagedUtf8,PagedUtf8AppendCursor};"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🛬️receive/🦀️.rs",
+    "line": 6,
+    "excerpt": "pub struct PagedTextReceiver<I:NativeValueSource+?Sized,const N:usize>{binding:Option<RetainedCloneBinding>,append:PagedUtf8AppendCursor,output:ManuallyDrop<Option<PagedUtf8<N>>>,retirement:RetainedCloneClose,ready:bool,taken:bool,closing:bool,input:std::marker::PhantomData<fn(&I)>}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🛬️receive/🦀️.rs",
+    "line": 9,
+    "excerpt": " fn demands(&self,input:RetainedCloneRef<'_,I>,_:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.ready||self.taken{return Err(invalid())}if !input.check_binding(&self.binding)?{return Ok(fixed(input.binding_copy_bytes()))}nested(self.append.next_advance_demand(input.get().text()?.as_str(),self.output.as_ref().ok_or_else(invalid)?)?,size_of::<bool>())}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 463,
+    "excerpt": "        let (mut cursor, allocation) = observe_retirement_allocations(crate::paged::PagedUtf8AppendCursor::default);"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs",
+    "line": 171,
+    "excerpt": "    pub handoff_cursors: [Option<semio_framework_value::paged::PagedUtf8AppendCursor>; 2],"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs",
+    "line": 430,
+    "excerpt": "                let copy=size_of::<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>()+size_of::<semio_framework_value::paged::PagedUtf8AppendCursor>();"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs",
+    "line": 438,
+    "excerpt": "                let demand=cursor.next_advance_demand(source,output)?;"
+  }
+]

@@ -1,0 +1,460 @@
+{
+  "version": 1,
+  "base": {
+    "directory": "/cache/d",
+    "declaration": {
+      "filesystemBytes": 67108864,
+      "maximumPhysicalBytes": 68157440
+    },
+    "baseNames": [
+      ".publication",
+      "fixed.dmg",
+      "image.json",
+      "m"
+    ],
+    "parent": {
+      "dev": "1",
+      "ino": "2",
+      "mode": 16832
+    },
+    "backing": {
+      "dev": "1",
+      "ino": "3",
+      "mode": 33152,
+      "kind": "file",
+      "nlink": 1,
+      "size": 33554432,
+      "allocatedBytes": 33554432
+    },
+    "receipt": {
+      "version": 1,
+      "dev": 1,
+      "ino": 3,
+      "size": 33554432,
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "mountDirectory": {
+        "dev": "1",
+        "ino": "4",
+        "mode": 16832
+      },
+      "bootSession": "12345678-1234-1234-1234-123456789ABC",
+      "ancestry": [
+        "11",
+        "12"
+      ]
+    },
+    "namespace": {
+      "dev": "1",
+      "ino": "5",
+      "mode": 16832,
+      "entries": [
+        {
+          "name": "intent.json",
+          "kind": "file",
+          "dev": "1",
+          "ino": "6",
+          "mode": 33152,
+          "nlink": 1,
+          "size": 47
+        }
+      ]
+    },
+    "root": {
+      "dev": "7",
+      "ino": "2",
+      "mode": 16877,
+      "filesystemBytes": 32505856
+    },
+    "imageMatches": 1,
+    "associations": [
+      {
+        "imagePath": "/cache/d/fixed.dmg",
+        "mountPoint": "/cache/d/m",
+        "device": "/dev/disk20s1"
+      }
+    ],
+    "platform": "darwin",
+    "ancestry": [
+      "11",
+      "12"
+    ]
+  },
+  "cases": [
+    {
+      "id": "predecessor",
+      "patch": [],
+      "accepted": true
+    },
+    {
+      "id": "empty-namespace",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/namespace/entries",
+          "value": []
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "candidate-only",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/namespace/entries/0/name",
+          "value": "receipt.json"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "equal-current",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/declaration",
+          "value": {
+            "filesystemBytes": 33554432,
+            "maximumPhysicalBytes": 34603008
+          }
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "over-ceiling",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/receipt/maximumPhysicalBytes",
+          "value": 71303168
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "filesystem-exceeds-receipt",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/root/filesystemBytes",
+          "value": 34603008
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "host-root",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/root/dev",
+          "value": "1"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "wrong-platform",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/platform",
+          "value": "linux"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "backing-links",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/backing/nlink",
+          "value": 2
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "foreign-backing",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/backing/dev",
+          "value": "9"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "receipt-inode",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/receipt/ino",
+          "value": 8
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "missing-image",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/imageMatches",
+          "value": 0
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "ambiguous-image",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/imageMatches",
+          "value": 2
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "foreign-root-mapping",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/associations/0/imagePath",
+          "value": "/other/fixed.dmg"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "wrong-device",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/associations/0/device",
+          "value": "/dev/other"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "wrong-root-mapping",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/associations/0/mountPoint",
+          "value": "/other/m"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "unknown-metadata",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/namespace/entries/0/name",
+          "value": "unknown.json"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "metadata-link",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/namespace/entries/0/kind",
+          "value": "link"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "metadata-links",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/namespace/entries/0/nlink",
+          "value": 2
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "metadata-permission",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/namespace/entries/0/mode",
+          "value": 33188
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "metadata-extent",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/namespace/entries/0/size",
+          "value": 4097
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "metadata-volume",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/namespace/entries/0/dev",
+          "value": "8"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "namespace-permission",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/namespace/mode",
+          "value": 16877
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "namespace-volume",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/namespace/dev",
+          "value": "8"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "underlying-volume",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/receipt/mountDirectory/dev",
+          "value": "8"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "allocated-over-old",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/backing/allocatedBytes",
+          "value": 34603009
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "bad-base",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/baseNames/-",
+          "value": ".other"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "missing-base",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/baseNames/1"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "descendant-mount",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/associations/-",
+          "value": {
+            "imagePath": "/other",
+            "mountPoint": "/cache/d/m/child",
+            "device": "/dev/disk21s1"
+          }
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "second-root-mount",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/associations/-",
+          "value": {
+            "imagePath": "/cache/d/fixed.dmg",
+            "mountPoint": "/cache/d/m",
+            "device": "/dev/disk20s1"
+          }
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "duplicate-metadata",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/namespace/entries/-",
+          "value": {
+            "name": "intent.json",
+            "kind": "file",
+            "dev": "1",
+            "ino": "6",
+            "mode": 33152,
+            "nlink": 1,
+            "size": 47
+          }
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "wrong-ancestry",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/ancestry/0",
+          "value": "99"
+        }
+      ],
+      "accepted": false
+    },
+    {
+      "id": "invalid-boot-data",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/receipt/bootSession",
+          "value": "not-a-boot-session"
+        }
+      ],
+      "accepted": false
+    }
+  ]
+}

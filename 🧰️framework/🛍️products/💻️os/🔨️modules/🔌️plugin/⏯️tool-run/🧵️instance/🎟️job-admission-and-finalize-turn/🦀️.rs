@@ -200,7 +200,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             }
             ToolRunFinalizePhase::Revalidating => self.step_tool_run_job(cx),
             ToolRunFinalizePhase::Publishing => self.publish_tool_run(cx).await,
-            ToolRunFinalizePhase::Closing => {let entry=selected_entry_mut!(self.tool_runs).expect("closing original slot");if !entry.operations.terminal_is_empty(){entry.operations.close_step(&self.stores.store,cx)?;return Ok(())}self.close_tool_run_publication(grant).map_err(Into::into)},
+            ToolRunFinalizePhase::Closing => {let entry=selected_entry_mut!(self.tool_runs).expect("closing original slot");if !entry.operations.terminal_is_empty(){entry.operations.close_step(&self.stores.store,cx)?;return Ok(())}self.close_tool_run_publication(cx)},
         }
     }
 

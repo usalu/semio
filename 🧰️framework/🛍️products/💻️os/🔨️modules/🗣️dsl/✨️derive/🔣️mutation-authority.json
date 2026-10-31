@@ -118,7 +118,7 @@
         "🔷️change-glazing-thickness": "change-glazing-material-thickness",
         "🟠️change-glazing-conductivity": "change-glazing-material-conductivity",
         "🟡️change-glazing-solar-transmittance": "change-glazing-material-solar-transmittance",
-        "🥽️change-glazing-visible-transmittance": "change-glazing-material-visible-transmittance",
+        "🥽️glazing-visible-transmittance": "change-glazing-material-visible-transmittance",
         "🩻️change-glazing-infrared-emissivity": "change-glazing-material-infrared-emissivity",
         "🟢️rename-glazing": "rename-glazing-material",
         "🟣️change-gas-thickness": "change-gas-material-thickness",
@@ -209,7 +209,7 @@
         "🏜️delete": "delete-humidistat",
         "🏙️change-zone": "change-humidistat-zone",
         "☔️change-humidifying-setpoint-schedule": "change-humidistat-humidifying-setpoint-schedule",
-        "🏝️change-dehumidifying-setpoint-schedule": "change-humidistat-dehumidifying-setpoint-schedule",
+        "🏝️dehumidify-setpoint-schedule": "change-humidistat-dehumidifying-setpoint-schedule",
         "🌧️change-humidifying-throttle-range": "change-humidistat-humidifying-throttle-range",
         "🧻️change-dehumidifying-throttle-range": "change-humidistat-dehumidifying-throttle-range"
       },

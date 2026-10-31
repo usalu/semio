@@ -19,6 +19,7 @@ use semio_framework_job::{root_cancel_token, Generation, InteractiveStage, JobOu
 #[test]
 fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../🖌️render/⏱️schedule/🧪️tests/🧫️fixtures/🎞️animation/🔣️.json")).unwrap();
     for overlay_route in [false, true] {
         for row in fixture["primitives"].as_array().unwrap() {
@@ -40,9 +41,11 @@ fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
             let mut packet = job.take_packet().expect("measured packet");
             assert_eq!(packet.has_animated_primitives(), row["active"].as_bool().unwrap(), "{}", row["id"]);
             while !close_packet_step(&mut packet) {}
-            while !close_job_step(&mut job) {}
+            while !close_job_step(&mut job,&mut close_caller) {}
         }
     }
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }
 
 
@@ -221,6 +224,7 @@ fn a_disabled_shadow_never_publishes_a_gpu_shadow_scalar() {
 #[test]
 fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let (unbound, _) = PreparedRasterProducer::try_admit("unbound".into(), vec![4; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page producer");
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     assert!(input.try_push_raster_producer(unbound).is_ok());
@@ -230,7 +234,7 @@ fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
     assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
     assert!(matches!(outcome, Some(JobOutcomeKind::Fault)));
     assert_eq!(job.fault(), Some("raster producer generation is stale"));
-    while !close_job_step(&mut job) {}
+    while !close_job_step(&mut job,&mut close_caller) {}
 
     let (mut bound, _) = PreparedRasterProducer::try_admit("bound".into(), vec![4; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page producer");
     assert!(bound.bind_frame_generation(3));
@@ -241,7 +245,9 @@ fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
     assert!(original_retained_receipt.fits(ui_contract::UI_WORKER_RETIREMENT_POLICY));
     assert!(matches!(outcome, None | Some(JobOutcomeKind::Yield)));
     assert_eq!(job.fault(), None);
-    while !close_job_step(&mut job) {}
+    while !close_job_step(&mut job,&mut close_caller) {}
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }
 
 
@@ -249,6 +255,7 @@ fn an_unbound_raster_producer_refuses_its_prepared_job_with_a_readable_fault() {
 #[test]
 fn zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let (mut producer, _) = PreparedRasterProducer::try_admit("governed".into(), vec![4; PREPARED_RASTER_PAGE_BYTES], 4_096, 1).expect("one-page producer");
     assert!(producer.bind_frame_generation(3));
     let source_pointer = producer.original_source().as_ptr();
@@ -273,25 +280,30 @@ fn zero_fuel_and_expired_deadline_advance_no_raster_page_or_allocation() {
     assert_eq!(retained.original_source().as_ptr(), source_pointer);
     assert_eq!(retained.original_page_count(), 0);
 
-    while !close_job_step(&mut job) {}
+    while !close_job_step(&mut job,&mut close_caller) {}
     assert!(job.terminal_is_empty());
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
 fn cancellation_retires_large_upload_incrementally_before_terminal_empty() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     assert!(input.try_push_upload(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4_096], width: 64, height: 64 }).is_ok());
     let mut job = PreparedRenderJob::new(input, 1);
-    assert!(!close_job_step(&mut job));
+    assert!(!close_job_step(&mut job,&mut close_caller));
     assert!(!job.terminal_is_empty());
     let mut turns = 1;
-    while !close_job_step(&mut job) {
+    while !close_job_step(&mut job,&mut close_caller) {
         turns += 1;
         assert!(turns < 5_000);
     }
     assert!(turns > 4_096);
     assert!(job.terminal_is_empty());
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }
 
 fn assert_send<T: Send>() {}
@@ -352,6 +364,7 @@ fn preparation_yields_at_the_configured_item_budget() {
 #[test]
 fn preparation_completes_across_bounded_steps() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let mut draw = DrawList::default();
     draw.layers.extend((0..2).map(|_| DrawLayer::default()));
     let mut job = PreparedRenderJob::new(PreparedRenderInput::new(7, 3, draw, None, 0.0), 1);
@@ -360,8 +373,10 @@ fn preparation_completes_across_bounded_steps() {
     let mut packet = job.take_packet().expect("prepared packet");
     assert_eq!((packet.scene_revision, packet.preview_generation), (7, 3));
     while !close_packet_step(&mut packet) {}
-    while !close_job_step(&mut job) {}
+    while !close_job_step(&mut job,&mut close_caller) {}
     assert!(job.terminal_is_empty());
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
@@ -504,6 +519,7 @@ fn gate_close_requires_pending_and_last_valid_packet_handback_before_terminal_sc
 #[test]
 fn upload_byte_cap_faults_before_packet_publication() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     input.limits.max_upload_bytes = 3;
     assert!(input.try_push_upload(PreparedRenderUpload::GlyphAtlas { pixels: vec![0; 4], width: 2, height: 2 }).is_ok());
@@ -511,13 +527,16 @@ fn upload_byte_cap_faults_before_packet_publication() {
     let outcome = drive_preparation_until_terminal(&mut job);
     assert!(matches!(outcome, Some(JobOutcomeKind::Fault)));
     assert!(job.take_packet().is_none());
-    while !close_job_step(&mut job) {}
+    while !close_job_step(&mut job,&mut close_caller) {}
     assert!(job.terminal_is_empty());
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
 fn eviction_byte_cap_faults_before_packet_publication() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let mut input = PreparedRenderInput::new(7, 3, DrawList::default(), None, 0.0);
     input.limits.max_upload_bytes = 3;
     assert!(input.try_push_eviction(PreparedRenderEviction::Mesh { key: "mesh".into() }).is_ok());
@@ -525,13 +544,16 @@ fn eviction_byte_cap_faults_before_packet_publication() {
     let outcome = drive_preparation_until_terminal(&mut job);
     assert!(matches!(outcome, Some(JobOutcomeKind::Fault)));
     assert!(job.take_packet().is_none());
-    while !close_job_step(&mut job) {}
+    while !close_job_step(&mut job,&mut close_caller) {}
     assert!(job.terminal_is_empty());
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
 fn draw_item_cap_faults_before_packet_publication() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let mut draw = DrawList::default();
     draw.layers[0].ui_instances.push(semio_framework_ui_draw_contract::UiInstance::solid([0.0; 4], semio_framework_ui_theme::Rgba::new(0.0, 0.0, 0.0, 0.0)));
     let mut input = PreparedRenderInput::new(7, 3, draw, None, 0.0);
@@ -540,8 +562,10 @@ fn draw_item_cap_faults_before_packet_publication() {
     let outcome = drive_preparation_until_terminal(&mut job);
     assert!(matches!(outcome, Some(JobOutcomeKind::Fault)));
     assert!(job.take_packet().is_none());
-    while !close_job_step(&mut job) {}
+    while !close_job_step(&mut job,&mut close_caller) {}
     assert!(job.terminal_is_empty());
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
@@ -622,6 +646,7 @@ fn fixed_command_pages_reject_max_plus_one_without_consuming_the_owner() {
 #[test]
 fn tessellation_commands_retain_exact_scalar_and_overlay_cursors() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     drain_abandoned_preparations();
     let mut draw = DrawList::default();
     draw.push_solid([0.0, 0.0, 4.0, 4.0], semio_framework_ui_theme::Rgba::new(0.0, 1.0, 0.0, 1.0));
@@ -646,7 +671,9 @@ fn tessellation_commands_retain_exact_scalar_and_overlay_cursors() {
         .filter_map(|index| packet.commands.get(index))
         .any(|command| { command.kind == PreparedRenderCommandKind::Tessellate && command.draw_cursor == Some(DrawMeasureCursor::LayerUi { layer: 0, item: 0, overlay: false }) && !command.packet_overlay }));
     while !close_packet_step(&mut packet) {}
-    while !close_job_step(&mut job) {}
+    while !close_job_step(&mut job,&mut close_caller) {}
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
@@ -719,6 +746,7 @@ fn prepared_packet_publishes_main_overlay_and_top_overlay_raster_owners() {
 #[test]
 fn prepared_render_common_close_funds_declared_frontiers_without_losing_original_owners() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🧫️fixtures/📦️prepared-close/🔣️.json")).unwrap();
     for row in fixture["grants"].as_array().unwrap() {
         let grant = semio_framework_job::RetainedCloneGrant {
@@ -737,9 +765,9 @@ fn prepared_render_common_close_funds_declared_frontiers_without_losing_original
         let mut job = PreparedRenderJob::new(retained_input, 1);
         let input = job.input.as_ref().unwrap() as *const PreparedRenderInput;
         assert!(job.commands.take().unwrap().terminal_is_empty());
-        assert_eq!(semio_framework_job::close_with_self_funded_context(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Blocked);
+        assert_eq!(close_caller.turn(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Blocked);
         InteractiveJob::begin_close(&mut job);
-        let outcome = semio_framework_job::close_with_self_funded_context(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn");
+        let outcome = close_caller.turn(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn");
         let expected = semio_framework_job::RetainedCloneProgress { copied_items: row["expectedItems"].as_u64().unwrap() as usize, ..Default::default() };
         assert_eq!(outcome, semio_framework_job::InteractiveJobCloseStep::Pending { progress: expected });
         assert!(outcome.progress().fits(grant));
@@ -748,16 +776,19 @@ fn prepared_render_common_close_funds_declared_frontiers_without_losing_original
         assert!(!PreparedRenderJob::terminal_is_empty(&job));
         assert!(InteractiveJob::next_close_release_byte_demand(&job).is_ok());
         let mut complete = false;
-        for _ in 0..10_000 { if close_job_step(&mut job) { complete = true; break; } }
+        for _ in 0..10_000 { if close_job_step(&mut job,&mut close_caller) { complete = true; break; } }
         assert!(complete);
         assert!(PreparedRenderJob::terminal_is_empty(&job));
-        assert_eq!(semio_framework_job::close_with_self_funded_context(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete { progress: semio_framework_job::RetainedCloneProgress::default() });
+        assert_eq!(close_caller.turn(grant, |cx| InteractiveJob::close_step(&mut job, cx)).expect("original fixture close turn"), semio_framework_job::InteractiveJobCloseStep::Complete { progress: semio_framework_job::RetainedCloneProgress::default() });
     }
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }
 
 #[test]
 fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
     let _guard = prepared_process_guard();
+    let mut close_caller=semio_framework_ui_prepared::testing::close_source::caller(1,3);
     let decoded = vec![7; PREPARED_RASTER_PAGE_BYTES];
     let retained_source = vec![9; PREPARED_RASTER_PAGE_BYTES * 2];
     let retained_pointer = retained_source.as_ptr();
@@ -778,6 +809,8 @@ fn retained_codec_source_moves_once_and_retires_one_page_per_governed_step() {
         assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().original_retained_source().len(), expected);
     }
     assert_eq!(job.input.as_ref().unwrap().raster_producers.get(0).unwrap().original_retained_source().as_ptr(), retained_pointer);
-    while !close_job_step(&mut job) {}
+    while !close_job_step(&mut job,&mut close_caller) {}
     assert!(job.terminal_is_empty());
+
+    close_caller.retire(semio_framework_ui_prepared::testing::close_source::STOCK);
 }

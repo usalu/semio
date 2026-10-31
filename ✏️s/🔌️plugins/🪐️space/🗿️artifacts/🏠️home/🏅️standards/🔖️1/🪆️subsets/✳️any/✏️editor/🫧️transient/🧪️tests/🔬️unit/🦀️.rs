@@ -256,3 +256,31 @@ fn a_displaced_root_retires_in_page_grants() {
     assert_eq!(released, estimate);
 }
 //#endregion 🔖️Codec
+
+/// 🪜️ The grant-driven stepper folds every page to exactly the projection the one-shot `fold_page` yields, in turns whose charged work never exceeds the budget, however small.
+#[test]
+fn the_fold_stepper_equals_the_one_shot_fold_in_bounded_turns() {
+    use crate::editor::home::transient::{HomeDirectoryFold, HomeDirectoryProjection};
+    for budget in [2_048usize, 16_384, 1 << 20] {
+        let mut oracle = HomeDirectoryProjection::default();
+        let mut held = Arc::new(HomeDirectoryProjection::default());
+        let mut turns = 0usize;
+        for json in directory_pages(300) {
+            let page = store::os_directory::DirectoryEventPageV1::parse_canonical_json(&json).expect("canonical page");
+            oracle = oracle.fold_page(&page);
+            let mut fold = HomeDirectoryFold::new(held.clone(), page);
+            loop {
+                let step = fold.step(budget);
+                assert!(step.charged_bytes <= budget, "a turn charged {} over its budget {budget}", step.charged_bytes);
+                turns += 1;
+                if step.done {
+                    break;
+                }
+                assert!(step.units > 0, "budget {budget} starved the stepper at quote {:?}", fold.next_quote());
+            }
+            held = Arc::new(fold.finish().expect("done fold finishes"));
+            assert_eq!(*held, oracle);
+        }
+        assert!(budget >= 1 << 20 || turns > 4, "a small budget must split the work into turns");
+    }
+}

@@ -1,0 +1,22 @@
+[
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udcec\ufe0foutcome/\ud83d\udce6\ufe0fbuilder/\ud83d\udcc4\ufe0fprefix/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "sha256": "46f4f97234e6b9a61369623caa35dac60d83f62b89e6dc7d25ea2bdc729eabb2",
+    "bytes": 6114
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udcec\ufe0foutcome/\ud83d\udce6\ufe0fbuilder/\ud83d\udcc4\ufe0fprefix/\ud83e\uddea\ufe0ftests/case.json",
+    "sha256": "19c592362c7fc24ba0cf6b6f1c3c328a82c49b9a059d4ddf47fb19edd175d42a",
+    "bytes": 819
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udcec\ufe0foutcome/\ud83d\udce6\ufe0fbuilder/\ud83d\udcc4\ufe0fprefix/\ud83e\uddea\ufe0ftests/case.schema.json",
+    "sha256": "d89cce60618c73e7f7683987a6d91ba33c081231c23b1354d47e499ba08ce3a2",
+    "bytes": 1811
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udcec\ufe0foutcome/\ud83d\udce6\ufe0fbuilder/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/Cargo.toml",
+    "sha256": "2123ca2e6915eeecb843f40c9fe91ade82f95afdc6721ae4bcfa7c534d7eabf9",
+    "bytes": 1533
+  }
+]

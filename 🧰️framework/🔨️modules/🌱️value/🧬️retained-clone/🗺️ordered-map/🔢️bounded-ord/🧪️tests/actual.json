@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "left": "αa",
+      "right": "αb",
+      "ordering": "Less"
+    },
+    {
+      "left": "Grüße",
+      "right": "Grüße",
+      "ordering": "Equal"
+    },
+    {
+      "left": "🌱z",
+      "right": "🌱a",
+      "ordering": "Greater"
+    }
+  ],
+  "stock": {
+    "items": 4096,
+    "copy": 16777216,
+    "capacity": 16777216,
+    "release": 16777216,
+    "depth": 128
+  },
+  "maximumTurns": 10000,
+  "deniedWork": 0,
+  "cachedWork": 0,
+  "maximumTurnWork": 1,
+  "serdeOracle": true,
+  "birth": {
+    "work": 1,
+    "deniedWork": 0,
+    "deniedAxes": [
+      "items",
+      "copy",
+      "depth"
+    ],
+    "capacityBytes": 0
+  }
+}

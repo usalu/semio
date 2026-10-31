@@ -1,0 +1,429 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "claims",
+    "publication",
+    "providers",
+    "checkpoints",
+    "dataKeys",
+    "usage",
+    "metadataRole",
+    "metadataDraft",
+    "initialization"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "ops",
+          "accept",
+          "used",
+          "oldPresent",
+          "currentPresent"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "ops": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "accept": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "boolean"
+            }
+          },
+          "used": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "oldPresent": {
+            "type": "boolean"
+          },
+          "currentPresent": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "proof",
+          "claim",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "proof": {
+            "enum": [
+              "actual",
+              "copied",
+              "foreign"
+            ]
+          },
+          "claim": {
+            "enum": [
+              "actual",
+              "copied",
+              "foreign",
+              "stale",
+              "settled"
+            ]
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "publication": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "filesystemBytes",
+          "maximumPhysicalBytes",
+          "size",
+          "allocatedBytes",
+          "observedFilesystemBytes",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "filesystemBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "maximumPhysicalBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "allocatedBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "observedFilesystemBytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "providers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "backend",
+          "platform",
+          "anchorFilesystemBytes",
+          "anchorMaximumPhysicalBytes",
+          "state",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "backend": {
+            "enum": [
+              "mounted-volume",
+              "directory-partition"
+            ]
+          },
+          "platform": {
+            "enum": [
+              "darwin",
+              "linux",
+              "win32"
+            ]
+          },
+          "anchorFilesystemBytes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "anchorMaximumPhysicalBytes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "state": {
+            "enum": [
+              "attached",
+              "inactive"
+            ]
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "checkpoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "phase",
+          "bytes",
+          "oldPresent",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "phase": {
+            "enum": [
+              "reserved",
+              "settled"
+            ]
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "oldPresent": {
+            "type": "boolean"
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "dataKeys": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "target",
+          "key",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "target": {
+            "enum": [
+              "request",
+              "predecessor",
+              "policy",
+              "allocation"
+            ]
+          },
+          "key": {
+            "enum": [
+              "__proto__",
+              "constructor",
+              "prototype"
+            ]
+          },
+          "accept": {
+            "const": false
+          }
+        }
+      }
+    },
+    "usage": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "bytes",
+          "maximumBytes",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "maximumBytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "metadataRole": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "change",
+          "accept"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "change": {
+            "type": "string"
+          },
+          "accept": {
+            "type": "boolean"
+          },
+          "recordState": {
+            "enum": [
+              "baseline",
+              "partial-prepared"
+            ]
+          }
+        }
+      }
+    },
+    "metadataDraft": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "cut",
+          "change",
+          "accept"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "cut": {
+            "enum": [
+              "empty",
+              "identity",
+              "stage-name",
+              "retained-name",
+              "complete",
+              "utf8"
+            ]
+          },
+          "change": {
+            "enum": [
+              "none",
+              "foreign",
+              "newline"
+            ]
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "initialization": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "backend",
+          "change",
+          "accept"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "backend": {
+            "enum": [
+              "mounted-volume",
+              "directory-partition"
+            ]
+          },
+          "change": {
+            "enum": [
+              "none",
+              "services",
+              "payload",
+              "marker",
+              "journal",
+              "envelope",
+              "publication",
+              "funding",
+              "alias",
+              "device",
+              "flag",
+              "empty-journal"
+            ]
+          },
+          "accept": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

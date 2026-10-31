@@ -1,0 +1,37 @@
+{
+  "state": "schema-and-existing-genuine-law-strengthening-before-production",
+  "actualRed": "layout-js-current-2-caller-classification.md",
+  "allOriginalAssertionsAndFixtureDataRetained": true,
+  "beforeDriverHashes": {
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🧪️tests/🧵️flow/🟦️.ts": "246665732a30214dba57347d6028c72a0648b02aeffe1af0440078ad67516d45",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🧪️tests/🧵️flow/📇️addressed.ts": "0d45d52dab5c5e6d37ccf6559dabf356535c4f8cb178acf55d9959a145f7c54f",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🧪️tests/🧵️flow/🔗️label.ts": "d612db167873be588628c74837ce22b2b9c383db5417f2aec8c5fdea5ba6019a"
+  },
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🧪️tests/🎟️work/📐️.json",
+      "bytes": 1343,
+      "sha256": "19f06d4d7ebb6c2433c5c8738d223c3dd80762e06a1fc8a73cbcaeea4bc70dd9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🧪️tests/🎟️work/🔣️.json",
+      "bytes": 1863,
+      "sha256": "4b720e36d859c04a5e4b2988ba0d4aff3662fbebbda19a7929d165c5022702ce"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🧪️tests/🧵️flow/🟦️.ts",
+      "bytes": 5161,
+      "sha256": "11ae3f263c5a1ad3d941b420e98809df4c7b463b2a6aaeefa466cedd0435eeca"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🧪️tests/🧵️flow/📇️addressed.ts",
+      "bytes": 3665,
+      "sha256": "f0b44d9ba3b60b1de74af1702f5ecf1302454a789833b8cef820e466373c88d2"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🧪️tests/🧵️flow/🔗️label.ts",
+      "bytes": 2806,
+      "sha256": "20d15ae06a231ba780c6b676014b58841bb531e96bf3f90412847fb61f88e032"
+    }
+  ]
+}

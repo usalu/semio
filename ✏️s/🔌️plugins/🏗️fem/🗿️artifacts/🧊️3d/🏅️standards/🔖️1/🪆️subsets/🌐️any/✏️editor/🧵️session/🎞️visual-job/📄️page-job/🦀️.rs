@@ -201,7 +201,7 @@ struct Fem3dVisualItemPayload {
 }
 
 impl Fem3dPageVisualJob {
-    fn backing_usage(&self) -> (usize, usize) {
+    pub fn backing_usage(&self) -> (usize, usize) {
         let region = usize::from(self.region_order.is_some());
         let element = usize::from(self.element_order.is_some());
         (region + element, region * FEM3D_REGION_ORDER_BYTES + element * FEM3D_ELEMENT_ORDER_BYTES)
@@ -215,7 +215,7 @@ impl Fem3dPageVisualJob {
         }
     }
 
-    fn new(freshness: Fem3dVisualFreshness, credit: Fem3dPageCredit) -> Self {
+    pub fn new(freshness: Fem3dVisualFreshness, credit: Fem3dPageCredit) -> Self {
         Self {
             freshness,
             credit,
@@ -382,7 +382,7 @@ impl Fem3dPageVisualJob {
         base + index / WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY
     }
 
-    fn step_one(&mut self, doc: &Fem3dSnapshot, solver: &Fem3dSolverView, backing: &mut Fem3dBackingCredit, freshness: Fem3dVisualFreshness) -> Result<bool, Vec<u8>> {
+    pub fn step_one(&mut self, doc: &Fem3dSnapshot, solver: &Fem3dSolverView, backing: &mut Fem3dBackingCredit, freshness: Fem3dVisualFreshness) -> Result<bool, Vec<u8>> {
         match self.stage {
             Fem3dVisualJobStage::ReserveSnapshot => {
                 if doc.solids.len() > MAXIMUM_REGIONS || doc.nodes.len() > MAXIMUM_NODES || doc.elements.len() > MAXIMUM_ELEMENTS || doc.supports.len() > MAXIMUM_SUPPORTS || doc.nodes.len() > MAXIMUM_FIELDS {
@@ -633,7 +633,7 @@ impl Fem3dPageVisualJob {
         Ok(self.stage == Fem3dVisualJobStage::Complete)
     }
 
-    fn take_complete(&mut self) -> Option<Fem3dPageVisualLease> {
+    pub fn take_complete(&mut self) -> Option<Fem3dPageVisualLease> {
         if self.stage == Fem3dVisualJobStage::Complete {
             self.complete.take()
         } else {

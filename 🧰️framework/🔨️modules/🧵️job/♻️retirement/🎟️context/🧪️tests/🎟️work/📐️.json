@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.job.original-retirement-cpu",
+  "const": {
+    "terminalQueryWork": 0,
+    "receiverValidationWork": 1,
+    "receiverMessage": "Fault publication requires an empty receiver",
+    "receiptMessage": "job child receipt exceeds original remaining retained grant",
+    "message": "Original close 源",
+    "maximumObservedTurns": 4096,
+    "deniedAxes": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ],
+    "closeSameOriginalStock": true,
+    "recordZeroWorkReceipt": true,
+    "contextMessage": "owned original reply requires its genuine source receiver",
+    "nestedWrapperWork": 0,
+    "headerTransferWork": 1
+  }
+}

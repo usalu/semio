@@ -76,7 +76,7 @@ export function isLeaseMediumV1(policy:LeaseOrderPolicyV1,held:HeldLeaseV1,reque
  return policy.media.some(medium=>held.resource.startsWith(medium.prefix)&&(slash(request.directory)+"/").startsWith(slash(held.resource.slice(medium.prefix.length))+"/"));
 }
 
-const edgeAllowed=(policy:LeaseOrderPolicyV1,from:string,to:string,held:HeldLeaseV1,request:Request):boolean=>policy.allowed.some(edge=>{if(edge.from!==from||edge.to!==to)return false;const binding=edge.binding;if(!binding)return true;return held.directory===request.directory&&held.resource.startsWith(binding.fromPrefix)&&request.resource.startsWith(binding.toPrefix)&&held.resource.length>binding.fromPrefix.length&&held.resource.slice(binding.fromPrefix.length)===request.resource.slice(binding.toPrefix.length);});
+const edgeAllowed=(policy:LeaseOrderPolicyV1,from:string,to:string,held:HeldLeaseV1,request:Request):boolean=>policy.allowed.some(edge=>{if(edge.from!==from||edge.to!==to)return false;const binding=edge.binding;if(!binding)return true;if(binding.kind==="held-prefix")return held.resource.startsWith(binding.fromPrefix);return held.directory===request.directory&&held.resource.startsWith(binding.fromPrefix)&&request.resource.startsWith(binding.toPrefix)&&held.resource.length>binding.fromPrefix.length&&held.resource.slice(binding.fromPrefix.length)===request.resource.slice(binding.toPrefix.length);});
 
 type Request=Readonly<{directory:string;resource:string;mode:LeaseModeV1;nonblocking:boolean;bounded?:boolean}>;
 const violation=(kind:LeaseViolationV1["kind"],policy:LeaseOrderPolicyV1,held:HeldLeaseV1,request:Request,extra:Partial<LeaseViolationV1>={}):LeaseViolationV1=>{

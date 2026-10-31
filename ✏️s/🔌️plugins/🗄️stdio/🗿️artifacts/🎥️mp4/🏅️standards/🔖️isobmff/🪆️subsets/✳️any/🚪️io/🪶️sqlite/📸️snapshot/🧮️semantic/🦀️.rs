@@ -19,7 +19,7 @@ fn text(value:&F,n:&mut N<'_>)->Result<usize,ValueError>{let F::Text(value)=valu
 fn optional_text(value:&F,n:&mut N<'_>)->Result<usize,ValueError>{if matches!(value,F::Absent){Ok(0)}else{text(value,n)}}
 fn decimal(value:&F)->Result<usize,ValueError>{let mut value=uint(value,u64::MAX)?;let mut digits=1;while value>=10{value/=10;digits+=1;}Ok(digits)}
 fn octets(value:&F,n:&mut N<'_>)->Result<usize,ValueError>{let values=items(value)?;n.scoped_stage(|n|{n.begin_stage(values.len())?;for value in values{uint(value,u64::from(u8::MAX))?;n.step()?;}Ok::<_,ValueError>(())})?;Ok(values.len())}
-fn blob(value:&F,n:&mut N<'_>)->Result<usize,ValueError>{let F::Bytes64(values)=value else{return Err(invalid("MP4 sample data requires intrinsic Bytes64"))};n.scoped_stage(|n|{n.begin_stage(values.len())?;for part in values.chunks(256){n.advance(part.len())?;}Ok::<_,ValueError>(())})?;Ok(values.len())}
+fn blob(value:&F,n:&mut N<'_>)->Result<usize,ValueError>{let F::Bytes64(values)=value else{return Err(invalid("MP4 sample data requires intrinsic Bytes64"))};n.scoped_stage(|n|{n.begin_stage(values.len())?;let mut left=values.len();while left>0{let step=left.min(256);n.advance(step)?;left-=step;}Ok::<_,ValueError>(())})?;Ok(values.len())}
 fn unsigned(record:&R,ids:&[u16],maximum:u64)->Result<(),ValueError>{for id in ids{uint(field(record,*id)?,maximum)?;}Ok(())}
 fn signed_fields(record:&R,ids:&[u16],minimum:i64,maximum:i64)->Result<(),ValueError>{for id in ids{signed(field(record,*id)?,minimum,maximum)?;}Ok(())}
 struct Census{limits:SqliteDatabaseLimits,rows:usize,bytes:usize}

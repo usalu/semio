@@ -1,0 +1,43 @@
+{
+  "status": "authored-uncompiled-for-root-review",
+  "productionCheckCandidateOnly": true,
+  "coreReady": false,
+  "runtimeAttempts": 0,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🦀️.rs",
+      "sha256": "5ccdc3668ab914d66e8649ec3432c66045f5d66d192c271000516fccfed9c063",
+      "bytes": 25023
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/⛽️staged/🦀️.rs",
+      "sha256": "32a1bf3df9042e7eef3a4477f361c9811fdf410c5e080bda9e2317cdc48a3d16",
+      "bytes": 9366
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📄️payload-pages-and-ledger/🦀️.rs",
+      "sha256": "a92fb6d4b9a7f0eecb4ca82ac822d700f8a8706fa4dec6d76ca7814334efa022",
+      "bytes": 13281
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🎟️work/🔣️.json",
+      "sha256": "8fd6eb0e6d5ef4dd8bfb44bce20c6498ffc99a44b63412af22286f964de004e4",
+      "bytes": 1579
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "bee4ac523943d635cd34d3e50a8c6d39137b51c49bf3974c118e23683b542409",
+      "bytes": 2717
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "202aa12766293cfaa0bd70b9780512987bf50bace5f4313320e5726df053db71",
+      "bytes": 21503
+    }
+  ],
+  "coeditNotes": [
+    "Root qualifier-only lower dependency narrowing preserved",
+    "Root terminal take_finished impl preserved with incoming/reservation guard",
+    "Root owns shared staged source trait, fixtures and ordinary caller migrations"
+  ]
+}

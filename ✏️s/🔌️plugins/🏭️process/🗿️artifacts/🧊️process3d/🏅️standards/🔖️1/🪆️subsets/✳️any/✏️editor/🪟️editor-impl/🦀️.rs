@@ -117,24 +117,16 @@ impl ArtifactEditor for Process3dPlayApp {
             Ok((work, Default::default()))
         })
     }
-    const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
+    fn document_store_owners_source_demands() -> Result<semio_framework_plugin::__value::RetirementDemand, semio_framework_plugin::__value::ValueError> {
+        semio_framework_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    fn build_document_store_owners(grant: semio_framework_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
+    }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(semio_s_artifact_process_process3d_host::process3d_envelope_decode_owner_bundle())
-    }
-
-    /// 🎟️ Admits the lease that [`Self::validate_document_store_publication`] consumes when the framework-default initializer's replacement commits.
-    fn admit_document_store_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) {
-        let _ = semio_s_artifact_process_process3d_host::process3d_admit_app_publication_authority(operation, generation);
-    }
-
-    /// 🔐️ The exact publication gate the host consults once, right before its non-rejecting commit
-    /// — so a lease the app admitted for itself (`process3d_admit_app_publication_authority`, every
-    /// host-begun `Effect::LoadDocument`) is consumed here; a host-admitted lease stays the host's.
-    fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        semio_s_artifact_process_process3d_host::process3d_validate_atomic_publication_authority(operation, generation, live_generation).map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Process3d atomic publication authority is absent or stale"))?;
-        semio_s_artifact_process_process3d_host::process3d_release_app_publication_authority(operation);
-        Ok(())
     }
 
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -192,7 +184,6 @@ impl ArtifactEditor for Process3dPlayApp {
         Some(process3d_io())
     }
 
-    //#region 🔖️Media
     /// 🎞️ `brep:out` (see the artifact engine's `export_process3d_model`, STEP text) plus the inherited
     /// `document:out` default (the pack of `doc.snapshot`, replicated inline — overriding `export_media`
     /// shadows the trait's provided body for every port on this app, not just the new one).
@@ -238,7 +229,6 @@ impl ArtifactEditor for Process3dPlayApp {
             _ => Err(MediaError::NotImplemented),
         }
     }
-    //#endregion 🔖️Media
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
@@ -374,7 +364,7 @@ impl ArtifactEditor for Process3dPlayApp {
         process3d_render_body(body_key, doc.snapshot, cfg.snapshot, view_state, &[])
     }
 
-    /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): resolves the live `"geometry"`
+    /// 👆️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): resolves the live `"geometry"`
     /// selection once per render and threads it into `process3d_render_body`, so the inspection
     /// panel finally sees a real selection instead of always rendering empty.
     fn render_with_request_context(
@@ -410,7 +400,7 @@ impl ArtifactEditor for Process3dPlayApp {
         process3d_context_menu_items(registry, view_state, &[])
     }
 
-    /// 🕹️ `removeSelectedStep` appears only for a real `"geometry"` selection — the authoritative
+    /// 📱️ `removeSelectedStep` appears only for a real `"geometry"` selection — the authoritative
     /// framework-owned one, since `ContextMenuRequest.surface.selection` only carries what the clicked
     /// surface itself painted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
     fn context_menu_with_request_context(

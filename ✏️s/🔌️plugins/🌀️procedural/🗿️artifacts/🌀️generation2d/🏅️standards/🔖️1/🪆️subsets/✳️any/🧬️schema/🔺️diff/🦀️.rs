@@ -7,7 +7,7 @@ use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Generation2dDiff
-/// 🧬️ Sparse delta of the generation2d artifact: keyed widget, synapse, layout and generation rows plus owned scalar fields.
+/// 🗝️ Sparse delta of the generation2d artifact: keyed widget, synapse, layout and generation rows plus owned scalar fields.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.procedural.generation2d")]
@@ -47,7 +47,7 @@ pub enum Generation2dWidgetPatch {
 }
 
 protocol::list_delta! {
-    /// 🧩 Positional rows of the synapse list: `removed: [{id, index}]` (base index), `inserted: [{index, row}]` (after index), `moved: [{id, from, to}]`, keyed `modified` entries `{id, patch}`.
+    /// ➖️ Positional rows of the synapse list: `removed: [{id, index}]` (base index), `inserted: [{index, row}]` (after index), `moved: [{id, from, to}]`, keyed `modified` entries `{id, patch}`.
     pub Generation2dSynapsesDelta { removal: Generation2dSynapseRemoval, insertion: Generation2dSynapseInsertion, relocation: Generation2dSynapseRelocation, modification: Generation2dSynapseModification, row: SynapseSpec, patch: Generation2dSynapsePatch, list: Vec<SynapseSpec>, key: String = by Generation2dSynapseKeys, values_only }
 }
 
@@ -59,7 +59,7 @@ pub struct Generation2dLayoutRow {
     pub layout: WidgetLayout,
 }
 
-/// 🧩 Id-keyed rows of the widget positions.
+/// 🪪️ Id-keyed rows of the widget positions.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct Generation2dLayoutDelta {
@@ -69,11 +69,11 @@ pub struct Generation2dLayoutDelta {
 }
 
 protocol::list_delta! {
-    /// 🧩 Positional rows of the generation roster: `removed: [{id, index}]` (base index), `inserted: [{index, row}]` (after index), `moved: [{id, from, to}]`, keyed `modified` entries `{id, patch}`.
+    /// 🧹️ Positional rows of the generation roster: `removed: [{id, index}]` (base index), `inserted: [{index, row}]` (after index), `moved: [{id, from, to}]`, keyed `modified` entries `{id, patch}`.
     pub Generation2dGenerationsDelta { removal: Generation2dGenerationRemoval, insertion: Generation2dGenerationInsertion, relocation: Generation2dGenerationRelocation, modification: Generation2dGenerationModification, row: FormGeneration, patch: Generation2dGenerationPatch, list: Vec<FormGeneration>, key: String = by Generation2dGenerationKeys, values_only }
 }
 
-/// 🩹 Owned-field patch of one generation: its name and keyed answer rows.
+/// 🌾️ Owned-field patch of one generation: its name and keyed answer rows.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Generation2dGenerationPatch {
@@ -89,7 +89,7 @@ pub struct Generation2dValueRow {
     pub value: DslValue,
 }
 
-/// 🧩 Question-keyed rows of the answers of one generation.
+/// 🌀️ Question-keyed rows of the answers of one generation.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Generation2dValuesDelta {
@@ -131,7 +131,7 @@ use protocol::{ColdDiffAlgebra, DiffAlgebra, MutationApplyError, MutationApplyRe
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
 
 //#region 🔖️RowAlgebra
-/// 🧩 One keyed row: its id and how a displaced owned value is closed instead of dropped.
+/// 🚪️ One keyed row: its id and how a displaced owned value is closed instead of dropped.
 pub(crate) trait Row: Clone {
     fn id(&self) -> &str;
     fn retire(self) {}
@@ -152,7 +152,7 @@ impl Row for Generation2dValueRow {
     }
 }
 
-/// 🩹 How one patch row edits one item: applied, inverted against a base item, composed with a later row, rebuilt between two items, and closed when displaced.
+/// 📱️ How one patch row edits one item: applied, inverted against a base item, composed with a later row, rebuilt between two items, and closed when displaced.
 pub(crate) trait CellPatch<T>: Clone + Sized {
     fn applied(&self, item: &T) -> MutationApplyResult<T>;
     fn inverse_against(&self, base: &T) -> Self;
@@ -190,7 +190,7 @@ impl protocol::list_delta::KeyOf<Widget> for Generation2dWidgetKeys {
     }
 }
 
-/// 🔑️ The key extractor of the synapse rows (plain data: a drop is a close).
+/// 💧️ The key extractor of the synapse rows (plain data: a drop is a close).
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Generation2dSynapseKeys;
 
@@ -201,7 +201,7 @@ impl protocol::list_delta::KeyOf<SynapseSpec> for Generation2dSynapseKeys {
     }
 }
 
-/// 🔑️ The key extractor and cold disposal of the generation rows: their answers own fail-closed roots.
+/// ❌️ The key extractor and cold disposal of the generation rows: their answers own fail-closed roots.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct Generation2dGenerationKeys;
 
@@ -215,7 +215,7 @@ impl protocol::list_delta::KeyOf<FormGeneration> for Generation2dGenerationKeys 
     }
 }
 
-/// 🩹 A synapse is patched by replacing it wholesale; the wire form is the synapse itself.
+/// 🌁️ A synapse is patched by replacing it wholesale; the wire form is the synapse itself.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[value(transparent)]
 pub struct Generation2dSynapsePatch(pub SynapseSpec);
@@ -324,7 +324,7 @@ impl protocol::list_delta::RowPatch<FormGeneration> for Generation2dGenerationPa
     }
 }
 
-/// 🧩 The shared shape of every unordered keyed collection delta (rows of a map: they carry no position).
+/// 🔗️ The shared shape of every unordered keyed collection delta (rows of a map: they carry no position).
 pub(crate) trait Delta: Default + Clone {
     type Item: Row;
     type Patch: CellPatch<Self::Item>;
@@ -519,7 +519,7 @@ fn apply_values(generation: &mut FormGeneration, delta: &Generation2dValuesDelta
         }
     }
     for id in &delta.removed {
-        retire_displaced(generation.values.remove(id));
+        retire_displaced(generation.values.remove(id).and_then(|removal|removal.into_owned()));
     }
     for row in delta.added.iter().chain(&delta.patched) {
         retire_displaced(generation.values.insert(row.question_id.clone(), row.value.clone()));
@@ -597,7 +597,7 @@ impl std::fmt::Debug for Generation2dDiffRead {
 //#endregion 🔖️Retirement
 
 //#region 🔖️Apply
-/// ➕️ Composes an optional positional delta field with the later one; a delta that cancels out is closed, never dropped.
+/// 🔘️ Composes an optional positional delta field with the later one; a delta that cancels out is closed, never dropped.
 macro_rules! absorb_rows {
     ($field:expr, $later:expr) => {
         if let Some(later) = $later {
@@ -657,19 +657,19 @@ impl Generation2dDiff {
 }
 
 impl MutationDiff<Generation2dSnapshot> for Generation2dDiff {
-    /// 🧊️ The generic replay seams (`os_vcs::apply_mutation`, the store's history folds) build a
+    /// 🧰️ The generic replay seams (`os_vcs::apply_mutation`, the store's history folds) build a
     /// delta and throw it away; an inhabited widget row owns a fail-closed root, so the contract routes here.
     fn retire_cold(self) {
         Generation2dDiff::retire_cold(self);
     }
-    /// 🧊️ Same law for the scratch projections a history fold displaces between steps.
+    /// ⚖️ Same law for the scratch projections a history fold displaces between steps.
     fn retire_projection(projection: Generation2dSnapshot) {
         projection.retire_cold();
     }
 }
 
 impl protocol::ColdMutationDiff<Generation2dSnapshot> for Generation2dDiff {
-    /// ➕️ Sequential coalesce: same-key rows fold (patch∘patch → one patch, add∘remove → nothing, remove∘add → replace). Every
+    /// 🗜️ Sequential coalesce: same-key rows fold (patch∘patch → one patch, add∘remove → nothing, remove∘add → replace). Every
     /// value this displaces is RETIRED, never dropped: owned widgets and answers reject a bare drop.
     fn absorb(&mut self, other: Self) {
         if other.schema.is_some() {

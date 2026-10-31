@@ -12,6 +12,7 @@
         "heartbeatMilliseconds": 2000,
         "staleMilliseconds": 20000,
         "abandonedMilliseconds": 600000,
+        "strandedGraceMilliseconds": 120000,
         "pollMilliseconds": 250,
         "pollMaximumMilliseconds": 2000,
         "pollBackoffBasisPoints": 15000,
@@ -24,9 +25,28 @@
         "minimumBytes": 134217728,
         "maximumClassLength": 160,
         "prior": {
-          "cold": { "bytes": 2147483648, "rampMilliseconds": 600000 },
-          "warm": { "bytes": 805306368, "rampMilliseconds": 300000 }
+          "cold": {
+            "bytes": 2147483648,
+            "rampMilliseconds": 600000
+          },
+          "warm": {
+            "bytes": 805306368,
+            "rampMilliseconds": 300000
+          }
         },
+        "classPriors": [
+          {
+            "prefix": "component",
+            "cold": {
+              "bytes": 5905580032,
+              "rampMilliseconds": 900000
+            },
+            "warm": {
+              "bytes": 3221225472,
+              "rampMilliseconds": 600000
+            }
+          }
+        ],
         "estimate": {
           "quantileBasisPoints": 9000,
           "marginBasisPoints": 1500,
@@ -61,135 +81,556 @@
     "Row": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "state", "reservedBytes", "rampMilliseconds", "arrivedMs", "admittedMs"],
+      "required": [
+        "id",
+        "state",
+        "reservedBytes",
+        "rampMilliseconds",
+        "arrivedMs",
+        "admittedMs"
+      ],
       "properties": {
-        "id": { "type": "string", "pattern": "^[a-z0-9]{1,24}$" },
-        "state": { "enum": ["waiting", "running"] },
-        "reservedBytes": { "type": "integer", "minimum": 0, "maximum": 549755813888 },
-        "rampMilliseconds": { "type": "integer", "minimum": 1, "maximum": 86400000 },
-        "arrivedMs": { "type": "integer", "minimum": 0 },
-        "admittedMs": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] }
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]{1,24}$"
+        },
+        "state": {
+          "enum": [
+            "waiting",
+            "running"
+          ]
+        },
+        "reservedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 549755813888
+        },
+        "rampMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        },
+        "arrivedMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "admittedMs": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
       }
     },
     "Record": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "pid", "label", "id", "state", "reservedBytes", "rampMilliseconds", "arrivedMs", "admittedMs"],
+      "required": [
+        "version",
+        "pid",
+        "label",
+        "id",
+        "state",
+        "reservedBytes",
+        "rampMilliseconds",
+        "arrivedMs",
+        "admittedMs"
+      ],
       "properties": {
-        "version": { "const": 1 },
-        "pid": { "type": "integer", "minimum": 1 },
-        "label": { "type": "string", "maxLength": 200 },
-        "id": { "type": "string", "pattern": "^[a-z0-9]{1,24}$" },
-        "state": { "enum": ["waiting", "running"] },
-        "reservedBytes": { "type": "integer", "minimum": 0, "maximum": 549755813888 },
-        "rampMilliseconds": { "type": "integer", "minimum": 1, "maximum": 86400000 },
-        "arrivedMs": { "type": "integer", "minimum": 0 },
-        "admittedMs": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] }
+        "version": {
+          "const": 1
+        },
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "label": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]{1,24}$"
+        },
+        "state": {
+          "enum": [
+            "waiting",
+            "running"
+          ]
+        },
+        "reservedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 549755813888
+        },
+        "rampMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        },
+        "arrivedMs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "admittedMs": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
       }
     },
     "Sample": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["bytes", "wallMs", "atMs"],
+      "required": [
+        "bytes",
+        "wallMs",
+        "atMs"
+      ],
       "properties": {
-        "bytes": { "type": "integer", "minimum": 0, "maximum": 549755813888 },
-        "wallMs": { "type": "integer", "minimum": 0, "maximum": 86400000 },
-        "atMs": { "type": "integer", "minimum": 0 }
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 549755813888
+        },
+        "wallMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 86400000
+        },
+        "atMs": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "History": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "classes"],
+      "required": [
+        "version",
+        "classes"
+      ],
       "properties": {
-        "version": { "const": 1 },
-        "classes": { "type": "object", "additionalProperties": { "type": "array", "items": { "$ref": "#/definitions/Sample" } } }
+        "version": {
+          "const": 1
+        },
+        "classes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Sample"
+            }
+          }
+        }
       }
     },
     "Prior": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["bytes", "rampMilliseconds"],
+      "required": [
+        "bytes",
+        "rampMilliseconds"
+      ],
       "properties": {
-        "bytes": { "type": "integer", "minimum": 0, "maximum": 549755813888 },
-        "rampMilliseconds": { "type": "integer", "minimum": 1, "maximum": 86400000 }
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 549755813888
+        },
+        "rampMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        }
       }
     },
     "Estimate": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["reservedBytes", "rampMilliseconds", "samples", "class"],
+      "required": [
+        "reservedBytes",
+        "rampMilliseconds",
+        "samples",
+        "class"
+      ],
       "properties": {
-        "reservedBytes": { "type": "integer", "minimum": 0 },
-        "rampMilliseconds": { "type": "integer", "minimum": 1 },
-        "samples": { "type": "integer", "minimum": 0 },
-        "class": { "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }] }
+        "reservedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rampMilliseconds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "class": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
       }
     },
     "Decision": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["verdict", "reason", "floorBytes", "heldBytes", "aheadBytes", "shortfallBytes", "running"],
+      "required": [
+        "verdict",
+        "reason",
+        "floorBytes",
+        "heldBytes",
+        "aheadBytes",
+        "shortfallBytes",
+        "running"
+      ],
       "properties": {
-        "verdict": { "enum": ["admit", "wait"] },
-        "reason": { "enum": ["fits", "alone", "space", "queue"] },
-        "floorBytes": { "type": "integer", "minimum": 0 },
-        "heldBytes": { "type": "integer", "minimum": 0 },
-        "aheadBytes": { "type": "integer", "minimum": 0 },
-        "shortfallBytes": { "type": "integer", "minimum": 0 },
-        "running": { "type": "integer", "minimum": 0 }
+        "verdict": {
+          "enum": [
+            "admit",
+            "wait"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "fits",
+            "alone",
+            "space",
+            "queue"
+          ]
+        },
+        "floorBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heldBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "aheadBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shortfallBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "running": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "DecisionInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["freeBytes", "volumeBytes", "nowMs", "request", "rows", "reclaimed"],
+      "required": [
+        "freeBytes",
+        "volumeBytes",
+        "nowMs",
+        "request",
+        "rows",
+        "reclaimed"
+      ],
       "properties": {
-        "freeBytes": { "type": "integer", "minimum": 0 },
-        "volumeBytes": { "type": "integer", "minimum": 1 },
-        "nowMs": { "type": "integer", "minimum": 0 },
+        "freeBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "volumeBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "nowMs": {
+          "type": "integer",
+          "minimum": 0
+        },
         "request": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["id", "reservedBytes", "arrivedMs"],
+          "required": [
+            "id",
+            "reservedBytes",
+            "arrivedMs"
+          ],
           "properties": {
-            "id": { "type": "string", "pattern": "^[a-z0-9]{1,24}$" },
-            "reservedBytes": { "type": "integer", "minimum": 0 },
-            "arrivedMs": { "type": "integer", "minimum": 0 }
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z0-9]{1,24}$"
+            },
+            "reservedBytes": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "arrivedMs": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
-        "rows": { "type": "array", "items": { "$ref": "#/definitions/Row" } },
-        "reclaimed": { "type": "boolean" }
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Row"
+          }
+        },
+        "reclaimed": {
+          "type": "boolean"
+        }
       }
     },
     "EstimateInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["volumeBytes", "classes", "prior", "history"],
+      "required": [
+        "volumeBytes",
+        "classes",
+        "prior",
+        "history"
+      ],
       "properties": {
-        "volumeBytes": { "type": "integer", "minimum": 1 },
-        "classes": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-        "prior": { "$ref": "#/definitions/Prior" },
-        "history": { "$ref": "#/definitions/History" }
+        "volumeBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "classes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "prior": {
+          "$ref": "#/definitions/Prior"
+        },
+        "history": {
+          "$ref": "#/definitions/History"
+        }
       }
     },
     "OutstandingInput": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["row", "nowMs"],
-      "properties": { "row": { "$ref": "#/definitions/Row" }, "nowMs": { "type": "integer", "minimum": 0 } }
+      "required": [
+        "row",
+        "nowMs"
+      ],
+      "properties": {
+        "row": {
+          "$ref": "#/definitions/Row"
+        },
+        "nowMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     },
     "Vectors": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "estimates", "outstanding", "decisions", "floors", "quantiles"],
+      "required": [
+        "version",
+        "estimates",
+        "outstanding",
+        "decisions",
+        "floors",
+        "quantiles",
+        "priors"
+      ],
       "properties": {
-        "version": { "const": 1 },
-        "estimates": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "input", "expected"], "properties": { "name": { "type": "string", "minLength": 1 }, "input": { "$ref": "#/definitions/EstimateInput" }, "expected": { "$ref": "#/definitions/Estimate" } } } },
-        "outstanding": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "input", "expected"], "properties": { "name": { "type": "string", "minLength": 1 }, "input": { "$ref": "#/definitions/OutstandingInput" }, "expected": { "type": "integer", "minimum": 0 } } } },
-        "decisions": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "input", "expected"], "properties": { "name": { "type": "string", "minLength": 1 }, "input": { "$ref": "#/definitions/DecisionInput" }, "expected": { "$ref": "#/definitions/Decision" } } } },
-        "floors": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "volumeBytes", "expected"], "properties": { "name": { "type": "string", "minLength": 1 }, "volumeBytes": { "type": "integer", "minimum": 1 }, "expected": { "type": "integer", "minimum": 0 } } } },
-        "quantiles": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "values", "basisPoints", "expected"], "properties": { "name": { "type": "string", "minLength": 1 }, "values": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0 } }, "basisPoints": { "type": "integer", "minimum": 1, "maximum": 10000 }, "expected": { "type": "integer", "minimum": 0 } } } }
+        "version": {
+          "const": 1
+        },
+        "estimates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "input",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "input": {
+                "$ref": "#/definitions/EstimateInput"
+              },
+              "expected": {
+                "$ref": "#/definitions/Estimate"
+              }
+            }
+          }
+        },
+        "outstanding": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "input",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "input": {
+                "$ref": "#/definitions/OutstandingInput"
+              },
+              "expected": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "decisions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "input",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "input": {
+                "$ref": "#/definitions/DecisionInput"
+              },
+              "expected": {
+                "$ref": "#/definitions/Decision"
+              }
+            }
+          }
+        },
+        "floors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "volumeBytes",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "volumeBytes": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "expected": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "quantiles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "values",
+              "basisPoints",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "values": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "basisPoints": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10000
+              },
+              "expected": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        },
+        "priors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "classes",
+              "temperature",
+              "expected"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "classes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "temperature": {
+                "enum": [
+                  "warm",
+                  "cold"
+                ]
+              },
+              "expected": {
+                "$ref": "#/definitions/Prior"
+              }
+            }
+          }
+        }
       }
     }
   }

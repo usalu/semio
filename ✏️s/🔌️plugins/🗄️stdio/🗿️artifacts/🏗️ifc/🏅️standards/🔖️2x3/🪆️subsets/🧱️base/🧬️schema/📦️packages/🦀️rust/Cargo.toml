@@ -35,6 +35,8 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-ifc-2x3-base-catalog = { workspace = true }
+semio-s-artifact-stdio-ifc-geometry = { workspace = true }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
@@ -48,5 +50,3 @@ path = "../../../../../../../📚️catalog/📦️packages/🦀️rust"
 [dependencies.semio-s-artifact-stdio-ifc2x3-catalog]
 path = "../../📚️catalog/📦️packages/🦀️rust"
 
-[dependencies.semio-s-artifact-stdio-ifc-geometry]
-path = "../../../../../../../📐️geometry/📦️packages/🦀️rust"

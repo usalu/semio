@@ -119,7 +119,7 @@ fn points_output(work: &mut Work, hits: Vec<Hit>, tolerance: f64) -> Result<Outp
     let mut result = outputs([("points", GeometryValue::List(points.iter().copied().map(GeometryValue::Point).collect()))]);
     if points.len() >= 2 {
         let wire = work.session.brep().polyline_wire_sync(&points).map_err(|error| kernel_fault(&error))?;
-        result.insert("wire".to_string(), work.export(&wire)?);
+        result.cold_insert("wire".to_string(), work.export(&wire)?);
     }
     Ok(result)
 }

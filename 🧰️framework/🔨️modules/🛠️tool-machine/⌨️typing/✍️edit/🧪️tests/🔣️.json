@@ -364,6 +364,7 @@
   "foreignDecoderRefused": true,
   "sameMutationBacking": true,
   "originalOldRowUntilPublication": true,
+  "freshDecoderBirth": true,
   "resident": {
     "readerWindow": "z-source",
     "readerLeaves": 8197,

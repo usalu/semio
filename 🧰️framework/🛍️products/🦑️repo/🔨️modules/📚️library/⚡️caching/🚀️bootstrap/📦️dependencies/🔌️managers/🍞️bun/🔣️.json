@@ -72,7 +72,7 @@
     }
   },
   "recipe": {
-    "version": 6,
+    "version": 7,
     "kind": "javascript-install-projection",
     "backends": {
       "darwin": "clonefile",
@@ -80,7 +80,7 @@
       "win32": "copyfile"
     },
     "lifecycle": "ignore-scripts",
-    "linker": "isolated",
+    "linker": "hoisted",
     "cache": "bun-cache",
     "global": "bun-global",
     "bin": "bun-bin",
@@ -174,16 +174,14 @@
   },
   "installed": {
     "containers": [
-      "node_modules/.bun"
+      "node_modules"
     ],
-    "entry": "{name}@{version}",
-    "match": "listed",
+    "entry": "{name}",
+    "match": "exact",
     "nameTransform": "identity",
-    "nameEscape": {
-      "/": "+"
-    },
+    "nameEscape": {},
     "fold": "identity",
-    "suffix": "^(\\+[0-9a-f]{16})?$",
+    "suffix": null,
     "sourcePrefix": null
   },
   "resolution": {
@@ -241,7 +239,7 @@
     "🏗️build/🕸️graph/📥️inference/🧶️bun-lock/🟨️.mjs",
     "🗂️workspaces/🟦️bun"
   ],
-  "stagedConfiguration": "[install]\nlinker = \"isolated\"\nglobalStore = false\npublicHoistPattern = []\nhoistPattern = []\n",
+  "stagedConfiguration": "[install]\nlinker = \"hoisted\"\nglobalStore = false\npublicHoistPattern = []\nhoistPattern = []\n",
   "generationDirectory": "j",
   "graphComponent": "bun-lock"
 }

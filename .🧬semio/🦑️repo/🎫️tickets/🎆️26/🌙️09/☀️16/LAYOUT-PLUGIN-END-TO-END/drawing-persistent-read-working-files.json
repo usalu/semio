@@ -1,0 +1,22 @@
+{
+  "beforeSha256": "ca0ea851e9aa934865bb7a2c0723bec4a240574b56c008b5dfe43d5fc1d6cf37",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🦀️.rs",
+      "sha256": "a92802d13ed89465376302481c87c41de3346db65f7f7d739f184689fc84aed9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🎟️work/📐️.json",
+      "sha256": "8a3602044b78f26784a413eac13a6f47965844dbfafb32942216995bc0f4757e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🎟️work/🔣️.json",
+      "sha256": "7bc0e641da609de3522405c191da157b20c6ff7ca810a6a0da6ebfdb1293095e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "61d23762b44be715aa713746845d5e0ce6499562649c7dbc46b955a797ce7f38"
+    }
+  ],
+  "status": "Source authored; no compile/runtime"
+}

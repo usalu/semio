@@ -36,7 +36,7 @@ fn the_real_demonstrator_pack_is_admitted_distilled_and_retained() {
     assert_eq!(ids, builtin_ids, "the four shipped packs re-contribute the built-in ids, so the installed build wins and nothing is appended");
 }
 
-/// ⚖️ A contribution pack repeating the ids this build already compiles in leaves the installed
+/// 🎁️ A contribution pack repeating the ids this build already compiles in leaves the installed
 /// catalogs untouched — the Werkstatt panel renders five sections, not nine.
 #[test]
 fn a_pack_repeating_the_builtin_ids_installs_exactly_the_builtin_catalogs() {
@@ -49,7 +49,7 @@ fn a_pack_repeating_the_builtin_ids_installs_exactly_the_builtin_catalogs() {
     }
 }
 
-/// ⚖️ A genuinely new catalog id still installs — dedupe drops repeats, never the contribution
+/// ✨️ A genuinely new catalog id still installs — dedupe drops repeats, never the contribution
 /// channel itself — and its machines are reachable through the add-machine lookup.
 #[test]
 fn a_pack_with_a_new_catalog_id_appends_one_section_with_its_machines() {
@@ -80,7 +80,7 @@ fn a_pack_with_a_new_catalog_id_appends_one_section_with_its_machines() {
 //#endregion 🧩️RealContributionsPackAdmission
 
 //#region 🧩️HostContributionsOutputCap
-/// ⚖️ LAW: the host's REAL `setContributions` push crosses this app's host-configuration gate. The
+/// 🏠️ LAW: the host's REAL `setContributions` push crosses this app's host-configuration gate. The
 /// gate prices the op-encoded config mutation against the proof contract's `max_output_bytes`; that
 /// cap used to be the 16 KiB gesture output while the contributions lane beside it admits 24 KiB, so
 /// the distilled four-extension roster was refused with `host configuration command
@@ -159,13 +159,12 @@ fn published_example_load(app: &mut context::Process3dApp, example: &str) -> (Ve
     loaded.unwrap_or_else(|| panic!("{example}: setActiveExample must publish a LoadDocument effect"))
 }
 
-/// ⚖️ LAW: every registered example loads through the host's document archive door — `setActiveExample`
+/// 📤️ LAW: every registered example loads through the host's document archive door — `setActiveExample`
 /// publishes `Effect::LoadDocument`, the shell hands its pack/spr back with NO members, and the
 /// app's `genesis_child_pack` must complete the composed roster so the ownership closure is not
 /// `Incomplete` (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP).
 #[test]
 fn every_example_loads_through_the_member_less_archive_door() {
-    let _lane = semio_s_artifact_process_process3d_host::process3d_publication_authority_lane();
     for (operation, example) in [(71_u64, PROCESS3D_EXAMPLE_TIMBER), (72, PROCESS3D_EXAMPLE_PLATE), (73, PROCESS3D_EXAMPLE_CONCRETE_FOREST)] {
         let mut app = context::unseeded_app_with_registry();
         let (pack, spr) = published_example_load(&mut app, example);
@@ -178,7 +177,7 @@ fn every_example_loads_through_the_member_less_archive_door() {
     }
 }
 
-/// ⚖️ LAW: every shipped example is CANONICAL — its composed-child handles are exactly the
+/// 👶️ LAW: every shipped example is CANONICAL — its composed-child handles are exactly the
 /// content-addressed ids `process_working_scene_to_snapshot` mints from its own inline records today.
 /// `genesis_process3d_child_pack` re-derives each `toolSolids` id from the step's solid, so a fixture
 /// minted under an older B-Rep serialization names children genesis can no longer derive: the timber

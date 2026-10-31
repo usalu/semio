@@ -123,6 +123,7 @@ pub struct FrameBuildHandle {
     session: Option<semio_framework_job_worker::WorkerJobSession<ActiveFrameBuild>>,
     ticket: Option<semio_framework_job_worker::WorkerJobTicket>,
     original_job: Option<ActiveFrameBuild>,
+    original_admission: semio_framework_job_worker::WorkerJobSessionAdmission<ActiveFrameBuild,semio_framework_job_worker::WorkerJobSession<ActiveFrameBuild>>,
     original_params: Option<BatchJobParams>,
     original_params_cancel_retirement: Option<semio_framework_async::CancelTokenRetirement>,
     original_outcome: Option<semio_framework_job_worker::WorkerJobOutcome<ActiveFrameBuild>>,
@@ -134,7 +135,7 @@ pub struct FrameBuildHandle {
 }
 
 enum ActiveFramePhase {
-    DeadlineAdmission { job: Option<FrameBuildJob>, params: Option<BatchJobParams>, cancel_retirement: Option<semio_framework_async::CancelTokenRetirement> },
+    DeadlineAdmission { job: Option<FrameBuildJob>, params: Option<BatchJobParams>, cancel_retirement: Option<semio_framework_async::CancelTokenRetirement>, admission: semio_framework_job_worker::WorkerJobSessionAdmission<FrameBuildJob,BatchJobSession<FrameBuildJob>> },
     Deadlines(BatchJobSession<FrameBuildJob>),
     ApplyPending(FrameDirectives),
     Build(semio_framework_os_renderer_wgpu_frame_transaction::FrameTransaction),
@@ -183,7 +184,8 @@ fn retire_active_phase(phase: &mut ActiveFramePhase, cx: &mut StepContext<'_>, w
     let grant=cx.retained_grant();
     if cx.retirement_should_yield(){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
     let empty = match phase {
-        ActiveFramePhase::DeadlineAdmission { job, params, cancel_retirement } => {
+        ActiveFramePhase::DeadlineAdmission { job, params, cancel_retirement, admission } => {
+            if !admission.terminal_is_empty() { return semio_framework_os_renderer_wgpu_app_runtime::frame_received_child(admission.close_step(cx),grant,admission.terminal_is_empty()) }
             if params.is_some() {
                 if let Some(step)=semio_framework_os_renderer_wgpu_app_runtime::frame_inline_gate(grant,0).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?{return Ok(step)}
                 let original=params.take().expect("original deadline params remain held before paid transfer");
@@ -252,7 +254,7 @@ fn retire_active_phase(phase: &mut ActiveFramePhase, cx: &mut StepContext<'_>, w
 impl ActiveFrameBuild {
     fn new(runtime: semio_framework_os_renderer_wgpu_app_runtime::AppMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation, cancel: CancelToken, retained: RetainedCloneGrant) -> Self {
         let handle = runtime.downgrade();
-        let phase = ActiveFramePhase::DeadlineAdmission { job:Some(FrameBuildJob::new(inputs)),params:None,cancel_retirement:None };
+        let phase = ActiveFramePhase::DeadlineAdmission { job:Some(FrameBuildJob::new(inputs)),params:None,cancel_retirement:None,admission:Default::default() };
         Self { retained, runtime, handle, operation, generation, cancel:std::mem::ManuallyDrop::new(Some(cancel)), cancel_retirement:None, presentation_generation:generation, preview_sequence: 0, phase, retiring_phase:None, deadline_receipt_received:false, deadline_outcome_pending:None, deadline_acknowledged:false, deadline_refused_receipt:None, overruns: semio_framework_trace::StepOverrunLedger::new(), completed: None, closing: false }
     }
 
@@ -360,8 +362,8 @@ impl ActiveFrameBuild {
             return ActiveFrameStep::Pending;
         }
         match &mut self.phase {
-            ActiveFramePhase::DeadlineAdmission { job, params, .. } => {
-                if params.is_none() {
+            ActiveFramePhase::DeadlineAdmission { job, params, admission, .. } => {
+                if job.is_some() && params.is_none() {
                     if self.operation!=cx.operation()||self.generation!=cx.generation()||!self.cancel.as_ref().unwrap().is_same_node(cx.original_cancel_token()){return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame deadline requires its admitted business identity and cancellation source"))}
                     let Some(now)=cx.latest_us()else{return ActiveFrameStep::Fault(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original frame deadline requires its initiating clock"))};
                     let cancel=match cx.admit_original_cancel_alias(){Ok(Some(cancel))=>cancel,Ok(None)=>return ActiveFrameStep::Pending,Err(error)=>return ActiveFrameStep::Fault(error)};
@@ -369,19 +371,17 @@ impl ActiveFrameBuild {
                     *params=Some(original);
                     return ActiveFrameStep::Pending;
                 }
-                match BatchJobSession::try_admit_owned(job,params,cx) {
-                    Ok(Some((session,_already_received)))=>self.phase=ActiveFramePhase::Deadlines(session),
+                match admission.advance(job,params,cx) {
+                    Ok(Some(session))=>self.phase=ActiveFramePhase::Deadlines(session),
                     Ok(None)=>{},
-                    Err(error)=>return ActiveFrameStep::Fault(error),
+                    Err(failure)=>return ActiveFrameStep::CloseFailure(failure),
                 }
                 ActiveFrameStep::Pending
             }
             ActiveFramePhase::Deadlines(session) => {
                 if let Some(complete)=self.deadline_outcome_pending {
                     if !self.deadline_acknowledged {
-                        let step=session.acknowledge_outcome(cx.retained_grant());
-                        if let Err(error)=cx.consume_retained(step.progress()){return ActiveFrameStep::Fault(error)}
-                        self.deadline_acknowledged=matches!(step,semio_framework_value::RetainedCloneStep::Complete(_));
+                        match session.acknowledge_outcome(cx){Ok(done)=>self.deadline_acknowledged=done,Err(failure)=>return ActiveFrameStep::CloseFailure(failure)}
                         return ActiveFrameStep::Pending;
                     }
                     if !complete {
@@ -461,7 +461,7 @@ impl ActiveFrameBuild {
                     },
                     Ok(semio_framework_os_renderer_wgpu_app_runtime::FramePreparationStep::Pending)=>ActiveFrameStep::Pending,
                     Ok(semio_framework_os_renderer_wgpu_app_runtime::FramePreparationStep::Cancelled|semio_framework_os_renderer_wgpu_app_runtime::FramePreparationStep::Fault)=>{self.cancel.as_ref().unwrap().cancel_now();ActiveFrameStep::Pending},
-                    Err(error)=>ActiveFrameStep::Fault(error),
+                    Err(failure)=>ActiveFrameStep::CloseFailure(failure),
                 }
             }
             ActiveFramePhase::Terminal => ActiveFrameStep::Complete(self.completed.take()),
@@ -538,7 +538,7 @@ impl FrameBuildHandle {
         if self.original_refused_receipt.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame receiver retains its refused physical tuple").into())}
         if self.original_presentation_generation.is_some_and(|original|original!=presentation_generation){if let Some(session)=self.session.as_ref(){let _=session.begin_close();}else{return Ok(None)}}
         if let Some(owner)=self.original_outcome.as_mut(){
-            if !self.original_outcome_acknowledged{let progress=owner.acknowledge_outcome(cx.retained_grant());cx.consume_retained(progress.progress())?;cx.consume_fuel(progress.progress().copied_items as u64);self.original_outcome_acknowledged=matches!(progress,semio_framework_job::RetainedCloneStep::Complete(_));return Ok(None)}
+            if !self.original_outcome_acknowledged{self.original_outcome_acknowledged=owner.acknowledge_outcome(cx)?;return Ok(None)}
             let kind=self.original_outcome_kind;let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
             let progress=RetainedCloneProgress{copied_items:1,..Default::default()};cx.consume_retained(progress)?;cx.consume_fuel(1);
             let mut owner=self.original_outcome.take().unwrap();self.original_outcome_acknowledged=false;self.original_outcome_kind=None;
@@ -567,9 +567,9 @@ impl FrameBuildHandle {
             return Ok(None)
         }
         if self.closing||cx.is_cancelled(){return Ok(None)}
-        if self.original_job.is_none(){let Some(cancel)=cx.admit_original_cancel_alias()?else{return Ok(None)};let mut job=ActiveFrameBuild::new(runtime,inputs,cx.operation(),cx.generation(),cancel,cx.retained_grant());job.presentation_generation=presentation_generation;self.original_job=Some(job);self.original_presentation_generation=Some(presentation_generation);return Ok(None)}
-        if self.original_params.is_none(){let Some(now)=cx.latest_us()else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original frame admission requires its initiating clock").into())};let Some(cancel)=cx.admit_original_cancel_alias()?else{return Ok(None)};self.original_params=Some(BatchJobParams{operation:cx.operation(),generation:cx.generation(),cancel,now_us:cx.clock_source(),config:BatchDriveConfig{retained:cx.retained_grant(),site:"os_renderer_frame_build",stage:InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:cx.deadline_us().saturating_sub(now)}});return Ok(None)}
-        if let Some((session,_already_posted))=semio_framework_job_worker::WorkerJobSession::try_admit_owned(&mut self.original_job,&mut self.original_params,cx)?{self.session=Some(session)}Ok(None)
+        if self.original_job.is_none()&&self.original_admission.terminal_is_empty(){let Some(cancel)=cx.admit_original_cancel_alias()?else{return Ok(None)};let mut job=ActiveFrameBuild::new(runtime,inputs,cx.operation(),cx.generation(),cancel,cx.retained_grant());job.presentation_generation=presentation_generation;self.original_job=Some(job);self.original_presentation_generation=Some(presentation_generation);return Ok(None)}
+        if self.original_job.is_some()&&self.original_params.is_none(){let Some(now)=cx.latest_us()else{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original frame admission requires its initiating clock").into())};let Some(cancel)=cx.admit_original_cancel_alias()?else{return Ok(None)};self.original_params=Some(BatchJobParams{operation:cx.operation(),generation:cx.generation(),cancel,now_us:cx.clock_source(),config:BatchDriveConfig{retained:cx.retained_grant(),site:"os_renderer_frame_build",stage:InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:cx.deadline_us().saturating_sub(now)}});return Ok(None)}
+        if let Some(session)=self.original_admission.advance(&mut self.original_job,&mut self.original_params,cx)?{self.session=Some(session)}Ok(None)
     }
 
     /// ♻️ Returns pending admission and checked-out custody before closing the same admitted session.
@@ -587,7 +587,8 @@ impl FrameBuildHandle {
 
     fn retire_original_frame_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
-        if let Some(owner)=self.original_outcome.as_mut(){let step=owner.acknowledge_outcome(grant);cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);if matches!(step,semio_framework_job::RetainedCloneStep::Complete(_)){self.original_outcome.take().unwrap().begin_close();self.original_outcome_kind=None;self.original_outcome_acknowledged=false;}return Ok(false)}
+        if let Some(owner)=self.original_outcome.as_mut(){if owner.acknowledge_outcome(cx)?{self.original_outcome.take().unwrap().begin_close();self.original_outcome_kind=None;self.original_outcome_acknowledged=false;}return Ok(false)}
+        if !self.original_admission.terminal_is_empty(){self.original_admission.close_step(cx)?;return Ok(false)}
         if let Some(job)=self.original_job.as_mut(){if !job.terminal_is_empty(){job.close_step(cx)?;return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_job=None;return Ok(false)}
         if let Some(params)=self.original_params.take(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_params_cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));return Ok(false)}
         if let Some(owner)=self.original_params_cancel_retirement.as_mut(){if !owner.terminal_is_empty(){match owner.return_alias_step(cx.original_cancel_token(),grant){Ok(step)=>{cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64)},Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>{},Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx))}return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_params_cancel_retirement=None;return Ok(false)}
@@ -604,6 +605,7 @@ impl FrameBuildHandle {
             session: None,
             ticket: None,
             original_job:None,
+            original_admission:Default::default(),
             original_params:None,
             original_params_cancel_retirement:None,
             original_outcome:None,
@@ -620,7 +622,7 @@ impl FrameBuildHandle {
     /// 🧵️ Whether a frame build is admitted right now — the one owner that must keep its own frames
     /// coming and must not have its inputs renumbered underneath it.
     pub fn has_live_session(&self) -> bool {
-        self.session.is_some() || self.original_job.is_some() || self.original_params.is_some() || self.original_outcome.is_some()
+        self.session.is_some() || self.original_job.is_some() || !self.original_admission.terminal_is_empty() || self.original_params.is_some() || self.original_outcome.is_some()
     }
 
     pub fn original_event_terminal_is_empty(&self)->bool{!self.has_live_session()&&self.original_params_cancel_retirement.is_none()&&self.original_outcome_kind.is_none()&&self.original_refused_receipt.is_none()&&self.original_presentation_generation.is_none()}

@@ -72,3 +72,6 @@ fn deflate_controlled_output_phase_refusal_precedes_output_reservation(){
  WATCHED_SIZE.store((9*raw.len()+17)/8,std::sync::atomic::Ordering::Relaxed);WATCHED_ALLOCATIONS.store(0,std::sync::atomic::Ordering::Relaxed);OBSERVE_ALLOCATIONS.store(true,std::sync::atomic::Ordering::Relaxed);let result=deflate_controlled(&raw,&mut control);OBSERVE_ALLOCATIONS.store(false,std::sync::atomic::Ordering::Relaxed);
  assert!(result.unwrap_err().message.contains("canceled"));assert_eq!(WATCHED_ALLOCATIONS.load(std::sync::atomic::Ordering::Relaxed),0);assert_eq!(control.events.last().unwrap().phase,DeflateEncodePhase::WriteOutput);assert_eq!(control.events.last().unwrap().completed,0);
 }
+
+#[path="../../../🚰️inflater/♻️close/🧪️tests/🦀️.rs"]
+mod retained_close_work;

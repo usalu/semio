@@ -1,0 +1,83 @@
+{
+  "version": 1,
+  "owner": "rust",
+  "state": "source-ready-normal-verification-passed",
+  "files": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/descriptor-generation-final.test.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/generation-absent-working-files.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/generation-absent.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/unready-generation-final.test.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/📄️generation/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/📄️generation/🧪️tests/👮️owner.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/📄️generation/🧪️tests/👮️owner.schema.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/📄️generation/🧪️tests/🔗️references.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/📄️generation/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/📄️generation/🧬️schema/🔗️references.json"
+  ],
+  "verification": {
+    "admission": "normal-managed",
+    "session": 2958,
+    "exit": 0,
+    "tests": 26,
+    "failed": 0,
+    "assertions": 2020,
+    "strict": "passed-TypeScript-createProgram-ESNext",
+    "log": "🗑️generated/descriptor-generation-final.log",
+    "input": "descriptor-generation-final.test.ts"
+  },
+  "sourceSha256": {
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/📄️generation/🟦️.ts": "6d3c47f1f82e7b5a13a6f967566fa1287a1632542de4cd35feea94c39079d892",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/📄️generation/🧪️tests/👮️owner.json": "e3ec75348d22e3e54dd8bbfda5844ab6f5757f50bc1717d0460d008a547cf779",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/📄️generation/🧪️tests/👮️owner.schema.json": "a8c58576cbfd76c9bcbe568c16dd8e51b2043fa9954cf59ffe6c113a4056c647",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/📄️generation/🧪️tests/🔗️references.json": "2303b2868a993fd4c5bd363929ddf664862a92e960d96c711bf75a33cb38bfb3",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/📄️generation/🧪️tests/🟦️.ts": "d70811cbd24709dc19e2a284ed974ee736eaeac92b7e6065fe7c5778c781680c",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/📄️generation/🧬️schema/🔗️references.json": "fde1ff56e0dbed521eafa398f077612a14a28f22309d5c9b1300cfe7428aceba"
+  },
+  "rootOwnedPrerequisites": [
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+      "owner": "root",
+      "scope": "Current capture/reference wiring imports actual opaque metadata observer and retains canonical text plus actual-byte digest fence"
+    }
+  ],
+  "integrationVerification": {
+    "state": "behavior-passed-peer-strict-failed",
+    "session": 37597,
+    "exit": 1,
+    "passed": 13,
+    "failed": 1,
+    "assertions": 1495,
+    "log": "🗑️generated/unready-generation-final.log",
+    "diagnostics": "Peer Native envelope closed-role arguments; driver test extracted functions optional under noUncheckedIndexedAccess"
+  },
+  "canonicalSemanticVerification": {
+    "state": "passed",
+    "session": 60686,
+    "exit": 0,
+    "admission": "normal-managed",
+    "interface": "actual-typescript-cli",
+    "log": "🗑️generated/unready-canonical-tsc-2.log",
+    "scope": "13 actual current roots incl genuine anchor, Native owner, initial helper and tests"
+  },
+  "canonicalSemanticFinal": {
+    "state": "passed",
+    "session": 41640,
+    "exit": 0,
+    "admission": "normal-managed",
+    "interface": "actual-typescript-cli",
+    "roots": 14,
+    "log": "🗑️generated/unready-canonical-tsc-final.log",
+    "flags": [
+      "noEmit",
+      "strict",
+      "noUncheckedIndexedAccess",
+      "skipLibCheck",
+      "target ESNext",
+      "module preserve",
+      "moduleResolution bundler",
+      "resolveJsonModule",
+      "allowImportingTsExtensions",
+      "types bun"
+    ]
+  }
+}

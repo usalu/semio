@@ -1,0 +1,9 @@
+# Native Bulk Work Blocker
+
+The actual NativeBulkReceiver calls recursive native_bulk_measure over the entire subtree while quoting, then recursive NativeBulkValue.read/build constructs every descendant in one advance. Graph PropertyValue and PropertyBag implement the same trait, recursively allocate all descendants, and synchronously sort object members. Their partial outputs are dropped on failure. A full-outcome wrapper cannot honestly claim one bounded work unit, preserve cancellation custody, or retain all owned effects on error.
+
+Bounded Source census found exactly two NativeBulkValue defining files: value/decode/owned/value/bulk and graph/manifest/receive. The reached Graph implementation and the obsolete owned/blocking convenience remain real compile/architecture blockers, not source-ready counterparts.
+
+Required clean closure: replace bulk convenience with a genuine dynamic-tree receiver retaining per-node binding, kind, child slot, real text/key buffers and array/object row backing. Probe cardinality separately; reserve real capacity; copy bounded UTF8 fragments; advance one same-source child; publish its genuine owned row; close child before reuse. Keep the existing semantic nesting limit64 and exact DslValue entry order/duplicate behavior. Graph property object ordering additionally needs a resumable in-place comparison/sort/duplicate-validation frontier, preserving sorted unique members and the same values. A pure child receiver initializer may receive actual semantic depth configuration without reading input or deriving authority. No fixed stock or demand-derived grant can replace this closure.
+
+No Source body or runtime was added for this dynamic-tree rewrite yet. Schema, genuine null/cancellation/identity/heap/independent output laws must precede it. Native-owned and Graph owning --lib gates remain mandatory. Other Native scalar/string/sequence/tuple/flat-record/typed backing work proceeds independently.

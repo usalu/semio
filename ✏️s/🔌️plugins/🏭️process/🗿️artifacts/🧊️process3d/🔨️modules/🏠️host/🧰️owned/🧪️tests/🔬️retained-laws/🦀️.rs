@@ -50,30 +50,6 @@ fn retained_fixture() -> serde_json::Value {
     serde_json::from_str(&std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🔬️retained-laws/🧫️fixtures/🔣️.json")).expect("retained-laws fixture")).unwrap()
 }
 
-fn authority_fixture() -> Process3dPublicationLease {
-    Process3dPublicationLease {
-        operation: u64::MAX - 313,
-        generation: 51,
-        base_revision: 51,
-        parent_revision: 51,
-        live_revision: 51,
-        maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS,
-        maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS,
-        maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS,
-        closing: false,
-        terminal: false,
-    }
-}
-
-/// 🔒️ `process3d_admit_publication_authority` fills ONE process-global fixed authority table, which
-/// answers `process3d-publication.saturated` the moment two holders overlap. Every law that mints a
-/// real publication lease takes this lane first, so the suite's own parallelism cannot starve one
-/// law of the authority another law is holding. Poisoning is absorbed: a lane is a scheduling
-/// device, and the panic that poisoned it is already the failure being reported.
-fn publication_authority_lane() -> std::sync::MutexGuard<'static, ()> {
-    process3d_publication_authority_lane()
-}
-
 fn close_store(mut store: store::ArtifactStore<Process3dSnapshot, Process3dMutation>) {
     use semio_framework_plugin::ArtifactOwnedDisposer;
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
@@ -87,7 +63,7 @@ fn close_store(mut store: store::ArtifactStore<Process3dSnapshot, Process3dMutat
     drop(store);
 }
 
-/// 📏️ Budget the TYPICAL unit of one whole-document store-replacement phase must respect. A quarter of
+/// 💰️ Budget the TYPICAL unit of one whole-document store-replacement phase must respect. A quarter of
 /// `semio_framework_trace::INTERACTIVE_STEP_CEILING_US` (8 000us), the ceiling the OS runtime's
 /// cooperative-maintenance clock faults an instance on: this runs at opt-level 0, far slower than
 /// the release wasm that ceiling guards, so a native phase already eating a quarter of it is the
@@ -130,7 +106,7 @@ impl Default for ReplacementPhaseBudget {
 }
 
 impl ReplacementPhaseBudget {
-    /// ⏱️ Typical cost of one unit of `phase`: the median of its retained readings.
+    /// 💲️ Typical cost of one unit of `phase`: the median of its retained readings.
     fn median(&self, phase: usize) -> u64 {
         let sampled = self.sampled[phase];
         if sampled == 0 {
@@ -141,7 +117,7 @@ impl ReplacementPhaseBudget {
         ordered[sampled / 2]
     }
 
-    /// ⏱️ The phase whose typical unit is the most expensive, with that median in microseconds.
+    /// 🌓️ The phase whose typical unit is the most expensive, with that median in microseconds.
     fn worst(&self) -> (&'static str, u64) {
         let mut worst = (REPLACEMENT_PHASES[0], 0);
         for phase in 0..REPLACEMENT_PHASES.len() {
@@ -153,7 +129,7 @@ impl ReplacementPhaseBudget {
         worst
     }
 
-    /// ⏱️ The phase that ran the single most expensive unit, with that maximum in microseconds.
+    /// 🔼️ The phase that ran the single most expensive unit, with that maximum in microseconds.
     fn worst_unit(&self) -> (&'static str, u64) {
         let mut worst = (REPLACEMENT_PHASES[0], 0);
         for phase in 0..REPLACEMENT_PHASES.len() {
@@ -193,7 +169,7 @@ impl ReplacementPhaseBudget {
     }
 }
 
-/// ⏱️ Runs one replacement phase unit under the framework's own clock and records the reading.
+/// 🏃️ Runs one replacement phase unit under the framework's own clock and records the reading.
 fn measure_phase<T>(budget: &mut ReplacementPhaseBudget, phase: usize, work: impl FnOnce() -> T) -> T {
     let started_us = semio_framework_job::default_now_us();
     let value = work();
@@ -246,34 +222,28 @@ fn owned_store_measured(label: &str, operation_value: u64, budget: &mut Replacem
 
 #[test]
 fn actual_atomic_publication_is_fail_closed_and_retires_stale_candidate() {
-    let _lane = publication_authority_lane();
-    let authority = authority_fixture();
-    let operation = semio_framework_job::OperationId(authority.operation);
-    let generation = semio_framework_job::Generation(authority.generation);
-    assert_eq!(process3d_validate_atomic_lease(Process3dPublicationLease { operation: authority.operation + 1, ..authority }, operation, generation, generation), Err("process3d-publication.wrong-operation"));
-    assert_eq!(process3d_validate_atomic_lease(Process3dPublicationLease { generation: authority.generation + 1, ..authority }, operation, generation, generation), Err("process3d-publication.wrong-generation"));
-    assert_eq!(process3d_validate_atomic_lease(Process3dPublicationLease { base_revision: authority.base_revision - 1, ..authority }, operation, generation, generation), Err("process3d-publication.wrong-base"));
-    assert_eq!(process3d_validate_atomic_lease(Process3dPublicationLease { parent_revision: authority.parent_revision - 1, ..authority }, operation, generation, generation), Err("process3d-publication.wrong-parent"));
-
+    let operation = semio_framework_job::OperationId(u64::MAX - 313);
+    let generation = semio_framework_job::Generation(51);
+    let token = semio_framework_plugin::DocumentStorePublicationToken::mint(operation, generation, 7);
+    let stale_live = semio_framework_job::Generation(52);
     let mut live = owned_store("last-valid", u64::MAX - 316);
     let stale = owned_store("stale-candidate", u64::MAX - 315);
     let accepted = owned_store("accepted-candidate", u64::MAX - 314);
 
     let stale = match semio_framework_plugin::publish_document_store_candidate_if_authoritative(&mut live, stale, || {
-        process3d_validate_atomic_lease(Process3dPublicationLease { parent_revision: authority.parent_revision - 1, ..authority }, operation, generation, generation)
-            .map_err(|code| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), "hostile stale publication"))
+        token.validate_live(semio_framework_plugin::DocumentStoreLivePublication::new(operation, stale_live, 7))
     }) {
         Err((_fault, stale)) => stale,
         Ok(displaced) => {
             close_store(displaced);
-            panic!("wrong parent swapped the stale candidate")
+            panic!("a stale token swapped the stale candidate")
         }
     };
     assert_eq!(live.snapshot_root().stock_label, "last-valid");
     close_store(stale);
 
     let displaced = match semio_framework_plugin::publish_document_store_candidate_if_authoritative(&mut live, accepted, || {
-        process3d_validate_atomic_lease(authority, operation, generation, generation).map_err(|code| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), "valid publication"))
+        token.validate_live(semio_framework_plugin::DocumentStoreLivePublication::new(operation, generation, 7))
     }) {
         Ok(displaced) => displaced,
         Err((_fault, rejected)) => {
@@ -286,7 +256,7 @@ fn actual_atomic_publication_is_fail_closed_and_retires_stale_candidate() {
     close_store(live);
 }
 
-/// ⏱️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave R2: `drive_store_replacement_jobs` is ONE
+/// ⏲️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave R2: `drive_store_replacement_jobs` is ONE
 /// cooperative-maintenance unit of the OS runtime's live-cleanup clock, which faults its instance
 /// with `plugin.internal.interactive-ceiling` the moment a unit overruns
 /// `semio_framework_trace::INTERACTIVE_STEP_CEILING_US`. Each of the replacement's three phases is
@@ -297,7 +267,6 @@ fn actual_atomic_publication_is_fail_closed_and_retires_stale_candidate() {
 /// overruns.
 #[test]
 fn every_store_replacement_phase_unit_fits_the_interactive_step_budget() {
-    let _lane = publication_authority_lane();
     let mut best = ReplacementPhaseBudget::default();
     for round in 0..REPLACEMENT_BUDGET_ROUNDS {
         best.keep_best_round(&measure_one_store_replacement(round as u64));
@@ -308,17 +277,17 @@ fn every_store_replacement_phase_unit_fits_the_interactive_step_budget() {
     assert!(peak_us < REPLACEMENT_STEP_CEILING_US, "store replacement phase {peak_phase} ran one unit for {peak_us}us in every round, at or over the framework's {REPLACEMENT_STEP_CEILING_US}us interactive step ceiling (per-phase median/worst/units: {})", best.report());
 }
 
-/// 🎲️ Independent repetitions of the whole measured replacement, folded per phase by
+/// 🔄️ Independent repetitions of the whole measured replacement, folded per phase by
 /// [`ReplacementPhaseBudget::keep_best_round`].
 const REPLACEMENT_BUDGET_ROUNDS: u64 = 3;
 
-/// ⏱️ Drives one whole real store replacement — initializer to displaced-store retirement — and
+/// 🏪️ Drives one whole real store replacement — initializer to displaced-store retirement — and
 /// hands back what each phase's single most expensive unit cost.
 fn measure_one_store_replacement(round: u64) -> ReplacementPhaseBudget {
     use semio_framework_plugin::ArtifactOwnedDisposer;
-    let authority = authority_fixture();
-    let operation = semio_framework_job::OperationId(authority.operation);
-    let generation = semio_framework_job::Generation(authority.generation);
+    let operation = semio_framework_job::OperationId(u64::MAX - 313);
+    let generation = semio_framework_job::Generation(51);
+    let token = semio_framework_plugin::DocumentStorePublicationToken::mint(operation, generation, 7);
     let mut budget = ReplacementPhaseBudget::default();
 
     let mut live = owned_store_measured("budget-live", u64::MAX - 318 - round * 2, &mut budget);
@@ -327,7 +296,7 @@ fn measure_one_store_replacement(round: u64) -> ReplacementPhaseBudget {
     let displaced = match measure_phase(&mut budget, 1, || {
         let disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
         let published = semio_framework_plugin::publish_document_store_candidate_if_authoritative(&mut live, candidate, || {
-            process3d_validate_atomic_lease(authority, operation, generation, generation).map_err(|code| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(code), "budget publication"))
+            token.validate_live(semio_framework_plugin::DocumentStoreLivePublication::new(operation, generation, 7))
         });
         (disposer, published)
     }) {
@@ -483,7 +452,7 @@ fn snapshot_decoder_publishes_and_funds_large_timeline_backing() {
     assert_eq!(terminal, row["expectedTerminal"].as_bool().unwrap());
 }
 
-/// 🧮️ A nested mutation decoder forwards the same complete physical backing grant as its snapshot sibling and retains the backing under an insufficient grant.
+/// 🔓️ A nested mutation decoder forwards the same complete physical backing grant as its snapshot sibling and retains the backing under an insufficient grant.
 #[test]
 fn mutation_decoder_forwards_large_retained_backing_grant() {
     use store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority as _;

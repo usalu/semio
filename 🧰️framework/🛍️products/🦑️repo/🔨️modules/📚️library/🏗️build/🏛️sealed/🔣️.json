@@ -13,7 +13,10 @@
   ],
   "cacheDirectory": ".🧬semio/🦑️repo/⚡️cache/implementation",
   "stampedFiles": [
-    "bun.lock",
+    {
+      "ecosystem": "javascript",
+      "role": "locks"
+    },
     "package.json"
   ],
   "keepPrevious": 2,

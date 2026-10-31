@@ -1,0 +1,3 @@
+# Native Typed Storage and Inline Prefix Tests First
+
+The original16-byte typed storage law/profile is retained; closed schema now also pins take-into1, live initialized release refusal0, and no opaque constructor. Its canonical caller-owned array slot and raw null/retry/identity/denial/uninitialized-cancel cases are authored before body replacement. Inline prefix new closed cases0/3/4097 use independent10000 item/fuel and32MiB/depth64 per case, not item-to-byte conversion. Real row copy8 for u64, existing owner pop/swap0copy, actual defining work1, denied/cached0, actual heap0 and Serde/prefix order are required. All old seven concrete/derived receiver initializer cases remain a NativeOwned public law. No runtime.

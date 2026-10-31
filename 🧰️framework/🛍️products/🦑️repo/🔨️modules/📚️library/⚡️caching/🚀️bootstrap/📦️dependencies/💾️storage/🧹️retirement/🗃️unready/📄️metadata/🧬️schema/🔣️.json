@@ -1,0 +1,161 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "hex",
+          "effect",
+          "accepted",
+          "sha256",
+          "text"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "hex": {
+            "type": "string",
+            "pattern": "^(?:[0-9a-f]{2})*$",
+            "maxLength": 8194
+          },
+          "effect": {
+            "enum": [
+              "ordinary",
+              "link",
+              "multilink",
+              "directory",
+              "oversized",
+              "cancel",
+              "drift",
+              "ancestor-link",
+              "wrong-name"
+            ]
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Protocol": {
+      "const": {
+        "maximumBytes": 4096,
+        "readBytes": 128,
+        "roles": [
+          "i",
+          "r"
+        ],
+        "decode": "nonfatal-utf8-inert-data-no-history-authority",
+        "owner": "actual-firstparty-synchronous-nofollow-reader",
+        "proof": "same-current-seven-field-entry-before-held-after-close-singlelink",
+        "authority": false
+      }
+    },
+    "Stamp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dev",
+        "ino",
+        "mode",
+        "nlink",
+        "size",
+        "mtimeNs",
+        "ctimeNs"
+      ],
+      "properties": {
+        "dev": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nlink": {
+          "const": 1
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "mtimeNs": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$"
+        },
+        "ctimeNs": {
+          "type": "string",
+          "pattern": "^-?[0-9]+$"
+        }
+      }
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "text",
+        "sha256",
+        "stamp",
+        "before",
+        "after",
+        "authority"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "text": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "stamp": {
+          "$ref": "#/$defs/Stamp"
+        },
+        "before": {
+          "$ref": "#/$defs/Stamp"
+        },
+        "after": {
+          "$ref": "#/$defs/Stamp"
+        },
+        "authority": {
+          "const": false
+        }
+      }
+    }
+  }
+}

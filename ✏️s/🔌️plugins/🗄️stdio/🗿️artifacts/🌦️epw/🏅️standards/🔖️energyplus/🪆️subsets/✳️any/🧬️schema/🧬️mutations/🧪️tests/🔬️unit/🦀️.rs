@@ -3,6 +3,7 @@ use crate::apply_mutation;
 use crate::standards::energyplus::subsets::any::schema::mutations::*;
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
 use protocol::MutationDiff;
+use protocol::{ColdMutation, DiffBinary, DiffText, OpBinary, OpText};
 use protocol::ColdMutationDiff;
 
 //#region 🔖️Fixtures

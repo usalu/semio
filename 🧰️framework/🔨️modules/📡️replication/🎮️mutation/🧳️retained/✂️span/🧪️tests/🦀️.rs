@@ -13,7 +13,7 @@ fn retained_byte_span_logical_body_survives_expanded_physical_headers(){
  for policy in fixture["rows"].as_array().unwrap(){
   let body=policy["body"].as_u64().unwrap() as usize;
   let funding=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:8192,maximum_capacity_bytes:8192,maximum_release_bytes:8192,maximum_depth:128};
-  let mut source=match RetainedCloneSource::admit_owned(bytes.clone(),(),funding){Ok((source,_))=>source,Err((error,_,_))=>panic!("original byte range source refused: {error}")};
+  let mut source={let mut admission=RetainedCloneSource::admission_owned(bytes.clone(),());let mut output=None;for _ in 0..64{if admission.terminal_is_empty(){break}if admission.phase()=="ready"{admission.take_output(&mut output,funding).result.unwrap();}else{admission.advance(funding).result.unwrap();}}output.expect("staged byte range source")};
   let(mut span,heap)=observe(||RetainedByteSpan::new(row["start"].as_u64().unwrap() as usize,row["length"].as_u64().unwrap() as usize));assert_eq!(heap,(0,0));let mut turns=0;
   while !span.ready(){
    let demand=span.demand(source.borrow(),body).unwrap();let exact=quote(demand);let grant=RetainedCloneGrant{maximum_copy_bytes:policy["physical"].as_u64().unwrap() as usize,..exact};
@@ -23,9 +23,9 @@ fn retained_byte_span_logical_body_survives_expanded_physical_headers(){
   }
   let grant=quote(span.take_demand().unwrap());let(value,receipt)=span.take(grant).unwrap().unwrap();assert!(receipt.fits(grant));assert_eq!(value,expected);assert_eq!(source.borrow().get(),&bytes);
   let mut value=ManuallyDrop::new(Some(value));let mut retirement=RetainedCloneClose::default();
-  while value.is_some()||!retirement.is_empty(){let demand=retirement.next_owner_demands::<Vec<u8>>(value.is_some(),&None,body).unwrap();let grant=quote(demand);let(step,heap)=observe(||if retirement.is_empty(){retirement.begin_granted(&mut value,grant).unwrap().unwrap()}else{RetainedCloneStep::Progress(retirement.step_granted(grant).unwrap().progress())});assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
+  while value.is_some()||!retirement.is_empty(){let demand=retirement.next_owner_demands::<Vec<u8>>(value.is_some(),&None,body).unwrap();let grant=quote(demand);let(step,heap)=observe(||if retirement.is_empty(){retirement.begin_granted(&mut value,grant).result.unwrap().unwrap()}else{RetainedCloneStep::Progress(retirement.step_granted(grant).result.unwrap().progress())});assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
   span.begin_close();while !span.terminal_is_empty(){let grant=quote(span.close_demand(body).unwrap());let(step,heap)=observe(||span.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
-  while !source.terminal_is_empty(){let grant=quote(source.next_close_demand(body).unwrap());assert!(source.close_step(grant).unwrap().progress().fits(grant));}
+  while !source.terminal_is_empty(){let grant=quote(source.next_close_demand(body).unwrap());assert!(source.close_step(grant).result.unwrap().progress().fits(grant));}
   assert_eq!(observe(||drop(span)).1,(0,0));unsafe{ManuallyDrop::drop(&mut value);}
  }
 }

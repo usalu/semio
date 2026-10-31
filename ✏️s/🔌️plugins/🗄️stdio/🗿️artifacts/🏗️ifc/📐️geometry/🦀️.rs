@@ -1,4 +1,9 @@
 //! 📐 Schema-neutral IFC representation projection in source length units.
+#[cfg(test)]
+#[global_allocator]
+static GEOMETRY_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+#[cfg(test)]
+macro_rules! fixture{($path:literal)=>{std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"),"/../../",$path)).unwrap()}}
 #[path = "📖️graph/🦀️.rs"]
 pub mod graph;
 #[path="📏️units/🦀️.rs"]

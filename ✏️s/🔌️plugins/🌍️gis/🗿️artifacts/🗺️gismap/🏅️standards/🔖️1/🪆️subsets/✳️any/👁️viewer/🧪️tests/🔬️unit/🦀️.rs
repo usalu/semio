@@ -1,7 +1,7 @@
 use crate::viewer::gismap::modes::view;
 use crate::viewer::gismap::modes::view::windows::map;
 use crate::GISMAP_DIALECT;
-use semio_framework_plugin::{ArtifactToolPublicationLane, ArtifactViewer, Viewer, ViewerApp};
+use semio_framework_plugin::{ArtifactToolPublicationLane, ArtifactViewer, PluginApp as _, Viewer, ViewerApp};
 #[allow(unused_imports)]
 use crate::standards::v1::subsets::any::io::text::snapshot::default_document;
 #[allow(unused_imports)]
@@ -86,7 +86,7 @@ async fn the_viewer_declares_and_owns_the_camera_verb() {
     }
 }
 
-/// ⚖️ LAW: the camera route joins its exact registered factory. A registry-backed viewer PANICS at
+/// 📷️ LAW: the camera route joins its exact registered factory. A registry-backed viewer PANICS at
 /// construction (`interactive-job.catalog-authority` / `-incomplete`) whenever the roster, the
 /// publication contract, the `Migrated` classification and `TOOL_JOB_IDS` disagree, and every
 /// declared lane is a window-config lane.
@@ -120,7 +120,7 @@ async fn a_camera_gesture_without_a_concrete_map_window_is_refused_rather_than_w
     assert!(camera_emit(&GisMapViewCommand::SetCamera { camera: "{\"x\":1.0,\"y\":1.0,\"zoom\":0.0}".into() }, Some(&map_view(map::WINDOW_KIND_ID))).is_err(), "a zero zoom is not a camera");
 }
 
-/// ⚖️ LAW: the args bridge takes the host's `camera` object (the `TiledMapHost` sends `{x,y,zoom}`) or
+/// 🌉️ LAW: the args bridge takes the host's `camera` object (the `TiledMapHost` sends `{x,y,zoom}`) or
 /// its JSON text, canonicalizes it, and refuses a foreign action.
 #[semio_framework_async_macros::async_test]
 async fn the_args_bridge_canonicalizes_the_hosts_camera_and_refuses_a_foreign_action() {
@@ -139,7 +139,7 @@ async fn the_view_command_round_trips_through_its_binary_codec() {
     let command = GisMapViewCommand::SetCamera { camera: "{\"x\":1.0,\"y\":2.0,\"zoom\":3.0}".into() };
     assert_eq!(GisMapViewCommand::decode_op(&command.encode_op().expect("encode")).expect("decode"), command);
 }
-/// ⚖️ LAW: a pan dispatched exactly as the `TiledMapHost` sends it (`{surfaceId, camera:{x,y,zoom}}`
+/// 🚀️ LAW: a pan dispatched exactly as the `TiledMapHost` sends it (`{surfaceId, camera:{x,y,zoom}}`
 /// from one map window) settles through the viewer's retained route into THAT window's config, and the
 /// window's next render publishes the retained camera.
 #[semio_framework_async_macros::async_test]

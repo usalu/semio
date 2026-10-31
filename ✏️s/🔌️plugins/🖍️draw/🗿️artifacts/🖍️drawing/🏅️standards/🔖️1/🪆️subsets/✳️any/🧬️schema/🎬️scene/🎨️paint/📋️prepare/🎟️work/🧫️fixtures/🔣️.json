@@ -1,0 +1,42 @@
+{
+  "axes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "image": {
+    "width": 3,
+    "height": 2,
+    "transform": [
+      2,
+      0,
+      0,
+      3,
+      7,
+      11
+    ],
+    "bounds": [
+      7,
+      11,
+      13,
+      17
+    ]
+  },
+  "stock": {
+    "items": 100000,
+    "copy": 16777216,
+    "capacity": 16777216,
+    "release": 16777216,
+    "depth": 128
+  },
+  "turn": {
+    "items": 64,
+    "copy": 1048576,
+    "capacity": 1048576,
+    "release": 1048576,
+    "depth": 64
+  },
+  "maximumTurns": 10000
+}

@@ -1,0 +1,17 @@
+{
+  "state": "test-measurement-source-strengthened-no-runtime",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/♻️retirement/🧪️tests/🦀️.rs",
+      "beforeSha256": "8090fe1523d241ee9b7d2d2842beb123a4225e97577317ee7ff6c19bfd9036aa",
+      "sha256": "a46f1727b22142e7806e86721bf0d505e1921befe809944a9622ed16860d87a1",
+      "scope": "same allocator API, explicit observed-counter overflow assertion; preserves all owner tests"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml",
+      "beforeSha256": "c777dae9ab2bfd9375fe5457660bab339d3f9147f9c1a82504de00cb65d20cfd",
+      "sha256": "131ef8a0ada8b2b7d02eea1b783d671927a3b32b284edac177038621de3828bd",
+      "scope": "shared first-party test wallet observer dependency only"
+    }
+  ]
+}

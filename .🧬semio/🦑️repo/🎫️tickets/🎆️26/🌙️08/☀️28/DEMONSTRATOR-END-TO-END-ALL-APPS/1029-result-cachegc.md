@@ -46,3 +46,28 @@ STATUS: DONE, live. New cargo admissions now reserve image headroom and queue in
 - The image-wait does not extend an idle-window deadline of the invocation (it honors the signal only, like the lane-pool wait).
 - Final-code run: `cachegc-chk3` (same command) RC 0, "Finished `prototype` profile … in 3m 02s", after queueing for image headroom (see its waiting and admitted lines in `🗑️generated/1029/cachegc-chk3.txt`).
 - chk2 (started under the first policy) was cancelled by me with SIGINT (pid 9360) after 25 minutes in the queue; chk3 is the final-code run.
+
+## Addendum: act05 "Exact allocation issuance control required" (fixed)
+- Cause: not the headroom code. `withRepositoryComponentLaneV1` read the storage policy with the `actualControl` that `withRepositoryCompilerStoreV1` (changed today 11:38) now hands the body, but the reservation captured `store.control`; the driver itself already reads the policy with `store.control` (driver-stages line 71). Plain `repo cargo` was unaffected.
+- Fix: `withRepositoryComponentLaneV1` takes optional `policyControl` (default `control`); driver-stages passes `policyControl:store.control`; the source-text assertion in `🔒️leases/🧭️order/🧪️tests/🧩️component-driver` updated (21 pass). tsc clean.
+- `repo:test-cargo-launcher`: 3 pass, 2 fail; the failure is the diagnostics-directory same-filesystem expectation in "isolated Cargo stores are removed…" (environment, no lane code involved), unrelated.
+- `1029-tools/act.sh act06` started detached at 21:54:17 (status `🗑️generated/1029/act06.status`); at last look still in graph inference (504 of 1179 projects), 0 occurrences of the error.
+
+## CHECKPOINT (weekly 97 %): STATUS and exact next step
+STATUS: the tree is compile-atomic; no half-made edit. act07 NOT started (coordinator chains it after lock03; at last look lock03 had no exit line).
+
+OPEN (coordinator report: `rustc-LLVM ERROR: No space left on device` in the component lane build dir `u/l/pfb0ee6/b/wasm32-unknown-unknown/prototype`, `act06.log`): `withRepositoryComponentLaneV1` already goes through `withAgentLaneV1` and so through the headroom admission, but it passes no `classes`, so it uses the default class `lane` with the generic cold prior (2 GiB, schema `Policy.prior.cold`), far below a cold wasm32 component build. `u/h/history.json` has no `lane#…` samples yet, so no learned value exists either. Nothing is wrong with the mechanism; the estimate is too small.
+
+Exact next step (small, compile-atomic):
+1. In `🧬️schema/🔣️.json` of `🧹️gc/🏦️headroom` add `Policy.classPriors`: `[{"prefix":"component","cold":{"bytes":<cold wasm component build, start 8589934592 (8 GiB)>,"rampMilliseconds":900000},"warm":{"bytes":3221225472,"rampMilliseconds":600000}}]`. Cap stays 15 % of the image (7.2 GiB on 48 GiB), so choose the cold value at or above that cap on purpose; size it from the lane growth of one cold `semio-framework-os-store-space` component build.
+2. In `🏦️headroom/🟦️.ts` pick the prior by the first class name that starts with a `classPriors` prefix (else `prior`); mirror it in `🐍️.py` and add estimate vectors (component cold, component warm, unknown prefix) to `🧫️fixtures/🔣️.json`.
+3. In `launcher/🟦️.ts` `withRepositoryComponentLaneV1` pass `classes:["component","component/"+crateKeyV1(crates)]` (add `classes` to its option type, forwarded to `withAgentLaneV1`).
+4. Re-run the headroom bun test + `repo tools exec tsc -p 1029-tools/cachegc/tsconfig.json`, then the coordinator's `act.sh act07`.
+Also consider: the 2 s monitor only frees on demand; a cold component build writes faster than that, so the prior must carry it.
+
+## Update: component lane prior DONE (supersedes the checkpoint's open item)
+STATUS: implemented, headroom + ballast + gc tests 29 pass / 0 fail (`🗑️generated/1029/cachegc-test9.txt`), tsc clean. act07 was started by the coordinator; new admissions pick this up.
+- Schema `Policy.classPriors`: prefix `component` → cold 8 GiB / 900 s ramp, warm 3 GiB / 600 s (the 15 % share cap still applies: 7.2 GiB on the 48 GiB image).
+- `headroomPriorV1` (class-prefix selection, else general prior) used by `admitImageHeadroomV1`; Python oracle kind `prior`; 5 `priors` fixture vectors (schema `Vectors.priors`) checked against TS and Python; IO test: a component admission reserves the capped component prior, a cargo check keeps the general 2 GiB.
+- Launcher: `withRepositoryComponentLaneV1` forwards `classes` (default `componentHeadroomClassesV1(crates)` = `component`, `component/<crateKey>`), so the wasm-pack component builds are one mechanism with `repo cargo` and learn their own history.
+- Limit: if the cold build writes more than 7.2 GiB at once, the 15 % cap bounds the reservation; the learned history (quantile, capped) and the 2 s on-demand monitor take over.

@@ -1,0 +1,248 @@
+[
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fcustody/\ud83e\udd80\ufe0f.rs",
+    "line": 33,
+    "offset": 653,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 59,
+    "offset": 155,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 9,
+    "offset": 121,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 166,
+    "offset": 1275,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 131,
+    "offset": 154,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udccb\ufe0fvector/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 50,
+    "offset": 120,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 10,
+    "offset": 22,
+    "method": "err"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udebc\ufe0fconstruction/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 29,
+    "offset": 211,
+    "method": "err"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fcustody/\ud83e\udd80\ufe0f.rs",
+    "line": 58,
+    "offset": 314,
+    "method": "is_err"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 11,
+    "offset": 91,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 136,
+    "offset": 191,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 166,
+    "offset": 1531,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 23,
+    "offset": 140,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fcustody/\ud83e\udd80\ufe0f.rs",
+    "line": 59,
+    "offset": 151,
+    "method": "is_err"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udebc\ufe0fconstruction/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 30,
+    "offset": 141,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udce6\ufe0fowned/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 50,
+    "offset": 602,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 13,
+    "offset": 82,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 143,
+    "offset": 174,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 25,
+    "offset": 107,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fcustody/\ud83e\udd80\ufe0f.rs",
+    "line": 60,
+    "offset": 134,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udccb\ufe0fvector/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 84,
+    "offset": 81,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 166,
+    "offset": 1755,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udce6\ufe0fowned/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 73,
+    "offset": 35,
+    "method": "err"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udce6\ufe0fowned/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 51,
+    "offset": 428,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udce6\ufe0fowned/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 30,
+    "offset": 300,
+    "method": "is_err"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 148,
+    "offset": 111,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 27,
+    "offset": 101,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udccb\ufe0fvector/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 85,
+    "offset": 102,
+    "method": "is_err"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udebc\ufe0fconstruction/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 32,
+    "offset": 913,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udce6\ufe0fowned/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 76,
+    "offset": 39,
+    "method": "map_err"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fcustody/\ud83e\udd80\ufe0f.rs",
+    "line": 61,
+    "offset": 155,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udce6\ufe0fowned/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 31,
+    "offset": 123,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fcustody/\ud83e\udd80\ufe0f.rs",
+    "line": 64,
+    "offset": 307,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udebc\ufe0fconstruction/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 32,
+    "offset": 1221,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udccb\ufe0fvector/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 86,
+    "offset": 137,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udce6\ufe0fowned/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 39,
+    "offset": 576,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fcustody/\ud83e\udd80\ufe0f.rs",
+    "line": 65,
+    "offset": 169,
+    "method": "map_err"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83c\udfed\ufe0ffactory/\ud83d\udce6\ufe0fowned/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "line": 39,
+    "offset": 754,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fcustody/\ud83e\udd80\ufe0f.rs",
+    "line": 66,
+    "offset": 307,
+    "method": "unwrap"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fcustody/\ud83e\udd80\ufe0f.rs",
+    "line": 67,
+    "offset": 385,
+    "method": "map_err"
+  },
+  {
+    "path": "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\u267b\ufe0fretirement/\ud83d\udd17\ufe0farc-custody/\ud83c\udfed\ufe0ffactory/\ud83e\uddea\ufe0ftests/\ud83d\udd10\ufe0fcustody/\ud83e\udd80\ufe0f.rs",
+    "line": 68,
+    "offset": 521,
+    "method": "unwrap"
+  }
+]

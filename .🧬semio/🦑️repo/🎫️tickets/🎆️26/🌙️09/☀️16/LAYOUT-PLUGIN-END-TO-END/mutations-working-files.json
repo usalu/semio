@@ -131,7 +131,13 @@
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🔺️change/🦀️.rs",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🔺️change/🧪️tests/🦀️.rs",
     "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🔺️change/🧳️part/🦀️.rs",
-    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🔺️change/🧳️part/🧪️tests/🦀️.rs"
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🔺️change/🧳️part/🧪️tests/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/⌨️typing/✍️edit/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/⌨️typing/✍️edit/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/⌨️typing/✍️edit/🧪️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust/Cargo.toml",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🖼️render/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🧪️transform-tool-transactions/⌨️typing-edit/🦀️.rs"
   ],
   "removed": [],
   "sharedFilesEditedByPeers": [
@@ -175,7 +181,9 @@
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/idml-boundary.md",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/idml-boundary-inventory.ts",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/idml-boundary-oracle.ts",
-    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/idml-xml-oracle.py"
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/idml-xml-oracle.py",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/typing-edit-inlet.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/typing-edit-inlet-oracle.ts"
   ],
   "notes": [
     "The earlier new unmounted authority law body was removed; all preexisting report tests preserved. Its authority.json input remains.",

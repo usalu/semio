@@ -6,11 +6,11 @@ fn turn(owner:&mut Option<Box<dyn ErasedSnapshotRetirement>>,copy:usize)->(usize
     let demand=factory_ticket_demands(owner.as_ref().unwrap(),copy).unwrap();
     assert!(demand.copy_bytes<=copy,"shared ownership metadata must not self-enlarge a narrow payload copy grant");
     let g=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-    let(step,heap)=observe_retirement_allocations(||close_factory_ticket(owner,RetainedCloneGrant {maximum_items:0,..g}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));
+    let(step,heap)=observe_retirement_allocations(||close_factory_ticket(owner,RetainedCloneGrant {maximum_items:0,..g}).result.unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));
     for denied in [(demand.copy_bytes!=0).then_some(RetainedCloneGrant {maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..g}),(demand.capacity_bytes!=0).then_some(RetainedCloneGrant {maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..g}),(demand.release_bytes!=0).then_some(RetainedCloneGrant {maximum_release_bytes:demand.release_bytes.saturating_sub(1),..g})].into_iter().flatten(){
-        let(step,heap)=observe_retirement_allocations(||close_factory_ticket(owner,denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));
+        let(step,heap)=observe_retirement_allocations(||close_factory_ticket(owner,denied).result.unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(heap,(0,0));
     }
-    let(step,heap)=observe_retirement_allocations(||close_factory_ticket(owner,g).unwrap());assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(step.progress().copied_items!=0||owner.is_none(),"exact full factory owner stalled");heap
+    let(step,heap)=observe_retirement_allocations(||close_factory_ticket(owner,g).result.unwrap());assert!(step.progress().fits(g));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(step.progress().copied_items!=0||owner.is_none(),"exact full factory owner stalled");heap
 }
 
 #[test]

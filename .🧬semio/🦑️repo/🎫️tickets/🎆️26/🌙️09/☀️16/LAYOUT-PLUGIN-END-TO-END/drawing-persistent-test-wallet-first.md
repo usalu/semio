@@ -1,0 +1,3 @@
+# Persistent Test Wallet
+
+Root approved a newly declared LARGE finite per-case authority only for the preserved65536/65537 corpus:10M items/fuel and256MiB copy/capacity/release, depth64. Other scenarios retain the accepted100k/32MiB/depth64 profile. This is explicit new large-corpus test authority, not an unchanged-profile claim or production quota change. The closed profile schema and genuine actual owner allocation/close law precede the helper. Per-case lifetime stock debits actual full outcome work and receipt; quote selection only narrows existing stock, never creates authority or replenishes it. No runtime ran.

@@ -46,8 +46,8 @@ impl PcgJob {
         if let Some(demand) = self.desk.retirement_demands() {
             return demand.map(Some);
         }
-        if let Some(publication) = self.publication.as_ref() {
-            return publication.writer.retirement_demands().map(Some);
+        if let Some(demand) = self.publication.as_ref().and_then(|publication| numerical_writer_demand(&publication.writer)) {
+            return demand.map(Some);
         }
         Ok(None)
     }
@@ -61,12 +61,10 @@ impl PcgJob {
             return step;
         }
         if let Some(publication) = self.publication.as_mut() {
-            publication.writer.begin_close();
-            let step = numerical_close_result(publication.writer.close_step(grant))?;
-            if publication.writer.terminal_is_empty() {
-                self.publication = None;
+            match numerical_writer_close(&mut publication.writer, grant) {
+                Some(step) => return step,
+                None => self.publication = None,
             }
-            return Ok(step);
         }
         Ok(numerical_ladder_turn(self.close_retained_step(grant.maximum_release_bytes)))
     }
@@ -86,16 +84,8 @@ impl PcgJob {
 }
 
 impl InteractiveJob for PcgJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
-        if self.desk.retire_due(cx, self.operation) {
-            self.desk.retire_delivered(cx)?;
-            return Ok(None);
-        }
-        let run = match self.desk.take_pending() {
-            Some(run) => run,
-            None => self.run(cx)?,
-        };
-        Ok(self.desk.admit(cx, run)?)
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, _: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> {
+        InteractiveJobStep::from_callback(self.step_plain(cx))
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
@@ -104,7 +94,6 @@ impl InteractiveJob for PcgJob {
 
     fn begin_close(&mut self) {
         self.closing = true;
-        if let Some(publication) = self.publication.as_mut() { publication.writer.begin_close(); }
     }
 
     fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
@@ -122,6 +111,20 @@ impl InteractiveJob for PcgJob {
 
     fn terminal_is_empty(&self) -> bool {
         self.close_lane == 8 && self.publication.is_none() && self.desk.terminal_is_empty()
+    }
+}
+
+impl NumericalStep for PcgJob {
+    fn step_plain<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
+        if self.desk.retire_due(cx, self.operation) {
+            self.desk.retire_delivered(cx)?;
+            return Ok(None);
+        }
+        let run = match self.desk.take_pending() {
+            Some(run) => run,
+            None => self.run(cx)?,
+        };
+        Ok(self.desk.admit(cx, run)?)
     }
 }
 

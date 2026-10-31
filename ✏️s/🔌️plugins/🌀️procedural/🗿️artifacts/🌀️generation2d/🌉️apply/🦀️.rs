@@ -42,7 +42,7 @@ pub enum Generation2dReplayDisplaced {
 pub(crate) fn generation2d_retire_displaced_cold(value: Generation2dReplayDisplaced) {
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<Generation2dReplayDisplaced>(), maximum_release_bytes: 0, maximum_depth: 2 };
-    let Ok((mut owner, _)) = semio_framework_value::retirement::admit_owned_retirement(value, birth) else { panic!("cold displaced replay owner refused its own birth") };
+    let Ok((mut owner, _)) = semio_framework_value::retirement::admit_owned_retirement(value, birth).result else { panic!("cold displaced replay owner refused its own birth") };
     while !owner.terminal_is_empty() {
         let copy = owner.next_copy_byte_demand().expect("cold displaced copy demand").max(GENERATION2D_OWNER_BYTES);
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).expect("cold displaced capacity demand"), maximum_release_bytes: owner.next_release_byte_demand().expect("cold displaced release demand"), maximum_depth: owner.next_depth_demand().expect("cold displaced depth demand").max(1) };
@@ -97,7 +97,7 @@ pub fn generation2d_apply_initialization_mutation(snapshot: &mut Generation2dSna
                 .insert(generation2d_copy_string(&payload.id)?, semio_framework_artifact_flow_flow::WidgetLayout { x: payload.layout.x, y: payload.layout.y })
                 .map(Generation2dReplayDisplaced::Layout)
         }
-        Generation2dMutation::ClearWidgetLayout(payload) => snapshot.host_snapshot.layout.remove(&payload.id).map(Generation2dReplayDisplaced::Layout),
+        Generation2dMutation::ClearWidgetLayout(payload) => snapshot.host_snapshot.layout.remove(&payload.id).and_then(|removal| removal.into_owned()).map(Generation2dReplayDisplaced::Layout),
         Generation2dMutation::UpdateCamera(payload) => {
             if !payload.camera.x.is_finite() || !payload.camera.y.is_finite() || !payload.camera.zoom.is_finite() {
                 return Err("generation2d-replay.camera-nonfinite");
@@ -407,7 +407,7 @@ pub fn generation2d_copy_generation(source: &semio_framework_artifact_playbook_p
     Ok(semio_framework_artifact_playbook_playbook::FormGeneration { id: generation2d_copy_string(&source.id)?, name: generation2d_copy_string(&source.name)?, values: source.values.clone() })
 }
 
-/// 🧊️ Cold-only disposal of a detached mutation — `CreateWidget`/`ReplaceWidget` carry an owned
+/// 🌀️ Cold-only disposal of a detached mutation — `CreateWidget`/`ReplaceWidget` carry an owned
 /// `Widget` whose `Dictionary`/`Tree`/`OrderedSet` payloads reject a bare drop
 /// (`🧠️neural/⚙️engine/🦀️.rs`'s `Dictionary::drop`, `🌱️value/🗂️ordered/🦀️.rs`'s roots). Every other
 /// variant is plain owned text/floats and closes on drop.
@@ -433,7 +433,7 @@ pub fn generation2d_retire_mutation_cold(mutation: Generation2dMutation) {
     }
 }
 
-/// 🧊️ The plural twin of [`generation2d_retire_mutation_cold`].
+/// 🛌️ The plural twin of [`generation2d_retire_mutation_cold`].
 #[cfg(any(test, feature = "testkit"))]
 pub fn generation2d_retire_mutations_cold(mutations: Vec<Generation2dMutation>) {
     for mutation in mutations {

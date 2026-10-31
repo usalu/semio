@@ -18,6 +18,7 @@ use semio_s_artifact_procedural_3d_mesh_support::Machine;
 use semio_s_artifact_procedural_3d_mesh_support::BATCH;
 use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
 use semio_s_artifact_procedural_3d_geometry_compute::KernelSession;
+use semio_s_artifact_procedural_3d_geometry_compute::{fuel_budget, StepContext};
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
 use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
 use semio_s_artifact_procedural_3d_geometry_value::body_fault;
@@ -37,7 +38,8 @@ struct FromBrep {
 }
 
 impl Machine for FromBrep {
-    fn advance(&mut self, fuel: usize) -> Result<Flow, WidgetFault> {
+    fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
+        let fuel = fuel_budget(cx);
         if let Some(tessellation) = self.tessellation.as_mut() {
             return match tessellation.step(fuel).map_err(|error| kernel_fault(&error))? {
                 TessellationStep::Working(progress) => Ok(Flow::Working(0.5 * progress.units_done as f32 / progress.units_total.max(1) as f32)),
@@ -89,7 +91,8 @@ struct ToBrep {
 }
 
 impl Machine for ToBrep {
-    fn advance(&mut self, fuel: usize) -> Result<Flow, WidgetFault> {
+    fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
+        let fuel = fuel_budget(cx);
         if let Some(job) = self.tessellation.as_mut() {
             return match tessellation_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
                 MeshTessellationStep::Working(progress) => Ok(Flow::Working(0.3 * ratio(progress))),

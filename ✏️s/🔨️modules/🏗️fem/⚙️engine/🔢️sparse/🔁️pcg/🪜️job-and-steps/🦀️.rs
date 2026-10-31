@@ -69,7 +69,8 @@ pub(super) enum PcgPublicationKind {
 pub(super) struct PcgPublication {
     pub(super) kind: PcgPublicationKind,
     pub(super) cursor: NumericalPageCursor,
-    pub(super) writer: RetainedJobPayloadWriter,
+    pub(super) stream: JobPayloadStream,
+    pub(super) writer: NumericalPayloadSlot,
     pub(super) complete: bool,
 }
 
@@ -80,7 +81,7 @@ impl PcgPublication {
             PcgPublicationKind::Preview => JobPayloadStream::Preview,
             PcgPublicationKind::Complete => JobPayloadStream::CommitOutput,
         };
-        Self { kind, cursor: NumericalPageCursor::new(), writer: RetainedJobPayloadWriter::new(stream), complete: false }
+        Self { kind, cursor: NumericalPageCursor::new(), stream, writer: None, complete: false }
     }
 
     pub(super) fn advance(&mut self, operation: Operation, state: &PcgCheckpoint, context: &mut StepContext<'_>) -> Result<bool, ValueError> {
@@ -88,37 +89,38 @@ impl PcgPublication {
             PcgPublicationKind::Checkpoint => (b"FEMPCP1\0", 13, 11),
             _ => (b"FEMPCG1\0", 3, 5),
         };
-        if advance_numerical_page_header(&mut self.writer, magic, kind, self.cursor, context)? { return Ok(false); }
+        let Some(writer) = self.writer.as_deref_mut() else { return Ok(false) };
+        if advance_numerical_page_header(writer, magic, kind, self.cursor, context)? { return Ok(false); }
         let complete = if self.kind == PcgPublicationKind::Checkpoint {
             match self.cursor.field {
-                0 => advance_u64_values(&mut self.writer, &state.checkpoint_control(operation), &mut self.cursor, context)?,
-                1 => advance_paged_u32_owner(&mut self.writer, &state.a.indptr, &mut self.cursor, context)?,
-                2 => advance_paged_u32_owner(&mut self.writer, &state.a.indices, &mut self.cursor, context)?,
-                3 => advance_paged_f64_owner(&mut self.writer, &state.a.vals, &mut self.cursor, context)?,
-                4 => advance_f64_owner(&mut self.writer, &state.b.0, &mut self.cursor, context)?,
-                5 => advance_f64_owner(&mut self.writer, &state.x.0, &mut self.cursor, context)?,
-                6 => advance_f64_owner(&mut self.writer, &state.diag.0, &mut self.cursor, context)?,
-                7 => advance_f64_owner(&mut self.writer, &state.r.0, &mut self.cursor, context)?,
-                8 => advance_f64_owner(&mut self.writer, &state.z.0, &mut self.cursor, context)?,
-                9 => advance_f64_owner(&mut self.writer, &state.p.0, &mut self.cursor, context)?,
-                10 => advance_f64_owner(&mut self.writer, &state.ap.0, &mut self.cursor, context)?,
+                0 => advance_u64_values(writer, &state.checkpoint_control(operation), &mut self.cursor, context)?,
+                1 => advance_paged_u32_owner(writer, &state.a.indptr, &mut self.cursor, context)?,
+                2 => advance_paged_u32_owner(writer, &state.a.indices, &mut self.cursor, context)?,
+                3 => advance_paged_f64_owner(writer, &state.a.vals, &mut self.cursor, context)?,
+                4 => advance_f64_owner(writer, &state.b.0, &mut self.cursor, context)?,
+                5 => advance_f64_owner(writer, &state.x.0, &mut self.cursor, context)?,
+                6 => advance_f64_owner(writer, &state.diag.0, &mut self.cursor, context)?,
+                7 => advance_f64_owner(writer, &state.r.0, &mut self.cursor, context)?,
+                8 => advance_f64_owner(writer, &state.z.0, &mut self.cursor, context)?,
+                9 => advance_f64_owner(writer, &state.p.0, &mut self.cursor, context)?,
+                10 => advance_f64_owner(writer, &state.ap.0, &mut self.cursor, context)?,
                 _ => true,
             }
         } else if self.cursor.field == 0 {
-            advance_u64_values(&mut self.writer, &state.output_control(operation), &mut self.cursor, context)?
+            advance_u64_values(writer, &state.output_control(operation), &mut self.cursor, context)?
         } else {
             let values = if self.cursor.field == 2 || self.cursor.field == 3 { &state.r.0 } else { &state.x.0 };
-            if !advance_owner_length(&mut self.writer, values.len(), &mut self.cursor, context)? { return Ok(false); }
+            if !advance_owner_length(writer, values.len(), &mut self.cursor, context)? { return Ok(false); }
             if let Some(value) = values.get(self.cursor.item) {
                 let value = match self.cursor.field { 3 => -*value, 4 => value.abs(), _ => *value };
-                if write_numerical_entry(&mut self.writer, &value.to_bits().to_le_bytes(), context)? { self.cursor.item += 1; }
+                if write_numerical_entry(writer, &value.to_bits().to_le_bytes(), context)? { self.cursor.item += 1; }
                 false
             } else {
                 true
             }
         };
         if complete {
-            if !self.writer.commit_staged_page_funded(context, size_of::<NumericalPageCursor>() + size_of::<bool>())? { return Ok(false); }
+            if !numerical_commit_page(writer, context)? { return Ok(false); }
             self.cursor.field += 1;
             self.cursor.owner = 0;
             self.cursor.item = 0;
@@ -186,21 +188,26 @@ impl PcgJob {
         if self.publication.is_none() {
             let copy_bytes = 2 * size_of::<Option<PcgPublication>>();
             let demand = RetirementDemand { copy_bytes, depth: 1, ..Default::default() };
-            if !semio_s_fem_sparse::numerical_grant_covers(context.retained_grant(), demand) { return Ok(NumericalRun::Yield); }
+            if !semio_s_fem_payload_turns::numerical_grant_covers(context.retained_grant(), demand) { return Ok(NumericalRun::Yield); }
             self.publication = Some(PcgPublication::new(kind));
             context.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..Default::default() })?;
             return Ok(NumericalRun::Yield);
         }
         let publication = self.publication.as_mut().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "PCG publication lost its original frame"))?;
         if !publication.complete {
-            if publication.writer.staged_page_len().is_none() {
-                publication.writer.begin_staged_page_funded(context)?;
+            if publication.writer.as_ref().is_none_or(|writer| !writer.is_initialized()) {
+                numerical_open_writer(&mut publication.writer, publication.stream, context)?;
+                return Ok(NumericalRun::Yield);
+            }
+            let Some(writer) = publication.writer.as_deref_mut() else { return Ok(NumericalRun::Fault) };
+            if writer.staged_page_len().is_none() {
+                numerical_begin_page(writer, context)?;
                 return Ok(NumericalRun::Yield);
             }
             if publication.advance(self.operation, &self.state, context)? { publication.complete = true; }
             return Ok(NumericalRun::Yield);
         }
-        if !publication.writer.take_finished_funded(&mut self.desk.lent, context, 2 * size_of::<Option<PcgPublication>>() + 3 * size_of::<bool>())? { return Ok(NumericalRun::Yield); }
+        if !numerical_finish_writer(&mut publication.writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
         let kind = publication.kind;
         self.publication = None;
         let payload = self.desk.lent.take().expect("finished PCG publication retained its actual payload");

@@ -359,13 +359,22 @@ fn utf8_copy_is_boundary_paged_and_source_lease_captures_one_value() {
     close_source(&mut siblings);
 }
 
+/// 🎟️ Drives one staged source admission to its published source under repeated identical grants.
+fn seal_read<T: semio_framework_value::retirement::RetireOwned + Sync>(read: snapshot_read::SnapshotRead<T>, grant: RetainedCloneGrant) -> RetainedCloneSource<T, snapshot_read::SnapshotRead<T>> {
+    let mut admission = read.source_admission().unwrap_or_else(|(error, _)| panic!("staged snapshot source admission refused: {error}"));
+    for _ in 0..16 { if admission.phase() == "ready" { break; } admission.advance(grant).result.expect("staged snapshot source stage"); }
+    let mut output = None;
+    admission.take_output(&mut output, grant).result.expect("staged snapshot source publication");
+    output.expect("staged snapshot source output")
+}
+
 #[test]
 fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellation() {
     let captured = fixture().immutable_lease.captured;
     let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(captured.clone());
     let lease = registry.try_issue(Arc::clone(&owner)).expect("production snapshot read lease");
-    let mut retained_source = snapshot_read::SnapshotRead::new(Arc::clone(&owner), lease).admit_retained_clone_source(physical_grant()).unwrap_or_else(|_| panic!("fixed snapshot source admission policy")).0;
+    let mut retained_source = seal_read(snapshot_read::SnapshotRead::new(Arc::clone(&owner), lease), physical_grant());
     let copy_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: captured.len(), maximum_depth: 64, maximum_release_bytes: captured.len() };
     let mut cursor = String::retained_clone_cursor();
     cursor.advance(retained_source.borrow(), 1, bound(copy_grant)).expect("production snapshot read alias bind");
@@ -388,7 +397,7 @@ fn production_snapshot_read_lease_survives_multiturn_copy_and_bounded_cancellati
     let registry = semio_framework_value_snapshot_read::SnapshotReadRegistryHandle::new();
     let owner = Arc::new(source(&fixture));
     let lease = registry.try_issue(Arc::clone(&owner)).expect("production cancellation snapshot read lease");
-    let mut retained_source = snapshot_read::SnapshotRead::new(owner, lease).admit_retained_clone_source(physical_grant()).unwrap_or_else(|_| panic!("fixed snapshot source admission policy")).0;
+    let mut retained_source = seal_read(snapshot_read::SnapshotRead::new(owner, lease), physical_grant());
     let grant = grant(&fixture);
     let mut cursor = NeutralSnapshot::retained_clone_cursor();
     cursor.advance(retained_source.borrow(), 1, grant).expect("production cancellation reserve");

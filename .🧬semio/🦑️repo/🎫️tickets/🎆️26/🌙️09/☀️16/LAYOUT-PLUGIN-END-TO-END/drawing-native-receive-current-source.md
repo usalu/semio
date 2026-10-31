@@ -1,0 +1,11 @@
+# Native Receive Current Source
+
+Status: partial authored Source, not compilation-ready and not SourceReady. No runtime was launched by this lane.
+
+Schema-first owning laws precede the new native outcome contract, real typed storage and dedicated Box receiver. The source now retains actual uninitialized Layout-backed storage across denial, real allocator null, initialization and cancellation; each actual birth/init/release has a distinct work outcome. NativeReceive concrete and receive-derived header initializers are pure. NativeReceiveSlot, NativeReceivingOriginal, NativeSharedReceiver and NativePersistentListReceiver now own staged storage. Box output uses the same actual storage, replacing its ungranted Box::new mapper. Retained child close outcomes are forwarded before errors throughout the native receiver family. Persistent builder/root/read/splice close forwards genuine child work; builder frontier scans are separate metadata turns, and builder new(expected) is pure.
+
+Removed constructor contracts: NativeReceive.begin_receive/begin_record_subset/receive_birth_demand; NativeReceivingOriginal shell/admit_parts/capture/begin_receiver convenience paths. Actual call sites and old owning tests are still being hand-migrated, and the obsolete synchronous blocking decoder remains an explicit removal/caller blocker. No compatibility alias or grant minted from a demand was introduced.
+
+Remaining required production work: remaining sequence/tuple/bulk/map/set/flat-record and derived normal advances; Builder normal work outcomes; the defining sealed/shared construction work seam and ordered map update work seam; old constructor and full-outcome consumers; exact existing law migration. New laws are unexecuted. Native-owned --lib is the earliest owning compile/test gate only after this closure stabilizes; persistent --lib and Job --lib own the respective lower changes. Full Drawing and Layout gates remain open.
+
+The exact observation packet drawing-native-receive-current-inputs.json records current native/derive/lower inputs, not blanket authorship or a frozen proof. Earlier close/initializer packets are historical as this closure proceeds. New native storage, Box and source-return paths were checked against the 256 UTF16-unit absolute path bound.

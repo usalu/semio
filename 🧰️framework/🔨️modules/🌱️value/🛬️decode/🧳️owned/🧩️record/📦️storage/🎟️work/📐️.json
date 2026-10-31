@@ -1,0 +1,17 @@
+{
+  "stock": {
+    "items": 1000,
+    "fuel": 1000,
+    "copyBytes": 32768,
+    "capacityBytes": 32768,
+    "releaseBytes": 32768,
+    "depth": 64
+  },
+  "value": 42,
+  "deniedWork": 0,
+  "allocationWork": 1,
+  "initializeWork": 1,
+  "takeWork": 1,
+  "releaseWork": 1,
+  "copyBytes": 0
+}

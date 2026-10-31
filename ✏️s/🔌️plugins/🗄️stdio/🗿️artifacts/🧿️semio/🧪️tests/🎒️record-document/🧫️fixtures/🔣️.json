@@ -1,0 +1,310 @@
+{
+ "schema": "semio.stdio.record-document-laws/v1",
+ "packCount": 39,
+ "crc32c": [
+  {
+   "hex": "",
+   "crc": 0
+  },
+  {
+   "hex": "313233343536373839",
+   "crc": 3808858755
+  },
+  {
+   "hex": "0000000000000000000000000000000000000000000000000000000000000000",
+   "crc": 2324772522
+  },
+  {
+   "hex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+   "crc": 1655221059
+  },
+  {
+   "hex": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+   "crc": 1188919630
+  },
+  {
+   "hex": "1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100",
+   "crc": 289397596
+  }
+ ],
+ "blake3": [
+  {
+   "size": 0,
+   "hash": "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"
+  },
+  {
+   "size": 1,
+   "hash": "448bd8dd9624154a690f8e84dc52d6f633ba7cd545c4d3c9b4e0f6a2f6fa71f4"
+  },
+  {
+   "size": 3,
+   "hash": "545a7476d63b5a22936f733cd2cb89f162a7d864cb01b8b88437a36627b1303a"
+  },
+  {
+   "size": 63,
+   "hash": "7a7ae5f9b6891d25edecc530fbf41f88f0e4035b8fa17715cfb1201ba3c913ae"
+  },
+  {
+   "size": 64,
+   "hash": "580eedf630212f2a9bd14712f93921e1a2712117290a21a8974a029532e93b11"
+  },
+  {
+   "size": 65,
+   "hash": "7f55325c3368e44f79edddb7b1a079b8aeae7ab43a0254b3012e564d75c4c1ae"
+  },
+  {
+   "size": 1000,
+   "hash": "9e488940536ee753d05b6f7f6f40a000d47c9a3fed17f8c241ba1ad5112cbb9a"
+  },
+  {
+   "size": 1023,
+   "hash": "7cc12c8435bc5cdb011ba62b7367601fb7d30b23b32e177f7e41907b210a8673"
+  },
+  {
+   "size": 1024,
+   "hash": "16f3b22ae43940fb8c8f328b033272ae752c203c3385d00bdda1696540f4c37e"
+  },
+  {
+   "size": 1025,
+   "hash": "b8c5c46b114817810a6ed499350cb4d2423cd23dd08d32c137b226d8559b8ab0"
+  },
+  {
+   "size": 2047,
+   "hash": "cbdca44a3053529ec21db844522b1eb6c1da17decea917294a064abc8ddf885a"
+  },
+  {
+   "size": 2048,
+   "hash": "634f590a498b3e29165cd8bd32f30a99a2b0d8949a3d7ce35779b6253d8ca0d5"
+  },
+  {
+   "size": 2049,
+   "hash": "3c6cc85bfe26acef94b6bb440e8256c3fc541be3afe18bfffcd2c30c38e8a633"
+  },
+  {
+   "size": 3072,
+   "hash": "ef59bae05ee1055873dce05dfc322342deaf90b6e45b4329297027447b1996e6"
+  },
+  {
+   "size": 4096,
+   "hash": "d0c362f7235cbf7df3b8aabcefa9be7485c1c3c82983d42a519345929fb2fc1f"
+  },
+  {
+   "size": 8191,
+   "hash": "96ae78405b2b63d56cb3e5caf1d18f75b2a5d028ac18578f9be2a4a496115587"
+  },
+  {
+   "size": 8192,
+   "hash": "2f99d251d947737dbc51610781b1908924579cad6ef72769cf17b0c88287e836"
+  },
+  {
+   "size": 100000,
+   "hash": "4e14b1e550c5a286b2fa16dc0046a7291b3c0cb164d880200354a68982e113ef"
+  }
+ ],
+ "deflate": [
+  {
+   "source": "📃️note",
+   "kind": 3,
+   "rawHex": "08000748656c6c6f2c2002646502656e1268747470733a2f2f73656d696f2e7465636812732e737464696f2e73656d696f2e746578740a73656d696f2e7465636805776f726c64",
+   "deflatedHex": "e36060f748cdc9c9d751604a49654acd13ca28292928b6d2d72f4ecdcdccd72b494dce102ad62b2e490172604215255c0859d6f2fca29c1400"
+  },
+  {
+   "source": "📃️note",
+   "kind": 4,
+   "rawHex": "02000605010c030d03000603010601020c000d03000603010607020c010d02000a000106000d03000602010606020c010d02000a03010604",
+   "deflatedHex": "6362606365e461e66566606366646364e2618032d9997818799918b81818d9c0424c8c6c6c5021a02c0b00"
+  },
+  {
+   "source": "🏢️building",
+   "kind": 3,
+   "rawHex": "130a46697265526174696e670c47726f756e6420466c6f6f720a497345787465726e616c0f507365745f57616c6c436f6d6d6f6e0552454936300853697465204f6e6514546865726d616c5472616e736d697474616e636507626f6f6c65616e046272657006627265702d310c636f6e7461696e65642d696e066e756d6265720572656c2d3106736974652d3111737464696f2e73656d696f2e6d6f64656c0873746f7265792d3104746578740477616c6c0677616c6c2d31",
+   "deflatedHex": "13e672cb2c4a0d4a2cc9cc4be7712fca2fcd4b5170cbc9cf2fe2f22c76ad28492dca4bcce10f284e2d890f4fccc971cecfcdcdcf630d72f53433e008ce2c4955f0cf4b1509c9482dca4dcc09294acc2bcecd2c2949cc4b4e654fcacfcf494dcc63492a4a2d600311ba863cc9f97925899979a929ba99796c79a5b949a945ac45a939ba866cc540b3740d058b4b5232f3f58a537381646e7e4a6a0e4771497e516aa5ae214b496a45094b39d00d6c2042d71000"
+  },
+  {
+   "source": "🏢️building",
+   "kind": 4,
+   "rawHex": "0400060e010c020d0400060d010a00020605040d03000d03000500000000000000000105000000000000000002050000000000000000010d040005000000000000000001050000000000000000020500000000000000000305000000000000f03f020d030005000000000000f03f0105000000000000f03f0205000000000000f03f0d0500060f010a0202060103060d040d03000d03000500000000000000000105000000000000000002050000000000000840010d040005000000000000000001050000000000000000020500000000000000000305000000000000f03f020d030005000000000000f03f0105000000000000f03f0205000000000000f03f020c010d06000612010e0f011100020d03000d03000500000000000000000105000000000000000002050000000000000000010d040005000000000000000001050000000000000000020500000000000000000305000000000000f03f020d030005000000000000f03f0105000000000000f03f0205000000000000f03f030e0f01080100060904060f050c010d02000603010c030d02000602010e0f01070100020d02000600010e0f0110010006040d02000606010e0f010b010005b81e85eb51b8ce3f030c010d0400060c010e0f010a0002061203060f",
+   "deflatedHex": "636160e363e461e205d2bc8c5c0c4c6cac2cbccc0c40c4ca00058c701613420ca81eaf026628eb833d13c2ac0ff630a54061388b9795818d9f918b89898d91998d97b0ed1c0ed4b49d898791978d814d88918f9f519001a49c9e7e6706dacac1c8c0c6c9c2c6cf0a740913031b33230f33886602b9889d11e824208701c411002a6401f1d8403c6e4606d61d72adaf03779cb367066a0546200f481c148742cc6cfc00"
+  }
+ ],
+ "subsets": [
+  {
+   "folder": "🎞️animation",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "s.stdio.semio.animation",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🚶️walk/🖼️assets/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/📚️examples/🚶️walk/🖼️assets/🎒️.pack.semio"
+   ]
+  },
+  {
+   "folder": "🎬️video",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "stdio.semio.video",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎥️clip/🖼️assets/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🎬️video/📚️examples/🎥️clip/🖼️assets/🎒️.pack.semio"
+   ]
+  },
+  {
+   "folder": "🏛️model",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "stdio.semio.model",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🏢️building/🖼️assets/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🖼️assets/🏢️building/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧪️tests/🧫️fixtures/🏛️mutate-semio-model/📦️nakagin-capsule-tower.pack.semio"
+   ],
+   "snapshots": [
+    {
+     "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🏢️building/🖼️assets/🎒️.pack.semio",
+     "json": "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧪️tests/🧫️fixtures/🏛️mutate-semio-model/🏗️insert-spatial-node/⬅️before/🔣️.json"
+    },
+    {
+     "pack": "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🖼️assets/🏢️building/🎒️.pack.semio",
+     "json": "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧪️tests/🧫️fixtures/🏛️mutate-semio-model/🏗️insert-spatial-node/⬅️before/🔣️.json"
+    }
+   ]
+  },
+  {
+   "folder": "📊️table",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "s.stdio.semio.table",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/📊️table/🖼️assets/📃️sheet/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧪️tests/🧫️fixtures/📊️mutate-semio-table/📦️reuse-marketplaces.pack.semio"
+   ]
+  },
+  {
+   "folder": "📐️cad",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "stdio.semio.cad",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📐️drawing/🖼️assets/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🖼️assets/📐️drawing/🎒️.pack.semio"
+   ]
+  },
+  {
+   "folder": "📑️document",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "s.stdio.semio.document",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🗒️memo/🖼️assets/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/📑️document/🖼️assets/🗒️memo/🎒️.pack.semio"
+   ]
+  },
+  {
+   "folder": "📦️object",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "stdio.semio.object",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/📦️object/🖼️assets/📦️crate/🎒️.pack.semio"
+   ]
+  },
+  {
+   "folder": "📽️presentation",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "s.stdio.semio.presentation",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📽️deck/🖼️assets/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🖼️assets/📽️deck/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧪️tests/🧫️fixtures/📽️mutate-semio-presentation/🎒️.pack.semio"
+   ],
+   "snapshots": [
+    {
+     "pack": "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📽️deck/🖼️assets/🎒️.pack.semio",
+     "json": "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧪️tests/🧫️fixtures/📽️mutate-semio-presentation/🧾️set-slide-notes/⬅️before/🔣️.json"
+    },
+    {
+     "pack": "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🖼️assets/📽️deck/🎒️.pack.semio",
+     "json": "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧪️tests/🧫️fixtures/📽️mutate-semio-presentation/🧾️set-slide-notes/⬅️before/🔣️.json"
+    }
+   ]
+  },
+  {
+   "folder": "🔊️audio",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "stdio.semio.audio",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎵️tone/🖼️assets/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/📚️examples/🎵️tone/🖼️assets/🎒️.pack.semio"
+   ]
+  },
+  {
+   "folder": "🔢️value",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "stdio.semio.value",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🖼️assets/🕸️graph/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧪️tests/🧫️fixtures/🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-forest/🎒️.pack.semio"
+   ]
+  },
+  {
+   "folder": "🔤️text",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "s.stdio.semio.text",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📃️note/🖼️assets/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🖼️assets/📃️note/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧪️tests/🧫️fixtures/🔤️mutate-semio-text/🎒️.pack.semio",
+    "📚️examples/📃️note/🖼️assets/🎒️.pack.semio"
+   ]
+  },
+  {
+   "folder": "🔺️mesh",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "stdio.semio.mesh",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/📚️examples/🧊️cube/🖼️assets/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧪️tests/🧫️fixtures/🔺️mutate-semio-mesh/🎒️.pack.semio"
+   ]
+  },
+  {
+   "folder": "🕸️graph",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "s.stdio.semio.graph",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🖼️assets/🕸️wires/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧪️tests/🧫️fixtures/🌳️mutate-semio-graph/🎒️.pack.semio"
+   ]
+  },
+  {
+   "folder": "🖊️drawing",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "stdio.semio.drawing",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖍️sketch/🖼️assets/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧪️tests/🧫️fixtures/🖊️mutate-semio-drawing/🎒️.pack.semio"
+   ]
+  },
+  {
+   "folder": "🖼️image",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "s.stdio.semio.image",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖼️swatch/🖼️assets/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧪️tests/🧫️fixtures/🖼️mutate-semio-image/🎒️.pack.semio"
+   ]
+  },
+  {
+   "folder": "🧊️brep",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "stdio.semio.brep",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🧊️solid/🖼️assets/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🖼️assets/🧊️solid/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🧫️fixtures/🧊️mutate-semio-brep/🎒️.pack.semio"
+   ]
+  },
+  {
+   "folder": "🧰️kit",
+   "spec": "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json",
+   "envelope": "stdio.semio.kit",
+   "packs": [
+    "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🖼️assets/🪑️furniture/🎒️.pack.semio",
+    "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧪️tests/🧫️fixtures/🧰️mutate-semio-kit/🎒️.pack.semio"
+   ]
+  }
+ ]
+}

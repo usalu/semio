@@ -21,13 +21,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[[test]]
-name = "history_supersede_fold"
-path = "../../🧪️tests/🔬️supersede-fold/🦀️.rs"
-
-[[test]]
-name = "history_transition_unit"
-path = "../../🧪️tests/🔬️unit/🦀️.rs"
+[features]
+# 🪝️ Exposes forwarders of crate-private items for the companion crate `semio-framework-replication-history-tests`.
+testkit = []
 
 [dependencies]
 semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }

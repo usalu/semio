@@ -103,8 +103,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
                 return Err(self.diagnostic("generation3d-envelope.snapshot-pack-odd-hex", token.start));
             }
             let expected = usize::try_from(span / 2).map_err(|_| self.diagnostic("generation3d-envelope.snapshot-pack-length", token.start))?;
-            let maximum_items = generation3d_publication_item_credit(self.operation, self.generation).map_err(|_| self.diagnostic("generation3d-envelope.snapshot-item-authority", token.start))?;
-            *self.session = Some(semio_s_artifact_procedural_3d_io_binary::snapshot::generation3d_mounted_pack_session(expected, maximum_items).map_err(|_| self.diagnostic("generation3d-envelope.snapshot-pack-preflight", token.start))?);
+            *self.session = Some(semio_s_artifact_procedural_3d_io_binary::snapshot::generation3d_mounted_pack_session(expected, GENERATION3D_MAXIMUM_DOMAIN_ITEMS).map_err(|_| self.diagnostic("generation3d-envelope.snapshot-pack-preflight", token.start))?);
             self.token = Some(token);
             self.state = Generation3dPackSnapshotState::Ingest;
         }
@@ -244,7 +243,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             };
         }
         if self.retirement.is_none() {
-            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.snapshot-retirement-fault", error))?;
+            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).result.map_err(|error| diagnostic("generation3d-envelope.snapshot-retirement-fault", error))?;
             self.state = Generation3dPackSnapshotState::Closing;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }

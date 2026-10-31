@@ -7,21 +7,21 @@ fn boolean_translated_stroke_junctions_preserve_endpoint_incidence(){
  let rows:Vec<Value>=serde_json::from_str(include_str!("🧫️fixtures/🔗️endpoints/🔣️.json")).unwrap();
  for row in rows {let source=input(&row);let mut previous=None;for grant in [1,7,4096]{let (segments,_)=finish(source.clone(),grant);let rings=contours(&segments);assert_eq!(rings.len(),1,"{}",row["name"]);assert!(area(&rings[0])>0.0);for ring in &rings{for at in 0..ring.len(){assert!(length(ring[at],ring[(at+1)%ring.len()])>source.epsilon);}}if let Some(before)=&previous{assert_eq!(&segments,before);}previous=Some(segments);}}
 }
-fn rows()->Vec<Value> {serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
-fn input(row:&Value)->BooleanInput {
+pub(super) fn rows()->Vec<Value> {serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+pub(super) fn input(row:&Value)->BooleanInput {
  let v=&row["input"];BooleanInput {operation:BooleanOperation::parse(v["operation"].as_str().unwrap()).unwrap(),operands:v["operands"].as_array().unwrap().iter().map(|operand|BooleanOperand {fill_rule:match operand["fillRule"].as_str().unwrap() {"nonzero"=>BooleanFillRule::Nonzero,"evenodd"=>BooleanFillRule::Evenodd,_=>panic!("Invalid fixture rule")},contours:operand["contours"].as_array().unwrap().iter().map(|ring|ring.as_array().unwrap().iter().map(|p|[p[0].as_f64().unwrap(),p[1].as_f64().unwrap()]).collect()).collect()}).collect(),epsilon:v["epsilon"].as_f64().unwrap(),max_edges:v["maxEdges"].as_u64().unwrap() as usize,max_parameters:v["maxParameters"].as_u64().unwrap() as usize,max_atomic_edges:v["maxAtomicEdges"].as_u64().unwrap() as usize,max_segments:v["maxSegments"].as_u64().unwrap() as usize,max_work:v["maxWork"].as_u64().unwrap()}
 }
-fn contours(segments:&[PathSegment])->Vec<Vec<Vec2>> {
+pub(super) fn contours(segments:&[PathSegment])->Vec<Vec<Vec2>> {
  let mut rings=Vec::<Vec<Vec2>>::new();for segment in segments {match segment {PathSegment::Move {to}=>rings.push(vec![*to]),PathSegment::Line {to}=>rings.last_mut().unwrap().push(*to),PathSegment::Close=>{},_=>panic!("Unexpected boolean curve")}}rings
 }
-fn area(ring:&[Vec2])->f64 {let mut sum=0.0;for at in 1..ring.len().saturating_sub(1) {sum+=cross(ring[0],ring[at],ring[at+1]);}sum/2.0}
+pub(super) fn area(ring:&[Vec2])->f64 {let mut sum=0.0;for at in 1..ring.len().saturating_sub(1) {sum+=cross(ring[0],ring[at],ring[at+1]);}sum/2.0}
 fn filled(rings:&[Vec<Vec2>],p:Vec2,rule:BooleanFillRule)->bool {
  let mut winding=0;for ring in rings {for at in 0..ring.len() {let (a,b)=(ring[at],ring[(at+1)%ring.len()]);let c=cross(a,b,p);if a[1]<=p[1]&&b[1]>p[1]&&c>0.0 {winding+=1;}else if a[1]>p[1]&&b[1]<=p[1]&&c<0.0 {winding-=1;}}}if rule==BooleanFillRule::Evenodd {winding%2!=0} else {winding!=0}
 }
-fn finish(input:BooleanInput,grant:usize)->(Vec<PathSegment>,BooleanProgress) {
- let limit=input.max_work;let mut job=BooleanJob::new(input).unwrap();assert_eq!(job.result().unwrap_err(),BooleanError::Incomplete);let mut work=0;
- loop {let p=job.advance(grant).unwrap();assert!(p.work-work<=grant as u64);assert!(p.work<=limit);work=p.work;if p.done {return (job.into_result().unwrap(),p);}assert_eq!(job.result().unwrap_err(),BooleanError::Incomplete);}
-}
+#[path="../../🛤️path/🎟️work/🧪️tests/🦀️.rs"]pub(super) mod funding;
+pub(super) fn wallet()->funding::Wallet{let data:Value=serde_json::from_str(include_str!("../🎟️work/📐️.json")).unwrap();let s=&data["stock"];funding::Wallet::from_grant(semio_framework_value::RetainedCloneGrant{maximum_items:s["items"].as_u64().unwrap()as usize,maximum_copy_bytes:s["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:s["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:s["release"].as_u64().unwrap()as usize,maximum_depth:s["depth"].as_u64().unwrap()as usize},data["maxTurns"].as_u64().unwrap()as usize)}
+fn turn(job:&mut BooleanJob,wallet:&mut funding::Wallet,items:usize)->Result<BooleanProgress,BooleanError>{wallet.turn(items,|work|job.advance(items,work))}
+pub(super) fn finish(input:BooleanInput,grant:usize)->(Vec<PathSegment>,BooleanProgress){let limit=input.max_work;let mut job=BooleanJob::new(input);let mut wallet=wallet();assert_eq!(job.result().unwrap_err(),BooleanError::Incomplete);let mut previous=0;loop{let p=turn(&mut job,&mut wallet,grant).unwrap();assert!(p.work-previous<=grant as u64);assert!(p.work<=limit);previous=p.work;if p.done{let output=job.result().unwrap().to_vec();wallet.close_owned(job);return(output,p);}assert_eq!(job.result().unwrap_err(),BooleanError::Incomplete);}}
 #[test]
 fn boolean_neutral_regions_with_identical_outputs_across_grants() {
  for row in rows() {let input=input(&row);let mut previous=None;
@@ -37,17 +37,13 @@ fn boolean_neutral_regions_with_identical_outputs_across_grants() {
 fn boolean_resource_and_precision_refusals_remain_sticky() {
  let source=input(&rows()[0]);assert!(BooleanOperation::parse("bogus").is_err());let mut invalid=Vec::new();
  for kind in 0..9 {let mut row=source.clone();match kind {0=>row.operands.clear(),1=>row.operands=vec![row.operands[0].clone();1025],2=>row.epsilon=0.0,3=>row.epsilon=f64::INFINITY,4=>row.max_edges=0,5=>row.max_parameters=0,6=>row.max_atomic_edges=0,7=>row.max_segments=0,_=>row.max_work=0}invalid.push(row);}
- for row in invalid {assert!(BooleanJob::new(row).is_err());}
+ for row in invalid {let mut job=BooleanJob::new(row);let mut wallet=wallet();assert!(turn(&mut job,&mut wallet,1).is_err());wallet.close_owned(job);}
  for kind in 0..8 {let mut row=source.clone();match kind {0=>row.operands[0].contours[0][0][0]=f64::NAN,1=>row.operands[0].contours[0][0][0]=1e12+1.0,2=>row.max_edges=3,3=>row.max_parameters=2,4=>row.max_atomic_edges=1,5=>row.max_segments=3,6=>row.max_work=1,_=>{row=input(&rows()[25]);row.epsilon=1e-12;}}
-  let mut job=BooleanJob::new(row).unwrap();let error=job.advance(10000000).unwrap_err();assert_eq!(job.result().unwrap_err(),error);assert_eq!(job.advance(1).unwrap_err(),error);
- }assert!(BooleanJob::new(source).unwrap().advance(0).is_err());
+  let mut job=BooleanJob::new(row);let mut wallet=wallet();let error=loop{match turn(&mut job,&mut wallet,4096){Err(error)=>break error,Ok(p)=>assert!(!p.done)}};assert_eq!(job.result().unwrap_err(),error);assert_eq!(turn(&mut job,&mut wallet,1).unwrap_err(),error);wallet.close_owned(job);
+ }let mut job=BooleanJob::new(source);let mut wallet=wallet();assert!(turn(&mut job,&mut wallet,0).is_err());wallet.close_owned(job);
 }
 #[test]
-fn boolean_cancellation_covers_every_public_phase_and_keeps_owned_results() {
- let input=input(&rows()[0]);let mut probe=BooleanJob::new(input.clone()).unwrap();let mut seen=BTreeSet::new();
- loop {let p=probe.advance(1).unwrap();if seen.insert(p.phase.as_str()) {let mut job=BooleanJob::new(input.clone()).unwrap();job.advance(p.work as usize).unwrap();job.cancel();assert_eq!(job.result().unwrap_err(),BooleanError::Cancelled);assert_eq!(job.advance(1).unwrap_err(),BooleanError::Cancelled);}if p.done {break;}}
- assert_eq!(seen,BTreeSet::from(["preparing","indexing","intersections","splitting","classifying","contours","compacting","emitting","complete"]));let mut job=BooleanJob::new(input).unwrap();job.advance(1000000).unwrap();let published=job.result().unwrap().to_vec();job.cancel();assert!(!published.is_empty());
-}
+fn boolean_cancellation_covers_every_public_phase_and_keeps_owned_results(){let input=input(&rows()[0]);let mut probe=BooleanJob::new(input.clone());let mut bank=wallet();let mut seen=BTreeSet::new();loop{let p=turn(&mut probe,&mut bank,1).unwrap();if seen.insert(p.phase.as_str()){let mut job=BooleanJob::new(input.clone());let mut funds=wallet();loop{if turn(&mut job,&mut funds,1).unwrap().phase==p.phase{break;}}job.cancel();assert_eq!(job.result().unwrap_err(),BooleanError::Cancelled);assert_eq!(turn(&mut job,&mut funds,1).unwrap_err(),BooleanError::Cancelled);funds.close_owned(job);}if p.done{break;}}assert_eq!(seen,BTreeSet::from(["preparing","indexing","intersections","splitting","classifying","contours","compacting","emitting","complete"]));let published=probe.result().unwrap().to_vec();probe.cancel();assert!(!published.is_empty());bank.close_owned(probe);}
 #[test]
 fn boolean_exact_resource_caps_and_progress_taxonomy() {
  let input=input(&rows()[0]);let (expected,p)=finish(input.clone(),1);let mut exact=input;exact.max_edges=p.vertices;exact.max_parameters=p.parameters;exact.max_atomic_edges=p.atomic_edges;exact.max_segments=p.segments;exact.max_work=p.work;assert_eq!(finish(exact,7).0,expected);
@@ -55,17 +51,5 @@ fn boolean_exact_resource_caps_and_progress_taxonomy() {
 }
 
 #[test]
-fn boolean_retirement_hands_off_owned_sources_and_drains_private_arrangements(){
- let cases:Value=serde_json::from_str(include_str!("🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();
- for row in cases["cases"].as_array().unwrap(){for grant in [1,7,4096]{
-  let fixture=rows().into_iter().find(|r|r["name"]==row["source"]).unwrap();let mut source=input(&fixture);if let Some(n)=row["maxParameters"].as_u64(){source.max_parameters=n as usize;}let source_ptr=source.operands.as_ptr();let source_points=source.operands.iter().map(|o|o.contours.clone()).collect::<Vec<_>>();let mut job=BooleanJob::new(source).unwrap();let phase=row["phase"].as_str().unwrap();
-  if phase=="failure"{assert!(job.advance(4096).is_err());}else if phase!="fresh"{if phase!="cancelled"{let mut reached=false;for _ in 0..100000{if job.advance(1).unwrap().phase.as_str()==phase{reached=true;break;}}assert!(reached);}for _ in 0..row["offset"].as_u64().unwrap(){job.advance(1).unwrap();}}
-  if phase=="cancelled"{job.cancel();}let published=if phase=="complete"{Some(job.result().unwrap().as_ptr())}else{None};
-  let(mut close,operands,output)=job.into_retirement();assert_eq!(operands.as_ptr(),source_ptr);assert_eq!(operands.iter().map(|o|o.contours.clone()).collect::<Vec<_>>(),source_points);
-  if let Some(ptr)=published{assert_eq!(output.as_ref().unwrap().as_ptr(),ptr);let actual=contours(output.as_ref().unwrap()).iter().map(|r|area(r)).sum::<f64>();assert_eq!(actual,fixture["expected"]["area"].as_f64().unwrap());}else{assert!(output.is_none());}
-  assert!(close.advance(0).is_err());let mut work=0;loop{let p=close.advance(grant).unwrap();assert!(p.work>=work&&p.work-work<=grant as u64);work=p.work;if p.done{break;}}assert!(work>0);assert!(close.terminal_is_empty());assert!(close.owner.original().is_none());let p=close.advance(1).unwrap();assert_eq!((p.phase,p.work,p.done),("complete",work,true));
- }}
-}
-
-#[test]
-fn retained_admission_keeps_refused_boolean_source(){let fixture:Value=serde_json::from_str(include_str!("../../🧹️retire/🧪️tests/🧫️fixtures/📥️admission/🔣️.json")).unwrap();for row in fixture["cases"].as_array().unwrap(){if row["kind"]!="boolean"{continue;}let mut source=input(&rows()[0]);source.max_edges=row["maxEdges"].as_u64().unwrap()as usize;let operands=source.operands.as_ptr();let points=source.operands[0].contours[0].as_ptr();let mut job=BooleanJob::admit(source);assert_eq!(job.input.operands.as_ptr(),operands);assert_eq!(job.input.operands[0].contours[0].as_ptr(),points);assert!(job.advance_work(1).is_err());assert!(job.result().is_err());let mut close=BooleanRetirement::new(job);assert_eq!(close.owner.original().unwrap().input.operands.as_ptr(),operands);while !close.advance(1).unwrap().done{}assert!(close.terminal_is_empty());}}
+fn boolean_retirement_hands_off_owned_sources_and_drains_private_arrangements(){let cases:Value=serde_json::from_str(include_str!("🧫️fixtures/🧹️retirement/🔣️.json")).unwrap();for row in cases["cases"].as_array().unwrap(){for quantum in [1,7,4096]{let fixture=rows().into_iter().find(|r|r["name"]==row["source"]).unwrap();let mut source=input(&fixture);if let Some(n)=row["maxParameters"].as_u64(){source.max_parameters=n as usize;}let source_ptr=source.operands.as_ptr();let source_points=source.operands.iter().map(|o|o.contours.clone()).collect::<Vec<_>>();let mut job=BooleanJob::new(source);let mut bank=wallet();let phase=row["phase"].as_str().unwrap();if phase=="failure"{loop{if turn(&mut job,&mut bank,quantum).is_err(){break;}}}else if phase!="fresh"{if phase!="cancelled"{loop{if turn(&mut job,&mut bank,1).unwrap().phase.as_str()==phase{break;}}}let target=job.work+row["offset"].as_u64().unwrap();while job.work<target{turn(&mut job,&mut bank,1).unwrap();}}if phase=="cancelled"{job.cancel();}let published=if phase=="complete"{Some(job.result().unwrap().as_ptr())}else{None};let(close,operands,output)=job.into_retirement();assert_eq!(operands.as_ptr(),source_ptr);assert_eq!(operands.iter().map(|o|o.contours.clone()).collect::<Vec<_>>(),source_points);if let Some(ptr)=published{assert_eq!(output.as_ref().unwrap().as_ptr(),ptr);let actual=contours(output.as_ref().unwrap()).iter().map(|r|area(r)).sum::<f64>();assert_eq!(actual,fixture["expected"]["area"].as_f64().unwrap());}else{assert!(output.is_none());}bank.close_owned((close,operands,output));}}}
+#[test]fn retained_admission_keeps_refused_boolean_source(){let fixture:Value=serde_json::from_str(include_str!("../../🧹️retire/🧪️tests/🧫️fixtures/📥️admission/🔣️.json")).unwrap();for row in fixture["cases"].as_array().unwrap(){if row["kind"]!="boolean"{continue;}let mut source=input(&rows()[0]);source.max_edges=row["maxEdges"].as_u64().unwrap()as usize;let operands=source.operands.as_ptr();let points=source.operands[0].contours[0].as_ptr();let mut job=BooleanJob::new(source);let mut bank=wallet();assert_eq!(job.input.operands.as_ptr(),operands);assert_eq!(job.input.operands[0].contours[0].as_ptr(),points);assert!(turn(&mut job,&mut bank,1).is_err());assert!(job.result().is_err());let close=BooleanRetirement::new(job);assert_eq!(close.owner.original().unwrap().input.operands.as_ptr(),operands);bank.close_owned(close);}}

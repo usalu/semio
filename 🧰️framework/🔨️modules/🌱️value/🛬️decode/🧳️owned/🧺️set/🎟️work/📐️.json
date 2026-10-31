@@ -1,0 +1,31 @@
+{
+  "members": [
+    "z",
+    "a",
+    "m",
+    "a"
+  ],
+  "expected": [
+    "a",
+    "m",
+    "z"
+  ],
+  "stock": {
+    "items": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "fuel": 100000,
+    "maximumTurns": 100000
+  },
+  "rules": {
+    "stagedNativeReceiver": true,
+    "sameFiniteStock": true,
+    "noSynchronousControlledFallback": true,
+    "independentBTreeSet": true,
+    "allPositiveDenialAxes": true,
+    "genuineNullRetrySameStock": true,
+    "childCompletionDoesNotPublishParent": true
+  }
+}

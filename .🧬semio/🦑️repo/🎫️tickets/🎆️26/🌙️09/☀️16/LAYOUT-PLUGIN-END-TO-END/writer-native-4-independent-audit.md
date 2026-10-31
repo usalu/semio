@@ -1,0 +1,18 @@
+# Writer Native 4 Independent Audit
+
+Read-only current Source/command inspection. No Cargo/runtool, semantic test, native execution, source edit or cache effect by reviewer. Root has released one actual native4 to Rust; retained command JSON still labels PREP ONLY/executed=false and must not itself be treated as runtime receipt.
+
+Prepared owning Writer artifact Cargo.toml current SHA matches command metadata. Explicit packages semio-s-artifact-writer-writer-typing-fold and semio-s-artifact-writer-writer-tests-2 still uniquely exist in that workspace. --lib original_ -- --nocapture selects real library roots, not dependency-only unit code. Current authored names matching that filter are two original_writer_fold laws plus writer_editor_forwards_its_canonical_original_typing_factory; mount/source evidence is not a compiler-selected count. The fold crate mounts original tests under cfg(test); tests-2 facade retains original operation test source and Editor forwarding law.
+
+Current neutral fold corpus contains exactly10unique cases, from whole-text/mixed/empty/multiple leaves through adjacent/erased/disjoint/repeated-scalar/astral splice cases. Actual provider law emits one [writer-native-fold] record per case while preserving source pointer identity and unchanged borrowed inputs. Cancellation law checks partial native owner closure separately; forwarding law checks real EditorApp factory. Exactly3tests+10actual records are expected; actual runtime output remains required.
+
+Current writer-fold-oracle.ts validates neutral schema with strict Ajv, computes independent JSONPatch text edits, and requires exactly expected.size10native records with unique known names and exact result equality. No-log mode reports nativeCompared=false and must not be claimed as native acceptance. writer-fold-hostile.ts first validates fresh actual baseline, then rejects duplicate replacing omitted, extra duplicate, omission, unknown case and changed actual output. It cannot legitimately run positive hostile evidence on synthetic tape. Full actual native output and both owner-run oracles remain pending.
+
+Prepared log/artifact paths live under ticket generated; native command is a workspace-specific reviewed input and makes no cross-platform installer promise. Previous ENOSPC attempt has no runtime baseline. This audit does not infer compiler capacity readiness or dependency rematerialization from Source selection.
+
+
+## Actual Native 4 Terminal Evidence
+
+2026-10-30. Original18275 owner terminal EXIT1, inner Cargo101/signalnull. Independent full log read verifies first failing semio-s-artifact-stdio-semio-mesh-snapshot due ENOSPC os28; managed compiler image reports0.0GiB free of47.8GiB. Built-in recovery reports0lanes/0incrementalsets/0sessions/0buildunits/0objects cleaned and exactly one automatic retry. Retry then fails semio-framework-pack with rustc-LLVM output IO failure/No space left, followed by still-full diagnostic. Final retained OwnedCommandFailure status101 agrees with owner terminal classification.
+
+Full log contains0Running test boundaries,0test-result summaries and0[writer-native-fold] records. Thus none of intended3Writer laws or10records executed; compiler progress and absence of source-type errors do not constitute native acceptance. No genuine baseline exists, so neither record comparison nor hostile tape oracle was run or may be reported as passed. Root owns any next recovery/maintenance decision; reviewer launched no retry and changed no cache/source/cap/deadline/peer state. LogSHA256 `d1b455f427627d727089b2ef8181abf1cfff6ed806b8c29197fd7100215195e0`.

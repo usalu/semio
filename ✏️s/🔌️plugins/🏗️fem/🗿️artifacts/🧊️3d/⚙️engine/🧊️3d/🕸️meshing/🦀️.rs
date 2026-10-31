@@ -49,7 +49,7 @@ impl NodeMerger {
     fn new(doc: &Fem3dSnapshot) -> Self {
         let mut merger = Self { nodes: Vec::with_capacity(doc.nodes.len()), cells: HashMap::new() };
         for node in &doc.nodes {
-            merger.register(node.id.clone(), [node.x, node.y, node.z]);
+            merger.register(node.id.as_str().to_owned(), [node.x, node.y, node.z]);
         }
         merger
     }
@@ -84,7 +84,7 @@ impl NodeMerger {
         index
     }
 
-    /// 🧲️ The id of the node at `position`, registering a synthetic one when nothing sits there yet.
+    /// 🪪️ The id of the node at `position`, registering a synthetic one when nothing sits there yet.
     fn resolve(&mut self, position: [f64; 3], synthetic_id: impl FnOnce() -> String) -> String {
         match self.find(position) {
             Some(index) => self.nodes[index].id.clone(),
@@ -104,7 +104,7 @@ fn triangle_area_2d(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
     (0.5 * ((p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]))).abs()
 }
 
-/// 📐️ A world-space triangle's area vector (`cross(e0, e1) / 2`): its length is the area, its direction
+/// 🌍️ A world-space triangle's area vector (`cross(e0, e1) / 2`): its length is the area, its direction
 /// the face normal, so the `+Z` component is the area projected onto the horizontal plane.
 fn triangle_area_vector(a: [f64; 3], b: [f64; 3], c: [f64; 3]) -> [f64; 3] {
     let e0 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
@@ -167,7 +167,7 @@ pub fn mesh_solids(doc: &Fem3dSnapshot) -> Result<(Vec<Node>, Vec<SolidMesh>), F
     Ok((merger.nodes, meshes))
 }
 
-/// 🧩️ `resolve_geometry`'s resolved `(nodes, elements, meshed solids, supports)` quadruple.
+/// 🔵️ `resolve_geometry`'s resolved `(nodes, elements, meshed solids, supports)` quadruple.
 pub type ResolvedGeometry = (Vec<Node>, Vec<Elements>, Vec<SolidMesh>, Vec<Support>);
 
 /// 🌉️ Resolves a `Fem3dSnapshot`'s nodes/elements/supports (materials/sections looked up by id) plus
@@ -221,7 +221,7 @@ pub fn resolve_geometry(doc: &Fem3dSnapshot) -> Result<ResolvedGeometry, Fem3dEr
     Ok((nodes, elements, meshes, supports))
 }
 
-/// 🌬️ Converts a `FemLoad::Area` (uniform pressure, Pa) into per-node global `-Z` nodal loads over a
+/// 🧮️ Converts a `FemLoad::Area` (uniform pressure, Pa) into per-node global `-Z` nodal loads over a
 /// solid's UPWARD-FACING surface: every boundary triangle whose outward normal has a positive `+Z`
 /// component carries `pressure × its horizontally projected area`, spread a third to each corner —
 /// the snow/floor-load convention (a load per plan area), which makes a sloped roof and a flat slab
@@ -243,13 +243,13 @@ fn area_load_nodal_loads_3d(solid: &SolidMesh, pressure: f64) -> Vec<NodalLoad> 
     loads.into_iter().map(|(node_id, trib)| NodalLoad { node_id, dof: Dof::Tz, value: -pressure * trib }).collect()
 }
 
-/// 📐️ The footprint area of one meshed solid's triangulation, in the footprint plane.
+/// 🔶️ The footprint area of one meshed solid's triangulation, in the footprint plane.
 pub fn footprint_area(mesh: &SolidMesh) -> f64 {
     mesh.footprint.tris.iter().map(|tri| triangle_area_2d(mesh.footprint.points[tri[0] as usize], mesh.footprint.points[tri[1] as usize], mesh.footprint.points[tri[2] as usize])).sum()
 }
 
 //#region 🔖️SemioMeshBridge
-/// 🌉️ Builds a real `SemioMeshSnapshot` from every `FemSolid`'s genuinely triangulated, extruded
+/// 🏗️ Builds a real `SemioMeshSnapshot` from every `FemSolid`'s genuinely triangulated, extruded
 /// boundary — the same [`mesh_solids`] pipeline the solver runs (the solid's own `axis`, `base_z`,
 /// `height` and `layers`), reduced to `boundary_faces` for the outward-oriented outer surface — real,
 /// tested geometry (`crate::mesh`'s own volume/area-preservation tests), not fabricated bytes. Feeds
@@ -277,7 +277,7 @@ pub fn build_semio_mesh_snapshot(doc: &Fem3dSnapshot) -> SemioMeshSnapshot {
 }
 //#endregion 🔖️SemioMeshBridge
 
-/// 🌬️ Translates one `FemLoadCase`'s loads into `(nodal_loads, member_loads)`, resolving `Area` loads
+/// 🧭️ Translates one `FemLoadCase`'s loads into `(nodal_loads, member_loads)`, resolving `Area` loads
 /// against the already-meshed `solids` — shared by `build_model`, `fem3d_solve_all`, and buckling's
 /// reference-case resolution.
 pub fn translate_loads(loads: &[FemLoad], solids: &[SolidMesh]) -> Result<TranslatedLoads, Fem3dError> {

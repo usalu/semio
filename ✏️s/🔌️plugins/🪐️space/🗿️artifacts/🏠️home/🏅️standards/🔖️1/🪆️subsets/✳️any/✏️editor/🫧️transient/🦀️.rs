@@ -64,6 +64,17 @@ fn directory_sha256_is_valid(value: &str) -> bool {
 //#endregion 🔖️Receipt
 
 //#region 🔖️Projection
+/// 📏️ The heap one space row retains, estimated without encoding it.
+fn row_bytes(space: &store::os_directory::DirectorySpace) -> usize {
+    const ROW_BYTES: usize = 256;
+    const MEMBER_BYTES: usize = 128;
+    const DOCUMENT_BYTES: usize = 512;
+    ROW_BYTES + space.view.id.len() + space.view.name.len() + space.members.len() * MEMBER_BYTES + (space.documents.len() + space.indexed_documents.len()) * DOCUMENT_BYTES
+}
+
+#[path = "🪜️fold-stepper/🦀️.rs"]
+mod fold_stepper;
+pub use fold_stepper::{HomeDirectoryFold, HomeDirectoryFoldStep};
 /// 🚦️ How the projection answers one sealed page before anything is folded.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum DirectoryPageAdmission {
@@ -212,11 +223,8 @@ impl HomeDirectoryProjection {
 
     /// 📏️ The heap this projection retains, estimated per row without encoding it — what its retirement pages through.
     pub fn retained_bytes(&self) -> usize {
-        const ROW_BYTES: usize = 256;
-        const MEMBER_BYTES: usize = 128;
-        const DOCUMENT_BYTES: usize = 512;
         const USER_BYTES: usize = 128;
-        let rows = self.spaces.values().map(|space| ROW_BYTES + space.view.id.len() + space.view.name.len() + space.members.len() * MEMBER_BYTES + (space.documents.len() + space.indexed_documents.len()) * DOCUMENT_BYTES).sum::<usize>();
+        let rows = self.spaces.values().map(|space| row_bytes(space)).sum::<usize>();
         rows + self.users.len() * USER_BYTES + self.session_binding_sha256.len() + self.receipt_sha256.len() + 16
     }
 

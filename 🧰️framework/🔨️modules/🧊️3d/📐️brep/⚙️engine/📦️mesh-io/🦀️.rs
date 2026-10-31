@@ -185,7 +185,7 @@ impl MeshImportCursor {
         if grant.maximum_items==0 || grant.maximum_depth==0 || (!self.cancelled && self.phase<4) {return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(owner)=self.retirement.as_mut() {
             if owner.owner().terminal_is_empty() {self.retirement=None;return Ok(import_progress());}
-            return owner.owner_mut().close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));
+            return owner.owner_mut().close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));
         }
         match self.retirement_stage {
             0=>{let scratch=ImportScratch {positions:std::mem::take(&mut self.positions),positions64:std::mem::take(&mut self.positions64),normals64:std::mem::take(&mut self.normals64),normals:std::mem::take(&mut self.normals),indices:std::mem::take(&mut self.indices),faces:std::mem::take(&mut self.faces),vertices:std::mem::take(&mut self.vertex_map),edges:std::mem::take(&mut self.edge_map)};self.retirement=Some(ImportCloseOwner::Scratch(import_controller(scratch)));self.retirement_stage=2;Ok(import_progress())}

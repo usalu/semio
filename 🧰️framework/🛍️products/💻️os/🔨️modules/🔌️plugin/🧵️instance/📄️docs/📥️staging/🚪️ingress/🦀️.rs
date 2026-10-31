@@ -65,9 +65,9 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
     /// 🧭️ The first rotation stage at or after the cursor whose pump or store still holds a returned read.
     pub fn next_snapshot_read_return_stage(&self, stores: &InstanceStores<A>, interaction: &LocalInteraction<A>) -> Option<u8> {
         (0..4u8).map(|offset| (interaction.snapshot_read_return_stage + offset) % 4).find(|stage| match stage {
-            0 => !self.document_snapshot_read_returns.terminal_is_empty() || stores.store.returned_snapshot_read_count() != 0,
-            1 => !interaction.config_snapshot_read_returns.terminal_is_empty() || stores.config_store.returned_snapshot_read_count() != 0,
-            2 => !interaction.interaction_snapshot_read_returns.terminal_is_empty() || stores.interaction_store.returned_snapshot_read_count() != 0,
+            0 => !self.document_snapshot_read_returns.terminal_is_empty() || (!stores.store.terminal_is_empty() && stores.store.returned_snapshot_read_count() != 0),
+            1 => !interaction.config_snapshot_read_returns.terminal_is_empty() || (!stores.config_store.terminal_is_empty() && stores.config_store.returned_snapshot_read_count() != 0),
+            2 => !interaction.interaction_snapshot_read_returns.terminal_is_empty() || (!stores.interaction_store.terminal_is_empty() && stores.interaction_store.returned_snapshot_read_count() != 0),
             _ => stores.transient_local_root_retirement_factory.is_some() && stores.transient_store.returned_read_pending(),
         })
     }

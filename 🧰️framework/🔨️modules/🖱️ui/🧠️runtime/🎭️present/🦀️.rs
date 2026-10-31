@@ -224,7 +224,7 @@ impl ComponentTreeProducer {
         if self.close_native_resources_on_original(cx)? != Some(true) { return Ok(false); }
         if let Some(owner) = self.closing.as_mut() {
             let demand = owner.next_demand(cx.retained_grant().maximum_copy_bytes)?;
-            semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;
+            semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);let work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=semio_framework_value::RetainedCloneProgress::default()));semio_framework_value::RetainedWorkOutcome{result,work}})?;
             if owner.terminal_is_empty() { self.closing = None; }
             return Ok(false);
         }

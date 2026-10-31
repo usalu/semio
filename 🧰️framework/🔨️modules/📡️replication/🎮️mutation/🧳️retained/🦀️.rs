@@ -13,6 +13,8 @@ pub use key::{RetainedKeyLookup,RetainedKeyMatch};
 pub use patch::{RetainedRowPatch,RetainedRowPatchFields,RetainedPatchSource,RetainedRowPatchApply};
 #[path="⚠️diagnostic/🦀️.rs"] pub mod diagnostic;
 pub use diagnostic::{RetainedDiagnosticSpec,RetainedDiagnosticTarget,RetainedDiagnosticPreparation};
+#[path="🎛️set-field/🦀️.rs"] pub mod set_field;
+pub use set_field::{RetainedSetField,RetainedSetFieldLeaf,RetainedPatchDiffApply};
 #[path="🔺️diff/🦀️.rs"] pub mod diff;
 pub use diff::{RetainedDiff,RetainedDiffFragment,RetainedDiffSequence,RetainedDiffApply,RetainedDiffOwner,RetainedDiffAdmission,RetainedDiffPreflightAdvance,RetainedDiffPreflightStep,retained_diff_birth_demand,begin_retained_diff,preflight_retained_diff,commit_retained_diff};
 
@@ -142,12 +144,12 @@ impl<P,M:RetainedMutation<P>> RetainedMutationOwner<P,M>{
   if self.inverse_issuer.is_some_and(|i|!i.matches(context.mutations)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original inverse issuer changed"));}
   let d=self.close_demand(context,grant.maximum_copy_bytes)?;if self.preparation.is_none(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !retained_mutation_demand_fits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let p=self.preparation.as_mut().expect("original preparation");if !p.terminal_is_empty(){let step=p.close_step(context,grant)?;let step=admit_retained_clone_close(grant,step,p.terminal_is_empty(),"original semantic child closure")?;return Ok(RetainedCloneStep::Progress(step.progress()));}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.decision,grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if !self.retirement.is_empty(){return self.retirement.step_granted(grant).result.map(|s|RetainedCloneStep::Progress(s.progress()));}
+  if let Some(step)=self.retirement.begin_granted(&mut self.decision,grant).result?{return Ok(RetainedCloneStep::Progress(step.progress()));}
   if let Some(m)=self.messages.as_mut(){let s=m.close_step(grant)?;if m.terminal_is_empty(){*self.messages=None;}return Ok(RetainedCloneStep::Progress(s.progress()));}
-  if self.diff_source.is_some(){return RetainedCloneBinding::close_one(&mut self.diff_source,grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
-  if self.original_source.is_some(){return RetainedCloneBinding::close_one(&mut self.original_source,grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
-  if self.mutation_source.is_some(){return RetainedCloneBinding::close_one(&mut self.mutation_source,grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
+  if self.diff_source.is_some(){return RetainedCloneBinding::close_one(&mut self.diff_source,grant).result.map(|s|RetainedCloneStep::Progress(s.progress()));}
+  if self.original_source.is_some(){return RetainedCloneBinding::close_one(&mut self.original_source,grant).result.map(|s|RetainedCloneStep::Progress(s.progress()));}
+  if self.mutation_source.is_some(){return RetainedCloneBinding::close_one(&mut self.mutation_source,grant).result.map(|s|RetainedCloneStep::Progress(s.progress()));}
   drop(self.preparation.take());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))
  }
  /// 🫙️ All fixed and original ownership has terminal custody.
@@ -156,8 +158,8 @@ impl<P,M:RetainedMutation<P>> RetainedMutationOwner<P,M>{
 /// 🛡️ Original decision diagnostics are scanned before D can leave the central semantic owner.
 pub fn decide_retained_mutation<P,M:RetainedMutation<P>>(owner:&mut RetainedMutationOwner<P,M>,mutation:RetainedCloneRef<'_,M>,original:RetainedCloneRef<'_,P>,body:usize,grant:RetainedCloneGrant)->Result<RetainedMutationDecisionStep<M::Diff>,ValueError>{
  let d=owner.decision_demand(mutation,original,body)?;if !retained_mutation_demand_fits(d,grant){return Ok(RetainedMutationDecisionStep::Progress(Default::default()));}
- if let Some(p)=mutation.bind(&mut owner.mutation_source,grant)?{return Ok(RetainedMutationDecisionStep::Progress(p));}
- if let Some(p)=original.bind(&mut owner.original_source,grant)?{return Ok(RetainedMutationDecisionStep::Progress(p));}
+ if let Some(p)=mutation.bind(&mut owner.mutation_source,grant).result?{return Ok(RetainedMutationDecisionStep::Progress(p));}
+ if let Some(p)=original.bind(&mut owner.original_source,grant).result?{return Ok(RetainedMutationDecisionStep::Progress(p));}
  if owner.phase==0{let step=owner.preparation.as_mut().expect("original preparation").decide(mutation,original,body,child(grant))?;let p=receipt(grant,step.progress())?;if matches!(step,RetainedMutationAdvance::Ready(_)){owner.phase=1;}return Ok(RetainedMutationDecisionStep::Progress(p));}
  let p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
  if owner.phase==1{let messages=match owner.preparation.as_mut().expect("original preparation").take_decision(){RetainedMutationDecision::Admitted(diff,messages)=>{*owner.decision=Some(diff);messages},RetainedMutationDecision::Refused(messages)=>{owner.refusal=true;messages}};*owner.messages=Some(MutationMessageLedgerRetirement::new(String::new(),messages));owner.phase=2;return Ok(RetainedMutationDecisionStep::Progress(p));}
@@ -168,7 +170,7 @@ pub fn decide_retained_mutation<P,M:RetainedMutation<P>>(owner:&mut RetainedMuta
 /// 📖️ Exact preflight witness gates read-only inversion of the original semantic operation.
 pub fn inverse_retained_mutation<P,M:RetainedMutation<P>>(owner:&mut RetainedMutationOwner<P,M>,mutation:RetainedCloneRef<'_,M>,admission:&RetainedDiffAdmission<'_,P,M::Diff>,body:usize,grant:RetainedCloneGrant)->Result<RetainedMutationInverseStep<M>,ValueError>{
  let d=owner.inverse_demand(mutation,admission,body)?;if !retained_mutation_demand_fits(d,grant){return Ok(RetainedMutationInverseStep::Progress(Default::default()));}
- if let Some(p)=admission.diff().bind(&mut owner.diff_source,grant)?{return Ok(RetainedMutationInverseStep::Progress(p));}
+ if let Some(p)=admission.diff().bind(&mut owner.diff_source,grant).result?{return Ok(RetainedMutationInverseStep::Progress(p));}
  admission.original().check_binding(&owner.original_source)?;mutation.check_binding(&owner.mutation_source)?;
  if owner.phase==4{owner.phase=5;let rows=owner.preparation.as_mut().expect("original inverse preparation").take_inverse();return Ok(RetainedMutationInverseStep::Ready(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()},rows));}
  let step=owner.preparation.as_mut().expect("original inverse preparation").inverse(mutation,admission.original(),admission.diff(),body,child(grant))?;let p=receipt(grant,step.progress())?;if matches!(step,RetainedMutationAdvance::Ready(_)){owner.phase=4;}Ok(RetainedMutationInverseStep::Progress(p))

@@ -1,0 +1,875 @@
+{
+  "scope": "Bounded current DrawingAny eight genuine scene producer/close constructor routes; not a whole-repo census or proof of original16 completion.",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🖼️image/🧪️tests/🟦️.ts",
+      "sha256": "49eedf4435a5d691b5b5d15ae320956f6fbfd11600caf1cea4b1642ad34710af",
+      "role": "test",
+      "calls": [
+        {
+          "line": 30,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 41,
+          "constructor": "RasterSceneJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/🧪️tests/🟦️.ts",
+      "sha256": "c155594b1cf1daafabbf6f62bdd6e35230c6f3e18560f1ae2c2d5a92137b8755",
+      "role": "test",
+      "calls": [
+        {
+          "line": 22,
+          "constructor": "SvgWriteJob"
+        },
+        {
+          "line": 22,
+          "constructor": "PdfWriteJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🟦️.ts",
+      "sha256": "595aa946bb3a21f1caf6b41828eb6fcf8f3005cac85daef43ca89d3018011909",
+      "role": "production",
+      "calls": [
+        {
+          "line": 53,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🟦️.ts",
+      "sha256": "157de80573b2fbf798f83f535ab87888766e0822209e3130e05d5e7b5723389f",
+      "role": "test",
+      "calls": [
+        {
+          "line": 21,
+          "constructor": "SvgWriteJob"
+        },
+        {
+          "line": 24,
+          "constructor": "SvgWriteJob"
+        },
+        {
+          "line": 26,
+          "constructor": "SvgWriteJob"
+        },
+        {
+          "line": 26,
+          "constructor": "SvgWriteJob"
+        },
+        {
+          "line": 29,
+          "constructor": "SvgWriteJob"
+        },
+        {
+          "line": 29,
+          "constructor": "SvgWriteJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🟦️.ts",
+      "sha256": "6609b703e8ce9359346323630bdc4813cc8123de6a09d2d14f3fe8873d125b15",
+      "role": "production",
+      "calls": [
+        {
+          "line": 76,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
+      "sha256": "6f9ccd0e21bf6c31c9332a89e590696e60cb0baeda7de13ec66359798d1722ed",
+      "role": "test",
+      "calls": [
+        {
+          "line": 28,
+          "constructor": "PdfWriteJob"
+        },
+        {
+          "line": 31,
+          "constructor": "PdfWriteJob"
+        },
+        {
+          "line": 34,
+          "constructor": "PdfWriteJob"
+        },
+        {
+          "line": 34,
+          "constructor": "PdfWriteJob"
+        },
+        {
+          "line": 37,
+          "constructor": "PdfWriteJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "0fd43d1351721036fd3fbc48e7980778858f530123b623ba3064210d6dc6f86c",
+      "role": "test",
+      "calls": [
+        {
+          "line": 62,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 65,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🟦️.ts",
+      "sha256": "59841d0207a22b36b2832bff6cb2c5fb52c03025e5d56324344465c563f94d92",
+      "role": "production",
+      "calls": [
+        {
+          "line": 122,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 123,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "7f92679875f2b52e1a5eca2d97757b0e2e5f4a7bf54217daf2928119a121186c",
+      "role": "test",
+      "calls": [
+        {
+          "line": 25,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 36,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 58,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 86,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 86,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 86,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🟦️.ts",
+      "sha256": "0530c30401e3ca17cb6585e0f5b7f50f2128682804c5d45015e8ad119a9aa7b2",
+      "role": "production",
+      "calls": [
+        {
+          "line": 58,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 58,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "44f5fd5cb02990a0e290b062691bc08ffef89485b3ea44f92de082d5db601be9",
+      "role": "test",
+      "calls": [
+        {
+          "line": 25,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 38,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 63,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 92,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 92,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 92,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/📝️replace/🧪️tests/replacement.test.ts",
+      "sha256": "8842fb650cc079a55acb76629593d617eb7e0f8ac4af367e0d61d47fb69abdb9",
+      "role": "test",
+      "calls": [
+        {
+          "line": 15,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 17,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🗺️plan-model/🎟️owned/🧪️tests/owned.test.ts",
+      "sha256": "afee7dca46de39ecda626d5efc8bfb5570e8878bf58a5b5e4d2e55f031844299",
+      "role": "test",
+      "calls": [
+        {
+          "line": 45,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 45,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 46,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 48,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "sha256": "907e9143e016a3ddeda2bfa1aa64d49e577539c4a90ba540e0413c2035e5fbd8",
+      "role": "production",
+      "calls": [
+        {
+          "line": 78,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 89,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/zero-work.test.ts",
+      "sha256": "a77008d4907ddc3207f35c545f7fadfe5b5c62fcb3a7113e43b35ceb4aedc87a",
+      "role": "test",
+      "calls": [
+        {
+          "line": 6,
+          "constructor": "DocumentTextJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🟦️.ts",
+      "sha256": "8700017d5a351b81b4f19dd46ae5fa93af47fd07fbb7b0910a79743579caa976",
+      "role": "test",
+      "calls": [
+        {
+          "line": 44,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 45,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 46,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 46,
+          "constructor": "SvgWriteJob"
+        },
+        {
+          "line": 46,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 46,
+          "constructor": "PdfWriteJob"
+        },
+        {
+          "line": 46,
+          "constructor": "ScenePaintJob"
+        },
+        {
+          "line": 53,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 53,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 54,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 54,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 59,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 59,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 60,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 60,
+          "constructor": "DocumentTextJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+      "sha256": "bb452f0fbc9aef7f08520d13dfdeece5e9e43be47ff6e2acbe5f868be4324ad2",
+      "role": "test",
+      "calls": [
+        {
+          "line": 23,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 24,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 25,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 26,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 27,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 28,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 29,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 29,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 29,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 29,
+          "constructor": "DocumentTextJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🟦️.ts",
+      "sha256": "5c0644d00607ab7ef9d7aed5e9e61da1918d39eda9ad713b41300ebbb98b086d",
+      "role": "production",
+      "calls": [
+        {
+          "line": 166,
+          "constructor": "RasterSceneJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "d230d97ffad30c5a5319bba3f93c1409176e04e76608153808c6275d4b3c9a2e",
+      "role": "test",
+      "calls": [
+        {
+          "line": 19,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 27,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 35,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 62,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 63,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 64,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 65,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 67,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 71,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 109,
+          "constructor": "RasterSceneJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🖼️assets/🟦️.ts",
+      "sha256": "c8f26ce1c50a35358888021644f810b761eb3c19046642585571ebdc0953521d",
+      "role": "test",
+      "calls": [
+        {
+          "line": 19,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 44,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 48,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 49,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 69,
+          "constructor": "RasterSceneJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🧪️tests/🔬️unit/🖼️images/🟦️.ts",
+      "sha256": "489663abdc060f4e327cc3bc68f2f8a60c39ddaeb78b7330cafe36f124d69207",
+      "role": "test",
+      "calls": [
+        {
+          "line": 11,
+          "constructor": "RasterSceneJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🧹️retire/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "04c9fff8ae3516016c53ea1fc12fdb6e8b53abad0d68bba74ea6f2db3607b6e5",
+      "role": "test",
+      "calls": [
+        {
+          "line": 20,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 21,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 26,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "4d4a06b9ede0c981588a6c82f2dd581a73f66d119782ff388839319d4d9e96dd",
+      "role": "test",
+      "calls": [
+        {
+          "line": 15,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 16,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 19,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 19,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 43,
+          "constructor": "DocumentVectorJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "7bd94db28e6beca1d01047d673ad0022ad1ee1cec0660a683a4379e57722071c",
+      "role": "test",
+      "calls": [
+        {
+          "line": 50,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 50,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🟦️.ts",
+      "sha256": "bd97eaf4791532b008eb8b79f2c38021a319aafb4e4e30203f12c83d2ceaac24",
+      "role": "production",
+      "calls": [
+        {
+          "line": 21,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "40e9ddb809a6e83c1f7d01c9982e28d855fb51d2a45914cdf8328d7cfaa88dd7",
+      "role": "test",
+      "calls": [
+        {
+          "line": 18,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 18,
+          "constructor": "ScenePaintJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "94e9ceea119e279bd493e689a39ada4feccbbbb81f4f2867b50056455a765569",
+      "role": "test",
+      "calls": [
+        {
+          "line": 26,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 27,
+          "constructor": "ScenePaintJob"
+        },
+        {
+          "line": 30,
+          "constructor": "ScenePaintJob"
+        },
+        {
+          "line": 31,
+          "constructor": "ScenePaintJob"
+        },
+        {
+          "line": 32,
+          "constructor": "ScenePaintJob"
+        },
+        {
+          "line": 32,
+          "constructor": "ScenePaintJob"
+        },
+        {
+          "line": 39,
+          "constructor": "ScenePaintJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🟦️.ts",
+      "sha256": "17a2946cbe0d033a5d754cbc733821c8263f73893e8456593ca0e6e8b4486089",
+      "role": "production",
+      "calls": [
+        {
+          "line": 21,
+          "constructor": "ScenePaintJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+      "sha256": "e7332a6fdeb4cbfddb47e58f435ef6a6dd681c19367de04ccf826725cd364173",
+      "role": "production",
+      "calls": [
+        {
+          "line": 42,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 46,
+          "constructor": "DocumentTextJob"
+        },
+        {
+          "line": 48,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 50,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 61,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 61,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 66,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 66,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 75,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 96,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 103,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 103,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 114,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 121,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 122,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "3d1cb176f40ba9bb21512c4bfdcccae4138c8c275f3e5e246d9e901e24dffc92",
+      "role": "test",
+      "calls": [
+        {
+          "line": 36,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 46,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 46,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 48,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 50,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 51,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 52,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 52,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 53,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 54,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 62,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 72,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 74,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 76,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 76,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 76,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 78,
+          "constructor": "RasterSceneJob"
+        },
+        {
+          "line": 79,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 79,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 87,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 88,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 92,
+          "constructor": "DocumentVectorJob"
+        },
+        {
+          "line": 93,
+          "constructor": "ScenePlanCloseJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🟦️.ts",
+      "sha256": "da71e45a163efc6ac2dac0c25d3cf8cc0db1c0bb7b6b56fdced38df8b2d3e8c9",
+      "role": "production",
+      "calls": [
+        {
+          "line": 182,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 188,
+          "constructor": "DocumentSceneJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🧪️tests/owned.test.ts",
+      "sha256": "2137d6737a468406a8d93fe37b8b2bf67771cdd2848ec4fb3e5c413115f1c198",
+      "role": "test",
+      "calls": [
+        {
+          "line": 19,
+          "constructor": "ScenePlanCloseJob"
+        },
+        {
+          "line": 20,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 21,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 22,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 23,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 24,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 25,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 25,
+          "constructor": "DocumentSceneJob"
+        },
+        {
+          "line": 25,
+          "constructor": "DocumentSceneJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🧪️tests/zero-authority.test.ts",
+      "sha256": "5fdfe57d4ebe0b33354855a87ff47d7a3012442d649303c3d697b1fe0730f700",
+      "role": "test",
+      "calls": [
+        {
+          "line": 13,
+          "constructor": "DocumentSceneJob"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-document/🧪️tests/🔬️unit/🟦️.ts",
+      "sha256": "9137c5c78179becacf6961434afa8d0bedfccdccf3f871298cbeef55864fc526",
+      "role": "test",
+      "calls": [
+        {
+          "line": 58,
+          "constructor": "DocumentVectorJob"
+        }
+      ]
+    }
+  ]
+}

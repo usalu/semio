@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Current retained funding is bounded by the declaration ceiling; DATA validation never grants a native parent or allocation authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "ceiling",
+    "retained",
+    "allocationBytes",
+    "backingMaximumPhysicalBytes"
+  ],
+  "properties": {
+    "ceiling": {
+      "$ref": "#/$defs/Policy"
+    },
+    "retained": {
+      "$ref": "#/$defs/Policy"
+    },
+    "allocationBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "backingMaximumPhysicalBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    }
+  },
+  "$defs": {
+    "Policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "root",
+        "leaseDirectory",
+        "capacityBytes",
+        "maximumWorkspaceBytes",
+        "maximumArtifactBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "leaseDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumWorkspaceBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumArtifactBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    }
+  }
+}

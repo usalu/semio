@@ -1,4 +1,9 @@
 use super::*;
+#[path = "../../../🧪️tests/🧰️persisted/🦀️.rs"]
+mod persisted;
+use persisted::{drain, with};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
@@ -10,10 +15,10 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 
 // #region 🔖️Fixtures
-fn simply_supported_beam_doc() -> Fem2dSnapshot {
-    Fem2dSnapshot {
+fn simply_supported_beam_doc() -> Fem2dSnapshotValue {
+    Fem2dSnapshotValue {
         nodes: vec![FemNodeValue { id: "n1".into(), x: 0.0, y: 0.0 }, FemNodeValue { id: "n2".into(), x: 6.0, y: 0.0 }],
-        elements: vec![crate::FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }],
+        elements: vec![FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }],
         regions: vec![],
         materials: vec![FemMaterialValue { id: "steel".into(), name: "steel".into(), e: 210e9, nu: 0.3, rho: 7850.0 }],
         sections: vec![FemSection { id: "ipe300".into(), name: "ipe300".into(), area: 0.005381, iy: 8.356e-5 }],
@@ -26,8 +31,8 @@ fn simply_supported_beam_doc() -> Fem2dSnapshot {
 
 /// 🟩️ A 4x2m rectangular region (steel, 0.02m thick, 1m mesh) whose 4 corners are pre-placed as
 /// document nodes.
-fn rectangle_region_doc() -> Fem2dSnapshot {
-    Fem2dSnapshot {
+fn rectangle_region_doc() -> Fem2dSnapshotValue {
+    Fem2dSnapshotValue {
         nodes: vec![FemNodeValue { id: "c0".into(), x: 0.0, y: 0.0 }, FemNodeValue { id: "c1".into(), x: 4.0, y: 0.0 }, FemNodeValue { id: "c2".into(), x: 4.0, y: 2.0 }, FemNodeValue { id: "c3".into(), x: 0.0, y: 2.0 }],
         elements: vec![],
         regions: vec![FemRegion { id: "r1".into(), name: "slab".into(), outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.02, material_id: "steel".into(), mesh_size: 1.0 }],
@@ -44,7 +49,7 @@ fn rectangle_region_doc() -> Fem2dSnapshot {
 #[test]
 fn fem2d_modal_returns_requested_mode_count() {
     let doc = rectangle_region_doc();
-    let result = fem2d_modal(&doc).expect("modal solves");
+    let result = with(&doc, |d| fem2d_modal(d)).expect("modal solves");
     assert_eq!(result.frequencies_hz.len(), doc.analysis.modal_count);
     for w in result.frequencies_hz.windows(2) {
         assert!(w[0] <= w[1], "frequencies should be ascending: {:?}", result.frequencies_hz);
@@ -57,7 +62,7 @@ fn fem2d_modal_returns_requested_mode_count() {
 #[test]
 fn fem2d_modal_mode_values_returns_node_displacements() {
     let doc = simply_supported_beam_doc();
-    let (freq, values) = fem2d_modal_mode_values(&doc, 0).expect("modal mode values solves");
+    let (freq, values) = with(&doc, |d| fem2d_modal_mode_values(d, 0)).expect("modal mode values solves");
     assert!(freq.is_finite() && freq >= 0.0);
     assert!(values.contains_key("n1"));
     assert!(values.contains_key("n2"));
@@ -66,7 +71,7 @@ fn fem2d_modal_mode_values_returns_node_displacements() {
 #[test]
 fn fem2d_buckling_returns_requested_mode_count() {
     let doc = simply_supported_beam_doc();
-    let result = fem2d_buckling(&doc, "dead").expect("buckling solves");
+    let result = with(&doc, |d| fem2d_buckling(d, "dead")).expect("buckling solves");
     assert_eq!(result.factors.len(), doc.analysis.buckling_count);
     for &f in &result.factors {
         assert!(f.is_finite(), "buckling factor should be finite: {f}");
@@ -76,7 +81,7 @@ fn fem2d_buckling_returns_requested_mode_count() {
 #[test]
 fn fem2d_buckling_mode_values_returns_node_displacements() {
     let doc = simply_supported_beam_doc();
-    let (factor, values) = fem2d_buckling_mode_values(&doc, "dead", 0).expect("buckling mode values solves");
+    let (factor, values) = with(&doc, |d| fem2d_buckling_mode_values(d, "dead", 0)).expect("buckling mode values solves");
     assert!(factor.is_finite());
     assert!(values.contains_key("n1"));
     assert!(values.contains_key("n2"));
@@ -85,7 +90,7 @@ fn fem2d_buckling_mode_values_returns_node_displacements() {
 #[test]
 fn fem2d_buckling_unknown_case_errors() {
     let doc = simply_supported_beam_doc();
-    let err = fem2d_buckling(&doc, "missing").err().expect("expected error");
+    let err = with(&doc, |d| fem2d_buckling(d, "missing")).err().expect("expected error");
     assert!(err.to_string().contains("load case not found"), "unexpected error: {err}");
 }
 
@@ -94,13 +99,13 @@ fn continuum_buckling_retains_mesh_nodes_elements_and_area_prestress() {
     let mut doc = rectangle_region_doc();
     doc.load_cases[0].self_weight = false;
     doc.load_cases[0].loads = vec![FemLoad::Area { id: "pressure".into(), region_id: "r1".into(), pressure: 3000.0 }];
-    let (expected_nodes, expected_elements, _) = build_nodes_and_elements(&doc).unwrap();
-    let (nodes, elements, _, case) = buckling_inputs(&doc, "self").unwrap();
+    let (expected_nodes, expected_elements, _) = with(&doc, |d| build_nodes_and_elements(d)).unwrap();
+    let (nodes, elements, _, case) = with(&doc, |d| buckling_inputs(d, "self")).unwrap();
     assert!(nodes.len() > doc.nodes.len());
     assert_eq!(nodes.len(), expected_nodes.len());
     assert_eq!(elements.len(), expected_elements.len());
     assert!((case.nodal_loads.iter().map(|load| load.value).sum::<f64>() + 24000.0).abs() < 1e-8);
-    let (factor, values) = fem2d_buckling_mode_values(&doc, "self", 0).unwrap();
+    let (factor, values) = with(&doc, |d| fem2d_buckling_mode_values(d, "self", 0)).unwrap();
     assert!(factor.is_finite() && factor > 0.0);
     assert_eq!(values.len(), nodes.len());
 }
@@ -109,7 +114,7 @@ fn continuum_buckling_retains_mesh_nodes_elements_and_area_prestress() {
 fn continuum_buckling_rejects_unknown_area_region() {
     let mut doc = rectangle_region_doc();
     doc.load_cases[0].loads = vec![FemLoad::Area { id: "pressure".into(), region_id: "missing".into(), pressure: 3000.0 }];
-    assert!(matches!(buckling_inputs(&doc, "self"), Err(Fem2dError::UnknownRegionId(id)) if id == "missing"));
+    assert!(matches!(with(&doc, |d| buckling_inputs(d, "self")), Err(Fem2dError::UnknownRegionId(id)) if id == "missing"));
 }
 
 #[test]

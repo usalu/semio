@@ -38,7 +38,7 @@ const wasiPort = Object.freeze({
   },
   exit(): void { fault(); },
 });
-const hostPort = Object.freeze({ dispatch: denied, cancelEffect: () => "closed" as const, log: denied, traceSpan: denied, nowMs: () => BigInt(Date.now()), operationClockUs: () => undefined, wasi: wasiPort });
+const hostPort = Object.freeze({ dispatch: denied, cancelEffect: () => "closed" as const, log: denied, traceSpan: denied, nowMs: () => BigInt(Date.now()), operationClockUs: () => BigInt(Math.floor(performance.now() * 1000)), wasi: wasiPort });
 
 /** 🪜️ Announces one load stage to the owner. The load phase used to be the only silent stretch of
  * the child's life: the bytes arrived and nothing was heard again until the module either activated

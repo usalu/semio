@@ -1,0 +1,30 @@
+{
+  "state": "schema-first-standalone-helper-body-authored-unexecuted",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "beforeSha256": "d9ce297f89f6ef10f1923e7cf9fefc5661b44e837431e833a43359b405cad8b1",
+      "sha256": "d7ed8c629eb04cc2cc2855bda0ace716fe1f13349eb37fa17e4cf3e992061178",
+      "bytes": 22103,
+      "inverseWholeFile": "d9ce297f89f6ef10f1923e7cf9fefc5661b44e837431e833a43359b405cad8b1",
+      "scope": "ONLY checked nonnullable return in public standalone fill/stroke helper; attributes preserve null and all nonnull parser algorithms/paths unchanged; no assertion/cast."
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️attributes/🧪️tests/🎯️value/📐️.json",
+      "bytes": 1258,
+      "sha256": "7448e88dbd3ef1275b848fae4adc78dce6fe004bf1dad7ee46550f6cfffa7133"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️attributes/🧪️tests/🎯️value/🔣️.json",
+      "bytes": 1831,
+      "sha256": "76f017867cfa3a6345c2cc249269cea9cdb362fe7098d7241cd994e303212050"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️attributes/🧪️tests/🎯️value/value.test.ts",
+      "bytes": 2456,
+      "sha256": "2ce0de3801a44d432a349748399641174bb2f95bd656fa30850c0d8156f0cd2d"
+    }
+  ],
+  "testFirst": "drawing-standalone-paint-value-test-first.json",
+  "noClaims": "No runtime yet; prior25 proof historical after exact root parser byte changes, fresh affected gate required."
+}

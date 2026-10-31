@@ -1,0 +1,117 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Retained Byte Ownership Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "unit",
+    "cases",
+    "denied",
+    "rules",
+    "cpu"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "unit": {
+      "const": "actual-Uint8Array-byteLength"
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "empty",
+          "length": 0,
+          "input": [],
+          "hex": ""
+        },
+        {
+          "name": "scalar",
+          "length": 1,
+          "input": [
+            255
+          ],
+          "hex": "FF"
+        },
+        {
+          "name": "binary",
+          "length": 6,
+          "input": [
+            0,
+            1,
+            127,
+            128,
+            254,
+            255
+          ],
+          "hex": "00017F80FEFF"
+        }
+      ]
+    },
+    "denied": {
+      "const": [
+        {
+          "phase": "allocate",
+          "axis": "items"
+        },
+        {
+          "phase": "allocate",
+          "axis": "capacityBytes"
+        },
+        {
+          "phase": "allocate",
+          "axis": "depth"
+        },
+        {
+          "phase": "write",
+          "axis": "copyBytes"
+        },
+        {
+          "phase": "close",
+          "axis": "releaseBytes"
+        }
+      ]
+    },
+    "rules": {
+      "const": {
+        "sameBackingOnDenied": true,
+        "noAllocationOnDenied": true,
+        "allocationReceiptEqualsActualByteLength": true,
+        "copyReceiptEqualsWrittenBytes": true,
+        "releaseReceiptEqualsOriginalByteLength": true,
+        "terminalBytesEmpty": true,
+        "noDetachedReservationOwner": true,
+        "mandatoryLiveActualTurn": true,
+        "actualCpuBeforeFallibleReceiptFold": true,
+        "cachedQueriesCpuZero": true,
+        "deniedTurnsCpuZero": true,
+        "physicalEpochOnlyAfterBackingMutation": true
+      }
+    },
+    "cpu": {
+      "const": [
+        {
+          "name": "admission",
+          "actual": 1
+        },
+        {
+          "name": "write",
+          "actual": 1
+        },
+        {
+          "name": "denied",
+          "actual": 0
+        },
+        {
+          "name": "cached",
+          "actual": 0
+        },
+        {
+          "name": "effect-then-fold-error",
+          "actual": 1
+        }
+      ]
+    }
+  }
+}

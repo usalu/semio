@@ -42,7 +42,7 @@ pub fn drive_erased_released(owner: &mut dyn store::ErasedSnapshotRetirement, la
 /// 🎟️ Admits `value` as an owned retirement under a grant that pays exactly its frame birth.
 pub fn retire_owned_for_test<T: semio_framework_value::retirement::RetireOwned>(value: T, label: &str) -> Box<dyn store::ErasedSnapshotRetirement> {
     let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(), maximum_release_bytes: 0, maximum_depth: 2 };
-    match semio_framework_value::retirement::admit_owned_retirement(value, birth) {
+    match semio_framework_value::retirement::admit_owned_retirement(value, birth).result {
         Ok((owner, _)) => owner,
         Err((error, _)) => panic!("{label} refused its own birth: {error}"),
     }

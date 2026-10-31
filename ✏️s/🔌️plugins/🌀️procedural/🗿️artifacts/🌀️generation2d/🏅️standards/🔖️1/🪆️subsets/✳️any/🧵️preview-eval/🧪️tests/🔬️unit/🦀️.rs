@@ -263,7 +263,7 @@ fn every_run_effects_row_starts_finalizes_or_leaves_the_run() {
             link.settled = Some((run.identity.id.run, settled as u32));
         }
         link.restart_owed = row["restartOwed"].as_bool().unwrap_or(false);
-        let effects = preview_eval_run_effects(sessions.parts(), &mut link, &windows, &current, run.as_ref(), row["servable"].as_bool().unwrap_or(true));
+        let effects = preview_eval_run_effects(sessions.parts(), &mut link, &windows, &current, run.as_ref().map(ToolRunView::poll_view), row["servable"].as_bool().unwrap_or(true));
         let actions: Vec<&str> = effects
             .iter()
             .map(|effect| match effect {
@@ -317,7 +317,7 @@ fn replay_pending_effects(sessions: &mut Sessions, link: &mut PreviewEvalRunLink
     let mut starts = 0_usize;
     let mut landing: Option<(usize, ToolRunState)> = None;
     for _ in 0..polls {
-        for effect in preview_eval_run_effects(sessions.parts(), link, windows, &current, view.as_ref(), servable) {
+        for effect in preview_eval_run_effects(sessions.parts(), link, windows, &current, view.as_ref().map(ToolRunView::poll_view), servable) {
             let Effect::DispatchAction { action, .. } = effect else { panic!("the run owes only dispatches") };
             let state = match action.as_str() {
                 TOOL_RUN_START_ACTION_ID => {
@@ -377,7 +377,7 @@ fn every_gesture_rearm_row_owes_one_hop_per_preview_and_at_most_one_start() {
             let complete = run_view(&serde_json::json!({ "run": 1, "generation": 0, "state": "complete" }));
             let mut asked: Vec<&str> = Vec::new();
             for _ in 0..polls {
-                for effect in preview_eval_run_effects(sessions.parts(), &mut link, &windows, &current, complete.as_ref(), true) {
+                for effect in preview_eval_run_effects(sessions.parts(), &mut link, &windows, &current, complete.as_ref().map(ToolRunView::poll_view), true) {
                     let Effect::DispatchAction { action, .. } = effect else { panic!("{id}: the run owes only dispatches") };
                     asked.push(if action == TOOL_RUN_FINALIZE_ACTION_ID { "toolRunFinalize" } else { "toolRunStart" });
                 }

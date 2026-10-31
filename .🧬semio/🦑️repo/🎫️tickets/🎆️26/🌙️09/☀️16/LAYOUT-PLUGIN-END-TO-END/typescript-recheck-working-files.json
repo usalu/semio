@@ -1,0 +1,32 @@
+{
+  "files": [],
+  "removed": [],
+  "reportsInputs": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/typescript.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/typescript-recheck-input.json"
+  ],
+  "results": {
+    "portable": {
+      "exitCode": 0,
+      "tests": 75,
+      "files": 16,
+      "assertions": 313,
+      "seconds": 28.21
+    },
+    "strict": {
+      "exitCode": 0
+    },
+    "declaredFirst": {
+      "exitCode": 1,
+      "beforeTests": true,
+      "reason": "canonical build owner identity collision"
+    },
+    "declaredRetry": {
+      "exitCode": 1,
+      "beforeTests": true,
+      "reason": "existing Native publication/request image geometry differs"
+    }
+  },
+  "sourceEdits": false,
+  "nativeJobsStarted": false
+}

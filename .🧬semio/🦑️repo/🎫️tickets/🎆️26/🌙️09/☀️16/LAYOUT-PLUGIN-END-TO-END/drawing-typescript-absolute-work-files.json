@@ -1,0 +1,22 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+    "bytes": 15622,
+    "sha256": "b007808e5d97c62bbd877f44eac94df906ce8e8e7521a87819b4b1ce1f6b28ea"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/absolute.test.ts",
+    "bytes": 5408,
+    "sha256": "3e9a6f8cc082c3a56e854726193265bd913061bc5e1f8dc9d0dd7cb1e816fbf7"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/🔣️.json",
+    "bytes": 140,
+    "sha256": "e9190c184209ccf4bfc5e644b1aa67228bf1769f2e1c457b1c90d2bd75526aa7"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/absolute/📐️.json",
+    "bytes": 515,
+    "sha256": "f4481f61008717602063eb92d0e231cb1c7dcc33e52584944a044778f5ab0d2d"
+  }
+]

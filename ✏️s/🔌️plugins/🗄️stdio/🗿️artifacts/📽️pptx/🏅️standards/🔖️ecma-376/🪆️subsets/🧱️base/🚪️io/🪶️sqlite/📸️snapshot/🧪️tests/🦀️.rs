@@ -317,18 +317,18 @@ fn sqlite_snapshot_pptx_native_exact_file_and_entity_admission() {
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,defaults)).unwrap();
     let rows = database.tables.iter().map(|table| table.rows.len()).sum::<usize>();
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
-        let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, defaults), native_owner)).unwrap();
+        let payload = semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(defaults, &mut |_| true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, control, native_owner))).unwrap();
         let bytes = match &payload {
             store::io_schema::IoPayload::Binary(bytes) => bytes.len(),
             store::io_schema::IoPayload::Text(text) => text.len(),
         };
         let exact = SqliteDatabaseLimits { max_file_bytes: bytes, max_rows: rows, ..defaults };
-        assert_eq!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, exact), native_owner)).unwrap(), payload);
+        assert_eq!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(exact, &mut |_| true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, control, native_owner))).unwrap(), payload);
         let restored = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| PptxSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, exact), native_owner)).unwrap();
         assert_eq!(restored, snapshot);
         restored.retire_sqlite_snapshot();
         for limited in [SqliteDatabaseLimits { max_file_bytes: bytes - 1, ..exact }, SqliteDatabaseLimits { max_rows: rows - 1, ..exact }] {
-            assert!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limited), native_owner)).is_err());
+            assert!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limited, &mut |_| true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, control, native_owner))).is_err());
             assert!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| PptxSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, limited), native_owner)).is_err());
         }
     }
@@ -351,7 +351,7 @@ fn sqlite_snapshot_pptx_complete_literal_native_file_matches_independent_fixture
             store::io_schema::IoPayload::Text(text) => text.len(),
         };
         let limits = SqliteDatabaseLimits { max_file_bytes: file_size, max_rows: plan["rows"].as_u64().unwrap() as usize, ..defaults };
-        assert_eq!(semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap(), expected);
+        assert_eq!(semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut |_| true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, control, native_owner))).unwrap(), expected);
         let restored = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| PptxSnapshot::decode_sqlite_snapshot_native(&expected, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
         assert_eq!(restored, snapshot);
         restored.retire_sqlite_snapshot();
@@ -380,8 +380,8 @@ fn sqlite_snapshot_pptx_borrowed_preflight_pays_frontiers_without_materializing_
         let error = snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut callback, limits)).unwrap_err();
         assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::Canceled);
         assert!(reached);
-        let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
-        let error = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }), native_owner)).unwrap_err();
+        let payload = semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut |_| true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, control, native_owner))).unwrap();
+        let error = semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }, &mut |_| true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, control, native_owner))).unwrap_err();
         assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);
         let error = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| <PptxSnapshot as ArtifactSqliteSnapshotHost>::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits { max_allocation_bytes: 1, ..limits }), native_owner)).unwrap_err();
         assert_eq!(error.kind, semio_framework_value::ValueRefusalKind::OwnershipLimit);

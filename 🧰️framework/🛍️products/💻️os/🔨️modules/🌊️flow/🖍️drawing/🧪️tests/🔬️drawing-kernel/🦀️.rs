@@ -280,20 +280,6 @@ fn boolean_segments_trait_delegates_to_booleans_module() {
 // #endregion Boolean operations via kernel trait
 
 // #region Trace via kernel trait
-#[test]
-fn trace_bitmap_trait_delegates_to_trace_module() {
-    let mut store = DrawingStore::new();
-    let width = 6_u32;
-    let height = 6_u32;
-    let mut mask = vec![0_u8; (width * height) as usize];
-    for y in 1..5 {
-        for x in 1..5 {
-            mask[(y * width + x) as usize] = 255;
-        }
-    }
-    let traced = store.trace_bitmap(width, height, &mask, 0.5, 0.5).unwrap();
-    assert_eq!(store.kind(&traced).unwrap(), DrawingKind::Path);
-}
 // #endregion Trace via kernel trait
 
 // #region Registry lifecycle

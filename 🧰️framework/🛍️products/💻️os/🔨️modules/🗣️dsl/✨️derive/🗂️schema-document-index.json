@@ -4,6 +4,9 @@
     "♻️mit-bestand/📋️bericht/🔨️modules/📄️documents": {
       "https://json.schemas.assets.semio-tech.com/mit-bestand/bericht/documents/schema.json": "♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/🧬️schema/🔣️.json"
     },
+    "♻️mit-bestand/🧺️demonstrator/🔨️modules/🌐️locale": {
+      "https://json.schemas.assets.semio-tech.com/mit-bestand/demonstrator/locale/texts.json": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🌐️locale/🧬️schema/🔣️.json"
+    },
     "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime": {
       "https://json.schemas.assets.semio-tech.com/mit-bestand/demonstrator/runtime/catalog/cases.json": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/📇️catalog/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/mit-bestand/demonstrator/runtime/schema.json": "♻️mit-bestand/🧺️demonstrator/🔨️modules/🧩️runtime/🧬️schema/🔣️.json"
@@ -2275,7 +2278,9 @@
       "semio.draw.scene.admission": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🚦️admission/🧬️schema/🔣️.json",
       "semio.draw.scene.identity": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🪪️identity/🧬️schema/🔣️.json",
       "semio.draw.scene.view": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧬️schema/🔣️.json",
+      "semio.drawing.scene.original-failure": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/⚠️failure/🧬️schema/🔣️.json",
       "semio/drawing/scene/placement": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🧬️schema/🔣️.json",
+      "semio:drawing:scene-paint:funding": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎟️work/🔣️.json",
       "urn:semio:draw:completion-custody:v1": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📬️completion/🧬️schema/🔣️.json",
       "urn:semio:draw:inspector-selection-actions": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🎬️actions/🧬️schema/🔣️.json",
       "urn:semio:draw:painted-regions:v1": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧬️schema/🔣️.json",
@@ -4343,6 +4348,7 @@
       "schema://process.routing/OriginalProcessIssuanceFixtureV1": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️issuance/🧬️schema/🧪️fixture.json",
       "schema://process.routing/OriginalProcessResourceControlV1": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️issuance/🧬️schema/🔣️.json",
       "schema://process.routing/OriginalResourceControlRequestV1": "🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/📥️issuance/🧬️schema/📥️request.json",
+      "schema://process/directory-envelope-publication": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📁️directory/⚓️envelope/🧬️schema/🔣️.json",
       "schema://process/native-image-publication": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧬️schema/🔣️.json",
       "schema://process/native-image-publication/witness": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📚️witness/🧬️schema/🔣️.json",
       "schema://repo.build/AdmissionV1": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🧬️schema/🔣️.json",
@@ -4543,16 +4549,19 @@
       "semio.scalar-rank-projection.v1": "🧰️framework/🔨️modules/🧮️math/📶️rank/🧬️schema/🔣️.json"
     },
     "🧰️framework/🔨️modules/🧵️job": {
-      "framework.job.destination-initialization.v1": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🚚️staged/📦️destination/🧬️schema/🔣️.json",
       "framework/job/original-snapshot-intake/schema.json": "🧰️framework/🔨️modules/🧵️job/📥️snapshot/🧬️schema/🔣️.json",
       "framework/job/session-return/schema.json": "🧰️framework/🔨️modules/🧵️job/♻️session-return/🧬️schema/🔣️.json",
       "https://json.schemas.assets.semio-tech.com/framework/job/reconcile/schema.json": "🧰️framework/🔨️modules/🧵️job/🔎️reconcile/🧬️schema/🔣️.json",
       "https://semio.dev/job/original-parent-source-loan": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🧬️schema/🎟️caller.json",
       "https://semio.tech/framework/job/retained-work-grant": "🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/🧬️schema/🔣️.json",
+      "semio.job.original-cancel-alias-output": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️cancel/🧬️schema/🔣️.json",
       "semio.job.original-close-context": "🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧬️schema/🔣️.json",
+      "semio.job.original-continuation-return": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🧬️schema/🔣️.json",
       "semio.job.original-domain-failure": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🧬️schema/📦️domain.json",
+      "semio.job.original-domain-reservation": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🎟️reservation/🧬️schema/🔣️.json",
       "semio.job.original-retained-loan.inputs": "🧰️framework/🔨️modules/🧵️job/🎟️context/🪙️loan/🧬️schema/🔣️.json",
       "semio.job.original-turn-failure": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🧬️schema/🔣️.json",
+      "semio.job.original-work-failure": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🧬️schema/🔣️.json",
       "semio:job:owned-session-admission": "🧰️framework/🔨️modules/🧵️job/🚪️admission/📦️owned/🧬️schema/🔣️.json"
     },
     "🧰️framework/🔨️modules/🪪️identity": {

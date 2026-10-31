@@ -1,6 +1,6 @@
 /** 📄️ Exact resident page destinations replace layout without editing command arguments. */
 import {sameStagedFormToken,type StagedFormPath,type StagedFormToken,type StagedFormStatus} from './🟦️.ts';
-import bodyLimits from './body-limits.json';
+import bodyLimits from './body-limits.json' with {type:'json'};
 export const STAGED_FORM_PAGE_ACTION='framework.stageActionFormPage';
 export const STAGED_FORM_PAGE_SIZES=Object.freeze({controls:16,choices:32,diagnostics:16});
 export const STAGED_FORM_BODY_LIMITS=Object.freeze(bodyLimits);

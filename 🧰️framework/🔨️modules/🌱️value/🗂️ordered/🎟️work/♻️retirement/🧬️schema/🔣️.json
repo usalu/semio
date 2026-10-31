@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Ordered Retirement Actual Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rows",
+    "expectedValues",
+    "maximumTurns",
+    "maximumCpuWork",
+    "stock",
+    "expected"
+  ],
+  "properties": {
+    "rows": {
+      "const": [
+        [
+          "alpha",
+          17
+        ],
+        [
+          "beta",
+          42
+        ]
+      ]
+    },
+    "expectedValues": {
+      "const": [
+        17,
+        42
+      ]
+    },
+    "maximumTurns": {
+      "const": 1048576
+    },
+    "maximumCpuWork": {
+      "const": 1048576
+    },
+    "stock": {
+      "const": {
+        "maximumItems": 1048576,
+        "maximumCopyBytes": 16777216,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 33554432,
+        "maximumDepth": 256
+      }
+    },
+    "expected": {
+      "const": {
+        "deniedCpu": 0,
+        "paidEventCpu": 1,
+        "cachedCpu": 0,
+        "keyHeaderPhysicalCopyBytes": 0
+      }
+    }
+  }
+}

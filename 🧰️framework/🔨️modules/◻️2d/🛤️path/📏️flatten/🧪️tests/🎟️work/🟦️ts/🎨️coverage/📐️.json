@@ -1,0 +1,1026 @@
+{
+  "version": 1,
+  "source": "original quadratic/cubic and all original ellipse flags/transforms",
+  "size": [
+    8,
+    8
+  ],
+  "sampleScale": 64,
+  "maximumChannelDelta": 2,
+  "rotations": [
+    0,
+    35,
+    -75
+  ],
+  "flags": [
+    false,
+    true
+  ],
+  "transforms": [
+    [
+      1,
+      0,
+      0,
+      1,
+      0,
+      0
+    ],
+    [
+      0.8,
+      0.2,
+      -0.3,
+      1,
+      1,
+      0
+    ]
+  ],
+  "tolerance": 0.0001,
+  "sourceUnchanged": true,
+  "sameFiniteStock": true,
+  "cases": [
+    {
+      "name": "0-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              5
+            ]
+          },
+          {
+            "kind": "quad",
+            "ctrl": [
+              4,
+              -3
+            ],
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "0-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              5
+            ]
+          },
+          {
+            "kind": "quad",
+            "ctrl": [
+              4,
+              -3
+            ],
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "1-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              5
+            ]
+          },
+          {
+            "kind": "cubic",
+            "ctrl1": [
+              9,
+              -4
+            ],
+            "ctrl2": [
+              -2,
+              9
+            ],
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "1-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              5
+            ]
+          },
+          {
+            "kind": "cubic",
+            "ctrl1": [
+              9,
+              -4
+            ],
+            "ctrl2": [
+              -2,
+              9
+            ],
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "2-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 0,
+            "largeArc": false,
+            "sweep": false,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "2-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 0,
+            "largeArc": false,
+            "sweep": false,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "3-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 0,
+            "largeArc": false,
+            "sweep": true,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "3-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 0,
+            "largeArc": false,
+            "sweep": true,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "4-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 0,
+            "largeArc": true,
+            "sweep": false,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "4-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 0,
+            "largeArc": true,
+            "sweep": false,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "5-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 0,
+            "largeArc": true,
+            "sweep": true,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "5-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 0,
+            "largeArc": true,
+            "sweep": true,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "6-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 35,
+            "largeArc": false,
+            "sweep": false,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "6-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 35,
+            "largeArc": false,
+            "sweep": false,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "7-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 35,
+            "largeArc": false,
+            "sweep": true,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "7-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 35,
+            "largeArc": false,
+            "sweep": true,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "8-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 35,
+            "largeArc": true,
+            "sweep": false,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "8-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 35,
+            "largeArc": true,
+            "sweep": false,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "9-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 35,
+            "largeArc": true,
+            "sweep": true,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "9-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": 35,
+            "largeArc": true,
+            "sweep": true,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "10-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": -75,
+            "largeArc": false,
+            "sweep": false,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "10-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": -75,
+            "largeArc": false,
+            "sweep": false,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "11-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": -75,
+            "largeArc": false,
+            "sweep": true,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "11-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": -75,
+            "largeArc": false,
+            "sweep": true,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "12-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": -75,
+            "largeArc": true,
+            "sweep": false,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "12-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": -75,
+            "largeArc": true,
+            "sweep": false,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "13-0",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": -75,
+            "largeArc": true,
+            "sweep": true,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          1,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "13-1",
+      "input": {
+        "segments": [
+          {
+            "kind": "move",
+            "to": [
+              1,
+              3
+            ]
+          },
+          {
+            "kind": "arc",
+            "rx": 4,
+            "ry": 2,
+            "rotation": -75,
+            "largeArc": true,
+            "sweep": true,
+            "to": [
+              7,
+              5
+            ]
+          }
+        ],
+        "transform": [
+          0.8,
+          0.2,
+          -0.3,
+          1,
+          1,
+          0
+        ],
+        "tolerance": 0.0001
+      }
+    }
+  ]
+}

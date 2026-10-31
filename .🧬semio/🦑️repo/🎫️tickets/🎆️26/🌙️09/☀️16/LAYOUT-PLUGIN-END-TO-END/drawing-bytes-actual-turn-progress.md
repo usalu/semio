@@ -1,0 +1,9 @@
+# Actual Byte Turn Witness
+
+The closed schema and five actual laws were authored before implementation. Original three byte cases, independent SQLite hex and all five denial axes remain. New laws require zero work for denial/cached queries, expired-loan refusal before custody mutation, and real positive admitted capacity/CPU retained when a subsequent accounting fold throws. All mutators require the same live explicit work witness; actual backing mutation updates the physical epoch before a fallible fold. No default grant or callback-entry/receipt CPU inference. Empty-owner control transitions still require real item/depth/CPU authority.
+
+Actual callers migrated: direct Byte laws, PNG lower producer/output close and Drawing controller output-close fixture. PNG now emits one funded byte per turn; child-final positive work defers parent ownership-field clears. Old primitive/numeric results remain real historical evidence for their frozen source, not proof of this changed shared closure. No runtime. Root primitive2 frozen input metadata was read and no work/bytes paths are included; generic other byte-module names are unrelated.
+
+Drawing PNG consumers and wider font/lower APIs remain incomplete. Canonical absolute-demand insertion is Cursor-owned.
+
+Current common settlement contract follow-up: mandatory readonly settlementPending/failurePending exposes only actual computed custody/publication or error state, with no grant/effects. The real Unicode child/runtime law denies a real parent archive allocation at exact semantic ceiling, then resumes under the same finite stock; actual child delta posts once, custody is semantic zero. Own algorithm capacity/copy admission is preceded by semantic cap validation. All current implementation/test changes remain unexecuted. PNG/Byte exact direct caller migration now uses genuine mandatory lower turn witnesses. Wider Drawing callers remain unfinished.

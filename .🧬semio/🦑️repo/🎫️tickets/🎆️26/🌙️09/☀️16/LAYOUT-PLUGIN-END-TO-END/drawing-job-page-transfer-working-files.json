@@ -1,0 +1,93 @@
+{
+  "sourceOnly": true,
+  "runtimeAttempts": 0,
+  "sourceReady": false,
+  "lowerOwningDoor": "semio-framework-job-payload --all-targets",
+  "upperOwningDoor": "semio-framework-job --all-targets --features=testkit",
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/📦️page-transfer/case.json",
+      "sha256": "c7596bbba7570e56b48ed7b02344c1bbc993da1d5258b3db5e0e83aff4e57faa",
+      "bytes": 646,
+      "utf16PathUnits": 106
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/📦️page-transfer/case.schema.json",
+      "sha256": "39c7ef85051bd75e48e05fce77a9f3e1950467be06d63b6519a90128133ae070",
+      "bytes": 1324,
+      "utf16PathUnits": 113
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/📦️page-transfer/🧪️tests/🦀️.rs",
+      "sha256": "ee878209284dde4015388c92a42c9e3c40ec1e6887450c98acab755a8586ddf4",
+      "bytes": 4727,
+      "utf16PathUnits": 112
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/📦️page-transfer/🦀️.rs",
+      "sha256": "fb00f303329db5b1441838b5db20e9dbf60d5300e8b4e64011ae7f3352102870",
+      "bytes": 4565,
+      "utf16PathUnits": 103
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "1cfcd8e93413fb326bc6d5affd8eabce5fc6d1f35ecf5f0349457eb207464d8b",
+      "bytes": 1443,
+      "utf16PathUnits": 111
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "48d06d60aaff93c0b4b4ab600b1f12f92d090e504a058b15539799430e57fea1",
+      "bytes": 2511,
+      "utf16PathUnits": 107
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️testing/🦀️.rs",
+      "sha256": "7084d6324213b2b0e652da0042aaae61215c8505a0b4310777e053a971b78276",
+      "bytes": 6713,
+      "utf16PathUnits": 98
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🦀️.rs",
+      "sha256": "5758f89cb8d5dae0ad8a25daba879f52be9c156a1caa69a674645720428e8654",
+      "bytes": 13044,
+      "utf16PathUnits": 86
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📮️return/🦀️.rs",
+      "sha256": "233ec521255dd519a9411bfa804d812a61d6733ec5c6e54752a41c618fbdfa4f",
+      "bytes": 1046,
+      "utf16PathUnits": 97
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🧪️tests/🦀️.rs",
+      "sha256": "6ed05fc6cdec3470f362cab7bac07e76c2d320f3f716da58a60fa6269857719f",
+      "bytes": 14732,
+      "utf16PathUnits": 95
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🎟️admission/🧪️tests/🦀️.rs",
+      "sha256": "d964fb6a5363dae6405d812c32acd63a736fb9cfd194655c9036d175a1bb9ef8",
+      "bytes": 6602,
+      "utf16PathUnits": 108
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🧪️testing/📬️payload/🦀️.rs",
+      "sha256": "d8f44d5216215985bdd0d21af62ee30bb67479346794e19fd1aee0fc5dd9de7e",
+      "bytes": 4602,
+      "utf16PathUnits": 87
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+      "sha256": "027d50ca3563c9575991b07b031afa226bb9eb0188ce1a61fca59c7de03a97ed",
+      "bytes": 1697,
+      "utf16PathUnits": 65
+    }
+  ],
+  "blockers": [
+    "No compiler or owning-law run for this new seam.",
+    "Parent NativeIO direct caller roster migration remains external and mandatory.",
+    "Upper higher worker/World/relay authentic caller work remains open.",
+    "Existing context-free supplied-carrier Drop publishes into reserved return slot without an independent genuine Source CPU witness; must pin/reuse actual one-shot held-credit accounting before SourceReady."
+  ]
+}

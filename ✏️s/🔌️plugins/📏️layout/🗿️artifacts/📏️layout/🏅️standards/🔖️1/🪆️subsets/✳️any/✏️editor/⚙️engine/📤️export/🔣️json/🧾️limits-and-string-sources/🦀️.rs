@@ -80,13 +80,6 @@ pub enum StringSource {
     ChildTargetArtifactKind,
     ChildTargetStandard,
     ChildTargetSubset,
-    DrawingSchema,
-    DrawStyleName(usize),
-    DrawLayerId(usize),
-    DrawLayerName(usize),
-    DrawNodeValue { layer: usize, path: Vec<usize> },
-    DrawNodeStyle { layer: usize, path: Vec<usize> },
-    DrawNodeMime { layer: usize, path: Vec<usize> },
     ReferencedTargetArtifactId,
     ReferencedTargetArtifactKind,
     ReferencedTargetStandard,
@@ -95,12 +88,6 @@ pub enum StringSource {
     ReferencedCheckpointId,
     ReferencedBlobHash,
     ReferencedBlobMediaType,
-}
-
-impl StringSource {
-    pub(super) fn is_drawing(&self) -> bool {
-        matches!(self, Self::DrawingSchema | Self::DrawStyleName(_) | Self::DrawLayerId(_) | Self::DrawLayerName(_) | Self::DrawNodeValue { .. } | Self::DrawNodeStyle { .. } | Self::DrawNodeMime { .. })
-    }
 }
 
 #[derive(Clone, Debug, Default)]

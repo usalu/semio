@@ -25,3 +25,4 @@ semio-framework-value-control-contract = { path="../../../../🎟️control/🧬
 
 [dev-dependencies]
 serde_json = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }

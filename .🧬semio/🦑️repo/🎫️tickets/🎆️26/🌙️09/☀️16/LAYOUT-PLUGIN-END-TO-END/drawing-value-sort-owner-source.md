@@ -1,0 +1,5 @@
+# Independent Index Sort Production Owner
+
+Existingstd-onlysort producer iscompiledtwice byValue+Edit. ActualNativeIO2reachedValueproductionSourcebytefailure5376>3010remaining/4files. Newcanonicalsemio-framework-value-sortpackage prepared withsamephysicaldefiner, no runtime dependency, unchanged262144/32/4000. Existing2owninglawssamephysicalfile/corpus/cases/snapshots/refusal/orderbounds willmoveonce toSorttarget;Value/Edit namespaceexports remainactualdomainfacades, no olddefault API/newpublichooks. Currentnewmanifest/project prepared, notyetworkspace/catalogregistered orconsumersrewired becauseCursorNative3gate islive. No fit/compiler/runtimeclaim. Allnewpaths <=256UTF16.
+
+Workspace/catalogregistration andValue+Edit directcanonicalSort dependencies authored; both facades reexport actualdomainnamespace instead of recompilingsamebody. Existing2physicaltests movedonce fromValuetesttarget toSorttesttarget;onlytestimport changedtocanonicalproducer. Sort implementationbody/corpus/snapshots/assertions untouched. All2Sort,allValue andallEdit gatesrequired. No newruntime library dependency, no caps/stock/profilechanges. Actualgatepending.

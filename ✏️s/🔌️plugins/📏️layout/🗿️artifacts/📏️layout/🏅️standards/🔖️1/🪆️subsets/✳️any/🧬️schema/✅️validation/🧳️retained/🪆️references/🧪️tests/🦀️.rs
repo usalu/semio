@@ -1,6 +1,6 @@
 use super::*;
 use crate::snapshot::LayoutSnapshot;
-use semio_framework_value::{RetireOwned,retained_clone::RetainedCloneSource};
+use semio_framework_value::{retirement::RetireOwned,retained_clone::RetainedCloneSource};
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn decode<T:semio_framework_value::FromValue>(v:&serde_json::Value)->T{semio_framework_pack_json::from_json_str(&v.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn source<T:RetireOwned+Send+Sync+'static>(v:T)->RetainedCloneSource<T>{let d=RetainedCloneSource::<T>::owned_constructor_demand::<()>();let g=grant(RetirementDemand{copy_bytes:RetainedCloneSource::<T>::constructor_copy_bytes(),capacity_bytes:d.capacity_bytes,depth:d.depth,..Default::default()});RetainedCloneSource::admit_owned(v,(),g).unwrap_or_else(|(e,_,_)|panic!("{e}")).0}

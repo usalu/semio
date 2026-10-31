@@ -124,8 +124,8 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> MutationApplyEdit<S,M>{
   if let Some(o)=self.semantics.as_mut(){if o.terminal_is_empty(){drop(self.semantics.take());return Ok(moved());}return o.close_step(Self::context(mutations),grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
   if let Some(o)=self.plan.as_mut(){if o.terminal_is_empty(){drop(self.plan.take());return Ok(moved());}return o.close_step(grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
   if let Some(o)=self.source.as_mut(){if o.terminal_is_empty(){drop(self.source.take());return Ok(moved());}return o.close_step(grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
-  if let Some(s)=self.retirement.begin_granted(&mut self.diff,grant)?{return Ok(RetainedCloneStep::Progress(s.progress()));}
+  if !self.retirement.is_empty(){return self.retirement.step_granted(grant).result.map(|s|RetainedCloneStep::Progress(s.progress()));}
+  if let Some(s)=self.retirement.begin_granted(&mut self.diff,grant).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}
   if let Some(o)=self.inverse_close.as_mut(){if o.terminal_is_empty(){self.inverse_close=None;return Ok(moved());}return o.close_step(mutations,grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
   if let Some(rows)=self.inverse.take(){return match FactoryVectorRetirement::admit(rows,grant){Ok((o,p))=>{self.inverse_close=Some(o);Ok(RetainedCloneStep::Progress(p))},Err((e,rows))=>{*self.inverse=Some(rows);Err(e)}};}
   if let Some(o)=self.join.as_mut(){if o.terminal_is_empty(){drop(self.join.take());return Ok(moved());}return o.close_step(grant).map(|s|RetainedCloneStep::Progress(s.progress()));}

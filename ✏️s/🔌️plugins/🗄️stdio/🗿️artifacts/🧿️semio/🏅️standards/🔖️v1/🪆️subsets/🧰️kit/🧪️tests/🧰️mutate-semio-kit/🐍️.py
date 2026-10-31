@@ -22,15 +22,12 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 * the fifteen verbs and their argument lists are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is the
   committed per-kind specification vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/`;
-* the pack body's `format u8` + varint-length-prefixed `schema` is the committed protocol
-  `…/📸️snapshot/💾️binary/📡️.protocol.semio`, whose prose then names — but declines to
-  frame — "types/designs/objects/models/properties/representations (all variable-length
-  repeated/optional records)". That named-but-unframed layout was written out here in the order the
-  grammar's `document` lists those collections and is PINNED by `pack_bytes` re-encoding the
-  committed `🎒️.pack.semio` byte for byte, which a misreading could not do. The committed
-  artifact carries only a `head` pin, so the `checkpoint` and `snapshot` arms of the BINARY pin
-  codec below are the natural extension of the one that is pinned rather than themselves pinned —
-  no scenario in this case round-trips either through the pack.
+* the pack body is the derived record document of the shared record-document codec
+  (`🧿️semio/🚪️io/💾️binary/🎒️record-document/🐍️.py`), driven by this subset's committed record spec
+  `…/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json`: the SPK container, the fixed-Huffman deflate, the BLAKE3
+  content hash and the schema-hashed record body are specified by `🧰️framework/🔨️modules/🎒️pack` and
+  re-implemented there, not here. The committed `🎒️.pack.semio` files were written by the Rust record
+  pack, so `parse_pack`/`pack_bytes` reproducing them is a cross-language byte agreement.
 
 Nothing here imports, links, wraps or transliterates the Rust subject. Every function was written
 against the documents above; where the two disagree the disagreement is a finding, not something to
@@ -40,8 +37,11 @@ tune away.
 from __future__ import annotations
 
 # region 🔖️Imports
+import importlib.util
 import json
+import os
 import struct
+import sys
 
 from semio_repo_test import Adapter, Context, Outcome, digest
 
@@ -49,16 +49,9 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 
 
 # region 🔖️Carrier
-BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 DSL_PREAMBLE = "semio stdio.semio.kit.dsl v1"
-PACK_TOKEN = "stdio.semio.kit.pack v1"
 DOCUMENT_SCHEMA = "stdio.semio.kit"
-PACK_FORMAT = 1
 
-#: 📌️ `pin = "[" "h" "]" | "[" "c" "," hex "]" | "[" "s" "," hex "," INT "," hex "]"` in the
-#: grammar's own order, against `LinkPin`'s `Head | Checkpoint | Snapshot` in the same order — which
-#: is also the pack ordinal, as the committed example's `head → 0x00` shows.
-PIN_ORDER = ("head", "checkpoint", "snapshot")
 PIN_LETTER = {"head": "h", "checkpoint": "c", "snapshot": "s"}
 LETTER_PIN = {letter: kind for kind, letter in PIN_LETTER.items()}
 
@@ -81,7 +74,7 @@ def hex_of(text: str) -> str:
 
 
 def text_of(hexed: str) -> str:
-    """🔡️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
+    """🪄️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
     if len(hexed) % 2 != 0:
         raise AssertionError("hex run %r has an odd digit count" % hexed)
     return bytes.fromhex(hexed).decode("utf-8")
@@ -148,22 +141,8 @@ def read_reference(reader) -> dict:
 
 
 def print_reference(target: dict) -> str:
-    """🖨️ Prints the literal reference production."""
+    """🔖️ Prints the literal reference production."""
     return "[" + ",".join(hex_of(field) for field in reference_fields(target)) + "]"
-
-
-def read_pack_reference(body: bytes, at: int) -> tuple:
-    """💾️ Reads four length-prefixed reference strings."""
-    fields = []
-    for _ in range(4):
-        field, at = read_string(body, at)
-        fields.append(field)
-    return reference_from_fields(fields), at
-
-
-def write_pack_reference(target: dict) -> bytes:
-    """📦️ Writes four length-prefixed reference strings."""
-    return b"".join(write_string(field) for field in reference_fields(target))
 
 
 def transform_of(numbers: list) -> dict:
@@ -172,7 +151,7 @@ def transform_of(numbers: list) -> dict:
 
 
 def transform_numbers(transform: dict) -> list:
-    """🔢️ Returns translation, rotation and scale in the grammar's order."""
+    """⚖️ Returns translation, rotation and scale in the grammar's order."""
     translation, rotation, scale = transform["translation"], transform["rotation"], transform["scale"]
     return [translation["x"], translation["y"], translation["z"], rotation["x"], rotation["y"], rotation["z"], rotation["w"], scale["x"], scale["y"], scale["z"]]
 
@@ -252,7 +231,7 @@ def read_type(reader: Reader) -> dict:
 
 
 def read_transform(reader: Reader) -> dict:
-    """📐️ `transform` — ten positional numbers."""
+    """🌀️ `transform` — ten positional numbers."""
     reader.take("[")
     numbers = [reader.number()]
     for _ in range(9):
@@ -275,7 +254,7 @@ def read_piece(reader: Reader) -> dict:
 
 
 def read_connection(reader: Reader) -> dict:
-    """🔗️ `connection = "[" hex "," hex "," hex "," hex "," hex "]"`."""
+    """🌁️ `connection = "[" hex "," hex "," hex "," hex "," hex "]"`."""
     reader.take("[")
     fields = [reader.hex()]
     for _ in range(4):
@@ -334,7 +313,7 @@ def read_pin(reader: Reader) -> dict:
 
 
 def print_pin(pin: dict) -> str:
-    """📌️ The writing direction of `pin`."""
+    """🌂️ The writing direction of `pin`."""
     kind = pin["kind"]
     if kind == "head":
         return "[h]"
@@ -357,7 +336,7 @@ def read_link(reader: Reader) -> dict:
 
 
 def parse_dsl(text: str) -> dict:
-    """📖️ The seven body lines of a kit document, under the text envelope."""
+    """🧍️ The seven body lines of a kit document, under the text envelope."""
     body = [line.rstrip("\r") for line in split_preamble(text).split("\n") if line.strip() != ""]
     keys = ["schema", "types", "designs", "objects", "models", "properties", "representations"]
     if len(body) != len(keys):
@@ -426,190 +405,33 @@ def print_dsl(document: dict) -> str:
 
 
 # region 🔖️Pack
-def read_varint(data: bytes, at: int) -> tuple:
-    """🔢️ Unsigned LEB128 — the `varint` the protocol description names for every length."""
-    value = 0
-    shift = 0
-    while True:
-        if at >= len(data):
-            raise AssertionError("the pack frame ends inside a varint")
-        byte = data[at]
-        at += 1
-        value |= (byte & 0x7F) << shift
-        if byte & 0x80 == 0:
-            return value, at
-        shift += 7
+_HERE = os.path.dirname(os.path.abspath(__file__))
 
 
-def write_varint(value: int) -> bytes:
-    """🔢️ The writing direction of the same encoding."""
-    out = bytearray()
-    while True:
-        byte = value & 0x7F
-        value >>= 7
-        out.append(byte | (0x80 if value else 0))
-        if not value:
-            return bytes(out)
+def _load_shared(alias, *parts):
+    """🧬️ Loads a shared module from the `stdio.semio` artifact root, six folders above this case, and registers it under an importable name."""
+    if alias in sys.modules:
+        return sys.modules[alias]
+    path = os.path.join(_HERE, *[os.pardir] * 6, *parts)
+    spec = importlib.util.spec_from_file_location(alias, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[alias] = module
+    spec.loader.exec_module(module)
+    return module
 
 
-def read_string(data: bytes, at: int) -> tuple:
-    """🧵️ A varint-length-prefixed UTF-8 string."""
-    length, at = read_varint(data, at)
-    if at + length > len(data):
-        raise AssertionError("the pack frame ends inside a length-prefixed string")
-    return data[at : at + length].decode("utf-8"), at + length
-
-
-def write_string(text: str) -> bytes:
-    """🧵️ The writing direction of the same scalar."""
-    raw = text.encode("utf-8")
-    return write_varint(len(raw)) + raw
-
-
-def read_pack_pin(data: bytes, at: int) -> tuple:
-    """📌️ One tagged pin, mirroring the text grammar's own `h|c|s` order."""
-    ordinal = data[at]
-    at += 1
-    if ordinal >= len(PIN_ORDER):
-        raise AssertionError("unknown pin ordinal %d" % ordinal)
-    kind = PIN_ORDER[ordinal]
-    if kind == "head":
-        return {"kind": "head"}, at
-    if kind == "checkpoint":
-        checkpoint, at = read_string(data, at)
-        return {"kind": "checkpoint", "id": checkpoint}, at
-    blob_hash, at = read_string(data, at)
-    size, at = read_varint(data, at)
-    media_type, at = read_string(data, at)
-    return {"kind": "snapshot", "blob": {"hash": blob_hash, "size": size, "mediaType": media_type}}, at
-
-
-def write_pack_pin(pin: dict) -> bytes:
-    """📌️ The writing direction of `read_pack_pin`."""
-    out = bytearray([PIN_ORDER.index(pin["kind"])])
-    if pin["kind"] == "head":
-        return bytes(out)
-    if pin["kind"] == "checkpoint":
-        return bytes(out + write_string(pin["id"]))
-    blob = pin["blob"]
-    return bytes(out + write_string(blob["hash"]) + write_varint(blob["size"]) + write_string(blob["mediaType"]))
-
-
-def unwrap_binary(data: bytes) -> bytes:
-    """📖️ Strips the semio binary envelope and refuses any token but this subset's own."""
-    if data[:8] != BINARY_MAGIC:
-        raise AssertionError("the pack file does not start with the semio binary magic")
-    if len(data) < 12:
-        raise AssertionError("the pack file is truncated inside its envelope")
-    token_len = int.from_bytes(data[8:12], "little")
-    token = data[12 : 12 + token_len].decode("utf-8")
-    if token != PACK_TOKEN:
-        raise AssertionError("expected the %r envelope token, got %r" % (PACK_TOKEN, token))
-    return data[12 + token_len :]
+record_document = _load_shared("record_document", "🚪️io", "💾️binary", "🎒️record-document", "🐍️.py")
+RECORD_SPEC = record_document.load_record_spec(os.path.join(_HERE, os.pardir, os.pardir, "🧬️schema", "📸️snapshot", "🗺️record-spec", "🔣️.json"))
 
 
 def parse_pack(data: bytes) -> dict:
-    """📦️ Binary envelope, then `format u8`, the schema, and the six collections in grammar order."""
-    body = unwrap_binary(data)
-    if body[0] != PACK_FORMAT:
-        raise AssertionError("unknown pack format byte %d" % body[0])
-    schema, at = read_string(body, 1)
-    document = {"schema": schema}
-    count, at = read_varint(body, at)
-    types = []
-    for _ in range(count):
-        type_id, at = read_string(body, at)
-        name, at = read_string(body, at)
-        category, at = read_string(body, at)
-        types.append({"id": type_id, "name": name, "category": category})
-    document["types"] = types
-    count, at = read_varint(body, at)
-    designs = []
-    for _ in range(count):
-        design_id, at = read_string(body, at)
-        name, at = read_string(body, at)
-        piece_count, at = read_varint(body, at)
-        pieces = []
-        for _ in range(piece_count):
-            piece_id, at = read_string(body, at)
-            type_id, at = read_string(body, at)
-            numbers = list(struct.unpack_from("<10d", body, at))
-            at += 80
-            pieces.append({"id": piece_id, "typeId": type_id, "transform": transform_of(numbers)})
-        connection_count, at = read_varint(body, at)
-        connections = []
-        for _ in range(connection_count):
-            fields = []
-            for _ in range(5):
-                field, at = read_string(body, at)
-                fields.append(field)
-            connections.append({"id": fields[0], "connectingPieceId": fields[1], "connectingPort": fields[2], "connectedPieceId": fields[3], "connectedPort": fields[4]})
-        designs.append({"id": design_id, "name": name, "pieces": pieces, "connections": connections})
-    document["designs"] = designs
-    for key in ("objects", "models"):
-        count, at = read_varint(body, at)
-        children = []
-        for _ in range(count):
-            child_id, at = read_string(body, at)
-            target, at = read_pack_reference(body, at)
-            children.append({"childId": child_id, "target": target})
-        document[key] = children
-    present = body[at]
-    at += 1
-    if present not in (0, 1):
-        raise AssertionError("the properties presence byte is %d, not 0 or 1" % present)
-    if present:
-        child_id, at = read_string(body, at)
-        target, at = read_pack_reference(body, at)
-        document["properties"] = {"childId": child_id, "target": target}
-    count, at = read_varint(body, at)
-    links = []
-    for _ in range(count):
-        target, at = read_pack_reference(body, at)
-        pin, at = read_pack_pin(body, at)
-        role, at = read_string(body, at)
-        links.append({"target": target, "pin": pin, "role": role})
-    document["representations"] = links
-    if at != len(body):
-        raise AssertionError("%d trailing byte(s) after the last representation" % (len(body) - at))
-    return document
+    """📦️ A `.pack.semio` file as the JSON snapshot its record document carries, an absent optional field left out like the text carrier leaves it."""
+    return record_document.decode_pack(RECORD_SPEC, data, omit_nulls=True)
 
 
 def pack_bytes(document: dict) -> bytes:
-    """📦️ The writing direction of `parse_pack`, envelope included."""
-    body = bytearray([PACK_FORMAT])
-    body += write_string(document["schema"])
-    body += write_varint(len(document["types"]))
-    for entry in document["types"]:
-        body += write_string(entry["id"]) + write_string(entry["name"]) + write_string(entry["category"])
-    body += write_varint(len(document["designs"]))
-    for design in document["designs"]:
-        body += write_string(design["id"]) + write_string(design["name"])
-        body += write_varint(len(design["pieces"]))
-        for piece in design["pieces"]:
-            body += write_string(piece["id"]) + write_string(piece["typeId"])
-            body += struct.pack("<10d", *transform_numbers(piece["transform"]))
-        body += write_varint(len(design["connections"]))
-        for link in design["connections"]:
-            for field in (link["id"], link["connectingPieceId"], link["connectingPort"], link["connectedPieceId"], link["connectedPort"]):
-                body += write_string(field)
-    for key in ("objects", "models"):
-        body += write_varint(len(document[key]))
-        for child in document[key]:
-            body += write_string(child["childId"]) + write_pack_reference(child["target"])
-    properties = document.get("properties")
-    if not properties:
-        body.append(0)
-    else:
-        body.append(1)
-        body += write_string(properties["childId"]) + write_pack_reference(properties["target"])
-    body += write_varint(len(document["representations"]))
-    for link in document["representations"]:
-        body += write_pack_reference(link["target"])
-        body += write_pack_pin(link["pin"])
-        body += write_string(link["role"])
-    token = PACK_TOKEN.encode("utf-8")
-    return BINARY_MAGIC + len(token).to_bytes(4, "little") + token + bytes(body)
+    """🔍️ The writing direction of `parse_pack`, envelope included."""
+    return record_document.encode_pack(RECORD_SPEC, document)
 
 
 # endregion 🔖️Pack
@@ -642,7 +464,7 @@ def clone(value):
 
 
 def tagged(mutation: dict) -> tuple:
-    """🔎️ Splits `{"AddType": {…}}` into its verb and its arguments."""
+    """✂️ Splits `{"AddType": {…}}` into its verb and its arguments."""
     if len(mutation) != 1:
         raise AssertionError("a mutation is exactly one externally tagged verb, got %r" % sorted(mutation))
     tag = next(iter(mutation))
@@ -652,7 +474,7 @@ def tagged(mutation: dict) -> tuple:
 
 
 def entry_at(items: list, key: str, value: str, verb: str, what: str) -> int:
-    """🔎️ The position of the id-keyed record one verb addresses; absence is a refusal."""
+    """🗝️ The position of the id-keyed record one verb addresses; absence is a refusal."""
     for index, entry in enumerate(items):
         if entry[key] == value:
             return index
@@ -660,14 +482,14 @@ def entry_at(items: list, key: str, value: str, verb: str, what: str) -> int:
 
 
 def link_index(items: list, index, verb: str) -> int:
-    """🔎️ A positional index into the ordered representation pool."""
+    """🔟️ A positional index into the ordered representation pool."""
     if not isinstance(index, int) or index < 0 or index >= len(items):
         raise AssertionError("%s addresses representation %r of a pool holding %d" % (verb, index, len(items)))
     return index
 
 
 def apply_mutation(document: dict, mutation: dict) -> dict:
-    """🧬️ Applies one verb, returning a NEW document. An unaddressable id or index is a refusal,
+    """📱️ Applies one verb, returning a NEW document. An unaddressable id or index is a refusal,
     never a silent no-op — a quietly skipped mutation would report as a pass."""
     result = clone(document)
     tag, args = tagged(mutation)
@@ -764,7 +586,7 @@ def inverse_mutation(document: dict, mutation: dict) -> list:
 
 
 def apply_all(document: dict, mutations: list) -> dict:
-    """🧬️ Folds a list of verbs over a document, left to right."""
+    """🗜️ Folds a list of verbs over a document, left to right."""
     for mutation in mutations:
         document = apply_mutation(document, mutation)
     return document
@@ -775,7 +597,7 @@ def apply_all(document: dict, mutations: list) -> dict:
 
 # region 🔖️Scenario input
 def doc_json(ctx: Context) -> dict:
-    """📜️ The scenario's own committed vector — the feature owns the parameters, not the adapter."""
+    """➡️ The scenario's own committed vector — the feature owns the parameters, not the adapter."""
     for step in ctx.scenario["steps"]:
         if step.get("docString"):
             return json.loads(step["docString"])
@@ -807,7 +629,7 @@ def mutate(ctx: Context) -> Outcome:
 
 
 def inverse(ctx: Context) -> Outcome:
-    """↩️ The same verb, then this implementation's own undo of it. The restored kit must be the
+    """🌃️ The same verb, then this implementation's own undo of it. The restored kit must be the
     prepared kit again — asserted here, and compared against the subject's restored kit by the
     runner, so a wrong undo that happens to be self-consistent still shows up."""
     document, mutation = prepared(ctx)
@@ -819,7 +641,7 @@ def inverse(ctx: Context) -> Outcome:
 
 
 def spec_vector(ctx: Context) -> Outcome:
-    """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
+    """🌄️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
     is a THIRD statement of what the verb means, independent of both implementations."""
     before_uri, mutation_uri, after_uri = ctx.step_input_uris()[:3]
     before = snapshot_json(ctx, before_uri)
@@ -854,7 +676,7 @@ def carrier_pair(ctx: Context, dsl_uri: str, pack_uri: str, what: str) -> dict:
 
 
 def identity_round_trip(ctx: Context) -> Outcome:
-    """🔁️ Both kits, in both encodings — four files, all four reproduced byte for byte.
+    """📄️ Both kits, in both encodings — four files, all four reproduced byte for byte.
 
     The committed furniture kit's two files were written by the RUST codec, so this implementation
     reproducing them is a cross-language byte agreement, not a codec agreeing with itself. The

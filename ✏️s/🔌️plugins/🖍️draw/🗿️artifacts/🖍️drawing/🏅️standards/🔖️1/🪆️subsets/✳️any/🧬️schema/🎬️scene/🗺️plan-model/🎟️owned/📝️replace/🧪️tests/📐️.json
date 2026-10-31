@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "ownership": "consume-genuine-plan-owner-retain-same-private-body",
+  "source": "borrowed-replacement-content-never-adopted",
+  "rules": {
+    "originalFiniteBankUnchanged": true,
+    "oldOwnerCannotBorrowOrCloseAfterTransfer": true,
+    "noFullPlanOrNodeArrayCopy": true,
+    "actualContentCellsAndNode112Write": true,
+    "oldContentCellsRemainInRealCloseStack": true,
+    "retiredOldDomainCountsClearedByPaidRowWrite": true,
+    "unchangedNodeAndAssetIdentitiesPreserved": true,
+    "borrowedBytesAndPathsUnchanged": true,
+    "cpuAndSemanticIndependent": true,
+    "completedCustodySemanticZero": true,
+    "sameStockCancellationErrorAndOutputClose": true,
+    "allOriginalScene6AndGlyph14Retained": true
+  },
+  "cases": [
+    {
+      "name": "authentic-consume-before-properties"
+    },
+    {
+      "name": "all-seven-original-kinds-to-glyphs",
+      "indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "name": "same-body-cached-borrow-and-unmodified-neighbours"
+    },
+    {
+      "name": "paid-old-domain-reclassification"
+    },
+    {
+      "name": "partial-cancel",
+      "phases": [
+        "source",
+        "path",
+        "children",
+        "paint",
+        "dash",
+        "nodeRewrite",
+        "reclassification",
+        "publication"
+      ]
+    },
+    {
+      "name": "repeated-five-axis-refusal",
+      "axes": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    {
+      "name": "current-final-error-effects-and-cpu"
+    },
+    {
+      "name": "exact-semantic-ceiling-and-denied-settlement",
+      "quanta": [
+        1,
+        7
+      ]
+    },
+    {
+      "name": "duplicate-transfer-and-cached-close"
+    }
+  ],
+  "representation": {
+    "nodeRewriteStagingBytes": 112,
+    "stagingCapacityReusableWithinSamePrivateBody": true,
+    "stagingDomainOwners": 0,
+    "oldDomainCounterFieldsWritten": 2,
+    "oldDomainCounterWriteBytes": 16,
+    "resourceRowBytes": 24
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:drawing:scene:prepare:owned",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "sourceCases",
+    "quanta",
+    "zeroAuthority",
+    "rules",
+    "maximumWork",
+    "cancelPhases",
+    "deniedAxes",
+    "sourceModes",
+    "profiles"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "sourceCases": {
+      "const": [
+        "rectangle",
+        "authored path",
+        "ellipse",
+        "reflected circle",
+        "line",
+        "polygon",
+        "empty polygon",
+        "shared asset geometry",
+        "text stays explicit",
+        "boolean preserves operands",
+        "trace stays explicit",
+        "group full affine",
+        "hidden ancestor retains child",
+        "linearGradient",
+        "radialGradient",
+        "unused unicode source bytes",
+        "boolean parent reference preserves independent result movement"
+      ]
+    },
+    "quanta": {
+      "const": [
+        1,
+        7,
+        4096
+      ]
+    },
+    "zeroAuthority": {
+      "const": {
+        "source": "rectangle",
+        "items": 1,
+        "grant": {
+          "maximumItems": 0,
+          "maximumCopyBytes": 0,
+          "maximumCapacityBytes": 0,
+          "maximumReleaseBytes": 0,
+          "maximumDepth": 0
+        },
+        "expectedWork": 0,
+        "expectedReceipt": {
+          "copiedItems": 0,
+          "copiedBytes": 0,
+          "retainedCapacityBytes": 0,
+          "releasedBytes": 0
+        }
+      }
+    },
+    "rules": {
+      "const": {
+        "originalFixtureGeometryUnchanged": true,
+        "borrowedSourceIdentityAndContents": true,
+        "sameBankThroughClose": true,
+        "actualPrivateScenePages": true,
+        "ownedRgbaBacking": true,
+        "sortedAssetIdentityOrder": true,
+        "actualCpuSeparateFromSemantic": true,
+        "errorReceiptAndCpuBeforeRefusal": true,
+        "allFiveDeniedAxesZeroEffect": true,
+        "exactSemanticCapSettlement": true,
+        "producedBytesSharePrivateResourceCloseStack": true
+      }
+    },
+    "maximumWork": {
+      "const": 1000000
+    },
+    "cancelPhases": {
+      "const": [
+        "assets",
+        "layers",
+        "paint",
+        "geometry",
+        "references",
+        "validation",
+        "cycles",
+        "complete"
+      ]
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "sourceModes": {
+      "const": [
+        "borrowed-authored-layers",
+        "borrowed-image-samples",
+        "owned-produced-rgba",
+        "private-scene-pages"
+      ]
+    },
+    "profiles": {
+      "const": {
+        "node": 112,
+        "asset": 32,
+        "resource": 24,
+        "rgbaByte": 1,
+        "frame": 136,
+        "assetKey": 8,
+        "identityIndex": 16,
+        "cycleFrame": 16,
+        "cycleState": 8
+      }
+    }
+  }
+}

@@ -120,7 +120,7 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
     }
 }
 
-/// ⚖️ LAW: the Artifact lane every document tool publishes into has a real one-item preparation
+/// 📄️ LAW: the Artifact lane every document tool publishes into has a real one-item preparation
 /// factory — a tool without `build_artifact_store_one_item_preparation_factory` is rejected at
 /// dispatch with `interactive-job.publication-authority-missing`. fem3d has no `Config` lane
 /// (`NoConfig`), so no config preparation factory is owed.
@@ -130,7 +130,7 @@ async fn the_artifact_publication_lane_has_a_preparation_factory() {
     assert!(!FEM3D_RETAINED_PUBLICATION_CONTRACTS.iter().any(|contract| contract.lanes.contains(&ArtifactToolPublicationLane::Config)), "no fem3d tool publishes into a config lane the app does not own");
 }
 
-/// ⚖️ LAW: every document mutation the 15 Artifact-lane tools can emit fits the Artifact lane's
+/// 📚️ LAW: every document mutation the 15 Artifact-lane tools can emit fits the Artifact lane's
 /// one-item envelope, measured on the boot document (the largest fixture this app ships).
 #[semio_framework_async_macros::async_test]
 async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
@@ -222,7 +222,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     assert_eq!(ids.len(), 34, "every Fem3dCommand row must be covered by every_command()");
 }
 
-/// ⚖️ LAW: text and binary are two projections of the same command, for every single row.
+/// 📝️ LAW: text and binary are two projections of the same command, for every single row.
 #[semio_framework_async_macros::async_test]
 async fn every_command_round_trips_through_text_and_binary() {
     for command in every_command() {
@@ -284,11 +284,11 @@ async fn every_command_keeps_its_current_bytes() {
         let bytes = command.encode_op().expect("encode");
         assert_eq!(bytes.iter().map(|byte| format!("{byte:02x}")).collect::<String>(), expected, "wire bytes changed for {}", command.command_id());
     }
-    let nodal_load_without_case = Fem3dCommand::AddNodalLoad(Fem3dCommand::AddNodalLoad { node_id: "n1".into(), dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tz, value: -5000.0, case_id: None });
+    let nodal_load_without_case = Fem3dCommand::AddNodalLoad(add_nodal_load::AddNodalLoad { node_id: "n1".into(), dof: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof::Tz, value: -5000.0, case_id: None });
     assert_eq!(nodal_load_without_case.encode_op().expect("encode").iter().map(|byte| format!("{byte:02x}")).collect::<String>(), "010601026e3103000600010a020205000000000088b3c0");
 }
 
-/// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword. Four rows
+/// 🎫️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword. Four rows
 /// (`setActiveExample`/`setCamera`/`setResultDisplay`/`setResultAnimation`) prove the wire keyword is NOT simply the
 /// kebab-cased command id — this is exactly what a missing `#[dsl(keyword = ..)]` on a payload struct
 /// silently breaks (the record prints with no keyword at all and no longer parses).
@@ -419,7 +419,7 @@ async fn mounted_peer_catch_up_preserves_independent_fields_and_deduplicates_eve
 async fn undo_restores_document_after_add_node() {
     let mut app = fem3d_app();
     let before = app.snapshot().expect("snapshot").nodes.len();
-    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddNode(Fem3dCommand::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    assert_undo_redo_round_trip(&mut app.0, Fem3dCommand::AddNode(add_node::AddNode { x: 1.0, y: 2.0, z: 3.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 /// 🛡️ The same round trip for `addSupport`, the verb 🏗️fem3d's own bar presses. B3f measured it
@@ -478,7 +478,7 @@ async fn export_media_results_out_returns_solved_json_for_every_case_3d() {
     assert!(value["dead"].get("displacements").is_some(), "expected a displacements array: {json}");
 }
 
-/// 🎞️ `"results:out"` on a document with no load cases errors rather than panicking or returning an
+/// 📤️ `"results:out"` on a document with no load cases errors rather than panicking or returning an
 /// empty payload.
 #[semio_framework_async_macros::async_test]
 async fn export_media_results_out_errors_without_load_cases_3d() {
@@ -489,7 +489,7 @@ async fn export_media_results_out_errors_without_load_cases_3d() {
     assert!(matches!(err, MediaError::Payload(..)));
 }
 
-/// 🎞️ `"geometry:in"` decodes an extruded-footprint JSON contract into a new `FemSolid` operation.
+/// 🔓️ `"geometry:in"` decodes an extruded-footprint JSON contract into a new `FemSolid` operation.
 #[semio_framework_async_macros::async_test]
 async fn import_media_geometry_in_adds_a_new_solid_3d() {
     let mut app: Fem3dApp = context::fem3d_empty_app().await;
@@ -597,3 +597,6 @@ async fn mounted_camera_and_interaction_presence_reach_peers_without_document_ed
     let command = Fem3dCommand::SetCamera(set_camera::SetCamera { camera: semio_framework_os_kernel::Viewport3dOrbit { position, target, up: Some(up), zoom: 1.0 } });
     assert_registered_presence_round_trip::<EditorApp<Fem3dPlayApp>, _, _>(|| async { context::manifest() }, command, view, expected, ("fem3d", Some(("node", &selected))), fixture_mounted_policy(), &mut fixture_identity()).await;
 }
+
+#[path = "../🪧️pane-smoke/🦀️.rs"]
+mod pane_smoke;

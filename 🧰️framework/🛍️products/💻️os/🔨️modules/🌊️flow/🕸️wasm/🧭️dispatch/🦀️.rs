@@ -103,7 +103,7 @@ pub(super) fn flow_action(operation: u16, arguments: &FlowArguments) -> Option<B
         2_600 => Some(Box::new(FlowAction2600 { program: FlowProgramState::new(arguments) })),
         2_601 => Some(Box::new(FlowAction2601 { program: FlowProgramState::new(arguments) })),
         2_602 => Some(Box::new(FlowAction2602 { program: FlowProgramState::new(arguments) })),
-        2_605 => Some(Box::new(FlowAction2605 { program: FlowProgramState::new(arguments) })),
+        2_605 => Some(Box::new(FlowAction2605::new(arguments))),
         2_606 => Some(Box::new(FlowAction2606 { program: FlowProgramState::new(arguments) })),
         2_607 => Some(Box::new(FlowAction2607 { program: FlowProgramState::new(arguments) })),
         2_608 => Some(Box::new(FlowAction2608 { program: FlowProgramState::new(arguments) })),

@@ -1,0 +1,209 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Drawing Text Original Work Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumTurns",
+    "quantum",
+    "deniedAxes",
+    "cancelPhases",
+    "exhaustionWork",
+    "sameLedgerCalls",
+    "rules",
+    "closeDeniedAxes",
+    "admissionVectors",
+    "zeroAuthorityPublic"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumTurns": {
+      "const": 2000000
+    },
+    "quantum": {
+      "const": 1
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "depth"
+      ]
+    },
+    "cancelPhases": {
+      "const": [
+        "nodes",
+        "unicode",
+        "fonts",
+        "run",
+        "geometryAdmission",
+        "geometry",
+        "publishing",
+        "complete"
+      ]
+    },
+    "exhaustionWork": {
+      "const": 1
+    },
+    "sameLedgerCalls": {
+      "const": 2
+    },
+    "rules": {
+      "const": {
+        "deniedReceipt": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "deniedHeap": [
+          0,
+          0
+        ],
+        "paidReceiptFits": true,
+        "heapMatchesReceipt": true,
+        "originalSourceIdentity": true,
+        "partialOutputForbidden": true,
+        "controlledClose": true,
+        "receiptFoldedOnceBeforeError": true,
+        "cpuSeparateChargedOnce": true,
+        "blockedReturnsWithoutSpin": true,
+        "geometryAndHeaderFunded": true
+      }
+    },
+    "closeDeniedAxes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "admissionVectors": {
+      "const": [
+        {
+          "name": "paid",
+          "grant": [
+            1,
+            8,
+            16,
+            4,
+            2
+          ],
+          "demand": [
+            1,
+            8,
+            16,
+            4,
+            2
+          ],
+          "admitted": true
+        },
+        {
+          "name": "items",
+          "grant": [
+            0,
+            8,
+            16,
+            4,
+            2
+          ],
+          "demand": [
+            1,
+            8,
+            16,
+            4,
+            2
+          ],
+          "admitted": false
+        },
+        {
+          "name": "copy",
+          "grant": [
+            1,
+            7,
+            16,
+            4,
+            2
+          ],
+          "demand": [
+            1,
+            8,
+            16,
+            4,
+            2
+          ],
+          "admitted": false
+        },
+        {
+          "name": "capacity",
+          "grant": [
+            1,
+            8,
+            15,
+            4,
+            2
+          ],
+          "demand": [
+            1,
+            8,
+            16,
+            4,
+            2
+          ],
+          "admitted": false
+        },
+        {
+          "name": "release",
+          "grant": [
+            1,
+            8,
+            16,
+            3,
+            2
+          ],
+          "demand": [
+            1,
+            8,
+            16,
+            4,
+            2
+          ],
+          "admitted": false
+        },
+        {
+          "name": "depth",
+          "grant": [
+            1,
+            8,
+            16,
+            4,
+            1
+          ],
+          "demand": [
+            1,
+            8,
+            16,
+            4,
+            2
+          ],
+          "admitted": false
+        }
+      ]
+    },
+    "zeroAuthorityPublic": {
+      "const": {
+        "work": 0,
+        "nodes": 0,
+        "phase": "nodes",
+        "done": false,
+        "sameContentOwner": true
+      }
+    }
+  }
+}

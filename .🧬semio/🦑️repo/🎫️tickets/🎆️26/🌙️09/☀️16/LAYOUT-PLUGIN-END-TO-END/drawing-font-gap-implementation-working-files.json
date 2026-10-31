@@ -1,0 +1,33 @@
+{
+  "state": "partial-gap-source-authored-callers-open-not-SourceReady",
+  "runtimeExecuted": false,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🟦️.ts",
+      "bytes": 9134,
+      "sha256": "959d27f7351e3aab3070d939bb768525b79cfbe8c932aad42aa34f61e8151691"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "bytes": 5976,
+      "sha256": "9ed9c742532170b5e11544ea7eec4c1cc390408cab4d0479ffb230160e107b67"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🎟️work/🧬️schema/🔣️.json",
+      "bytes": 2134,
+      "sha256": "bab84c61222dfce86ef3459988bd557f01c253ac4fa1ad1057a0ea1e05f4600d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 1213,
+      "sha256": "e4867f4b3ca78ca62359616177b36cad5883b9eb545f29314bf8a4a5cb83e62e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🏪️workspace/🎟️work/🧪️tests/🟦️.ts",
+      "bytes": 9793,
+      "sha256": "7d0458a6a402fd64f62587c32ba82acbf427b678548de6b4d575b739c4032922"
+    }
+  ],
+  "testFirstPacket": "drawing-font-gap-test-first-working-files.json",
+  "peerAttribution": "Workspace producer/output body ours. ClusterFace exact two close-call substitutions are coordinated shared hunks; existing Cursor close implementation not blanket claimed."
+}

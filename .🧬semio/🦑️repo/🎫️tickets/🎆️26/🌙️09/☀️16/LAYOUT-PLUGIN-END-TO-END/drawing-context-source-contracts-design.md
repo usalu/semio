@@ -1,0 +1,5 @@
+# Source Contract Identity and Public Test Ownership
+
+The genuine canonical caller fixture is a consumer of the normal Context library. A Context lib-test is a distinct Rust crate identity, so importing that consumer into lib-test cannot provide the same typed StepContext. The remaining Source/cancellation laws therefore belong beside the other genuine public Context contracts, each once, using the normal defining Context library and its canonical fixture provider. None are dropped or duplicated, and lib.test is not disabled.
+
+The original one-shot post-alias receipt cuts now live in the defining feature-gated testkit, with the identical private mutations after the actual output exists. Their actual failed/source receipt/CPU assertions remain in the same physical laws. Child status and inherited budget observations read the real objects; no Source, budget, fixture issuer or replacement Context is manufactured. Original rows, currencies, cancel cuts, clock identity and bounds remain unchanged. Compile/runtime validation remains mandatory.

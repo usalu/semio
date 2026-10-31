@@ -128,7 +128,7 @@ fn admit_owned<T: RetireOwned>(pending: &mut Option<T>, active: &mut Option<Box<
     let demand = birth_demands(pending)?;
     let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
     let original = pending.take().ok_or_else(|| invariant("original History retirement admission lost its owner"))?;
-    match admit_owned_retirement(original, child) {
+    match admit_owned_retirement(original, child).result {
         Ok((owner, progress)) => {
             *active = Some(owner);
             admit_retained_clone_progress(child, progress, "original History child birth")?;
@@ -152,7 +152,7 @@ fn close_box(slot: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: Retain
         return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..Default::default() }));
     }
     let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-    let step = owner.close_step(child)?;
+    let step = owner.close_step(child).result?;
     admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original History retirement child")?;
     Ok(RetainedCloneStep::Progress(step.progress()))
 }
@@ -295,7 +295,7 @@ impl RetainedHistoryDecode {
         let (range, limits, persisted_document) = (self.range, self.limits, self.persisted_document);
         let (result, issued) = with_control(&mut self.receipt, &mut self.recipient, self.maximum, turn, grant.maximum_capacity_bytes, false, |control| {
             if control.has_retirement_owner() {
-                let raw = control.close_retirement_recipient(grant);
+                let raw = control.close_retirement_recipient(grant).result;
                 let progress = match &raw {
                     Ok(step) => step.progress(),
                     Err(error) => error.retained_progress(),
@@ -427,7 +427,7 @@ impl RetainedHistoryDecode {
             return Ok(RetainedCloneStep::Progress(progress));
         }
         if !self.recipient.terminal_is_empty() {
-            let raw = with_control(&mut self.receipt, &mut self.recipient, self.maximum, turn, grant.maximum_capacity_bytes, true, |control| control.close_retirement_recipient(grant))?;
+            let raw = with_control(&mut self.receipt, &mut self.recipient, self.maximum, turn, grant.maximum_capacity_bytes, true, |control| control.close_retirement_recipient(grant).result)?;
             return raw;
         }
         self.receipt.take();

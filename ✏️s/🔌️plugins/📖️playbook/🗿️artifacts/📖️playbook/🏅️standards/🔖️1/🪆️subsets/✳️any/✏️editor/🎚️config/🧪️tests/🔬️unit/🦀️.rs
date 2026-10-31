@@ -1,4 +1,5 @@
 use crate::editor::playbook::config::*;
+use store::ColdMutation as _;
 
 #[semio_framework_async_macros::async_test]
 async fn playbook_config_default_matches_the_existing_runtime_defaults() {

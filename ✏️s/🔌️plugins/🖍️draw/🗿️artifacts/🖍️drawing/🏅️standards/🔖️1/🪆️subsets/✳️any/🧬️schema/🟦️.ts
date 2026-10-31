@@ -38,7 +38,7 @@ export type DrawingFill =
  | {kind:"linearGradient";x1:Binary64;y1:Binary64;x2:Binary64;y2:Binary64;stops:DrawingGradientStop[]}
  | {kind:"radialGradient";cx:Binary64;cy:Binary64;r:Binary64;stops:DrawingGradientStop[]};
 export interface DrawingStroke {color:DrawingColor;width:Binary64;cap:"butt"|"round"|"square";join:"miter"|"round"|"bevel";dash?:Binary64[]}
-export interface DrawingAttributes {fillRule:FillRule;fill?:DrawingFill;stroke?:DrawingStroke}
+export interface DrawingAttributes {fillRule:FillRule;fill?:DrawingFill|null;stroke?:DrawingStroke|null}
 export interface DrawingLayerBase {id:string;name:string;visible:boolean;locked:boolean;opacity:Binary64;blendMode:string;transform:DrawingTransform;attributes:DrawingAttributes}
 export interface DrawingRect {x:Binary64;y:Binary64;width:Binary64;height:Binary64}
 export interface DrawingEllipse {cx:Binary64;cy:Binary64;rx:Binary64;ry:Binary64}
@@ -128,8 +128,10 @@ const ownedRecord=drawingDrawingArtifactGuardObject,ownedArray=drawingDrawingArt
 function ownedPoint(value:unknown,at:string):DrawingPoint{const v=ownedArray(value,at,{minItems:2,maxItems:2});return[ownedWord(v[0],at+'[0]'),ownedWord(v[1],at+'[1]')];}
 function ownedColor(value:unknown,at:string):DrawingColor{const v=ownedArray(value,at,{minItems:4,maxItems:4});return[ownedWord(v[0],at+'[0]'),ownedWord(v[1],at+'[1]'),ownedWord(v[2],at+'[2]'),ownedWord(v[3],at+'[3]')];}
 function ownedAttributes(value:unknown,at:string):DrawingAttributes{const v=value===undefined?{}:ownedRecord(value,at),out:DrawingAttributes={fillRule:v.fillRule===undefined?"evenodd":parseFillRule(v.fillRule)};
- if(v.fill!==undefined){const f=ownedRecord(v.fill,at+'.fill'),kind=drawingDrawingArtifactGuardMember(f.kind,at+'.fill.kind',["solid","linearGradient","radialGradient"] as const);if(kind==='solid')out.fill={kind,color:ownedColor(f.color,at+'.fill.color')};else{const stops=ownedArray(f.stops,at+'.fill.stops').map((item,i)=>{const p=ownedRecord(item,at+'.fill.stops['+i+']');return{offset:ownedWord(p.offset,at+'.fill.offset'),color:ownedColor(p.color,at+'.fill.color')};});out.fill=kind==='linearGradient'?{kind,x1:ownedWord(f.x1,at+'.fill.x1'),y1:ownedWord(f.y1,at+'.fill.y1'),x2:ownedWord(f.x2,at+'.fill.x2'),y2:ownedWord(f.y2,at+'.fill.y2'),stops}:{kind,cx:ownedWord(f.cx,at+'.fill.cx'),cy:ownedWord(f.cy,at+'.fill.cy'),r:ownedWord(f.r,at+'.fill.r'),stops};}}
- if(v.stroke!==undefined){const p=ownedRecord(v.stroke,at+'.stroke');out.stroke={color:ownedColor(p.color,at+'.stroke.color'),width:ownedWord(p.width,at+'.stroke.width'),cap:drawingDrawingArtifactGuardMember(p.cap,at+'.stroke.cap',["butt","round","square"] as const),join:drawingDrawingArtifactGuardMember(p.join,at+'.stroke.join',["miter","round","bevel"] as const)};if(p.dash!==undefined)out.stroke.dash=ownedArray(p.dash,at+'.stroke.dash').map((v,i)=>ownedWord(v,at+'.stroke.dash['+i+']'));}return out;
+ if(v.fill===null)out.fill=null;
+ else if(v.fill!==undefined){const f=ownedRecord(v.fill,at+'.fill'),kind=drawingDrawingArtifactGuardMember(f.kind,at+'.fill.kind',["solid","linearGradient","radialGradient"] as const);if(kind==='solid')out.fill={kind,color:ownedColor(f.color,at+'.fill.color')};else{const stops=ownedArray(f.stops,at+'.fill.stops').map((item,i)=>{const p=ownedRecord(item,at+'.fill.stops['+i+']');return{offset:ownedWord(p.offset,at+'.fill.offset'),color:ownedColor(p.color,at+'.fill.color')};});out.fill=kind==='linearGradient'?{kind,x1:ownedWord(f.x1,at+'.fill.x1'),y1:ownedWord(f.y1,at+'.fill.y1'),x2:ownedWord(f.x2,at+'.fill.x2'),y2:ownedWord(f.y2,at+'.fill.y2'),stops}:{kind,cx:ownedWord(f.cx,at+'.fill.cx'),cy:ownedWord(f.cy,at+'.fill.cy'),r:ownedWord(f.r,at+'.fill.r'),stops};}}
+ if(v.stroke===null)out.stroke=null;
+ else if(v.stroke!==undefined){const p=ownedRecord(v.stroke,at+'.stroke');out.stroke={color:ownedColor(p.color,at+'.stroke.color'),width:ownedWord(p.width,at+'.stroke.width'),cap:drawingDrawingArtifactGuardMember(p.cap,at+'.stroke.cap',["butt","round","square"] as const),join:drawingDrawingArtifactGuardMember(p.join,at+'.stroke.join',["miter","round","bevel"] as const)};if(p.dash!==undefined)out.stroke.dash=ownedArray(p.dash,at+'.stroke.dash').map((v,i)=>ownedWord(v,at+'.stroke.dash['+i+']'));}return out;
 }
 export function parseDrawingPathSegment(value:unknown,at='$'):DrawingPathSegment{const v=ownedRecord(value,at),kind=drawingDrawingArtifactGuardMember(v.kind,at+'.kind',["move","line","quad","cubic","arc","close"] as const);switch(kind){case'move':case'line':return{kind,to:ownedPoint(v.to,at+'.to')};case'quad':return{kind,ctrl:ownedPoint(v.ctrl,at+'.ctrl'),to:ownedPoint(v.to,at+'.to')};case'cubic':return{kind,ctrl1:ownedPoint(v.ctrl1,at+'.ctrl1'),ctrl2:ownedPoint(v.ctrl2,at+'.ctrl2'),to:ownedPoint(v.to,at+'.to')};case'arc':return{kind,rx:ownedWord(v.rx,at+'.rx'),ry:ownedWord(v.ry,at+'.ry'),rotation:ownedWord(v.rotation,at+'.rotation'),largeArc:ownedBool(v.largeArc,at+'.largeArc'),sweep:ownedBool(v.sweep,at+'.sweep'),to:ownedPoint(v.to,at+'.to')};case'close':return{kind};}}
 /** 🖍️ Validate explicit layer fields and reconstruct the forest without recursive cloning. */
@@ -213,9 +215,9 @@ export function parsePathGeometrySegment(value: unknown, at = "$"): PathGeometry
 /** 📐 Validate a decoded transform value. */
 export function parseDrawingTransform(value:unknown,at="$"):DrawingTransform {const row=ownedRecord(value,at);return {x:ownedWord(row.x,at+".x"),y:ownedWord(row.y,at+".y"),scaleX:ownedWord(row.scaleX,at+".scaleX"),scaleY:ownedWord(row.scaleY,at+".scaleY"),shear:ownedWord(row.shear,at+".shear"),rotation:ownedWord(row.rotation,at+".rotation")};}
 /** 🎨 Validate a decoded fill value. */
-export function parseDrawingFill(value:unknown,at="$"):DrawingFill {return ownedAttributes({fill:value},at).fill!;}
+export function parseDrawingFill(value:unknown,at="$"):DrawingFill {const parsed=ownedAttributes({fill:value},at).fill;if(parsed===null||parsed===undefined)return drawingDrawingArtifactGuardReject(at,"expected a non-null fill value");return parsed;}
 /** 🖊️ Validate a decoded stroke value. */
-export function parseDrawingStroke(value:unknown,at="$"):DrawingStroke {return ownedAttributes({stroke:value},at).stroke!;}
+export function parseDrawingStroke(value:unknown,at="$"):DrawingStroke {const parsed=ownedAttributes({stroke:value},at).stroke;if(parsed===null||parsed===undefined)return drawingDrawingArtifactGuardReject(at,"expected a non-null stroke value");return parsed;}
 /** 🖼️ Decoded trace settings. */
 export interface DrawingTraceParams {threshold:Binary64;simplifyEpsilon:Binary64}
 /** 🖼️ Validate decoded trace settings. */

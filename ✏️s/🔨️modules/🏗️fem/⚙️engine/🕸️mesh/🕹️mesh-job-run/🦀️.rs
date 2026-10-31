@@ -302,10 +302,8 @@ impl MeshJob {
         let demand = lent.payload.retirement_demands()?;
         let grant = cx.retained_grant();
         if mesh_covers(grant, demand) {
-            let progress = match lent.payload.close_step(grant)? {
-                RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => progress,
-            };
-            cx.consume_retained(progress)?;
+            let turn = lent.payload.close_step(grant);
+            receive_original_retained_work(cx, turn).map_err(numerical_turn_error)?;
         }
         if lent.payload.terminal_is_empty() {
             self.lent = None;
@@ -316,7 +314,61 @@ impl MeshJob {
 }
 
 impl InteractiveJob for MeshJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, _: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> {
+        InteractiveJobStep::from_callback(self.step_plain(cx))
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        let lent = || self.lent.as_ref().map(|lent| &lent.payload).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "mesh outcome has no staged payload"));
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Fault => descriptor.fault(&self.markers.fault),
+            JobOutcomeKind::PreviewReady => descriptor.preview(lent()?),
+            JobOutcomeKind::CheckpointReady { .. } => descriptor.checkpoint(lent()?),
+            JobOutcomeKind::Complete => descriptor.complete(Some(&self.markers.state), Some(self.lent.as_ref().map_or(&self.markers.output, |lent| &lent.payload))),
+        }
+    }
+
+    fn begin_close(&mut self) {}
+
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
+        if self.terminal_is_empty() {
+            return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
+        }
+        let demand = self.retirement_demand()?;
+        let step = close_original_retained_step(cx, demand, |grant| {
+            let result = self.close_granted(grant).map(|step| match step {
+                InteractiveJobCloseStep::Complete { progress } => RetainedCloneStep::Complete(progress),
+                InteractiveJobCloseStep::Pending { progress } => RetainedCloneStep::Progress(progress),
+                InteractiveJobCloseStep::Blocked => RetainedCloneStep::Progress(RetainedCloneProgress::default()),
+            });
+            RetainedWorkOutcome { result, work: 1 }
+        })?;
+        Ok(if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demand()?.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> { Ok(self.retirement_demand()?.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demand()?.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demand()?.depth) }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.publication_writer.is_none() && self.finished_payload.is_none() && self.lent.is_none() && self.close_lane > 9
+            && self.preparation.is_none() && self.prepared_input.is_none() && self.triangulation.is_none()
+            && self.constraints.capacity() == 0 && self.mesh.points.capacity() == 0 && self.mesh.tris.capacity() == 0
+            && self.point_index.capacity() == 0 && self.indexed_constraint_edges.capacity() == 0
+            && match &self.domain {
+                MeshDomainOwner::Dynamic(domain) => domain.outer.capacity() == 0 && domain.holes.capacity() == 0,
+                MeshDomainOwner::Mounted(domain) => domain.outer.len == 0 && domain.outer.admitted == 0
+                    && domain.hole_count == 0 && domain.admitted_holes == 0
+                    && domain.holes.iter().all(|hole| hole.len == 0 && hole.admitted == 0),
+            }
+    }
+}
+
+impl NumericalStep for MeshJob {
+    fn step_plain<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         if self.lent_delivered && !cx.is_cancelled() && cx.operation() == self.operation.operation && cx.generation() == self.operation.generation {
             return Ok(self.retire_delivered(cx)?);
         }
@@ -340,57 +392,6 @@ impl InteractiveJob for MeshJob {
         }
         Ok(admitted)
     }
-
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
-        let lent = || self.lent.as_ref().map(|lent| &lent.payload).ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "mesh outcome has no staged payload"));
-        match descriptor.kind() {
-            JobOutcomeKind::Yield => descriptor.yielded(),
-            JobOutcomeKind::Cancelled => descriptor.cancelled(),
-            JobOutcomeKind::Fault => descriptor.fault(&self.markers.fault),
-            JobOutcomeKind::PreviewReady => descriptor.preview(lent()?),
-            JobOutcomeKind::CheckpointReady { .. } => descriptor.checkpoint(lent()?),
-            JobOutcomeKind::Complete => descriptor.complete(Some(&self.markers.state), Some(self.lent.as_ref().map_or(&self.markers.output, |lent| &lent.payload))),
-        }
-    }
-
-    fn begin_close(&mut self) {
-        if let Some(writer) = self.publication_writer.as_mut() {
-            writer.begin_close();
-        }
-    }
-
-    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
-        if self.terminal_is_empty() {
-            return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
-        }
-        let demand = self.retirement_demand()?;
-        let step = close_original_retained_step(cx, demand, |grant| {
-            Ok(match self.close_granted(grant)? {
-                InteractiveJobCloseStep::Complete { progress } => RetainedCloneStep::Complete(progress),
-                InteractiveJobCloseStep::Pending { progress } => RetainedCloneStep::Progress(progress),
-                InteractiveJobCloseStep::Blocked => RetainedCloneStep::Progress(RetainedCloneProgress::default()),
-            })
-        })?;
-        Ok(if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
-    }
-
-    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demand()?.copy_bytes) }
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> { Ok(self.retirement_demand()?.capacity_bytes) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demand()?.release_bytes) }
-    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demand()?.depth) }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.publication_writer.is_none() && self.lent.is_none() && self.close_lane > 9
-            && self.preparation.is_none() && self.prepared_input.is_none() && self.triangulation.is_none()
-            && self.constraints.capacity() == 0 && self.mesh.points.capacity() == 0 && self.mesh.tris.capacity() == 0
-            && self.point_index.capacity() == 0 && self.indexed_constraint_edges.capacity() == 0
-            && match &self.domain {
-                MeshDomainOwner::Dynamic(domain) => domain.outer.capacity() == 0 && domain.holes.capacity() == 0,
-                MeshDomainOwner::Mounted(domain) => domain.outer.len == 0 && domain.outer.admitted == 0
-                    && domain.hole_count == 0 && domain.admitted_holes == 0
-                    && domain.holes.iter().all(|hole| hole.len == 0 && hole.admitted == 0),
-            }
-    }
 }
 // #endregion 🧵️IncrementalMeshJob
 
@@ -411,8 +412,11 @@ impl MeshJob {
         if let Some(lent) = self.lent.as_ref() {
             return lent.payload.retirement_demands();
         }
-        if let Some(writer) = self.publication_writer.as_ref() {
-            return writer.retirement_demands();
+        if let Some(payload) = self.finished_payload.as_ref() {
+            return payload.retirement_demands();
+        }
+        if let Some(demand) = numerical_writer_demand(&self.publication_writer) {
+            return demand;
         }
         for lane in self.close_lane..=9 {
             match lane {
@@ -471,20 +475,24 @@ impl MeshJob {
     /// 🎟️ Releases the lent payload first, then the half-built publication writer, one page or ledger per granted turn.
     fn close_publication(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError> {
         let step = if let Some(lent) = self.lent.as_mut() {
-            let step = lent.payload.close_step(grant);
+            let step = lent.payload.close_step(grant).result;
             if lent.payload.terminal_is_empty() {
                 self.lent = None;
                 self.lent_delivered = false;
             }
             step
-        } else if let Some(writer) = self.publication_writer.as_mut() {
-            writer.begin_close();
-            let step = writer.close_step(grant);
-            if writer.terminal_is_empty() {
-                self.publication_writer = None;
-                self.publication_kind = None;
+        } else if let Some(payload) = self.finished_payload.as_mut() {
+            let step = payload.close_step(grant).result;
+            if payload.terminal_is_empty() {
+                self.finished_payload = None;
             }
             step
+        } else if let Some(step) = numerical_writer_close(&mut self.publication_writer, grant) {
+            let step = step?;
+            if self.publication_writer.is_none() {
+                self.publication_kind = None;
+            }
+            return Ok(step);
         } else {
             return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
         };
@@ -501,7 +509,7 @@ impl MeshJob {
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
-        if self.lent.is_some() || self.publication_writer.is_some() {
+        if self.lent.is_some() || self.finished_payload.is_some() || self.publication_writer.is_some() {
             return self.close_publication(grant);
         }
         let (complete, items, bytes) = self.retire_owner_turn(grant.maximum_release_bytes);

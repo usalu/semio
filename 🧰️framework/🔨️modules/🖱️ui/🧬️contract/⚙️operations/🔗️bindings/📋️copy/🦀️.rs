@@ -60,7 +60,7 @@ impl UiBindingsCopy {
     }
 
     pub fn advance(&mut self, items: usize, allocation_bytes: usize, copy_bytes: usize) -> Result<UiBindingsCopyProgress, PagedListAllocationError> {
-        let rejected = |reason| PagedListAllocationError { allocated_bytes: 0, kind: PagedListRefusalKind::InvariantViolated, reason };
+        let rejected = |reason| PagedListAllocationError { work: 0, allocated_bytes: 0, kind: PagedListRefusalKind::InvariantViolated, reason };
         if self.closing {
             return Err(rejected("binding copy is closing"));
         }
@@ -72,7 +72,7 @@ impl UiBindingsCopy {
         }
         let owned = &mut *self.owned;
         if owned.pending.is_some() {
-            let step = owned.candidate.try_place_reserved(&mut owned.pending, copy_bytes).map_err(|refusal| PagedListAllocationError { allocated_bytes: 0, kind: refusal.kind, reason: refusal.reason })?;
+            let step = owned.candidate.try_place_reserved(&mut owned.pending, copy_bytes).map_err(|refusal| PagedListAllocationError { work: 0, allocated_bytes: 0, kind: refusal.kind, reason: refusal.reason })?;
             return Ok(UiBindingsCopyProgress { complete: self.is_complete(), progressed: step.progressed, placed_bytes: step.placed_bytes, ..Default::default() });
         }
         if !owned.candidate.has_reserved_slot() {

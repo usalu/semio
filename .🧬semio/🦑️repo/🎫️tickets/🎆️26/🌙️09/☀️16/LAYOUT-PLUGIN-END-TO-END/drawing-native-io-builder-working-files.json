@@ -1,0 +1,123 @@
+{
+  "state": "parent-authored-uncompiled",
+  "files": [
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🎟️original/path-return.json",
+      "bytes": 915,
+      "sha256": "6c8b8a43ffe883fdf24b4773b5ab3f6ca5ac3d5ac9feeaebd8c2adcd66973492",
+      "absoluteUtf16Units": 123
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🎟️original/path-return.schema.json",
+      "bytes": 1551,
+      "sha256": "86987f258ffd5048d85d3c05414032b91b7f0da2efad24d06805302ecf2b6a12",
+      "absoluteUtf16Units": 130
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🎟️original/payload.json",
+      "bytes": 2954,
+      "sha256": "e8152aba57f139cfaec3ee30cfff81e75fb7133c96b43f1eb9193054a2aa2f2e",
+      "absoluteUtf16Units": 119
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🎟️original/payload.schema.json",
+      "bytes": 4396,
+      "sha256": "12de51f1da4ca5fa72768b869db663597654d3e6fdfd7f838d0a7f515dacec7f",
+      "absoluteUtf16Units": 126
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/advance.rs",
+      "bytes": 3094,
+      "sha256": "40bfcbc4118d5752a4007aea9a33adeb334dedd91c31305616cc736d92ebdf9f",
+      "absoluteUtf16Units": 113
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/tests.rs",
+      "bytes": 4353,
+      "sha256": "d195885dc6c165d09ee2af152fb7bc5511e54f30064479366b5614cca1e816bf",
+      "absoluteUtf16Units": 111
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 787,
+      "sha256": "c571a480c62487b16380a2f61537f3435464f8c58cd5533fbde6073ad333f3bd",
+      "absoluteUtf16Units": 133
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 116,
+      "sha256": "24992bc1a38eb364f5b3bb49cb37c616f85ee72c63d0481c3808eba677a85b1f",
+      "absoluteUtf16Units": 138
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 376,
+      "sha256": "c8b191cac39a2b28db925b270dc28e7c3bc86e154083e8c16f147676ab176773",
+      "absoluteUtf16Units": 129
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📋️rows/🦀️.rs",
+      "bytes": 3703,
+      "sha256": "591cd3495e65948e9d1ba56b5133bed961835f923cce22a50e81d32f0153e9bd",
+      "absoluteUtf16Units": 109
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📖️buffer/read.rs",
+      "bytes": 8930,
+      "sha256": "db7c22b21e7b230a92f56033be6107f6140c0583f0034eb655276071a076ffd5",
+      "absoluteUtf16Units": 112
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📖️buffer/tests.rs",
+      "bytes": 6041,
+      "sha256": "97f2ee0d448d3a737d1850ee0fff6ba754f0eb45b258091a9fc947e42ad7d286",
+      "absoluteUtf16Units": 113
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📖️buffer/🦀️.rs",
+      "bytes": 4452,
+      "sha256": "94ae13a857182ec56a265b23112fc7b8cae093aaa5839c20bd93643d6c9be9a2",
+      "absoluteUtf16Units": 111
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1368,
+      "sha256": "d00b6f5e911e535044fd97727a87495a1e204329642a2e2efd1bb998958783ad",
+      "absoluteUtf16Units": 125
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📦️payload/tests.rs",
+      "bytes": 4773,
+      "sha256": "fe0a078feeb5013dfaca3ae4dbbacc4f66b4a17590089f2cae8c7de7cff27a51",
+      "absoluteUtf16Units": 114
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📦️payload/🦀️.rs",
+      "bytes": 5758,
+      "sha256": "666531a05813d7d04c20f9bfb643498b5e380cdb0e53f10560ed8b294bbb57a5",
+      "absoluteUtf16Units": 112
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📮️path-return/🦀️.rs",
+      "bytes": 11521,
+      "sha256": "7cf8f97dc18e6b088d18fb47d9f15bc6f3dfb0f051b8119f3e83c926dcbecd05",
+      "absoluteUtf16Units": 116
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs",
+      "bytes": 44077,
+      "sha256": "559d899db145837e13d2df8e38b51c809d5ae27dfeffbd05708417a47e59b3b2",
+      "absoluteUtf16Units": 101
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧪️tests/🔬️native-io-unit/🦀️.rs",
+      "bytes": 39931,
+      "sha256": "b46aa0a9ece841616ff562daad9149d878f910a42d2ebfbc83a2ac9d82f88e6f",
+      "absoluteUtf16Units": 115
+    }
+  ],
+  "originalTests": 11,
+  "newComponentTests": 4,
+  "runtimeDependencies": "canonical lower retained-clone instead of Value umbrella; no old-name alias",
+  "scope": "Sole Builder Pump, stable original backing, bounded prefix initialization, persistent cursor/output, separate actual File open/metadata/seek/read/close turns, full close outcomes; original11 fixture/host migration pending. Same existing96KiB full-read case now asserts exact bytes, resolving contradiction with originalRenderer multi-page contract. Path/error formatting and native-container construction still unfunded qualifications; no SourceReady/compiler/owning pass. Genuine NativePaths runtime owner and Single/Rows input enum, explicit source-held path return currencies authored; original selected-path held return law uses currentCPU/items0. These additions are uncompiled, prior NativePaths1 source seal predates Input enum. Arbitrary wake remains unqualified."
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/pack/json/wire/cpu",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "denied",
+    "cachedTerminal",
+    "selectedWork",
+    "genuineFault",
+    "fault"
+  ],
+  "properties": {
+    "denied": {
+      "const": 0
+    },
+    "cachedTerminal": {
+      "const": 0
+    },
+    "selectedWork": {
+      "const": 1
+    },
+    "genuineFault": {
+      "const": 1
+    },
+    "fault": {
+      "const": "wire source explicit fault"
+    }
+  }
+}

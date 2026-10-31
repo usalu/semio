@@ -11,9 +11,10 @@ impl RetireOwned for NativeDecodeRetirementRecipient {
 impl RetirementCursor for NativeDecodeRetirementRecipient {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{crate::ErasedSnapshotRetirement::next_demand(self,body)}
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
-        match ErasedSnapshotRetirement::close_step(self,grant){
-            Err(error)=>RetirementStep::Failure(error),
-            Ok(RetainedCloneStep::Complete(progress)|RetainedCloneStep::Progress(progress))=>RetirementStep::Progress(progress),
+        let turn=ErasedSnapshotRetirement::close_step(self,grant);
+        match turn.result{
+            Err(error)=>RetirementStep::Failure(error,turn.work),
+            Ok(RetainedCloneStep::Complete(progress)|RetainedCloneStep::Progress(progress))=>RetirementStep::Progress(progress,turn.work),
         }
     }
     fn terminal_is_empty(&self)->bool{ErasedSnapshotRetirement::terminal_is_empty(self)}

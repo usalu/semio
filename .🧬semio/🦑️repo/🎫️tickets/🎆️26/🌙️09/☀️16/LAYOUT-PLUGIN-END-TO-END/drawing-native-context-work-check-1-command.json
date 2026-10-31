@@ -1,0 +1,31 @@
+{
+  "state": "prepared-narrow-actual-compiler-successor",
+  "cwd": "/Users/ueli/Documents/semio",
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "check",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/\ud83e\uddf0\ufe0fframework/Cargo.toml",
+    "-p",
+    "semio-framework-job-context",
+    "--lib"
+  ],
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/drawing-native-context-work-check-1",
+    "TMPDIR": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/drawing-native-context-work-check-1/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/drawing-native-context-work-check-1/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/drawing-native-context-work-check-1/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/drawing-native-context-work-check-1/tmp"
+  },
+  "log": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/\ud83d\uddd1\ufe0fgenerated/drawing-native-context-work-check-1/native.log",
+  "sourcePacket": "/Users/ueli/Documents/semio/.\ud83e\uddecsemio/\ud83e\udd91\ufe0frepo/\ud83c\udfab\ufe0ftickets/\ud83c\udf86\ufe0f26/\ud83c\udf19\ufe0f09/\u2600\ufe0f16/LAYOUT-PLUGIN-END-TO-END/drawing-native-context-work-check-1-inputs.json",
+  "scope": "Production-only compilation diagnostic; no tests, no Source-fit certificate or owning-law acceptance.",
+  "sourcePacketSha256": "7ab29b1af7b2dbaaefddbe858f586d7fdb80402c6a5747a82e2e0b1af350ac5f",
+  "metadataSha256": "1a3ebcadd7d25e5467b3e8430af83795a4e2a4fbfb7e788382c9171b1d6919c6"
+}

@@ -1,0 +1,18 @@
+{
+  "operation": 443,
+  "generation": 9,
+  "deniedWork": 0,
+  "admittedWork": 1,
+  "cachedWork": 0,
+  "receiptRefusalRetainsLoan": true,
+  "copiedBytes": 0,
+  "stock": {
+    "items": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "fuel": 100000,
+    "maximumTurns": 100000
+  }
+}

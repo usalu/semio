@@ -18,7 +18,7 @@ extern crate semio_framework_os_kernel as store;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Transient
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "generation3dview.transient")]
 #[dsl(layout = "lines")]
@@ -26,6 +26,13 @@ pub struct Generation3dViewTransient {
     /// 🧮️ `FlowEvalSession::eval_json()` for the current document — `None` until the first command
     /// evaluated it, in which case the preview window evaluates once inline instead.
     pub preview_eval_text: Option<String>,
+}
+
+impl semio_framework_value_snapshot_projection::SnapshotProjection for Generation3dViewTransient {
+    type Output = Self;
+    type Projection = semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
+    fn projection_birth_demand() -> semio_framework_value::RetirementDemand { Self::Projection::birth_demand() }
+    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_value::ValueError> { Self::Projection::begin(grant) }
 }
 
 impl pack::snapshot::ArtifactDsl for Generation3dViewTransient {
@@ -93,19 +100,15 @@ pub use mutations::*;
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
 
-/// 🩹 Owned-field diff of [`Generation3dViewTransient`]: exactly the fields a leaf sets.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+/// 🩹 Owned-field diff of [`Generation3dViewTransient`]: exactly the fields a leaf sets; the inner `None` clears the nullable evaluation text. Transient state is ephemeral local-only, so the patch never crosses a wire where nested options collapse.
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct Generation3dViewTransientPatch {
-    pub preview_eval_text: Option<Generation3dPreviewEvalChange>,
+    pub preview_eval_text: Option<Option<String>>,
 }
 
-/// 🔺️ One change of the nullable `preview_eval_text`: the inner `None` clears it.
-#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[value(rename_all = "camelCase", deny_unknown_fields)]
-pub struct Generation3dPreviewEvalChange {
-    pub text: Option<String>,
-}
+protocol::retained_row_patch!(pub retained_fields for Generation3dViewTransientPatch => Generation3dViewTransient { preview_eval_text: Option<String> });
+protocol::retained_patch_diff!(Generation3dViewTransientPatch => Generation3dViewTransient);
 
 impl protocol::MutationDiff<Generation3dViewTransient> for Generation3dViewTransientPatch {}
 
@@ -116,10 +119,7 @@ impl protocol::ColdMutationDiff<Generation3dViewTransient> for Generation3dViewT
 
     fn apply(&self, unpublished: &mut Generation3dViewTransient, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<()> {
         let base = &*unpublished;
-        *unpublished = Generation3dViewTransient {
-            preview_eval_text: self.preview_eval_text.clone().map_or_else(|| base.preview_eval_text.clone(), |change| change.text),
-            ..base.clone()
-        };
+        *unpublished = Generation3dViewTransient { preview_eval_text: self.preview_eval_text.clone().unwrap_or_else(|| base.preview_eval_text.clone()), ..base.clone() };
         Ok(())
     }
 }
@@ -132,8 +132,6 @@ impl protocol::DiffAlgebra<Generation3dViewTransient> for Generation3dViewTransi
 
 impl protocol::ColdDiffAlgebra<Generation3dViewTransient> for Generation3dViewTransientPatch {
     fn inverse(&self, base: &Generation3dViewTransient) -> Self {
-        Self {
-            preview_eval_text: self.preview_eval_text.as_ref().map(|_| Generation3dPreviewEvalChange { text: base.preview_eval_text.clone() }),
-        }
+        Self { preview_eval_text: self.preview_eval_text.as_ref().map(|_| base.preview_eval_text.clone()) }
     }
 }

@@ -1,0 +1,5 @@
+# Pack Native Work Ingress
+
+Each selected bounded normal Record action now preflights exactly one unit from the attached original native work recipient; absent or denied authority executes no effect. A cancelled pre-action returns its unused claim with actual0. Concrete selected parser/materialization/release outcomes commit their actual0/1 before the original physical/full-cause receipt is folded. Commit success is an internal invariant of these closed actions: no generic user callback supplies their work value. Raw allocation null commits actual1 and native physical bytes0. No work is inferred from the observer callback, copied_items, byte count or granted physical stock.
+
+Existing standalone actual Record tests explicitly attach a single finite100000-unit work recipient for each pre-existing native control lifetime. This is authored test authority, not a production default or synthetic SourceHost. The same native ledger/work baseline survives nested scopes. All original fixtures, physical stocks and turn/close bounds remain; production Source ownership and other native/DSL leaf integration remain mandatory.

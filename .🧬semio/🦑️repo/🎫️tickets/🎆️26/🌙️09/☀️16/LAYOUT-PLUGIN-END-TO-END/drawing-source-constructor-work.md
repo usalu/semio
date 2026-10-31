@@ -1,0 +1,3 @@
+# Original Source Constructor Work
+
+Closed schema, fixture and genuine owning law precede the constructor outcome change. Source birth is one bounded fixed ownership-construction phase, independent of its actual physical allocation bytes. The witness starts at successful actual shared-issuance reservation, after all input-support/grant preflight; denied construction remains zero and returns the same String pointer. One finite item/byte/depth/CPU bank covers the admitted source and its complete close. Actual allocator observations validate births/releases, and an independent standard Arc/String plus Serde fixture validate the value. No body result or owning execution is claimed yet.

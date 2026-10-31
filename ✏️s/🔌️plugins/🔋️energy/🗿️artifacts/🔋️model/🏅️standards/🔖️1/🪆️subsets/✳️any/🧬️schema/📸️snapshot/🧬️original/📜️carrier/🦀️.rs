@@ -2,20 +2,25 @@
 use super::EnergyModelSnapshot;
 use crate::store::{PackDecodeOptions,PackEncodeOptions,PackError,pack_rt,semio_format::{Component,SemioEnvelope,split_text_preamble,unwrap_binary,wrap_binary,wrap_text}};
 use semio_framework_diagnostic::{Limits,TextError,TextSpan};
-use semio_framework_dsl_record::{BorrowedRecordSpecProducer,JoinMode,ParseOptions,RecordSpec,RecordValue,SourceMode};
+use semio_framework_dsl_record::{BorrowedRecordSpecProducer,FieldSpec,FieldValue,JoinMode,ParseOptions,RecordLayout,RecordSpec,RecordValue,Shape,SourceMode};
 use semio_framework_value::{DslValue,ToValue,ValueError,ValueRefusalKind};
 use semio_framework_value_native_owned::blocking::receive_blocking;
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
 
-/// 📄️ The owned image of the intrinsic Record: the canonical document value under its authored key.
-#[derive(semio_framework_dsl_record_derive::DslRecord)]
-#[dsl(keyword="energy-model")]
-struct EnergyModelDocument{document:DslValue}
+/// 📄️ The owned image of the intrinsic Record: the canonical document value under its authored field id.
+struct EnergyModelDocument;
 
 impl EnergyModelDocument{
- fn record(snapshot:&EnergyModelSnapshot)->RecordValue{Self{document:snapshot.to_value()}.__dsl_to_record()}
+ const FIELD:u16=1;
+ fn __dsl_spec()->RecordSpec{
+  RecordSpec{keyword:Some("energy-model".into()),layout:RecordLayout::Inline,fields:vec![FieldSpec{id:Self::FIELD,key:"document".into(),position:None,shape:Shape::Value,optional:false,flatten:false,defines:None,is_call_name:false}]}
+ }
+ fn record(snapshot:&EnergyModelSnapshot)->RecordValue{RecordValue{fields:[(Self::FIELD,FieldValue::Value(snapshot.to_value()))].into_iter().collect()}}
  fn receive(record:&RecordValue)->Result<EnergyModelSnapshot,ValueError>{
-  receive_blocking(Self::__dsl_from_record(record).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?.document)
+  match record.fields.get(&Self::FIELD){
+   Some(FieldValue::Value(document))=>receive_blocking(document.clone()),
+   _=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"the energy-model record lacks its document value")),
+  }
  }
 }
 
@@ -35,6 +40,24 @@ impl EnergyModelSnapshot{
 /// 🌱️ The canonical empty engine model is the real empty document.
 impl Default for EnergyModelSnapshot{
  fn default()->Self{Self::from_model(&crate::model::Model::default()).expect("the canonical empty model is admissible")}
+}
+
+impl semio_framework_value::FromValue for EnergyModelSnapshot{
+ fn from_value(value:DslValue)->Result<Self,ValueError>{receive_blocking(value)}
+}
+
+impl EnergyModelSnapshot{
+ /// ❄️ Projects the persistent owner to the plain explicit reference rows through its canonical wire value.
+ pub fn to_reference(&self)->Result<crate::reference::EnergyModelSnapshot,ValueError>{
+  let model=<crate::model::Model as semio_framework_value::FromValue>::from_value(self.model.to_value())?;
+  let mut reference=crate::reference::energy_snapshot_owning(self.schema.get().clone(),model,self.referenced_model.get().clone());
+  reference.weather_link=self.weather_link.get().clone();
+  Ok(reference)
+ }
+ /// 🔥️ Receives the plain explicit reference rows back into the persistent owner.
+ pub fn from_reference(reference:&crate::reference::EnergyModelSnapshot)->Result<Self,ValueError>{
+  Self::from_document(DslValue::object([("schema".to_string(),DslValue::String(reference.schema.clone())),("model".to_string(),reference.model.to_value()),("referencedModel".to_string(),reference.referenced_model.to_value()),("weatherLink".to_string(),reference.weather_link.to_value())]))
+ }
 }
 
 impl ArtifactDsl for EnergyModelSnapshot{

@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "quanta",
+    "stopLogicalBytes",
+    "maximumTurns",
+    "deniedCpu",
+    "cachedCpu",
+    "positions",
+    "duplicateStops",
+    "cuts",
+    "invalidStop",
+    "preparedGeometry"
+  ],
+  "properties": {
+    "contract": {
+      "const": "funded-fill-stable-v1"
+    },
+    "quanta": {
+      "const": [
+        1,
+        7,
+        4096
+      ]
+    },
+    "stopLogicalBytes": {
+      "const": 40
+    },
+    "maximumTurns": {
+      "const": 100000
+    },
+    "deniedCpu": {
+      "const": 0
+    },
+    "cachedCpu": {
+      "const": 0
+    },
+    "positions": {
+      "const": [
+        -1,
+        0,
+        0.25,
+        0.5,
+        0.75,
+        1,
+        2
+      ]
+    },
+    "duplicateStops": {
+      "const": [
+        {
+          "offset": 1,
+          "color": [
+            1,
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 0.5,
+          "color": [
+            0,
+            1,
+            0,
+            1
+          ]
+        },
+        {
+          "offset": 0,
+          "color": [
+            0,
+            0,
+            1,
+            1
+          ]
+        },
+        {
+          "offset": 0.5,
+          "color": [
+            1,
+            1,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "cuts": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        7,
+        15
+      ]
+    },
+    "invalidStop": {
+      "const": "nonfinite-offset-after-first"
+    },
+    "preparedGeometry": {
+      "const": "paid-snapshot-survives-borrowed-source-change"
+    }
+  }
+}

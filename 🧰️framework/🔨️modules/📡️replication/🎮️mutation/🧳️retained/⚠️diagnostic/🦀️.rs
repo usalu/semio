@@ -81,7 +81,7 @@ impl<const N:usize> RetainedDiagnosticPreparation<N>{
   if self.phase<N{
    self.target_kinds[self.phase]=match target[self.phase]{RetainedDiagnosticTarget::Original(_)=>1,RetainedDiagnosticTarget::Literal(_)=>2,RetainedDiagnosticTarget::Unsigned(_)=>3};
    if let RetainedDiagnosticTarget::Unsigned(source)=target[self.phase]{
-    if self.integer_bindings[self.phase].is_none(){let mut p=source.bind(&mut self.integer_bindings[self.phase],RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-1,..grant})?.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original unsigned target binding omitted its capture"))?;p.copied_bytes+=1;return self.receipt(p,grant,false);}
+    if self.integer_bindings[self.phase].is_none(){let mut p=source.bind(&mut self.integer_bindings[self.phase],RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-1,..grant}).result?.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original unsigned target binding omitted its capture"))?;p.copied_bytes+=1;return self.receipt(p,grant,false);}
     if self.literal.is_none(){let(digits,start)=unsigned_digits(*source.get());let text=std::str::from_utf8(&digits[start..]).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"native unsigned decimal digits are invalid"))?;let mut value=String::with_capacity(text.len());value.push_str(text);progress.retained_capacity_bytes=value.capacity();*self.literal=Some(value);return self.receipt(progress,grant,false);}
     self.address.as_mut().expect("admitted numeric target backing").push(self.literal.take().expect("original paid decimal target"));self.phase+=1;return self.receipt(progress,grant,false);
    }
@@ -128,12 +128,12 @@ impl<const N:usize> RetainedDiagnosticPreparation<N>{
   if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"semantic diagnostic closure not started"));}
   let demand=self.close_demand(grant.maximum_copy_bytes)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
   if let Some(target)=self.targets.iter_mut().find(|target|!target.terminal_is_empty()){return target.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-  if let Some(binding)=self.integer_bindings.iter_mut().find(|binding|binding.is_some()){return RetainedCloneBinding::close_one(binding,grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.literal,grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.address,grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.code,grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.text,grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if let Some(binding)=self.integer_bindings.iter_mut().find(|binding|binding.is_some()){return RetainedCloneBinding::close_one(binding,grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+  if !self.retirement.is_empty(){return self.retirement.step_granted(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+  if let Some(step)=self.retirement.begin_granted(&mut self.literal,grant).result?{return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if let Some(step)=self.retirement.begin_granted(&mut self.address,grant).result?{return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if let Some(step)=self.retirement.begin_granted(&mut self.code,grant).result?{return Ok(RetainedCloneStep::Progress(step.progress()));}
+  if let Some(step)=self.retirement.begin_granted(&mut self.text,grant).result?{return Ok(RetainedCloneStep::Progress(step.progress()));}
   if let Some(rows)=self.rows.take(){*self.ledger=Some(MutationMessageLedgerRetirement::new(String::new(),rows));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
   if let Some(ledger)=self.ledger.as_mut(){let step=ledger.close_step(grant)?;if ledger.terminal_is_empty(){*self.ledger=None;}return Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())});}
   Ok(RetainedCloneStep::Complete(Default::default()))

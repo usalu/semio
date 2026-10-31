@@ -1,0 +1,45 @@
+{
+  "schema": "semio.store-command-work/v1",
+  "stock": {
+    "items": 100000,
+    "fuel": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 16777216,
+    "releaseBytes": 33554432,
+    "depth": 128
+  },
+  "turn": {
+    "items": 1,
+    "copyBytes": 4096,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 128
+  },
+  "source": [
+    255
+  ],
+  "expect": {
+    "admissionWork": 1,
+    "headerProbeWork": 1,
+    "headerMutationItems": 1,
+    "copyBytes": 0,
+    "deniedWork": 0,
+    "cachedWork": 0,
+    "fullNativePrimary": true,
+    "partialAllocationRetained": true,
+    "nullOriginalStringRetained": true,
+    "paidCloseSameStock": true
+  },
+  "staging": [
+    "list-header",
+    "list-backing",
+    "list-publication",
+    "nested-range",
+    "nested-raw-backing",
+    "nested-initialization",
+    "nested-box-handoff",
+    "command-backing",
+    "command-owned-move",
+    "command-box-handoff"
+  ]
+}

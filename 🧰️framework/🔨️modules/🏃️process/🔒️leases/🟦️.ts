@@ -19,7 +19,7 @@ import {checkResourceLeaseControl,isSystemLeaseLinkV1,requireMaterializedPathV1,
 export {checkResourceLeaseControl,watchResourceLeaseControlDeadlineV1,fenceMaterializedPathsV1,requireMaterializedPathV1,type LeaseWait,type ResourceAccess,type ResourceLeaseControl} from "./🎛️control/🟦️.ts";
 import { waitingDelayV1 as delay } from "../🧭️routing/📥️invocation/🏃️process/🐕️watchdog/🟦️.ts";
 import queueSchema from "./🧬️schema/📜️ticket.json" with { type: "json" };
-import {queueMayProceedV1,type QueueTicketV1} from "./⚖️fairness/🟦️.ts";
+import {queueMayProceedV1,writerPreferenceForResourceV1,type QueueTicketV1} from "./⚖️fairness/🟦️.ts";
 import {currentLeasePriorityV1,leaseRealArrivalV1,leaseTicketArrivalV1,type LeasePriorityV1} from "./📈️standing/🟦️.ts";
 export {currentLeasePriorityV1,leasePriorityClassV1,leaseOvertakeWindowV1,leaseRealArrivalV1,leaseTicketArrivalV1,type LeasePriorityV1} from "./📈️standing/🟦️.ts";
 import {ensureLeaseYieldWatcherV1,observeLeaseHolderV1,type LeaseHolderNoticeV1} from "./📈️standing/🤝️yield/🟦️.ts";
@@ -104,6 +104,18 @@ async function waitProgress(options: LeaseOptions, progress: LeaseWait, started:
 export type ResourceLease = ResourceAccess & { release(): void };
 type IssuedResourceLeaseV1={readonly path:string;readonly directory:string;readonly resource:string;readonly database:LeaseDatabase;readonly signal:AbortSignal;readonly control:ResourceLeaseControl|undefined;readonly mode:ResourceAccess["mode"];phase:ResourceLeaseTransactionPhaseV1};
 const originalLeases=new WeakMap<ResourceLease,IssuedResourceLeaseV1>();
+
+declare const terminalLeaseBrand:unique symbol;
+/** 🛬️ Releases only the exact guard accepted while its original body was live. */
+export type AcceptedResourceLeaseTerminalV1=Readonly<{readonly[terminalLeaseBrand]:true}>;
+type TerminalLeaseScope={lease:ResourceLease;issued:IssuedResourceLeaseV1;control:ResourceLeaseControl;release:ResourceLease["release"];file:Readonly<{dev:bigint;ino:bigint;mode:bigint;size:bigint}>;directory:Readonly<{dev:bigint;ino:bigint;mode:bigint}>;released:boolean};
+const terminalLeases=new WeakMap<AcceptedResourceLeaseTerminalV1,TerminalLeaseScope>(),terminalIssues=new WeakMap<IssuedResourceLeaseV1,AcceptedResourceLeaseTerminalV1>();
+function terminalLeaseIdentity(scope:TerminalLeaseScope):void{const{lease,issued,control}=scope;if(originalLeases.get(lease)!==issued||issued.control!==control||issued.signal!==control.signal||lease.mode!==issued.mode||lease.resource!==issued.resource||lease.release!==scope.release||issued.phase!=="held")throw Error("Exact accepted terminal resource lease required");const directory=lstatSync(issued.directory,{bigint:true}),file=lstatSync(issued.path,{bigint:true});if(!directory.isDirectory()||directory.isSymbolicLink()||directory.dev!==scope.directory.dev||directory.ino!==scope.directory.ino||directory.mode!==scope.directory.mode||!file.isFile()||file.isSymbolicLink()||file.nlink!==1n||file.dev!==scope.file.dev||file.ino!==scope.file.ino||file.mode!==scope.file.mode||file.size!==scope.file.size)throw Error("Exact accepted terminal resource pin required");}
+/** 🎟️ Captures the actual wrapper and kernel pin without granting work or renewed control. */
+export function acceptResourceLeaseTerminalV1(lease:ResourceLease,directory:string,resource:string,control:ResourceLeaseControl):AcceptedResourceLeaseTerminalV1{requireIssuedResourceControlV1(control);checkResourceLeaseControl(control);const issued=originalLeases.get(lease);if(!issued||typeof lease.release!=="function"||issued.control!==control||issued.directory!==resolve(directory)||issued.resource!==resource||issued.path!==resourceLeasePathV1(directory,resource)||terminalIssues.has(issued))throw Error("One actual live terminal resource acceptance required");const folder=lstatSync(issued.directory,{bigint:true}),file=lstatSync(issued.path,{bigint:true}),scope:TerminalLeaseScope={lease,issued,control,release:lease.release,file:Object.freeze({dev:file.dev,ino:file.ino,mode:file.mode,size:file.size}),directory:Object.freeze({dev:folder.dev,ino:folder.ino,mode:folder.mode}),released:false};terminalLeaseIdentity(scope);const token=Object.freeze({})as AcceptedResourceLeaseTerminalV1;terminalLeases.set(token,scope);terminalIssues.set(issued,token);return token;}
+/** 🔓️ Confirms exact terminal release, idempotent against the original body having released the same lease, without exposing body, renewal, or admission authority. */
+export function releaseResourceLeaseTerminalV1(token:AcceptedResourceLeaseTerminalV1):void{const scope=terminalLeases.get(token);if(!scope)throw Error("Private accepted terminal resource lease required");if(scope.released)return;if(scope.issued.phase==="closed"&&originalLeases.get(scope.lease)===scope.issued){scope.released=true;return;}terminalLeaseIdentity(scope);scope.release.call(scope.lease);if(scope.issued.phase!=="closed")throw Error("Confirmed original terminal resource release required");scope.released=true;}
+
 declare const cleanupLeaseBrand:unique symbol,cleanupWriterBrand:unique symbol;
 /** 🛟️ Carries only a privately retained exact preexisting kernel guard into its birth-funded cleanup. */
 export type AcceptedResourceLeaseCleanupV1=Readonly<{[cleanupLeaseBrand]:true}>;
@@ -369,7 +381,7 @@ async function acquireHoldingGate(options:LeaseOptions,started:number,cleanup?:C
 /** 🚦️ One waiter's place in a resource's arrival queue: `<directory>/<resource-hash>.queue/<arrivedAtMs>-<pid>-<owner>`. */
 export type QueuedLeaseOptions = LeaseOptions & { readonly owner: string; readonly sharedCohort?: boolean; readonly yielding?: boolean; readonly priority?: LeasePriorityV1 };
 
-/** 🎟️ Names one live request using the exact production ticket contract. */
+/** 📛️ Names one live request using the exact production ticket contract. */
 export function resourceQueueTicketV1(request:{readonly arrivedAtMs:number;readonly pid:number;readonly owner:string}):string{
   if(!Number.isSafeInteger(request.arrivedAtMs)||request.arrivedAtMs<queueSchema.properties.arrivedAtMs.minimum||request.arrivedAtMs>queueSchema.properties.arrivedAtMs.maximum||!Number.isSafeInteger(request.pid)||request.pid<queueSchema.properties.pid.minimum||request.pid>queueSchema.properties.pid.maximum||!new RegExp(queueSchema.properties.owner.pattern,"u").test(request.owner))throw Error("Invalid lease queue ticket");
   const rule=queueSchema.definitions.Protocol.const;return `${request.arrivedAtMs.toString(rule.arrivalBase).padStart(rule.arrivalDigits,"0")}-${request.pid.toString(rule.pidBase).padStart(rule.pidDigits,"0")}-${request.owner}`;
@@ -584,7 +596,7 @@ async function awaitQueuedTurn(options:QueuedLeaseOptions,started:number,queue:s
       const now=Date.now(),before=live.slice(0,live.indexOf(ticket)),requester={pid:process.pid,mode:options.mode,sharedCohort:options.sharedCohort===true,yielding:options.yielding===true,holdsShared:options.mode==="shared"&&before.length>0&&leaseOrderPolicyV1().fairness.reentrantShared!==false&&holdsSharedInProcessV1(resolve(options.directory),options.resource)},
         ahead=await retryInterruptedFilesystemRead(options.signal,()=>before.map(name=>queueAheadV1(queue,name,now)).filter((row):row is QueueTicketV1=>row!==undefined),options.control);
       remaining(options, started);
-      if (live.includes(ticket) && queueMayProceedV1(requester,ahead,now,leaseOrderPolicyV1().fairness.writerPreferenceMilliseconds??Infinity)) {
+      if (live.includes(ticket) && queueMayProceedV1(requester,ahead,now,writerPreferenceForResourceV1(leaseOrderPolicyV1().fairness,options.resource))) {
         const acquire = (): Promise<ResourceLease> => acquireResourceLeaseBody({ ...options, admissionPatienceMs: leaseOrderPolicyV1().gate.admissionPatienceMilliseconds, timeoutMs: options.timeoutMs === undefined ? undefined : Math.max(0, options.timeoutMs - (Date.now() - started)) });
         const lease = await (guard ? trackedAcquisition.run({ guard, directory: resolve(options.directory), resource: options.resource }, acquire) : acquire());
         try { remaining(options, started); } catch (error) { lease.release(); throw error; }

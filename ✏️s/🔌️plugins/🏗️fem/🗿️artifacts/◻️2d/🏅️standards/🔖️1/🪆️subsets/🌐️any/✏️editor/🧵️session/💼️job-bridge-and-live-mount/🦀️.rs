@@ -277,7 +277,7 @@ pub fn result_request_key(source: Option<semio_s_fem_analyses_model::ResultSourc
 }
 
 #[cfg(test)]
-fn resolved_source(snapshot:&Fem2dSnapshot,source:Option<semio_s_fem_analyses_model::ResultSourceIdentity<'_>>)->Option<Option<ResolvedResultSource>>{match source{None=>Some(None),Some(source)if source.kind=="loadCase"=>snapshot.load_cases.iter().position(|case|case.id==source.id).map(|index|Some(ResolvedResultSource::LoadCase(index))),Some(source)if source.kind=="combination"=>snapshot.combinations.iter().position(|case|case.id==source.id).map(|index|Some(ResolvedResultSource::Combination(index))),Some(_)=>None}}
+pub(super) fn resolved_source(snapshot:&Fem2dSnapshot,source:Option<semio_s_fem_analyses_model::ResultSourceIdentity<'_>>)->Option<Option<ResolvedResultSource>>{match source{None=>Some(None),Some(source)if source.kind=="loadCase"=>snapshot.load_cases.iter().position(|case|case.id==source.id).map(|index|Some(ResolvedResultSource::LoadCase(index))),Some(source)if source.kind=="combination"=>snapshot.combinations.iter().position(|case|case.id==source.id).map(|index|Some(ResolvedResultSource::Combination(index))),Some(_)=>None}}
 
 fn prepare_result_demand(registry:&mut MountedRegistry,render:AppRenderOperationContext,consumer:ConsumerKey,window:&str,source:Option<semio_s_fem_analyses_model::ResultSourceIdentity<'_>>,family:semio_s_fem_app_surface::ResultMode,index:usize,version:semio_framework_value_registry::fixed_request_owners::RequestCandidateVersion,grant:RetainedCloneGrant)->RetainedCloneProgress{
  let source=if family==semio_s_fem_app_surface::ResultMode::Modal{None}else{source};let index=if family==semio_s_fem_app_surface::ResultMode::Static{0}else{index};

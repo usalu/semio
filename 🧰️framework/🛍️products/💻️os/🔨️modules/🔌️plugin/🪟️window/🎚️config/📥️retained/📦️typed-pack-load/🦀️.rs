@@ -3,9 +3,9 @@ use super::*;
 use crate::registry;
 use crate::owner_contract_and_mutation::WindowConfigAuthorityIdentity;
 #[path="🛬️native/🦀️.rs"]
-mod native;
-pub(super) use native::TypedWindowConfigPackLoad;
-pub(in super::super) use native::admit_typed_window_config_pack_load;
+pub mod native;
+pub use native::TypedWindowConfigPackLoad;
+pub use native::admit_typed_window_config_pack_load;
 impl<O:WindowConfigOwner> TypedWindowConfigPackLoad<O>{
     fn install_demands(&self,partitions:&WindowRegistry<semio_framework_value::SharedUtf8,WindowConfigPartition<O>>)->Result<RetirementDemand,ValueError>{
         let control=size_of::<WindowConfigPackLoadPhase>()+2*size_of::<bool>();
@@ -27,7 +27,7 @@ impl<O:WindowConfigOwner> TypedWindowConfigPackLoad<O>{
     }
 
 }
-pub(in super::super) fn commit_typed_window_config_pack_load<O: WindowConfigOwner>(
+pub fn commit_typed_window_config_pack_load<O: WindowConfigOwner>(
     registry_lifetime: u64,
     partitions: &mut WindowRegistry<semio_framework_value::SharedUtf8, WindowConfigPartition<O>>,
     load: &mut dyn ErasedWindowConfigPackLoad,
@@ -38,17 +38,12 @@ pub(in super::super) fn commit_typed_window_config_pack_load<O: WindowConfigOwne
 }
 
 /// ↩️ Restores a staged registry hole before any cancelled load owner is retired.
-pub(in super::super) fn cancel_typed_window_config_pack_load<O:WindowConfigOwner>(partitions:&mut WindowRegistry<semio_framework_value::SharedUtf8,WindowConfigPartition<O>>,load:&mut dyn ErasedWindowConfigPackLoad,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
+pub fn cancel_typed_window_config_pack_load<O:WindowConfigOwner>(partitions:&mut WindowRegistry<semio_framework_value::SharedUtf8,WindowConfigPartition<O>>,load:&mut dyn ErasedWindowConfigPackLoad,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,ValueError>{
  let typed=load.as_any_mut().downcast_mut::<TypedWindowConfigPackLoad<O>>().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original cancelled Window load owner differs from its registered vocabulary"))?;if !typed.registry_inserting{return Ok(None)}
  let mut demand=partitions.cancel_insert_original_demands()?;let overhead=size_of::<bool>();demand.copy_bytes=demand.copy_bytes.checked_add(overhead).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original Window load insertion cancellation extent overflow"))?;demand.depth=demand.depth.max(1);if !registry::fits(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())))}
  let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-overhead,..grant};let(done,mut receipt)=partitions.cancel_insert_original(&mut typed.registry_address,&mut typed.candidate,child)?;if done{typed.registry_inserting=false;receipt.copied_items=receipt.copied_items.max(1);receipt.copied_bytes+=overhead;}Ok(Some(RetainedCloneStep::Progress(receipt)))
 }
 
 /// 📏️ Quotes the exact next private registry event before original native publication.
-pub(in super::super) fn typed_window_config_pack_load_commit_demands<O:WindowConfigOwner>(partitions:&WindowRegistry<semio_framework_value::SharedUtf8,WindowConfigPartition<O>>,load:&dyn ErasedWindowConfigPackLoad)->Result<RetirementDemand,ValueError>{load.as_any().downcast_ref::<TypedWindowConfigPackLoad<O>>().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"native Window commit vocabulary differs from its registered owner"))?.install_demands(partitions)}
+pub fn typed_window_config_pack_load_commit_demands<O:WindowConfigOwner>(partitions:&WindowRegistry<semio_framework_value::SharedUtf8,WindowConfigPartition<O>>,load:&dyn ErasedWindowConfigPackLoad)->Result<RetirementDemand,ValueError>{load.as_any().downcast_ref::<TypedWindowConfigPackLoad<O>>().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"native Window commit vocabulary differs from its registered owner"))?.install_demands(partitions)}
 
-#[cfg(test)]
-pub(super) use native::tests::input as original_saved_input;
-
-#[cfg(test)]
-pub(super) use native::tests::diagnostic as original_saved_diagnostic;

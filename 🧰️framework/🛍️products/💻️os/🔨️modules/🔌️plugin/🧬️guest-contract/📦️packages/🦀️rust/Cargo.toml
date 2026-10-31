@@ -41,6 +41,3 @@ wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "co
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { workspace = true }
 
-[[test]]
-name = "original_actor_poll_input"
-path = "../../../⚛️reactor/🎟️context/🌉️call/📥️input/🧪️tests/🦀️.rs"

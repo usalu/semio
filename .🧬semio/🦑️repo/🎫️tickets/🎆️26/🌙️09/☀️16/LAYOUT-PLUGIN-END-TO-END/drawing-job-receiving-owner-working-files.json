@@ -1,0 +1,66 @@
+{
+  "sourceOnly": true,
+  "sourceReady": false,
+  "runtimeAttempts": 0,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🛬️receiving/🦀️.rs",
+      "sha256": "27690268bb45837c9f31faa32d33d4831c67b67e703fad02bbd429be7986f298",
+      "bytes": 6612
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🛬️receiving/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "636304a82f37a6c12a374cf7d8c7e03994463728884562211dfc2372db074987",
+      "bytes": 916
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🛬️receiving/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "5179bfc69f9fc400cac71da8d0c2827acf46a6438a9536c86eac9dcd06e01594",
+      "bytes": 138
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🛬️receiving/🧪️tests/🦀️.rs",
+      "sha256": "ee861eb364370c0f825fd7af6434223ff4ac8dd57e02452e5fa7228515d73e59",
+      "bytes": 12786
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🛬️receiving/🧪️tests/🔬️custody/🦀️.rs",
+      "sha256": "16e3a0c081c2641fee630da4e5e1156141eedde690301c3df19774d3c184cb2a",
+      "bytes": 2712
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🛬️receiving/♻️close/🧪️tests/🦀️.rs",
+      "sha256": "8c24bd456637135b8f188587e876e3efc9988219df71b3b3ccc6c45971552397",
+      "bytes": 2308
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs",
+      "sha256": "4f861dcba090b39e48e7baf44cb7c9d2c5a74309f618730f63dae8c2944539a8",
+      "bytes": 52297
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "836275a7fc3c8b0b32ad11339d8411e0cf3d530097c5ee1460740b023b6f376f",
+      "bytes": 1834
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/Cargo.toml",
+      "sha256": "931727900224e6e77413d7ac6b53cc892be0db565cff30cfa6797f0e1cec5b25",
+      "bytes": 125783
+    }
+  ],
+  "owners": [
+    "semio-framework-job-receiving",
+    "semio-framework-job-context"
+  ],
+  "laws": {
+    "receiving-custody": 1,
+    "receiving-close": 1,
+    "context-integration": 3
+  },
+  "remainingBlockers": [
+    "all other context private laws need same-package integration ownership",
+    "NativeOwned defining migration and compiler evidence pending",
+    "broader worker authentic receiver/initializer and old DTO test migration pending"
+  ]
+}

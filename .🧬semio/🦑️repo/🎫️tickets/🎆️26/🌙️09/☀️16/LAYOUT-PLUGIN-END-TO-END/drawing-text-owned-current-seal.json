@@ -1,0 +1,14 @@
+{
+  "state": "prepared-no-runtime",
+  "commandSha256": "13eff5e7682cb387395ee977183f5121dca00378c15d24ef871d65d901727f23",
+  "inputs": 116,
+  "edges": 300,
+  "changedSinceInitialUnexecutedPreparation": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/text.test.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/📐️.json",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️owned/🔣️.json"
+  ],
+  "actualPriorScope": "Scene12/strict5 accepted historically; exact current Source changed for genuine owner transfer/paint branch, so fresh18 required. No actual Text proof yet.",
+  "unresolved": []
+}

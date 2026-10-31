@@ -1,0 +1,158 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "stdio.semio.video",
+ "schemaHash": "5e5aaec85cc819fe734d84090db8b0e1dd081f848765a8cf34323dd9cb62cb7f",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "streams",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 1
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "kind",
+    "optional": false,
+    "shape": {
+     "kind": "enum",
+     "variants": [
+      [
+       0,
+       "video"
+      ],
+      [
+       1,
+       "audio"
+      ],
+      [
+       2,
+       "subtitle"
+      ]
+     ]
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "codec",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "width",
+    "optional": false,
+    "shape": {
+     "kind": "uint"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "height",
+    "optional": false,
+    "shape": {
+     "kind": "uint"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "rate",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 2
+    }
+   },
+   {
+    "flatten": false,
+    "id": 5,
+    "key": "samples",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 3
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "num",
+    "optional": false,
+    "shape": {
+     "kind": "int"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "den",
+    "optional": false,
+    "shape": {
+     "kind": "int"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "pts",
+    "optional": false,
+    "shape": {
+     "kind": "uint"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "key",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "data",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "uint"
+     },
+     "kind": "list"
+    }
+   }
+  ]
+ ]
+}

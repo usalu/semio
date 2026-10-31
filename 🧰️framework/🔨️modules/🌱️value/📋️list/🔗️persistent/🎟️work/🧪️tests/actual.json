@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "text": "Grüße 🌱",
+  "deniedWork": 0,
+  "attemptWork": 1,
+  "retryCpuStock": 2,
+  "writeWork": 1,
+  "heldWork": 0,
+  "cachedWork": 0,
+  "rules": {
+    "workIndependentOfReceipt": true,
+    "sameInputPointerAfterNull": true,
+    "sameLedgerAcrossRetry": true,
+    "directPageWitness": true,
+    "serdeOracle": true
+  }
+}

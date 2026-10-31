@@ -77,10 +77,10 @@ fn deconstruct(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
             let mut next = || groups.next().map(list).ok_or_else(|| WidgetFault::new(EMPTY, "The decomposition produced no components.", "Die Zerlegung lieferte keine Bestandteile."));
             let mut result = outputs([("vertices", next()?), ("edges", next()?), ("faces", next()?), ("shells", next()?)]);
             if has_edges {
-                result.insert("selectedEdges".to_string(), next()?);
+                result.cold_insert("selectedEdges".to_string(), next()?);
             }
             if has_faces {
-                result.insert("selectedFaces".to_string(), next()?);
+                result.cold_insert("selectedFaces".to_string(), next()?);
             }
             Ok(result)
         }))

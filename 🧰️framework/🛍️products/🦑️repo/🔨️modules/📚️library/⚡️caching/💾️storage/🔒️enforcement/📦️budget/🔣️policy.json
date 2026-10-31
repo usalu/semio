@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "maximumBytes": 135291469824,
+  "maximumBytes": 206158430208,
   "maximumControlBytes": 8388608,
   "elastic": {
     "graph": {
@@ -22,20 +22,20 @@
       "maximumBytes": 42949672960
     },
     "rust": {
-      "needBytes": 51539607552,
+      "needBytes": 103080263680,
       "headroomPercent": 25,
       "hostFreeReservePercent": 50,
       "alignBytes": 1073741824,
       "automatic": true,
       "pressureFreeBytes": 6442450944,
-      "maximumBytes": 68719476736
+      "maximumBytes": 103080263680
     }
   },
   "partitions": {
     "rust": {
       "directory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed",
-      "capacityBytes": 51539607552,
-      "maximumLogicalBytes": 51538558976
+      "capacityBytes": 103080263680,
+      "maximumLogicalBytes": 103079215104
     },
     "tools": {
       "directory": ".cache/b/t",

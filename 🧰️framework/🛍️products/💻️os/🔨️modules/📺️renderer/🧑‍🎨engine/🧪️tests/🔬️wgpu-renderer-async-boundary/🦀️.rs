@@ -27,7 +27,7 @@ struct OriginalRendererFixture { caller: Option<semio_framework_job::OriginalJob
 #[cfg(not(target_arch = "wasm32"))]
 impl OriginalRendererFixture {
     fn new() -> Self { Self::with_identity(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1)) }
-    fn with_identity(operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation) -> Self { Self { caller: Some(semio_framework_job::OriginalJobFixtureCaller::admit(operation,generation,renderer_law_stock(),||Some(0),u64::MAX,1 << 48)), decoder:semio_framework_job::OriginalJobDecodeOwner::empty() } }
+    fn with_identity(operation:semio_framework_job::OperationId,generation:semio_framework_job::Generation) -> Self { Self { caller: Some(semio_framework_job::OriginalJobFixtureCaller::admit(operation,generation,renderer_law_stock(),||Some(0),8000,1 << 48)), decoder:semio_framework_job::OriginalJobDecodeOwner::empty() } }
     fn turn<R>(&mut self, run: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> Result<R,semio_framework_job::OriginalTurnFailure>) -> Result<R,semio_framework_job::OriginalTurnFailure> { self.limited(renderer_law_stock(),run) }
     fn limited<R>(&mut self, grant:semio_framework_job::RetainedCloneGrant, run:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<R,semio_framework_job::OriginalTurnFailure>)->Result<R,semio_framework_job::OriginalTurnFailure>{ self.caller.as_mut().unwrap().turn_with_decoder(grant,&mut self.decoder,run) }
     fn cancel(&self) { self.caller.as_ref().unwrap().cancel().cancel_now(); }

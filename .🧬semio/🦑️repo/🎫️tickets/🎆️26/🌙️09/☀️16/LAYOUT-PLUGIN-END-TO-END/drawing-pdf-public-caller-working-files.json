@@ -1,0 +1,16 @@
+{
+  "status": "single canonical public PDF producer activated; original four owning laws hand-migrated, unexecuted",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🟦️.ts",
+      "beforeSha256": "6609b703e8ce9359346323630bdc4813cc8123de6a09d2d14f3fe8873d125b15",
+      "sha256": "03578ffadb5f96805c277d95475a05b47ca4253a6fd05135becd17a2e1dbd1d2"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧪️tests/🟦️.ts",
+      "beforeSha256": "c5204ef15aa67eb2c29a048516bd630c2b3604b2c6a913f89de7f0bebaf10dfb",
+      "sha256": "692622a9594af547770b41d6e42f35730294803e8503e8822c2e8d6682384dd3"
+    }
+  ],
+  "preserved": "all original eight pixel rows/tolerances, independent Poppler/PDF.js/Sharp, PNG source identity, work quanta, refusal and33 cancellation phases"
+}

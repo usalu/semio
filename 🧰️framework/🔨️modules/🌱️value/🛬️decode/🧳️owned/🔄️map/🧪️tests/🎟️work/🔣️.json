@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "items",
+    "fuel",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ],
+  "properties": {
+    "items": {
+      "const": 100000
+    },
+    "fuel": {
+      "const": 100000
+    },
+    "copyBytes": {
+      "const": 33554432
+    },
+    "capacityBytes": {
+      "const": 33554432
+    },
+    "releaseBytes": {
+      "const": 33554432
+    },
+    "depth": {
+      "const": 64
+    }
+  }
+}

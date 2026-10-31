@@ -1,0 +1,7 @@
+{
+  "before": "6aebbc12a21cb857b1897f3039d487fe0c29017fea96f39b7ed3ebe7f0eb1d20",
+  "after": "d8f95ee241df5941225c689a57b1ee6050204ec56bd5aa0e6923dfcce60633a3",
+  "changes": "one matcher generic and two getter return annotations only",
+  "wholeBeforeReconstructed": true,
+  "runtimeSchemaStocksFuelAssertionsUnchanged": true
+}

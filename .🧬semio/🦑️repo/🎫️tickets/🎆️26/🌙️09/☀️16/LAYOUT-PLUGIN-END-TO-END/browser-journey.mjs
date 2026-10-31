@@ -6,14 +6,16 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { validateMedia, compareEditedGeometry, validateCanvasCapture } from "./media-oracles.mjs";
 import { assertSurfaceHealthy } from "./browser-health.mjs";
+import { assertRenderedTextContrast } from "./browser-text-contrast.mjs";
+import { planBrowserOutputPaths } from "./browser-output-paths.mjs";
+import { waitForProjection } from "./browser-projection.mjs";
 
 const ticket = dirname(fileURLToPath(import.meta.url));
 const contract = JSON.parse(readFileSync(join(ticket, "browser-journey.json"), "utf8"));
-const runName = (process.env.SEMIO_PROBE_OUT ?? "layout-current").replace(/[^a-zA-Z0-9_.-]/g, "-");
-assert.ok(runName !== "." && runName !== "..", "generated output directory name");
-const outDir = join(ticket, "🗑️generated", runName);
+const outputChildren = ["report.json", "console.txt", "failure.png", "boot-canvas.png", "baseline.svg", "baseline.png", "edited.svg", "edited.png", "edited.pdf", "edited.semio-archive", "downloads", join("downloads", "a".repeat(36)), ...contract.steps.map((step, index) => String(index + 1).padStart(2, "0") + "-" + step.step + ".png")];
+const { outDir } = planBrowserOutputPaths(ticket, process.env.SEMIO_PROBE_OUT ?? "layout-current", outputChildren);
 mkdirSync(outDir, { recursive: true });
-const url = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6079/?plugin=layout";
+const url = process.env.SEMIO_PROBE_URL ?? "http://127.0.0.1:6179/?plugin=layout&example=%F0%9F%8E%AC%EF%B8%8Fdemo";
 const report = { url, contractVersion: contract.version, steps: [], complete: false };
 const lines = [];
 const start = Date.now();
@@ -46,43 +48,35 @@ try {
   report.browser = { executable: chromium.executablePath(), browsers: process.env.PLAYWRIGHT_BROWSERS_PATH };
   browser = await chromium.launch({ downloadsPath: join(outDir, "downloads"), headless: true, args: ["--enable-unsafe-webgpu", "--ignore-gpu-blocklist"] });
   if (cancellation) throw Error("Browser journey cancelled: " + cancellation.reason);
-  const context = await browser.newContext({ viewport: { width: 1900, height: 1200 }, acceptDownloads: true });
+  const context = await browser.newContext({ viewport: { width: 1900, height: 1200 }, acceptDownloads: true, locale: "en-US" });
   page = await context.newPage();
   page.on("console", message => lines.push({ t: Date.now() - start, type: message.type(), text: message.text() }));
   page.on("pageerror", error => lines.push({ t: Date.now() - start, type: "pageerror", text: String(error) }));
   page.setDefaultTimeout(15000);
 
-  const artifact = () => page.locator('[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="framework.panel.artifact"]');
-  const tabs = () => page.locator('[data-slot="mode-dock-tab"]');
-  const windowRoot = owner => page.locator('[data-slot="window"]' + attr("id", owner));
+  const nodes = () => page.locator('[data-semio-wgpu-accessibility] [data-node-key]');
+  const key = value => nodes().and(page.locator(attr("data-node-key", value)));
+  const artifact = () => nodes().and(page.locator('[data-window="framework.panel.artifact"]')).filter({ hasNot: page.locator('[aria-hidden="true"]') });
+  const tabs = () => nodes().and(page.locator('[role="tab"][data-node-key^="dock.tab."]'));
   const snapshot = () => page.evaluate(() => {
-    const visible = element => !!(element.getClientRects().length && getComputedStyle(element).visibility !== "hidden");
-    const panels = [...document.querySelectorAll('[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="framework.panel.artifact"]')].filter(visible);
-    const rows = panels.length === 1 ? [...panels[0].querySelectorAll('[role="treeitem"]')] : [];
-    const windows = [...document.querySelectorAll('[data-slot="mode-dock-tab"]')];
-    const active = windows.filter(node => node.getAttribute("data-active") === "true");
-    const hosts = [...document.querySelectorAll("[data-surface-id]")].filter(visible).map(node => {
-      return {
-        id: node.getAttribute("data-surface-id"),
-        owner: node.closest('[data-slot="window"]')?.id ?? null,
-        statusJson: node.getAttribute("data-status-json"),
-        boardStatusJson: node.getAttribute("data-board-status-json"),
-        phase: node.getAttribute("data-phase"),
-        fault: node.getAttribute("data-fault"),
-        canvases: [...node.querySelectorAll("canvas")].filter(visible).map(canvas => ({ width: canvas.width, height: canvas.height })),
-      };
-    });
+    const nodes = [...document.querySelectorAll('[data-semio-wgpu-accessibility] [data-node-key]')].filter(node => node.getAttribute("aria-hidden") !== "true");
+    const rows = nodes.filter(node => node.dataset.window === "framework.panel.artifact" && node.getAttribute("role") === "treeitem");
+    const tabs = nodes.filter(node => node.getAttribute("role") === "tab" && /^dock\.tab\.[^.]*\.[^.]+$/.test(node.dataset.nodeKey));
+    const active = tabs.filter(node => node.getAttribute("aria-selected") === "true" && /blueprint/i.test(node.dataset.nodeKey));
+    const canvas = document.getElementById("semio-wgpu-canvas");
+    const statuses = nodes.filter(node => node.getAttribute("role") === "status" || node.getAttribute("role") === "alert");
     return {
       ready: document.documentElement.getAttribute("data-semio-os-ready"),
       error: document.documentElement.getAttribute("data-semio-os-error"),
-      artifactPanels: panels.length,
-      frameIds: rows.filter(row => /^frame-/.test(row.id)).map(row => row.id).sort(),
-      pageIds: rows.filter(row => row.id.startsWith("layout-document.page.")).map(row => row.id).sort(),
-      selected: rows.filter(row => row.getAttribute("aria-selected") === "true").map(row => row.id).sort(),
-      ownerWindowId: active.length === 1 ? active[0].getAttribute("data-window-id") : null,
-      windowIds: [...new Set(windows.map(node => node.getAttribute("data-window-id")))].sort(),
-      hosts,
-      surfaceFaults: [...document.querySelectorAll("[data-semio-window-fault],[data-shell-fault-boundary],[data-semio-time-travel-fault],[data-semio-os-shell-error]")].filter(visible).map(node => ({ id: node.id, fault: node.getAttribute("data-semio-window-fault"), code: node.getAttribute("data-semio-window-fault-code"), text: node.textContent?.slice(0, 400) })),
+      artifactPanels: rows.length ? 1 : 0,
+      frameIds: rows.map(row => row.dataset.nodeKey).filter(id => /^frame-/.test(id)).sort(),
+      pageIds: rows.map(row => row.dataset.nodeKey).filter(id => id.startsWith("layout-document.page.")).sort(),
+      selected: rows.filter(row => row.getAttribute("aria-selected") === "true").map(row => row.dataset.nodeKey).sort(),
+      ownerWindowId: active.length === 1 ? active[0].dataset.nodeKey.split(".").slice(3).join(".") : null,
+      windowIds: [...new Set(tabs.map(node => node.dataset.nodeKey.split(".").slice(3).join(".")))].sort(),
+      hosts: canvas ? [{ id: canvas.id, phase: null, fault: null, statusJson: null, boardStatusJson: null, canvases: [{ width: canvas.width, height: canvas.height }], uiTurn: canvas.dataset.uiTurn }] : [],
+      accessibility: { nodes: nodes.length, unnamed: nodes.filter(node => node.dataset.actionable === "true" && !node.getAttribute("aria-label") && !node.textContent?.trim()).map(node => node.dataset.nodeKey) },
+      surfaceFaults: statuses.filter(node => node.getAttribute("role") === "alert" || /fault|failed|refused|unreachable/i.test(node.getAttribute("aria-label") ?? "")).map(node => ({ id: node.dataset.nodeKey, text: node.getAttribute("aria-label") })),
     };
   });
 
@@ -90,6 +84,8 @@ try {
     assert.equal(state.ready, "layout", "selected layout component is ready");
     assert.equal(state.error, null, "shell boot error");
     assert.deepEqual(state.surfaceFaults, [], "visible surface fault");
+    assert.ok(state.accessibility.nodes > 0, "current renderer publishes accessible controls");
+    assert.deepEqual(state.accessibility.unnamed, [], "actionable controls carry accessible names");
     for (const host of state.hosts) assertSurfaceHealthy(host);
   };
   const faults = from => lines.slice(from).filter(line => {
@@ -118,79 +114,73 @@ try {
     assert.fail(label + " timed out: " + JSON.stringify(last));
   };
   const one = async (locator, label) => {
-    await locator.waitFor({ state: "visible" });
-    assert.equal(await locator.count(), 1, label + " has one control");
-    assert.ok(await locator.isVisible(), label + " is visible");
+    await locator.first().waitFor({ state: "attached" });
+    assert.equal(await locator.count(), 1, label + " has one current accessibility control");
+    assert.notEqual(await locator.getAttribute("aria-hidden"), "true", label + " is exposed");
     const until = Date.now() + 10000;
-    while (!await locator.isEnabled() && Date.now() < until) await page.waitForTimeout(100);
-    assert.ok(await locator.isEnabled(), label + " is enabled");
+    while ((!await locator.isEnabled() || await locator.getAttribute("aria-disabled") === "true") && Date.now() < until) await page.waitForTimeout(100);
+    assert.ok(await locator.isEnabled() && await locator.getAttribute("aria-disabled") !== "true", label + " is enabled");
     return locator;
   };
-  const togglePanel = async id => {
-    const tab = await one(page.locator(attr("data-tab-id", id) + ":visible"), id);
-    await tab.click();
+  const activate = async (locator, label) => {
+    const control = await one(locator, label);
+    await control.focus();
+    assert.ok(await control.evaluate(element => document.activeElement === element), label + " receives keyboard focus");
+    await control.press("Enter");
   };
+  const togglePanel = async id => activate(key(id), id);
   const openArtifact = async () => {
-    if (await artifact().count() === 0) await togglePanel("framework.panel.artifact");
-    await one(artifact(), "focused Artifact panel");
+    if (!(await snapshot()).artifactPanels) await togglePanel("framework.panel.artifact");
+    await poll("Artifact accessibility document", state => state.artifactPanels === 1);
   };
   const closeArtifact = async () => {
-    if (await artifact().count()) {
+    if ((await snapshot()).artifactPanels) {
       await togglePanel("framework.panel.artifact");
-      await page.waitForFunction(() => document.querySelector('[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="framework.panel.artifact"]') === null);
+      await poll("Artifact document retired", state => state.artifactPanels === 0);
     }
   };
   const focusOwner = async owner => {
     await closeArtifact();
-    const tab = await one(tabs().and(page.locator(attr("data-window-id", owner))), "owner dock tab");
-    await tab.click();
+    await activate(tabs().and(page.locator('[data-node-key$=".' + owner + '"]')), "owner dock tab");
     await poll("active owner", state => state.ownerWindowId === owner);
-    await one(windowRoot(owner), "active owner window");
   };
-  const pane = owner => windowRoot(owner).locator('[data-slot="window-action-pane"]');
+  const pane = owner => nodes().and(page.locator(attr("data-window", owner + contract.renderer.actionsSurfaceSuffix)));
   const openActions = async owner => {
-    await one(windowRoot(owner), "action owner");
-    if (await pane(owner).count() === 0 || !await pane(owner).isVisible()) {
-      const toggle = windowRoot(owner).locator('[id$=".engagement.toggle"]');
-      await (await one(toggle, "Actions toggle")).click();
-    }
-    await one(pane(owner), "owner Actions pane");
+    if (await pane(owner).count() === 0) await activate(key("framework.window." + owner + ".engagement.toggle"), "Actions toggle");
+    await one(pane(owner).and(page.locator(attr("data-node-key", "window-action-pane"))), "owner Actions pane");
   };
   const stageAction = async (owner, action, args) => {
     await openActions(owner);
     const scope = pane(owner);
-    let execute = scope.locator('[id$=".action.' + action + '.execute"]');
+    let execute = scope.and(page.locator('[data-node-key$=".action.' + action + '.execute"]'));
     if (await execute.count() === 0) {
-      const row = await one(scope.locator(attr("id", "action." + action)), action + " row");
-      await row.scrollIntoViewIfNeeded();
-      await row.click();
-      await page.waitForTimeout(150);
-      execute = scope.locator('[id$=".action.' + action + '.execute"]');
+      const row = await one(scope.and(page.locator(attr("data-node-key", "action." + action))), action + " row");
+      await activate(row, action + " row");
+      execute = scope.and(page.locator('[data-node-key$=".action.' + action + '.execute"]'));
       if (Object.keys(args).length === 0 && await execute.count() === 0) return { submitted: "row", action };
     }
     await one(execute, action + " Execute");
     for (const [name, value] of Object.entries(args)) {
-      const row = await one(scope.locator(attr("id", "action." + action + ".arg." + name)), action + "." + name);
+      const row = await one(scope.and(page.locator(attr("data-node-key", "action." + action + ".arg." + name))), action + "." + name);
       if (name === "kind") {
-        const trigger = await one(row.locator('[data-slot="select-trigger"][role="combobox"]'), action + ".kind trigger");
-        const listboxId = await trigger.getAttribute("aria-controls");
-        assert.ok(listboxId, "kind Select names its portal listbox");
-        await trigger.click();
-        const listbox = await one(page.locator('[role="listbox"]' + attr("id", listboxId) + ":visible"), "kind listbox");
-        const option = await one(listbox.locator('[role="option"]' + attr("data-value", String(value))), "kind option " + value);
-        await option.click();
-        await listbox.waitFor({ state: "hidden" });
-        await trigger.waitFor({ state: "visible" });
-        assert.equal(await trigger.getAttribute("aria-expanded"), "false", "kind selection closes its popup");
-        const verificationId = await trigger.getAttribute("aria-controls");
-        assert.ok(verificationId, "kind verification names its listbox");
-        await trigger.click();
-        const verification = page.locator('[role="listbox"]' + attr("id", verificationId) + ":visible");
-        const selected = await one(verification.locator('[role="option"]' + attr("data-value", String(value))), "selected kind option");
-        assert.equal(await selected.getAttribute("aria-selected"), "true", "actual kind selection retained");
-        await page.keyboard.press("Escape");
-        await verification.waitFor({ state: "hidden" });
-        assert.equal(await trigger.getAttribute("aria-expanded"), "false", "kind verification closes before history baseline");
+        const trigger = () => pane(owner).and(page.locator(attr("data-node-key", "action." + action + ".arg." + name))).locator('[role="combobox"]');
+        const option = () => pane(owner).and(page.locator('[role="option"][data-node-key$="::option::' + value + '"]'));
+        const projection = () => page.evaluate(({ windowId, rowKey, optionSuffix }) => {
+          const controls = [...document.querySelectorAll('[data-semio-wgpu-accessibility] [data-node-key]')].filter(node => node.dataset.window === windowId);
+          const row = controls.find(node => node.dataset.nodeKey === rowKey);
+          const trigger = row?.querySelector('[role="combobox"]');
+          const option = controls.find(node => node.getAttribute("role") === "option" && node.dataset.nodeKey.endsWith(optionSuffix));
+          return { expanded: trigger?.getAttribute("aria-expanded") ?? null, selected: option?.getAttribute("aria-selected") ?? null };
+        }, { windowId: owner + contract.renderer.actionsSurfaceSuffix, rowKey: "action." + action + ".arg." + name, optionSuffix: "::option::" + value });
+        const wait = (label, accept) => waitForProjection(label, projection, accept, { pause: milliseconds => page.waitForTimeout(milliseconds) });
+        await activate(trigger(), action + ".kind trigger");
+        await wait("kind options open", state => state.expanded === "true");
+        await activate(option(), "kind option " + value);
+        await wait("kind option closes", state => state.expanded === "false");
+        await activate(trigger(), "kind verification");
+        await wait("kind selection retained on reopen", state => state.expanded === "true" && state.selected === "true");
+        await (await one(trigger(), "kind verification trigger")).press("Escape");
+        await wait("kind verification closes before history baseline", state => state.expanded === "false");
       } else {
         const input = row.locator('input:not([type="hidden"]),textarea');
         await (await one(input, action + "." + name + " input")).fill(String(value));
@@ -217,7 +207,7 @@ try {
   };
   const selectContentPage = async () => {
     await openArtifact();
-    await (await one(artifact().locator('[role="treeitem"]' + attr("id", "layout-document.page.page-1")), "content page row")).click();
+    await activate(artifact().and(page.locator('[role="treeitem"]' + attr("data-node-key", "layout-document.page.page-1"))), "content page row");
   };
   const download = async (owner, action, name) => {
     await closeArtifact();
@@ -233,34 +223,32 @@ try {
     assert.ok(bytes.length > 32, name + " payload");
     return { bytes, path, submitted, filename: result.suggestedFilename() };
   };
-  const inspectorText = () => page.locator('[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="framework.panel.inspection"]')
-    .locator(attr("id", "layout-play-inspector.global.story.story-1.content"))
-    .locator('textarea[id^="layout-play-inspector.global.story.story-1.content.span."][id$=".input"]');
+  const inspectorText = () => nodes().and(page.locator('[data-window="framework.panel.inspection"] textarea[data-node-key*="global.story.story-1.content"]'));
   const openInspector = async () => {
-    const visible = page.locator('[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="framework.panel.inspection"]');
-    if (await visible.count() === 0) await togglePanel("framework.panel.inspection");
-    await one(visible, "focused Inspector panel");
+    if (await inspectorText().count() === 0) await togglePanel("framework.panel.inspection");
     await one(inspectorText(), "story-1 authored textarea");
   };
   const storyMarker = async (marker, previous) => {
     await openInspector();
     if (previous !== undefined) assert.equal(await inspectorText().inputValue(), previous, "story before edit");
-    await inspectorText().fill(marker);
-    await inspectorText().press("Tab");
-    await page.waitForFunction(expected => {
-      const root = document.querySelector('[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="framework.panel.inspection"]');
-      const row = root?.querySelector('[id="layout-play-inspector.global.story.story-1.content"]');
-      const input = row?.querySelector('textarea[id$=".input"]');
-      return input?.value === expected && document.activeElement !== input;
-    }, marker);
-    assert.equal(await inspectorText().inputValue(), marker, "committed story marker");
+    const previousProjection = await inspectorText().elementHandle();
+    assert.ok(previousProjection, "story has a current renderer projection");
+    try {
+      await inspectorText().fill(marker);
+      await inspectorText().press("Tab");
+      await waitForProjection("fresh committed story projection", async () => ({
+        replaced: await previousProjection.evaluate(element => !element.isConnected),
+        value: await inspectorText().count() === 1 ? await inspectorText().inputValue() : null,
+        blurred: await inspectorText().count() === 1 && await inspectorText().evaluate(element => document.activeElement !== element),
+      }), state => state.replaced && state.value === marker && state.blurred, { pause: milliseconds => page.waitForTimeout(milliseconds) });
+    } finally { await previousProjection.dispose(); }
   };
 
   await page.goto(url, { waitUntil: "domcontentloaded" });
   const boot = await poll("layout boot", state => state.ready === "layout" && state.ownerWindowId !== null && state.hosts.some(host => host.canvases.some(canvas => canvas.width > 100 && canvas.height > 100)), 180000);
   let owner = boot.ownerWindowId;
   assert.ok(/blueprint/i.test(owner), "boot focuses a Blueprint owner");
-  const canvas = windowRoot(owner).locator('[data-surface-id] canvas:visible').first();
+  const canvas = page.locator('#semio-wgpu-canvas');
   await one(canvas, "rendered content canvas");
   const canvasBytes = await canvas.screenshot();
   writeFileSync(join(outDir, "boot-canvas.png"), canvasBytes);
@@ -283,6 +271,19 @@ try {
   await closeArtifact();
   const staged = await stageAction(owner, "addFrame", contract.frame);
   assert.equal(staged.submitted, null, "addFrame requires the populated form");
+  const contrastInput = await one(pane(owner).and(page.locator('[data-node-key="action.addFrame.arg.x"]')).locator("input"), "authored X input for rendered contrast");
+  const contrastKey = await contrastInput.getAttribute("data-node-key");
+  const contrastWindow = await contrastInput.getAttribute("data-window");
+  const contrastLabel = await contrastInput.inputValue();
+  assert.equal(contrastLabel, String(contract.frame.x), "contrast witness is the actual authored X value");
+  const contrastProjection = await page.evaluate(async windowId => {
+    const reader = window.semioWgpuIntrospection;
+    if (!reader) throw Error("Current renderer introspection reader is required for contrast measurement");
+    return { structure: JSON.parse(await reader.dumpStructure(windowId)), frame: JSON.parse(await reader.dumpFrameStats(windowId)) };
+  }, contrastWindow);
+  const textContrast = assertRenderedTextContrast(contrastProjection.structure, contrastProjection.frame, { key: contrastKey, window: contrastWindow, label: contrastLabel, kind: "input" }, contract.textContrast.minimumRatio);
+  await record("rendered-text-contrast", textContrast);
+
   await openArtifact();
   baseline = await snapshot();
   healthy(baseline);

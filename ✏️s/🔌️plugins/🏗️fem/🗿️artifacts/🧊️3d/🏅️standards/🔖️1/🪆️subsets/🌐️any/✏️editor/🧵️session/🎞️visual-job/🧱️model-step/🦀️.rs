@@ -14,7 +14,7 @@ pub(super) struct Fem3dMeshedSolid {
 pub struct Fem3dNumericalChild {
     pub stage: Fem3dNumericalStage,
     pub(super) model: Option<MountedAnalysisModel>,
-    pub(super) analysis_node_ids: FixedSlots<String, MAXIMUM_FIELDS>,
+    pub analysis_node_ids: FixedSlots<String, MAXIMUM_FIELDS>,
     pub(super) meshed_solids: FixedSlots<Fem3dMeshedSolid, MAXIMUM_REGIONS>,
     pub(super) node_cursor: usize,
     pub(super) element_cursor: usize,
@@ -42,19 +42,19 @@ pub struct Fem3dNumericalChild {
     pub pcg: Option<PcgJob>,
     pub(super) modal_build: Option<SymmetricPencilConstruction>,
     pub(super) ldlt: Option<LdltJob>,
-    pub(super) subspace: Option<SubspaceIterationJob>,
+    pub subspace: Option<SubspaceIterationJob>,
     pub(super) modal_mass: Option<Csr>,
     pub(super) scalar_axis: usize,
     pub(super) scalar: Fem3dSolverScalar,
-    pub(super) equations: [[Option<usize>; 6]; MAXIMUM_FIELDS],
+    pub equations: [[Option<usize>; 6]; MAXIMUM_FIELDS],
     pub(super) full_equations: [[Option<usize>; 6]; MAXIMUM_FIELDS],
     pub(super) full_rhs: [f64; MAXIMUM_FIELDS * 6],
-    pub(super) full_reactions: [[f64; 6]; MAXIMUM_FIELDS],
-    pub(super) stress_sums: [f64; MAXIMUM_FIELDS],
-    pub(super) stress_counts: [usize; MAXIMUM_FIELDS],
+    pub full_reactions: [[f64; 6]; MAXIMUM_FIELDS],
+    pub stress_sums: [f64; MAXIMUM_FIELDS],
+    pub stress_counts: [usize; MAXIMUM_FIELDS],
     pub(super) free_order: usize,
     pub(super) rhs: MountedScalarSlots,
-    pub(super) request: Fem3dResultRequest,
+    pub request: Fem3dResultRequest,
     pub(super) source_case: usize,
     pub(super) source_factor: f64,
     pub(super) load_cursor: usize,
@@ -290,7 +290,7 @@ impl Fem3dNumericalChild {
             }
             Fem3dNumericalStage::Nodes => {
                 if let Some(node) = doc.nodes.get(self.node_cursor) {
-                    self.model.as_mut().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?.push_node(Node { id: node.id.clone(), pos: [node.x, node.y, node.z] }).map_err(|_| b"fem3d.numerical-node-slot".to_vec())?;
+                    self.model.as_mut().ok_or_else(|| b"fem3d.numerical-model-owner".to_vec())?.push_node(Node { id: node.id.as_str().to_owned(), pos: [node.x, node.y, node.z] }).map_err(|_| b"fem3d.numerical-node-slot".to_vec())?;
                     self.stage = Fem3dNumericalStage::NodeId;
                 } else {
                     self.stage = Fem3dNumericalStage::ElementMaterial;
@@ -298,7 +298,7 @@ impl Fem3dNumericalChild {
             }
             Fem3dNumericalStage::NodeId => {
                 let node = doc.nodes.get(self.node_cursor).ok_or_else(|| b"fem3d.numerical-node".to_vec())?;
-                self.analysis_node_ids.push(node.id.clone()).map_err(|_| b"fem3d.numerical-node-id-slot".to_vec())?;
+                self.analysis_node_ids.push(node.id.as_str().to_owned()).map_err(|_| b"fem3d.numerical-node-id-slot".to_vec())?;
                 self.node_cursor += 1;
                 self.stage = Fem3dNumericalStage::Nodes;
             }

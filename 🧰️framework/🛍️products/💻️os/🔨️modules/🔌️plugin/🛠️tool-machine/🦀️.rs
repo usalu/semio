@@ -5,7 +5,7 @@
 //!   Apps supply only the ABSOLUTE leaves of a value: their verb's `Emit::mutations`, and the owned children's share
 //!   (`Emit::child_emits`, design §12) — ONE press commits ONE transaction stamped on every member it touched.
 //! - ⌨️ typing (§13.2): every live typing delivery (args carry a `typing` buffer) folds its leaves into the window's run in
-//!   the [`TypingLedger`] through the app's typing algebra (`ArtifactApp::typing_fold`); the run commits as ONE edit on idle,
+//!   the [`TypingLedger`] through the app's typing algebra (`ArtifactApp::original_typing_fold`); the run commits as ONE edit on idle,
 //!   a caret jump, blur, page hide, Enter, an explicit apply or any other verb, and aborts only on a conflicting base or a
 //!   frozen document.
 //!
@@ -99,7 +99,7 @@ pub struct TypingTag {
     pub buffer: String,
 }
 
-/// 🏷️ What an admitted operation carries to its publication: a press of a continuous control or a typed edit.
+/// 🚪️ What an admitted operation carries to its publication: a press of a continuous control or a typed edit.
 #[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum ToolTag {
     Scrub(ScrubTag),
@@ -278,7 +278,7 @@ impl<P, M: RetireOwned + protocol::StoreMutationFor<P>, C, CM: Mutation<C> + Col
         semio_framework_tool_machine::authoring_clock(self.tick)
     }
 
-    /// 🪞️ Refolds the overlay on `committed` (store generation `generation`) when a press or run changed or the document
+    /// 🏪️ Refolds the overlay on `committed` (store generation `generation`) when a press or run changed or the document
     /// moved under one. Scrub leaves are absolute and fold on any base (a leaf the base refuses is skipped); a typing run
     /// whose leaves the moved base refuses is a conflict and aborts with zero trace (`baseMoved`). Answers every snapshot
     /// alias the refold displaced (the caller retires them through the store, never plainly) and every aborted run.
@@ -312,12 +312,12 @@ impl<P, M: RetireOwned + protocol::StoreMutationFor<P>, C, CM: Mutation<C> + Col
         (displaced, aborted)
     }
 
-    /// 🪞️ The app config every render seam reads: committed with every held press's config mutations, else `committed`.
+    /// 📱️ The app config every render seam reads: committed with every held press's config mutations, else `committed`.
     pub fn config_overlay_or<'a>(&'a self, committed: &'a Arc<C>) -> &'a Arc<C> {
         self.config_overlay.as_ref().unwrap_or(committed)
     }
 
-    /// 🪞️ Refolds the app-config overlay on `committed` (config generation `generation`) when a held press changed or the
+    /// ⚙️ Refolds the app-config overlay on `committed` (config generation `generation`) when a held press changed or the
     /// config moved under one; answers the displaced aliases (retired by the caller through the config store).
     pub fn follow_config(&mut self, committed: &Arc<C>, generation: u64, changed: bool) -> Vec<Arc<C>> where C: Clone,CM:protocol::ColdMutation<C> {
         if self.presses.provisional().all(|leaf| leaf.config().is_none()) {

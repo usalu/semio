@@ -1,0 +1,45 @@
+{
+  "status": "Authored, unexecuted, not SourceReady",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🦀️.rs",
+      "sha256": "46f7c91dadf386bc2dd78fb4e6bff1604037ce8dfbff84df214760676193464c",
+      "bytes": 25771
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🧪️tests/🦀️.rs",
+      "sha256": "9d97c0d1c349411facdac02d3f0d99e8b8eb3302e07eb4b388931bf8591662a2",
+      "bytes": 13509
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🎟️work/🔣️.json",
+      "sha256": "96d0755e501b969c12db0bd17c633fe4a82d8870cee9b5ec7420106ab49587ec",
+      "bytes": 1911
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🎟️work/📐️.json",
+      "sha256": "25e9f70b7e6edb468167fa415b2280ad76c557ee51fd3d7421ef6da30bbae90f",
+      "bytes": 819
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🦀️.rs",
+      "sha256": "97d8975f605ca5d3a10a40299ee6f8a715318ca71a74de75682e878ee8e5beba",
+      "bytes": 17182
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "8af13fc2ac61c7b2a93fcea2948526c3ce46909c8178dbe01b2ae153a1dac1f6",
+      "bytes": 8493
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🎟️work/🔣️.json",
+      "sha256": "29e8c691f3c4bcf4f3095a9b1e6452d68fa245de1167117e7a74b1c5e50e95dc",
+      "bytes": 513
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🎟️work/📐️.json",
+      "sha256": "c2a1a7b0db9f32ba56e1b53922b94d6a85141a8e030587ae5788dd96876513a2",
+      "bytes": 193
+    }
+  ]
+}

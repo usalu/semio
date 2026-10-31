@@ -1,0 +1,17 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs",
+    "bytes": 52381,
+    "sha256": "88da80b0973ad6c393f48aaac2a77eb255561637e8a61b482c4ee86e3e22494b"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🧪️tests/🦀️.rs",
+    "bytes": 7280,
+    "sha256": "254a7663d4040cfa0a78908e163255efd1c0533d4ca1eae8c6f88e2d7ea53ea1"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️packages/🦀️rust/Cargo.toml",
+    "bytes": 1677,
+    "sha256": "caf18226f1cac275288240c1fe7a418c7a71131dd5c008b935822a670ab89b92"
+  }
+]

@@ -1,0 +1,3 @@
+# Native Storage Test First
+
+Root approved a canonical pure inline NativeReceive initializer plus actual staged uninitialized typed backing. Closed neutral fixture/schema and an owning law were authored before the storage body: real allocator denial/null, exact retained address across denied initialization, initializer call count, independent serde_json output, paid initialized and uninitialized cancellation, and cached zero work. One finite retained/CPU stock spans all operations. Real null is injected by the existing first-party testing allocator, not a fake receipt. Each actual birth/initialization/release is a distinct quantum-one turn. Native-owned --lib is the mandatory gate; no runtime has been run.

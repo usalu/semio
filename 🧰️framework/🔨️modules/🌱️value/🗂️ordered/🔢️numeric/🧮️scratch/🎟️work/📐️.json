@@ -1,0 +1,37 @@
+{
+  "insertions": [
+    {
+      "key": 1030,
+      "value": "Grüße"
+    },
+    {
+      "key": 1010,
+      "value": "eins"
+    },
+    {
+      "key": 1020,
+      "value": "zwei"
+    },
+    {
+      "key": 1050,
+      "value": "fünf"
+    },
+    {
+      "key": 1040,
+      "value": "vier"
+    },
+    {
+      "key": 1060,
+      "value": "sechs"
+    },
+    {
+      "key": 1020,
+      "value": "ersetzt"
+    }
+  ],
+  "removals": [
+    1010,
+    1050,
+    9999
+  ]
+}

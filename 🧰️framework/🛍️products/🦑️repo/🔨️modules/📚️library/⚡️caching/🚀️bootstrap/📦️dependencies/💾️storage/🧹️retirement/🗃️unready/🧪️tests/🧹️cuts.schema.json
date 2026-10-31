@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "rootNames",
+    "expectedRootOrder",
+    "cuts"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "rootNames": {
+      "const": [
+        "i",
+        "p",
+        "r"
+      ]
+    },
+    "expectedRootOrder": {
+      "const": [
+        "p",
+        "i",
+        "r"
+      ]
+    },
+    "cuts": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "after",
+          "remaining"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "after": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 3
+              }
+            ]
+          },
+          "remaining": {
+            "type": "array",
+            "maxItems": 2,
+            "items": {
+              "enum": [
+                "i",
+                "r"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

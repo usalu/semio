@@ -1,0 +1,7 @@
+# Font Owner Matcher Repair and Second Root Release
+
+Root read the actual first strict log and verified exactly two TS2769 test matcher diagnostics. Actual first9/439 behavior remains immutable. Root independently compared both command/input packets: only producer.test.ts changed; the other21 inputs and exact strict8 argv are unchanged. There are exactly two expect<unknown[]> annotations. Removing only those annotations in memory reconstructs the ENTIRE old test hash3fa5c4b1e71fe5a4d927842fcc88555e550030aeb27d90bf3c1c69663e75ea93 from current21b836be23f484fe688471eb8b40f4290a782c0b29d082983623be0e75150ccc. No cast/suppression, SQL, data, assertion, stock, fuel or production changed.
+
+Root reviewed second immutable packet SHA66210abe5048e44c710306033887059538de751ed5e3866808082de95ed6fde0 and all22 current input hashes match. Release ONE exact normal nine-law request using the separate second outputs, then exact strict8 sequentially if green. Preserve each actual handle through managed queues and all22 until terminal/postcheck. No duplicate, light semantic run, cap/profile/deadline/storage bypass or source copy.
+
+The scoped font evidence describes logical slot/semantic/CPU behavior. Current generic RetainedWorkBuffer scalar capacity is not genuine retained body backing and does not establish V8 allocation parity; its clean defining backing repair is explicitly pending with Dep after this freeze. Typed Byte/PNG actual backing evidence remains separately scoped. Wider font/Catalog/Drawing/native/full Layout/publication/browser gates remain required.

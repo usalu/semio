@@ -1,0 +1,203 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Complete retained metadata reference DATA. A successful predicate is not a generation pin, actual custody, readiness or retirement authority.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "generations",
+    "current",
+    "aliases",
+    "selected"
+  ],
+  "properties": {
+    "generations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "items": {
+        "$ref": "#/$defs/Generation"
+      }
+    },
+    "current": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
+    },
+    "aliases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "resolvedTarget"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "absent",
+              "link",
+              "directory"
+            ]
+          },
+          "resolvedTarget": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "selected": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "absent": {
+      "type": "array",
+      "maxItems": 4096,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
+    }
+  },
+  "$defs": {
+    "Generation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "description": "Inert retained generation metadata for conservative maintenance planning. No current readiness, install reuse or retirement authority is conferred.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "authority",
+        "currentReady",
+        "generation",
+        "prefix",
+        "scope",
+        "recipeSha256",
+        "receiptSha256",
+        "members",
+        "sourceBindings",
+        "ownerReferences"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "retained-dependency-generation-data"
+        },
+        "authority": {
+          "const": false
+        },
+        "currentReady": {
+          "const": false
+        },
+        "generation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "prefix": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{20}$"
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "recipeSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "members": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4095
+        },
+        "sourceBindings": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sourceDirectory",
+              "targetDirectory"
+            ],
+            "properties": {
+              "sourceDirectory": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "targetDirectory": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            }
+          }
+        },
+        "ownerReferences": {
+          "type": "array",
+          "maxItems": 63,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scope",
+              "generation"
+            ],
+            "properties": {
+              "scope": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "generation": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Protocol": {
+      "const": {
+        "version": 1,
+        "pins": "exclusive-every-complete-roster-member-held-through-settlement",
+        "native": "actual-fixed-image-ex-leaf-retained-whole-allocation",
+        "bindings": "exclusive-complete-qualified-current-source-owners",
+        "sources": "complete-current-and-all-retained-receipt-endpoints",
+        "aliases": "absent-or-exact-qualified-current-target",
+        "unknown": "retain-refuse-before-effects",
+        "artifactClosure": "inactive-references-known-or-explicitly-absent-current-closure-current-only",
+        "retirementAuthority": false,
+        "absent": "unique-no-known-generation-or-prefix-overlap-inert-complete-physical-roster-data"
+      }
+    }
+  }
+}

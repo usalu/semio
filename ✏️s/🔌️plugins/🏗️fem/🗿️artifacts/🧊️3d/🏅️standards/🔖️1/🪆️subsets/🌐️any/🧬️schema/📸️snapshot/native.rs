@@ -1,8 +1,8 @@
 //! 🛬️ Original authoring owners receive persistent FEM rows through physical grants and retain every close frontier.
 use super::{Fem3dSnapshot, Fem3dSnapshotValue};
 use semio_framework_value::{
-    ErasedSnapshotRetirement, RetirementDemand, ValueError, ValueRefusalKind,
-    retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneSourceTake, RetainedCloneStep, retained_clone_grant_admits},
+    ErasedSnapshotRetirement, OriginalReceivingPrimary, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind,
+    retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneSourceTake, RetainedCloneStep, StagedSourceAdmission, retained_clone_grant_admits},
 };
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient, NativeDecodeControl, NativeDecodeRetirementRecipient, NativeReceive, NativeReceiver, owned::NativePersistentListReceiver};
 use semio_framework_value_persistent::list::persistent::PersistentList;
@@ -21,6 +21,11 @@ fn fixed(bytes: usize) -> RetirementDemand {
 }
 fn receipt(d: RetirementDemand) -> RetainedCloneProgress {
     RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, retained_capacity_bytes: d.capacity_bytes, released_bytes: d.release_bytes }
+}
+
+fn primary(p: OriginalReceivingPrimary) -> ValueError {
+    let progress = p.progress;
+    p.primary.or(p.quote_refusal).or(p.allocation_refusal).unwrap_or_else(invalid).with_retained_progress(progress)
 }
 
 struct OriginalStepRecipient {
@@ -106,7 +111,7 @@ impl Fem3dSnapshot {
             analysis: self.analysis.clone(),
         }
     }
-    /// ❄️ Reference construction receives one explicit authoring value under an effectively unbounded wallet and retires its own receiving frames before returning.
+    /// 🔖️ Reference construction receives one explicit authoring value under an effectively unbounded wallet and retires its own receiving frames before returning.
     pub fn from_reference(value: Fem3dSnapshotValue) -> Result<Self, ValueError> {
         let wallet = RetainedCloneGrant { maximum_items: 1 << 40, maximum_copy_bytes: 1 << 40, maximum_capacity_bytes: 1 << 40, maximum_release_bytes: 1 << 40, maximum_depth: 128 };
         let mut recipient = NativeDecodeRetirementRecipient::new();
@@ -127,7 +132,7 @@ impl Fem3dSnapshot {
     }
 }
 
-/// ❄️ Persistent snapshots decode from wire values through the explicit authoring rows and retire a decoded-but-unused owner through the funded protocol.
+/// 🧲️ Persistent snapshots decode from wire values through the explicit authoring rows and retire a decoded-but-unused owner through the funded protocol.
 impl semio_framework_value::FromValue for Fem3dSnapshot {
     fn from_value(value: semio_framework_value::DslValue) -> Result<Self, ValueError> {
         Self::from_reference(<Fem3dSnapshotValue as semio_framework_value::FromValue>::from_value(value)?)
@@ -190,6 +195,7 @@ fn validate_authoring(value: &Fem3dSnapshotValue, owner: &mut store::NativeSnaps
 /// 🧳️ Every partial list, source alias and untransferred snapshot stays in this owner until explicitly closed.
 pub struct Fem3dReceiving {
     pending: ManuallyDrop<Option<Fem3dSnapshotValue>>,
+    admission: ManuallyDrop<Option<StagedSourceAdmission<Fem3dSnapshotValue, Fem3dSnapshotValue>>>,
     source: ManuallyDrop<Option<RetainedCloneSource<Fem3dSnapshotValue>>>,
     nodes_receiver: ManuallyDrop<Option<NodeReceiver>>,
     materials_receiver: ManuallyDrop<Option<MaterialReceiver>>,
@@ -197,6 +203,7 @@ pub struct Fem3dReceiving {
     materials: ManuallyDrop<Option<Materials>>,
     output: ManuallyDrop<Option<Fem3dSnapshot>>,
     retirement: RetainedCloneClose,
+    validated: usize,
     phase: u8,
     closing: bool,
 }
@@ -214,6 +221,7 @@ impl Fem3dReceiving {
         Ok((
             Self {
                 pending: ManuallyDrop::new(Some(value)),
+                admission: ManuallyDrop::new(None),
                 source: ManuallyDrop::new(None),
                 nodes_receiver: ManuallyDrop::new(None),
                 materials_receiver: ManuallyDrop::new(None),
@@ -221,6 +229,7 @@ impl Fem3dReceiving {
                 materials: ManuallyDrop::new(None),
                 output: ManuallyDrop::new(None),
                 retirement: Default::default(),
+                validated: 0,
                 phase: 0,
                 closing: false,
             },
@@ -233,20 +242,21 @@ impl Fem3dReceiving {
             return Err(invalid());
         }
         match self.phase {
-            0 => {
-                let d = RetainedCloneSource::<Fem3dSnapshotValue>::owned_constructor_demand::<()>();
-                Ok(RetirementDemand { copy_bytes: RetainedCloneSource::<Fem3dSnapshotValue>::constructor_copy_bytes(), capacity_bytes: d.capacity_bytes, depth: d.depth, ..Default::default() })
-            }
-            1 => Ok(<Nodes as NativeReceive<Vec<FemNodeValue>>>::receive_birth_demand()),
+            0 => match self.admission.as_ref() {
+                Some(admission) => admission.next_demand(),
+                None => Ok(fixed(2 * size_of::<StagedSourceAdmission<Fem3dSnapshotValue, Fem3dSnapshotValue>>())),
+            },
+            1 => Ok(fixed(size_of::<NodeReceiver>())),
             2 => self.nodes_receiver.as_ref().ok_or_else(invalid)?.demands(self.source.as_ref().ok_or_else(invalid)?.borrow().project(0, |s| &s.nodes), body),
             3 => self.nodes_receiver.as_ref().ok_or_else(invalid)?.take_demand(),
             4 => self.nodes_receiver.as_ref().ok_or_else(invalid)?.close_demands(body),
-            5 => Ok(<Materials as NativeReceive<Vec<FemMaterialValue>>>::receive_birth_demand()),
+            5 => Ok(fixed(size_of::<MaterialReceiver>())),
             6 => self.materials_receiver.as_ref().ok_or_else(invalid)?.demands(self.source.as_ref().ok_or_else(invalid)?.borrow().project(2, |s| &s.materials), body),
             7 => self.materials_receiver.as_ref().ok_or_else(invalid)?.take_demand(),
             8 => self.materials_receiver.as_ref().ok_or_else(invalid)?.close_demands(body),
             9 => self.source.as_ref().ok_or_else(invalid)?.next_take_demand(body),
-            10 => Ok(fixed(2 * size_of::<Fem3dSnapshotValue>() + 2 * size_of::<Fem3dSnapshot>())),
+            10 | 11 => Ok(fixed(size_of::<usize>() + size_of::<FemNode>().max(size_of::<FemMaterial>()))),
+            12 => Ok(fixed(2 * size_of::<Fem3dSnapshotValue>() + 2 * size_of::<Fem3dSnapshot>())),
             _ => Err(invalid()),
         }
     }
@@ -259,22 +269,28 @@ impl Fem3dReceiving {
         control.checkpoint()?;
         let p = match self.phase {
             0 => {
-                control.charge(d.capacity_bytes)?;
-                let value = self.pending.take().ok_or_else(invalid)?;
-                match RetainedCloneSource::admit_owned(value, (), g) {
-                    Ok((source, p)) => {
-                        *self.source = Some(source);
+                if self.admission.is_none() {
+                    let value = self.pending.take().ok_or_else(invalid)?;
+                    *self.admission = Some(StagedSourceAdmission::owned(value));
+                    receipt(d)
+                } else {
+                    control.charge(d.capacity_bytes)?;
+                    let admission = self.admission.as_mut().ok_or_else(invalid)?;
+                    let ready = admission.ready();
+                    let turn = admission.advance(&mut self.source, g);
+                    let p = turn.result?.progress();
+                    if admission.terminal_is_empty() {
+                        self.admission.take();
+                    }
+                    if ready && self.source.is_some() {
                         self.phase = 1;
-                        p
                     }
-                    Err((e, value, ())) => {
-                        *self.pending = Some(value);
-                        return Err(e);
-                    }
+                    p
                 }
             }
             1 => {
-                let (rx, p) = <Nodes as NativeReceive<Vec<FemNodeValue>>>::begin_receive(g)?;
+                let rx = <Nodes as NativeReceive<Vec<FemNodeValue>>>::receiver();
+                let p = receipt(d);
                 *self.nodes_receiver = Some(rx);
                 self.phase = 2;
                 p
@@ -282,7 +298,7 @@ impl Fem3dReceiving {
             2 => {
                 let source = self.source.as_ref().ok_or_else(invalid)?.borrow().project(0, |s| &s.nodes);
                 let rx = self.nodes_receiver.as_mut().ok_or_else(invalid)?;
-                let p = rx.advance(source, control, body, g)?.progress();
+                let p = rx.advance(source, control, body, g).result.map_err(primary)?.progress();
                 if rx.output_ready() {
                     self.phase = 3;
                 }
@@ -290,15 +306,16 @@ impl Fem3dReceiving {
             }
             3 => {
                 let rx = self.nodes_receiver.as_mut().ok_or_else(invalid)?;
-                let (value, p) = rx.take(g)?.ok_or_else(invalid)?;
+                let (value, p) = rx.take(g).result?.ok_or_else(invalid)?;
                 *self.nodes = Some(value);
                 rx.begin_close();
                 self.phase = 4;
                 p
             }
             4 => {
+                control.charge(d.capacity_bytes)?;
                 let rx = self.nodes_receiver.as_mut().ok_or_else(invalid)?;
-                let p = rx.close_step(g)?.progress();
+                let p = rx.close_step(g).result?.progress();
                 if rx.terminal_is_empty() {
                     self.nodes_receiver.take();
                     self.phase = 5;
@@ -306,7 +323,8 @@ impl Fem3dReceiving {
                 p
             }
             5 => {
-                let (rx, p) = <Materials as NativeReceive<Vec<FemMaterialValue>>>::begin_receive(g)?;
+                let rx = <Materials as NativeReceive<Vec<FemMaterialValue>>>::receiver();
+                let p = receipt(d);
                 *self.materials_receiver = Some(rx);
                 self.phase = 6;
                 p
@@ -314,7 +332,7 @@ impl Fem3dReceiving {
             6 => {
                 let source = self.source.as_ref().ok_or_else(invalid)?.borrow().project(2, |s| &s.materials);
                 let rx = self.materials_receiver.as_mut().ok_or_else(invalid)?;
-                let p = rx.advance(source, control, body, g)?.progress();
+                let p = rx.advance(source, control, body, g).result.map_err(primary)?.progress();
                 if rx.output_ready() {
                     self.phase = 7;
                 }
@@ -322,22 +340,29 @@ impl Fem3dReceiving {
             }
             7 => {
                 let rx = self.materials_receiver.as_mut().ok_or_else(invalid)?;
-                let (value, p) = rx.take(g)?.ok_or_else(invalid)?;
+                let (value, p) = rx.take(g).result?.ok_or_else(invalid)?;
                 *self.materials = Some(value);
                 rx.begin_close();
                 self.phase = 8;
                 p
             }
             8 => {
+                control.charge(d.capacity_bytes)?;
                 let rx = self.materials_receiver.as_mut().ok_or_else(invalid)?;
-                let p = rx.close_step(g)?.progress();
+                let p = rx.close_step(g).result?.progress();
                 if rx.terminal_is_empty() {
                     self.materials_receiver.take();
                     self.phase = 9;
                 }
                 p
             }
-            9 => match self.source.as_mut().ok_or_else(invalid)?.take_authority(g)? {
+            9 => match {
+                control.charge(d.capacity_bytes)?;
+                {
+                    let turn = self.source.as_mut().ok_or_else(invalid)?.take_authority(g);
+                    turn.result?
+                }
+            } {
                 RetainedCloneSourceTake::Pending(p) => p,
                 RetainedCloneSourceTake::Ready(value, p) => {
                     self.source.take();
@@ -347,6 +372,34 @@ impl Fem3dReceiving {
                 }
             },
             10 => {
+                let row = self.nodes.as_ref().ok_or_else(invalid)?.get(self.validated);
+                match row {
+                    Some(row) => {
+                        row.validate().map_err(|e| e.with_retained_progress(receipt(d)))?;
+                        self.validated += 1;
+                    }
+                    None => {
+                        self.validated = 0;
+                        self.phase = 11;
+                    }
+                }
+                receipt(d)
+            }
+            11 => {
+                let row = self.materials.as_ref().ok_or_else(invalid)?.get(self.validated);
+                match row {
+                    Some(row) => {
+                        row.validate().map_err(|e| e.with_retained_progress(receipt(d)))?;
+                        self.validated += 1;
+                    }
+                    None => {
+                        self.validated = 0;
+                        self.phase = 12;
+                    }
+                }
+                receipt(d)
+            }
+            12 => {
                 let value = self.pending.as_mut().ok_or_else(invalid)?;
                 *self.output = Some(Fem3dSnapshot {
                     nodes: self.nodes.take().ok_or_else(invalid)?,
@@ -359,7 +412,7 @@ impl Fem3dReceiving {
                     combinations: std::mem::take(&mut value.combinations),
                     analysis: std::mem::take(&mut value.analysis),
                 });
-                self.phase = 11;
+                self.phase = 13;
                 receipt(d)
             }
             _ => return Err(invalid()),
@@ -368,9 +421,9 @@ impl Fem3dReceiving {
     }
     /// 📫️ A real snapshot becomes transferable only after both row receivers and their source aliases have closed.
     pub fn ready(&self) -> bool {
-        !self.closing && self.phase == 11 && self.output.is_some()
+        !self.closing && self.phase == 13 && self.output.is_some()
     }
-    /// 📏️ Transfers only the fixed actual snapshot header; persistent pages and authored collections retain their identities.
+    /// 📸️ Transfers only the fixed actual snapshot header; persistent pages and authored collections retain their identities.
     pub fn take_demand(&self) -> Result<RetirementDemand, ValueError> {
         if !self.ready() {
             return Err(invalid());
@@ -383,7 +436,7 @@ impl Fem3dReceiving {
         if !retained_clone_grant_admits(g, d) {
             return Ok(None);
         }
-        self.phase = 12;
+        self.phase = 14;
         Ok(Some((self.output.take().ok_or_else(invalid)?, receipt(d))))
     }
     /// 🛑️ Cancellation switches to closure without dropping source, row, page or output ownership.
@@ -413,6 +466,9 @@ impl Fem3dReceiving {
         if !self.retirement.is_empty() {
             return self.retirement.next_owner_demands::<Fem3dSnapshotValue>(false, &None, body);
         }
+        if self.admission.is_some() {
+            return self.retirement.next_owner_demands::<StagedSourceAdmission<Fem3dSnapshotValue, Fem3dSnapshotValue>>(true, &None, body);
+        }
         if self.pending.is_some() {
             return self.retirement.next_owner_demands::<Fem3dSnapshotValue>(true, &None, body);
         }
@@ -428,57 +484,76 @@ impl Fem3dReceiving {
         Ok(Default::default())
     }
     /// 🧹️ Every source and destination frontier closes only through the supplied physical grant.
-    pub fn close_step(&mut self, g: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let d = self.close_demands(g.maximum_copy_bytes)?;
-        if !retained_clone_grant_admits(g, d) {
-            return Ok(RetainedCloneStep::Progress(Default::default()));
-        }
-        if let Some(rx) = self.nodes_receiver.as_mut() {
-            let p = rx.close_step(g)?.progress();
-            if rx.terminal_is_empty() {
-                self.nodes_receiver.take();
+    pub fn close_step(&mut self, g: RetainedCloneGrant) -> RetainedWorkOutcome {
+        let mut work = 0;
+        let result = (|| {
+            let d = self.close_demands(g.maximum_copy_bytes)?;
+            if !retained_clone_grant_admits(g, d) {
+                return Ok(RetainedCloneStep::Progress(Default::default()));
             }
-            return Ok(RetainedCloneStep::Progress(p));
-        }
-        if let Some(rx) = self.materials_receiver.as_mut() {
-            let p = rx.close_step(g)?.progress();
-            if rx.terminal_is_empty() {
-                self.materials_receiver.take();
+            if let Some(rx) = self.nodes_receiver.as_mut() {
+                let turn = rx.close_step(g);
+                work = turn.work;
+                let p = turn.result?.progress();
+                if rx.terminal_is_empty() {
+                    self.nodes_receiver.take();
+                }
+                return Ok(RetainedCloneStep::Progress(p));
             }
-            return Ok(RetainedCloneStep::Progress(p));
-        }
-        if let Some(source) = self.source.as_mut() {
-            let p = source.close_step(g)?.progress();
-            if source.terminal_is_empty() {
-                self.source.take();
+            if let Some(rx) = self.materials_receiver.as_mut() {
+                let turn = rx.close_step(g);
+                work = turn.work;
+                let p = turn.result?.progress();
+                if rx.terminal_is_empty() {
+                    self.materials_receiver.take();
+                }
+                return Ok(RetainedCloneStep::Progress(p));
             }
-            return Ok(RetainedCloneStep::Progress(p));
-        }
-        let p = if !self.retirement.is_empty() {
-            self.retirement.step_granted(g)?.progress()
-        } else if let Some(s) = self.retirement.begin_granted(&mut self.pending, g)? {
-            s.progress()
-        } else if let Some(s) = self.retirement.begin_granted(&mut self.nodes, g)? {
-            s.progress()
-        } else if let Some(s) = self.retirement.begin_granted(&mut self.materials, g)? {
-            s.progress()
-        } else if let Some(s) = self.retirement.begin_granted(&mut self.output, g)? {
-            s.progress()
-        } else {
-            Default::default()
-        };
-        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(p) } else { RetainedCloneStep::Progress(p) })
+            if let Some(source) = self.source.as_mut() {
+                let turn = source.close_step(g);
+                work = turn.work;
+                let p = turn.result?.progress();
+                if source.terminal_is_empty() {
+                    self.source.take();
+                }
+                return Ok(RetainedCloneStep::Progress(p));
+            }
+            let p = if !self.retirement.is_empty() {
+                let turn = self.retirement.step_granted(g);
+                work = turn.work;
+                turn.result?.progress()
+            } else if let Some(s) = Self::begin(&mut self.retirement, &mut self.admission, g, &mut work)? {
+                s.progress()
+            } else if let Some(s) = Self::begin(&mut self.retirement, &mut self.pending, g, &mut work)? {
+                s.progress()
+            } else if let Some(s) = Self::begin(&mut self.retirement, &mut self.nodes, g, &mut work)? {
+                s.progress()
+            } else if let Some(s) = Self::begin(&mut self.retirement, &mut self.materials, g, &mut work)? {
+                s.progress()
+            } else if let Some(s) = Self::begin(&mut self.retirement, &mut self.output, g, &mut work)? {
+                s.progress()
+            } else {
+                Default::default()
+            };
+            Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(p) } else { RetainedCloneStep::Progress(p) })
+        })();
+        RetainedWorkOutcome { result, work }
+    }
+    fn begin<T: semio_framework_value::retirement::RetireOwned>(retirement: &mut RetainedCloneClose, value: &mut Option<T>, g: RetainedCloneGrant, work: &mut u64) -> Result<Option<RetainedCloneStep>, ValueError> {
+        let turn = retirement.begin_granted(value, g);
+        *work = turn.work;
+        turn.result
     }
     /// 🏁️ Terminal destruction must release no original or newly received owner.
     pub fn terminal_is_empty(&self) -> bool {
-        self.pending.is_none() && self.source.is_none() && self.nodes_receiver.is_none() && self.materials_receiver.is_none() && self.nodes.is_none() && self.materials.is_none() && self.output.is_none() && self.retirement.is_empty()
+        self.pending.is_none() && self.admission.is_none() && self.source.is_none() && self.nodes_receiver.is_none() && self.materials_receiver.is_none() && self.nodes.is_none() && self.materials.is_none() && self.output.is_none() && self.retirement.is_empty()
     }
 }
 impl ErasedSnapshotRetirement for Fem3dReceiving {
     fn next_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         self.close_demands(body)
     }
-    fn close_step(&mut self, g: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, g: RetainedCloneGrant) -> RetainedWorkOutcome {
         Self::close_step(self, g)
     }
     fn terminal_is_empty(&self) -> bool {
@@ -514,13 +589,29 @@ impl semio_framework_value::retirement::RetirementCursor for Fem3dReceiving {
         self.close_demands(body)
     }
     fn close_step(&mut self, g: RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
-        match Self::close_step(self, g) {
-            Ok(s) => semio_framework_value::retirement::RetirementStep::Progress(s.progress()),
-            Err(e) => semio_framework_value::retirement::RetirementStep::Failure(e),
+        let turn = Self::close_step(self, g);
+        match turn.result {
+            Ok(s) => semio_framework_value::retirement::RetirementStep::Progress(s.progress(), turn.work),
+            Err(e) => semio_framework_value::retirement::RetirementStep::Failure(e, turn.work),
         }
     }
     fn terminal_is_empty(&self) -> bool {
         Self::terminal_is_empty(self)
+    }
+    fn next_depth_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demands(usize::MAX)?.depth)
+    }
+    fn next_work_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demands(usize::MAX)?.copy_bytes)
+    }
+    fn next_selected_work_byte_demand(&self, body: usize) -> Result<usize, ValueError> {
+        Ok(self.close_demands(body)?.copy_bytes)
+    }
+    fn next_close_byte_demand(&self) -> Option<usize> {
+        self.close_demands(usize::MAX).ok().map(|demand| demand.release_bytes)
+    }
+    fn next_birth_bytes(&self, body: usize) -> Option<usize> {
+        self.close_demands(body).ok().map(|demand| demand.capacity_bytes)
     }
     fn terminal_release_bytes(&self) -> Option<usize> {
         Some(size_of::<Self>())

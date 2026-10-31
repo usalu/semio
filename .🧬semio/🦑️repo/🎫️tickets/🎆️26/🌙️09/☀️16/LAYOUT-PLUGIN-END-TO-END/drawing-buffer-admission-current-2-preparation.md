@@ -1,0 +1,3 @@
+# Current Admission and Affected Caller Preparation
+
+Prepared only for Root review. The actual .test.ts importer registers each owning module, plus the two existing original primitive functions using an independent SQLite ordering result. No fixture mirroring or assertion removal. Existing shared neutral values and finite stocks are retained; old scalar contiguous assumptions now observe real page/directory body demand and conservation. All current loans are genuine and admission/row CPU comes only from defining commits. Prior ownership/quote and CPU RED receipts remain immutable. Full Font/Drawing closure stays open. Normal managed test then strict over the same capture, dedicated all-five environment paths, no runtime yet.

@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "historyBytes",
+    "allocationBytes",
+    "payload",
+    "malformed",
+    "logicalStock",
+    "releaseStock",
+    "fuel",
+    "grants",
+    "expectedCpu",
+    "headerCopyBytes",
+    "adapterItems",
+    "adapterCpu"
+  ],
+  "properties": {
+    "historyBytes": {
+      "const": 32
+    },
+    "allocationBytes": {
+      "const": 32
+    },
+    "payload": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "malformed": {
+      "const": [
+        7
+      ]
+    },
+    "logicalStock": {
+      "const": 2
+    },
+    "releaseStock": {
+      "const": 32
+    },
+    "fuel": {
+      "const": 3
+    },
+    "grants": {
+      "const": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          31
+        ],
+        [
+          0,
+          32
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    "expectedCpu": {
+      "const": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        0
+      ]
+    },
+    "headerCopyBytes": {
+      "const": 0
+    },
+    "adapterItems": {
+      "const": 4
+    },
+    "adapterCpu": {
+      "const": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0
+      ]
+    }
+  },
+  "additionalProperties": false
+}

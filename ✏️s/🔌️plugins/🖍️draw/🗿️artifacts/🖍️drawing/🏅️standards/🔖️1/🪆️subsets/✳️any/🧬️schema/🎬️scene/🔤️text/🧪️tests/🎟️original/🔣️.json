@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "source": "text stays explicit",
+  "operation": 71,
+  "generation": 5,
+  "deadlineUs": 1000000,
+  "fuel": 4194304,
+  "maxObservedTurns": 262144,
+  "stock": {
+    "items": 4194304,
+    "copy": 268435456,
+    "capacity": 33554432,
+    "release": 67108864,
+    "depth": 256
+  },
+  "cases": [
+    {
+      "id": "native-paid-outline",
+      "content": null,
+      "result": "complete"
+    },
+    {
+      "id": "native-boundary-neutral-error",
+      "content": "\u0000",
+      "result": "error",
+      "finalError": {
+        "message": "Unicode boundary-neutral source is not default ignorable",
+        "minimumCpu": 1,
+        "heapEqualsReceipt": true,
+        "minimumCopiedItems": 1
+      }
+    }
+  ],
+  "exportBlocked": {
+    "axis": "capacity",
+    "expectedComplete": false,
+    "expectedReceipt": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "expectedFuel": 0
+  },
+  "originalBlocked": [
+    {
+      "fuel": 0,
+      "deadlineUs": 1000000,
+      "expectedWork": 0,
+      "expectedReceipt": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "expectedFuel": 0
+    },
+    {
+      "fuel": 4194304,
+      "deadlineUs": 0,
+      "expectedWork": 0,
+      "expectedReceipt": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "expectedFuel": 0
+    }
+  ]
+}

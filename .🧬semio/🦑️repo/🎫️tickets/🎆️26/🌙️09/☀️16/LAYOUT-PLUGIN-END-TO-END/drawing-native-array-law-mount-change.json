@@ -1,0 +1,9 @@
+{
+  "source": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/📖️source/🧪️tests/🦀️.rs",
+  "before": "9d2daaa993d9a824936eb2c68303cafcdda0e395fbd804982341edb0f0fee1ca",
+  "after": "7428e3f8cd555241c3702fcde670fa2899c6fe5740b5c4d0b240ec9c0663a090",
+  "removedTest": "#[test]\nfn sequence_storage_refusal_retains_the_exact_unpublished_value(){\n let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!(\"../../🌳️value/📖️source/🧪️tests/🧫️fixtures/📐️.json\")).unwrap();\n for row in fixture[\"storage\"].as_array().unwrap(){let value=row[\"value\"].as_u64().unwrap();let index=row[\"index\"].as_u64().unwrap()as usize;let accepted=row[\"accepted\"].as_bool().unwrap();let result=if row[\"kind\"]==\"vector\"{let mut storage=Vec::with_capacity(row[\"capacity\"].as_u64().unwrap()as usize);<Vec<u64>as NativeSequenceCollection<u64>>::push(&mut storage,index,value)}else{let mut storage=[None;2];if row[\"occupied\"]==true{storage[index]=Some(3)}let before=storage;let result=<[u64;2]as NativeSequenceCollection<u64>>::push(&mut storage,index,value);if !accepted{assert_eq!(storage,before)}result};assert_eq!(result.is_ok(),accepted);if !accepted{assert_eq!(result.unwrap_err(),value)}}\n}\n",
+  "sameSchema": "🌳️value/📖️source/🧪️tests/🧫️fixtures/📐️.json",
+  "newDefiningTest": "🌳️value/🔢️array/🧪️tests/🦀️.rs",
+  "inverseExact": true
+}

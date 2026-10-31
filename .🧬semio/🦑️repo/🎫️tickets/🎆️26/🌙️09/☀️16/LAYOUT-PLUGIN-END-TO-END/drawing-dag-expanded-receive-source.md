@@ -1,0 +1,9 @@
+# Expanded DAG Native Source
+
+The previous NativeReceiveMap callback ran sort_unstable/dedup as an opaque unit. It and obsolete native birth/default methods are removed. A genuine NativeReceiver now retains its original binding, typed Vec child, owned string rows, duplicate under retirement, and final DagExpandedPaths output independently.
+
+After funded child construction/take/close, in-place heapsort uses64-byte maximum lexicographic probes and bounded existing-owner swaps. A separate compaction phase moves surviving owners, retires each duplicate string under its actual close quote, and pops one proven-empty tail slot per turn. Final publication and take move existing bodies with copy0; real CPU comes from each defining bounded probe/mutation or exact child outcome. No String clone, bulk comparator, sort_unstable/dedup or all-tail loop occurs in the native route. Cancellation drains child, active close state, duplicate, retained vector/output and original binding from the same caller stock.
+
+Language-neutral cases/genuine owning law preceded production. Empty/duplicate/Unicode/257-byte common-prefix cases compare against independent BTreeSet plus Serde. Seven partial cuts, all positive-axis denials, actual heap evidence and same finite-wallet closure are authored. Added only an existing first-party testing allocator as a dev dependency to the actual directed-presentation owner. No new runtime package/dependency or quota change. Every new path is within256UTF16.
+
+Uncompiled/unexecuted. The owning unfiltered --lib gate remains semio-framework-os-infinite-directed-presentation and is mandatory. NativeOwned check does not cover this OS owner. Existing synchronous cold FromValue/DslField controlled insertion routes are separate reached-boundary audit work; no full controlled decode readiness is claimed from this native source slice. Neural Atom still has an opaque text clone in its old scalar reader and remains another actual caller blocker.

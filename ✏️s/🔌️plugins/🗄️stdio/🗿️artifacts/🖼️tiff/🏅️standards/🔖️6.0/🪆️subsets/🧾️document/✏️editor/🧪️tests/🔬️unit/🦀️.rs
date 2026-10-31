@@ -46,7 +46,7 @@ fn number(value: u64) -> semio_framework_value::DslValue {
 fn editor_page_selection_config_round_trips_and_has_an_exact_inverse() {
     use protocol::{ColdMutation, Mutation, MutationDiff, OpBinary, OpText};
     let before = TiffEditorConfig::default();
-    let mutation = TiffEditorConfigMutation::SetSelectedIfd { selected_ifd: 1 };
+    let mutation = TiffEditorConfigMutation::select_ifd(1);
     assert_eq!(TiffEditorConfigMutation::parse_op(&mutation.print_op()).expect("text config mutation"), mutation);
     assert_eq!(TiffEditorConfigMutation::decode_op(&mutation.encode_op().expect("binary config mutation")).expect("decoded config mutation"), mutation);
     let after = protocol::apply_diff_cold(mutation.diff(&before).diff(), &before).expect("page selection applies");
@@ -69,7 +69,7 @@ fn retained_page_selection_publishes_only_the_addressed_config_lane() {
     let emit = tiff_any_editor_retained_reduce(&command, &snapshot, &TiffEditorConfig::default(), &history, &interaction, &hover, None, &operation).expect("retained page selection");
     assert!(emit.artifact_mutations.is_empty());
     assert!(emit.effects.is_empty());
-    assert_eq!(emit.config_mutations, vec![TiffEditorConfigMutation::SetSelectedIfd { selected_ifd: 1 }]);
+    assert_eq!(emit.config_mutations, vec![TiffEditorConfigMutation::select_ifd(1)]);
     assert!(tiff_any_editor_retained_reduce(&TiffAnyEditCommand::SelectIfd { ifd_index: 2 }, &snapshot, &TiffEditorConfig::default(), &history, &interaction, &hover, None, &operation).is_err());
 }
 

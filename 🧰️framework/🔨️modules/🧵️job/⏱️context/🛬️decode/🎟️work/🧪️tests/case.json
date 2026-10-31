@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "currentWork": 1,
+  "probe": [
+    255
+  ],
+  "expectedValid": false,
+  "expectedWork": 1,
+  "nextWorkAdmitted": false,
+  "heap": [
+    0,
+    0
+  ],
+  "scope": "actual-caller-native-current-work-loan-no-new-stock",
+  "reportedWork": [
+    0,
+    1
+  ],
+  "underreportRefusal": "original native producer omitted observed native work"
+}

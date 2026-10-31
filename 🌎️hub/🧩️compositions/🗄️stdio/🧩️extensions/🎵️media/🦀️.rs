@@ -1,7 +1,6 @@
 //! 🧩️ Typed runtime assembly published from artifact-owned composition contributions.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};

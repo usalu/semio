@@ -16,7 +16,8 @@
     "{projectRoot}/🧪️tests/🧪️demonstratorcompileclosure/🟦️.ts",
     "{projectRoot}/🧪️tests/🧪️demonstratorpanebootvariants/🟦️.ts",
     "{projectRoot}/🧪️tests/🧪️demonstratorexamples/🟦️.ts",
-    "{projectRoot}/🧪️tests/🧪️demonstratorunionreceipt/🟦️.ts"
+    "{projectRoot}/🧪️tests/🧪️demonstratorunionreceipt/🟦️.ts",
+    "{projectRoot}/🧪️tests/🧪️demonstratorlocale/🟦️.ts"
   ],
   "cases": [
     {

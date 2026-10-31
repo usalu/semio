@@ -2,7 +2,6 @@
 //! `CONVERSION` that registers and declares their composer rows.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as store;
 
@@ -60,7 +59,7 @@ pub mod dwg {
         }
     }
 
-    /// 📤️ Encodes tessellated BREP geometry through the DWG artifact codec.
+    /// 🔐️ Encodes tessellated BREP geometry through the DWG artifact codec.
     pub fn export(kernel: &dyn BrepKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
         kernel.export_mesh(shapes, deflection, &DwgExporter)
     }

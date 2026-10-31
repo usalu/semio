@@ -41,7 +41,7 @@ test("fill editing preserves stops, geometry, alpha and source on rejection", ()
 });
 
 import sharp from "sharp";
-import { PreparedFill, GradientRamp } from "../../🎨️sampling/🟦️.ts";
+import { PreparedFill, GradientRamp, sampleFill, sampleGradientStops } from "../../🎨️sampling/🟦️.ts";
 import retirementCases from "../../../../🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🧹️retirement/🔣️.json";
 import { retireSchema as retirementSchema } from "@semio-tech/framework/2d/retire/schema";
 import samplingCases from "../../../../🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🔣️.json";
@@ -61,42 +61,14 @@ function referencePaint(fill:Fill,box:readonly number[]=[0,0,120,24]):string {
   return `<defs><${tag} id="paint" gradientUnits="userSpaceOnUse" ${coordinates}>${stops}</${tag}></defs><rect ${bounds} fill="url(#paint)"/>`;
 }
 
-test("prepared fill sampling matches shared cases and independent SVG pixels",async()=>{
-  let compared=0;
-  for(const entry of samplingCases) {
-    const fill=structuredClone(entry.fill) as Fill;
-    if(entry.error) expect(()=>new PreparedFill(fill)).toThrow();
-    else {
-      const paint=new PreparedFill(fill);
-      for(const sample of entry.samples!) {
-        const color=paint.sample(sample.point as [number,number]);
-        for(let channel=0;channel<4;channel++) expect(color[channel]).toBeCloseTo(sample.color[channel]!,12);
-        const [x,y]=sample.point;
-        const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="${x} ${y} 1 1">${referencePaint(fill,[x!,y!,1,1])}</svg>`;
-        const pixel=await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer();
-        const expected=paint.sample([x!+0.5,y!+0.5]);
-        expect(Math.abs(pixel[3]!/255-expected[3]),`${entry.name}: alpha ${pixel} vs ${color}`).toBeLessThanOrEqual(2/255);
-        for(let channel=0;channel<3;channel++) expect(Math.abs(pixel[channel]!*pixel[3]!/255-expected[channel]!*expected[3]*255),`${entry.name}: rgb ${pixel} vs ${color}`).toBeLessThanOrEqual(2);
-        compared++;
-      }
-    }
-    expect<typeof entry.fill>(fill).toEqual(entry.fill);
-  }
-});
-
-test("prepared fills own source stops and reject nonfinite paint or sample coordinates",()=>{
-  const fill:Fill={kind:"linearGradient",x1:0,y1:0,x2:100,y2:0,stops:[{offset:0,color:[1,0,0,1]},{offset:1,color:[0,0,1,1]}]};
-  const paint=new PreparedFill(fill);
-  fill.stops[0]!.color[0]=0;
-  expect(paint.sample([0,0])).toEqual([1,0,0,1]);
-  for(const invalid of [NaN,Infinity,-Infinity]) {
-    expect(()=>paint.sample([invalid,0])).toThrow();
-    expect(()=>new PreparedFill({...fill,x1:invalid})).toThrow();
-    expect(()=>new PreparedFill({kind:"solid",color:[0,0,0,invalid]})).toThrow();
-  }
-});
-
-
+import {Bank} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts";
+import {RetainedWorkBuffer,type RetainedWorkRetirementCursor} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts";
+function tuple(value:readonly number[]):[number,number]{const[x,y]=value;if(x===undefined||y===undefined)throw Error("Original sample coordinate absent");return[x,y];}
+function prepare(paint:PreparedFill,bank:Bank,quantum=1):void{const turns=bank.cpu;for(let at=0;at<turns;at++)if(bank.turn(paint,work=>paint.advance(quantum,work),quantum).done)return;throw Error("Prepared fill exceeded original finite fixture turn bound");}
+function prepareRamp(ramp:GradientRamp,bank:Bank,quantum=1):void{const turns=bank.cpu;for(let at=0;at<turns;at++)if(bank.turn(ramp,work=>ramp.advance(quantum,work),quantum).done)return;throw Error("Gradient ramp exceeded original finite fixture turn bound");}
+function reject(fill:Fill):void{const bank=new Bank(),paint=new PreparedFill(fill);try{prepare(paint,bank);}finally{bank.close(paint.intoRetirement());bank.conserved();}}
+test("prepared fill sampling matches shared cases and independent SVG pixels",async()=>{let compared=0;for(const entry of samplingCases){const fill=structuredClone(entry.fill)as Fill;if(entry.error)expect(()=>reject(fill)).toThrow();else{const bank=new Bank(),paint=new PreparedFill(fill);try{prepare(paint,bank);if(entry.samples===undefined)throw Error("Original paint samples absent");for(const sample of entry.samples){const point=tuple(sample.point),color=paint.sample(point);for(let channel=0;channel<4;channel++)expect(color[channel]).toBeCloseTo(sample.color[channel]!,12);const[x,y]=point,svg=`<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="${x} ${y} 1 1">${referencePaint(fill,[x,y,1,1])}</svg>`,pixel=await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer(),expected=paint.sample([x+.5,y+.5]);expect(Math.abs(pixel[3]!/255-expected[3]),` ${entry.name}: alpha ${pixel} vs ${color}`).toBeLessThanOrEqual(2/255);for(let channel=0;channel<3;channel++)expect(Math.abs(pixel[channel]!*pixel[3]!/255-expected[channel]!*expected[3]*255),` ${entry.name}: rgb ${pixel} vs ${color}`).toBeLessThanOrEqual(2);compared++;}}finally{bank.close(paint.intoRetirement());bank.conserved();}}expect<typeof entry.fill>(fill).toEqual(entry.fill);}expect(compared).toBeGreaterThan(0);});
+test("prepared fills own source stops and reject nonfinite paint or sample coordinates",()=>{const fill:Fill={kind:"linearGradient",x1:0,y1:0,x2:100,y2:0,stops:[{offset:0,color:[1,0,0,1]},{offset:1,color:[0,0,1,1]}]},bank=new Bank(),paint=new PreparedFill(fill);try{prepare(paint,bank);fill.stops[0]!.color[0]=0;expect(paint.sample([0,0])).toEqual([1,0,0,1]);for(const invalid of [NaN,Infinity,-Infinity]){expect(()=>paint.sample([invalid,0])).toThrow();expect(()=>reject({...fill,x1:invalid})).toThrow();expect(()=>reject({kind:"solid",color:[0,0,0,invalid]})).toThrow();}}finally{bank.close(paint.intoRetirement());bank.conserved();}});
 test("inserting a gradient stop preserves independently rasterized appearance",async()=>{
   let compared=0;
   for(const entry of samplingCases.filter(entry=>!entry.error&&entry.fill.kind!=="solid"&&entry.fill.stops?.length)) {
@@ -118,22 +90,9 @@ test("inserting a gradient stop preserves independently rasterized appearance",a
   }
 });
 
-test("prepared paint retirement drains actual copied stop owners and composes the real ramp",async()=>{
- const validProgress=new Ajv({strict:true}).compile(retirementSchema),pop=Array.prototype.pop;let comparisons=0;
- for(const row of retirementCases)for(const grant of [1,7,4096]){
-  const source=samplingCases.find(sample=>sample.name===row.source)!,fill=structuredClone(source.fill) as Fill;
-  if(row.repeat&&fill.kind!=="solid")fill.stops=Array.from({length:row.repeat},()=>structuredClone(fill.stops[0]!));const before=structuredClone(fill),paint=new PreparedFill(fill),samples=source.samples!.map(sample=>paint.sample(sample.point as [number,number])),children:{owner:ReturnType<GradientRamp["intoRetirement"]>;work:number}[]=[],rampOriginal=GradientRamp.prototype.intoRetirement;
-  const adopt=spyOn(GradientRamp.prototype,"intoRetirement").mockImplementation(function(this:GradientRamp){const owner=rampOriginal.call(this),record={owner,work:0};children.push(record);const advance=owner.advance.bind(owner);owner.advance=unit=>{expect(unit).toBe(1);const p=advance(unit);expect(p.work-record.work).toBe(1);record.work=p.work;return p;};return owner;});
-  let retired:ReturnType<PreparedFill["intoRetirement"]>;try{retired=paint.intoRetirement();}finally{adopt.mockRestore();}
-  expect(()=>paint.sample([0,0])).toThrow(/transferred/);expect(()=>paint.constantColor()).toThrow(/transferred/);expect(()=>paint.intoRetirement()).toThrow(/transferred/);
-  for(const bad of [0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>retired.advance(bad)).toThrow(/grant/);
-  const popped:unknown[]=[];let work=0;
-  const spy=spyOn(Array.prototype,"pop").mockImplementation(function(this:unknown[]){const value=pop.call(this);if(value&&typeof value==="object"&&"offset" in value&&"color" in value)popped.push(value);return value;});
-  try{for(let at=0;at<=row.work.prepared.typescript;at++){const count=popped.length,p=retired.advance(grant);expect(validProgress(p)).toBe(true);expect(p.work-work).toBeGreaterThan(0);expect(p.work-work).toBeLessThanOrEqual(grant);expect(popped.length-count).toBeLessThanOrEqual(grant);work=p.work;if(p.done)break;}}finally{spy.mockRestore();}
-  expect(work).toBe(row.work.prepared.typescript);expect(retired.terminalIsEmpty()).toBe(true);expect(retired.advance(1)).toEqual({phase:"complete",work,done:true});expect(fill).toEqual(before);expect(popped).toHaveLength(fill.kind==="solid"?0:fill.stops.length);expect(children).toHaveLength(fill.kind==="solid"?0:1);for(const child of children){expect(child.work).toBe(row.work.ramp.typescript);expect(child.owner.terminalIsEmpty()).toBe(true);}
-  if(fill.kind!=="solid")for(const stop of popped as {offset:number;color:number[]}[]){expect(fill.stops.includes(stop as any)).toBe(false);expect(fill.stops.some(source=>source.color===stop.color)).toBe(false);}
-  source.samples!.forEach((sample,at)=>sample.color.forEach((value,c)=>expect(samples[at]![c]).toBeCloseTo(value,12)));
-  const sample=source.samples![0]!,[x,y]=sample.point,pixel=await sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="${x} ${y} 1 1">${referencePaint(fill,[x!,y!,1,1])}</svg>`)).ensureAlpha().raw().toBuffer(),expected=new PreparedFill(fill).sample([x!+.5,y!+.5]);expect(Math.abs(pixel[3]!/255-expected[3])).toBeLessThanOrEqual(2/255);for(let c=0;c<3;c++)expect(Math.abs(pixel[c]!*pixel[3]!/255-expected[c]!*expected[3]*255)).toBeLessThanOrEqual(2);comparisons++;
-  if(fill.kind!=="solid"){const ramp=new GradientRamp(fill.stops),color=ramp.sample(.5),owner=ramp.intoRetirement();expect(()=>ramp.sample(.5)).toThrow(/transferred/);expect(()=>ramp.constantColor()).toThrow(/transferred/);expect(()=>ramp.intoRetirement()).toThrow(/transferred/);let work=0;for(let at=0;at<=row.work.ramp.typescript;at++){const p=owner.advance(grant);expect(validProgress(p)).toBe(true);expect(p.work-work).toBeLessThanOrEqual(grant);work=p.work;if(p.done)break;}expect(work).toBe(row.work.ramp.typescript);expect(owner.terminalIsEmpty()).toBe(true);expect(color).toEqual(new GradientRamp(fill.stops).sample(.5));}
- }
-});
+test("prepared paint retirement drains actual copied stop owners and composes the real ramp",async()=>{const validProgress=new Ajv({strict:true}).compile(retirementSchema);let comparisons=0;for(const row of retirementCases)for(const grant of[1,7,4096]){const source=samplingCases.find(sample=>sample.name===row.source);if(source===undefined||source.samples===undefined)throw Error("Original paint retirement source absent");const fill=structuredClone(source.fill)as Fill;if(row.repeat&&fill.kind!=="solid"){const stop=fill.stops[0];if(stop===undefined)throw Error("Original repeated stop absent");fill.stops=Array.from({length:row.repeat},()=>structuredClone(stop));}const before=structuredClone(fill),bank=new Bank(),paint=new PreparedFill(fill);prepare(paint,bank,grant);const samples=source.samples.map(sample=>paint.sample(tuple(sample.point))),children:{owner:RetainedWorkRetirementCursor;work:number;rows:RetainedWorkBuffer<unknown>;scratch:RetainedWorkBuffer<unknown>;count:number}[]=[],original=GradientRamp.prototype.intoRetirement;
+const adopt=spyOn(GradientRamp.prototype,"intoRetirement").mockImplementation(function(this:GradientRamp){const rows:unknown=Reflect.get(this,"stops"),scratch:unknown=Reflect.get(this,"scratch");if(!(rows instanceof RetainedWorkBuffer)||!(scratch instanceof RetainedWorkBuffer))throw Error("Actual copied ramp pages absent");const count=rows.length;for(let at=0;at<count;at++){const stop=rows.at(at);if(typeof stop!=="object"||stop===null||!("color"in stop))throw Error("Actual owned gradient stop absent");if(fill.kind!=="solid"){expect(fill.stops.some(source=>source===stop)).toBe(false);expect(fill.stops.some(source=>source.color===stop.color)).toBe(false);}}const owner=original.call(this),record={owner,work:0,rows,scratch,count};children.push(record);const prior=owner.advance.bind(owner);owner.advance=(items,work)=>{expect(items).toBe(1);const before=rows.length+scratch.length,progress=prior(items,work);expect(progress.work-record.work).toBe(owner.lastTurnWork());expect(owner.lastTurnWork()).toBeLessThanOrEqual(items);expect(before-rows.length-scratch.length).toBeLessThanOrEqual(owner.lastTurnWork());record.work=progress.work;return progress;};return owner;});
+let retired:RetainedWorkRetirementCursor;try{retired=paint.intoRetirement();}finally{adopt.mockRestore();}expect(()=>paint.sample([0,0])).toThrow(/transferred/);expect(()=>paint.constantColor()).toThrow(/transferred/);expect(()=>paint.intoRetirement()).toThrow(/transferred/);for(const bad of[0,-1,.5,NaN,Infinity,Number.MAX_SAFE_INTEGER+1])expect(()=>bank.turn(retired,work=>retired.advance(bad,work))).toThrow(/grant/);
+let work=0;for(let at=0;at<100000;at++){const progress=bank.turn(retired,ledger=>retired.advance(grant,ledger),grant);expect(validProgress({phase:progress.done?"complete":"closing",...progress})).toBe(true);expect(progress.work-work).toBe(retired.lastTurnWork());expect(progress.work-work).toBeLessThanOrEqual(grant);if(!progress.done)expect(progress.work-work).toBeGreaterThan(0);work=progress.work;if(progress.done)break;}expect(retired.terminalIsEmpty()).toBe(true);expect(bank.turn(retired,ledger=>retired.advance(1,ledger))).toEqual({work,done:true});expect(retired.lastTurnWork()).toBe(0);expect(fill).toEqual(before);expect(children).toHaveLength(fill.kind==="solid"?0:1);const ownedCount=children[0]?.count??0;expect(ownedCount).toBe(fill.kind==="solid"?0:fill.stops.length);expect(ownedCount+(fill.kind==="solid"?2:4)).toBe(row.work.prepared.typescript);for(const child of children){expect(child.count+2).toBe(row.work.ramp.typescript);expect(child.rows.length).toBe(0);expect(child.scratch.length).toBe(0);expect(child.owner.terminalIsEmpty()).toBe(true);}source.samples.forEach((sample,at)=>sample.color.forEach((value,c)=>expect(samples[at]![c]).toBeCloseTo(value,12)));
+const sample=source.samples[0];if(sample===undefined)throw Error("Original paint comparison absent");const[x,y]=tuple(sample.point),pixel=await sharp(Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" viewBox="${x} ${y} 1 1">${referencePaint(fill,[x,y,1,1])}</svg>`)).ensureAlpha().raw().toBuffer(),expected=sampleFill(fill,[x+.5,y+.5]);expect(Math.abs(pixel[3]!/255-expected[3])).toBeLessThanOrEqual(2/255);for(let c=0;c<3;c++)expect(Math.abs(pixel[c]!*pixel[3]!/255-expected[c]!*expected[3]*255)).toBeLessThanOrEqual(2);comparisons++;
+if(fill.kind!=="solid"){const ramp=new GradientRamp(fill.stops);prepareRamp(ramp,bank,grant);const color=ramp.sample(.5),owner=ramp.intoRetirement();expect(()=>ramp.sample(.5)).toThrow(/transferred/);expect(()=>ramp.constantColor()).toThrow(/transferred/);expect(()=>ramp.intoRetirement()).toThrow(/transferred/);let work=0;for(let at=0;at<100000;at++){const progress=bank.turn(owner,ledger=>owner.advance(grant,ledger),grant);expect(validProgress({phase:progress.done?"complete":"closing",...progress})).toBe(true);expect(progress.work-work).toBe(owner.lastTurnWork());expect(progress.work-work).toBeLessThanOrEqual(grant);work=progress.work;if(progress.done)break;}expect(owner.terminalIsEmpty()).toBe(true);expect(color).toEqual(sampleGradientStops(fill.stops,.5));}bank.conserved();}expect(comparisons).toBeGreaterThan(0);});

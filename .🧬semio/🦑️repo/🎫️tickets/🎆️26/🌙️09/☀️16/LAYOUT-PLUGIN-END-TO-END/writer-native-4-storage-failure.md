@@ -1,0 +1,8 @@
+# Writer Native4 Storage Failure
+Original18275 is authoritatively terminal EXIT1; the owned child reported status101 with no signal. It used the exact prepared Writer workspace, two packages, --lib original_ -- --nocapture, managed shared store/prototype profile, ticket artifact root and four ticket-local temporary-directory environment variables.
+
+The request passed launcher source admission, waited for genuine image headroom and then entered substantial actual native dependency compilation. The first failure was semio-s-artifact-stdio-semio-mesh-snapshot: No space left on device (os error28). The canonical owner reported0.0GiB free of47.8GiB and performed its existing one automatic cleanup/retry. It cleaned0 lanes,0 incremental sets,0 sessions,0 build units and0 objects. The retry failed at semio-framework-pack; the final diagnostic said the image remained full while running lanes of other commands held the space.
+
+The full log is generated/writer-original-native-4.log. There are0 Running/test-result boundaries and0 writer-native-fold records. This is pre-runtime storage failure, not a test pass, zero-filter success, compiler type-error result or successful storage recovery. The strict Writer oracle and hostile validation were not run because no actual baseline exists.
+
+No source/provider edits, cap/deadline extension, manual cache or receipt changes, private target, extra native request or peer interruption occurred. Root was notified immediately. All following native/setup/preview/retirement actions are held for root direction. Historical14137 was also ENOSPC but its later deadline failure is a separate old attempt; this actual run is retained independently.

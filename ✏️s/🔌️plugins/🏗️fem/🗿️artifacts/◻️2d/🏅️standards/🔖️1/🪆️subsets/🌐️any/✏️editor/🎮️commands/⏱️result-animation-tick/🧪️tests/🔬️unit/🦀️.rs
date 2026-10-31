@@ -197,9 +197,9 @@ async fn history_rows(app: &mut Fem2dApp) -> usize {
 /// nothing; no playback edit is ever a history row; and the batch route refuses a tick it has no transient for.
 #[semio_framework_async_macros::async_test]
 async fn playback_presses_are_one_config_edit_and_never_a_history_row() {
-    let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let doc = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("bundled demo loads"));
     let history = semio_framework_plugin::HistoryView::empty();
-    let view = ArtifactView::new(&doc, &history);
+    let view = ArtifactView::new(&*doc, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config, window: None };
     assert!(handle_window(&ResultAnimationTick { window_id: WINDOW.into() }, &view, &cfg, &results_view()).is_err(), "the batch route has no transient to land a frame in");

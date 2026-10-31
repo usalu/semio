@@ -1,0 +1,23 @@
+# Genuine Outline Producer Migration
+
+Three actual owning laws and a closed language-neutral contract precede producer changes. They reuse unchanged catalog stock/limits, actual authored Anta bytes and real admitted font authority; OpenType commands independently compare quadratic geometry, SQLite independently checks retained capacity minus release. CPU is folded from actual owner getters before receipt/error propagation. Denied birth axes, cached completion, genuine release denial and cancellation cuts preserve all owners through funded close. These laws are authored, not executed; no broader Font proof is claimed.
+
+Producer Source authored after test seal. Source parsing/geometry probes now post explicit semantic+CPU; paid storage/output publication and frame ownership moves post CPU only. Actual Buffer get/at/write/pop replace raw indexing/mutation; each frame pop and completed archive publication is distinct, with a genuine pendingFrame custody header. Component matrix/arguments/shift are fixed scalar headers, not raw retained arrays. Old retirement suffix is byte-preserved and requires the pendingFrame close amendment from its owner before SourceReady. No runtime or strict has run.
+
+A fourth owning law extends the closed neutral rules: baseline actual semantic work establishes an unchanged exact semantic ceiling for the same source. At the final segmentPublish frontier, copy0 must preserve work/result/custody with CPU0; funded resume publishes and closes under the SAME remaining finite stock, without another semantic delta. This test enhancement follows initial producer authoring and precedes any runtime; it is not represented as executed RED.
+
+## Reviewable Scoped Gate
+
+Cursor's authentic pendingFrame close and separate CPU1 header clear are integrated; final fixed headers clear pendingPoint/segmentKind. The prepared command uses one actual registration importer for four laws and canonical strict4 (outline, Face owner, actual laws, importer). Literal module/declaration/URL edges and original font asset are captured; all paths fit256 UTF16 units. PathSegment imports its defining drawing-contract module directly, avoiding unrelated 2D barrel routes. Preparation only: no authority or test/strict runtime. The broader Run and shipped14-row glyph corpus remain pending and unchanged.
+
+## Actual Red and Oracle Test First
+
+Root released only narrow test/schema/type correction after actual2pass2fail/strict single test typing error. New closed neutral contour cases and a fifth actual hostile oracle law precede the canonicalizer implementation: only cyclic start/implicit closing edge/signed-zero equivalence is admitted; changed endpoints and controls at1e-12 and reversed orientation must differ exactly. Initial birth denial now names only genuinely positive item/capacity/depth axes. A copy0 body birth is explicitly paid CPU1/semantic0 before true copy8-link underfills are asserted repeatedly. Original catalog stock, limits, fuel and producer Source stay unchanged.
+
+Prepared version2 retains producer and every common input except the three precisely released test/case/schema files. It registers all original4 law identities plus one exact directed-edge hostile law. Canonicalizer uses linear minimum cyclic rotation, preserves contour/edge orientation and coordinates/control points exactly, and normalizes only signed zero plus implicit close. No reversal, rounding, interpolation or pixel approximation occurs. The explicit firstparty PathSegment return type resolves the original isolated test typing diagnostic. No new runtime attempted; the old actual red logs/receipt remain immutable.
+
+## Version3 Exact Constant-Line Contract
+
+After actual version2 failure, closed cases and the fifth law were strengthened before canonicalizer change: exact normalized constant LINE is equivalent, a1e-12 NONzero line differs, and even a coincident closed QUAD remains observable. Every prior edge/control/orientation hostile remains. The next copy frontier is corrected to the existing declared240-byte Frame row observed in the actual receipt. No producer/credit/fuel change or approximate oracle is authorized.
+
+Version3 is prepared, unexecuted. Exact reversal of the sole constant-L predicate and added hostile references reconstructs the ENTIRE prior law hash; reversing nextCopy240 and removing three added neutral oracle rows reconstructs ENTIRE prior case and schema hashes. All13 common non-test inputs including producer/policy/caps/stock/fuel remain identical. Dedicated third importer/log/env packet registers the same five actual owning laws and strict4.

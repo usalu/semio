@@ -9,7 +9,7 @@ fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated
 impl<T:RetainedClone> Default for IndexedCollectionCommit<T>{fn default()->Self{Self::new()}}
 impl<T:RetainedClone> IndexedCollectionCommit<T>{
  pub fn new()->Self{Self{original:ManuallyDrop::new(None),output:ManuallyDrop::new(None),pending:ManuallyDrop::new(None),pending_kind:PendingKind::Original,field:Default::default(),retirement:Default::default(),cursor:Default::default(),phase:0,closing:false}}
- fn fixed()->usize{size_of::<Self>()*2+size_of::<T>()*2+size_of::<Vec<T>>()*4}
+ fn fixed()->usize{0}
  fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.copy_bytes=demand.copy_bytes.checked_add(Self::fixed()).ok_or_else(invalid)?;demand.depth=demand.depth.checked_add(1).ok_or_else(invalid)?;Ok(demand)}
  fn child(grant:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-Self::fixed(),maximum_depth:grant.maximum_depth-1,..grant}}
  fn receipt(mut progress:RetainedCloneProgress)->RetainedCloneProgress{progress.copied_bytes+=Self::fixed();progress}
@@ -23,36 +23,37 @@ impl<T:RetainedClone> IndexedCollectionCommit<T>{
    0=>{let mut demand=Self::scalar();if !plan.entries(IndexedEditKind::Removed)?.is_empty()||!plan.entries(IndexedEditKind::Added)?.is_empty(){demand.capacity_bytes=plan.output_len()?.checked_mul(size_of::<T>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"indexed output directory extent overflow"))?;}Ok(demand)},
    1=>Self::nested(OriginalVectorCursor::<T>::constructor_demand()),
    2=>match self.cursor.next(plan)?{IndexedOutputWork::Original{..}|IndexedOutputWork::Removed{..}=>Self::nested(self.original.as_ref().ok_or_else(invalid)?.next_take_demand()),_=>Ok(Self::scalar())},
-   3 if self.field.output_ready()=>Ok(Self::scalar()),
+   3 if self.field.output_ready()=>Self::nested(self.field.take_demand()?),
    3=>Self::nested(self.field.advance_demands(added.ok_or_else(invalid)?,body)?),
    4 if self.pending_kind==PendingKind::Removed=>Self::nested(self.retirement.next_owner_demands::<T>(self.pending.is_some(),&None,body.saturating_sub(Self::fixed()))?),
-   4=>Ok(Self::scalar()),
+   4=>Ok(RetirementDemand{copy_bytes:size_of::<T>(),..Self::scalar()}),
    5 if self.field.terminal_is_empty()=>Ok(Self::scalar()),
    5=>Self::nested(retained_clone_close_demands::<T>(&self.field,body.saturating_sub(Self::fixed()))?),
    6=>Ok(Self::scalar()),
    _=>Err(invalid()),
   }
  }
- pub fn advance(&mut self,plan:&IndexedEditPlan,post:&mut Vec<T>,added:Option<RetainedCloneRef<'_,T>>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  let demand=self.demand(plan,post,added,body)?;if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
+ pub fn advance(&mut self,plan:&IndexedEditPlan,post:&mut Vec<T>,added:Option<RetainedCloneRef<'_,T>>,body:usize,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+  if self.complete(){return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.demand(plan,post,added,body)?;if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:Self::fixed(),..Default::default()};
   match self.phase{
-   0=>{if plan.entries(IndexedEditKind::Removed)?.is_empty()&&plan.entries(IndexedEditKind::Added)?.is_empty(){self.phase=6;return Ok(RetainedCloneStep::Complete(progress));}let mut output=Vec::new();output.try_reserve_exact(plan.output_len()?).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"indexed output directory reservation refused"))?;progress.retained_capacity_bytes=output.capacity()*size_of::<T>();*self.output=Some(output);self.phase=1;},
-   1=>{match OriginalVectorCursor::admit(std::mem::take(post),Self::child(grant)){Ok((original,p))=>{*self.original=Some(original);self.phase=2;return Ok(RetainedCloneStep::Progress(Self::receipt(p)));},Err((error,original))=>{*post=original;return Err(error);}}},
+   0=>{if plan.entries(IndexedEditKind::Removed)?.is_empty()&&plan.entries(IndexedEditKind::Added)?.is_empty(){self.phase=6;work+=1;return Ok(RetainedCloneStep::Complete(progress));}let mut output=Vec::new();work+=1;output.try_reserve_exact(plan.output_len()?).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"indexed output directory reservation refused"))?;progress.retained_capacity_bytes=output.capacity()*size_of::<T>();*self.output=Some(output);self.phase=1;},
+   1=>{let turn=OriginalVectorCursor::admit(std::mem::take(post),Self::child(grant));work+=turn.work;match turn.result{Ok((original,p))=>{*self.original=Some(original);self.phase=2;return Ok(RetainedCloneStep::Progress(Self::receipt(p)));},Err((error,original))=>{*post=original;return Err(error);}}},
    2=>match self.cursor.next(plan)?{
-    IndexedOutputWork::Original{..}|IndexedOutputWork::Removed{..}=>{self.pending_kind=if matches!(self.cursor.next(plan)?,IndexedOutputWork::Removed{..}){PendingKind::Removed}else{PendingKind::Original};let(value,p)=self.original.as_mut().ok_or_else(invalid)?.take_front(Self::child(grant))?.ok_or_else(invalid)?;*self.pending=Some(value);self.phase=4;return Ok(RetainedCloneStep::Progress(Self::receipt(p)));},
-    IndexedOutputWork::Added{..}=>self.phase=3,
-    IndexedOutputWork::Complete=>{if !self.original.as_ref().ok_or_else(invalid)?.remaining().is_empty()||self.output.as_ref().ok_or_else(invalid)?.len()!=plan.output_len()?{return Err(invalid());}*post=self.output.take().ok_or_else(invalid)?;self.phase=6;return Ok(RetainedCloneStep::Complete(progress));},
+    IndexedOutputWork::Original{..}|IndexedOutputWork::Removed{..}=>{self.pending_kind=if matches!(self.cursor.next(plan)?,IndexedOutputWork::Removed{..}){PendingKind::Removed}else{PendingKind::Original};let turn=self.original.as_mut().ok_or_else(invalid)?.take_front(Self::child(grant));work+=turn.work;let(value,p)=turn.result?.ok_or_else(invalid)?;*self.pending=Some(value);self.phase=4;return Ok(RetainedCloneStep::Progress(Self::receipt(p)));},
+    IndexedOutputWork::Added{..}=>{self.phase=3;work+=1;},
+    IndexedOutputWork::Complete=>{if !self.original.as_ref().ok_or_else(invalid)?.remaining().is_empty()||self.output.as_ref().ok_or_else(invalid)?.len()!=plan.output_len()?{return Err(invalid());}*post=self.output.take().ok_or_else(invalid)?;self.phase=6;work+=1;return Ok(RetainedCloneStep::Complete(progress));},
    },
-   3=>{if self.field.output_ready(){*self.pending=Some(self.field.take().ok_or_else(invalid)?);self.pending_kind=PendingKind::Added;self.phase=4;}else{return self.field.advance(added.ok_or_else(invalid)?,body,Self::child(grant)).map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}},
-   4 if self.pending_kind==PendingKind::Removed=>{if !self.retirement.is_empty(){return self.retirement.step_granted(Self::child(grant)).map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}if let Some(step)=self.retirement.begin_granted(&mut self.pending,Self::child(grant))?{return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())));}self.cursor.advance(plan)?;self.phase=2;},
-   4=>{self.output.as_mut().ok_or_else(invalid)?.push(self.pending.take().ok_or_else(invalid)?);self.cursor.advance(plan)?;self.phase=if self.pending_kind==PendingKind::Added{self.field.begin_close();5}else{2};},
-   5=>{if self.field.terminal_is_empty(){self.field=Default::default();self.phase=2;}else{return self.field.close_step(Self::child(grant)).map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}},
+   3=>{if self.field.output_ready(){let child=Self::child(grant);let turn=self.field.take(child);work+=turn.work;let Some((value,p))=turn.result?else{return Ok(RetainedCloneStep::Progress(Default::default()))};*self.pending=Some(value);self.pending_kind=PendingKind::Added;self.phase=4;let p=crate::retained_clone::admit_retained_clone_progress(child,p,"indexed authored addition take")?;return Ok(RetainedCloneStep::Progress(Self::receipt(p)));}else{return {let turn=self.field.advance(added.ok_or_else(invalid)?,body,Self::child(grant));work+=turn.work;turn.result}.map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}},
+   4 if self.pending_kind==PendingKind::Removed=>{if !self.retirement.is_empty(){return {let turn=self.retirement.step_granted(Self::child(grant));work+=turn.work;turn.result}.map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}if let Some(step)={let turn=self.retirement.begin_granted(&mut self.pending,Self::child(grant));work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())));}self.cursor.advance(plan)?;self.phase=2;work+=1;},
+   4=>{self.output.as_mut().ok_or_else(invalid)?.push(self.pending.take().ok_or_else(invalid)?);work+=1;progress.copied_bytes=size_of::<T>();self.cursor.advance(plan)?;self.phase=if self.pending_kind==PendingKind::Added{self.field.begin_close();5}else{2};},
+   5=>{if self.field.terminal_is_empty(){self.field=Default::default();self.phase=2;work+=1;}else{return {let turn=self.field.close_step(Self::child(grant));work+=turn.work;turn.result}.map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}},
    6=>return Ok(RetainedCloneStep::Complete(Default::default())),
    _=>return Err(invalid()),
   }
   Ok(RetainedCloneStep::Progress(progress))
- }
+ })();crate::RetainedWorkOutcome{result,work}}
+
  pub fn begin_close(&mut self){self.closing=true;self.field.begin_close();if let Some(original)=self.original.as_mut(){original.begin_close();}}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.closing{return Err(invalid());}
@@ -62,17 +63,17 @@ impl<T:RetainedClone> IndexedCollectionCommit<T>{
   if let Some(original)=self.original.as_ref(){return if original.terminal_is_empty(){Ok(Self::scalar())}else{Self::nested(original.next_demand(body.saturating_sub(Self::fixed()))?)};}
   Ok(Default::default())
  }
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
   if !self.closing{return Err(invalid());}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   let demand=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let child=Self::child(grant);
-  if !self.field.terminal_is_empty(){return self.field.close_step(child).map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(child).map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.pending,child)?{return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())));}
-  if let Some(step)=self.retirement.begin_granted(&mut self.output,child)?{return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())));}
-  if let Some(original)=self.original.as_mut(){if original.terminal_is_empty(){self.original.take();return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:Self::fixed(),..Default::default()}));}return original.step(child).map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}
+  if !self.field.terminal_is_empty(){return {let turn=self.field.close_step(child);work+=turn.work;turn.result}.map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}
+  if !self.retirement.is_empty(){return {let turn=self.retirement.step_granted(child);work+=turn.work;turn.result}.map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}
+  if let Some(step)={let turn=self.retirement.begin_granted(&mut self.pending,child);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())));}
+  if let Some(step)={let turn=self.retirement.begin_granted(&mut self.output,child);work+=turn.work;turn.result}?{return Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())));}
+  if let Some(original)=self.original.as_mut(){if original.terminal_is_empty(){self.original.take();work+=1;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:Self::fixed(),..Default::default()}));}return {let turn=original.step(child);work+=turn.work;turn.result}.map(|step|RetainedCloneStep::Progress(Self::receipt(step.progress())));}
   Ok(RetainedCloneStep::Complete(Default::default()))
- }
+ })();crate::RetainedWorkOutcome{result,work}}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.field.terminal_is_empty()&&self.retirement.is_empty()&&self.pending.is_none()&&self.output.is_none()&&self.original.is_none()}
 }
 impl<T:RetainedClone> Drop for IndexedCollectionCommit<T>{fn drop(&mut self){let empty=self.original.is_none()&&self.output.is_none()&&self.pending.is_none()&&self.retirement.is_empty();assert!(std::thread::panicking()||empty,"indexed collection commit requires original child-first closure");if empty{unsafe{ManuallyDrop::drop(&mut self.original);ManuallyDrop::drop(&mut self.output);ManuallyDrop::drop(&mut self.pending);}}}}

@@ -1,0 +1,3 @@
+# Glyph Gap and Actual Output Owner Preparation
+
+Prepared only, no runtime. Existing five canonical schema-first owning laws execute unchanged plus a sixth closed helper-entry provenance law through the actual registration module. Same finite wallet/fuel and independent SQLite list output, positive-axis denials, partial source-clear cancellation, exact deletion-operation refusal and original object identity/sole output page transfer remain. Source-body producer signatures now use genuine direct leaf CPU loans. Strict5 includes actual workspace and its law plus newly migrated Scalar/Cluster caller roots. No glyph-corpus/full Run/Drawing claim. Normal managed test then captured strict, all five dedicated ticket envs/separate outputs; Root review required.

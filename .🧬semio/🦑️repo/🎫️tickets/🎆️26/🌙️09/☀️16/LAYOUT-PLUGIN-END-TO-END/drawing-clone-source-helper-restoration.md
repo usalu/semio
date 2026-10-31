@@ -1,0 +1,7 @@
+# CloneSource Fixture Helper Restoration
+
+The genuine HEAD FixtureSource helper was restored byte-for-byte through supported read-only repo tools exec git show. Before writing, its raw stdout was verified against the canonical HEAD Git blob identity from read-only rev-parse: be07cb4382875b8392c5e898a29fc37d0f54defe. No Git mutation and no Source copy into the ticket was made. Restored 3816 bytes, SHA256 00acb6a2bd4b036b893eca4ebba584be96f31bd419805f3e87e46ddaa491e9c1. The private law Bank remains separately mounted at source/🧪️law-bank/🦀️.rs.
+
+Restoration fixes the ownership collision; the historical helper still requires hand migration to staged Source admission and its unchanged finite bank. No owning acceptance for the restored/current helper is claimed.
+
+Correction: Root's prior Core owning captures recorded3890 bytes/SHA bcdc7bf3ff23502f5df51bcaf292d3ae43ce29bbd145f05dbed3d85e54a1b707. Therefore the exact3816-byte HEAD restoration above is baseline restoration, not exact pre-overwrite working-tree restoration. Root is auditing the74-byte peer delta. Immediately before that notification this lane authored a staged migration of the genuine helper (6996 bytes/SHA24acc85895c6869f7c019a80b4afb90154080b65207add61a737262a143f1eee), preserving the baseline selected-close law and adding a same-existing-stock birth/paid-close law. That body is held unrun until the peer delta is reconciled. No claim that new behavior substitutes for unknown prior semantics is made.

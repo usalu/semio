@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "state": "read-only-observation-not-execution-or-admission",
+  "sources": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "7a818ba4dd36155b3d6911793650ca635d898c9f2a72b1c04febf0fdc621d2f1",
+      "literalInputs": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+      "sha256": "cc50518cdbc712950012ab125fc95ffc0170eb41d21611d231c96cb4f43be266",
+      "literalInputs": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "sha256": "11fe2b52959d82126e8f2512830ef9ee6d2136e994e38d46555f3eff289b5bd0",
+      "literalInputs": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🔬️round-trip/🦀️.rs",
+      "sha256": "cc730ce84dea111b48f38576d855535ba4cbd824c65e56ac4330f524e6a4187b",
+      "literalInputs": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🦀️.rs",
+      "sha256": "9a51d5565aa4b32cfa68592fa049235f9093ebee0a2bf76d22b866a71aa425d6",
+      "literalInputs": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🧪️tests/🦀️.rs",
+      "sha256": "fe76081a4d2423eb043f563585ea62676a5235501b10abf1fd053c0a0a512186",
+      "literalInputs": [
+        {
+          "relative": "../🌱️birth/🧪️tests/🧫️fixtures/🔣️.json",
+          "exists": true,
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🌱️birth/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🌱️birth/📤️transfer/🦀️.rs",
+      "sha256": "c30de168951f62947936f5346e0d6e83d5f3ec30c5b30fae7269317c8f34e1a2",
+      "literalInputs": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🌱️birth/📤️transfer/🧪️tests/🦀️.rs",
+      "sha256": "bc1f3c5d43272578578e55e9e7063e404085498ee88e3c992054ab13ff25c2f5",
+      "literalInputs": [
+        {
+          "relative": "🧫️fixtures/🔣️.json",
+          "exists": true,
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🌱️birth/📤️transfer/🧪️tests/🧫️fixtures/🔣️.json"
+        },
+        {
+          "relative": "../../../🧪️tests/🧫️fixtures/🔣️.json",
+          "exists": false,
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🪆️drawing/🧪️tests/🧫️fixtures/🔣️.json"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "783fefe5feb7cf591e72fade43bd01fc91eba70167a63cdc88a612076b053486",
+      "literalInputs": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🦀️.rs",
+      "sha256": "5d2204d67569192ee32e8ea1340db369ea2bb02077f365515fee046f74af7e92",
+      "literalInputs": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "daa757ad20d289044d845e0203d3609552194fd908c3f69bc7c5f7416a9a3c87",
+      "literalInputs": [
+        {
+          "relative": "../../../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json",
+          "exists": true,
+          "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🕸️graph/🔣️.json"
+        }
+      ]
+    }
+  ]
+}

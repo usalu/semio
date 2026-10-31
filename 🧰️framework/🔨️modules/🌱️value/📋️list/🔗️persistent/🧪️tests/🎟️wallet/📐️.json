@@ -1,0 +1,29 @@
+{
+  "small": {
+    "maximumItems": 100000,
+    "maximumCopyBytes": 33554432,
+    "maximumCapacityBytes": 33554432,
+    "maximumReleaseBytes": 33554432,
+    "maximumDepth": 64,
+    "fuel": 100000
+  },
+  "large": {
+    "maximumItems": 10000000,
+    "maximumCopyBytes": 268435456,
+    "maximumCapacityBytes": 268435456,
+    "maximumReleaseBytes": 268435456,
+    "maximumDepth": 64,
+    "fuel": 10000000
+  },
+  "largeCounts": [
+    65536,
+    65537
+  ],
+  "rules": {
+    "quantumChangesItemsOnly": true,
+    "actualOutcomeWork": true,
+    "actualReceiptOnly": true,
+    "noRenewal": true,
+    "largeAuthorityNewlyDeclared": true
+  }
+}

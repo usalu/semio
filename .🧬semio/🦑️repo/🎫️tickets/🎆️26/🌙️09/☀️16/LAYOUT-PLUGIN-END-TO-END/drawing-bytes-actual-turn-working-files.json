@@ -1,0 +1,46 @@
+{
+  "state": "scoped-actual-byte-owner-green-caller-test-unexecuted",
+  "files": [
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/📐️.json",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/controller.test.ts"
+  ],
+  "inputs": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "sha256": "67738d73708d16529b3d3c622e529ce53c5298755b34bf5fff088d6117cffe8c",
+      "bytes": 3173
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🔣️.json",
+      "sha256": "c940961a6a9b584d1f2f3b9988b9e01581cc28df6bd45766189e195398250a33",
+      "bytes": 1618
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/📐️.json",
+      "sha256": "f10c01891b9a6a61ff6ba9d6ee4a7b6576c564936ca16eadc53158e143bbc518",
+      "bytes": 2381
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+      "sha256": "d531933024eb3627a1873797b84262cb3cb2c38de3c13642866198c104d35647",
+      "bytes": 6217
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/controller.test.ts",
+      "sha256": "3e9426a43e29cd15a601d62f9f0065c66153cba7d0073673cc06b248865fbb17",
+      "bytes": 15855
+    }
+  ],
+  "notes": "New mandatory explicit actual turn on byte mutators; direct five laws before implementation, three original vectors and all five denial axes retained. Actual witness posts before fallible receipt fold, real backing effect epoch only. Actual controller byte output fixture and generic close-helper signatures migrated; SQLite bindings arrays. PNG direct callers separately attributed. Native primitive2 frozen input membership excludes every work/bytes path.",
+  "laws": 5,
+  "scopedProof": {
+    "testSession": 86887,
+    "strictSession": 36068,
+    "pass": 10,
+    "assertions": 1912,
+    "scope": "Byte5+PNG5; separate controller.test.ts not executed"
+  }
+}

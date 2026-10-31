@@ -142,8 +142,8 @@ export async function runHostileRenderPhase({ vitest, dependencies, reissuedOwne
   expect(historyStatuses.some((message) => message.historyEpoch === submittingOwner.historyEpoch && message.status.phase === "applied")).toBe(false);
   expect(testSeams.inferenceApprovalUndoOwner?.phase).toBe("awaiting-mount");
 
-  const renderDriver = probe.reservation as unknown as { child: DocumentBrowserActorChild; renderSurface(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> };
-  const retainedChild = renderDriver.child;
+  const renderDriver = (probe.reservation as unknown as { hub: { session: { child: DocumentBrowserActorChild }; surfaces: { renderSurface(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> } } }).hub;
+  const retainedChild = renderDriver.session.child;
   for (const row of corpus.browserRender.hostile) {
     let turns = 0,
       current = row.name !== "stale-before-turn";
@@ -151,7 +151,8 @@ export async function runHostileRenderPhase({ vitest, dependencies, reissuedOwne
       async invoke(path: readonly string[], args: BrowserActorChildValue[]): Promise<BrowserActorChildValue> {
         expect(path).toEqual(["reactor", "poll"]);
         const events = args[0] as Record<string, any>[];
-        expect(events).toEqual(turns === 0 ? [{ tag: "surface-visible", val: { surface: { instance: 0, surface: windowKindId }, bodyKey, viewState: encodePackValue(state.browserActorViewState!) } }, secondWindowVisible(state.browserActorViewState!), ...panelVisible(state.browserActorViewState!), ...sectionVisible(state.browserActorViewState!, false)] : [{ tag: "wake" }]);
+        const owed = [{ tag: "surface-visible", val: { surface: { instance: 0, surface: windowKindId }, bodyKey, viewState: encodePackValue(state.browserActorViewState!) } }, secondWindowVisible(state.browserActorViewState!), ...panelVisible(state.browserActorViewState!), ...sectionVisible(state.browserActorViewState!, false)];
+        expect(events).toEqual(turns < owed.length ? [owed[turns]] : [{ tag: "wake" }]);
         turns++;
         if (row.name === "stale-after-turn") current = false;
         return {
@@ -163,15 +164,15 @@ export async function runHostileRenderPhase({ vitest, dependencies, reissuedOwne
         };
       },
     } as unknown as DocumentBrowserActorChild;
-    renderDriver.child = child;
+    renderDriver.session.child = child;
     try {
       await expect(
-        renderDriver.renderSurface(child, () => {
+        renderDriver.surfaces.renderSurface(child, () => {
           if (!current) throw new Error("fixture-stale-render");
         }),
       ).rejects.toThrow(row.error);
     } finally {
-      renderDriver.child = retainedChild;
+      renderDriver.session.child = retainedChild;
     }
     expect(turns).toBe(row.turns);
   }

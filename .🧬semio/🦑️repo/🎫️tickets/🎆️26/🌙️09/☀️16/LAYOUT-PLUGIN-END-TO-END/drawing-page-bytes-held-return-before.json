@@ -1,0 +1,17 @@
+[
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udcec\ufe0foutcome/\ud83d\udcee\ufe0freturn/\ud83e\udd80\ufe0f.rs",
+    "sha256": "5758f89cb8d5dae0ad8a25daba879f52be9c156a1caa69a674645720428e8654",
+    "bytes": 13044
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udcec\ufe0foutcome/\ud83d\udcee\ufe0freturn/\ud83d\udce6\ufe0fbytes/\ud83e\udd80\ufe0f.rs",
+    "sha256": "36fcc02f77e2b82c168b9e165db132e388dd6aec22de07b01676efbcccb3ba25",
+    "bytes": 14077
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\ud83d\udcec\ufe0foutcome/\ud83d\udcee\ufe0freturn/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "sha256": "6ed05fc6cdec3470f362cab7bac07e76c2d320f3f716da58a60fa6269857719f",
+    "bytes": 14732
+  }
+]

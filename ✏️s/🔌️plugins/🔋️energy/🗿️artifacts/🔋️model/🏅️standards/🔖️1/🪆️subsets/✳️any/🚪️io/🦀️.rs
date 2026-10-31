@@ -108,7 +108,7 @@ pub mod io_registry {
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
 
     //#region 🔖️ExportEntries
-    /// 🗄️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: the typed registry (W11-W14) only ever grew
+    /// ⏲️ Ticket 26/08/10/STDIO-ARTIFACTS-AND-IO W15: the typed registry (W11-W14) only ever grew
     /// IMPORT-direction entries (each composer's own `reads()`) -- nothing registers the REVERSE
     /// ("this domain artifact can be exported AS format Y"), because `ArtifactComposer` only models
     /// "produce my own snapshot." These entries wrap the artifact's EXISTING `🚪️io/📤️export/🧵️serializers`
@@ -187,7 +187,7 @@ pub mod derived_analysis {
     use crate::snapshot::EnergyModelSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalyzer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
-    #[derive(Clone, Debug, Default)]
+    #[derive(Debug, Default)]
     pub struct EnergyModelParts {
         pub snapshot: Option<EnergyModelSnapshot>,
     }

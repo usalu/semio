@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/value/numeric/work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "insertions",
+    "removals"
+  ],
+  "properties": {
+    "insertions": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "value"
+        ],
+        "properties": {
+          "key": {
+            "type": "integer",
+            "minimum": 1000,
+            "maximum": 9999
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "removals": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9999
+      }
+    }
+  }
+}

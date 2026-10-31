@@ -1,0 +1,11 @@
+--- a/🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/🔒️leases/🟦️.ts
+@@ -596,7 +596,7 @@
+       const now=Date.now(),before=live.slice(0,live.indexOf(ticket)),requester={pid:process.pid,mode:options.mode,sharedCohort:options.sharedCohort===true,yielding:options.yielding===true,holdsShared:options.mode==="shared"&&before.length>0&&leaseOrderPolicyV1().fairness.reentrantShared!==false&&holdsSharedInProcessV1(resolve(options.directory),options.resource)},
+         ahead=await retryInterruptedFilesystemRead(options.signal,()=>before.map(name=>queueAheadV1(queue,name,now)).filter((row):row is QueueTicketV1=>row!==undefined),options.control);
+       remaining(options, started);
+-      if (live.includes(ticket) && queueMayProceedV1(requester,ahead,now,writerPreferenceForResourceV1(leaseOrderPolicyV1().fairness,options.resource))) {
++      if (live.includes(ticket) && queueMayProceedV1(requester,ahead,now,writerPreferenceForResourceV1(leaseOrderPolicyV1().fairness,options.resource),leaseOrderPolicyV1().fairness.reentrantPassCeilingMilliseconds??Infinity)) {
+         const acquire = (): Promise<ResourceLease> => acquireResourceLeaseBody({ ...options, admissionPatienceMs: leaseOrderPolicyV1().gate.admissionPatienceMilliseconds, timeoutMs: options.timeoutMs === undefined ? undefined : Math.max(0, options.timeoutMs - (Date.now() - started)) });
+         const lease = await (guard ? trackedAcquisition.run({ guard, directory: resolve(options.directory), resource: options.resource }, acquire) : acquire());
+         try { remaining(options, started); } catch (error) { lease.release(); throw error; }

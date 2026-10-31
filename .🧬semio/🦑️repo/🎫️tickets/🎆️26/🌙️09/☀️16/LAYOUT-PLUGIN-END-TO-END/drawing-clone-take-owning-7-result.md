@@ -1,0 +1,7 @@
+# Core Clone All-Target Actual Result
+
+Canonical unfiltered owning Cargo test completed outer0/native0:private21/0(3.00s),same-owningpackage publicbulk5/0(0.24s),newtake1/0(0.01s),docs0. Original26 laws preserved across21private+5publicbulk;newtake1 gives27total. All290metadata inputs EXACT atpost. CommandSHA256 6785a26ae52b60fd4beb5a1e696327fe9bb4017a15026f0c8777934ca2055173;logSHA256 445ef309108a477ec8da78635908741957fb9c0e257b5c53b24c9ac682374821. No Source/cap/stock/profileincrease or filters.
+
+Newtake actual10 families include originalscalar/String/Option/Vec/array/tuple/Box plus generatedenumempty/record/tuple. Each realSourcebirth,advance,denied/exact/cached outputtake,cursor/output/Sourceclosure uses the same finite4096CPU/16MiB/depth128bank,actualheap andindependentSerde. Generatedenum addedafterAPIbody chronology isexplicit, notclaimedpre-bodyRED. Publicbulk originalcases use samefinite100000CPU/16MiB/depth128 percase with realSource,progress,row bounds,Clone/Serde andfullcleanup. Alloriginal testcasevalues/pagebounds/meaningfulassertions preserved. PhysicalVec24byteheaderassert remains separatefromclosedownershipmove-copy0.
+
+This proves the captured Core API/owning regression scope. Preexistingremainingprivatebulk/paged fixtureaggregatecurrencybank isstillopen;structuralgreen alone doesnot establishfullfunding there. WiderNative/Job/ValueEdit/Scene/Drawing/Layout/setup/browser acceptance remainsopen. Lowerholdreleased forcontinuedintegration;this exact snapshot is historical onceinputschange.

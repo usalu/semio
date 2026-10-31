@@ -1,3 +1,5 @@
+import{fileURLToPath}from"node:url";
+import catalog from"../🔣️catalog.json"with{type:"json"};
 import {spawnSync} from "node:child_process";
 import {PackageManagerRegistryV1,type HostPortV1,type PackageManagerV1} from "../🟦️.ts";
 import {bunPackageManagerV1} from "../🍞️bun/🟦️.ts";
@@ -17,3 +19,6 @@ export const selectPackageManagerV1=(ecosystem:string,environment:Readonly<Recor
 /** 🖥️ Describes the running host for keys and runtime identity; the version map is the process's own, so embedded managers answer without a probe. */
 export const spawnProbeV1:NonNullable<HostPortV1["probe"]>=(executable,args)=>{const result=spawnSync(executable,[...args],{encoding:"utf8"});return result.status===0?result.stdout:undefined;};
 export function currentHostV1(probe:HostPortV1["probe"]=spawnProbeV1):HostPortV1{return Object.freeze({platform:process.platform,arch:process.arch,versions:process.versions,probe});}
+
+/** 🔏️ Names every defining module and descriptor of the ESM registry for observed source identities. */
+export function packageManagerSourceFilesV1():readonly string[]{return Object.freeze(["./🟦️.ts","../🟦️.ts","../🔣️catalog.json","../🔣️policy.json","../🧬️schema/🔣️.json","../📖️formats/🟦️.ts",...Object.values(catalog.adapters).flatMap(folder=>["../"+folder+"/🟦️.ts","../"+folder+"/🔣️.json"])].map(path=>fileURLToPath(new URL(path,import.meta.url))));}

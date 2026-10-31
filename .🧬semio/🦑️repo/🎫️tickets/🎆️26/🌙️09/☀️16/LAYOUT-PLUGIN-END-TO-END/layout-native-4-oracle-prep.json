@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "authority": false,
+  "state": "not-executed-native-source-admission-failed",
+  "nativeOwnerSession": 97565,
+  "nativeCommandInput": "layout-native-4-command.json",
+  "nativeCommandInputSha256": "c2c43c24f533fae4c07b7310e4bfa0cbaf362dedc1b0d082e8773ab9b5d572b5",
+  "nativeLog": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/native.log",
+  "nativeLogAtPreparation": {
+    "finalHash": null,
+    "terminalOutcome": null,
+    "liveLogNotRead": true
+  },
+  "rootReleaseRequired": true,
+  "releaseCondition": "No conditional release exists. Fresh Root authorization against actual Native4 outcome and genuine owning records is required.",
+  "commands": [
+    {
+      "kind": "media4actualrecords",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "python",
+        "--",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/media-handoff-oracle.py",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/native.log"
+      ],
+      "cwd": "/Users/ueli/Documents/semio",
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/media",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/media/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/media/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/media/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/media/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/media/oracle.log",
+      "posixInvocation": "SEMIO_BUILD_MODE=prototype SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/media' TMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/media/tmp' TMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/media/tmp' TEMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/media/tmp' TEMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/media/tmp' repo --service=off tools exec python -- '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/media-handoff-oracle.py' '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/native.log' > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/media/oracle.log' 2>&1",
+      "oracleSha256": "0cba9ee77f6e0003084e0f3d6654773d3302d13a552ee436e1ab6d40c15e6843",
+      "admission": "normal-managed",
+      "executed": false,
+      "authorizedAttempts": 0
+    },
+    {
+      "kind": "sdkActor6actualrecords",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "bun",
+        "--",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/sdk-actor-admission-oracle.ts",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/native.log"
+      ],
+      "cwd": "/Users/ueli/Documents/semio",
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/sdk-actors",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/sdk-actors/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/sdk-actors/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/sdk-actors/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/sdk-actors/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/sdk-actors/oracle.log",
+      "posixInvocation": "SEMIO_BUILD_MODE=prototype SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/sdk-actors' TMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/sdk-actors/tmp' TMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/sdk-actors/tmp' TEMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/sdk-actors/tmp' TEMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/sdk-actors/tmp' repo --service=off tools exec bun -- '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/sdk-actor-admission-oracle.ts' '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/native.log' > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-4/oracles/sdk-actors/oracle.log' 2>&1",
+      "oracleSha256": "a25783a31b7ea67f6db85b41a3af51d8eab5ff0090b63ea562e74d9c6ff8f7f7",
+      "admission": "normal-managed",
+      "executed": false,
+      "authorizedAttempts": 0
+    }
+  ],
+  "codec": {
+    "owner": "semio-s-artifact-layout-layout-engine-export-unit-tests",
+    "actualBinaryPassRequired": true,
+    "perCaseRecordOracle": false,
+    "status": "unproved by this preparation"
+  },
+  "requirementsChanged": false,
+  "proofClaimed": false,
+  "nativePackageCount": 17,
+  "priorNative3Release": "Failed Native6942 condition was not met and grants no authority for Native4.",
+  "ownerObservation": "Reported live by Root and owning Rust lane; no terminal or test result inferred.",
+  "nativeTerminalDisposition": {
+    "session": 97565,
+    "exitCode": 1,
+    "boundary": "precompiler MODEL cfg(test) Source bytes refusal",
+    "unit": 595,
+    "units": 914,
+    "fixtureBytes": 101392,
+    "remainingBytes": 26564,
+    "remainingFiles": 1,
+    "testBinaryRan": false,
+    "oracleExecuted": false,
+    "authorizedAttempts": 0,
+    "terminalReceipt": "🗑️generated/layout-native-4/terminal.json"
+  }
+}

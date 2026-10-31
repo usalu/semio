@@ -4,7 +4,7 @@
 #[path="🎟️invocation/🦀️.rs"]
 mod original_invocation;
 #[cfg(not(target_arch="wasm32"))]
-pub use original_invocation::RendererOriginalIoNode;
+pub use original_invocation::{RendererOriginalIoNode,RendererOriginalIoStep};
 
 #[cfg(not(target_arch="wasm32"))]
 #[path="🎟️source/🦀️.rs"]

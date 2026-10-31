@@ -1,0 +1,13 @@
+{
+  "originalObservedBeforeSha256": "de9a607b1e8448f6c4a4adfb17af717e477c345841b2a3c9472b6f1889b24c57",
+  "gitHeadReadExit": 0,
+  "gitHeadSha256": "de9a607b1e8448f6c4a4adfb17af717e477c345841b2a3c9472b6f1889b24c57",
+  "headMatchesObservedOriginal": true,
+  "headHas100000": false,
+  "headPreparationIsConstructor": true,
+  "headOriginalCloseGuard": "at<=row.work.prepared.typescript",
+  "newHelper100000IntroducedIn": "drawing-prepared-fill-ts-original-migration-working-files.json",
+  "unchangedOriginalFixtures": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🧪️tests/🔬️unit/../../../../🧪️tests/🧫️fixtures/🎨️fill/🎨️sampling/🧹️retirement/🔣️.json"
+  ]
+}

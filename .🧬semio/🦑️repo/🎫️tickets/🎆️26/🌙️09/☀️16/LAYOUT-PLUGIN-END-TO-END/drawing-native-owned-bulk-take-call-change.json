@@ -1,0 +1,8 @@
+{
+  "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🎟️work/🧪️tests/🦀️.rs",
+  "before": "1456069a3dd121f70fc0dad1f491e39b801f50f25e42cf2ed79de6ba5e960d56",
+  "after": "381ca595ccbfb5d2cbb78f27e8cd404ea27dff2df4602834d68d263d0ea3df7e",
+  "old": "let(output,p)=receiver.take(bank.offer()).unwrap().unwrap();bank.post(p,1);",
+  "new": "let turn=receiver.take(bank.offer());let p=match &turn.result{Ok(Some((_,p)))=>*p,Ok(None)=>Default::default(),Err(e)=>e.retained_progress()};bank.post(p,turn.work);let(output,_)=turn.result.unwrap().unwrap();",
+  "inverseExact": true
+}

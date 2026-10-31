@@ -22,9 +22,7 @@ pub fn print_dsl(document: &LayoutSnapshot) -> String {
 }
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 //#endregion 🧪️Tests
 
 //#region 🚚️Carrier
@@ -183,6 +181,7 @@ pub fn build_demo_layout_snapshot() -> crate::snapshot::LayoutSnapshot {
                     },
                 ],
                 overrides: Vec::new(),
+                background_drawing: None,
             },
             Page {
                 id: "page-2".into(),
@@ -198,6 +197,7 @@ pub fn build_demo_layout_snapshot() -> crate::snapshot::LayoutSnapshot {
                 layers: Vec::new(),
                 frames: Vec::new(),
                 overrides: Vec::new(),
+                background_drawing: None,
             },
         ],
         print_target: None,

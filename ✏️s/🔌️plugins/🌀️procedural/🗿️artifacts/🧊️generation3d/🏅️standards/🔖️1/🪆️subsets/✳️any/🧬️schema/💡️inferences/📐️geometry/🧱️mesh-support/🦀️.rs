@@ -1,12 +1,13 @@
-//! 🧱️ The plumbing every `mesh.*` compute shares: typed mesh inputs, selection validation against the input mesh, localized mesh faults and the stepped machines that run kernel mesh jobs under a widget fuel grant.
+//! 🧱️ The plumbing every `mesh.*` compute shares: typed mesh inputs, selection validation against the input mesh, localized mesh faults and the stepped machines that run kernel mesh jobs under the caller's `StepContext`.
 //!
-//! A mesh compute describes its work as a closure that runs inside the first step, so cloning the input mesh and building the kernel job are charged to the grant like every other unit. A machine advances in batches of [`BATCH`] kernel units per fuel, reports monotone progress, turns a kernel panic into a fault and drops its kernel job on cancel.
+//! A mesh compute describes its work as a closure that runs inside the first step, so cloning the input mesh and building the kernel job are charged to the caller like every other unit. A machine advances in batches of [`BATCH`] kernel units per fuel, reports monotone progress, turns a kernel panic into a fault and drops its kernel job on cancel.
 #![allow(clippy::result_large_err)]
 
 use semio_framework_3d::mesh::{MeshModelingOps};
 use semio_s_artifact_procedural_3d_model::catalogue::{Kind, Quality};
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetStep;
+use semio_s_artifact_procedural_3d_geometry_compute::{fuel_budget, settle, unfunded, OriginalTurnFailure, StepContext};
 use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
 use semio_s_artifact_procedural_3d_geometry_value::outputs;
 use semio_s_artifact_procedural_3d_geometry_value::GeometryValue;
@@ -101,7 +102,7 @@ pub enum Element {
 }
 
 impl Element {
-    /// 🧲️ The mesh element of a selection kind.
+    /// 🔹️ The mesh element of a selection kind.
     pub fn of(kind: SelectionKind) -> Self {
         match kind {
             SelectionKind::Vertex => Self::Vertex,
@@ -128,7 +129,7 @@ impl Element {
     }
 }
 
-/// 🧲️ The ids a selection port names, ascending and without repeats, each validated against `mesh`: an id the mesh no longer has is `selection-stale`.
+/// 🪪️ The ids a selection port names, ascending and without repeats, each validated against `mesh`: an id the mesh no longer has is `selection-stale`.
 pub fn picked(inputs: &WidgetInputs, port: &str, mesh: &HalfedgeMesh, element: Element) -> Result<Vec<u32>, WidgetFault> {
     let selection = inputs.selection(port)?;
     let bound = element.bound(mesh);
@@ -151,7 +152,7 @@ pub fn picked(inputs: &WidgetInputs, port: &str, mesh: &HalfedgeMesh, element: E
     Ok(ids)
 }
 
-/// 🧲️ The ids of the single element a selection port names; anything else than exactly one is a `selection-count` fault.
+/// 👆️ The ids of the single element a selection port names; anything else than exactly one is a `selection-count` fault.
 pub fn picked_one(inputs: &WidgetInputs, port: &str, mesh: &HalfedgeMesh, element: Element) -> Result<u32, WidgetFault> {
     let ids = picked(inputs, port, mesh, element)?;
     match ids.as_slice() {
@@ -160,7 +161,7 @@ pub fn picked_one(inputs: &WidgetInputs, port: &str, mesh: &HalfedgeMesh, elemen
     }
 }
 
-/// 🧲️ The element a `mode` enum input names.
+/// ⌨️ The element a `mode` enum input names.
 pub fn mode_element(inputs: &WidgetInputs, port: &str) -> Result<Element, WidgetFault> {
     match inputs.text(port)? {
         "vertex" => Ok(Element::Vertex),
@@ -184,12 +185,12 @@ fn narrowed(value: f64, port: &str) -> Result<f32, WidgetFault> {
     }
 }
 
-/// 🔢️ A number input as the kernel's `f32`.
+/// 🌀️ A number input as the kernel's `f32`.
 pub fn scalar(inputs: &WidgetInputs, port: &str) -> Result<f32, WidgetFault> {
     narrowed(inputs.number(port)?, port)
 }
 
-/// 🔢️ A whole-number input as a count.
+/// 🌁️ A whole-number input as a count.
 pub fn count(inputs: &WidgetInputs, port: &str) -> Result<u32, WidgetFault> {
     let value = inputs.integer(port)?;
     u32::try_from(value).map_err(|_| WidgetFault::new("generation3d.geometry.input-range", format!("The value {value} is outside the supported count range."), format!("Der Wert {value} liegt ausserhalb des unterstützten Zählbereichs.")).at(port))
@@ -220,11 +221,11 @@ pub enum Flow {
     Done(Outputs),
 }
 
-/// 🧵️ A started piece of mesh work that advances by widget fuel.
+/// 🧵️ A started piece of mesh work that advances by the fuel its caller's context funds.
 pub trait Machine: Send {
-    /// ⏱️ Does at most `fuel` units of work.
-    fn advance(&mut self, fuel: usize) -> Result<Flow, WidgetFault>;
-    /// 🛑️ Drops whatever the machine holds.
+    /// ⏱️ Does at most the units of work `cx` funds.
+    fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault>;
+    /// 💧️ Drops whatever the machine holds.
     fn cancel(&mut self);
 }
 
@@ -247,21 +248,25 @@ impl MachineJob {
 }
 
 impl WidgetJob for MachineJob {
-    fn step(&mut self, fuel: usize) -> WidgetStep {
+    fn step(&mut self, cx: &mut StepContext<'_>) -> Result<Option<WidgetStep>, OriginalTurnFailure> {
         if self.finished {
-            return self.fault(cancelled_fault());
+            return Ok(Some(self.fault(cancelled_fault())));
         }
-        let fuel = fuel.max(1);
+        if unfunded(cx) {
+            return Ok(None);
+        }
+        let fuel = fuel_budget(cx);
         let outcome = catch_unwind(AssertUnwindSafe(|| {
             if let Some(build) = self.build.take() {
                 self.machine = Some(build()?);
             }
             match self.machine.as_mut() {
-                Some(machine) => machine.advance(fuel),
+                Some(machine) => machine.advance(cx),
                 None => Err(cancelled_fault()),
             }
         }));
-        match outcome {
+        settle(cx, fuel, matches!(outcome, Ok(Ok(Flow::Working(_)))));
+        Ok(Some(match outcome {
             Ok(Ok(Flow::Working(progress))) => WidgetStep::Working { progress: progress.clamp(0.0, 0.999) },
             Ok(Ok(Flow::Done(outputs))) => {
                 self.finished = true;
@@ -270,7 +275,7 @@ impl WidgetJob for MachineJob {
             }
             Ok(Err(fault)) => self.fault(fault),
             Err(_) => self.fault(stopped_fault()),
-        }
+        }))
     }
 
     fn cancel(&mut self) {
@@ -288,7 +293,7 @@ pub fn run(kind: &Kind, build: impl FnOnce() -> Result<Box<dyn Machine>, WidgetF
     Box::new(MachineJob { quality: kind.quality, build: Some(Box::new(build)), machine: None, finished: false })
 }
 
-/// 🧱️ A kernel job that turns a mesh into a mesh in budgeted units.
+/// 💼️ A kernel job that turns a mesh into a mesh in budgeted units.
 pub trait Stepper: Send {
     fn step(&mut self, budget: usize) -> Result<MeshModelingStep, MeshKernelError>;
     fn cancel(&mut self);
@@ -300,7 +305,7 @@ pub fn modeling_slice(job: &mut MeshModelingJob, budget: usize) -> Result<MeshMo
     job.step(budget, grant, &mut RetainedCloneProgress::default())
 }
 
-/// 🎟️ Advances a kernel tessellation by up to `events` producer events, each under the exact grant its own quote asks for.
+/// 📣️ Advances a kernel tessellation by up to `events` producer events, each under the exact grant its own quote asks for.
 pub fn tessellation_slice(job: &mut MeshTessellationJob, events: usize) -> Result<MeshTessellationStep, MeshKernelError> {
     let mut last = MeshTessellationStep::Working(job.progress());
     for _ in 0..events.max(1) {
@@ -342,8 +347,8 @@ pub fn ratio(progress: MeshModelingProgress) -> f32 {
 struct Modeling<J: Stepper>(J);
 
 impl<J: Stepper> Machine for Modeling<J> {
-    fn advance(&mut self, fuel: usize) -> Result<Flow, WidgetFault> {
-        match self.0.step(fuel.saturating_mul(BATCH)).kernel()? {
+    fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
+        match self.0.step(fuel_budget(cx).saturating_mul(BATCH)).kernel()? {
             MeshModelingStep::Working(progress) => Ok(Flow::Working(ratio(progress))),
             MeshModelingStep::Done(mesh) => Ok(Flow::Done(mesh_output(mesh))),
             MeshModelingStep::Cancelled(_) => Err(cancelled_fault()),
@@ -355,7 +360,7 @@ impl<J: Stepper> Machine for Modeling<J> {
     }
 }
 
-/// 🛠️ Starts a widget job over a kernel mesh job that `make` builds inside the first step; the finished mesh is the `mesh` output.
+/// ▶️ Starts a widget job over a kernel mesh job that `make` builds inside the first step; the finished mesh is the `mesh` output.
 pub fn modeling<J: Stepper + 'static>(kind: &Kind, make: impl FnOnce() -> Result<J, WidgetFault> + Send + 'static) -> Box<dyn WidgetJob> {
     run(kind, move || Ok(Box::new(Modeling(make()?)) as Box<dyn Machine>))
 }
@@ -368,7 +373,8 @@ struct FromSource {
 }
 
 impl Machine for FromSource {
-    fn advance(&mut self, fuel: usize) -> Result<Flow, WidgetFault> {
+    fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
+        let fuel = fuel_budget(cx);
         if self.job.is_none() {
             match (self.parse)(fuel)? {
                 Some(source) => self.job = Some(HalfedgeMesh::polygon_source_job(source).kernel()?),
@@ -390,7 +396,7 @@ impl Machine for FromSource {
     }
 }
 
-/// 🛠️ Starts a widget job that reads a polygon source with the parser `make` builds inside the first step and reconstructs it with the kernel's polygon source job.
+/// 🔍️ Starts a widget job that reads a polygon source with the parser `make` builds inside the first step and reconstructs it with the kernel's polygon source job.
 pub fn from_source(kind: &Kind, make: impl FnOnce() -> Result<Parse, WidgetFault> + Send + 'static) -> Box<dyn WidgetJob> {
     run(kind, move || Ok(Box::new(FromSource { parse: make()?, job: None }) as Box<dyn Machine>))
 }

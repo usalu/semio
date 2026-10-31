@@ -8,24 +8,24 @@ pub struct WindowConfigOwnerRegistry {
     #[doc(hidden)]
     pub owners: WindowRegistry<&'static str, Box<dyn ErasedWindowConfigStoreOwner>>,
     owner_close_cursor: usize,
-    pub(super) preview_visible_epoch:u64,
-    pub(super) preview_active_epoch:Option<u64>,
-    pub(super) lifetime: u64,
+    pub preview_visible_epoch:u64,
+    pub preview_active_epoch:Option<u64>,
+    pub lifetime: u64,
     #[doc(hidden)]
     pub actor: Option<protocol::ActorId>,
     #[doc(hidden)]
     pub actor_retirement: Option<ControlledRetirement<semio_framework_value::SharedUtf8>>,
 }
 
-pub(super) fn controlled_owner_demands<T: semio_framework_value::retirement::RetireOwned>(owner: &ControlledRetirement<T>, body: usize) -> Result<RetirementDemand, ValueError> {
+pub fn controlled_owner_demands<T: semio_framework_value::retirement::RetireOwned>(owner: &ControlledRetirement<T>, body: usize) -> Result<RetirementDemand, ValueError> {
     Ok(owner.next_demand(body)?)
 }
 
-pub(super) fn window_actor_demands(actor: &Option<protocol::ActorId>, retirement: &Option<ControlledRetirement<semio_framework_value::SharedUtf8>>, body: usize) -> Result<RetirementDemand, ValueError> {
+pub fn window_actor_demands(actor: &Option<protocol::ActorId>, retirement: &Option<ControlledRetirement<semio_framework_value::SharedUtf8>>, body: usize) -> Result<RetirementDemand, ValueError> {
     retirement.as_ref().map_or(Ok(RetirementDemand { copy_bytes: if actor.is_some() { size_of::<protocol::ActorId>() } else { 0 }, depth: usize::from(actor.is_some()), ..Default::default() }), |owner| controlled_owner_demands(owner, body))
 }
 
-pub(super) fn close_window_actor(actor: &mut Option<protocol::ActorId>, retirement: &mut Option<ControlledRetirement<semio_framework_value::SharedUtf8>>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
+pub fn close_window_actor(actor: &mut Option<protocol::ActorId>, retirement: &mut Option<ControlledRetirement<semio_framework_value::SharedUtf8>>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
     if actor.is_none() && retirement.is_none() { return Ok(PluginLifecycleStep::Complete(Default::default())); }
     let demand = window_actor_demands(actor, retirement, grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
     if !registry::fits(grant, demand) { return Ok(PluginLifecycleStep::Progress(Default::default())); }
@@ -79,7 +79,7 @@ impl WindowConfigOwnerRegistry {
         self.owners.get(window_kind_id)?.borrow(window_id)
     }
 
-    /// 👁️ Lends only the visible complete original epoch without issuing another snapshot read.
+    /// 🕰️ Lends only the visible complete original epoch without issuing another snapshot read.
     pub fn borrow_preview<'a>(&'a self,kind:&str,window:&'a str)->Option<WindowConfigBorrow<'a>>{self.owners.get(kind)?.borrow_preview(window,self.preview_visible_epoch)}
     /// 🧬️ Retains the actual press projection for one native semantic preview leaf.
     /// 📏️ Quotes one original leaf without finishing or publishing its window prefix.
@@ -93,15 +93,15 @@ impl WindowConfigOwnerRegistry {
     pub fn preview_input(&mut self,input:&semio_framework_value::retained_clone::RetainedOwnedProjection<WindowConfigMutation>,epoch:u64,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{let original=input.borrow()?;let kind=original.get().window_kind_id();self.owners.get_mut(kind).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original Window preview owner is absent"))?.preview_input(input,epoch,grant)}
     /// 📏️ Quotes the next actual original press admission.
     pub fn preview_input_demands(&self,kind:&str,window:&str,epoch:u64,body:usize)->Result<RetirementDemand,ValueError>{self.owners.get(kind).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original Window preview owner is absent"))?.preview_input_demands(window,epoch,body)}
-    /// 👁️ Borrows the current original published preview.
+    /// 🤲️ Borrows the current original published preview.
     pub fn preview_or<'a>(&'a self,committed:&'a WindowConfigSnapshot)->&'a WindowConfigSnapshot{self.owners.get(committed.window_kind_id()).map_or(committed,|owner|owner.preview_or(committed,self.preview_visible_epoch))}
     /// 🔢️ The generation of window `window_id`'s published provisional config.
     #[doc(hidden)]
     pub fn preview_generation(&self,window_kind_id:&str,window_id:&str)->Option<u64>{self.owners.get(window_kind_id)?.preview_generation(window_id)}
-    /// 🗂️ Every live partition of every window kind, the frontier a retained preview pass walks.
+    /// 💚️ Every live partition of every window kind, the frontier a retained preview pass walks.
     #[doc(hidden)]
     pub fn preview_partition_count(&self)->usize{self.owners.values().map(|owner|owner.preview_partition_count()).sum()}
-    /// 🧭️ The position of window `window_id`'s partition in the pass, absent before its first capture.
+    /// 🌬️ The position of window `window_id`'s partition in the pass, absent before its first capture.
     #[doc(hidden)]
     pub fn preview_partition_index(&self,window_kind_id:&str,window_id:&str)->Option<usize>{
         let mut before=0;
@@ -168,7 +168,7 @@ impl WindowConfigOwnerRegistry {
         self.owners.get_mut(authority.window_kind_id.as_str()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config emission has no registered concrete window owner"))?.dispatch(actor, mutation, identity).await
     }
 
-    pub(crate) fn admit_catalog(&mut self,authority:&WindowConfigAuthority,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{self.owners.get_mut(&authority.window_kind_id).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original Window catalog owner is absent"))?.admit_catalog(authority,grant)}
+    pub fn admit_catalog(&mut self,authority:&WindowConfigAuthority,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{self.owners.get_mut(&authority.window_kind_id).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original Window catalog owner is absent"))?.admit_catalog(authority,grant)}
     #[doc(hidden)]
     pub fn admit_begin(
         &mut self, operation: semio_framework_job::OperationId,
@@ -226,7 +226,7 @@ impl WindowConfigOwnerRegistry {
         load.close_step_context(cx)
     }
 
-    /// 📏️ The exact physical release the next [`Self::close_step`] owes: the open owner's first partition store, or its opened actor's retirement. Parked loads pay their own demand.
+    /// 🎉️ The exact physical release the next [`Self::close_step`] owes: the open owner's first partition store, or its opened actor's retirement. Parked loads pay their own demand.
     #[doc(hidden)]
     pub fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(owner) = self.owners.get_index(self.owner_close_cursor) {
@@ -242,15 +242,17 @@ impl WindowConfigOwnerRegistry {
         window_actor_demands(&self.actor, &self.actor_retirement, body)
     }
 
-    /// ♻️ Retires parked loads first, each under its own exact release demand (paying back credits it was admitted), then owners.
+    /// 🛌️ Retires parked loads first, each under its own exact release demand (paying back credits it was admitted), then owners.
     #[doc(hidden)]
     pub fn direct_ingress_terminal_is_empty(&self)->bool{self.owners.values().all(|owner|owner.direct_ingress_terminal_is_empty())}
+    #[doc(hidden)]
+    pub fn direct_ingress_quiescent(&self)->bool{self.owners.values().all(|owner|owner.direct_ingress_quiescent())}
     #[doc(hidden)]
     pub fn direct_ingress_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.owners.values().find(|owner|!owner.direct_ingress_terminal_is_empty()).map_or(Ok(Default::default()),|owner|owner.direct_ingress_demands(body))}
     #[doc(hidden)]
     pub fn close_direct_ingress(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{match self.owners.values_mut().find(|owner|!owner.direct_ingress_terminal_is_empty()){Some(owner)=>owner.close_direct_ingress(grant).map(|step|RetainedCloneStep::Progress(step.progress())),None=>Ok(RetainedCloneStep::Complete(Default::default()))}}
     #[doc(hidden)]
-    /// ♻️ Preserves original domain failures while closing a partially born Window partition.
+    /// ❌️ Preserves original domain failures while closing a partially born Window partition.
     pub fn close_step_context(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if let Some(owner)=self.owners.get_index_mut(self.owner_close_cursor){if !owner.terminal_is_empty(){let demand=owner.retirement_demands(grant.maximum_copy_bytes)?;if !registry::fits(grant,demand){return Ok(PluginLifecycleStep::Progress(Default::default()))}return owner.close_step_context(grant,cx).map(|step|match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),other=>other});}}
         let d=self.retirement_demands(grant.maximum_copy_bytes)?;

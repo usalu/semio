@@ -67,7 +67,7 @@ impl<T:Copy+Send+'static> RetirementCursor for RecordPlanningRetirement<T> {
         if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}
         if !self.0.is_empty(){self.0.clear();return RetirementStep::Advanced;}
         let bytes=self.0.capacity()*size_of::<T>();
-        if bytes==0{return RetirementStep::Complete;}
+        if bytes==0{return RetirementStep::Complete(0);}
         if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted;}
         drop(std::mem::take(&mut*self.0));RetirementStep::Bytes(bytes)
     }

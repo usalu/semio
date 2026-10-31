@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "linker": "hoisted",
+  "recipeVersion": 7,
+  "maximumPathUnits": 256,
+  "package": "@babel/plugin-bugfix-safari-id-destructuring-collision-in-function-expression",
+  "resolution": "7.29.7+497cea1c68b2b111",
+  "generation": "j/023faac68681e8bd6e2f",
+  "roots": [
+    {
+      "platform": "darwin",
+      "root": "/Users/ueli/Documents/semio/.cache/b/d/m",
+      "flatUnits": 154,
+      "isolatedUnits": 274
+    },
+    {
+      "platform": "linux",
+      "root": "/home/runner/work/semio/.cache/b/d/m",
+      "flatUnits": 150,
+      "isolatedUnits": 270
+    },
+    {
+      "platform": "win32",
+      "root": "C:/Users/developer/semio/.cache/b/d/m",
+      "flatUnits": 151,
+      "isolatedUnits": 271
+    }
+  ],
+  "bootstrapIncludesRecipe": true
+}

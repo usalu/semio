@@ -24,7 +24,7 @@ impl<T:Send+'static> FactoryBoxedPublication<T>{
 impl<T:Send+'static> RetireOwned for OriginalBoxSlot<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(self)}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}fn controlled_retirement_supported()->bool{true}}
 impl<T:Send+'static> RetirementCursor for OriginalBoxSlot<T>{
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{release_bytes:if self.allocation.is_some(){size_of::<T>()}else{0},depth:usize::from(self.allocation.is_some()),..Default::default()})}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}let bytes=size_of::<T>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}drop(self.allocation.take());RetirementStep::Bytes(bytes)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0);}let bytes=size_of::<T>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted;}drop(self.allocation.take());RetirementStep::Bytes(bytes)}
  fn terminal_is_empty(&self)->bool{self.allocation.is_none()}
  fn next_close_byte_demand(&self)->Option<usize>{Some(if self.terminal_is_empty(){0}else{size_of::<T>()})}
  fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
@@ -37,19 +37,19 @@ impl<T:Send+'static> Cursor<T>{
   if self.boxed.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()});}
   if self.vacant.is_some(){return Ok(RetirementDemand{release_bytes:size_of::<T>(),depth:1,..Default::default()});}
   if let Some(original)=self.original.as_ref(){return Ok(RetirementDemand{capacity_bytes:self.factory.as_ref().unwrap().retirement_birth_bytes(original),depth:2,..Default::default()});}
-  let mut demand=if let Some(unique)=self.unique.as_ref(){crate::factory_ticket_demands(unique,body)?}else if self.factory.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Arc<dyn FactoryRetirement>>(),depth:1,..Default::default()});}else if let Some(closing)=self.closing.as_ref(){closing.demands(body)?}else{return Ok(Default::default());};
+  let mut demand=if let Some(unique)=self.unique.as_ref(){crate::factory_ticket_demands(unique,body)?}else if self.factory.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Arc<dyn FactoryRetirement>>(),depth:1,..Default::default()});}else if let Some(closing)=self.closing.as_ref(){if closing.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()})}else{closing.demands(body)?}}else{return Ok(Default::default());};
   demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"boxed mutation retirement depth overflow"))?;Ok(demand)
  }
- fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+ fn step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<RetainedCloneProgress>{let mut work=0;let result=(||{
   let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Default::default());}
-  if self.boxed.is_some(){let pointer=Box::into_raw(self.boxed.take().unwrap());*self.original=Some(unsafe{pointer.read()});*self.vacant=Some(OriginalBoxSlot{allocation:ManuallyDrop::new(Some(unsafe{Box::from_raw(pointer.cast())}))});return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()});}
-  if let Some(vacant)=self.vacant.as_mut(){drop(vacant.allocation.take());drop(self.vacant.take());return Ok(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()});}
+  if self.boxed.is_some(){work=1;let pointer=Box::into_raw(self.boxed.take().unwrap());*self.original=Some(unsafe{pointer.read()});*self.vacant=Some(OriginalBoxSlot{allocation:ManuallyDrop::new(Some(unsafe{Box::from_raw(pointer.cast())}))});return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()});}
+  if let Some(vacant)=self.vacant.as_mut(){work=1;drop(vacant.allocation.take());drop(self.vacant.take());return Ok(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()});}
   let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-  if let Some(original)=self.original.take(){return match self.factory.as_ref().unwrap().retire_owned(original,child){Ok((owner,progress))=>{*self.unique=Some(owner);if !progress.fits(child)||progress.retained_capacity_bytes!=demand.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"boxed payload issuer changed its admitted receipt"));}Ok(progress)},Err((error,original))=>{*self.original=Some(original);Err(error)}};}
-  if self.unique.is_some(){return crate::close_factory_ticket(&mut self.unique,child).map(|step|step.progress());}
-  if self.factory.is_some(){let factory:Arc<dyn FactoryRetirement>=self.factory.take().unwrap();*self.closing=Some(FactoryAuthority::new(factory));return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()});}
-  if let Some(closing)=self.closing.as_mut(){let step=closing.step(child)?;if closing.terminal_is_empty(){drop(self.closing.take());}return Ok(step.progress());}Ok(Default::default())
- }
+  if let Some(original)=self.original.take(){let turn=self.factory.as_ref().unwrap().retire_owned(original,child);work=turn.work;return match turn.result{Ok((owner,progress))=>{*self.unique=Some(owner);if !progress.fits(child)||progress.retained_capacity_bytes!=demand.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"boxed payload issuer changed its admitted receipt").with_retained_progress(progress));}Ok(progress)},Err((error,original))=>{*self.original=Some(original);Err(error)}};}
+  if self.unique.is_some(){let turn=crate::close_factory_ticket(&mut self.unique,child);work=turn.work;return turn.result.map(|step|step.progress());}
+  if self.factory.is_some(){let factory:Arc<dyn FactoryRetirement>=self.factory.take().unwrap();*self.closing=Some(FactoryAuthority::new(factory));work=1;return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()});}
+  if let Some(closing)=self.closing.as_mut(){if closing.terminal_is_empty(){self.closing.take();work=1;return Ok(RetainedCloneProgress{copied_items:1,..Default::default()})}let turn=closing.step(child);work=turn.work;return turn.result.map(|step|step.progress())}Ok(Default::default())
+ })();crate::RetainedWorkOutcome{result,work}}
 }
 impl<T:Send+'static> RetireOwned for FactoryBoxedValue<T>{
  fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor{boxed:ManuallyDrop::new(Some(self.original)),vacant:ManuallyDrop::new(None),original:ManuallyDrop::new(None),factory:ManuallyDrop::new(Some(self.factory)),unique:ManuallyDrop::new(None),closing:ManuallyDrop::new(None)})}
@@ -58,7 +58,7 @@ impl<T:Send+'static> RetireOwned for FactoryBoxedValue<T>{
 }
 impl<T:Send+'static> RetirementCursor for Cursor<T>{
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.demands(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}match self.step(grant){Ok(progress)=>RetirementStep::Progress(progress),Err(error)=>RetirementStep::Failure(error)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0);}let turn=self.step(grant);match turn.result{Ok(progress)=>RetirementStep::Progress(progress,turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
  fn terminal_is_empty(&self)->bool{self.boxed.is_none()&&self.vacant.is_none()&&self.original.is_none()&&self.factory.is_none()&&self.unique.is_none()&&self.closing.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
  fn next_close_byte_demand(&self)->Option<usize>{self.demands(0).ok().map(|demand|demand.release_bytes)}

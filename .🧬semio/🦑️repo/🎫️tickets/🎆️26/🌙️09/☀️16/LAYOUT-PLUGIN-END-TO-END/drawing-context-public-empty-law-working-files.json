@@ -1,0 +1,29 @@
+{
+  "sourceOnly": true,
+  "runtimeAttempts": 0,
+  "samePackage": "semio-framework-job-context",
+  "names": [
+    "real_empty_outcome_and_payload_slots_keep_final_metadata_work_independent"
+  ],
+  "bodyAssertionsUnchanged": true,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🎟️work/🧪️tests/🦀️.rs",
+      "beforeSha256": "ba0b474353488be141270732ed4447cfba11996fc0de544da862043235d0443c",
+      "sha256": "a4de0a49d80e9cdd8529e8378a46af8d50295c8e4817fc280ff8e4f56846621c",
+      "bytes": 1827
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🦀️.rs",
+      "beforeSha256": "754b3f5c5fc03d088775a30eb17c3dc635f033ff20e195b17020e26bbdc12cfc",
+      "sha256": "bc85e2a4c08c2b5995b50c34d88f89370e6c78684d75914937760824df092dd9",
+      "bytes": 8843
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/Cargo.toml",
+      "beforeSha256": "84d4a4c97293ddee4b9b36abab1c941eb06318f7fb5f3e8f92710156b4da394e",
+      "sha256": "a31b19078aaacb072e814a86bc110db0cbdda596d7b1b19f95086d9a2eec73ad",
+      "bytes": 2387
+    }
+  ]
+}

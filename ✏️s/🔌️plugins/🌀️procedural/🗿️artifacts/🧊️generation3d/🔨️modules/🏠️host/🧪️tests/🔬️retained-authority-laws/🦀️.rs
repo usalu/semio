@@ -171,7 +171,7 @@ fn step_initializer(authority: &mut Generation3dStoreInitializationAuthority, fu
 #[test]
 fn insufficient_fuel_and_expired_deadline_yield_before_initializer_progress() {
     use semio_framework_plugin::ArtifactStoreInitializationAuthority;
-    let _serial = semio_s_artifact_procedural_3d_testkit::publication_authority::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let operation = semio_framework_job::OperationId(u64::MAX - 301);
     let generation = semio_framework_job::Generation(301);
     let mut authority = initializer(operation, generation);
@@ -187,7 +187,7 @@ fn insufficient_fuel_and_expired_deadline_yield_before_initializer_progress() {
 #[test]
 fn cancelled_and_stale_aba_initializers_retire_to_terminal_empty() {
     use semio_framework_plugin::ArtifactStoreInitializationAuthority;
-    let _serial = semio_s_artifact_procedural_3d_testkit::publication_authority::lock();
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let cancelled_operation = semio_framework_job::OperationId(u64::MAX - 302);
     let cancelled_generation = semio_framework_job::Generation(302);
     let mut cancelled = initializer(cancelled_operation, cancelled_generation);

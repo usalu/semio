@@ -86,7 +86,7 @@ import * as External14 from "../../../🚚️distribution/🟦️.ts";
 import * as External15 from "@semio-tech/framework-os";
 
 export type TestSource = { readonly directory: string; readonly url: string };
-/** 🧰️ One namespace bag, typed by an object literal rather than `Object.assign`: past three sources
+/** 📛️ One namespace bag, typed by an object literal rather than `Object.assign`: past three sources
  * `Object.assign` falls back to its `...sources: any[]` overload and the whole bag degrades to `any`,
  * which silently untyped every case below. `node:url` is spread BEFORE `node:path` because both export
  * `resolve`, and every call site here means the variadic path one, not `url.resolve(from, to)`.
@@ -140,11 +140,12 @@ export function createTestKit(vitest: NonNullable<ImportMeta["vitest"]>, depende
   /** 🛡️ A guest module whose `reactor` answers the retained original-turn protocol with zero spend; its default `poll` answers what the case supplies through `globalThis.__bridgeNext`, and a case may replace the poll body (it sees `events`, `grant` and `receipt`), add imports before the module (`prelude`) and members after the protocol (`extra`). */
   const retainedGuestSource = (options: { readonly prelude?: string; readonly poll?: string; readonly extra?: string } = {}): string => `${options.prelude ?? ""}
 const zero = { copiedItems: 0n, copiedBytes: 0n, retainedCapacityBytes: 0n, releasedBytes: 0n };
-const receipt = (retained) => ({ input: retained, spent: zero });
+const call = (retained) => ({ input: retained, spent: zero, workUnitsSpent: 0n });
+const receipt = (retained) => ({ ...call(retained), remaining: retained.grant, remainingFuel: retained.work.fuel });
 export const reactor = {
   channelVersion: async () => ${APP_CHANNEL_VERSION},
-  admitActorContext: async (retained) => ({ ...receipt(retained), ready: true, blocked: false, complete: false, refusal: undefined }),
-  closeActorContext: async (retained) => ({ ...receipt(retained), ready: true, blocked: false, complete: true, refusal: undefined }),
+  admitActorContext: async (retained) => ({ ...call(retained), ready: true, blocked: false, complete: false, refusal: undefined }),
+  closeActorContext: async (retained) => ({ ...call(retained), ready: true, blocked: false, complete: true, refusal: undefined }),
   poll: async (events, grant) => { ${options.poll ?? "globalThis.__bridgePolled?.(events, grant); return { retainedReceipt: receipt(grant.retained), fuelUsed: 0n, uiPatches: [], status: { tag: \"idle\" }, commandIngress: { kind: 0 }, ...globalThis.__bridgeNext };"} },
   ${options.extra ?? ""}
 };

@@ -23,7 +23,7 @@ pub struct RegionMesh {
     pub node_ids: Vec<String>,
 }
 
-/// 🗺️ Triangulates every `FemRegion` in `doc` (same `semio_s_fem_mesh::triangulate` call as
+/// 📄️ Triangulates every `FemRegion` in `doc` (same `semio_s_fem_mesh::triangulate` call as
 /// `build_nodes_and_elements`, so triangle indices/ids line up deterministically with solved results)
 /// and returns just the geometry — cheap enough to call on every render.
 pub fn fem2d_mesh_preview(doc: &Fem2dSnapshot) -> Result<Vec<RegionMesh>, Fem2dError> {
@@ -37,7 +37,7 @@ pub fn fem2d_mesh_preview(doc: &Fem2dSnapshot) -> Result<Vec<RegionMesh>, Fem2dE
             .iter()
             .enumerate()
             .map(|(point_index, p)| match doc.nodes.iter().find(|n| (n.x - p[0]).abs() < 1e-9 && (n.y - p[1]).abs() < 1e-9) {
-                Some(n) => n.id.clone(),
+                Some(n) => n.id.as_str().to_owned(),
                 None => format!("{}_m{}", region.id, point_index),
             })
             .collect();

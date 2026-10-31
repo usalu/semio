@@ -59,3 +59,5 @@ fn encode_fields(encoding:SnapshotEncoding,text_preamble:&str,binary_token:&str,
  })?
  },|prefix|{let bytes=std::mem::take(&mut prefix.bytes);match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(bytes),SnapshotEncoding::Text=>store::io::IoPayload::Text(String::from_utf8(bytes).expect("native output was validated as UTF-8"))}})
 }
+/// 🧷️ Emits a record-pack body as the binary field section of one measured native payload; the body is built under the writer's own allocation control, so its bytes are priced and cancellable before they are copied.
+pub fn record_binary<S:crate::SemioRecordPack>(snapshot:&S,writer:&mut Writer<'_,'_,'_>)->Result<(),ValueError>{writer.entities(1)?;let body=snapshot.record_binary(&mut *writer.control)?;writer.bytes(&body)}

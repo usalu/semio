@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "maximumTextBytes": 256,
+  "phases": [
+    "source",
+    "backing",
+    "text",
+    "shared",
+    "settlement",
+    "complete"
+  ],
+  "maximumTurns": 1000,
+  "stock": {
+    "items": 1000,
+    "copyBytes": 4096,
+    "capacityBytes": 65536,
+    "releaseBytes": 262144,
+    "depth": 64,
+    "work": 1000
+  },
+  "quantumItems": 1,
+  "undergrantHeapBytes": 0,
+  "sharedNullWork": 1,
+  "sameSourcePointer": true,
+  "scope": "finite-physical-actor-domain-stock-not-host-source-proof",
+  "nullFrontiers": [
+    "backing",
+    "shared"
+  ],
+  "cancellationCuts": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "resumeAfterPaidClose": false
+}

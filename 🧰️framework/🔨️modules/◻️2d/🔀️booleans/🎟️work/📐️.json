@@ -1,0 +1,30 @@
+{
+  "values": [
+    8,
+    4,
+    2,
+    6,
+    12,
+    10,
+    14
+  ],
+  "sorted": [
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    14
+  ],
+  "stock": {
+    "items": 4194304,
+    "copy": 268435456,
+    "capacity": 33554432,
+    "release": 67108864,
+    "depth": 256
+  },
+  "maxTurns": 262144,
+  "implicitEndpoints": true,
+  "finalPublicationSemanticWork": 0
+}

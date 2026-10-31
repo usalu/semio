@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Typed Equality Actual Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "stock",
+    "cases",
+    "nullWork",
+    "deniedWork",
+    "cachedWork",
+    "maximumTurns",
+    "laws",
+    "compoundTraversal"
+  ],
+  "properties": {
+    "schema": {
+      "const": "value.typed-equality.actual/v1"
+    },
+    "stock": {
+      "const": {
+        "items": 4096,
+        "copy": 16777216,
+        "capacity": 16777216,
+        "release": 16777216,
+        "depth": 128
+      }
+    },
+    "cases": {
+      "const": [
+        {
+          "left": [
+            "Grüße",
+            "alpha"
+          ],
+          "right": [
+            "Grüße",
+            "alpha"
+          ]
+        },
+        {
+          "left": [
+            "same",
+            "left"
+          ],
+          "right": [
+            "same",
+            "right"
+          ]
+        }
+      ]
+    },
+    "nullWork": {
+      "const": 1
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "maximumTurns": {
+      "const": 10000
+    },
+    "laws": {
+      "const": {
+        "actualFieldNull": true,
+        "sameBankRetryAndClose": true,
+        "originalPointers": true,
+        "serdeEqualityOracle": true,
+        "exactHeap": true,
+        "cachedZero": true
+      }
+    },
+    "compoundTraversal": {
+      "const": {
+        "zeroArrayLength": 4097,
+        "reserveCloseItems": 1,
+        "wholeInlineCollapse": false,
+        "callerStockRenewed": false
+      }
+    }
+  }
+}

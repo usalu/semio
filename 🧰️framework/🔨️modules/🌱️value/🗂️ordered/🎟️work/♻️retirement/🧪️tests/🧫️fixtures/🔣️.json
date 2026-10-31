@@ -1,0 +1,31 @@
+{
+  "rows": [
+    [
+      "alpha",
+      17
+    ],
+    [
+      "beta",
+      42
+    ]
+  ],
+  "expectedValues": [
+    17,
+    42
+  ],
+  "maximumTurns": 1048576,
+  "maximumCpuWork": 1048576,
+  "stock": {
+    "maximumItems": 1048576,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 33554432,
+    "maximumDepth": 256
+  },
+  "expected": {
+    "deniedCpu": 0,
+    "paidEventCpu": 1,
+    "cachedCpu": 0,
+    "keyHeaderPhysicalCopyBytes": 0
+  }
+}

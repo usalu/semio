@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "headerCopyBytes",
+    "headerCapacityBytes",
+    "headerWork",
+    "deniedWork",
+    "cachedWork",
+    "logicalMoveCopyBytes",
+    "logicalMoveWork",
+    "nullAllocationWork",
+    "nullAllocationCapacityBytes",
+    "physicalAxes",
+    "source",
+    "workUnits"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "headerCopyBytes": {
+      "const": 0
+    },
+    "headerCapacityBytes": {
+      "const": 0
+    },
+    "headerWork": {
+      "const": 1
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "logicalMoveCopyBytes": {
+      "const": 0
+    },
+    "logicalMoveWork": {
+      "const": 1
+    },
+    "nullAllocationWork": {
+      "const": 1
+    },
+    "nullAllocationCapacityBytes": {
+      "const": 0
+    },
+    "physicalAxes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "source": {
+      "const": {
+        "items": 1,
+        "copyBytes": 4096,
+        "capacityBytes": 65536,
+        "releaseBytes": 65536,
+        "depth": 128
+      }
+    },
+    "workUnits": {
+      "const": 100000
+    }
+  }
+}

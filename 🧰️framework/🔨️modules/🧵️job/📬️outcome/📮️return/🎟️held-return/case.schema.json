@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "currentWork",
+    "heldWitnesses",
+    "witnessWork",
+    "witnessItems",
+    "witnessCopyBytes",
+    "witnessCapacityBytes",
+    "witnessReleaseBytes",
+    "maximumAdmissionTurns",
+    "maximumCloseTurns",
+    "source"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "const": [
+        "pageReservation",
+        "bytesReservation"
+      ]
+    },
+    "currentWork": {
+      "const": 0
+    },
+    "heldWitnesses": {
+      "const": 2
+    },
+    "witnessWork": {
+      "const": 1
+    },
+    "witnessItems": {
+      "const": 1
+    },
+    "witnessCopyBytes": {
+      "const": 0
+    },
+    "witnessCapacityBytes": {
+      "const": 0
+    },
+    "witnessReleaseBytes": {
+      "const": 0
+    },
+    "maximumAdmissionTurns": {
+      "const": 8
+    },
+    "maximumCloseTurns": {
+      "const": 32
+    },
+    "source": {
+      "const": {
+        "items": 4096,
+        "copyBytes": 1048576,
+        "capacityBytes": 1048576,
+        "releaseBytes": 1048576,
+        "depth": 64,
+        "fuel": 16384,
+        "deadlineUs": 1000000
+      }
+    }
+  }
+}

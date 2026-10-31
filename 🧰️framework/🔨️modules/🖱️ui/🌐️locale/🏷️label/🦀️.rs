@@ -131,6 +131,11 @@ impl LocalizedLabel {
         &self.cells[terminology.index()][locale.index()]
     }
 
+    /// 🕳️ Whether any (terminology x locale) cell is blank — a label with a missing translation is not a label.
+    pub fn has_blank_cell(&self) -> bool {
+        self.cells.iter().flatten().any(|cell| cell.trim().is_empty())
+    }
+
     /// ♻️ Every cell as an owned, mutable string — the retained close cursor pages an oversized
     /// history label cell by cell, exactly as it pages a plain retained `String` field.
     pub fn texts_mut(&mut self) -> impl Iterator<Item = &mut String> {

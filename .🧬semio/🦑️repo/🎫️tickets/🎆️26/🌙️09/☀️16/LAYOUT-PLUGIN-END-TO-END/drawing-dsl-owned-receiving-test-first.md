@@ -1,0 +1,9 @@
+# DSL Owned Receiving Work Contract
+
+The new closed neutral contract and finite stock at schema/receiving/owned/work precede defining changes. Existing DSL record/typed/intrinsic law families, cancellation cuts, field identities, loop bounds and independent outputs remain mandatory. The profile is explicit new test authority, not a claim that previous demand-derived grants were funded. No currency is inferred from item quantum or replenished.
+
+Required canonical ports are mandatory full RetainedWorkOutcome normal/take/close and a typed Value-or-Native failure preserving all OriginalReceivingPrimary causes. Existing scalar payload creation has truthful scalar-width copies; existing owner and fixed control moves have copy0. Each actual child outcome propagates independent CPU before its Result. Pure headers cannot call arbitrary Default; real raw cursor backing is retained before initialization and closed generically only through actual child closure then static Layout deallocation with no C::Drop.
+
+Std scalar/vector/option/box/array/mapped/derived record owners and actual model/test callers are one defining closure. Array initialization and publication cannot execute N from_fn/map callbacks in one unit. Mapped variant construction must be an actual defining funded operation rather than an opaque fn(T)->U priced1. The native intrinsic producer must retain source/admission/raw header/output before any refusal and forward every source/native work outcome.
+
+Only DSL-specific paths may change while NativeOwned8 and selected lower source remain held. Shared Value, retirement, native-storage, native-owned, Value derive, framework/root manifests and locks remain immutable in this lane. Any reached NativeSnapshotDecodeOwner CPU port must be coordinated with Root rather than replaced by receipt/entry/default inference. No owning compile/pass is claimed by schema authorship.

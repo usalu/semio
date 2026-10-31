@@ -55,11 +55,11 @@ fn element_field_intent_follows_committed_vectors() {
         } else {
             assert!(!outcome.messages().is_empty(), "{id} has a refusal");
         }
-        let (mut replayed, _) = vcs::apply_mutation(&before, &operation).expect("central applier");
+        let (mut replayed, _) = semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&before, &operation).expect("central applier");
         assert_eq!(replayed, after, "{id} projection");
         if diff.is_some() {
             for inverse in operation.inverse(&before).expect("inverse element field intent").iter().rev() {
-                replayed = vcs::apply_mutation(&replayed, inverse).expect("central inverse").0;
+                replayed = semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&replayed, inverse).expect("central inverse").0;
             }
             assert_eq!(replayed, before, "{id} exact inverse");
         }

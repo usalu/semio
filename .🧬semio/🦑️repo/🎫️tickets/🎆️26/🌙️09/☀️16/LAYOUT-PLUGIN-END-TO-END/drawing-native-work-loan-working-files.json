@@ -1,0 +1,47 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+    "bytes": 18140,
+    "sha256": "55c01688869e6a6e123b97f6caaa7d0c0df050e05928b81cb0811660e4411770"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🔭️observer/🦀️.rs",
+    "bytes": 2521,
+    "sha256": "43f1d82d8e147fad05e93d216f6e95ca239cb519116843bb1dd7247827751646"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️child/🦀️.rs",
+    "bytes": 2875,
+    "sha256": "191967f9c040bb1142a2c655d5d85196127e9fae8ae004f98e0d0532a533696b"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🦀️.rs",
+    "bytes": 12421,
+    "sha256": "cb24a473f63533d4b75e9b74d576119354abf9e836ac881b2b856d4d7509afc1"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🦀️.rs",
+    "bytes": 7601,
+    "sha256": "b69f468613df2f83e8c1520de062ad745e889b81c13d117da4aad627c7090bde"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🎟️work/🦀️.rs",
+    "bytes": 4620,
+    "sha256": "c6384a21e4f515ac841758eea27252e3f938d44d68208254a0e8a624286d9ce4"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🎟️work/🧪️tests/🦀️.rs",
+    "bytes": 2243,
+    "sha256": "f78c3f8b9be9146b1716b489f1657649a1c0212157838aa0b3fa66d729a02045"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🎟️work/📐️.json",
+    "bytes": 492,
+    "sha256": "17d75cb4c965cd2304157563d3fa64305287c9f4d896b0c9d16b27418838aed8"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🎟️work/🔣️.json",
+    "bytes": 1196,
+    "sha256": "f7b36f5491ed50c9c25a571af307408066aa490b79c371d1b4e11742fd1ed554"
+  }
+]

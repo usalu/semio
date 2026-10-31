@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "cases": [
+    { "name": "Current WGPU Mirror", "ready": "layout", "canvas": true, "dock": "dock.tab.0.blueprint-1", "selected": true, "pages": ["layout-document.page.page-1", "layout-document.page.page-2"], "frames": ["frame-1", "frame-text-1"], "owner": "blueprint-1", "artifactPanels": 1 },
+    { "name": "Panel Closed", "ready": "layout", "canvas": true, "dock": "dock.tab..blueprint-2", "selected": true, "pages": [], "frames": [], "owner": "blueprint-2", "artifactPanels": 0 },
+    { "name": "No Selected Blueprint", "ready": "layout", "canvas": true, "dock": "dock.tab.0.blueprint-1", "selected": false, "pages": [], "frames": [], "owner": null, "artifactPanels": 0 }
+  ]
+}

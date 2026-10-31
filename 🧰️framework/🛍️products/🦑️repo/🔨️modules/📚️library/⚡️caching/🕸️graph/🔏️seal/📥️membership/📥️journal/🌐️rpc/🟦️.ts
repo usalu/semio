@@ -3,7 +3,7 @@ import { lstatSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join } from "node:path";
 import {nxAuthorizerReceiptHoldsV1} from "../../../../../🚀️bootstrap/🛠️tools/🔏️authorizers/📤️receipt/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
-import neutralSchema from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json";
+import neutralSchema from "../../../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/📥️journal/🧬️schema/🔣️.json"with{type:"json"};
 import { validateJsonSchemaSubset } from "../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type { FilesystemJournalScopeV1, FilesystemJournalWitnessV1 } from "@semio-tech/framework-filesystem/observation/journal";
 

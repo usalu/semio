@@ -1,0 +1,3 @@
+# History Whole Owner Runtime 3
+
+Terminal outer exit 1: 10 passed, 4 failed, none ignored/filtered. The new three-cause owned native fault law passed. All four old caller fixtures reached the genuine new producer and correctly refused absent original native work authority, retaining UnsupportedOwner with zero progress. The successor installs one explicit fixture-owned finite native work wallet with quantum1 across all cases of each owner test; only actual native counter deltas settle this wallet. Original physical grants, source vectors and guards are unchanged. This is a lower native work test, not a whole callback/SourceHost CPU proof. Log SHA256: 682392155e5c2c2dc456d57b391b3214f8913434f940f2206cd14ca1f0b6e3f7.

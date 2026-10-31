@@ -1,0 +1,61 @@
+{
+  "state": "real-std-only-production-owner-authored-uncompiled",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📶️sort/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 895,
+      "sha256": "6e6e495e43cb9010e980f6b024795463e4c6fd1c5884b6cf0708b151c0d0894e",
+      "utf16PathUnits": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📶️sort/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 102,
+      "sha256": "9f53d9fe061470681868c154faa281955bb916fca577f847fc4184df338a425b",
+      "utf16PathUnits": 104
+    },
+    {
+      "path": "🧰️framework/Cargo.toml",
+      "bytes": 125858,
+      "sha256": "014bee0bf6a458f9527aafd525a68b72fc382f96ee3487f22663e7683a5307de",
+      "utf16PathUnits": 51
+    },
+    {
+      "path": "📋️build-owners.json",
+      "bytes": 1674956,
+      "sha256": "21a99f6273fca5a3a5e411b376b20a04c869560410d7c3743906d7cae05e66f7",
+      "utf16PathUnits": 48
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 3123,
+      "sha256": "2d3d3b14825051c26f3b4933cb0976eca134e7209c6e2a2347a605881877b2f8",
+      "utf16PathUnits": 91
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 3039,
+      "sha256": "c74ce2974d6cbbae03cf549819a94d57421c6897b28e147183bc8952a0960b3f",
+      "utf16PathUnits": 87
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 2003,
+      "sha256": "4358c828df729067bba75e00ac82a14159f34746465763913dce4fb306eb4537",
+      "utf16PathUnits": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 1987,
+      "sha256": "98a6c1ba8c89c6402c0169f2ea0ac8a811f5c1ca1a65c4ed7c3730c3bda93e33",
+      "utf16PathUnits": 103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🦀️.rs",
+      "bytes": 2566,
+      "sha256": "779dc465d663cd97421d8de5fa41e0fef711d3c15fb29e8d748390595570c1de",
+      "utf16PathUnits": 84
+    }
+  ],
+  "existingOwningLaws": 2,
+  "runtimeDependencies": []
+}

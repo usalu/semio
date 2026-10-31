@@ -3,8 +3,8 @@ use super::{BorrowedProjectedPackCursor,BorrowedProjectedPackFailure};
 use semio_framework_dsl_record::native_encoding::FieldProjectionSource;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
-use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedCloneSourceTake};
-use std::mem::ManuallyDrop;
+use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission,RetainedCloneSourceTake};
+use std::mem::{ManuallyDrop,size_of};
 use semio_framework_value_persistent::list::PagedList;
 type WirePages=PagedList<u8,{isize::MAX as usize}>;
 type WireBytes=semio_framework_value::paged::PagedBytes<{isize::MAX as usize}>;
@@ -20,17 +20,18 @@ pub struct OwnedProjectedPackWireReady<T:RetireOwned>{pub source:T,pub wire:Wire
 pub struct OwnedProjectedPackWireStep<T:RetireOwned>{pub ready:Option<OwnedProjectedPackWireReady<T>>,pub progress:RetainedCloneProgress}
 
 /// 🧳️ Native source custody, symbols and partial output remain owned through every denial and cancellation.
-pub struct OwnedProjectedPackWireCursor<T:FieldProjectionSource+RetireOwned+Sync>{original:ManuallyDrop<Option<T>>,source:ManuallyDrop<Option<RetainedCloneSource<T>>>,cursor:ManuallyDrop<Option<BorrowedProjectedPackCursor>>,wire:ManuallyDrop<WirePages>,original_close:ManuallyDrop<Option<ControlledRetirement<T>>>,scratch:[u8;64],pending_length:usize,pending_offset:usize,field_id:u16,length:usize,written:usize,phase:u8,closing:bool}
+pub struct OwnedProjectedPackWireCursor<T:FieldProjectionSource+RetireOwned+Sync>{original:ManuallyDrop<Option<T>>,admission:ManuallyDrop<Option<RetainedCloneSourceAdmission<T,T>>>,source:ManuallyDrop<Option<RetainedCloneSource<T>>>,cursor:ManuallyDrop<Option<BorrowedProjectedPackCursor>>,wire:ManuallyDrop<WirePages>,original_close:ManuallyDrop<Option<ControlledRetirement<T>>>,scratch:[u8;64],pending_length:usize,pending_offset:usize,field_id:u16,length:usize,written:usize,phase:u8,closing:bool}
 impl<T:FieldProjectionSource+RetireOwned+Sync> OwnedProjectedPackWireCursor<T>{
  /// 📥️ Moves only the already-owned original header into inline custody.
- pub fn new(original:T,field_id:u16)->Self{Self{original:ManuallyDrop::new(Some(original)),source:ManuallyDrop::new(None),cursor:ManuallyDrop::new(None),wire:ManuallyDrop::new(WirePages::empty()),original_close:ManuallyDrop::new(None),scratch:[0;64],pending_length:0,pending_offset:0,field_id,length:0,written:0,phase:0,closing:false}}
- pub fn original(&self)->Option<&T>{self.original.as_ref().or_else(||self.source.as_ref().and_then(|source|source.try_borrow().ok().map(|loan|loan.get())))}
+ pub fn new(original:T,field_id:u16)->Self{Self{original:ManuallyDrop::new(Some(original)),admission:ManuallyDrop::new(None),source:ManuallyDrop::new(None),cursor:ManuallyDrop::new(None),wire:ManuallyDrop::new(WirePages::empty()),original_close:ManuallyDrop::new(None),scratch:[0;64],pending_length:0,pending_offset:0,field_id,length:0,written:0,phase:0,closing:false}}
+ pub fn original(&self)->Option<&T>{self.original.as_ref().or_else(||self.admission.as_ref().and_then(RetainedCloneSourceAdmission::original_authority)).or_else(||self.source.as_ref().and_then(|source|source.try_borrow().ok().map(|loan|loan.get())))}
  pub fn measured_byte_length(&self)->usize{self.length}
  pub fn output_bytes_written(&self)->usize{self.written}
  pub fn phase(&self)->&'static str{if self.closing{"closing"}else{match self.phase{0=>"admittingSource",1=>"measure",2=>"measureClose",3=>"allocate",4=>"initialize",5=>"admittingEncoder",6=>"encode",7=>"encodeClose",8=>"returnSource",9=>"handoff",_=>"complete"}}}
  pub fn begin_close(&mut self){self.closing=true;}
- pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.source.is_none()&&self.cursor.is_none()&&self.wire.terminal_is_empty()&&self.original_close.is_none()}
+ pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.admission.is_none()&&self.source.is_none()&&self.cursor.is_none()&&self.wire.terminal_is_empty()&&self.original_close.is_none()}
  fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
+  if let Some(admission)=self.admission.as_ref(){return admission.next_return_demand()}
   if let Some(cursor)=self.cursor.as_ref(){return if cursor.terminal_is_empty(){Ok(header())}else{cursor.retirement_demands()}}
   if let Some(source)=self.source.as_ref(){return if source.terminal_is_empty(){Ok(header())}else{source.next_close_demand(body)}}
   if let Some(owner)=self.original_close.as_ref(){return if owner.terminal_is_empty(){Ok(header())}else{owner.selected_demand(body)}}
@@ -41,7 +42,7 @@ impl<T:FieldProjectionSource+RetireOwned+Sync> OwnedProjectedPackWireCursor<T>{
   if self.closing{return self.close_demand(body)}
   if matches!(self.phase,6|7)&&self.pending_offset<self.pending_length{return Ok(RetirementDemand{copy_bytes:usize::from(body!=0),depth:1,..Default::default()})}
   Ok(match self.phase{
-   0=>{let demand=RetainedCloneSource::<T>::owned_constructor_demand::<()>();RetirementDemand{capacity_bytes:demand.capacity_bytes,depth:demand.depth,..Default::default()}},
+   0=>match self.admission.as_ref(){Some(admission) if admission.phase()!="ready"=>admission.next_demand()?,_=>header()},
    1|6=>{let cursor=self.cursor.as_ref().ok_or_else(||invalid("original Pack codec is absent"))?;RetirementDemand{copy_bytes:cursor.next_minimum_copy_bytes(),capacity_bytes:cursor.next_capacity_byte_demand()?,depth:cursor.next_advance_depth_demand()?,..Default::default()}},
    2|7=>self.cursor.as_ref().map_or(Ok(header()),|cursor|if cursor.terminal_is_empty(){Ok(header())}else{cursor.retirement_demands()})?,
    3=>RetirementDemand{capacity_bytes:self.wire.next_exact_capacity_allocation_bytes(self.length).map_err(page_error)?.unwrap_or(0),depth:self.wire.next_reserve_depth_demand().map_err(page_error)?.max(1),..Default::default()},
@@ -55,7 +56,11 @@ impl<T:FieldProjectionSource+RetireOwned+Sync> OwnedProjectedPackWireCursor<T>{
   let none=|progress|OwnedProjectedPackWireStep{ready:None,progress};let demand=self.next_demand(grant.maximum_copy_bytes)?;if !permits(grant,demand){return Ok(none(Default::default()))}if self.closing{return self.close_one(grant).map(none)}
   if matches!(self.phase,6|7)&&self.pending_offset<self.pending_length{let count=(self.pending_length-self.pending_offset).min(grant.maximum_copy_bytes);for index in self.pending_offset..self.pending_offset+count{self.wire.push_reserved(self.scratch[index]).map_err(|_|invalid("original Pack output lost its paid page"))?;}self.pending_offset+=count;return Ok(none(RetainedCloneProgress{copied_bytes:count,..item()}))}
   match self.phase{
-   0=>{let original=self.original.take().ok_or_else(||invalid("original Pack input is absent"))?;match RetainedCloneSource::admit_owned(original,(),grant){Ok((source,receipt))=>{*self.source=Some(source);*self.cursor=Some(Default::default());self.phase=1;Ok(none(receipt))},Err((error,original,()))=>{*self.original=Some(original);Err(error.into())}}},
+   0=>{
+    if self.admission.is_none(){let original=self.original.take().ok_or_else(||invalid("original Pack input is absent"))?;*self.admission=Some(RetainedCloneSource::<T>::admission_owned(original,()));return Ok(none(item()))}
+    let admission=self.admission.as_mut().ok_or_else(||invalid("original Pack admission is absent"))?;
+    if admission.phase()=="ready"{let turn=admission.take_output(&mut self.source,grant);let step=turn.result?;if admission.terminal_is_empty(){self.admission.take();*self.cursor=Some(Default::default());self.phase=1;}Ok(none(step.progress()))}else{let turn=admission.advance(grant);turn.result.map(|step|none(step.progress())).map_err(Into::into)}
+   },
    1|6=>{
     let source=self.source.as_ref().ok_or_else(||invalid("original Pack source is absent"))?.try_borrow()?;let cursor=self.cursor.as_mut().ok_or_else(||invalid("original Pack codec is absent"))?;
     let result=cursor.advance_intrinsic(source.get(),self.field_id,&mut self.scratch,grant);
@@ -65,7 +70,7 @@ impl<T:FieldProjectionSource+RetireOwned+Sync> OwnedProjectedPackWireCursor<T>{
    3=>{if demand.capacity_bytes==0{self.phase=4;return Ok(none(item()))}let step=self.wire.reserve_exact_capacity_one(self.length,grant.maximum_capacity_bytes).map_err(|error|page_error(error.refusal()).with_retained_progress(RetainedCloneProgress{retained_capacity_bytes:error.allocated_bytes,..Default::default()}))?;Ok(none(RetainedCloneProgress{retained_capacity_bytes:step.allocated_bytes,..item()}))},
    4=>{self.phase=5;Ok(none(item()))},
    5=>{*self.cursor=Some(Default::default());self.phase=6;Ok(none(item()))},
-   8=>{let source=self.source.as_mut().ok_or_else(||invalid("original Pack source return is absent"))?;match source.take_authority(grant)?{RetainedCloneSourceTake::Pending(receipt)=>Ok(none(receipt)),RetainedCloneSourceTake::Ready(original,receipt)=>{assert!(source.terminal_is_empty());self.source.take();*self.original=Some(original);self.phase=9;Ok(none(receipt))}}},
+   8=>{let source=self.source.as_mut().ok_or_else(||invalid("original Pack source return is absent"))?;match source.take_authority(grant).result?{RetainedCloneSourceTake::Pending(receipt)=>Ok(none(receipt)),RetainedCloneSourceTake::Ready(original,receipt)=>{assert!(source.terminal_is_empty());self.source.take();*self.original=Some(original);self.phase=9;Ok(none(receipt))}}},
    9=>{let source=self.original.take().ok_or_else(||invalid("original Pack returned input is absent"))?;let wire=WireBytes::from_retained_bytes(std::mem::replace(&mut*self.wire,WirePages::empty()));self.phase=10;Ok(OwnedProjectedPackWireStep{ready:Some(OwnedProjectedPackWireReady{source,wire}),progress:item()})},
    _=>Ok(none(Default::default())),
   }
@@ -73,8 +78,9 @@ impl<T:FieldProjectionSource+RetireOwned+Sync> OwnedProjectedPackWireCursor<T>{
  /// ✍️ Returns every native codec cause whole while retaining original source and initialized partial bytes for paid close.
  pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<OwnedProjectedPackWireStep<T>,BorrowedProjectedPackFailure>{let result=self.advance_one(grant);if result.is_err(){self.begin_close()}result}
  fn close_one(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,BorrowedProjectedPackFailure>{
+  if let Some(admission)=self.admission.as_mut(){let mut returned=None;let turn=admission.return_inputs(&mut returned,grant);if let Some((original,()))=returned{*self.original=Some(original);}if admission.terminal_is_empty(){self.admission.take();}return turn.result.map(|step|step.progress()).map_err(Into::into)}
   if let Some(cursor)=self.cursor.as_mut(){if cursor.terminal_is_empty(){self.cursor.take();return Ok(item())}return cursor.close(grant).map(|step|step.progress)}
-  if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source.take();return Ok(item())}return source.close_step(grant).map(|step|step.progress()).map_err(Into::into)}
+  if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source.take();return Ok(item())}return source.close_step(grant).result.map(|step|step.progress()).map_err(Into::into)}
   if let Some(owner)=self.original_close.as_mut(){if owner.terminal_is_empty(){self.original_close.take();return Ok(item())}return owner.step(grant).map(|step|step.progress()).map_err(Into::into)}
   if self.original.is_some(){let original=self.original.take().unwrap();match ControlledRetirement::new(original){Ok(owner)=>{*self.original_close=Some(owner);return Ok(item())},Err((error,original))=>{*self.original=Some(original);return Err(error.into())}}}
   if !self.wire.is_empty(){let count=self.wire.len().min(grant.maximum_copy_bytes).min(64);for _ in 0..count{self.wire.pop();}return Ok(RetainedCloneProgress{copied_bytes:count,..item()})}if !self.wire.terminal_is_empty(){let step=self.wire.release_empty_page(grant.maximum_release_bytes).map_err(page_error)?;return Ok(RetainedCloneProgress{released_bytes:step.released_allocation_bytes,..item()})}Ok(Default::default())
@@ -84,10 +90,22 @@ impl<T:FieldProjectionSource+RetireOwned+Sync> OwnedProjectedPackWireCursor<T>{
 }
 impl<T:FieldProjectionSource+RetireOwned+Sync> Drop for OwnedProjectedPackWireCursor<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original Pack source and partial wire require paid terminal close")}}
 
-#[derive(semio_framework_value::RetireOwned)]
-struct PhysicalOwnedPack<T:RetireOwned+Sync>{original:Option<T>,source:Option<RetainedCloneSource<T>>,cursor:Option<BorrowedProjectedPackCursor>,wire:WireBytes,original_close:Option<ControlledRetirement<T>>}
+struct OwnedProjectedPackWireRetirement<T:FieldProjectionSource+RetireOwned+Sync>(ManuallyDrop<OwnedProjectedPackWireCursor<T>>);
+impl<T:FieldProjectionSource+RetireOwned+Sync> semio_framework_value::retirement::RetirementCursor for OwnedProjectedPackWireRetirement<T>{
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.0.close_demand(body)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep as Step;match self.0.close_step(grant){Err(failure)=>Step::Failure(failure.reason,0),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>Step::Complete(0),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Step::Progress(progress,1)}}
+ fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demand(usize::MAX)?.copy_bytes)}
+ fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.0.close_demand(body)?.copy_bytes)}
+ fn allows_admitted_narrow_work(&self)->bool{!self.0.terminal_is_empty()}
+ fn next_birth_bytes(&self,body:usize)->Option<usize>{self.0.close_demand(body).ok().map(|demand|demand.capacity_bytes)}
+ fn next_close_byte_demand(&self)->Option<usize>{self.0.close_demand(usize::MAX).ok().map(|demand|demand.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.close_demand(usize::MAX)?.depth)}
+ fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl<T:FieldProjectionSource+RetireOwned+Sync> Drop for OwnedProjectedPackWireRetirement<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.0.terminal_is_empty(),"original Pack wire cursor abandoned its paid closure");if self.0.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.0)}}}}
 impl<T:FieldProjectionSource+RetireOwned+Sync> RetireOwned for OwnedProjectedPackWireCursor<T>{
- fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let mut owner=ManuallyDrop::new(self);let physical=unsafe{PhysicalOwnedPack{original:ManuallyDrop::take(&mut owner.original),source:ManuallyDrop::take(&mut owner.source),cursor:ManuallyDrop::take(&mut owner.cursor),wire:WireBytes::from_retained_bytes(ManuallyDrop::take(&mut owner.wire)),original_close:ManuallyDrop::take(&mut owner.original_close)}};physical.retirement()}
- fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&*self.original),deferred_birth_bytes_for(&*self.source),deferred_birth_bytes_for(&*self.cursor),deferred_birth_bytes_for(&*self.wire),deferred_birth_bytes_for(&*self.original_close)])}
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(OwnedProjectedPackWireRetirement(ManuallyDrop::new(self)))}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OwnedProjectedPackWireRetirement<T>>())}
  fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
 }

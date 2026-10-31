@@ -37,12 +37,12 @@ fn transform_inverse_preserves_collaborator_fields_and_matches_diff_inverse() {
     }
     assert_eq!(oracle, fixture["expected"], "third-party JSON pointer oracle agrees with the shared outcome");
     assert_eq!(restored, decode::<Fem2dSnapshotValue>(&oracle));
-    let negative = DiffAlgebra::inverse(mine.diff(&before).diff(), &before);
+    let negative = <Fem2dDiff as ColdDiffAlgebra<Fem2dSnapshotValue>>::inverse(mine.diff(&before).diff(), &before);
     assert_eq!(protocol::apply_diff_cold(&negative, &combined).expect("diff inverse"), restored);
     let mut summed = Fem2dDiff::default();
     let mut cursor = moved;
     for step in inverse.iter().rev() {
-        summed.absorb(step.diff(&cursor).diff().clone());
+        ColdMutationDiff::<Fem2dSnapshotValue>::absorb(&mut summed, step.diff(&cursor).diff().clone());
         cursor = apply(&cursor, step);
     }
     assert_eq!(cursor, before);

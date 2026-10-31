@@ -1,0 +1,187 @@
+{
+  "outerExit": 1,
+  "session": 7910,
+  "compilerStarted": false,
+  "testsRun": 0,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs",
+      "sha256": "73636ee099734d3381541556e3b805093f6c782159d5265ebd6a09ba166fe934",
+      "after": "73636ee099734d3381541556e3b805093f6c782159d5265ebd6a09ba166fe934"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts",
+      "sha256": "f95f594023d47fb96d34fdeca253a26e35f75ab1872ab9a30b3fe65f0fb7780a",
+      "after": "f95f594023d47fb96d34fdeca253a26e35f75ab1872ab9a30b3fe65f0fb7780a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs",
+      "sha256": "a33d624ed0f5b634d08530dbcedfa3bd7b9d7ca8c6eb918e351271b2194678b0",
+      "after": "a33d624ed0f5b634d08530dbcedfa3bd7b9d7ca8c6eb918e351271b2194678b0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔗️alias/🦀️.rs",
+      "sha256": "43f24e4b79a61e651d0401046f5f12551624f71b2f44f5b9feaf071743042710",
+      "after": "43f24e4b79a61e651d0401046f5f12551624f71b2f44f5b9feaf071743042710"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔢️scalar-cursor/🦀️.rs",
+      "sha256": "55607541746636fd41e77c44304eb75fdb883f6455412125ac197748a3d45418",
+      "after": "55607541746636fd41e77c44304eb75fdb883f6455412125ac197748a3d45418"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔢️scalar-cursor/🟦️.ts",
+      "sha256": "ec86aa99ac0331b93de41d04dd48a0692ec6df6b8d3d0b2602dcd31a1125859f",
+      "after": "ec86aa99ac0331b93de41d04dd48a0692ec6df6b8d3d0b2602dcd31a1125859f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🎁️option-cursor/🦀️.rs",
+      "sha256": "696206c1214c859d86e39b7c3fdbbc67f1057e3349e069073969088c7acf33a1",
+      "after": "696206c1214c859d86e39b7c3fdbbc67f1057e3349e069073969088c7acf33a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🗃️box-cursor/🦀️.rs",
+      "sha256": "3e78e207978ced45ab77b00b5a8c3d49f0b01168ede8e56f31d0fb653e4128f9",
+      "after": "3e78e207978ced45ab77b00b5a8c3d49f0b01168ede8e56f31d0fb653e4128f9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧱️tuple-cursors/🦀️.rs",
+      "sha256": "b2d8df12e5a15768c570b728b707765d0b552be5d1d3b9a8b9da486b79636925",
+      "after": "b2d8df12e5a15768c570b728b707765d0b552be5d1d3b9a8b9da486b79636925"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🦀️.rs",
+      "sha256": "0e2a811b572a4d2b77ffe844bb731937cb7feba9adf43223ea3c2b35cbeacd31",
+      "after": "0e2a811b572a4d2b77ffe844bb731937cb7feba9adf43223ea3c2b35cbeacd31"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🎯️dispatch/🦀️.rs",
+      "sha256": "3ab6ad9779e0481edc34b68ad22be30841cdcbc72fa4659bac64fae2579b2855",
+      "after": "3ab6ad9779e0481edc34b68ad22be30841cdcbc72fa4659bac64fae2579b2855"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🎯️dispatch/🟦️.ts",
+      "sha256": "0d73d41b5e401a5b38f01c30660c5da818c8abc9bfab6be1ad0c7222e25ac4a8",
+      "after": "0d73d41b5e401a5b38f01c30660c5da818c8abc9bfab6be1ad0c7222e25ac4a8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🎯️dispatch/🧬️schema/🔣️.json",
+      "sha256": "6478c5acba5c66001ce3d07a3659d287473d20bf787109f11c960d11e62a854f",
+      "after": "6478c5acba5c66001ce3d07a3659d287473d20bf787109f11c960d11e62a854f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🎯️dispatch/🧫️fixtures/🔣️.json",
+      "sha256": "e8f074b44407a8b874e5bdae1d9f292b64698d5717c0c0b729cb763559050328",
+      "after": "e8f074b44407a8b874e5bdae1d9f292b64698d5717c0c0b729cb763559050328"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧬️schema/🔣️.json",
+      "sha256": "de5a3754e318649cae014680bd88e47b562047932e3db327614fa0ce8d36b61b",
+      "after": "de5a3754e318649cae014680bd88e47b562047932e3db327614fa0ce8d36b61b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs",
+      "sha256": "eeb36d48ce24b1a91ce684845bd548f7ef869d5987e9e0f734281cd26d37711e",
+      "after": "eeb36d48ce24b1a91ce684845bd548f7ef869d5987e9e0f734281cd26d37711e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs",
+      "sha256": "179ca91eee36e6d5f2ddd5d3c5f4fd2fb7ef0cc1cf7e6be955c968828a46f025",
+      "after": "179ca91eee36e6d5f2ddd5d3c5f4fd2fb7ef0cc1cf7e6be955c968828a46f025"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🦀️.rs",
+      "sha256": "406fca4b404f59f7bb1e02bed6bd154de601557cdecc401d81e9576de7a3b1f0",
+      "after": "406fca4b404f59f7bb1e02bed6bd154de601557cdecc401d81e9576de7a3b1f0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🟦️.ts",
+      "sha256": "c0dba7594cde88721afb93375323cd5201f6b9d951c559f04f2138dbee0b06b3",
+      "after": "c0dba7594cde88721afb93375323cd5201f6b9d951c559f04f2138dbee0b06b3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🧪️tests/🥒️.feature",
+      "sha256": "9136dbcf6a5feedbc026912256fa03218287f9acf12a9e0deb048bd152434105",
+      "after": "9136dbcf6a5feedbc026912256fa03218287f9acf12a9e0deb048bd152434105"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🧪️tests/🦀️.rs",
+      "sha256": "45fe7b25e544cb06aecbb1ea21b80222c813fc1cc3ea6fdceb0ce27b352c6b6f",
+      "after": "45fe7b25e544cb06aecbb1ea21b80222c813fc1cc3ea6fdceb0ce27b352c6b6f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🧪️tests/🟦️.ts",
+      "sha256": "a46cebf5227e89b35d0ec4178c8aebe1961bcd9c890770ae4a12463a12ccf21f",
+      "after": "a46cebf5227e89b35d0ec4178c8aebe1961bcd9c890770ae4a12463a12ccf21f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "81ec43903e40a3e22cb96976359bdfcaa1d96990f6a6815ff1724ea65410c0c4",
+      "after": "81ec43903e40a3e22cb96976359bdfcaa1d96990f6a6815ff1724ea65410c0c4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🧬️schema/🔣️.json",
+      "sha256": "c520e7d45a668c1d1833974c119e8f447bc1df6f43202da151136a5ac5263a7c",
+      "after": "c520e7d45a668c1d1833974c119e8f447bc1df6f43202da151136a5ac5263a7c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "6448293252d69096a20113699b12fa66a08101a9dc38a3ca65818117e1dea46a",
+      "after": "6448293252d69096a20113699b12fa66a08101a9dc38a3ca65818117e1dea46a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "d4dd2d31ed48d0e7ccf122670aa607ddf7ff7cd1b1f2e88dd80ab4750dbc2734",
+      "after": "d4dd2d31ed48d0e7ccf122670aa607ddf7ff7cd1b1f2e88dd80ab4750dbc2734"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "54ee243c5dbd6f7ff8f56a36bcea3c1faf722ac228de09ae7697d1b708c81abd",
+      "after": "54ee243c5dbd6f7ff8f56a36bcea3c1faf722ac228de09ae7697d1b708c81abd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "2ca299d3d5858015bc4616f7368b962fb51b33254114b588bf06eaacd846a94f",
+      "after": "2ca299d3d5858015bc4616f7368b962fb51b33254114b588bf06eaacd846a94f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🥒️.feature",
+      "sha256": "cea9142474d89b219b29dca48ad1feee7c2501a1a42c63d4ca17cc6705ed00e3",
+      "after": "cea9142474d89b219b29dca48ad1feee7c2501a1a42c63d4ca17cc6705ed00e3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🦀️.rs",
+      "sha256": "4ccd7784669b9a4cc8ff264d690f8151461fa0976725e27c2774f976ede36fb5",
+      "after": "4ccd7784669b9a4cc8ff264d690f8151461fa0976725e27c2774f976ede36fb5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🟦️.ts",
+      "sha256": "f0612f5707acdd68589537887f9c80d8871f98cd338276b80d0620a8dfc75ddd",
+      "after": "f0612f5707acdd68589537887f9c80d8871f98cd338276b80d0620a8dfc75ddd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🌐️lifecycle/🦀️.rs",
+      "sha256": "1f861df8ed724d11f69e14fb37b87e29c6d9ec44e3f74561f8f4f839c7fd7b8f",
+      "after": "1f861df8ed724d11f69e14fb37b87e29c6d9ec44e3f74561f8f4f839c7fd7b8f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "3b5352572bff0edf6107dae617f500fd7fc979ab95cc7a2acd3342fb4a4bc112",
+      "after": "3b5352572bff0edf6107dae617f500fd7fc979ab95cc7a2acd3342fb4a4bc112"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧬️schema/🔣️.json",
+      "sha256": "958609e3df4a0d470aa7dfff16a933cfbe0eb6bf6886b796bb6b1a47fa0fa85b",
+      "after": "958609e3df4a0d470aa7dfff16a933cfbe0eb6bf6886b796bb6b1a47fa0fa85b"
+    }
+  ],
+  "logSha256": "1e9db294a4e7518295651fbaa0a7b70b4a6a247f6ffe0063265fcfaa1d82409a",
+  "refusal": {
+    "reason": "crate source byte boundary",
+    "package": "semio-framework-value-retained-clone",
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🦀️.rs",
+    "fileBytes": 22040,
+    "remainingBytes": 18251
+  },
+  "scope": "Admission refusal only; no compiler/test result. No boundary increase authorized."
+}

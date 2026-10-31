@@ -1,0 +1,5 @@
+# Actual Nested Observer Correction
+
+Core4 executed all27 tests:26pass and one real nested-observer failure. Source fixture internals use the canonical allocator observer, which intentionally rejects nesting. The dynamic fixture protocol now selects an independent real outer Trace observer for birth and selected close; the inner canonical receipt check remains. The test-only SourceTesting owner exposes that narrow typed observation interface, asserts overflow false and returns actual requested/released bytes. Its existing lifetime law now exercises this nested composition.
+
+A direct first-party Trace dependency was added only to the role-test SourceTesting manifest; no allocator/Trace/lower production source changed. No bank, source stock, algorithm row, case, turn guard or heap equality is weakened. Cursor released only the dynamic private test from its conservative NativeOwned495 capture, and will qualify494/495 for that extra cfg(test) file. No complete canonical input census or SourceReady claim.

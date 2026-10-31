@@ -1,5 +1,29 @@
-fn prepare_test(render:AppRenderOperationContext,snapshot:&Fem2dSnapshot)->bool{let windows=semio_framework_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("fem2d-preparation-test".into()));let steps=128+snapshot.nodes.len()*64+snapshot.elements.len()*64+snapshot.regions.iter().map(|region|(region.outer.len()+region.holes.iter().map(Vec::len).sum::<usize>())*32+128).sum::<usize>()+snapshot.load_cases.len()*128+snapshot.combinations.len()*128;for _ in 0..steps{let step=prepare_snapshot_read(render,snapshot,&windows,None,render.mounted_policy.preparation);assert!(step.progress.fits(render.mounted_policy.preparation));if step.ready{return true;}if step.progress==Default::default(){return false;}}false}
+fn prepare_test(render:AppRenderOperationContext,snapshot:&Fem2dSnapshot)->bool{let windows=semio_framework_plugin::WindowConfigOwnerRegistry::new(protocol::ActorId("fem2d-preparation-test".into()));let steps=128+snapshot.nodes.len()*64+snapshot.elements.len()*64+snapshot.regions.iter().map(|region|(region.outline.len()+region.holes.iter().map(Vec::len).sum::<usize>())*32+128).sum::<usize>()+snapshot.load_cases.len()*128+snapshot.combinations.len()*128;for _ in 0..steps{let step=prepare_snapshot_read(render,snapshot,&windows,None,render.mounted_policy.preparation);assert!(step.progress.fits(render.mounted_policy.preparation));if step.ready{return true;}if step.progress==Default::default(){return false;}}false}
 use super::*;
+
+fn persist(value: &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue) -> semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring {
+    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(Fem2dSnapshot::from_reference(value.clone()).expect("fixture loads as a persistent snapshot"))
+}
+
+fn fixture() -> serde_json::Value {
+    serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).expect("fixture parses")
+}
+
+fn lifecycle_context<R>(grant: RetainedCloneGrant, run: impl FnOnce(&mut StepContext<'_>) -> R) -> R {
+    let operation = mounted_test_operation();
+    let mut sequence = 0;
+    let mut receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(64, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
+    run(&mut context)
+}
+
+fn close(app: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+    lifecycle_context(grant, |cx| close(app, cx, grant)).expect("lifecycle close step")
+}
+
+fn maintenance(app: u32, grant: RetainedCloneGrant) -> PluginLifecycleStep {
+    lifecycle_context(grant, |cx| maintenance_step(app, cx, grant)).expect("lifecycle maintenance step")
+}
 
 /// 📚️ The session module as the unsplit file held it: the root, then every mounted child in declaration order.
 fn session_source() -> String {
@@ -18,7 +42,7 @@ fn session_source() -> String {
 
 #[test]
 fn mounted_static_sources_use_physical_rhs_and_canonical_identity() {
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture = fixture();
     for source in fixture["sources"].as_array().unwrap() {
         let kind = source["kind"].as_str().unwrap();
         let id = source["id"].as_str().unwrap();
@@ -46,12 +70,12 @@ fn drain_mounted_job(job: &mut impl InteractiveJob) {
         let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(64, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
         match child_end(job.step(&mut context)) {
             ChildEnd::Complete(_) => return,
-            ChildEnd::Fault(detail) => panic!("[DEBUG] mounted job fault: {:?}", detail.map(|detail| String::from_utf8_lossy(&detail).into_owned())),
-            ChildEnd::Cancelled => panic!("[DEBUG] unexpected cancellation"),
+            ChildEnd::Fault(detail) => panic!("mounted job fault: {:?}", detail.map(|detail| String::from_utf8_lossy(&detail).into_owned())),
+            ChildEnd::Cancelled => panic!("unexpected cancellation"),
             _ => {}
         }
     }
-    panic!("[DEBUG] mounted job did not complete its bounded opportunities");
+    panic!("mounted job did not complete its bounded opportunities");
 }
 
 #[test]
@@ -63,7 +87,7 @@ fn mounted_admission_exceeds_old_demo_caps_without_synthetic_forcing() {
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
     let count = 50;
-    let doc = Fem2dSnapshot {
+    let value = Fem2dSnapshotValue {
         nodes: (0..count).map(|index| FemNodeValue { id: format!("n{index}"), x: 2.0 * index as f64 / (count - 1) as f64, y: 0.0 }).collect(),
         elements: (1..count).map(|index| FemElement::Bar { id: format!("e{index}"), start: format!("n{}", index - 1), end: format!("n{index}"), material_id: "steel".into(), section_id: "section".into() }).collect(),
         materials: vec![FemMaterialValue { id: "steel".into(), name: "Steel".into(), e: 210e9, nu: 0.3, rho: 7850.0 }],
@@ -72,6 +96,7 @@ fn mounted_admission_exceeds_old_demo_caps_without_synthetic_forcing() {
         load_cases: vec![FemLoadCase { id: "tip".into(), name: "Tip".into(), loads: vec![FemLoad::Nodal { id: "force".into(), node_id: format!("n{}", count - 1), dof: FemDof::Tx, value: 1000.0 }], self_weight: false }],
         ..Default::default()
     };
+    let doc = persist(&value);
     let mut builder = MountedModelBuild::new(None);
     assert!((0..100_000).any(|_| builder.step_one(&doc).unwrap()));
     let model = builder.take_complete().unwrap();
@@ -81,19 +106,18 @@ fn mounted_admission_exceeds_old_demo_caps_without_synthetic_forcing() {
     assert!((0..100_000).any(|_| construction.step_one().unwrap()));
     let mut assembly = construction.take_complete().unwrap();
     drain_mounted_job(&mut assembly);
-    let mut loads = MountedLoadBuild::new(resolved_source(&snapshot,Some(semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:"tip"})).unwrap());
+    let mut loads = MountedLoadBuild::new(job_bridge_and_live_mount::resolved_source(&doc,Some(semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:"tip"})).unwrap());
     assert!((0..100_000).any(|_| loads.step_one(&doc, &assembly).unwrap()));
     let mut csr = AssemblyCsrBuild::new_free(assembly).ok().unwrap();
-    assert!((0..100_000).any(|_| csr.step_one().unwrap()));
-    let mut construction = PcgJobConstruction::new_with_mounted_rhs(mounted_test_operation(), csr.take_complete().unwrap(), std::mem::take(&mut loads.free)).ok().unwrap();
+    assert!((0..100_000).any(|_| csr.step_one_funded(drain_grant()).unwrap().0));
+    let mut construction = PcgJobConstruction::new_with_mounted_rhs(mounted_test_operation(), csr.take_complete(drain_grant()).unwrap().0, std::mem::take(&mut loads.free)).ok().unwrap();
     assert!((0..100_000).any(|_| construction.step_one().unwrap()));
     let mut pcg = construction.take_complete().unwrap();
     drain_mounted_job(&mut pcg);
     let free = csr.visual_equation_indices("n49", semio_s_fem_model::Dof::Tx).unwrap().1.unwrap();
     let actual = pcg.visual_scalar(free).unwrap().displacement;
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture = fixture();
     let expected = fixture["axialChain"]["tipX"].as_f64().unwrap();
-    eprintln!("[DEBUG] FEM2D paged axial chain nodes={count}, elements={}, tip_x={actual:.16e}, expected={expected:.16e}, progress={:?}", count - 1, pcg.visual_progress());
     assert!((actual - expected).abs() < 1e-12);
     assert!(pcg.visual_progress().4);
 }
@@ -108,7 +132,7 @@ fn mounted_cantilever_sources_match_committed_oracle() {
     use semio_s_fem_node::planar::FemNodeValue;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
-    let doc = Fem2dSnapshot {
+    let value = Fem2dSnapshotValue {
         nodes: vec![FemNodeValue { id: "root".into(), x: 0.0, y: 0.0 }, FemNodeValue { id: "tip".into(), x: 2.0, y: 0.0 }],
         elements: vec![FemElement::Beam { id: "beam".into(), start: "root".into(), end: "tip".into(), material_id: "steel".into(), section_id: "section".into() }],
         materials: vec![FemMaterialValue { id: "steel".into(), name: "Steel".into(), e: 210e9, nu: 0.3, rho: 7850.0 }],
@@ -118,10 +142,11 @@ fn mounted_cantilever_sources_match_committed_oracle() {
         combinations: vec![FemCombination { id: "tip".into(), name: "Reverse".into(), terms: vec![FemCombinationTerm { case_id: "tip".into(), factor: -2.0 }] }],
         ..Default::default()
     };
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture = fixture();
     for reversed in [false, true] {
-        let mut doc = doc.clone();
-        if reversed { doc.load_cases.reverse(); }
+        let mut value = value.clone();
+        if reversed { value.load_cases.reverse(); }
+        let doc = persist(&value);
         for row in fixture["sources"].as_array().unwrap() {
             let source = ResultSource::from_parts(row["kind"].as_str().unwrap(), row["id"].as_str().unwrap().to_owned()).unwrap();
             let mut builder = MountedModelBuild::new(None);
@@ -132,17 +157,16 @@ fn mounted_cantilever_sources_match_committed_oracle() {
             drain_mounted_job(&mut assembly);
             let tip_y = assembly.visual_equation_indices("tip", semio_s_fem_model::Dof::Ty).unwrap().1.unwrap();
             let tip_rz = assembly.visual_equation_indices("tip", semio_s_fem_model::Dof::Rz).unwrap().1.unwrap();
-            let mut loads = MountedLoadBuild::new(resolved_source(&snapshot,Some(semio_s_fem_analyses_model::ResultSourceIdentity{kind:source.kind(),id:source.id()})).unwrap());
+            let mut loads = MountedLoadBuild::new(job_bridge_and_live_mount::resolved_source(&doc,Some(semio_s_fem_analyses_model::ResultSourceIdentity{kind:source.kind(),id:source.id()})).unwrap());
             assert!((0..100_000).any(|_| loads.step_one(&doc, &assembly).unwrap()));
             let mut csr = AssemblyCsrBuild::new_free(assembly).ok().unwrap();
-            assert!((0..100_000).any(|_| csr.step_one().unwrap()));
-            let mut construction = PcgJobConstruction::new_with_mounted_rhs(mounted_test_operation(), csr.take_complete().unwrap(), std::mem::take(&mut loads.free)).ok().unwrap();
+            assert!((0..100_000).any(|_| csr.step_one_funded(drain_grant()).unwrap().0));
+            let mut construction = PcgJobConstruction::new_with_mounted_rhs(mounted_test_operation(), csr.take_complete(drain_grant()).unwrap().0, std::mem::take(&mut loads.free)).ok().unwrap();
             assert!((0..100_000).any(|_| construction.step_one().unwrap()));
             let mut pcg = construction.take_complete().unwrap();
             drain_mounted_job(&mut pcg);
             let y = pcg.visual_scalar(tip_y).unwrap().displacement;
             let rz = pcg.visual_scalar(tip_rz).unwrap().displacement;
-            eprintln!("[DEBUG] FEM2D source={source:?}, reversed={reversed}, tip_y={y:.16e}, tip_rz={rz:.16e}, progress={:?}", pcg.visual_progress());
             assert!((y - row["tipY"].as_f64().unwrap()).abs() < 1e-12);
             assert!((rz - row["tipRz"].as_f64().unwrap()).abs() < 1e-12);
             assert!(pcg.visual_progress().4);
@@ -158,22 +182,23 @@ fn mounted_regions_share_boundary_nodes_and_preserve_both_materials() {
     use semio_s_fem_node::planar::FemNodeValue;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport;
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture = fixture();
     let regions = vec![
         FemRegion { id: "a".into(), name: "A".into(), outline: vec![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]], holes: vec![], thickness: 0.1, material_id: "a".into(), mesh_size: 2.0 },
         FemRegion { id: "b".into(), name: "B".into(), outline: vec![[1.0, 0.0], [1.0, 1.0], [0.0, 1.0]], holes: vec![], thickness: 0.2, material_id: "b".into(), mesh_size: 2.0 },
     ];
     let materials = vec![FemMaterialValue { id: "a".into(), name: "A".into(), e: 10e9, nu: 0.2, rho: 1000.0 }, FemMaterialValue { id: "b".into(), name: "B".into(), e: 20e9, nu: 0.3, rho: 2000.0 }];
     for reversed in [false, true] {
-        let mut doc = Fem2dSnapshot {
+        let mut value = Fem2dSnapshotValue {
             nodes: vec![FemNodeValue { id: "root".into(), x: 0.0, y: 0.0 }, FemNodeValue { id: "edge".into(), x: 1.0, y: 0.0 }],
             regions: regions.clone(), materials: materials.clone(),
             supports: vec![FemSupport { id: "f0".into(), node_id: "root".into(), fixed: vec![FemDof::Tx, FemDof::Ty] }, FemSupport { id: "f1".into(), node_id: "edge".into(), fixed: vec![FemDof::Tx, FemDof::Ty] }],
             load_cases: vec![FemLoadCase { id: "area".into(), name: "Area".into(), loads: vec![FemLoad::Area { id: "a".into(), region_id: "a".into(), pressure: fixture["regions"]["areaLoads"][0].as_f64().unwrap() }, FemLoad::Area { id: "b".into(), region_id: "b".into(), pressure: fixture["regions"]["areaLoads"][1].as_f64().unwrap() }], self_weight: false }],
             ..Default::default()
         };
-        if reversed { doc.regions.reverse(); }
-        let mesh = |index: usize| TriMesh2 { points: doc.regions[index].outline.clone(), tris: vec![[0, 1, 2]] };
+        if reversed { value.regions.reverse(); }
+        let doc = persist(&value);
+        let mesh = |index: usize| TriMesh2 { points: value.regions[index].outline.clone(), tris: vec![[0, 1, 2]] };
         let mut builder = MountedModelBuild::new(Some(mesh(0)));
         assert!((0..10_000).any(|_| builder.step_one(&doc).unwrap()));
         builder.close_lane = 7;
@@ -185,10 +210,9 @@ fn mounted_regions_share_boundary_nodes_and_preserve_both_materials() {
         assert_eq!(model.elements_len(), 2);
         for index in 0..2 {
             let semio_s_fem_static::Elements::Tri3Cst(element) = model.element(index).unwrap() else { panic!("continuum owner"); };
-            assert_eq!(element.thickness, doc.regions[index].thickness);
-            assert_eq!(element.e, doc.materials.iter().find(|material| material.id == doc.regions[index].material_id).unwrap().e);
+            assert_eq!(element.thickness, value.regions[index].thickness);
+            assert_eq!(element.e, value.materials.iter().find(|material| material.id == value.regions[index].material_id).unwrap().e);
         }
-        eprintln!("[DEBUG] FEM2D two regions reversed={reversed}, nodes={}, triangles={}", model.nodes_len(), model.elements_len());
         let free_nodes: Vec<_> = fixture["regions"]["freeCoordinates"].as_array().unwrap().iter().map(|coordinate| {
             (0..model.nodes_len()).filter_map(|index| model.node(index)).find(|node| node.pos[..2] == [coordinate[0].as_f64().unwrap(), coordinate[1].as_f64().unwrap()]).unwrap().id.clone()
         }).collect();
@@ -196,11 +220,11 @@ fn mounted_regions_share_boundary_nodes_and_preserve_both_materials() {
         assert!((0..100_000).any(|_| construction.step_one().unwrap()));
         let mut assembly = construction.take_complete().unwrap();
         drain_mounted_job(&mut assembly);
-        let mut loads = MountedLoadBuild::new(resolved_source(&snapshot,Some(semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:"area"})).unwrap());
+        let mut loads = MountedLoadBuild::new(job_bridge_and_live_mount::resolved_source(&doc,Some(semio_s_fem_analyses_model::ResultSourceIdentity{kind:"loadCase",id:"area"})).unwrap());
         assert!((0..100_000).any(|_| loads.step_one(&doc, &assembly).unwrap()));
         let mut csr = AssemblyCsrBuild::new_free(assembly).ok().unwrap();
-        assert!((0..100_000).any(|_| csr.step_one().unwrap()));
-        let mut construction = PcgJobConstruction::new_with_mounted_rhs(mounted_test_operation(), csr.take_complete().unwrap(), std::mem::take(&mut loads.free)).ok().unwrap();
+        assert!((0..100_000).any(|_| csr.step_one_funded(drain_grant()).unwrap().0));
+        let mut construction = PcgJobConstruction::new_with_mounted_rhs(mounted_test_operation(), csr.take_complete(drain_grant()).unwrap().0, std::mem::take(&mut loads.free)).ok().unwrap();
         assert!((0..100_000).any(|_| construction.step_one().unwrap()));
         let mut pcg = construction.take_complete().unwrap();
         drain_mounted_job(&mut pcg);
@@ -209,7 +233,6 @@ fn mounted_regions_share_boundary_nodes_and_preserve_both_materials() {
                 let index = csr.visual_equation_indices(node, dof).unwrap().1.unwrap();
                 let actual = pcg.visual_scalar(index).unwrap().displacement;
                 let expected = fixture["regions"]["freeDisplacements"][node_index][axis].as_f64().unwrap();
-                eprintln!("[DEBUG] FEM2D regions reversed={reversed}, node={node}, dof={dof:?}, actual={actual:.16e}, expected={expected:.16e}");
                 assert!((actual - expected).abs() < 1e-14);
             }
         }
@@ -232,8 +255,8 @@ fn mounted_app_admission_isolates_colliding_ids_until_original_children_return()
         (first, second, registry.pending[second.index()].unwrap())
     });
     assert_ne!(first.index(), second.index());
-    assert!(matches!(close_step(1, RetainedCloneGrant::default()), PluginLifecycleStep::Progress(progress) if progress == Default::default()));
-    for _ in 0..16 { if terminal_is_empty(1) { break } close_step(1, grant); }
+    assert!(matches!(close(1, RetainedCloneGrant::default()), PluginLifecycleStep::Progress(progress) if progress == Default::default()));
+    for _ in 0..16 { if terminal_is_empty(1) { break } close(1, grant); }
     assert!(terminal_is_empty(1));
     MOUNTED.with(|registry| {
         let registry = registry.borrow();
@@ -247,9 +270,8 @@ fn mounted_app_admission_isolates_colliding_ids_until_original_children_return()
     assert_eq!(reused.index(), first.index());
     assert_ne!(reused.generation(), first.generation());
     MOUNTED.with(|registry| assert!(!registry.borrow_mut().app_slots.release(1, first)));
-    for app in [33, 65] { for _ in 0..16 { if terminal_is_empty(app) { break } close_step(app, grant); } assert!(terminal_is_empty(app)); }
+    for app in [33, 65] { for _ in 0..16 { if terminal_is_empty(app) { break } close(app, grant); } assert!(terminal_is_empty(app)); }
     MOUNTED.with(|registry| { let registry = registry.borrow(); assert!(registry.app_slots.is_empty()); assert_eq!(registry.reserved_bytes, 0); assert_eq!(registry.reserved_items, 0); });
-    println!("[DEBUG] FEM2D app IDs 1/33 own independent pending jobs; funded close preserves sibling identity and stale reuse cannot release app 65");
 }
 
 /// 🧵️ A genuine Store snapshot lease prevents registry release while its mounted child is borrowed.
@@ -257,7 +279,7 @@ fn mounted_app_admission_isolates_colliding_ids_until_original_children_return()
 async fn mounted_app_close_keeps_borrowed_original_child_and_full_digest_authority() {
     use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
     let snapshot = Fem2dSnapshot::default();
-    let mut document = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new(store::os_store::document_materialize::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA, "mounted-child-affinity", snapshot.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
+    let mut document = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new(store::os_store::document_materialize::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA, "mounted-child-affinity", snapshot.clone(), None, &semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
     document.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Fem2dSnapshot, Fem2dMutation>().unwrap()).unwrap_or_else(|(error, _)| panic!("original owners refused: {error}"));
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 4096 };
     let render = AppRenderOperationContext { app_instance_id: 101, base_revision: semio_framework_job::RevisionId(17), generation: semio_framework_job::Generation(document.generation()), canonical_base_revision: document.content_revision(), mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } };
@@ -286,11 +308,11 @@ async fn mounted_app_close_keeps_borrowed_original_child_and_full_digest_authori
         assert!(registry.retain_retirement(current.shell, current.app_instance_id));
     });
     let borrowed = owner.borrow_mut();
-    assert!((0..16).any(|_| matches!(close_step(render.app_instance_id, grant), PluginLifecycleStep::Blocked { .. })), "request metadata may retire first, while the original borrowed child must block the key release");
+    assert!((0..16).any(|_| matches!(close(render.app_instance_id, grant), PluginLifecycleStep::Blocked { .. })), "request metadata may retire first, while the original borrowed child must block the key release");
     assert!(!terminal_is_empty(render.app_instance_id));
     assert!(MOUNTED.with(|registry| registry.borrow().app_slots.lookup(render.app_instance_id).is_some()));
     drop(borrowed);
-    for _ in 0..4096 { if terminal_is_empty(render.app_instance_id) { break } assert!(!matches!(close_step(render.app_instance_id, grant), PluginLifecycleStep::Blocked { .. })); }
+    for _ in 0..4096 { if terminal_is_empty(render.app_instance_id) { break } assert!(!matches!(close(render.app_instance_id, grant), PluginLifecycleStep::Blocked { .. })); }
     assert!(terminal_is_empty(render.app_instance_id));
     let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<Fem2dSnapshot, Fem2dMutation>();
     for _ in 0..4096 {
@@ -300,7 +322,6 @@ async fn mounted_app_close_keeps_borrowed_original_child_and_full_digest_authori
         disposer.close_step(&mut document, funded).unwrap();
     }
     assert!(disposer.terminal_is_empty(&document));
-    println!("[DEBUG] FEM2D original Store snapshot child remains owned while borrowed; full digest change admits a replacement and child-first funded close returns exact Store custody");
 }
 
 #[test]
@@ -329,7 +350,7 @@ fn mounted_close_and_capacity_are_fixed_and_terminal_witnessed() {
     let second = registry.app_slots.claim(33).unwrap();
     assert_ne!(first.index(), second.index(), "exact app keys occupy independent slots even when their old modulo buckets collide");
     assert!(registry.current[second.index()].is_none());
-    assert_eq!(maintenance_step(u32::MAX, TEST_GRANT), PluginLifecycleStep::Complete(Default::default()));
+    assert_eq!(maintenance(u32::MAX, TEST_GRANT), PluginLifecycleStep::Complete(Default::default()));
     assert!(terminal_is_empty(u32::MAX));
 }
 
@@ -345,15 +366,15 @@ fn snapshot_lease_is_preceded_by_a_fixed_pending_admission_and_idle_polling_reus
     let retained = MOUNTED.with(|registry| { let registry = registry.borrow(); registry.pending[registry.app_slots.lookup(render.app_instance_id).unwrap().index()].expect("same pending admission") });
     assert_eq!(first.shell, retained.shell);
     assert_eq!(first.identity, retained.identity);
-    assert!(matches!(close_step(render.app_instance_id, TEST_GRANT), PluginLifecycleStep::Progress(progress) if progress.copied_items == 1));
-    for _ in 0..8 { if terminal_is_empty(render.app_instance_id) { break } close_step(render.app_instance_id, TEST_GRANT); }
+    assert!(matches!(close(render.app_instance_id, TEST_GRANT), PluginLifecycleStep::Progress(progress) if progress.copied_items == 1));
+    for _ in 0..8 { if terminal_is_empty(render.app_instance_id) { break } close(render.app_instance_id, TEST_GRANT); }
     assert!(terminal_is_empty(render.app_instance_id));
 }
 
 #[test]
 fn snapshot_census_completes_within_one_opportunity_and_rejects_exact_plus_one_without_partial_credit() {
     let render = AppRenderOperationContext { app_instance_id: 2_000_000_006, base_revision: semio_framework_job::RevisionId(29), generation: semio_framework_job::Generation(31), canonical_base_revision: [37; 32], mounted_policy: semio_framework_plugin::MountedOwnerPolicyV1 { preparation: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, maintenance: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 }, close: semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32768, maximum_capacity_bytes: 262144, maximum_release_bytes: 1048576, maximum_depth: 4096 } } };
-    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot();
+    let snapshot = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("bundled demo loads"));
     let mut census = SnapshotAdmissionCursor::new();
     let mut units = 0;
     while census.step_one(&snapshot) == Ok(false) {
@@ -375,8 +396,8 @@ fn snapshot_census_completes_within_one_opportunity_and_rejects_exact_plus_one_w
     let before = (exact.items, exact.bytes);
     assert_eq!(exact.charge(1, 0), Err(b"fem2d.session-admission-exceeded" as &'static [u8]));
     assert_eq!((exact.items, exact.bytes), before, "plus one returns the exact unchanged census owner");
-    assert!(matches!(close_step(render.app_instance_id, TEST_GRANT), PluginLifecycleStep::Progress(progress) if progress.copied_items == 1));
-    for _ in 0..8 { if terminal_is_empty(render.app_instance_id) { break } close_step(render.app_instance_id, TEST_GRANT); }
+    assert!(matches!(close(render.app_instance_id, TEST_GRANT), PluginLifecycleStep::Progress(progress) if progress.copied_items == 1));
+    for _ in 0..8 { if terminal_is_empty(render.app_instance_id) { break } close(render.app_instance_id, TEST_GRANT); }
     assert!(terminal_is_empty(render.app_instance_id));
 }
 
@@ -485,9 +506,9 @@ fn mounted_region_generated_element_identity_collision_is_refused() {
     use semio_s_fem_node::planar::FemNodeValue;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection;
-    let fixture: semio_framework_pack_json::Value = semio_framework_pack_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
+    let fixture = fixture();
     let collision = &fixture["generatedIdentityCollision"];
-    let doc = Fem2dSnapshot {
+    let value = Fem2dSnapshotValue {
         nodes: vec![FemNodeValue { id: "a".into(), x: 0.0, y: 0.0 }, FemNodeValue { id: "b".into(), x: 1.0, y: 0.0 }],
         elements: vec![FemElement::Bar { id: collision["authoredElementId"].as_str().unwrap().into(), start: "a".into(), end: "b".into(), material_id: "m".into(), section_id: "s".into() }],
         materials: vec![FemMaterialValue { id: "m".into(), name: "M".into(), e: 10e9, nu: 0.2, rho: 1000.0 }],
@@ -495,10 +516,14 @@ fn mounted_region_generated_element_identity_collision_is_refused() {
         regions: vec![FemRegion { id: collision["regionId"].as_str().unwrap().into(), name: "Area".into(), outline: vec![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]], holes: vec![], thickness: 0.1, material_id: "m".into(), mesh_size: 2.0 }],
         ..Default::default()
     };
-    let mesh = TriMesh2 { points: doc.regions[0].outline.clone(), tris: vec![[0, 1, 2]] };
+    let doc = persist(&value);
+    let mesh = TriMesh2 { points: value.regions[0].outline.clone(), tris: vec![[0, 1, 2]] };
     let mut builder = MountedModelBuild::new(Some(mesh));
     let refusal = (0..10_000).find_map(|_| match builder.step_one(&doc) { Err(detail) => Some(detail), Ok(true) => panic!("colliding numerical elements were accepted"), Ok(false) => None }).expect("bounded refusal");
     assert_eq!(String::from_utf8(refusal).unwrap(), collision["diagnostic"].as_str().unwrap());
     assert_eq!(builder.model.elements_len(), 1);
-    println!("[DEBUG] Generated region element identity collision refused before numerical insertion");
+}
+
+fn drain_grant() -> RetainedCloneGrant {
+    RetainedCloneGrant { maximum_items: 4096, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 4 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 4096 }
 }

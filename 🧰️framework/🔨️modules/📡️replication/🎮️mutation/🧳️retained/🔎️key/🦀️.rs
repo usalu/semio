@@ -40,8 +40,8 @@ impl RetainedKeyLookup {
     pub fn advance<R>(&mut self,rows:RetainedCloneRef<'_,Vec<R>>,key:RetainedCloneRef<'_,String>,row_key:fn(&R)->&str,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
         let demand=self.demand(rows,key,row_key,grant.maximum_copy_bytes)?;
         if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if let Some(progress)=rows.bind(&mut self.rows,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
-        if let Some(progress)=key.bind(&mut self.key,grant)?{return Ok(RetainedCloneStep::Progress(progress));}
+        if let Some(progress)=rows.bind(&mut self.rows,grant).result?{return Ok(RetainedCloneStep::Progress(progress));}
+        if let Some(progress)=key.bind(&mut self.key,grant).result?{return Ok(RetainedCloneStep::Progress(progress));}
         if self.result.is_some(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
         let Some(row)=rows.get().get(self.index)else{self.result=Some(self.first.map_or(RetainedKeyMatch::Missing,RetainedKeyMatch::Unique));return Ok(RetainedCloneStep::Complete(progress));};
@@ -74,7 +74,7 @@ impl RetainedKeyLookup {
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"key lookup closure not started"));}
         if !retained_mutation_demand_fits(self.close_demand(grant.maximum_copy_bytes)?,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-        let step=RetainedCloneBinding::close_one(if self.key.is_some(){&mut self.key}else{&mut self.rows},grant)?;
+        let step=RetainedCloneBinding::close_one(if self.key.is_some(){&mut self.key}else{&mut self.rows},grant).result?;
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
 

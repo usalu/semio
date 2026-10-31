@@ -182,3 +182,9 @@ impl Generation2dContributionsJobFactoryProofs {
     }
 }
 //#endregion 🧩️ContributionsRoute
+
+pub(super) fn generation2d_bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+    let mut proofs = Generation2dBoundedCommandJobFactoryProofs::bounded_first_step_tool_proofs();
+    proofs.extend(Generation2dContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
+    proofs
+}

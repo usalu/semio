@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cancel Token Actual Root Birth",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "stock",
+    "work",
+    "laws"
+  ],
+  "properties": {
+    "schema": {
+      "const": "async.cancel-token.root.actual/v1"
+    },
+    "stock": {
+      "const": {
+        "items": 32,
+        "copyBytes": 0,
+        "capacityBytes": 65536,
+        "releaseBytes": 65536,
+        "depth": 1,
+        "maximumTurns": 16
+      }
+    },
+    "work": {
+      "const": {
+        "denied": 0,
+        "null": 1,
+        "born": 1,
+        "cached": 0
+      }
+    },
+    "laws": {
+      "const": {
+        "sameBankNullRetry": true,
+        "realStandardArc": true,
+        "futuresInitialStateOracle": true,
+        "exactHeap": true,
+        "completeNativeClose": true
+      }
+    }
+  }
+}

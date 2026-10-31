@@ -55,7 +55,7 @@ impl<T: Default + RetireOwned> Future for FoldBackingBirth<T> {
         let Some(capacity) = self.capacity else { return Poll::Ready(Err(value_cause(ValueError::literal(ValueRefusalKind::OwnershipLimit, "history fold construction size overflow")))) };
         let grant = self.control.original_grant();
         if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < self.copy || grant.maximum_capacity_bytes < capacity { return Poll::Pending; }
-        let (owner, mut progress) = match admit_typed_controlled_retirement(T::default(), grant) {
+        let (owner, mut progress) = match admit_typed_controlled_retirement(T::default(), grant).result {
             Ok(admitted) => admitted,
             Err((error, _)) => return Poll::Ready(Err(value_cause(error))),
         };
@@ -112,6 +112,3 @@ pub async fn copy_history_trunk(document: &ArtifactId, control: &HistoryFoldCont
     super::copy_history_text(std::str::from_utf8(&result).expect("trunk identity is ASCII"),control).await
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;

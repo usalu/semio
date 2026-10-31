@@ -1,0 +1,17 @@
+{
+  "tailBytes": 48,
+  "uniqueness": [
+    {"name": "distinct owners sharing a 96-byte tail stay distinct", "prefix": "p/head-", "sharedTail": 96, "count": 300, "duplicate": null, "expected": null, "expectedBuckets": 1},
+    {"name": "an injected duplicate is reported with its first index", "prefix": "p/head-", "sharedTail": 96, "count": 300, "duplicate": {"index": 299, "of": 7}, "expected": {"first": 7, "index": 299}, "expectedBuckets": 1},
+    {"name": "short owners hash their whole identity and stay distinct", "prefix": "q/", "sharedTail": 0, "count": 5, "duplicate": null, "expected": null, "expectedBuckets": 5},
+    {"name": "the first duplicate by later index wins", "prefix": "r/head-", "sharedTail": 60, "count": 10, "duplicate": {"index": 3, "of": 1}, "expected": {"first": 1, "index": 3}, "expectedBuckets": 1}
+  ],
+  "records": {
+    "root": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations",
+    "leaves": 306,
+    "fields": 14,
+    "optionalExtra": "editable",
+    "uniqueFields": ["owner", "semanticKind", "textOpcode", "binaryTag", "aggregateVariant", "displayName"],
+    "requiredFields": ["schemaVersion", "owner", "semanticKind", "displayName", "emoji", "aggregateVariant", "payloadSchema", "textOpcode", "binaryTag", "invertibility", "diffParticipation", "outcomeClasses", "composition", "requiredLanguageSurfaces"]
+  }
+}

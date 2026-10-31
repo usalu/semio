@@ -37,7 +37,7 @@ impl SubspaceIterationJob {
         if self.state.checkpoint_due || self.checkpoint_writer.is_some() {
             context.set_stage("fem.subspace.checkpoint-page");
             if self.checkpoint_writer.is_some() && self.checkpoint_cursor.field == u16::MAX {
-                if !RetainedJobPayloadWriter::finish_funded(&mut self.checkpoint_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
+                if !numerical_finish_writer(&mut self.checkpoint_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
                 let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
                 return Ok(self.desk.lend_checkpoint(payload, self.state.iteration as u64));
             }
@@ -45,16 +45,15 @@ impl SubspaceIterationJob {
             if context.should_yield() {
                 return Ok(NumericalRun::Yield);
             }
-            if self.checkpoint_writer.is_none() {
-                self.checkpoint_writer = RetainedJobPayloadWriter::new_funded(JobPayloadStream::CheckpointState, context)?;
-                if self.checkpoint_writer.is_some() { self.state.checkpoint_due = false; self.checkpoint_cursor = NumericalPageCursor::new(); }
+            if self.checkpoint_writer.as_ref().is_none_or(|writer| !writer.is_initialized()) {
+                if numerical_open_writer(&mut self.checkpoint_writer, JobPayloadStream::CheckpointState, context)? { self.state.checkpoint_due = false; self.checkpoint_cursor = NumericalPageCursor::new(); }
                 return Ok(NumericalRun::Yield);
             }
             let Some(writer) = self.checkpoint_writer.as_mut() else {
                 return Ok(NumericalRun::Fault);
             };
             if writer.staged_page_len().is_none() {
-                writer.begin_staged_page_funded(context)?;
+                numerical_begin_page(writer, context)?;
                 return Ok(NumericalRun::Yield);
             }
             let complete = Self::advance_checkpoint_entry(&self.state, &mut self.checkpoint_cursor, writer, context)?;
@@ -66,7 +65,7 @@ impl SubspaceIterationJob {
         if self.state.preview_due {
             context.set_stage("fem.subspace.preview-entry");
             if self.preview_writer.as_ref().is_some_and(|writer| writer.staged_page_len().is_none()) && self.state.publication_stage == 4 {
-                if !RetainedJobPayloadWriter::finish_funded(&mut self.preview_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
+                if !numerical_finish_writer(&mut self.preview_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
                 self.state.preview_due = false;
                 let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
                 return Ok(self.desk.lend_preview(payload));
@@ -75,16 +74,15 @@ impl SubspaceIterationJob {
             if context.should_yield() {
                 return Ok(NumericalRun::Yield);
             }
-            if self.preview_writer.is_none() {
-                self.preview_writer = RetainedJobPayloadWriter::new_funded(JobPayloadStream::Preview, context)?;
-                self.preview_page_cursor = 0;
+            if self.preview_writer.as_ref().is_none_or(|writer| !writer.is_initialized()) {
+                if numerical_open_writer(&mut self.preview_writer, JobPayloadStream::Preview, context)? { self.preview_page_cursor = 0; }
                 return Ok(NumericalRun::Yield);
             }
             let Some(writer) = self.preview_writer.as_mut() else {
                 return Ok(NumericalRun::Fault);
             };
             if writer.staged_page_len().is_none() && self.state.publication_stage < 4 {
-                writer.begin_staged_page_funded(context)?;
+                numerical_begin_page(writer, context)?;
                 return Ok(NumericalRun::Yield);
             }
             let complete = Self::advance_preview_entry(&mut self.state, self.operation, writer, context)?;
@@ -110,10 +108,10 @@ impl SubspaceIterationJob {
         if self.state.iteration >= self.state.max_iter || self.state.converged {
             context.set_stage("fem.subspace.terminal-page");
             if self.terminal_writer.as_ref().is_some_and(|writer| writer.staged_page_len().is_none()) && self.state.publication_stage == 4 {
-                let mut demand = RetainedJobPayloadWriter::finish_demand();
+                let mut demand = RetainedPayloadBuilder::take_finished_demand();
                 demand.copy_bytes = demand.copy_bytes.checked_add(size_of::<bool>()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "numerical terminal metadata overflow"))?;
-                if !semio_s_fem_sparse::numerical_grant_covers(context.retained_grant(), demand) { return Ok(NumericalRun::Yield); }
-                if !RetainedJobPayloadWriter::finish_funded(&mut self.terminal_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
+                if !semio_s_fem_payload_turns::numerical_grant_covers(context.retained_grant(), demand) { return Ok(NumericalRun::Yield); }
+                if !numerical_finish_writer(&mut self.terminal_writer, &mut self.desk.lent, context)? { return Ok(NumericalRun::Yield); }
                 self.terminal_published = true;
                 context.consume_retained(RetainedCloneProgress { copied_bytes: size_of::<bool>(), ..Default::default() })?;
                 let payload = self.desk.lent.take().expect("finished numerical writer retained its original payload");
@@ -123,17 +121,15 @@ impl SubspaceIterationJob {
             if context.should_yield() {
                 return Ok(NumericalRun::Yield);
             }
-            if self.terminal_writer.is_none() {
-                self.terminal_writer = RetainedJobPayloadWriter::new_funded(JobPayloadStream::CommitOutput, context)?;
-                if self.terminal_writer.is_some() { self.state.publication_stage = 0; self.state.publication_first = 0; self.state.publication_second = 0; }
-                self.terminal_page_cursor = 0;
+            if self.terminal_writer.as_ref().is_none_or(|writer| !writer.is_initialized()) {
+                if numerical_open_writer(&mut self.terminal_writer, JobPayloadStream::CommitOutput, context)? { self.state.publication_stage = 0; self.state.publication_first = 0; self.state.publication_second = 0; self.terminal_page_cursor = 0; }
                 return Ok(NumericalRun::Yield);
             }
             let Some(writer) = self.terminal_writer.as_mut() else {
                 return Ok(NumericalRun::Fault);
             };
             if writer.staged_page_len().is_none() && self.state.publication_stage < 4 {
-                writer.begin_staged_page_funded(context)?;
+                numerical_begin_page(writer, context)?;
                 return Ok(NumericalRun::Yield);
             }
             let complete = Self::advance_preview_entry(&mut self.state, self.operation, writer, context)?;
@@ -283,33 +279,15 @@ impl SubspaceIterationJob {
 }
 
 impl InteractiveJob for SubspaceIterationJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
-        if self.desk.retire_due(cx, self.operation) {
-            self.desk.retire_delivered(cx)?;
-            return Ok(None);
-        }
-        let run = match self.desk.take_pending() {
-            Some(run) => run,
-            None => self.run(cx)?,
-        };
-        Ok(self.desk.admit(cx, run)?)
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, _: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> {
+        InteractiveJobStep::from_callback(self.step_plain(cx))
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         self.desk.borrow_outcome(descriptor)
     }
 
-    fn begin_close(&mut self) {
-        if let Some(writer) = self.checkpoint_writer.as_mut() {
-            writer.begin_close();
-        }
-        if let Some(writer) = self.preview_writer.as_mut() {
-            writer.begin_close();
-        }
-        if let Some(writer) = self.terminal_writer.as_mut() {
-            writer.begin_close();
-        }
-    }
+    fn begin_close(&mut self) {}
 
     fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
         if self.terminal_is_empty() {
@@ -326,6 +304,20 @@ impl InteractiveJob for SubspaceIterationJob {
 
     fn terminal_is_empty(&self) -> bool {
         self.checkpoint_writer.is_none() && self.preview_writer.is_none() && self.terminal_writer.is_none() && self.desk.terminal_is_empty() && self.close_terminal_is_empty()
+    }
+}
+
+impl NumericalStep for SubspaceIterationJob {
+    fn step_plain<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
+        if self.desk.retire_due(cx, self.operation) {
+            self.desk.retire_delivered(cx)?;
+            return Ok(None);
+        }
+        let run = match self.desk.take_pending() {
+            Some(run) => run,
+            None => self.run(cx)?,
+        };
+        Ok(self.desk.admit(cx, run)?)
     }
 }
 

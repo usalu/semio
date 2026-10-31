@@ -1,0 +1,485 @@
+{
+  "state": "current-coauthored-attribution-only-not-runtime-seal",
+  "files": [
+    {
+      "path": "📋️build-owners.json",
+      "bytes": 1674651,
+      "sha256": "28af1537665c0810f66949358071cf7ee7393d7bdf249a152fbaca208c444dc7"
+    },
+    {
+      "path": "🧰️framework/Cargo.lock",
+      "bytes": 308020,
+      "sha256": "b97d312eecb12e265d5a04b717de07d3997626a7745784e87c9a94fc24d3a033"
+    },
+    {
+      "path": "🧰️framework/Cargo.toml",
+      "bytes": 125783,
+      "sha256": "931727900224e6e77413d7ac6b53cc892be0db565cff30cfa6797f0e1cec5b25"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/♻️retirement/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 3501,
+      "sha256": "b530b15ccd63ad6aee2e056da9dfaf57d3a1eb7351438f8d0e734b2603dc448c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/⚙️expansion/🦀️.rs",
+      "bytes": 40449,
+      "sha256": "30dbb928ae964dd45d7674fd3df5407062d2554e07308d86aeccda2c631dd543"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🟰️equality/🦀️.rs",
+      "bytes": 6584,
+      "sha256": "68b9819a3f971fcb60de48fd1d11fb736f6b21d318168aad33bfce0418121928"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs",
+      "bytes": 51343,
+      "sha256": "b5129fca91c96e2c7bf81e2b0bb0b5d80797bd72421c412c84faffdbf43cc23c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🎚️record/🦀️.rs",
+      "bytes": 6288,
+      "sha256": "eb57cef82008ffaf24e8569d32611e90a0e450cccf06e5657d6da246a7d6aa31"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/📋️sequence/🦀️.rs",
+      "bytes": 9980,
+      "sha256": "5f40e8cffe880a8a0f429526f8ef4dad2e7e37a0ffd2729fa6117bb0cc2ed183"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1591,
+      "sha256": "bdba2cbba3ce71a2876c95fa6e784a907c167dc592144a96cc98dc75212cd3f4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 106,
+      "sha256": "044eaaff28d34ca512e0456937271d8ea79578acaae4132e3f866b8aad87dcb6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 1141,
+      "sha256": "6188e251b3af7c65fbfe20425e8cdb113acc8677589a16c462cd63735dcfb9f8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🤝️tuple/🦀️.rs",
+      "bytes": 3190,
+      "sha256": "ad8534b75f79a7e772af593aa859899b07c27afb7e75893a7d57a797b081d5dc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🦀️.rs",
+      "bytes": 10933,
+      "sha256": "480162e243e7cebed45ef7b8271caab0370c279671abe0f1ea938c3f2a7a80dd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/actual.json",
+      "bytes": 875,
+      "sha256": "90133954fbb0489fa39b4c7d5a6ec353947951bc1adf3bbff0d2de5364543bc8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/actual.rs",
+      "bytes": 7145,
+      "sha256": "6cbf417758aadee714a71a090f6419e8b5d021a79cd22756d517d823570e2e51"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/actual.schema.json",
+      "bytes": 1597,
+      "sha256": "cc3f412913b94ed361170c929059da499e38c2c9d125f9a665812244e3960de8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🧪️tests/🦀️.rs",
+      "bytes": 8724,
+      "sha256": "b4f454ffa9e1dc8dd10eed015fea49a3c0cd4e8719b421c9afc8c1cde832b3aa"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1146,
+      "sha256": "9bf673d3c44e0c782d5f7741a74a9ce0a6ceaac860d61f058807200ec377474a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 111,
+      "sha256": "dce783a07fb473b7bf5b6ba66e522fb4a4e4d53d9e9f06f82c5bba4ae91ce644"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 139,
+      "sha256": "5c1bc855dc848749965f99bca14fd55a3b815ffc9b5766bf677e96985e05d3d7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🦀️.rs",
+      "bytes": 14464,
+      "sha256": "7937cb6d6385cc6b7cf8f03b182914780f863cb6c5ac3886e7360e728930ee54"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 2185,
+      "sha256": "69367dc14884211cc5584045ff6b85b9e0fcd378cd686653696ff95f33fe65c1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 1664,
+      "sha256": "f9a9c6804bee5a181fcb5e5b3b1cdc6d0d29d1c0e26e6ff4c868a06bb3271e58"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🦀️.rs",
+      "bytes": 20395,
+      "sha256": "1ba77f36016b5f7d02a52ba12e29b69faafeedf2d464df22aebb7cc06ed47f2a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧬️clone/🦀️.rs",
+      "bytes": 8744,
+      "sha256": "e32d8a24cde7b2c826b4011185e42933a2c2918a0f55b463ca0dfc597098321c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 2004,
+      "sha256": "0b3bb9979b0824206b5e11574080eb8e166c41f38f15280c47b7b1527a812bce"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🦀️.rs",
+      "bytes": 11053,
+      "sha256": "fa4a2d0fbf00f46c331f75a507833abd19f2eb71166aa1db857aa3be7d7f1411"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🦀️.rs",
+      "bytes": 14689,
+      "sha256": "7e51ee472866c952d56ee480e5e5c43789128ae3eae3ad947123ae365ce96832"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🦀️.rs",
+      "bytes": 10979,
+      "sha256": "6f8025ec3e4c7b4acf0b932f8450aba7bd8c734f54857efca6c9c459db70b967"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🦀️.rs",
+      "bytes": 16795,
+      "sha256": "139498422a682e6bd7b28ffc2910f453db8d1cbac4830ebe549d2831c8e0c12a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🦀️.rs",
+      "bytes": 20667,
+      "sha256": "64abc0335460a89d464acc2aa58841c2590bc607f377afc5e92a15ca954c36f7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🦀️.rs",
+      "bytes": 3339,
+      "sha256": "e2e06b966c1a2f821144c9652aa6136ff0057e6dc32452cd8729043786d78be6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🦀️.rs",
+      "bytes": 11536,
+      "sha256": "4ca3041f397790c685b6f1571b5dc12e27f38c2e2004429c016cb372bce8bbfe"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🦀️.rs",
+      "bytes": 10781,
+      "sha256": "868111714b0a6b26e6c6adaaac4d2b5ad1a4a34801fd9ea6080ed3a2c39bf7ab"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🦀️.rs",
+      "bytes": 3678,
+      "sha256": "2839a6abe84a6dce8ea07aeef9359d2f1ee9c51b7b98b59d9b4946c5be97b142"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🟰️equal/🧪️tests/🦀️.rs",
+      "bytes": 6869,
+      "sha256": "53f99149d3887316219bd9933a1f9e6be75e8b0090769e60d24811c851d6a08e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/♻️close/🧪️tests/🦀️.rs",
+      "bytes": 1620,
+      "sha256": "068cade3de46fe9792f9659f6d603dc28f428db77f210ee3f6f42685fc3c92a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/📦️owned/🦀️.rs",
+      "bytes": 5347,
+      "sha256": "dc35f12b83fae7199203489f772362531aeb2f7feca9e50ffe4591ae81fe1682"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🦀️.rs",
+      "bytes": 17436,
+      "sha256": "8d4c6dab63808bed44f698aee5a13ad5ac6a47ff8a12d0f242d21e627258e3da"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️field/🦀️.rs",
+      "bytes": 6400,
+      "sha256": "dcd0c72cb007f198a14041b32954ea8295b5e64cee5a638589be6bdbb4607547"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🦀️.rs",
+      "bytes": 13199,
+      "sha256": "6c84ed80918f809be55e8c8921075c3aa8b0708728fdf89b56a77d7b823cab99"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 49327,
+      "sha256": "6d80cdbe90a726dc646eec38538150583451e4cf8a114e6e1725a26b21a866f1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs",
+      "bytes": 37652,
+      "sha256": "8b1e367d4b782eb482f24b355b9654fb7db889afc8579661ef72fdfd3b64464f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs",
+      "bytes": 7538,
+      "sha256": "d4daa85c1c4dadc9d8aedfdc0491a37c764b64e86e2be01956277bf25505af3d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs",
+      "bytes": 21861,
+      "sha256": "6c8e34c10e90c1339407158010084ce830c95087579531d879057d1558509728"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/logical-body.json",
+      "bytes": 1319,
+      "sha256": "11d9634531c49f89a8cd70c8ce2cade44067713c5f80246369892e5ab864cf91"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/logical-body.rs",
+      "bytes": 11697,
+      "sha256": "5be241ba79433d4d4506de2ed5eac590b7bfc5eb1a6c0a47ba16faa5ce58bb83"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/logical-body.schema.json",
+      "bytes": 2338,
+      "sha256": "b9728cb8662543c9e9e4fe8a3cba2be011b1fb1744eded28f1fe4c63c8d434fd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🦀️.rs",
+      "bytes": 15232,
+      "sha256": "6067e7f0b5017b730b18f5e720df9fbac4464bbc4ff41d189b6b1f153904b6bd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🎁️option-cursor/🦀️.rs",
+      "bytes": 9806,
+      "sha256": "1ffdb73372102184a0ffc2da432bd008e4452362367c71d20c686c553a1144c9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs",
+      "bytes": 14379,
+      "sha256": "ab6ae817bae59aac996e962444a6984b98c19f7f089b85d0bdd8c8c011194133"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs",
+      "bytes": 6931,
+      "sha256": "26416ea6524471e17102aab146ea620d1741e7a86eb36088fa0d0c7d2ad25242"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🧪️tests/take.json",
+      "bytes": 830,
+      "sha256": "2175009bcddf05b65efd2b2f759225505dc0203fa7b260520a023f296018a0ff"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🧪️tests/take.rs",
+      "bytes": 6608,
+      "sha256": "57e68214a4f1f10019f1542b9d1ffe367743461434183168533689ba91594028"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🧪️tests/take.schema.json",
+      "bytes": 1626,
+      "sha256": "af5520581e4241013410439b00c4d94e70ab7e30978642c62750a7586e58f2f7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔗️alias/🦀️.rs",
+      "bytes": 4694,
+      "sha256": "d067cb6f1aea21ff4b221d1645da4b56147b796d3df113c1dc49e5cc17f9ac37"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔢️scalar-cursor/🦀️.rs",
+      "bytes": 6056,
+      "sha256": "4b741c134cde1ff0b3fc94390ddf2818ec1e0813e7f7b2860984788c1e72fcbc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🦀️.rs",
+      "bytes": 8562,
+      "sha256": "a62a355fbb924a4e9569363915b4114afb15208ec71d375fb97b3386617b4c69"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🗃️box-cursor/🦀️.rs",
+      "bytes": 12291,
+      "sha256": "ef69b70adbae8c8356052ed89a49b0df5f558895da871d53d0de9dfb081c1a26"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs",
+      "bytes": 4443,
+      "sha256": "7ca67b792550a7f58a6f73201a110ae1d7fdb9d7ed8ac81a9781c96548079c06"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs",
+      "bytes": 13128,
+      "sha256": "cd5ad26781dc0a4e596ec896b32ca0a4f1ff6a31f11c93dd3babbf668b9d0276"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧱️tuple-cursors/🦀️.rs",
+      "bytes": 11492,
+      "sha256": "a902695d0b7708323ca8e29f8af919618381678138ff9bc84ff9dec764c24b8f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🦀️.rs",
+      "bytes": 7948,
+      "sha256": "3c21c3306985a3342a18801b43ae1d17abf1ce9628951da8446449d10f536659"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧳️owner/🦀️.rs",
+      "bytes": 4225,
+      "sha256": "5e41bdb5823f174f765f132e84a0bba60c4cbbf8c1f0f0116d032b766a161e46"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🦀️.rs",
+      "bytes": 21344,
+      "sha256": "a59aaad9009d4069b0995bb9764f655bc0335d433171679f8b827c02c4301355"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🎟️close/🧪️tests/🦀️.rs",
+      "bytes": 2890,
+      "sha256": "e9c626bdbefd0e15f34be12c1e0df7901c30913849277d7024ea7509c1ec1d42"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧮️parser-and-grammar-cursor/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 1465,
+      "sha256": "15217d8ee6227942194fd94f11b6083341ccf84e8bec1943eb367a630a4f6efb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟰️equal/🧪️tests/work.json",
+      "bytes": 259,
+      "sha256": "de030c4d37c4913390d26396fd55981da66ffdab83122f8e12ff4d2736eed005"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟰️equal/🧪️tests/work.schema.json",
+      "bytes": 690,
+      "sha256": "a6c79f2321beb7c55eb5a91cc57ae3d500f8ae0116461d5a9023e6f6a70cb7bf"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🟰️equal/🧪️tests/🦀️.rs",
+      "bytes": 6403,
+      "sha256": "fcb12d0f404ba6aed7a55012680ecf2987b7474efd7af556890b237653baf1f7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/♻️close/🧪️tests/🦀️.rs",
+      "bytes": 3068,
+      "sha256": "6c70c6e181786049d6105d233b737c97686cbda2b71414969838da34510956a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/👶️child/♻️close/🧪️tests/🦀️.rs",
+      "bytes": 2744,
+      "sha256": "d6b9b27608b7288ce48fc5464b9535c30a314a504c794e7caf2bffc4a85b1f4e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1834,
+      "sha256": "836275a7fc3c8b0b32ad11339d8411e0cf3d530097c5ee1460740b023b6f376f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 103,
+      "sha256": "df8c5e67c65fee07524a99cc731ca85c0bb8244aebdcd2331dcaf83a7e4a6d0e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 1590,
+      "sha256": "ba0b474353488be141270732ed4447cfba11996fc0de544da862043235d0443c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧪️tests/🦀️.rs",
+      "bytes": 13076,
+      "sha256": "73c8a21f8276d3231d021e51eba18de80c0c6a4edc47fda415b8cbf5457db02b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧱️payload-owner/🦀️.rs",
+      "bytes": 3299,
+      "sha256": "2a4cf89ad32a5fe9028e03e1ddf2160b467b2293b50d5514eaff7d87a784358a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📖️source/✍️bytes/🦀️.rs",
+      "bytes": 1995,
+      "sha256": "da25731be44c936d1fb4182c2414e676510b32edfb8059d4a0c2b846f7ab589f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1324,
+      "sha256": "910ae8cccac30c44e6707c16575ed52f3e4c981c1d24883bb2afed4112d72698"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 2360,
+      "sha256": "42ee1a515302815acb701565818b2790f98a4576188dd58dca4323857c7d656c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🦀️.rs",
+      "bytes": 25059,
+      "sha256": "d7aebb7fbc7dcb27200bd8d3b340bf16fd85b37708060e4586d4f1f6f0253203"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️testing/case.json",
+      "bytes": 315,
+      "sha256": "5c8a088c660be8caf83ecad1ca4c5c52a58db797c6875c0d7e986ed3843309ef"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️testing/case.schema.json",
+      "bytes": 797,
+      "sha256": "0a990a7f8c89edaccff2028dd7a5452cc94ad2236398fc9cfe059d00d9f89ebb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🧪️testing/🦀️.rs",
+      "bytes": 6707,
+      "sha256": "f3e2ecf292cc02549dcf0adebcb2a2aaa9586403fcd66d48e7d561d2030a8679"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🕰️clock-identity-and-budget/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 721,
+      "sha256": "fdfd43fdca78aaeaf506f0ef6abf670992854f495451df6e296c54376406939d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🕰️clock-identity-and-budget/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 101,
+      "sha256": "4e0e6633e6ffd139e3e4db4251d09e322d043f914f4830c32db1d7b0c46a4f6d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🛬️receiving/♻️close/🧪️tests/🦀️.rs",
+      "bytes": 2308,
+      "sha256": "8c24bd456637135b8f188587e876e3efc9988219df71b3b3ccc6c45971552397"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🛬️receiving/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 916,
+      "sha256": "636304a82f37a6c12a374cf7d8c7e03994463728884562211dfc2372db074987"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🛬️receiving/📦️packages/🦀️rust/📋️project.json",
+      "bytes": 105,
+      "sha256": "f9e3f0ed010ffeb63280299e5fed3a58b9b51a78b8a6a408e519dcd2f6f5aed0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+      "bytes": 1553,
+      "sha256": "39d432bfac1b9aaaf1a4011856794e6dab0089ccb1d2c7ff9feebed05712c229"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/⛽️staged-projection/writer-actual.json",
+      "bytes": 498,
+      "sha256": "38d43966468901617d52b43660253b096176e331425af2bdfa2eb700da8431e2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/⛽️staged-projection/writer-actual.rs",
+      "bytes": 3193,
+      "sha256": "ed6e5c84506b1abb7115a09a4f17cf477960462667bab4a68e4bed24e18ba1b9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/⛽️staged-projection/writer-actual.schema.json",
+      "bytes": 1203,
+      "sha256": "285fd163d1d73f24e97f22909dfe5bc076d9f21ca6bd3cf80f744a5c5ba0e5b1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/⛽️staged-projection/🦀️.rs",
+      "bytes": 14476,
+      "sha256": "ad9b72241c9d0168ceff8bd16b44c3b568e26bc9b2265cc99b80d7a304aabf18"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️retained-ownership/🦀️.rs",
+      "bytes": 7658,
+      "sha256": "ab9bce7be5697d3cef7a7bf45dd42ba1a51e770852b504c5124d2da936f5bb30"
+    }
+  ]
+}

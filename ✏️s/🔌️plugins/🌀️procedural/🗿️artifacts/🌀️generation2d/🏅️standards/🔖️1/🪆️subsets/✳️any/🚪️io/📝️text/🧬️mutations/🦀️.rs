@@ -16,21 +16,21 @@ pub const MUTATION_GRAMMAR_SEMIO: &str = include_str!("📖️mutations.grammar.
 /// 🧭️ Identifies the artifact mutation grammar.
 pub const MUTATION_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️mutations.grammar.semio");
 
-use crate::snapshot::camera_from_dsl;
-use crate::snapshot::camera_to_dsl;
-use crate::snapshot::form_generation_from_dsl;
-use crate::snapshot::form_generation_to_dsl;
-use crate::snapshot::layout_from_dsl;
-use crate::snapshot::layout_to_dsl;
-use crate::snapshot::synapse_from_dsl;
-use crate::snapshot::synapse_to_dsl;
-use crate::snapshot::widget_from_dsl;
-use crate::snapshot::widget_to_dsl;
-use crate::snapshot::CameraJsonDsl;
-use crate::snapshot::FormGenerationDsl;
-use crate::snapshot::SynapseSpecDsl;
-use crate::snapshot::WidgetDsl;
-use crate::snapshot::WidgetLayoutDsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::camera_from_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::camera_to_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::form_generation_from_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::form_generation_to_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::layout_from_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::layout_to_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::synapse_from_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::synapse_to_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::widget_from_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::widget_to_dsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::CameraJsonDsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::FormGenerationDsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::SynapseSpecDsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::WidgetDsl;
+use semio_s_artifact_procedural_2d_model::dsl_mirror::WidgetLayoutDsl;
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 pub enum Generation2dOperationDsl {
     CreateWidget {

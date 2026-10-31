@@ -18,12 +18,14 @@ impl RetirementReceipt for RetainedCloneStep {
 pub enum RetirementTurnError<E>{Owner(E),Receipt(ValueError)}
 
 /// 🎛️ Preflights every independent axis before effects and preserves the original grant unchanged.
-pub fn advance_retirement_turn<S:RetirementReceipt,E>(demand:RetirementDemand,grant:RetainedCloneGrant,owner:impl FnOnce(RetainedCloneGrant)->Result<(S,bool),E>)->Result<S,RetirementTurnError<E>>{
+pub fn advance_retirement_turn<S:RetirementReceipt,E>(demand:RetirementDemand,grant:RetainedCloneGrant,owner:impl FnOnce(RetainedCloneGrant)->crate::RetainedWorkOutcome<(S,bool),E>)->crate::RetainedWorkOutcome<S,RetirementTurnError<E>>{
+    let mut work=0;let result=(||{
     if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(S::retirement_yield());}
-    let(step,terminal_is_empty)=owner(grant).map_err(RetirementTurnError::Owner)?;
+    let turn=owner(grant);work=turn.work;let(step,terminal_is_empty)=turn.result.map_err(RetirementTurnError::Owner)?;
     if let Some(receipt)=step.retirement_progress(){if !receipt.fits(grant){return Err(RetirementTurnError::Receipt(ValueError::literal(ValueRefusalKind::InvariantViolated,"original retirement receipt exceeds its unchanged grant")));}}
     if step.retirement_complete()&&!terminal_is_empty{return Err(RetirementTurnError::Receipt(ValueError::literal(ValueRefusalKind::InvariantViolated,"original retirement completed without its terminal-empty witness")));}
     Ok(step)
+    })();crate::RetainedWorkOutcome{result,work}
 }
 
 #[cfg(test)]

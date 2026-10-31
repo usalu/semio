@@ -6,7 +6,7 @@ const META=256;
 const nested=(d:ValidationDemand):ValidationDemand=>({...d,copyBytes:d.copyBytes+META,depth:d.depth+1});
 const child=(g:ValidationGrant):ValidationGrant=>({...g,maximumCopyBytes:g.maximumCopyBytes-META,maximumDepth:g.maximumDepth-1});
 const paid=(p:ChildAdmissionProgress):ChildAdmissionProgress=>({...p,copiedItems:Math.max(1,p.copiedItems),copiedBytes:p.copiedBytes+META});
-/** 📦️ Logical reader envelope custody mirrors native stable Box-before-future and future-before-reader closure. */
+/** 📦️ Logical reader envelope custody mirrors native paid stable-owner birth and continuation-before-index-before-reader closure. */
 export class OwnedLayoutGraphValidation{
  private reader:OwnedLayoutGraphRead|undefined;private bytes=0;private cursor=new LayoutValidationCursor();private closing=false;private readerClosing=false;
  static readerBirthDemand(bytes:number):ValidationDemand{if(!Number.isSafeInteger(bytes)||bytes<1)throw Error('Invalid fixed graph reader header');return{copyBytes:bytes*2+META,capacityBytes:bytes,releaseBytes:0,depth:1}}

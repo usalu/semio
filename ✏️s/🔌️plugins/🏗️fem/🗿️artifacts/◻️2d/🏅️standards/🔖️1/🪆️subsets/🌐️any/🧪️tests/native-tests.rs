@@ -95,10 +95,27 @@ fn denied_capture_and_physical_frontier_preserve_original_owner() {
     let mut callback = |_| true;
     let mut control = NativeDecodeControl::new(1_000_000, &mut callback);
     let before = rx.demands(4096).unwrap();
-    let no_copy = RetainedCloneGrant { maximum_copy_bytes: 0, ..original() };
-    assert_eq!(rx.advance(&mut control, 4096, no_copy).unwrap().progress(), RetainedCloneProgress::default());
+    let no_capacity = RetainedCloneGrant { maximum_capacity_bytes: 0, ..original() };
+    assert_eq!(rx.advance(&mut control, 4096, no_capacity).unwrap().progress(), RetainedCloneProgress::default());
     assert_eq!(control.owned_bytes(), 0);
     assert_eq!(rx.advance(&mut control, 4096, denied).unwrap().progress(), RetainedCloneProgress::default());
+    assert_eq!(rx.demands(4096).unwrap(), before);
+    close(&mut rx);
+}
+#[test]
+fn copy_denial_at_a_copying_frontier_makes_no_progress_and_keeps_the_demand() {
+    let (mut rx, _) = Fem2dReceiving::capture(authoring(), original()).map_err(|(e, _)| e).unwrap();
+    let mut callback = |_| true;
+    let mut control = NativeDecodeControl::new(1_000_000, &mut callback);
+    let mut turns = 0;
+    while rx.demands(4096).unwrap().copy_bytes == 0 {
+        assert!(turns < 100_000 && !rx.terminal_is_empty(), "no copying frontier reached");
+        rx.advance(&mut control, 4096, original()).unwrap();
+        turns += 1;
+    }
+    let before = rx.demands(4096).unwrap();
+    let no_copy = RetainedCloneGrant { maximum_copy_bytes: 0, ..original() };
+    assert_eq!(rx.advance(&mut control, 4096, no_copy).unwrap().progress(), RetainedCloneProgress::default());
     assert_eq!(rx.demands(4096).unwrap(), before);
     close(&mut rx);
 }

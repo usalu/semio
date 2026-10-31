@@ -185,7 +185,7 @@ impl protocol::ColdDiffAlgebra<SourcingCurationConfig> for SourcingCurationConfi
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// 🧮️ [`SourcingCurationConfig`]'s operation enum — one variant per settled interaction (search query,
+/// 🔢️ [`SourcingCurationConfig`]'s operation enum — one variant per settled interaction (search query,
 /// module/typology/availability filters, sort, locale), plus a generic `Snapshot` every
 /// variant's `backwards()` returns. Since a config-only dispatch is a plain `Apply`, each tick is its own
 /// distinct, real config edit, and "undo this tick" is exactly
@@ -210,35 +210,35 @@ pub enum SourcingCurationConfigMutation {
     SetContributions(SetContributionsEdit),
 }
 
-/// 📦️ `SetFilterQuery` payload record — wire-identical to the former named variant.
+/// 📝️ `SetFilterQuery` payload record — wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct SetFilterQueryEdit {
     pub value: String,
 }
 
-/// 📦️ `SetFilterModules` payload record — wire-identical to the former named variant.
+/// 📛️ `SetFilterModules` payload record — wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct SetFilterModulesEdit {
     pub module_ids: Vec<String>,
 }
 
-/// 📦️ `SetFilterTypology` payload record — wire-identical to the former named variant.
+/// 🎭️ `SetFilterTypology` payload record — wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct SetFilterTypologyEdit {
     pub path: Vec<String>,
 }
 
-/// 📦️ `SetFilterMinAvailability` payload record — wire-identical to the former named variant.
+/// 🌀️ `SetFilterMinAvailability` payload record — wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct SetFilterMinAvailabilityEdit {
     pub value: u32,
 }
 
-/// 📦️ `SetSort` payload record — wire-identical to the former named variant.
+/// 🌁️ `SetSort` payload record — wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct SetSortEdit {
@@ -246,7 +246,7 @@ pub struct SetSortEdit {
     pub sort: Option<TableSort>,
 }
 
-/// 📦️ `SetContributions` payload record — wire-identical to the former named variant.
+/// 🌂️ `SetContributions` payload record — wire-identical to the former named variant.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct SetContributionsEdit {
@@ -361,7 +361,7 @@ impl protocol::ColdMutation<SourcingCurationConfig> for SourcingCurationConfigMu
 //#region 🧩️ArtifactItems5
 pub mod artifact_items_5 {
 //#region 🔖️Document
-#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslScalar, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum SortDirection {
@@ -377,7 +377,7 @@ pub struct TableSort {
     pub direction: SortDirection,
 }
 
-/// 🔍️ The pool table's active filter set — narrows `CurationSnapshot::stock` down to `filtered_stock()`.
+/// 🏊️ The pool table's active filter set — narrows `CurationSnapshot::stock` down to `filtered_stock()`.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct Filters {

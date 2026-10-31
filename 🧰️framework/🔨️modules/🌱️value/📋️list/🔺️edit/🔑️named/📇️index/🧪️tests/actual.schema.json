@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Named Index Staged Projection Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "stock",
+    "keys",
+    "projectionCuts",
+    "maximumTurns",
+    "laws"
+  ],
+  "properties": {
+    "schema": {
+      "const": "value.named-index.projection.actual/v1"
+    },
+    "stock": {
+      "const": {
+        "items": 4096,
+        "copy": 16777216,
+        "capacity": 16777216,
+        "release": 16777216,
+        "depth": 128
+      }
+    },
+    "keys": {
+      "const": [
+        "gamma",
+        "alpha",
+        "beta"
+      ]
+    },
+    "projectionCuts": {
+      "const": [
+        0,
+        1,
+        2
+      ]
+    },
+    "maximumTurns": {
+      "const": 10000
+    },
+    "laws": {
+      "const": {
+        "partialOutputSlot": true,
+        "deniedZero": true,
+        "sameBankThroughClose": true,
+        "stdOrdering": true,
+        "serdeOracle": true,
+        "exactHeap": true
+      }
+    }
+  }
+}

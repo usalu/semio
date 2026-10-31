@@ -15,7 +15,7 @@ mod semantic;
 fn entity_reference(ids:&[(&str,i64)],id:&str,out:&mut RowWriter<'_,'_>)->Result<i64,ValueError>{
  let mut lo=0;let mut hi=ids.len();while lo<hi{let mid=lo+(hi-lo)/2;match out.compare_text(ids[mid].0,id)?{std::cmp::Ordering::Less=>lo=mid+1,std::cmp::Ordering::Greater=>hi=mid,std::cmp::Ordering::Equal=>return Ok(ids[mid].1)}}Err(ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio Model entity identity"))
 }
-/// 🏛️ Resolves only the declared spatial owner partition for hierarchy and containment.
+/// 👑️ Resolves only the declared spatial owner partition for hierarchy and containment.
 fn spatial_reference(ids:&[(&str,i64)],id:&str,count:usize,out:&mut RowWriter<'_,'_>)->Result<i64,ValueError>{
  let row=entity_reference(ids,id,out)?;if row>number(count)?{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio Model parent is outside its spatial partition"))}Ok(row)
 }
@@ -72,10 +72,8 @@ pub fn visit_rows(snapshot:&SemioModelSnapshot,out:&mut RowWriter<'_,'_>)->Resul
 }
 /// 🎟️ Admits all typed Model cells before native forecasting or materialization.
 pub(crate)fn admit_values(snapshot:&SemioModelSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
-/// 🏛️ Admits the exact authored table and column layout before native ownership.
+/// 🚪️ Admits the exact authored table and column layout before native ownership.
 pub(crate)fn admit_layout(limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
-/// 📦️ Counts the actual native primitive cells before typed ownership.
-pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
 /// 📝️ Counts the actual native primitive cells before typed ownership.
 pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
 
@@ -119,7 +117,7 @@ impl SemioModelSnapshot {
 semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut out)?;out.finish()
 }
 
-    /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
+    /// 🔤️ Restores the owned typed subset inside its independently declared relational composition.
     pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{reconstruction::reconstruct(database,control,declared_schema)}
 }
 

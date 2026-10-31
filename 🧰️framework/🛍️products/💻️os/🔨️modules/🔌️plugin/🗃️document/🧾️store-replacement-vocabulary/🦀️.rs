@@ -175,6 +175,7 @@ where
 {
     pub operation: semio_framework_job::OperationId,
     pub generation: semio_framework_job::Generation,
+    pub publication_token: semio_framework_plugin_ownership::store_lifecycle::DocumentStorePublicationToken,
     pub base_child_content_generation: u64,
     pub cancel: ManuallyDrop<Option<semio_framework_job::CancelToken>>,
     pub cancel_signal: ManuallyDrop<Option<std::sync::Arc<std::sync::atomic::AtomicBool>>>,

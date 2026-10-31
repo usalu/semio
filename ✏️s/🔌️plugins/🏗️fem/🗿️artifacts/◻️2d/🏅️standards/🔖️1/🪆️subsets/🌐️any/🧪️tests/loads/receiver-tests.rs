@@ -151,7 +151,7 @@ fn canonical_member_udl_is_retained_but_missing_targets_and_area_are_refused() {
     let cases = cases();
     assert_eq!(cases.receiver.node_reference, "required");
     assert_eq!(cases.receiver.member_reference, "required");
-    assert_eq!(cases.receiver.area, "unsupported");
+    assert_eq!(cases.receiver.area, "required");
     assert_eq!(cases.receiver.unknown, "invalid");
     let mut input = source();
     input.load_cases = vec![load_case("case", vec![FemLoad::MemberUdl { id: "u".into(), element_id: "e".into(), wx: -0., wy: 2. }])];
@@ -165,9 +165,8 @@ fn canonical_member_udl_is_retained_but_missing_targets_and_area_are_refused() {
         FemLoad::MemberUdl { id: "u".into(), element_id: "absent".into(), wx: 0., wy: 0. },
         FemLoad::Area { id: "a".into(), region_id: "absent".into(), pressure: 1. },
     ] {
-        let area = matches!(&load, FemLoad::Area { .. });
         input.load_cases[0].loads = vec![load];
-        assert_eq!(receive(&pack(&input), grant(), usize::MAX).0.unwrap_err().kind, if area { ValueRefusalKind::UnsupportedOwner } else { ValueRefusalKind::InvalidValue });
+        assert_eq!(receive(&pack(&input), grant(), usize::MAX).0.unwrap_err().kind, ValueRefusalKind::InvalidValue);
     }
 }
 #[test]
@@ -290,5 +289,18 @@ fn identity_child_restores_original_finite_parent_stage_on_success_and_error() {
         native.step().unwrap();
         native.checkpoint().unwrap();
         assert_eq!(last.get(), (1, 1));
+    }
+}
+#[test]
+fn a_row_failing_validation_is_never_used() {
+    for (case, damage) in [("material modulus", 0usize), ("node identity", 1usize)] {
+        let mut input = source();
+        match damage {
+            0 => input.materials[0].e = -1.0,
+            _ => input.nodes[0].id = String::new(),
+        }
+        let (result, _) = receive(&pack(&input), grant(), usize::MAX);
+        let error = result.err().unwrap_or_else(|| panic!("{case}: an invalid row produced a usable snapshot"));
+        assert_eq!(error.kind, ValueRefusalKind::InvalidValue, "{case}");
     }
 }

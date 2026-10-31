@@ -1,0 +1,21 @@
+{
+  "state": "schema-and-owning-laws-before-production-no-runtime",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🎟️work/🔣️.json",
+      "sha256": "5f437848387c54b247e936761ae0397946a5ef25f8961bd0a07cf0158c2c8630"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🎟️work/🧫️fixtures/🔣️.json",
+      "sha256": "7eb10ef236c2442aaff5de5f7f4d8957e9b3c2671a5687520bfea62317d64156"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "28081d2f9d7e682aac8fa57881047a1727957b316e7f8ea254055343ee43358e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "c1a964678484d27b6eb303a2d834656e703c70e90256b9209175c98ebfd281d6"
+    }
+  ]
+}

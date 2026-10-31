@@ -85,10 +85,12 @@ impl From<semio_framework_value::ValueError> for InferenceWorkFailure{fn from(pr
 
 impl From<semio_framework_job::OriginalTurnFailure> for InferenceWorkFailure{fn from(primary:semio_framework_job::OriginalTurnFailure)->Self{Self::Original(primary)}}
 
-/// 🎟️ Moves an already admitted native envelope unchanged, or admits its entire defining inference source once.
-pub fn admit_inference_failure(original:&mut Option<InferenceWorkFailure>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{
+/// 🎟️ Moves an already admitted native envelope unchanged, or admits its entire defining inference source once through a prepaid domain reservation.
+pub fn admit_inference_failure(original:&mut Option<InferenceWorkFailure>,place:&mut semio_framework_job::OriginalDomainReservation<InferenceWorkFailure>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{
  if original.as_ref().is_some_and(|original|matches!(original,InferenceWorkFailure::Original(_))){let Some(InferenceWorkFailure::Original(original))=original.take()else{unreachable!()};return Ok(Some(original))}
- semio_framework_job::admit_original_domain_failure(original,cx)
+ if !place.ready(){place.prepare(cx)?;return Ok(None)}
+ if !place.pending(){place.with_body(cx,|_,slot|{*slot=original.take();Ok(())})?;}
+ semio_framework_job::admit_original_domain_failure(place,cx)
 }
 
 impl semio_framework_job::OriginalDomainProjection for InferenceWorkFailure{

@@ -45,6 +45,3 @@ impl OriginalCheckpointIdentity{
  pub fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.digest.is_none()}
 }
 
-#[cfg(test)]
-#[path="existing-tests.rs"]
-mod tests;

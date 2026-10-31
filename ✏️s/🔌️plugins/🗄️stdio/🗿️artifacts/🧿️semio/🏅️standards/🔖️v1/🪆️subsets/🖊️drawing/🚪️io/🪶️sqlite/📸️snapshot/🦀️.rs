@@ -20,8 +20,6 @@ pub fn visit_rows(snapshot:&SemioDrawingSnapshot,out:&mut RowWriter<'_,'_>)->Res
 pub(crate)fn admit_values(snapshot:&SemioDrawingSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
 /// 🏛️ Admits the exact authored table and column layout before native ownership.
 pub(crate)fn admit_layout(limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
-/// 📦️ Counts the actual native primitive cells before typed ownership.
-pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
 /// 📝️ Counts the actual native primitive cells before typed ownership.
 pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
 
@@ -84,7 +82,7 @@ impl SemioDrawingSnapshot {
     /// 🧩️ Restores all independently owned Drawing roots with one global ownership index.
     pub fn reconstruct_sqlite_components(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Vec<(i64,Self)>,ValueError>{reconstruction::reconstruct_components(db,control,declared_schema)}
 
-    /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
+    /// 🔤️ Restores the owned typed subset inside its independently declared relational composition.
     pub fn reconstruct_sqlite_database(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>, declared_schema: &str)->Result<Self,ValueError> {
         reconstruction::reconstruct(db,control,declared_schema)
     }

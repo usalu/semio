@@ -302,6 +302,14 @@
         }
       }
     },
+    "OutputDirectoryPattern": {
+      "description": "Directory names that hold per-lane compiler output (target, target-<lane>); never workspace members. One rule for the ownership walk and the workspace generator.",
+      "const": "^target(?:-[a-z0-9]+)*$"
+    },
+    "OutputDirectories": {
+      "description": "Directory names that hold generated or vendored build output (gitignored, or an opaque boundary such as compose); never workspace members, whatever manifest they carry.",
+      "const": ["🗑️generated", "🤖️generated", "node_modules", "target", "dist", "📤️dist", "build", "storybook-static", "temp", "coverage", "__pycache__", "🔌️plugin-modules", "compose", "pkg", "🕸️bindings"]
+    },
     "PhysicalLimits": {
       "const": {
         "maximumManifestBytes": 8388608,

@@ -34,6 +34,7 @@ pub struct UiNativeMeshResource {
 pub struct UiNativeResources {
     rows: ui_contract::UiFixedList<UiNativeMeshResource, UI_NATIVE_RESOURCE_CAPACITY>,
     pending_failure: Option<UiNativeResourceTurnFailure>,
+    failure_place: UiNativeFailurePlace,
 }
 
 impl UiNativeResources {
@@ -86,13 +87,17 @@ impl UiNativeResources {
     }
 
     pub fn close_step_on_original(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<bool>, semio_framework_job::OriginalTurnFailure> {
-        if self.pending_failure.is_some() { return admit_native_resource_failure(&mut self.pending_failure, cx); }
-        if self.rows.terminal_is_empty() { return Ok(Some(true)); }
+        if self.pending_failure.is_some() { return admit_native_resource_failure(&mut self.pending_failure, &mut self.failure_place, cx); }
+        if self.rows.terminal_is_empty() {
+            if self.failure_place.terminal_is_empty() { return Ok(Some(true)); }
+            close_native_failure_place(&mut self.failure_place, cx)?;
+            return Ok(Some(self.terminal_is_empty()));
+        }
         let grant = cx.retained_grant();
         if cx.should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
         let demand = match self.close_demands(grant.maximum_copy_bytes) {
             Ok(demand) => demand,
-            Err(primary) => { self.pending_failure = Some(UiNativeResourceTurnFailure::Native { primary, receipt_refusal: None }); return admit_native_resource_failure(&mut self.pending_failure, cx); }
+            Err(primary) => { self.pending_failure = Some(UiNativeResourceTurnFailure::Native { primary, receipt_refusal: None }); return admit_native_resource_failure(&mut self.pending_failure, &mut self.failure_place, cx); }
         };
         if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes || demand.depth > grant.maximum_depth { return Ok(None); }
         let result = self.close_step(grant);
@@ -106,7 +111,7 @@ impl UiNativeResources {
         }
     }
 
-    pub fn terminal_is_empty(&self) -> bool { self.rows.terminal_is_empty() && self.pending_failure.is_none() }
+    pub fn terminal_is_empty(&self) -> bool { self.rows.terminal_is_empty() && self.pending_failure.is_none() && self.failure_place.terminal_is_empty() }
 }
 
 impl Drop for UiNativeResources {
@@ -189,6 +194,20 @@ impl semio_framework_job::OriginalDomainProjection for UiNativeResourceTurnFailu
     }
 }
 
-fn admit_native_resource_failure(source: &mut Option<UiNativeResourceTurnFailure>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<bool>, semio_framework_job::OriginalTurnFailure> {
-    match semio_framework_job::admit_original_domain_failure(source, cx)? { Some(failure) => Err(failure), None => Ok(None) }
+#[derive(Default)]
+struct UiNativeFailurePlace(semio_framework_job::OriginalDomainReservation<UiNativeResourceTurnFailure>);
+impl std::fmt::Debug for UiNativeFailurePlace { fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { formatter.debug_struct("UiNativeFailurePlace").field("terminal_is_empty", &self.0.terminal_is_empty()).finish() } }
+impl std::ops::Deref for UiNativeFailurePlace { type Target = semio_framework_job::OriginalDomainReservation<UiNativeResourceTurnFailure>; fn deref(&self) -> &Self::Target { &self.0 } }
+impl std::ops::DerefMut for UiNativeFailurePlace { fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 } }
+
+fn close_native_failure_place(place: &mut UiNativeFailurePlace, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+    let demand = place.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
+    semio_framework_job::close_original_retained_step(cx, demand, |grant| place.close_step(grant))?;
+    Ok(())
+}
+
+fn admit_native_resource_failure(staged: &mut Option<UiNativeResourceTurnFailure>, place: &mut semio_framework_job::OriginalDomainReservation<UiNativeResourceTurnFailure>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<bool>, semio_framework_job::OriginalTurnFailure> {
+    if !place.ready() { place.prepare(cx)?; return Ok(None); }
+    if !place.pending() { place.with_body(cx, |_, slot| { *slot = staged.take(); Ok(()) })?; }
+    match semio_framework_job::admit_original_domain_failure(place, cx)? { Some(failure) => Err(failure), None => Ok(None) }
 }

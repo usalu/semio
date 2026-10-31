@@ -7,7 +7,7 @@ pub const FLOW_HOST_ONLY_TOOL_IDS: &[&str] = &["evaluate", "contextMenuAt", "ope
 
 const FLOW_HOST_ONLY_RAW_BYTES: usize = 16_384;
 
-pub(super) struct FlowHostEffectPayload {
+pub struct FlowHostEffectPayload {
     pub(super) command: FlowCommand,
     pub(super) snapshot: Arc<FlowSnapshot>,
     pub(super) config: Arc<FlowMainWindowConfig>,
@@ -35,7 +35,7 @@ fn flow_host_wire_view(payload: &FlowHostEffectPayload) -> Result<store::os_pack
     flow_scalar_command_view(&payload.command)
 }
 
-struct FlowHostEffectJob {
+pub struct FlowHostEffectJob {
     pub(super) payload: Option<Arc<FlowHostEffectPayload>>,
     payload_close: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<FlowHostEffectPayload>>,
     decoder_close: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<FlowHostEffectPayload>>,
@@ -214,7 +214,7 @@ pub(super) fn flow_build_host_only_job(request: &mut Option<semio_framework_plug
     semio_framework::action_bus::admit_original_tool_construction(cx, output, demand, |_| {
         let mut taken = request.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "original Flow host-only request is absent"))?;
         let input = taken.input.take();
-        let payload = FlowHostEffectPayload { command: *taken.command, snapshot: taken.snapshot, config: Arc::new(main::config::from_snapshot(taken.window_config.as_ref())), history: taken.history, children: taken.context.children.clone(), instance_owner: taken.instance_operation_owner, completion: taken.completion };
+        let payload = FlowHostEffectPayload { command: FlowCommand::clone(&taken.command), snapshot: taken.snapshot, config: Arc::new(main::config::from_snapshot(taken.window_config.as_ref())), history: taken.history, children: taken.context.children.clone(), instance_owner: taken.instance_operation_owner, completion: taken.completion };
         let mut job = FlowHostEffectJob::new(taken.operation, payload);
         if let Some(input) = input {
             job.decoder = Some(store::os_pack::record::scalar_witness::ScalarRecordWireWitness::new(job.payload.as_ref().expect("fresh Flow host-only payload").clone(), flow_host_wire_view));

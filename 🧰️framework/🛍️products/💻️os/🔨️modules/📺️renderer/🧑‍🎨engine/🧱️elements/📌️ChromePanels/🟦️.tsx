@@ -14,7 +14,7 @@
 import { useMemo, useState, type ReactElement } from "../⚛️react-port/🟦️.ts";
 import { Button, type IconName, type PanelTabBranch, type PanelTabNode, singleTreeLeaf } from "@semio-tech/ui-react";
 import { type NamedLayout, type WindowLayout } from "@semio-tech/framework";
-import { defaultAppsSettingsTabLabel, shellLabel, shellTabIcon } from "../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
+import { defaultAppsSettingsTabLabel, shellLabel, shellLabelLocale, shellTabIcon } from "../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { FRAMEWORK_CHAT_PANEL_ID, FRAMEWORK_SETTINGS_CONFLICTS_TAB_ID, FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID, FRAMEWORK_SETTINGS_GENERAL_TAB_ID, FRAMEWORK_SETTINGS_KEYBINDINGS_TAB_ID, FRAMEWORK_SETTINGS_PANEL_ID, FRAMEWORK_SETTINGS_THEME_TAB_ID, FRAMEWORK_TASK_MANAGER_PANEL_ID } from "./🆔️panel-ids/🟦️.ts";
 import type { DisplayHostApi } from "./🖥️display-panel/🟦️.tsx";
 import { buildSettingsGeneralTree, type SettingsHostApi } from "./⚙️settings-general/🟦️.tsx";
@@ -72,7 +72,7 @@ export function createFrameworkSettingsPanelTab(getHost: () => SettingsHostApi |
           singleTreeLeaf({
             id: FRAMEWORK_SETTINGS_DEFAULT_APPS_TAB_ID,
             icon: shellTabIcon("app-window"),
-            name: defaultAppsSettingsTabLabel(getDefaultAppsHost?.()?.locale ?? "en"),
+            name: defaultAppsSettingsTabLabel(getDefaultAppsHost?.()?.locale ?? shellLabelLocale()),
             order: 3,
             tree: {
               resolveTree: () => {

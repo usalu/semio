@@ -96,3 +96,13 @@ async fn edit_text_outcome_obeys_the_policy_matrix() {
     protocol::os_spr::protocol_laws::assert_outcome_policy_matrix(&base, &WriterMutation::EditText(EditText { text: "second".into() })).await;
 }
 //#endregion 🧪️OutcomeLaws
+
+/// 🪡️ The real Writer editor reaches its canonical original algebra through the application adapter.
+#[test]
+fn writer_editor_forwards_its_canonical_original_typing_factory() {
+    type App = semio_framework_plugin::app::EditorApp<crate::editor::writer::WriterPlayApp>;
+    let policy = <App as semio_framework_plugin::ArtifactApp>::original_typing_fold();
+    let semio_framework_plugin::tool_contract::OriginalTypingFoldPolicy::Factory(actual) = policy else { panic!("Writer editor must select its original producer") };
+    let expected: &dyn semio_framework_plugin::tool_contract::ArtifactOriginalTypingFoldFactory<WriterMutation> = &semio_s_artifact_writer_writer_typing_fold::WRITER_ORIGINAL_TYPING_FOLD;
+    assert!(std::ptr::eq(actual, expected));
+}

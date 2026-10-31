@@ -3,7 +3,7 @@ import {spawnSync} from "node:child_process";
 import {existsSync,mkdirSync,mkdtempSync,readdirSync,readFileSync,rmSync,writeFileSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
-import {bazelGrantedWorkerHostV1,bazelHostPlanV1,bazelHostResourceSettingsV1,bazelLocalConcurrencyV1,bazelResourceSetsV1} from "../🟦️.ts";
+import {bazelGrantedWorkerHostV1,bazelHostPlanV1,bazelHostResourceSettingsV1,bazelLocalConcurrencyV1,bazelResourceSetsV1,bazelStartJobsV1} from "../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 
 test("The plan renders into Bazel's local resource flags, and a plan travels through the environment",()=>{
@@ -53,3 +53,9 @@ test.skipIf(!live)("Real Bazel runs exactly as many local actions at once as the
   rmSync(root,{recursive:true,force:true});
  }
 },600_000);
+
+test("a grant that grew after admission starts Bazel with the jobs it holds now, an explicit request only without a grant",()=>{
+ const plan={...(fixture.plan.value as object),jobs:3} as never;
+ expect(bazelStartJobsV1(1,plan)).toBe(3);expect(bazelStartJobsV1(undefined,plan)).toBe(3);
+ expect(bazelStartJobsV1(2,undefined)).toBe(2);expect(bazelStartJobsV1(undefined,undefined)).toBeUndefined();
+});

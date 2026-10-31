@@ -1,0 +1,22 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🎟️work/📐️.json",
+    "bytes": 523,
+    "sha256": "423dc7a0dff2bce6178fe9e3a25ae570567e9f70492ad246997076b2f1906090"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🎟️work/🔣️.json",
+    "bytes": 980,
+    "sha256": "b0f7d0a1647969570ec70a81bcb720652c58445209323575dab6c2067da83fa5"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🎟️work/🧪️tests/🦀️.rs",
+    "bytes": 4912,
+    "sha256": "bff9f62c7dcba1b3de5a8382c781b0eba1ade10c14683ea41456c5b0534759bf"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🦀️.rs",
+    "bytes": 8009,
+    "sha256": "6706ca2f2f1c73232d69c77bbb224dc776986528c3c9a6a17a44129e9319f164"
+  }
+]

@@ -1,4 +1,5 @@
 use super::*;
+use crate::model::Model;
 use crate::snapshot::ENERGY_MODEL_DOCUMENT_SCHEMA;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel};
 
@@ -12,7 +13,7 @@ fn demo() -> EnergyModelSnapshot {
     snapshot_of(&crate::examples::demo::model())
 }
 
-/// 🧫️ Case 610 adds the south overhang, so the shading section has something in it.
+/// ➕️ Case 610 adds the south overhang, so the shading section has something in it.
 fn shaded() -> EnergyModelSnapshot {
     snapshot_of(&crate::bestest::model("610").expect("ANSI/ASHRAE 140 case 610 is registered"))
 }
@@ -27,7 +28,7 @@ fn request(node_key: &str, open: Option<bool>, offset: u32, rows: u32) -> TreeWi
     TreeWindowRequest { body_key: BODY_KEY.to_string(), node_key: node_key.to_string(), open, offset, rows }
 }
 
-/// 🪟️ Opens one container wide enough to show all of it — the "the user expanded this section" state.
+/// 📂️ Opens one container wide enough to show all of it — the "the user expanded this section" state.
 fn opened(node_key: &str) -> TreeWindowRequest {
     request(node_key, Some(true), 0, 64)
 }
@@ -70,7 +71,7 @@ fn child_keys(node: &serde_json::Value) -> Vec<String> {
     node["children"].as_array().map(|children| children.iter().filter_map(|child| child["key"].as_str().map(str::to_owned)).collect()).unwrap_or_default()
 }
 
-/// 🪟️ The `{total, offset}` a container stamps — the full extent of its logical child list and where
+/// ↗️ The `{total, offset}` a container stamps — the full extent of its logical child list and where
 /// the materialised slice starts.
 fn window_of(node: &serde_json::Value) -> (usize, usize) {
     let window = &node["component"]["window"];
@@ -100,7 +101,7 @@ fn surface_path(zone_key: &str, surface_key: &str) -> String {
     window_path(&[&section_key("zones"), zone_key, surface_key])
 }
 
-/// 🧫️ The demo's zone row children: no spaces, six surfaces.
+/// 🎪️ The demo's zone row children: no spaces, six surfaces.
 const DEMO_ZONE_CHILDREN: usize = 6;
 
 #[semio_framework_async_macros::async_test]
@@ -121,7 +122,7 @@ async fn every_section_is_assembled_over_the_document() {
     }
 }
 
-/// 🌳️ Every surface and window of the document reaches a row — the zones section and the zone row are
+/// 🏞️ Every surface and window of the document reaches a row — the zones section and the zone row are
 /// open by author default, so the first paint already shows the whole hierarchy of this fixture.
 #[semio_framework_async_macros::async_test]
 async fn every_zone_surface_and_window_is_a_row_keyed_by_its_entity_id() {
@@ -177,7 +178,7 @@ async fn every_entity_row_picks_into_the_energy_model_domain() {
 
 const DELETE_SURFACE_MARKER: &str = "delete-surface";
 
-/// 🌳️ A window is nested under its host surface, and a surface under its zone — the tree, not a flat
+/// 🌬️ A window is nested under its host surface, and a surface under its zone — the tree, not a flat
 /// list, is what makes "which wall is this window in" readable without a second lookup.
 #[semio_framework_async_macros::async_test]
 async fn windows_nest_under_their_surface_and_surfaces_under_their_zone() {
@@ -232,7 +233,7 @@ async fn an_empty_model_renders_placeholders_rather_than_refusing() {
 }
 
 //#region 🪟️WindowLaws
-/// 🪟️ THE law this panel was rebuilt for: a document an order of magnitude past one viewport stamps
+/// ⚖️ THE law this panel was rebuilt for: a document an order of magnitude past one viewport stamps
 /// every container's FULL extent and materialises only the slice the host asked for. No section is
 /// truncated, no `+N` row is invented, and the scrollbar the host paints spans the whole catalogue.
 #[semio_framework_async_macros::async_test]
@@ -265,7 +266,7 @@ async fn an_oversized_document_stamps_every_containers_total_and_materialises_on
     assert!(!json.contains("\"+"), "and no `+N` label either: {json}");
 }
 
-/// 🪟️ A closed container costs one stamped `total` and nothing else — that is what makes a document
+/// 🚪️ A closed container costs one stamped `total` and nothing else — that is what makes a document
 /// with ten thousand entities cheap to paint, and what the host's expand arrow reads.
 #[semio_framework_async_macros::async_test]
 async fn a_closed_container_stamps_its_total_and_materialises_no_child() {
@@ -281,7 +282,7 @@ async fn a_closed_container_stamps_its_total_and_materialises_no_child() {
     assert!(window_of(materials).0 > 0, "but still reports its extent: {materials}");
 }
 
-/// 🪟️ Scrolling a nested group: the host names the surface and the slice, and exactly that slice of
+/// 📜️ Scrolling a nested group: the host names the surface and the slice, and exactly that slice of
 /// its windows is materialised — keyed by raw `EntityId`, never renumbered by the offset.
 #[semio_framework_async_macros::async_test]
 async fn a_tree_window_request_materialises_exactly_its_slice_of_a_surface_group() {
@@ -297,7 +298,7 @@ async fn a_tree_window_request_materialises_exactly_its_slice_of_a_surface_group
     assert_eq!(child_keys(node_at(&tree, south_wall).expect("the south wall row")), vec!["50", "51"], "and a wide window builds both");
 }
 
-/// 🪟️ The nesting a hand-paged workaround used to starve: a zone owning far more surfaces than one
+/// 📃️ The nesting a hand-paged workaround used to starve: a zone owning far more surfaces than one
 /// viewport shows keeps EVERY surface reachable, and a surface's own windows are never collapsed into
 /// a marker no row can expand (the defect the first browser probe of this ticket found).
 #[semio_framework_async_macros::async_test]
@@ -388,7 +389,7 @@ async fn the_site_row_opens_the_site_form_by_clearing_the_selection() {
     assert!(row.to_string().contains("47.") || row.to_string().contains("°"), "and it still reports the site's own coordinates: {row}");
 }
 
-/// 🎯️ `PanelTreeBuilder::selected`/`::highlighted` are declared but do not paint in this SDK wave, so
+/// 👆️ `PanelTreeBuilder::selected`/`::highlighted` are declared but do not paint in this SDK wave, so
 /// the state also rides in the label — otherwise a reader cannot see that a 3d pick and a tree row
 /// are the same selection.
 #[semio_framework_async_macros::async_test]

@@ -48,13 +48,13 @@ impl RetirementCursor for ClaimRetirement {
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let Some(source)=self.source.as_ref()else{return Ok(Default::default())};if source.is_claimed(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original publication claim still has its permit"));}let returned=source.has_returned_alias();Ok(semio_framework_value::RetirementDemand{copy_bytes:if returned{size_of::<usize>()}else{size_of::<PublicationClaim>()},release_bytes:if returned{0}else{PublicationClaimHandle::frame_bytes()},depth:1,..Default::default()})}
 
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
-  let Some(source)=self.source.as_ref()else{return RetirementStep::Complete;};
-  if source.is_claimed(){return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original publication claim still has its permit"));}
+  let Some(source)=self.source.as_ref()else{return RetirementStep::Complete(0);};
+  if source.is_claimed(){return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original publication claim still has its permit"),0);}
   let returned=source.has_returned_alias();let copy=if returned{size_of::<usize>()}else{size_of::<PublicationClaim>()};let release=if returned{0}else{PublicationClaimHandle::frame_bytes()};
   if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_release_bytes<release||grant.maximum_depth==0{return RetirementStep::BudgetExhausted;}
-  if returned {source.drain_returned_alias();return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()});}
+  if returned {source.drain_returned_alias();return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()},1);}
   let original=self.source.take().unwrap().return_original();let unique=original.is_some();if let Some(original)=original{assert!(original.returned.load(Ordering::Acquire).is_null(),"original claim frame cannot return a live alias");drop(original);}
-  RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:if unique{copy}else{0},released_bytes:if unique{release}else{0},..Default::default()})
+  RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:if unique{copy}else{0},released_bytes:if unique{release}else{0},..Default::default()},1)
  }
  fn terminal_is_empty(&self)->bool { self.source.is_none() }
  fn next_close_byte_demand(&self)->Option<usize> {Some(self.source.as_ref().map_or(0,|source|if source.has_returned_alias(){0}else{PublicationClaimHandle::frame_bytes()}))}

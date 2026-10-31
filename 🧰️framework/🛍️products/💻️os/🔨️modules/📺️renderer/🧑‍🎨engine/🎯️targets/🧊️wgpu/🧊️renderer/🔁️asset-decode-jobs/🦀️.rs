@@ -1,6 +1,7 @@
 //! 🔁️ Asset decode jobs: asset probe, decode job and session, prefix validators and the renderer worker pool with its I/O slots.
 use super::*;
 use semio_framework_ui_contract as ui_contract;
+use semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource;
 
 //#region 📡️RendererAssetAuthority
 #[derive(Clone, Copy)]
@@ -374,17 +375,18 @@ impl RendererAssetDecodeSession {
         use semio_framework_job::{InteractiveJob, JobOutcomeKind, close_original_retained_step};
         use semio_framework_value::{RetirementDemand, RetainedCloneStep, ValueError, ValueRefusalKind};
         self.closing |= self.cancelled.load(Ordering::Acquire) || cx.is_cancelled();
+        if self.source.as_ref().is_some_and(RefusedWorkerSource::terminal_is_empty) { RefusedWorkerSource::retire_empty(&mut self.source,cx)?; return Ok(true); }
         if let Some(source) = self.source.as_mut() {
             if self.closing {
                 if self.boundary.is_none() { self.boundary = source.job().and_then(RendererAssetDecodeJob::take_probe).map(|probe| (probe, Some(RendererAssetDecodeResult::Cancelled))); }
                 source.close_step(cx)?;
-                if source.terminal_is_empty() { self.source = None; }
             } else {
                 let config = semio_framework_job_worker_authority::BatchDriveConfig { retained: cx.retained_grant(), site: "renderer_asset_decode", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: semio_framework_job::INTERACTIVE_LANE_WALL_US };
-                if let Some(session) = source.admit_pending(config, cx)? { self.session = Some(session); assert!(source.terminal_is_empty()); self.source = None; }
+                source.admit_pending(config, &mut self.session, cx)?;
             }
             return Ok(true);
         }
+        if self.session.as_ref().is_some_and(|session|session.terminal_is_empty()) { close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.session=None;semio_framework_value::RetainedWorkOutcome::<_,ValueError>{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(true); }
         let Some(session) = self.session.as_mut() else { return Ok(false); };
         if self.closing {
             if self.boundary.is_none() {
@@ -396,7 +398,7 @@ impl RendererAssetDecodeSession {
             let witness = cx.borrowed_original_cancel_token()?;
             match session.has_original_cancel_alias_witness(witness) {
                 Ok(true) => {
-                    close_original_retained_step(cx, RetirementDemand { depth: 1, ..Default::default() }, |grant| session.return_original_cancel_alias_step(witness, grant).map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(|error| match error { semio_framework_job_worker::WorkerJobDemandError::Refused(error) => error, semio_framework_job_worker::WorkerJobDemandError::Contention(_) => ValueError::literal(ValueRefusalKind::WorkLimit, "decoder cancellation return is contended") }))?;
+                    close_original_retained_step(cx, RetirementDemand { depth: 1, ..Default::default() }, |grant| {let turn=session.return_original_cancel_alias_step(witness,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|step| step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(|error| match error { semio_framework_job_worker::WorkerJobDemandError::Refused(error) => error, semio_framework_job_worker::WorkerJobDemandError::Contention(_) => ValueError::literal(ValueRefusalKind::WorkLimit, "decoder cancellation return is contended") }),work:turn.work}})?;
                     return Ok(true);
                 }
                 Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => return Ok(false),
@@ -404,7 +406,6 @@ impl RendererAssetDecodeSession {
                 Ok(false) => {}
             }
             session.close_step(cx)?;
-            if session.terminal_is_empty() { self.session = None; }
             return Ok(true);
         }
         if let Some(kind) = session.checked_out_outcome_descriptor().map(semio_framework_job::JobOutcomeDescriptor::kind) {
@@ -413,134 +414,13 @@ impl RendererAssetDecodeSession {
                 self.boundary = session.checked_out_job().and_then(RendererAssetDecodeJob::take_probe).map(|probe| (probe, Some(result)));
                 self.closing = true;
             } else {
-                close_original_retained_step(cx, RetirementDemand { depth: 2, ..Default::default() }, |grant| Ok(session.acknowledge_checked_out_outcome(grant)))?;
+                session.acknowledge_checked_out_outcome(cx)?;
                 if session.checked_out_outcome_descriptor().is_none() { session.resume().map_err(|_| ValueError::literal(ValueRefusalKind::InvariantViolated, "decoder lost its original checked-out owner"))?; }
             }
         } else if session.checked_out_job().is_some() {
             session.resume().map_err(|_| ValueError::literal(ValueRefusalKind::InvariantViolated, "decoder lost its original empty-outcome owner"))?;
         } else { session.pump_one_for_interactive_turn(cx)?; }
         Ok(true)
-    }
-
-    pub fn cancel(&self) {
-        if !self.cancelled.swap(true, Ordering::AcqRel) {
-            self.wake();
-        }
-    }
-
-    pub fn wake(&self) {
-        #[cfg(not(target_arch = "wasm32"))]
-        if let Some(waker) = self.waker.as_ref() {
-            waker.wake_by_ref();
-        }
-    }
-
-    pub fn pump_one(&mut self) -> bool {
-        use semio_framework_job::{StepOutcome};
-use semio_framework_job_worker::{WorkerJobPoll};
-        if self.boundary.is_none() {
-            if let Ok(mut handback) = self.handback.try_lock() {
-                self.boundary = handback.take().map(|probe| (probe, Some(self.fault.map_or(RendererAssetDecodeResult::Cancelled, RendererAssetDecodeResult::Fault))));
-            }
-        }
-        if let Some(rejected) = self.rejected.as_mut() {
-            let demand = match rejected.retirement_demands(ui_contract::UI_WORKER_RETIREMENT_POLICY.maximum_copy_bytes) { Ok(demand) => demand, Err(_) => { self.fault = Some("original rejected job close demand refused"); return false; } };
-            if !ui_contract::ui_worker_retirement_permits(demand) { self.fault = Some("original worker owner exceeds fixed retirement policy"); return false; }
-            let grant = ui_contract::UI_WORKER_RETIREMENT_POLICY;
-            let step = rejected.close_step(grant).admit(grant, rejected.terminal_is_empty());
-            if matches!(step, semio_framework_job::InteractiveJobCloseStep::Refused { .. }) { self.fault = Some("original rejected job close receipt refused"); return false; }
-            if rejected.terminal_is_empty() {
-                self.rejected = None;
-            }
-            return true;
-        }
-        let Some(session) = self.session.as_ref() else { return false };
-        let _ = session.take_wake();
-        #[cfg(not(target_arch = "wasm32"))]
-        if self.waker.as_ref().is_some_and(|waker| session.register_wake(waker).is_err()) {
-            return true;
-        }
-        match session.poll() {
-            WorkerJobPoll::Idle => {
-                #[cfg(not(target_arch = "wasm32"))]
-                match session.try_submit_step(&renderer_worker_pool(), semio_framework_async::Lane::Maintenance) {
-                    Ok(ticket) => {
-                        self.ticket = Some(ticket);
-                        return false;
-                    }
-                    Err(semio_framework_job_worker::WorkerJobSubmitFault::SequenceExhausted) => {
-                        self.fault = Some("asset decoder session sequence exhausted");
-                        let _ = session.begin_close();
-                    }
-                    Err(_) => {}
-                }
-                #[cfg(target_arch = "wasm32")]
-                match session.try_step_on_worker() {
-                    Ok((ticket, _)) => self.ticket = Some(ticket),
-                    Err(semio_framework_job_worker::WorkerJobContention::WakeExhausted(_)) => {
-                        self.fault = Some("asset decoder session wake sequence exhausted");
-                        let _ = session.begin_close();
-                    }
-                    Err(_) => {}
-                }
-            }
-            WorkerJobPoll::Outcome => {
-                let Some(ticket) = self.ticket else {
-                    self.fault = Some("asset decoder outcome lost its exact ticket");
-                    let _ = session.begin_close();
-                    return true;
-                };
-                if let Ok(mut owner) = session.take_outcome(ticket) {
-                    self.ticket = None;
-                    if matches!(owner.outcome(), StepOutcome::Yield) {
-                        let _ = owner.take_outcome();
-                        if let Err(owner) = owner.resume() {
-                            self.fault = Some("asset decoder yield could not resume its exact owner");
-                            owner.begin_close();
-                        }
-                    } else {
-                        self.fault = Some("asset decoder exposed a nonterminal payload");
-                        owner.begin_close();
-                    }
-                }
-            }
-            WorkerJobPoll::Terminal => {
-                if let Ok(owner) = session.take_terminal() {
-                    let result = match owner.outcome() {
-                        StepOutcome::Complete(_) => owner.job().result.unwrap_or(RendererAssetDecodeResult::Fault("asset decoder completed without its typed result")),
-                        StepOutcome::Cancelled => RendererAssetDecodeResult::Cancelled,
-                        _ => RendererAssetDecodeResult::Fault("asset decoder worker terminated with a fault"),
-                    };
-                    self.boundary = owner.job().take_probe().map(|probe| (probe, Some(result)));
-                    self.ticket = None;
-                    owner.begin_close();
-                }
-            }
-            WorkerJobPoll::Rejected => {
-                if let Ok(rejected) = session.take_rejected() {
-                    match rejected.kind() {
-                        semio_framework_async::WorkerSubmitErrorKind::Saturated | semio_framework_async::WorkerSubmitErrorKind::Contended => rejected.resume(),
-                        _ => {
-                            self.fault = Some("asset decoder worker pool refused the exact submission");
-                            self.boundary = rejected.job().take_probe().map(|probe| (probe, Some(RendererAssetDecodeResult::Fault("asset decoder worker pool refused the exact submission"))));
-                            rejected.begin_close();
-                        }
-                    }
-                }
-            }
-            WorkerJobPoll::Closing | WorkerJobPoll::TerminalEmpty => {
-                let demand = match session.retirement_demands(ui_contract::UI_WORKER_RETIREMENT_POLICY.maximum_copy_bytes) { Ok(demand) => demand, Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => return false, Err(_) => { self.fault = Some("original worker job close demand refused"); return false; } };
-                if !ui_contract::ui_worker_retirement_permits(demand) { self.fault = Some("original worker owner exceeds fixed retirement policy"); return false; }
-                let grant = ui_contract::UI_WORKER_RETIREMENT_POLICY;
-            let step = session.close_step(grant);
-            if !step.progress().fits(grant) || matches!(step, semio_framework_job_worker_authority::WorkerJobCloseStep::Refused(_)) { self.fault = Some("original worker job close receipt refused"); return false; }
-                if session.terminal_is_empty() {
-                    self.session = None;
-                }
-            }
-            WorkerJobPoll::Submitted | WorkerJobPoll::CheckedOut => return false,
-        }
-        true
     }
 
     pub fn take_boundary(&mut self) -> Option<(RendererAssetProbe, Option<RendererAssetDecodeResult>)> {

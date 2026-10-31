@@ -9,12 +9,12 @@ impl FactoryPayloadRetirement for Issuer{
  fn close_state_constructor_depth(&self)->usize{0}
  fn close_state_constructor_copy_bytes(&self)->usize {std::mem::size_of::<Self::CloseState>()}
  fn close_state_preparation_demands(&self,_:&Self::CloseState,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(Default::default())}
- fn prepare_close_state_step(&self,_:&mut Self::CloseState,_:crate::RetainedCloneGrant)->Result<crate::RetainedCloneStep,crate::ValueError>{Ok(crate::RetainedCloneStep::Complete(Default::default()))}
+ fn prepare_close_state_step(&self,_:&mut Self::CloseState,_:crate::RetainedCloneGrant)->crate::RetainedWorkOutcome{crate::RetainedWorkOutcome{result:Ok(crate::RetainedCloneStep::Complete(Default::default())),work:0}}
  fn close_state_preparation_is_complete(_:&Self::CloseState)->bool{true}
  fn prepare_close_state(&self)->bool{false}
  fn transfer_payload(_:Self,state:&mut bool){*state=true;}
  fn close_state_demands(_: &bool,_:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
- fn close_state_step(state:&mut bool,_:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{assert!(*state);Ok(RetainedCloneStep::Complete(Default::default()))}
+ fn close_state_step(state:&mut bool,_:RetainedCloneGrant)->crate::RetainedWorkOutcome{assert!(*state);crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
  fn close_state_terminal_is_empty(state:&bool)->bool{*state}
 }
 #[test]
@@ -28,7 +28,7 @@ fn factory_boxed_refused_publication_restores_the_actual_original_slots_and_issu
 }
 impl ArtifactOwnedValueRetirementFactory<String> for Issuer{
  fn retirement_birth_bytes(&self,_:&String)->usize{owned_retirement_birth_bytes::<String>()}
- fn retire_owned(&self,value:String,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,String)>{if self.refuse.swap(false,Ordering::SeqCst){Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original boxed issuer refuses once"),value))}else{admit_owned_retirement(value,grant)}}
+ fn retire_owned(&self,value:String,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,String)>{let mut work=0;let result=(||{work+=1;if self.refuse.swap(false,Ordering::SeqCst){Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original boxed issuer refuses once"),value))}else{{let turn=admit_owned_retirement(value,grant);work+=turn.work;turn.result}}})();crate::RetainedWorkOutcome{result,work}}
 }
 #[test]
 fn factory_boxed_value_preserves_original_box_payload_issuer_and_exact_physical_receipts(){

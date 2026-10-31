@@ -1,80 +1,57 @@
-/** 🎨️ Prepared local-space paint with stable stops and logarithmic lookup. */
-import type { Color, Fill, Stop } from "../🖌️paint-model/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework/2d/retire";
-
-type PaintStop={readonly offset:number;readonly color:Readonly<Color>};
-type PaintFill={readonly kind:"solid";readonly color:Readonly<Color>}|(Omit<Extract<Fill,{kind:"linearGradient"}>,"stops">&{readonly stops:readonly PaintStop[]})|(Omit<Extract<Fill,{kind:"radialGradient"}>,"stops">&{readonly stops:readonly PaintStop[]});
-
+/** 🎨️ Stable caller-funded paint preparation and bounded original-stop queries share exact interpolation semantics. */
+import type {Color,Fill} from "../🖌️paint-model/🟦️.ts";
+import {RetainedWorkBuffer,RetainedWorkRetirement,type RetainedWorkLedger,type RetainedWorkDemand,type RetainedWorkRetirementCursor} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts";
+import {RetainedWorkProducerRuntime,type RetainedWorkProducerStep} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts";
+export type PaintStop={readonly offset:number;readonly color:Readonly<Color>};
+export type PaintFill={readonly kind:"solid";readonly color:Readonly<Color>}|(Omit<Extract<Fill,{kind:"linearGradient"}>,"stops">&{readonly stops:readonly PaintStop[]})|(Omit<Extract<Fill,{kind:"radialGradient"}>,"stops">&{readonly stops:readonly PaintStop[]});
+export type PreparedFillProgress={completed:number;total:number;work:number;done:boolean};
 export const MAX_PAINT_STOPS=4096;
-const unit=(value:number):boolean=>Number.isFinite(value)&&value>=0&&value<=1;
-const validColor=(color:Readonly<Color>):boolean=>color.length===4&&color.every(unit);
-
-export class GradientRamp {
-  #stops:Stop[];#transferred=false;
-  constructor(stops:readonly PaintStop[]) {
-    if(stops.length>MAX_PAINT_STOPS || stops.some(stop=>!unit(stop.offset)||!validColor(stop.color))) throw new Error("Invalid gradient stops");
-    this.#stops=stops.map(stop=>({offset:stop.offset,color:[...stop.color] as Color})).sort((a,b)=>a.offset-b.offset);
-  }
-  constantColor():Color|null {if(this.#transferred)throw Error("Gradient ramp ownership already transferred");return this.#stops.length<=1 ? [...(this.#stops[0]?.color??[0,0,0,0])] as Color : null;}
-  sample(offset:number):Color {
-    if(this.#transferred)throw Error("Gradient ramp ownership already transferred");
-    if(Number.isNaN(offset)) throw new Error("Invalid gradient position");
-    const stops=this.#stops;
-    if(!stops.length) return [0,0,0,0];
-    let lo=0,hi=stops.length;
-    while(lo<hi) {const mid=lo+Math.floor((hi-lo)/2);if(stops[mid]!.offset<=offset) lo=mid+1;else hi=mid;}
-    if(lo===0) return [...stops[0]!.color];
-    const left=stops[lo-1]!;
-    if(lo===stops.length) return [...left.color];
-    const right=stops[lo]!,t=(offset-left.offset)/(right.offset-left.offset);
-    return left.color.map((value,index)=>value+(right.color[index]!-value)*t) as Color;
-  }
-  /** 🧹️ Drains each copied fixed-width stop owner before releasing the ramp header. */
-  intoRetirement():WorkRetirement {
-    if(this.#transferred)throw Error("Gradient ramp ownership already transferred");this.#transferred=true;let slot=0;
-    return new UnitRetirement(()=>{if(slot===0){if(this.#stops.length){this.#stops.pop();return false;}this.#stops=[];slot=1;return false;}return true;});
-  }
+const unit=(value:number)=>Number.isFinite(value)&&value>=0&&value<=1;
+const validColor=(color:Readonly<Color>)=>color.length===4&&color.every(unit);
+const validStop=(stop:PaintStop)=>unit(stop.offset)&&validColor(stop.color);
+const copyColor=(color:Readonly<Color>):Color=>[color[0],color[1],color[2],color[3]];
+function geometry(fill:PaintFill):void{if(fill.kind==="solid"){if(!validColor(fill.color))throw Error("Invalid fill color");return;}if(fill.stops.length>MAX_PAINT_STOPS)throw Error("Invalid gradient stops");if(fill.kind==="linearGradient"){const length=Math.hypot(fill.x2-fill.x1,fill.y2-fill.y1);if(!Number.isFinite(fill.x1)||!Number.isFinite(fill.y1)||!Number.isFinite(fill.x2)||!Number.isFinite(fill.y2)||!Number.isFinite(length))throw Error("Invalid linear gradient geometry");}else if(!Number.isFinite(fill.cx)||!Number.isFinite(fill.cy)||!Number.isFinite(fill.r)||fill.r<0)throw Error("Invalid radial gradient geometry");}
+function position(fill:Exclude<PaintFill,{kind:"solid"}>,point:readonly[number,number]):number{if(fill.kind==="linearGradient"){const dx=fill.x2-fill.x1,dy=fill.y2-fill.y1,length=Math.hypot(dx,dy);return length===0?1:((point[0]-fill.x1)*(dx/length)+(point[1]-fill.y1)*(dy/length))/length;}return fill.r===0?1:Math.hypot(point[0]-fill.cx,point[1]-fill.cy)/fill.r;}
+function interpolate(left:PaintStop,right:PaintStop,offset:number):Color{const t=(offset-left.offset)/(right.offset-left.offset);return[left.color[0]+(right.color[0]-left.color[0])*t,left.color[1]+(right.color[1]-left.color[1])*t,left.color[2]+(right.color[2]-left.color[2])*t,left.color[3]+(right.color[3]-left.color[3])*t];}
+/** 🔍️ One bounded original-stop query retains no sorted ramp and preserves stable duplicate offsets. */
+export function sampleGradientStops(stops:readonly PaintStop[],offset:number):Color{if(Number.isNaN(offset))throw Error("Invalid gradient position");if(stops.length>MAX_PAINT_STOPS)throw Error("Invalid gradient stops");let first:PaintStop|undefined,left:PaintStop|undefined,right:PaintStop|undefined;for(const stop of stops){if(!validStop(stop))throw Error("Invalid gradient stops");if(first===undefined||stop.offset<first.offset)first=stop;if(stop.offset<=offset){if(left===undefined||stop.offset>=left.offset)left=stop;}else if(right===undefined||stop.offset<right.offset)right=stop;}if(first===undefined)return[0,0,0,0];if(left===undefined)return copyColor(first.color);return right===undefined?copyColor(left.color):interpolate(left,right,offset);}
+/** 🖌️ A single authored sample uses bounded scalar geometry without constructing a retained owner. */
+export function sampleFill(fill:PaintFill,point:readonly[number,number]):Color{geometry(fill);if(!point.every(Number.isFinite))throw Error("Fill sample position must be finite");return fill.kind==="solid"?copyColor(fill.color):sampleGradientStops(fill.stops,position(fill,point));}
+/** 🎯️ Constant paint resolution never creates a copied or sorted stop body. */
+export function constantFillColor(fill:PaintFill):Color|null{geometry(fill);if(fill.kind==="solid")return copyColor(fill.color);const sample=sampleGradientStops(fill.stops,1);return(fill.kind==="linearGradient"?fill.x1===fill.x2&&fill.y1===fill.y2:fill.r===0)||fill.stops.length<=1?sample:null;}
+/** 🌈️ Five logical IEEE-754 values per genuine stop row retain actual payload through paid stable merge writes. */
+export class GradientRamp{
+ private source:readonly PaintStop[]|null;private stops:RetainedWorkBuffer<PaintStop>|null=new RetainedWorkBuffer<PaintStop>(40);private scratch:RetainedWorkBuffer<PaintStop>|null=new RetainedWorkBuffer<PaintStop>(40);
+ private runtime=new RetainedWorkProducerRuntime();private demand:RetainedWorkDemand={copyBytes:0,capacityBytes:0,releaseBytes:0,depth:1};private stage:"stops"|"scratch"|"sort"|"complete"="stops";private at=0;private width=1;private left=0;private i=0;private j=0;private k=0;private mid=0;private end=0;private picked:PaintStop|null=null;private fromLeft=false;private work=0;private failed:unknown=null;private cancelled=false;private transferred=false;
+ constructor(stops:readonly PaintStop[]){this.source=stops;}
+ lastTurnWork():number{return this.runtime.lastTurnWork();}lastTurnSemanticWork():number{return this.runtime.lastTurnSemanticWork();}nextWorkDemand():RetainedWorkDemand{return this.demand;}failurePending():boolean{return this.failed!==null;}settlementPending():boolean{return this.picked!==null||this.stage==="complete"||this.stage==="sort"&&this.width>=this.stops!.length||this.stage==="stops"&&this.at===(this.source?.length??0)&&(this.source?.length??0)<2||this.stage==="scratch"&&this.stops!.length<2;}
+ progress():PreparedFillProgress{return{completed:this.at,total:this.source?.length??0,work:this.work,done:this.stage==="complete"};}
+ private check():void{if(this.cancelled||this.transferred)throw Error("Gradient ramp ownership already transferred or cancelled");if(this.failed!==null)throw this.failed;}
+ private setup():void{this.i=this.left;this.mid=Math.min(this.left+this.width,this.stops!.length);this.j=this.mid;this.k=this.left;this.end=Math.min(this.left+2*this.width,this.stops!.length);}
+ private step(c:RetainedWorkProducerStep):void{switch(this.stage){
+ case"stops":{if(this.source!.length>MAX_PAINT_STOPS){c.commitSemanticWork();throw Error("Invalid gradient stops");}const stop=this.source![this.at];if(stop===undefined){if(!c.work.canStep())return;this.stage="scratch";c.commitControlWork();return;}if(!c.slot(this.stops!))return;if(!validStop(stop)){c.commitSemanticWork();throw Error("Invalid gradient stops");}c.push(this.stops!,{offset:stop.offset,color:copyColor(stop.color)});c.postSemanticWork();this.at++;return;}
+ case"scratch":if(this.stops!.length<2){if(!c.work.canStep())return;this.stage="complete";c.commitControlWork();return;}if(this.scratch!.length<this.stops!.length){if(!c.slot(this.scratch!))return;c.push(this.scratch!,{offset:0,color:[0,0,0,0]});return;}if(!c.work.canStep())return;this.setup();this.stage="sort";c.commitControlWork();return;
+ case"sort":if(this.width>=this.stops!.length){if(!c.work.canStep())return;this.stage="complete";c.commitControlWork();return;}if(this.picked===null){c.commitSemanticWork();this.fromLeft=this.i<this.mid&&(this.j>=this.end||this.stops!.at(this.i)!.offset<=this.stops!.at(this.j)!.offset);this.picked=this.stops!.at(this.fromLeft?this.i:this.j)!;return;}if(!c.write(this.scratch!,this.k,this.picked))return;this.picked=null;this.k++;if(this.fromLeft)this.i++;else this.j++;if(this.k<this.end)return;this.left+=2*this.width;if(this.left>=this.stops!.length){const source=this.stops;this.stops=this.scratch;this.scratch=source;this.width*=2;this.left=0;}this.setup();return;
+ case"complete":return;
+ }}
+ advance(items:number,work:RetainedWorkLedger):PreparedFillProgress{try{return this.runtime.advance(items,work,{maximumWork:Number.MAX_SAFE_INTEGER,workLimitMessage:"Gradient preparation work limit exceeded",validate:()=>this.check(),stopped:()=>this.stage==="complete",settlementPending:()=>this.settlementPending(),failurePending:()=>this.failurePending(),semanticWork:()=>this.work,recordSemanticWork:n=>{this.work+=n;},step:c=>{try{this.step(c);}catch(error){this.failed=error;throw error;}},progress:()=>this.progress()});}finally{this.demand=work.nextDemand;}}
+ private ready():RetainedWorkBuffer<PaintStop>{this.check();if(this.stage!=="complete")throw Error("Gradient preparation is incomplete");return this.stops!;}
+ constantColor():Color|null{const stops=this.ready();return stops.length<=1?copyColor(stops.at(0)?.color??[0,0,0,0]):null;}
+ sample(offset:number):Color{const stops=this.ready();if(Number.isNaN(offset))throw Error("Invalid gradient position");if(stops.length===0)return[0,0,0,0];let lo=0,hi=stops.length;while(lo<hi){const mid=lo+Math.floor((hi-lo)/2);if(stops.at(mid)!.offset<=offset)lo=mid+1;else hi=mid;}if(lo===0)return copyColor(stops.at(0)!.color);const left=stops.at(lo-1)!;return lo===stops.length?copyColor(left.color):interpolate(left,stops.at(lo)!,offset);}
+ cancel():void{this.cancelled=true;}
+ intoRetirement():RetainedWorkRetirementCursor{if(this.transferred)throw Error("Gradient ramp ownership already transferred");this.transferred=true;this.cancelled=true;let phase=0;return new RetainedWorkRetirement((work,turn)=>{for(;;){if(phase<2){const values=phase===0?this.stops:this.scratch;if(values!==null){if(!values.retireOne(work,turn)||turn.actualWork()>0)return false;if(!work.canStep())return false;if(phase===0)this.stops=null;else this.scratch=null;phase++;turn.commitActualWork();return false;}phase++;continue;}if(phase===2){if(!work.canStep())return false;this.source=null;this.picked=null;this.failed=null;phase++;turn.commitActualWork();return false;}return true;}});}
 }
-
-type Geometry={kind:"solid";color:Color}|{kind:"linear";origin:[number,number];unit:[number,number];length:number}|{kind:"radial";center:[number,number];radius:number};
-
-export class PreparedFill {
-  #geometry:Geometry|null;
-  #ramp:GradientRamp|null;#transferred=false;
-  constructor(fill:PaintFill) {
-    if(fill.kind==="solid") {
-      if(!validColor(fill.color)) throw new Error("Invalid fill color");
-      this.#geometry={kind:"solid",color:[...fill.color]};this.#ramp=null;
-    } else {
-      this.#ramp=new GradientRamp(fill.stops);
-      if(fill.kind==="linearGradient") {
-        const dx=fill.x2-fill.x1,dy=fill.y2-fill.y1,length=Math.hypot(dx,dy);
-        if(![fill.x1,fill.y1,fill.x2,fill.y2,length].every(Number.isFinite)) throw new Error("Invalid linear gradient geometry");
-        this.#geometry={kind:"linear",origin:[fill.x1,fill.y1],unit:length===0?[0,0]:[dx/length,dy/length],length};
-      } else {
-        if(![fill.cx,fill.cy,fill.r].every(Number.isFinite)||fill.r<0) throw new Error("Invalid radial gradient geometry");
-        this.#geometry={kind:"radial",center:[fill.cx,fill.cy],radius:fill.r};
-      }
-    }
-  }
-  constantColor():Color|null {
-    if(this.#transferred)throw Error("Prepared fill ownership already transferred");const geometry=this.#geometry!;
-    if(geometry.kind==="solid") return [...geometry.color];
-    if(geometry.kind==="linear" ? geometry.length===0 : geometry.radius===0) return this.#ramp!.sample(1);
-    return this.#ramp!.constantColor();
-  }
-  sample(point:readonly [number,number]):Color {
-    if(this.#transferred)throw Error("Prepared fill ownership already transferred");
-    if(!point.every(Number.isFinite)) throw new Error("Fill sample position must be finite");
-    const geometry=this.#geometry!;
-    if(geometry.kind==="solid") return [...geometry.color];
-    const offset=geometry.kind==="linear" ? geometry.length===0 ? 1 : ((point[0]-geometry.origin[0])*geometry.unit[0]+(point[1]-geometry.origin[1])*geometry.unit[1])/geometry.length
-      : geometry.radius===0 ? 1 : Math.hypot(point[0]-geometry.center[0],point[1]-geometry.center[1])/geometry.radius;
-    return this.#ramp!.sample(offset);
-  }
-  /** 🖌️ Adopts the actual ramp and admits each child step before closing the paint header. */
-  intoRetirement():WorkRetirement {
-    if(this.#transferred)throw Error("Prepared fill ownership already transferred");this.#transferred=true;let ramp=this.#ramp?.intoRetirement()??null,slot=0;
-    return new UnitRetirement(()=>{if(slot===0){if(ramp&&!ramp.terminalIsEmpty()){ramp.advance(1);return false;}ramp=null;this.#ramp=null;slot=1;return false;}this.#geometry=null;return true;});
-  }
+/** 🧱️ Authored geometry and copied stop data advance under the same caller ledger; no constructor clones a body. */
+export class PreparedFill{
+ private runtime=new RetainedWorkProducerRuntime();private demand:RetainedWorkDemand={copyBytes:0,capacityBytes:0,releaseBytes:0,depth:1};private ramp:GradientRamp|null=null;private kind:"solid"|"linearGradient"|"radialGradient"="solid";private r=0;private g=0;private b=0;private a=0;private x=0;private y=0;private ux=0;private uy=0;private length=0;private radius=0;private total=0;private stage:"geometry"|"ramp"|"complete"="geometry";private work=0;private failed:unknown=null;private cancelled=false;private transferred=false;
+ constructor(private input:PaintFill|null){}
+ lastTurnWork():number{return this.runtime.lastTurnWork();}lastTurnSemanticWork():number{return this.runtime.lastTurnSemanticWork();}nextWorkDemand():RetainedWorkDemand{return this.demand;}failurePending():boolean{return this.failed!==null;}settlementPending():boolean{return this.stage==="complete"||this.stage==="ramp"&&this.ramp!.settlementPending();}
+ progress():PreparedFillProgress{return{completed:this.stage==="geometry"?0:this.input?.kind==="solid"?0:this.ramp?.progress().completed??0,total:this.total,work:this.work,done:this.stage==="complete"};}
+ private check():void{if(this.cancelled||this.transferred)throw Error("Prepared fill ownership already transferred or cancelled");if(this.failed!==null)throw this.failed;}
+ advance(items:number,work:RetainedWorkLedger):PreparedFillProgress{try{return this.runtime.advance(items,work,{maximumWork:Number.MAX_SAFE_INTEGER,workLimitMessage:"Fill preparation work limit exceeded",validate:()=>this.check(),stopped:()=>this.stage==="complete",settlementPending:()=>this.settlementPending(),failurePending:()=>this.failurePending(),semanticWork:()=>this.work,recordSemanticWork:n=>{this.work+=n;},step:c=>{try{if(this.stage==="geometry"){c.commitSemanticWork();if(this.input===null)throw Error("Invalid fill geometry");geometry(this.input);this.kind=this.input.kind;if(this.input.kind==="solid"){this.r=this.input.color[0];this.g=this.input.color[1];this.b=this.input.color[2];this.a=this.input.color[3];this.stage="complete";}else{this.total=this.input.stops.length;if(this.input.kind==="linearGradient"){const dx=this.input.x2-this.input.x1,dy=this.input.y2-this.input.y1;this.x=this.input.x1;this.y=this.input.y1;this.length=Math.hypot(dx,dy);this.ux=this.length===0?0:dx/this.length;this.uy=this.length===0?0:dy/this.length;}else{this.x=this.input.cx;this.y=this.input.cy;this.radius=this.input.r;}this.ramp=new GradientRamp(this.input.stops);this.stage="ramp";}return;}if(this.stage==="ramp"){if(this.ramp!.progress().done){if(!c.work.canStep())return;this.stage="complete";c.commitControlWork();return;}c.advanceChild(this.ramp!);}}catch(error){this.failed=error;throw error;}},progress:()=>this.progress()});}finally{this.demand=work.nextDemand;}}
+ private ready():PaintFill{this.check();if(this.stage!=="complete"||this.input===null)throw Error("Fill preparation is incomplete");return this.input;}
+ constantColor():Color|null{this.ready();if(this.kind==="solid")return[this.r,this.g,this.b,this.a];if(this.kind==="linearGradient"?this.length===0:this.radius===0)return this.ramp!.sample(1);return this.ramp!.constantColor();}
+ sample(point:readonly[number,number]):Color{this.ready();if(!point.every(Number.isFinite))throw Error("Fill sample position must be finite");if(this.kind==="solid")return[this.r,this.g,this.b,this.a];const offset=this.kind==="linearGradient"?this.length===0?1:((point[0]-this.x)*this.ux+(point[1]-this.y)*this.uy)/this.length:this.radius===0?1:Math.hypot(point[0]-this.x,point[1]-this.y)/this.radius;return this.ramp!.sample(offset);}
+ cancel():void{this.cancelled=true;}
+ intoRetirement():RetainedWorkRetirementCursor{if(this.transferred)throw Error("Prepared fill ownership already transferred");this.transferred=true;this.cancelled=true;let child=this.ramp===null?null:this.ramp.intoRetirement();this.ramp=null;let done=false;return new RetainedWorkRetirement((work,turn)=>{if(child!==null){if(!child.terminalIsEmpty()){try{child.advance(1,work);}finally{turn.commitActualWork(child.lastTurnWork());}if(!child.terminalIsEmpty()||turn.actualWork()>0)return false;}if(!work.canStep())return false;child=null;turn.commitActualWork();return false;}if(done)return true;if(!work.canStep())return false;this.input=null;this.failed=null;done=true;turn.commitActualWork();return false;});}
 }

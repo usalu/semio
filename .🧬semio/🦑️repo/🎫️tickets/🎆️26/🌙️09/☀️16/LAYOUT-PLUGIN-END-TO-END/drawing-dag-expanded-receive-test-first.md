@@ -1,0 +1,3 @@
+# Expanded DAG Path Receiving
+
+Closed schema/fixtures and genuine NativeReceive owner law authored before replacing the impure mapping callback. Cases include empty input, duplicates/empty string, Unicode ordering and257-byte common prefixes. Independent BTreeSet plus Serde supplies exact sorted unique output. Every case has one100k item/fuel32MiB/depth64 wallet through creation, actual child, sort probes, duplicate retirement, transfer and full close; seven cancellation cuts and every positive denial axis remain real zero-effect observations. Comparison fragments are64bytes, no whole-string comparison behind unit work. Owning package is semio-framework-os-infinite-directed-presentation. No runtime.

@@ -3,7 +3,6 @@
 //! The editor crate (`-gltf-editor`) is named directly by the hub composition.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;

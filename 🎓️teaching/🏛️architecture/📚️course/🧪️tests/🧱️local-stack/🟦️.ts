@@ -37,7 +37,7 @@ import runtimeCases from "../../🧫️fixtures/🪁️runtime/🔣️.json" wit
 import outputCases from "../../🧫️fixtures/🎭️e2e-output/🔣️.json" with { type: "json" };
 import proctorPathCases from "../../🧫️fixtures/🎭️e2e-proctor/🔣️.json" with { type: "json" };
 import proctorPathSchema from "../../🧫️fixtures/🎭️e2e-proctor/🧬️schema/🔣️.json" with { type: "json" };
-import viteStorageSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/⚡️caching/🌐️vite/💾️storage/🧬️schema/🔣️json/🟦️.ts" with { type: "json" };
+import viteStorageSchema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎮️playground/⚡️caching/🌐️vite/💾️storage/🧬️schema/🔣️json/🟦️.ts";
 import { viteDevInvocation } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏃️process/🍞️bun/🟦️.ts";
 import { closeProxiedSocketWithBrowser, type ProxiedUpgradeProxy } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts";
 import { bootOrder, endToEndPlan, endToEndPorts, endToEndProctorPath, endToEndWorkDirectory, portFree, rehearsalBuildEnvironment, rehearsalBuildPlan } from "../../🎭️e2e/🟦️.ts";

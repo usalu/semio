@@ -2,7 +2,6 @@
 //! `CONVERSION` that registers and declares their composer rows.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as store;
 
@@ -107,7 +106,7 @@ fn register() {
     register_composer_entries(entries()).expect("static Stdio registration must be available and conflict-free");
 }
 
-/// 📥️ `bytes` in `format` read into a mesh through this subset's own import leaves (png has none: a
+/// 🧊️ `bytes` in `format` read into a mesh through this subset's own import leaves (png has none: a
 /// picture of a mesh carries no geometry).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_mesh(bytes: &[u8], format: SemioMeshFormat) -> Result<semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot, String> {

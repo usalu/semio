@@ -1,0 +1,546 @@
+{
+  "version": 1,
+  "policy": {
+    "singletonOwner": ".",
+    "singletonPackages": [
+      "@types/react",
+      "@types/react-dom",
+      "react",
+      "react-dom"
+    ]
+  },
+  "planCases": [
+    {
+      "id": "single-member",
+      "accepted": true,
+      "aliases": [
+        {
+          "scope": "b",
+          "root": "/j/b",
+          "name": "react"
+        }
+      ],
+      "observation": {
+        "version": 1,
+        "owner": {
+          "scope": ".",
+          "packages": [
+            {
+              "name": "react",
+              "version": "19.3.0"
+            }
+          ],
+          "root": "/j/a"
+        },
+        "members": [
+          {
+            "scope": "b",
+            "root": "/j/b",
+            "packages": [
+              {
+                "name": "react",
+                "version": "19.3.0"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "all-four",
+      "accepted": true,
+      "aliases": [
+        {
+          "scope": "b",
+          "root": "/j/b",
+          "name": "@types/react"
+        },
+        {
+          "scope": "b",
+          "root": "/j/b",
+          "name": "@types/react-dom"
+        },
+        {
+          "scope": "b",
+          "root": "/j/b",
+          "name": "react"
+        },
+        {
+          "scope": "b",
+          "root": "/j/b",
+          "name": "react-dom"
+        }
+      ],
+      "observation": {
+        "version": 1,
+        "owner": {
+          "scope": ".",
+          "packages": [
+            {
+              "name": "react",
+              "version": "19.3.0"
+            },
+            {
+              "name": "react-dom",
+              "version": "19.3.0"
+            },
+            {
+              "name": "@types/react",
+              "version": "19.3.0"
+            },
+            {
+              "name": "@types/react-dom",
+              "version": "19.3.0"
+            }
+          ],
+          "root": "/j/a"
+        },
+        "members": [
+          {
+            "scope": "b",
+            "root": "/j/b",
+            "packages": [
+              {
+                "name": "react-dom",
+                "version": "19.3.0"
+              },
+              {
+                "name": "react",
+                "version": "19.3.0"
+              },
+              {
+                "name": "@types/react-dom",
+                "version": "19.3.0"
+              },
+              {
+                "name": "@types/react",
+                "version": "19.3.0"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "member-without-singleton",
+      "accepted": true,
+      "aliases": [],
+      "observation": {
+        "version": 1,
+        "owner": {
+          "scope": ".",
+          "packages": [
+            {
+              "name": "react",
+              "version": "19.3.0"
+            }
+          ],
+          "root": "/j/a"
+        },
+        "members": [
+          {
+            "scope": "b",
+            "root": "/j/b",
+            "packages": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "two-roots",
+      "accepted": true,
+      "aliases": [
+        {
+          "scope": "b",
+          "root": "/j/b",
+          "name": "react"
+        },
+        {
+          "scope": "b",
+          "root": "/j/b/w/0",
+          "name": "react"
+        }
+      ],
+      "observation": {
+        "version": 1,
+        "owner": {
+          "scope": ".",
+          "packages": [
+            {
+              "name": "react",
+              "version": "19.3.0"
+            }
+          ],
+          "root": "/j/a"
+        },
+        "members": [
+          {
+            "scope": "b",
+            "root": "/j/b",
+            "packages": [
+              {
+                "name": "react",
+                "version": "19.3.0"
+              }
+            ]
+          },
+          {
+            "scope": "b",
+            "root": "/j/b/w/0",
+            "packages": [
+              {
+                "name": "react",
+                "version": "19.3.0"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "two-scopes",
+      "accepted": true,
+      "aliases": [
+        {
+          "scope": "b",
+          "root": "/j/b",
+          "name": "react"
+        },
+        {
+          "scope": "c",
+          "root": "/j/c",
+          "name": "react"
+        }
+      ],
+      "observation": {
+        "version": 1,
+        "owner": {
+          "scope": ".",
+          "packages": [
+            {
+              "name": "react",
+              "version": "19.3.0"
+            }
+          ],
+          "root": "/j/a"
+        },
+        "members": [
+          {
+            "scope": "c",
+            "root": "/j/c",
+            "packages": [
+              {
+                "name": "react",
+                "version": "19.3.0"
+              }
+            ]
+          },
+          {
+            "scope": "b",
+            "root": "/j/b",
+            "packages": [
+              {
+                "name": "react",
+                "version": "19.3.0"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "owner-copy-missing",
+      "accepted": false,
+      "observation": {
+        "version": 1,
+        "owner": {
+          "scope": ".",
+          "packages": [],
+          "root": "/j/a"
+        },
+        "members": [
+          {
+            "scope": "b",
+            "root": "/j/b",
+            "packages": [
+              {
+                "name": "react",
+                "version": "19.3.0"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "version-divergence",
+      "accepted": false,
+      "observation": {
+        "version": 1,
+        "owner": {
+          "scope": ".",
+          "packages": [
+            {
+              "name": "react",
+              "version": "19.3.0"
+            }
+          ],
+          "root": "/j/a"
+        },
+        "members": [
+          {
+            "scope": "b",
+            "root": "/j/b",
+            "packages": [
+              {
+                "name": "react",
+                "version": "19.2.0"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "undeclared-package",
+      "accepted": false,
+      "observation": {
+        "version": 1,
+        "owner": {
+          "scope": ".",
+          "packages": [
+            {
+              "name": "left-pad",
+              "version": "1.3.0"
+            }
+          ],
+          "root": "/j/a"
+        },
+        "members": [
+          {
+            "scope": "b",
+            "root": "/j/b",
+            "packages": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "owner-links-to-itself",
+      "accepted": false,
+      "observation": {
+        "version": 1,
+        "owner": {
+          "scope": ".",
+          "packages": [
+            {
+              "name": "react",
+              "version": "19.3.0"
+            }
+          ],
+          "root": "/j/a"
+        },
+        "members": [
+          {
+            "scope": ".",
+            "root": "/j/a",
+            "packages": [
+              {
+                "name": "react",
+                "version": "19.3.0"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "duplicate-package",
+      "accepted": false,
+      "observation": {
+        "version": 1,
+        "owner": {
+          "scope": ".",
+          "packages": [
+            {
+              "name": "react",
+              "version": "19.3.0"
+            }
+          ],
+          "root": "/j/a"
+        },
+        "members": [
+          {
+            "scope": "b",
+            "root": "/j/b",
+            "packages": [
+              {
+                "name": "react",
+                "version": "19.3.0"
+              },
+              {
+                "name": "react",
+                "version": "19.3.0"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "owner-nested-copy",
+      "accepted": true,
+      "aliases": [
+        {
+          "scope": ".",
+          "root": "/j/a/node_modules/x",
+          "name": "react"
+        }
+      ],
+      "observation": {
+        "version": 1,
+        "owner": {
+          "scope": ".",
+          "root": "/j/a",
+          "packages": [
+            {
+              "name": "react",
+              "version": "19.3.0"
+            }
+          ]
+        },
+        "members": [
+          {
+            "scope": ".",
+            "root": "/j/a/node_modules/x",
+            "packages": [
+              {
+                "name": "react",
+                "version": "19.3.0"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "nested-member-copy",
+      "accepted": true,
+      "aliases": [
+        {
+          "scope": "b",
+          "root": "/j/b",
+          "name": "react"
+        },
+        {
+          "scope": "b",
+          "root": "/j/b/node_modules/x",
+          "name": "react"
+        }
+      ],
+      "observation": {
+        "version": 1,
+        "owner": {
+          "scope": ".",
+          "root": "/j/a",
+          "packages": [
+            {
+              "name": "react",
+              "version": "19.3.0"
+            }
+          ]
+        },
+        "members": [
+          {
+            "scope": "b",
+            "root": "/j/b/node_modules/x",
+            "packages": [
+              {
+                "name": "react",
+                "version": "19.3.0"
+              }
+            ]
+          },
+          {
+            "scope": "b",
+            "root": "/j/b",
+            "packages": [
+              {
+                "name": "react",
+                "version": "19.3.0"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "nested-version-divergence",
+      "accepted": false,
+      "observation": {
+        "version": 1,
+        "owner": {
+          "scope": ".",
+          "root": "/j/a",
+          "packages": [
+            {
+              "name": "react",
+              "version": "19.3.0"
+            }
+          ]
+        },
+        "members": [
+          {
+            "scope": "b",
+            "root": "/j/b/node_modules/x",
+            "packages": [
+              {
+                "name": "react",
+                "version": "18.3.1"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "layout": {
+    "owner": ".",
+    "scopes": [
+      ".",
+      "b",
+      "c"
+    ],
+    "generations": {
+      ".": "a",
+      "b": "b",
+      "c": "c"
+    },
+    "packages": {
+      "react": "19.3.0",
+      "react-dom": "19.3.0",
+      "@types/react": "19.3.0",
+      "@types/react-dom": "19.3.0"
+    },
+    "bystander": {
+      "left-pad": "1.3.0"
+    },
+    "divergent": {
+      "scope": "c",
+      "package": "react",
+      "version": "19.2.0"
+    },
+    "nested": {
+      "scope": "b",
+      "parent": "left-pad",
+      "package": "react",
+      "version": "19.3.0"
+    },
+    "nestedDivergent": {
+      "scope": "b",
+      "parent": "left-pad",
+      "package": "react",
+      "version": "18.3.1"
+    }
+  }
+}

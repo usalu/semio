@@ -7,12 +7,12 @@ use pack::snapshot::ArtifactPack;
 pub mod retirement;
 
 //#region 🔖️Presence
-/// 👥️ Shareable live APP-SPECIFIC subset of flow view state — preview toggles + the node-graph camera
+/// 🔗️ Shareable live APP-SPECIFIC subset of flow view state — preview toggles + the node-graph camera
 /// only. Ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_node_ids`/
 /// `selected_edge_ids`/`selected_handle_ids` deleted — the "graph" interaction domain's selection is
 /// now broadcast generically by the framework (`PresenceInteraction`/`PresenceDomain`), for every peer,
 /// with no per-app mirror needed.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::NativeReceive, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value_derive::NativeReceive)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(extension = "flow.presence")]
 #[dsl(layout = "lines")]

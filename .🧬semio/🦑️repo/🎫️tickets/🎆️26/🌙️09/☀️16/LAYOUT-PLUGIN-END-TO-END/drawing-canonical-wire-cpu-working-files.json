@@ -1,0 +1,32 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs",
+    "bytes": 45597,
+    "sha256": "93db039d0f5565d0da9982f6fc3575c05adc381bea288ede48cb7978c884a73e"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📨️wire/🦀️.rs",
+    "bytes": 11548,
+    "sha256": "90d050f837bdc9332c6ab1f10ff1d86ea5a436d56be2d8bc3b67d57231dd2f02"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📨️wire/🧪️tests/🦀️.rs",
+    "bytes": 10127,
+    "sha256": "afbd1ae22f685aef1de3819f8a8f9dc82f6258ae68ea2a6fd9a537dbadec6322"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📨️wire/🧪️tests/⏱️cpu/🔣️.json",
+    "bytes": 554,
+    "sha256": "0089c0d9282f42e66584504748d4bbea9630e6ebdc10a5c12e158e252df54b74"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/📨️wire/🧪️tests/⏱️cpu/📐️.json",
+    "bytes": 124,
+    "sha256": "a8014c0a6f4db43c7c94315d41a2bc4239e8284e543d7fcdd7ce07b5e26636c4"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🎞️actions-b/📤️drawing-export-and-snapshots/🦀️.rs",
+    "bytes": 25344,
+    "sha256": "f97b5bec8ce023783e369c98de5f334e42ecb204899a4ac34762fd0a77f4dbd1"
+  }
+]

@@ -167,7 +167,7 @@
         let __chain = __base
             .introduction(IntroductionDefinition {
                 title: LocalizedLabel::data("Welcome"),
-                steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::utility("missing", "Activate").await])],
+                steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::utility("missing", LocalizedLabel::data("Activate")).await])],
             })
             .await;
         let result = std::panic::catch_unwind(move || __chain.build_definition());
@@ -183,7 +183,7 @@
         let __chain = __base
             .introduction(IntroductionDefinition {
                 title: LocalizedLabel::data("Welcome"),
-                steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::orbit("missing", "Orbit").await])],
+                steps: vec![IntroductionStepDefinition::new("step", LocalizedLabel::data("A"), LocalizedLabel::data("a")).interact(vec![IntroductionInteraction::orbit("missing", LocalizedLabel::data("Orbit")).await])],
             })
             .await;
         let result = std::panic::catch_unwind(move || __chain.build_definition());
@@ -211,9 +211,9 @@
                 steps: vec![
                     IntroductionStepDefinition::new("welcome", LocalizedLabel::data("Welcome"), LocalizedLabel::data("Hi")),
                     IntroductionStepDefinition::new("main-window", LocalizedLabel::data("Main Window"), LocalizedLabel::data("…")).introduce(window_element_id("main")),
-                    IntroductionStepDefinition::new("brush-utility", LocalizedLabel::data("Brush"), LocalizedLabel::data("…")).introduce("brush").interact(vec![IntroductionInteraction::utility("brush", "Activate Brush").await]),
-                    IntroductionStepDefinition::new("add-layer", LocalizedLabel::data("Add Layer"), LocalizedLabel::data("…")).interact(vec![IntroductionInteraction::action("addLayer", "Add a Layer").await]),
-                    IntroductionStepDefinition::new("navigate-main", LocalizedLabel::data("Navigate"), LocalizedLabel::data("…")).interact(vec![IntroductionInteraction::pan("main", "Pan").await, IntroductionInteraction::zoom("main", "Zoom").await]),
+                    IntroductionStepDefinition::new("brush-utility", LocalizedLabel::data("Brush"), LocalizedLabel::data("…")).introduce("brush").interact(vec![IntroductionInteraction::utility("brush", LocalizedLabel::data("Activate Brush")).await]),
+                    IntroductionStepDefinition::new("add-layer", LocalizedLabel::data("Add Layer"), LocalizedLabel::data("…")).interact(vec![IntroductionInteraction::action("addLayer", LocalizedLabel::data("Add a Layer")).await]),
+                    IntroductionStepDefinition::new("navigate-main", LocalizedLabel::data("Navigate"), LocalizedLabel::data("…")).interact(vec![IntroductionInteraction::pan("main", LocalizedLabel::data("Pan")).await, IntroductionInteraction::zoom("main", LocalizedLabel::data("Zoom")).await]),
                 ],
             })
             .await

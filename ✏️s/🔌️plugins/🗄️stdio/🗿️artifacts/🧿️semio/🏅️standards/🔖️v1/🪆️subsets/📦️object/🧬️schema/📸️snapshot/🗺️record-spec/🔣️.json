@@ -1,0 +1,229 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "stdio.semio.object",
+ "schemaHash": "356f4e4d949a35e794bc629eb4984f1bdf42c0a12ef1504053f87df1294fd941",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "transform",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 1
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "brep",
+    "optional": true,
+    "shape": {
+     "kind": "record",
+     "record": 2
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "mesh",
+    "optional": true,
+    "shape": {
+     "kind": "record",
+     "record": 2
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "properties",
+    "optional": true,
+    "shape": {
+     "kind": "record",
+     "record": 2
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "translation",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 3
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "rotation",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "scale",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 3
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "child_id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "target",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 5
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "x",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "y",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "z",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "x",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "y",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "z",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "w",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "artifact-id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "artifact-kind",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "standard",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "subset",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ]
+ ],
+ "annotations": {
+  "nested": [
+   [
+    5,
+    "dialect",
+    [
+     "artifact-kind",
+     "standard",
+     "subset"
+    ]
+   ]
+  ]
+ }
+}

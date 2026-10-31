@@ -1,0 +1,16 @@
+[
+  {
+    "path": "🧰️framework/📦️packages/🟦️typescript/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+    "before": "f76e065a2df04cbfeddd524359791f4c08b2471a44afd1d3e72c58c4f93b6e65",
+    "after": "c3952aa7af47d422b58a005a58aca2f0099dfe8b7e0fde8f8122219b2f8b9906",
+    "added": "export type { FontRunInput, FontOutlineRun } from \"@semio-tech/framework-2d-js/text/font/run\";",
+    "inverseWholeFile": "f76e065a2df04cbfeddd524359791f4c08b2471a44afd1d3e72c58c4f93b6e65"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/📝️text/🔤️font/🧵️run/🟦️.ts",
+    "before": "dec6070095d9e6183cfffcee545b1b57c0f9bb82f7d7406df78bb6b4bb985794",
+    "after": "072be646b5704928fda238448b592b840c426b3fc8738e0791e9f671c8b154c9",
+    "added": "export type { FontRunInput, FontOutlineRun } from \"../../../../../📝️text/🔤️font/🧵️run/🟦️.ts\";",
+    "inverseWholeFile": "dec6070095d9e6183cfffcee545b1b57c0f9bb82f7d7406df78bb6b4bb985794"
+  }
+]

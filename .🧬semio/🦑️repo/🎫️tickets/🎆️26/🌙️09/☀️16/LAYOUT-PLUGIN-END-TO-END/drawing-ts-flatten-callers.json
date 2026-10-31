@@ -1,0 +1,276 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+    "lines": [
+      {
+        "line": 8,
+        "source": "export { PathFlattenJob, preparePath, type PathFlattenInput, type FlatContour, type PathFlattenProgress, type PathFlattenOptions, type PathFlattenRetirement, type PathFlattenRetirementProgress } from \"./🛤️path/📏️flatten/🟦️.ts\";"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+    "lines": [
+      {
+        "line": 60,
+        "source": "export class PathFlattenJob{"
+      },
+      {
+        "line": 65,
+        "source": " static admit(input:PathFlattenInput):PathFlattenJob{return new PathFlattenJob(input,retainedAdmission);}"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🟦️.ts",
+    "lines": [
+      {
+        "line": 8,
+        "source": "import {PathFlattenJob,preparePath,type PathFlattenInput} from \"../🟦️.ts\";"
+      },
+      {
+        "line": 13,
+        "source": " const job=new PathFlattenJob(input);let work=0;"
+      },
+      {
+        "line": 47,
+        "source": " for(const steps of [0,1,2,3]) {const job=new PathFlattenJob(input);expect(()=>job.result()).toThrow();for(let at=0;at<steps;at++)job.advance(1);job.cancel();expect(()=>job.advance(1)).toThrow(/cancelled/);expect(()=>job.result()).toThrow(/cancelled/);}"
+      },
+      {
+        "line": 48,
+        "source": " for(const patch of [{tolerance:0},{tolerance:Infinity},{transform:[1,0,0,1,NaN,0]},{segments:Array.from({length:65537},()=>({kind:\"close\"}))}])expect(()=>new PathFlattenJob({...input,...patch} as PathFlattenInput)).toThrow();"
+      },
+      {
+        "line": 49,
+        "source": " for(const grant of [0,-1,Infinity,NaN,1.5])expect(()=>new PathFlattenJob(input).advance(grant)).toThrow();"
+      },
+      {
+        "line": 50,
+        "source": " const bad=new PathFlattenJob({...input,segments:[{kind:\"move\",to:[NaN,0]}]});expect(()=>bad.advance(4096)).toThrow();expect(()=>bad.result()).toThrow();"
+      },
+      {
+        "line": 54,
+        "source": "  const job=new PathFlattenJob({segments:segments as PathSegment[],transform:[1,0,0,1,0,0],tolerance:.5});"
+      },
+      {
+        "line": 61,
+        "source": " const actual=await preparePath(input,{workBudget:1,onProgress:p=>events.push(p.phase)});clearTimeout(timer);"
+      },
+      {
+        "line": 64,
+        "source": " const controller=new AbortController();await expect(preparePath(input,{signal:controller.signal,workBudget:1,onProgress:()=>controller.abort()})).rejects.toThrow(/cancelled/);"
+      },
+      {
+        "line": 65,
+        "source": " let called=false;await expect(preparePath(input,{signal:controller.signal,onProgress:()=>{called=true;}})).rejects.toThrow(/cancelled/);expect(called).toBe(false);"
+      },
+      {
+        "line": 66,
+        "source": " const job=new PathFlattenJob(input);while(!job.advance(4096).done){}const published=job.result();job.cancel();expect(published).toEqual(fixture[7]!.expected);expect(input).toEqual(before);"
+      },
+      {
+        "line": 73,
+        "source": " for(const row of fixture){const input=structuredClone(row.input) as PathFlattenInput,job=new PathFlattenJob(input);while(!job.advance(4096).done){}const output=job.result(),expected=structuredClone(output),sourcePoints=input.segments.flatMap(segment=>Object.values(segment).filter(Array.isArray)) as number[][];"
+      },
+      {
+        "line": 79,
+        "source": " const original=PathFlattenJob.prototype.intoRetirement;"
+      },
+      {
+        "line": 81,
+        "source": "  const spy=vi.spyOn(PathFlattenJob.prototype,\"intoRetirement\").mockImplementation(function(this:PathFlattenJob){adopted++;const retired=original.call(this);output=retired.output;const advance=retired.job.advance.bind(retired.job);retired.job.advance=(grant:number)=>{expect(grant).toBe(1);const p=advance(grant);progresses.push(p);return p;};return retired;});"
+      },
+      {
+        "line": 82,
+        "source": "  try{const pending=preparePath(input,{signal:controller.signal,workBudget:1,onProgress:p=>{if(p.done){if(mode===\"abort\")controller.abort();if(mode===\"callback\")throw Error(\"completion callback failed\");}}});if(mode===\"success\")expect(await pending).toEqual(retirementRows[3]!.output);else await expect(pending).rejects.toThrow(mode===\"abort\"?/cancelled/:/completion callback failed/);"
+      },
+      {
+        "line": 89,
+        "source": "  const source=structuredClone(row.input) as PathFlattenInput,before=structuredClone(source),job=new PathFlattenJob(source);"
+      },
+      {
+        "line": 103,
+        "source": "test(\"retained flatten admission preserves refused source until close\",()=>{expect(new Ajv({strict:true}).compile(admissionSchema)(admissionRows)).toBe(true);for(const row of admissionRows.cases){if(row.kind!==\"flatten\")continue;const input:PathFlattenInput={segments:[{kind:\"move\",to:[3,7]}],transform:[1,0,0,1,0,0],tolerance:row.tolerance!};expect(validate(input)).toBe(false);expect(()=>new PathFlattenJob(input)).toThrow(/contract/);const job=PathFlattenJob.admit(input);expect((job as unknown as {input:PathFlattenInput}).input.segments).toBe(input.segments);expect(()=>job.advance(1)).toThrow(/contract/);expect(()=>job.result()).toThrow(/contr"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts",
+    "lines": [
+      {
+        "line": 6,
+        "source": "import {PathFlattenJob,type PathFlattenInput,type FlatContours} from \"../../../🟦️.ts\";"
+      },
+      {
+        "line": 20,
+        "source": "function complete(job:PathFlattenJob,bank:Bank,quantum:number):void{for(let at=0;at<contract.maxTurns;at++){if(bank.turn(job,work=>job.advance(quantum,work),quantum).done)return;}throw Error(\"Actual flatten exceeded unchanged finite fuel\");}"
+      },
+      {
+        "line": 21,
+        "source": "function retire(job:PathFlattenJob,bank:Bank):void{const moved=job.intoRetirement();bank.close(moved.job);if(moved.output!==null)bank.close(moved.output.intoRetirement());bank.conserved();}"
+      },
+      {
+        "line": 22,
+        "source": "test(\"funded flatten preserves every original shared vector with independent Vector2 and exact source custody\",()=>{expect(new Ajv({strict:true}).compile(contractSchema)(contract)).toBe(true);for(const row of rows){if(!validate(row.input))throw Error(\"Original neutral flatten input invalid\");for(const quantum of contract.quanta){const before=structuredClone(row.input),bank=new Bank(),job=new PathFlattenJob(row.input);let failure:unknown;try{complete(job,bank,quantum);const output=projection(job.result());expect(output).toHaveLength(row.expected.length);for(let contour=0;contour<output.length;contour++){const actual=output[contour],expected=ro"
+      },
+      {
+        "line": 23,
+        "source": "test(\"funded flatten zero authority performs no actual body or semantic work\",()=>{const row=rows[0];if(row===undefined||!validate(row.input))throw Error(\"Original neutral input absent\");const bank=new Bank(),job=new PathFlattenJob(row.input);try{const before=structuredClone(row.input);const progress=bank.turn(job,work=>job.advance(1,work),1,{maximumItems:0,maximumCopyBytes:0,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:0});expect(progress.work).toBe(0);expect(job.lastTurnWork()).toBe(0);expect(bank.allocated).toBe(0);expect(row.input).toEqual(before);}finally{job.cancel();retire(job,bank);}});"
+      },
+      {
+        "line": 24,
+        "source": "test(\"funded flatten positive original row demands refuse every actual underfilled axis\",()=>{const row=rows.find(value=>value.input.segments.some(segment=>segment.kind===\"cubic\"));if(row===undefined||!validate(row.input))throw Error(\"Original curve vector absent\");const bank=new Bank(),job=new PathFlattenJob(row.input),seen=new Set<string>();try{for(let at=0;at<contract.maxTurns;at++){const probe=bank.turn(job,work=>job.advance(1,work),1,{maximumCopyBytes:0,maximumCapacityBytes:0});if(probe.done)break;const demand=job.nextWorkDemand(),before=probe.work;for(const axis of [\"items\",\"copy\",\"capacity\",\"depth\"]as const){const amount=axis===\"items\""
+      },
+      {
+        "line": 25,
+        "source": "test(\"funded flatten genuine output backing cannot release under an insufficient release grant\",()=>{const row=rows[0];if(row===undefined||!validate(row.input))throw Error(\"Original neutral input absent\");const bank=new Bank(),job=new PathFlattenJob(row.input);complete(job,bank,1);const output=job.result(),before=projection(output),moved=job.intoRetirement();expect(moved.output).toBe(output);bank.close(moved.job);const cursor=output.intoRetirement();let denied=false;for(let at=0;at<contract.maxTurns&&!cursor.terminalIsEmpty();at++){const quote=cursor.nextDemand();if(quote.releaseBytes>0){const released=bank.released;bank.turn(cursor,work=>cur"
+      },
+      {
+        "line": 26,
+        "source": "test(\"funded flatten cancellation at original semantic frontiers keeps source and every real private owner\",()=>{const row=rows.find(value=>value.input.segments.some(segment=>segment.kind===\"cubic\"));if(row===undefined||!validate(row.input))throw Error(\"Original cancellation vector absent\");for(const stop of [0,1,2,3,7]){const before=structuredClone(row.input),bank=new Bank(),job=new PathFlattenJob(row.input);for(let at=0;at<contract.maxTurns&&job.progress().work<stop;at++)bank.turn(job,work=>job.advance(1,work));job.cancel();expect(()=>job.result()).toThrow(/cancelled/);expect(()=>bank.turn(job,work=>job.advance(1,work))).toThrow(/cancelled/"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🟦️.ts",
+    "lines": [
+      {
+        "line": 4,
+        "source": "import {PathFlattenJob,type FlatContour,type PathFlattenInput,type PathFlattenProgress} from \"../../🛤️path/📏️flatten/🟦️.ts\";"
+      },
+      {
+        "line": 29,
+        "source": " private flatten:PathFlattenJob|null=null;private flatProgress:PathFlattenProgress|null=null;private boolean:BooleanJob|null=null;private booleanProgress:BooleanProgress|null=null;private output:PathSegment[]=[];"
+      },
+      {
+        "line": 45,
+        "source": "   this.flatten=new PathFlattenJob({...this.current,segments:this.admitted});this.admitted=[];this.phase=\"flattening\";return;"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🟦️.ts",
+    "lines": [
+      {
+        "line": 1,
+        "source": "export { BitmapTraceJob, BooleanJob, DRAWING_REF_PATTERN, DRAWING_TEXT_LINE_HEIGHT, DRAW_BOOLEAN_OPERATIONS, PathBooleanJob, PathFlattenJob, StrokeOutlineJob, booleanPaths, booleanRegions, canvasDrawingPngExportPort, constantGradientColor, drawingRef, drawingSceneFromPreviewPayload, drawingSceneToSvgMarkup, drawingTextFallbackExtent, drawingTextLines, isDrawingRef, paintDrawingScene, pathSegmentsToSvgD, preparePath, prepareStroke, rasterizeDrawingSceneToPng, rasterizeSvgMarkupToPngDataUrl, traceBitmap } from \"../../🟦️.ts\";"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🛤️path/📏️flatten/🟦️.ts",
+    "lines": [
+      {
+        "line": 2,
+        "source": "export { PathFlattenJob } from \"../../../../🛤️path/📏️flatten/🟦️.ts\";"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🟦️.ts",
+    "lines": [
+      {
+        "line": 2,
+        "source": "import {PathFlattenJob,type FlatContour} from \"@semio-tech/framework/2d/path/flatten\";"
+      },
+      {
+        "line": 24,
+        "source": " private flatten:PathFlattenJob|null=null;private flattenRetirement:WorkRetirement|null=null;private outline:StrokeOutlineJob|null=null;private outlineRetirement:WorkRetirement|null=null;"
+      },
+      {
+        "line": 50,
+        "source": "   case \"admitting\":{const segment=source(this.next);if(segment){if(this.next>=65536)invalid(\"Painted query exceeds segment limit\");this.segments.push(own(segment));this.next++;}else{this.flatten=new PathFlattenJob({segments:this.segments,transform:this.query.transform,tolerance:this.query.flatness});this.phase=\"flattening\";}break;}"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/🎯️picking/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+    "lines": [
+      {
+        "line": 20,
+        "source": "import {PathFlattenJob} from \"@semio-tech/framework/2d/path/flatten\";"
+      },
+      {
+        "line": 39,
+        "source": "  const spies=[PathFlattenJob,StrokeOutlineJob].map(kind=>{const prototype=kind.prototype as any,original=prototype.intoRetirement;return spyOn(prototype,\"intoRetirement\").mockImplementation(function(this:object){const moved=original.call(this),record={job:moved.job,work:0};children.push(record);const advance=record.job.advance.bind(record.job);record.job.advance=(unit:number)=>{expect(unit).toBe(1);const p=advance(unit);expect(p.work-record.work).toBe(1);record.work=p.work;return p;};return moved;});});"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts",
+    "lines": [
+      {
+        "line": 2,
+        "source": "import {PathFlattenJob,type FlatContour} from \"@semio-tech/framework/2d/path/flatten\";"
+      },
+      {
+        "line": 26,
+        "source": " private flatten:PathFlattenJob|null=null;private outline:StrokeOutlineJob|null=null;private coverage:CoverageJob|null=null;private fillMask:CoverageMask|null=null;private strokeMask:CoverageMask|null=null;"
+      },
+      {
+        "line": 60,
+        "source": "   else {this.flatten=new PathFlattenJob({segments:this.segments,transform:this.transform,tolerance:this.tolerance});this.at=0;this.enter(\"flattening\");}"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+    "lines": [
+      {
+        "line": 14,
+        "source": "import {PathFlattenJob} from \"@semio-tech/framework/2d/path/flatten\";"
+      },
+      {
+        "line": 25,
+        "source": "  const spies=[PathFlattenJob,StrokeOutlineJob,CoverageJob,PreparedFill].map(kind=>{const prototype=kind.prototype as any,original=prototype.intoRetirement;return spyOn(prototype,\"intoRetirement\").mockImplementation(function(this:object){const result=original.call(this),owner=\"job\"in result?result.job:result,record={source:this,job:owner,work:0};records.push(record);const advance=owner.advance.bind(owner);owner.advance=(unit:number)=>{expect(unit).toBe(1);const p=advance(unit);expect(p.work-record.work).toBe(1);record.work=p.work;return p;};return result;});});"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🟦️.ts",
+    "lines": [
+      {
+        "line": 2,
+        "source": "import {PathFlattenJob,type FlatContour} from \"@semio-tech/framework/2d/path/flatten\";"
+      },
+      {
+        "line": 57,
+        "source": " private flatten:PathFlattenJob|null=null;private flattenRetirement:WorkRetirement|null=null;private outline:StrokeOutlineJob|null=null;private outlineRetirement:WorkRetirement|null=null;"
+      },
+      {
+        "line": 74,
+        "source": "   case\"admitting\":{const s=source(this.next);if(s){if(this.next>=this.input.limits.maxSegments)invalid(\"Painted preparation exceeds segment limit\");this.segments.push(own(s));this.next++;}else{this.flatten=new PathFlattenJob({segments:this.segments,transform:this.input.transform,tolerance:this.input.flatness});this.phase=\"flattening\";}break;}"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🟦️.ts",
+    "lines": [
+      {
+        "line": 42,
+        "source": "import {PathFlattenJob} from \"@semio-tech/framework/2d/path/flatten\";"
+      },
+      {
+        "line": 50,
+        "source": "test(\"prepared regions cache actual resolved Boolean and PNG trace paths and queries never invoke geometry kernels\",async()=>{let comparisons=0;const lift=(v:any):any=>typeof v===\"number\"?binary64(v):Array.isArray(v)?v.map(lift):v&&typeof v===\"object\"?Object.fromEntries(Object.entries(v).map(([k,v])=>[k,lift(v)])):v;for(const row of resolvedRows)for(const grant of [1,7,4096]){const fixture=vectorRows.find(source=>source.name===row.source)!,document={...fixture.document,layers:lift(fixture.document.layers)}as DrawingArtifact,producer=new DocumentVectorJob(document,fixture.limits,fixture.algorithms);while(!producer.advance(grant).done){}const m"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🟦️.ts",
+    "lines": [
+      {
+        "line": 5,
+        "source": "import {PathFlattenJob} from \"@semio-tech/framework/2d/path/flatten\";"
+      },
+      {
+        "line": 14,
+        "source": " private vector:DocumentVectorPreparationJob;private vectorClose:WorkRetirement|null=null;private paint:ScenePaintJob|null=null;private scene:PreparedScene|null=null;private union:BooleanJob|null=null;private flatten:PathFlattenJob|null=null;private flattenContour=0;private flattenPoint=0;private retiredFlats:PathFlattenJob[]=[];"
+      },
+      {
+        "line": 34,
+        "source": "   const node=this.scene!.plan.nodes[this.node];if(!node){this.finish();return;}if(!node.visible||node.content.kind!==\"path\"){this.node++;return;}this.flatten=PathFlattenJob.admit({segments:node.content.segments,transform:node.transform,tolerance:this.flatness});this.flattenContour=0;this.flattenPoint=0;"
+      }
+    ]
+  }
+]

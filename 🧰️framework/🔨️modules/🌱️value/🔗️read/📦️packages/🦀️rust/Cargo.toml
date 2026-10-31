@@ -1,0 +1,45 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-value-read"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Typed read publication authority, immutable lease identity and funded original ownership closure."
+
+[package.metadata.semio]
+role = "framework"
+id = "value-read"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_value_read"
+path = "🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+semio-framework-value-control-contract = { path = "../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retained-clone = { path = "../../../🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-value-retirement = { path = "../../../♻️retirement/📦️packages/🦀️rust" }
+semio-framework-value-factory = { path = "../../../♻️retirement/🏭️factory/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-value-testing-allocator = { path = "../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+
+[[test]]
+name = "value-read"
+required-features = ["testkit"]
+path = "../../🧪️tests/🦀️.rs"
+
+[[test]]
+name = "value-read-work"
+path = "../../🎟️work/🧪️tests/🦀️.rs"

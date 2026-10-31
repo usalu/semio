@@ -24,9 +24,11 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
-semio-framework-value = { workspace = true }
+semio-framework-os-services-native-paths = { workspace = true }
+semio-framework-value-retained-clone = { path = "../../../../../../../🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-job-worker-authority = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }

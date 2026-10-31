@@ -142,7 +142,7 @@ async fn the_settings_panel_is_addressed_at_the_focused_pane_not_the_base_window
     let control = node_by_key(&unfocused, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-settings.grid-spacing.control")).expect("the grid spacing stepper");
     let bindings = control.get("bindings").and_then(Value::as_array).cloned().unwrap_or_default();
     let addressed = bindings[0].pointer("/args/windowId").and_then(Value::as_str).unwrap_or_default().to_string();
-    assert_ne!(addressed, main::WINDOW_KIND_ID, "with nothing focused the panel addresses a LIVE pane, never the base window kind nobody has open: {bindings:?}");
+    assert_ne!(addressed, WINDOW_KIND_ID, "with nothing focused the panel addresses a LIVE pane, never the base window kind nobody has open: {bindings:?}");
     assert!([main::WINDOW_INSTANCE_TOP, main::WINDOW_INSTANCE_PERSPECTIVE].contains(&addressed.as_str()), "and that pane is one this app really has open: {addressed:?} {bindings:?}");
 }
 

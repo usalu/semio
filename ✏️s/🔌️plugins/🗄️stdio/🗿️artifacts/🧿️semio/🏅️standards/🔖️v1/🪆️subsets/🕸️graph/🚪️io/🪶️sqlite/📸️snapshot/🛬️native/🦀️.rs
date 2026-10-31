@@ -16,25 +16,8 @@ fn invalid(error:impl std::fmt::Display)->ValueError{ValueError::new(ValueRefusa
 fn kind(tag:u8)->Result<SemioGraphPortKind,ValueError>{Ok(match tag{0=>SemioGraphPortKind::In,1=>SemioGraphPortKind::Out,2=>SemioGraphPortKind::InOut,_=>return Err(invalid("invalid Semio native port kind"))})}
 
 
-/// 📇️ Fills one ordered property list in its original vector, inserting each entry before its key and value.
-fn binary_properties_into(output:&mut Vec<SemioValueEntry>,reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,entities:&mut usize)->Result<(),ValueError>{
- native::binary_list_into(output,reader,control,limits,entities,Default::default,|entry,reader,control,entities|{native::reader_text_into(&mut entry.key,reader,control)?;values::value_binary_into(&mut entry.value,reader,control,limits,entities)})
-}
-/// ☑️ Fills one optional port name in its original slot.
-fn binary_optional_into(output:&mut Option<String>,reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{match reader.read_u8().map_err(invalid)?{0=>Ok(()),1=>{*output=Some(String::new());native::reader_text_into(output.as_mut().unwrap(),reader,control)},_=>Err(invalid("invalid Semio optional text tag"))}}
 /// 🧩️ Fills the retained graph root from borrowed binary octets, inserting every node, port and edge before its fields.
-pub fn binary_into(output:&mut SemioGraphSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
- crate::io::sqlite::snapshot::admit_binary(body,control,limits)?;
- let mut entities=0;native::entities(&mut entities,1,limits)?;let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(invalid)?!=1{return Err(invalid("unsupported Semio graph native format"))}
- native::reader_text_into(&mut output.schema,&mut reader,control)?;
- native::binary_list_into(&mut output.nodes,&mut reader,control,limits,&mut entities,Default::default,|node,reader,control,entities|{
-  native::reader_text_into(&mut node.id.value,reader,control)?;native::reader_text_into(&mut node.kind,reader,control)?;native::reader_text_into(&mut node.label,reader,control)?;node.position=SemioPoint2{x:reader.read_f64_le().map_err(invalid)?,y:reader.read_f64_le().map_err(invalid)?};node.width=reader.read_f64_le().map_err(invalid)?;node.height=reader.read_f64_le().map_err(invalid)?;
-  native::binary_list_into(&mut node.ports,reader,control,limits,entities,Default::default,|port,reader,control,entities|{native::reader_text_into(&mut port.name,reader,control)?;port.kind=self::kind(reader.read_u8().map_err(invalid)?)?;native::reader_text_into(&mut port.category,reader,control)?;binary_properties_into(&mut port.properties,reader,control,limits,entities)})?;
-  binary_properties_into(&mut node.properties,reader,control,limits,entities)
- })?;
- native::binary_list_into(&mut output.edges,&mut reader,control,limits,&mut entities,Default::default,|edge,reader,control,entities|{native::reader_text_into(&mut edge.id.value,reader,control)?;native::reader_text_into(&mut edge.source.value,reader,control)?;native::reader_text_into(&mut edge.target.value,reader,control)?;native::reader_text_into(&mut edge.kind,reader,control)?;native::reader_text_into(&mut edge.label,reader,control)?;binary_optional_into(&mut edge.source_port,reader,control)?;binary_optional_into(&mut edge.target_port,reader,control)?;binary_properties_into(&mut edge.properties,reader,control,limits,entities)})?;
- if reader.remaining()!=0{return Err(invalid("Semio graph native trailing bytes"))}Ok(())
-}
+pub fn binary_into(output:&mut SemioGraphSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::record_binary_into(output,body,control,limits)}
 
 
 

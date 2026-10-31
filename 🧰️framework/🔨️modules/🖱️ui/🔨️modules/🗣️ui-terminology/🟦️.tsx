@@ -57,6 +57,6 @@ export function resolveUiLocalizedText(value: unknown, terminology: string, loca
   const terminologyCells = matrix[terminology] ?? matrix[UI_TERMINOLOGY_NATIVE] ?? matrix.reuse;
   if (terminologyCells === null || typeof terminologyCells !== "object") return "";
   const localeCells = terminologyCells as Readonly<Record<string, unknown>>;
-  const resolved = localeCells[locale] ?? localeCells.en ?? Object.values(localeCells).find((cell) => typeof cell === "string");
+  const resolved = localeCells[locale];
   return typeof resolved === "string" ? resolved : "";
 }

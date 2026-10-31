@@ -20,6 +20,6 @@ impl<M:RetireOwned+Send+Sync+'static> ErasedSnapshotRetirement for NativeMessage
  fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.original.close_demands(body)?.capacity_bytes)}
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.original.close_demands(4096)?.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.original.close_demands(4096)?.depth)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.original.begin_close();self.original.close_step(grant)}
+ fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {self.original.begin_close();self.original.close_step(grant)})(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
  fn terminal_is_empty(&self)->bool{self.original.terminal_is_empty()}
 }

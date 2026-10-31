@@ -14,7 +14,7 @@ fn receipt(mut progress:RetainedCloneProgress)->Result<RetainedCloneProgress,Val
 
 /// 🧳️ The original source aliases and displaced patch fields survive staging, exchange and partial cancellation.
 pub struct RetainedRowPatchApply<R,P:RetainedRowPatch<R>>{
- fields:ManuallyDrop<Option<P::Fields>>,patch:ManuallyDrop<Option<P>>,retirement:RetainedCloneClose,
+ fields:ManuallyDrop<Option<Box<P::Fields>>>,patch:ManuallyDrop<Option<P>>,retirement:RetainedCloneClose,
  phase:u8,index:usize,closing:bool,row:std::marker::PhantomData<fn()->R>,
 }
 impl<R,P:RetainedRowPatch<R>> Default for RetainedRowPatchApply<R,P>{fn default()->Self{Self::new()}}
@@ -25,7 +25,7 @@ impl<R,P:RetainedRowPatch<R>> RetainedRowPatchApply<R,P>{
  pub fn stage_demand(&self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing{return Err(invalid());}
   match self.phase{
-   0=>Ok(scalar(size_of::<P::Fields>()+size_of::<Option<P::Fields>>()+META)),
+   0=>Ok(RetirementDemand{capacity_bytes:size_of::<P::Fields>(),..scalar(size_of::<P::Fields>()+size_of::<Option<Box<P::Fields>>>()+META)}),
    1=>nested(self.fields.as_ref().ok_or_else(invalid)?.demand(patch,row,body)?),
    2=>Ok(scalar(size_of::<P>()*2+size_of::<Option<P>>()+META)),
    _=>Err(invalid()),
@@ -34,9 +34,9 @@ impl<R,P:RetainedRowPatch<R>> RetainedRowPatchApply<R,P>{
  /// 🪡️ Copies only schema-declared authored sparse fields from their genuine immutable event source.
  pub fn stage(&mut self,patch:RetainedCloneRef<'_,P>,row:RetainedCloneRef<'_,R>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let demand=self.stage_demand(patch,row,body)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
+  let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:if self.phase==0{demand.capacity_bytes}else{0},..Default::default()};
   match self.phase{
-   0=>{*self.fields=Some(P::Fields::new(RetainedPatchSource::Authored));self.phase=1;},
+   0=>{*self.fields=Some(Box::new(P::Fields::new(RetainedPatchSource::Authored)));self.phase=1;},
    1=>{let step=self.fields.as_mut().ok_or_else(invalid)?.advance(patch,row,body,child(grant))?;progress=receipt(step.progress())?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=2;}},
    2=>{let(value,child)=self.fields.as_mut().ok_or_else(invalid)?.take(RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Option<P>>()-META,..grant})?;*self.patch=value;progress=child;progress.copied_bytes+=size_of::<Option<P>>()+META;self.phase=3;return Ok(RetainedCloneStep::Complete(progress));},
    _=>return Err(invalid()),
@@ -65,16 +65,16 @@ impl<R,P:RetainedRowPatch<R>> RetainedRowPatchApply<R,P>{
  /// ♻️ Original field cursors close before the displaced sparse patch is physically retired.
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.closing{return Err(invalid());}
-  if let Some(fields)=self.fields.as_ref(){if !fields.terminal_is_empty(){return nested(fields.close_demand(body.saturating_sub(META))?);}return Ok(scalar(size_of::<P::Fields>()+size_of::<Option<P::Fields>>()+META));}
+  if let Some(fields)=self.fields.as_ref(){if !fields.terminal_is_empty(){return nested(fields.close_demand(body.saturating_sub(META))?);}return Ok(RetirementDemand{release_bytes:size_of::<P::Fields>(),..scalar(size_of::<Option<Box<P::Fields>>>()+META)});}
   if self.patch.is_some()||!self.retirement.is_empty(){return nested(self.retirement.next_owner_demands::<P>(self.patch.is_some(),&None,body.saturating_sub(META))?);}
   Ok(Default::default())
  }
  /// 🪜️ Each returned child and physical backing release is paid before its original owner disappears.
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let demand=self.close_demand(grant.maximum_copy_bytes)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if let Some(fields)=self.fields.as_mut(){if !fields.terminal_is_empty(){let step=fields.close_step(child(grant))?;return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}drop(self.fields.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-  if !self.retirement.is_empty(){let step=self.retirement.step_granted(child(grant))?;return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}
-  if self.patch.is_some(){if let Some(step)=self.retirement.begin_granted(&mut self.patch,child(grant))?{return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}}
+  if let Some(fields)=self.fields.as_mut(){if !fields.terminal_is_empty(){let step=fields.close_step(child(grant))?;return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}drop(self.fields.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
+  if !self.retirement.is_empty(){let step=self.retirement.step_granted(child(grant)).result?;return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}
+  if self.patch.is_some(){if let Some(step)=self.retirement.begin_granted(&mut self.patch,child(grant)).result?{return Ok(RetainedCloneStep::Progress(receipt(step.progress())?));}}
   Ok(RetainedCloneStep::Complete(Default::default()))
  }
  /// 🫙️ All genuine source aliases and displaced payload allocations have returned.

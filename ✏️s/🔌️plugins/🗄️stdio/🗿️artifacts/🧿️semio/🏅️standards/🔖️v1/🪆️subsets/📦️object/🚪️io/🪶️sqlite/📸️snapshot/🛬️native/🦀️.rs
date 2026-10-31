@@ -13,17 +13,8 @@ pub(crate)fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotCon
 }
 
 
-/// 🪆️ Fills one optional persisted child in its original handle from borrowed binary octets.
-fn binary_child_into<S>(output:&mut Option<store::os_store::artifact_child::ArtifactChild<S>>,reader:&mut store::ByteReader<'_>,subset:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,entities:&mut usize)->Result<(),ValueError>{
- match reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?{0=>Ok(()),1=>{native::entities(entities,2,limits)?;let child=output.insert(native::empty_child());native::reader_text_into(&mut child.child_id,reader,control)?;native::reader_text_into(&mut child.target.artifact_id,reader,control)?;native::reader_text_into(&mut child.target.dialect.artifact_kind,reader,control)?;native::reader_text_into(&mut child.target.dialect.standard,reader,control)?;native::reader_text_into(&mut child.target.dialect.subset,reader,control)?;validate_semio_child_identity(&child.child_id,&child.target,subset).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))},_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Object native optional child presence"))}
-}
 /// 🧩️ Fills the retained object root from borrowed binary octets, selecting each child before copying its identity.
-pub fn binary_into(output:&mut SemioObjectSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{
- crate::io::sqlite::snapshot::admit_binary(body,control,limits)?; let mut entities=0;native::entities(&mut entities,1,limits)?;let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"unsupported Object native format"))}
- native::reader_text_into(&mut output.schema,&mut reader,control)?;output.transform=semio_s_artifact_stdio_semio_base::io::binary::codec::read_transform(&mut reader).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;
- binary_child_into(&mut output.brep,&mut reader,"brep",control,limits,&mut entities)?;binary_child_into(&mut output.mesh,&mut reader,"mesh",control,limits,&mut entities)?;binary_child_into(&mut output.properties,&mut reader,"value",control,limits,&mut entities)?;
- if reader.remaining()!=0{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Object native trailing bytes"))}output.validate().map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))
-}
+pub fn binary_into(output:&mut SemioObjectSnapshot,body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::record_binary_into(output,body,control,limits)}
 
 /// 🧸️ Fills one optional persisted child in its original handle from the borrowed document field.
 fn text_child_into<S>(output:&mut Option<store::os_store::artifact_child::ArtifactChild<S>>,value:&str,subset:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits,entities:&mut usize)->Result<(),ValueError>{

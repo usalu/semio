@@ -4,6 +4,7 @@ use std::{mem::ManuallyDrop,sync::Arc};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement,arc_custody::SharedControlledRetirement}};
 
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 struct FlowSnapshotSources{schema:String,child_id:String,target:semio_framework_artifact_reference::ArtifactRef,scene:Option<SharedControlledRetirement<FlowWorkingScene>>}
 
 impl RetireOwned for FlowWorkingScene{

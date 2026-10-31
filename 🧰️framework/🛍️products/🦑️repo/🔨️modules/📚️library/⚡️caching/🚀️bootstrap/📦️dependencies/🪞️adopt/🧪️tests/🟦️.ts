@@ -77,7 +77,7 @@ const installToy=(root:string,variant:"base"|"inert"|"control")=>{
  }
  return{cache,workspace};
 };
-const bunInstall=(workspace:string,cache:string,root:string,frozen:boolean)=>spawnSync(process.execPath,["install",...(frozen?["--frozen-lockfile"]:[]),"--linker=isolated","--backend=copyfile","--cache-dir",cache,"--ignore-scripts"],{cwd:workspace,encoding:"utf8",env:{...process.env,HOME:root}});
+const bunInstall=(workspace:string,cache:string,root:string,frozen:boolean)=>spawnSync(process.execPath,["install",...(frozen?["--frozen-lockfile"]:[]),"--linker=hoisted","--backend=copyfile","--cache-dir",cache,"--ignore-scripts"],{cwd:workspace,encoding:"utf8",env:{...process.env,HOME:root}});
 
 /** 🔬️ Proves with Bun itself that every inert field is install-inert: the frozen install of a workspace whose members carry different values for all of them yields the identical installed tree, while an install-relevant edit does not. */
 test("adopt bun probe: all inert manifest fields leave the installed tree and the frozen lock unchanged",()=>{
@@ -154,7 +154,7 @@ test("adopt flow: donors are chosen by projection, runtime, verification and sha
     expect(readFileSync(join(target,"node_modules","pkg","index.js"),"utf8"),row.id).toBe("module.exports="+row.expectDonor);
     expect(oracle(["tree",join(target,"node_modules")]),row.id).toEqual(oracle(["tree",join(store,"j",ids[row.expectDonor]!.slice(0,20),"node_modules")]));
     expect(Number(oracle(["shared",join(target,"node_modules"),join(store,"j",ids[row.expectDonor]!.slice(0,20),"node_modules")],undefined,true)),row.id).toBe(0);
-    expect(pinned).toContain(ids[row.expectDonor]);
+    expect(pinned).toContain(ids[row.expectDonor]!);
    }
    const fresh=await glue.sealJavascriptDependencyAdoptReceiptV1(store,{version:1,purpose:"dependency-adopt-receipt",generation,projectionSha256:core.installProjectionSha256V1(toFiles(base)),runtime,installed:generationSha256V1("target")},()=>{},async()=>{});
    expect(fresh).toMatch(/^[a-f0-9]{64}$/u);expect(glue.hasJavascriptDependencyAdoptReceiptV1(store,generation)).toBe(true);
@@ -204,12 +204,12 @@ test("adopt key and ready laws: the generation key is install-relevant and the r
  expect(inputs).toContain("manifest=Object.fromEntries(Object.entries(JSON.parse(capture(rootPath)");
  expect(inputs.indexOf("javascriptDependencyInertManifestFieldsV1.has(key)")).toBeLessThan(inputs.indexOf("const hash=createHash"));
  expect(source).toContain("new Set(adoptProtocolV1.adopt.inertManifestFields)");
- const ready=text("javascriptDependencySourceOwnerReadyReceiptV1");expect(ready).toContain('version:3,purpose:"current-dependency-source-owner-ready"');expect(ready).not.toContain("executionSha256");
+ const ready=text("javascriptDependencySourceOwnerReadyReceiptV1");expect(ready).toContain('version:4,purpose:"current-dependency-source-owner-ready"');expect(ready).not.toContain("executionSha256");
  expect(text("readJavascriptDependencySourceOwnerReadyV1")).not.toContain("executionSha256");
  const definition=(installSchema.$defs as Record<string,any>).SourceOwnerReady;
- expect(definition.required).not.toContain("executionSha256");expect(Object.keys(definition.properties)).not.toContain("executionSha256");expect(definition.properties.version.const).toBe(3);
+ expect(definition.required).not.toContain("executionSha256");expect(Object.keys(definition.properties)).not.toContain("executionSha256");expect(definition.properties.version.const).toBe(4);
  expect(definition.required).toEqual(expect.arrayContaining(["scope","generation","bindings","members","ownerReferences"]));
- const ajv=new Ajv({strict:false}).addSchema(installSchema,"install.json"),validate=ajv.compile({$ref:"install.json#/$defs/SourceOwnerReady"}),sha="a".repeat(64),ok={version:3,purpose:"current-dependency-source-owner-ready",scope:".",generation:sha,ownerRelationSha256:sha,groupSha256:sha,recipeSha256:sha,members:[],bindings:[{sourceDirectory:"/w/node_modules",targetDirectory:"/s/j/"+sha.slice(0,20)+"/node_modules"}],ownerReferences:[]};
+ const ajv=new Ajv({strict:false}).addSchema(installSchema,"install.json"),validate=ajv.compile({$ref:"install.json#/$defs/SourceOwnerReady"}),sha="a".repeat(64),ok={version:4,purpose:"current-dependency-source-owner-ready",scope:".",generation:sha,ownerRelationSha256:sha,groupSha256:sha,recipeSha256:sha,members:[],bindings:[{sourceDirectory:"/w/node_modules",targetDirectory:"/s/j/"+sha.slice(0,20)+"/node_modules"}],ownerReferences:[],singletons:[]};
  expect(validate(ok),JSON.stringify(validate.errors)).toBe(true);
  expect(validate({...ok,executionSha256:sha})).toBe(false);expect(validate({...ok,version:2})).toBe(false);
  const glueSource=readFileSync(new URL("../💾️storage/🟦️.ts",import.meta.url),"utf8");

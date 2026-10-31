@@ -1,6 +1,6 @@
 //! 🔗️ Typed fixed read leases retain original roots through independently admitted ownership closure.
 
-use crate::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,arc_custody::SharedControlledRetirement}};
+use crate::{RetainedWorkOutcome,ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneSource,RetainedCloneStep},retirement::{RetireOwned,RetirementCursor,RetirementStep,arc_custody::SharedControlledRetirement}};
 use std::{cell::UnsafeCell,mem::ManuallyDrop,sync::{Arc,atomic::{AtomicBool,AtomicU64,AtomicUsize,Ordering}}};
 
 #[path="🪪️authority/🦀️.rs"]
@@ -98,13 +98,13 @@ impl<T:RetireOwned+Sync> Drop for ReadOwnershipRegistry<T> {fn drop(&mut self){l
 
 struct RegistryRetirement<T:RetireOwned+Sync> {pub owner:ManuallyDrop<ReadOwnershipRegistry<T>>,active:Option<SharedControlledRetirement<T>>}
 impl<T:RetireOwned+Sync> RetirementCursor for RegistryRetirement<T> {
- fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(owner)=self.active.as_ref(){owner.next_demand(body)}else{Ok(RetirementDemand{release_bytes:if unsafe{&*self.owner.state.state.get()}.free_len==READ_LEASE_CAPACITY&&!self.terminal_is_empty(){size_of::<[Option<Slot<T>>;READ_LEASE_CAPACITY]>()}else{0},depth:1,..Default::default()})}}
+ fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if let Some(owner)=self.active.as_ref(){if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.next_demand(body)}}else{Ok(RetirementDemand{release_bytes:if unsafe{&*self.owner.state.state.get()}.free_len==READ_LEASE_CAPACITY&&!self.terminal_is_empty(){size_of::<[Option<Slot<T>>;READ_LEASE_CAPACITY]>()}else{0},depth:1,..Default::default()})}}
     fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {
-        if self.terminal_is_empty(){return RetirementStep::Complete;}
-        if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}
+        if self.terminal_is_empty(){return RetirementStep::Complete(0);}
+        if grant.maximum_items==0{return RetirementStep::BudgetExhausted;}let demand=match RetirementCursor::next_demand(self,grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error,0)};if grant.maximum_depth<demand.depth||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return RetirementStep::BudgetExhausted;}
         if let Some(active)=self.active.as_mut(){
             if active.terminal_is_empty(){self.active=None;return RetirementStep::Advanced;}
-            return match active.step(grant){Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)};
+            let result=active.step(grant);let work=active.last_turn_work();return match result{Ok(step)=>RetirementStep::Progress(step.progress(),work),Err(error)=>RetirementStep::Failure(error,work)};
         }
         let state=self.owner.state.state.get_mut();
         if let Some(index)=state.next_index(){let slot=state.take(index);if slot.returned{self.owner.returned.fetch_sub(1,Ordering::AcqRel);}self.active=Some(SharedControlledRetirement::lease(slot.owner));return RetirementStep::Advanced;}
@@ -114,7 +114,7 @@ impl<T:RetireOwned+Sync> RetirementCursor for RegistryRetirement<T> {
     fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.active.as_ref().map_or(Ok(0),SharedControlledRetirement::next_copy_byte_demand)}
     fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.active.as_ref().map_or(Some(0),|active|active.next_capacity_byte_demand(copy).ok())}
     fn next_close_byte_demand(&self)->Option<usize> {self.active.as_ref().map_or_else(||Some(if unsafe{&*self.owner.state.state.get()}.free_len==READ_LEASE_CAPACITY&&!self.terminal_is_empty(){size_of::<[Option<Slot<T>>;READ_LEASE_CAPACITY]>()}else{0}),|active|active.next_release_byte_demand().ok())}
-    fn next_depth_demand(&self)->Result<usize,ValueError> {self.active.as_ref().map_or(Ok(1),SharedControlledRetirement::next_depth_demand)}
+    fn next_depth_demand(&self)->Result<usize,ValueError> {Ok(RetirementCursor::next_demand(self,0)?.depth)}
     fn allows_admitted_narrow_work(&self)->bool {true}
     fn terminal_release_bytes(&self)->Option<usize> {self.terminal_is_empty().then_some(size_of::<Self>())}
 }
@@ -131,15 +131,15 @@ impl<T:RetireOwned+Sync> crate::FactoryPayloadRetirement for ReadOwnershipRegist
     fn close_state_constructor_depth(&self)->usize {0}
     fn close_state_constructor_copy_bytes(&self)->usize {0}
     fn close_state_preparation_demands(&self,_:&Self::CloseState,_:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
-    fn prepare_close_state_step(&self,_:&mut Self::CloseState,_:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Ok(RetainedCloneStep::Complete(Default::default()))}
+    fn prepare_close_state_step(&self,_:&mut Self::CloseState,_:RetainedCloneGrant)->RetainedWorkOutcome{RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
     fn close_state_preparation_is_complete(_:&Self::CloseState)->bool{true}
     fn prepare_close_state(&self)->Self::CloseState {None}
-    fn transfer_payload(value:Self,state:&mut Self::CloseState) {*state=Some(crate::retirement::controlled::ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("admitted typed registry lost its retirement support: {error}")));}
-    fn close_state_demands(state:&Self::CloseState,copy:usize)->Result<RetirementDemand,ValueError> {state.as_ref().map_or(Ok(Default::default()),|owner|owner.next_demand(copy))}
-    fn close_state_step(state:&mut Self::CloseState,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        let Some(owner)=state.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};
-        if owner.terminal_is_empty(){if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}state.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()}));}
-        Ok(RetainedCloneStep::Progress(owner.step(grant)?.progress()))
+    fn transfer_payload(value:Self,state:&mut Self::CloseState) {*state=Some(crate::retirement::controlled::ControlledRetirement::retain(value));}
+    fn close_state_demands(state:&Self::CloseState,copy:usize)->Result<RetirementDemand,ValueError> {state.as_ref().map_or(Ok(Default::default()),|owner|if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.next_demand(copy)})}
+    fn close_state_step(state:&mut Self::CloseState,grant:RetainedCloneGrant)->RetainedWorkOutcome {
+        let Some(owner)=state.as_mut()else{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}};
+        if owner.terminal_is_empty(){if grant.maximum_items==0||grant.maximum_depth==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}state.take();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+        let result=owner.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));RetainedWorkOutcome{result,work:owner.last_turn_work()}
     }
     fn close_state_terminal_is_empty(state:&Self::CloseState)->bool {state.is_none()}
 }
@@ -159,27 +159,38 @@ impl<T:RetireOwned+Sync> ReadLease<T> {
     pub fn commit_authority_matches(&self,generation:u64,revision:[u8;32])->bool {self.registry.as_ref().is_some_and(|registry|registry.authority_matches(generation,revision))}
     pub fn source_capacity_bytes(&self)->usize{RetainedCloneSource::<T>::borrowed_constructor_capacity_bytes::<OriginalReadSource<T>>()}
     pub fn source_copy_bytes(&self)->usize{RetainedCloneSource::<T>::borrowed_constructor_copy_bytes::<OriginalReadSource<T>>()}
-    pub fn admit_source(self,grant:RetainedCloneGrant)->Result<(RetainedCloneSource<T,OriginalReadSource<T>>,RetainedCloneProgress),(ValueError,Self)>{
-        if self.owner.is_none(){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"returned read cannot issue an original source"),self));}
-        RetainedCloneSource::admit_borrowed(OriginalReadSource::new(self),|read:&OriginalReadSource<T>|read.get(),grant).map_err(|(error,mut read)|{let original=read.take_refused();(error,original)})
+    pub fn source_admission(self)->Result<crate::retained_clone::RetainedCloneSourceAdmission<T,OriginalReadSource<T>>,(ValueError,Self)>{
+        if self.owner.is_none(){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"returned read cannot issue an original source"),self))}
+        Ok(RetainedCloneSource::admission_borrowed(OriginalReadSource::new(self),|read:&OriginalReadSource<T>|read.get()))
     }
-    pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError> {if let Some(owner)=self.closing.as_ref(){owner.next_demand(body)}else{Ok(RetirementDemand{release_bytes:if self.owner.is_none()&&self.registry.is_some(){crate::retirement::arc_custody::arc_bytes::<ReadOwnershipRegistry<T>>()}else{0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}}
+    pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError> {
+        if self.terminal_is_empty(){return Ok(Default::default())}
+        if self.owner.is_some()||self.closing.is_none(){return Ok(RetirementDemand{depth:1,..Default::default()})}
+        let close=self.closing.as_ref().unwrap();if close.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{close.next_demand(body)}
+    }
 }
 impl<T:RetireOwned+Sync> ErasedSnapshotRetirement for ReadLease<T> {
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.demands(body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
-        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-        if grant.maximum_depth<self.next_depth_demand()?{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"read closure exceeds admitted depth"));}
-        if self.owner.is_some(){let registry=self.registry.as_ref().unwrap();let mut state=registry.state.try_lock()?;if !state.contains(self.id){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"read generation lost original registered root"));}let slot=state.slots.as_mut().unwrap()[self.id.index as usize].as_mut().unwrap();assert!(Arc::ptr_eq(&slot.owner,self.owner.as_ref().unwrap()));drop(self.owner.take());slot.returned=true;registry.returned.fetch_add(1,Ordering::AcqRel);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..Default::default()}));}
-        if self.closing.is_none(){*self.closing=Some(SharedControlledRetirement::lease(self.registry.take().unwrap()));}
-        let close=self.closing.as_mut().unwrap();let step=close.step(grant)?;if close.terminal_is_empty(){*self.closing=None;}Ok(step)
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome {
+        if self.terminal_is_empty(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+        if grant.maximum_items==0{return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+        let demand=match self.demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
+        if grant.maximum_depth<demand.depth{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"read closure exceeds admitted depth")),work:0}}
+        if self.owner.is_some(){
+            let registry=self.registry.as_ref().unwrap();let mut state=match registry.state.try_lock(){Ok(state)=>state,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
+            if !state.contains(self.id){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"read generation lost original registered root")),work:0}}
+            let slot=state.slots.as_mut().unwrap()[self.id.index as usize].as_mut().unwrap();assert!(Arc::ptr_eq(&slot.owner,self.owner.as_ref().unwrap()));drop(self.owner.take());slot.returned=true;registry.returned.fetch_add(1,Ordering::AcqRel);
+            return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
+        }
+        if self.closing.is_none(){*self.closing=Some(SharedControlledRetirement::lease(self.registry.take().unwrap()));return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+        let close=self.closing.as_mut().unwrap();if close.terminal_is_empty(){self.closing.take();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+        let result=close.step(grant);RetainedWorkOutcome{result,work:close.last_turn_work()}
     }
     fn terminal_is_empty(&self)->bool {self.owner.is_none()&&self.registry.is_none()&&self.closing.is_none()}
-    fn next_copy_byte_demand(&self)->Result<usize,ValueError> {self.closing.as_ref().map_or(Ok(0),SharedControlledRetirement::next_copy_byte_demand)}
-    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {self.closing.as_ref().map_or(Ok(0),|close|close.next_capacity_byte_demand(copy))}
-    fn next_release_byte_demand(&self)->Result<usize,ValueError> {if self.owner.is_some(){return Ok(0);}self.closing.as_ref().map_or_else(||Ok(if self.registry.is_some(){crate::retirement::arc_custody::arc_bytes::<ReadOwnershipRegistry<T>>()}else{0}),SharedControlledRetirement::next_release_byte_demand)}
-    fn next_depth_demand(&self)->Result<usize,ValueError> {self.closing.as_ref().map_or(Ok(usize::from(!self.terminal_is_empty())),SharedControlledRetirement::next_depth_demand)}
+    fn next_copy_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.copy_bytes)}
+    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {Ok(self.demands(copy)?.capacity_bytes)}
+    fn next_release_byte_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.release_bytes)}
+    fn next_depth_demand(&self)->Result<usize,ValueError> {Ok(self.demands(0)?.depth)}
 }
 impl<T:RetireOwned+Sync> Drop for ReadLease<T> {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"read lease must finish explicitly granted closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owner);ManuallyDrop::drop(&mut self.registry);ManuallyDrop::drop(&mut self.closing);}}}}
 

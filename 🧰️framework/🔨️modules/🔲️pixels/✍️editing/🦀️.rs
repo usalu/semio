@@ -77,14 +77,12 @@ pub enum PixelEditError {
     Cancelled,
 }
 
+impl PixelEditError {
+    /// 🗣️ Borrows the exact diagnostic message for funded publication.
+    pub fn message(&self) -> &str {match self {Self::Invalid(message)=>message,Self::Incomplete=>"Pixel operation is incomplete",Self::Cancelled=>"Pixel operation cancelled"}}
+}
 impl std::fmt::Display for PixelEditError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Invalid(message) => f.write_str(message),
-            Self::Incomplete => f.write_str("Pixel operation is incomplete"),
-            Self::Cancelled => f.write_str("Pixel operation cancelled"),
-        }
-    }
+    fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{f.write_str(self.message())}
 }
 
 impl std::error::Error for PixelEditError {}

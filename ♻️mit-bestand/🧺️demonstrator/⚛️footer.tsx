@@ -4,6 +4,7 @@
 
 import type { NavbarItem, UiLocale } from "@semio-tech/ui-react";
 import { cn } from "@semio-tech/ui-react";
+import { demonstratorFormat, demonstratorText } from "./🔨️modules/🌐️locale/🟦️.ts";
 
 type PartnerLogoStyle = Readonly<Record<string, string | number | undefined>>;
 
@@ -11,7 +12,7 @@ type PartnerLogoStyle = Readonly<Record<string, string | number | undefined>>;
 /** 🏛️ Zukunft Bau wordmark, used to credit the BBSR research funding programme in app chrome. @see https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506 */
 export function ZukunftBauLogo({ className, style }: { className?: string; style?: PartnerLogoStyle }) {
   return (
-    <svg viewBox="0 0 336 59.185" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 336 59.185" aria-hidden="true" focusable="false" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
       <g transform="translate(71.508 -4.507)">
         <path
           fill="#040506"
@@ -70,8 +71,8 @@ export const LUH_URL = "https://www.iek.uni-hannover.de/ngs/team";
 export function LuhLogo({ className, style }: { className?: string; style?: PartnerLogoStyle }) {
   return (
     <span className={cn("inline-flex shrink-0 items-center", className)} style={style}>
-      <img src={LUH_LOGO_URL} alt="Leibniz Universität Hannover" className="h-full w-auto dark:hidden" />
-      <img src={LUH_LOGO_DARK_URL} alt="Leibniz Universität Hannover" className="hidden h-full w-auto dark:block" />
+      <img src={LUH_LOGO_URL} alt="" className="h-full w-auto dark:hidden" />
+      <img src={LUH_LOGO_DARK_URL} alt="" className="hidden h-full w-auto dark:block" />
     </span>
   );
 }
@@ -89,8 +90,8 @@ export const UDK_URL = "https://www.udk-berlin.de/studium/architektur/fachgebiet
 export function UdkLogo({ className, style }: { className?: string; style?: PartnerLogoStyle }) {
   return (
     <span className={cn("inline-flex shrink-0 items-center", className)} style={style}>
-      <img src={UDK_LOGO_URL} alt="Universität der Künste Berlin" className="h-full w-auto dark:hidden" />
-      <img src={UDK_LOGO_DARK_URL} alt="Universität der Künste Berlin" className="hidden h-full w-auto dark:block" />
+      <img src={UDK_LOGO_URL} alt="" className="h-full w-auto dark:hidden" />
+      <img src={UDK_LOGO_DARK_URL} alt="" className="hidden h-full w-auto dark:block" />
     </span>
   );
 }
@@ -115,10 +116,11 @@ export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau", locale:
     content: (
       <button
         type="button"
+        aria-label={demonstratorFormat("demonstrator.footer.newTab", locale, { name: `${demonstratorText("demonstrator.footer.fundedBy", locale)} ${demonstratorText("demonstrator.partner.zukunftBau", locale)}` })}
         onClick={() => window.open(ZUKUNFT_BAU_PROJECT_URL, "_blank", "noopener,noreferrer")}
         className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors cursor-pointer"
       >
-        {!iconOnly && <span className="whitespace-nowrap">{locale === "de" ? "Gefördert durch" : "Funded by"}</span>}
+        {!iconOnly && <span className="whitespace-nowrap">{demonstratorText("demonstrator.footer.fundedBy", locale)}</span>}
         <ZukunftBauLogo className="h-tiny w-auto shrink-0" />
       </button>
     ),
@@ -138,24 +140,24 @@ export function aProjectOfLuhUdkFooterItem(key = "aProjectOfLuhUdk", locale: UiL
     key,
     className: "relative z-40",
     content: (
-      <div className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors">
-        {!iconOnly && <span className="whitespace-nowrap">{locale === "de" ? "Ein Projekt von" : "A project of"}</span>}
+      <div role="group" aria-label={demonstratorText("demonstrator.footer.aProjectOf", locale)} className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors">
+        {!iconOnly && <span className="whitespace-nowrap">{demonstratorText("demonstrator.footer.aProjectOf", locale)}</span>}
         <a
           href={LUH_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex h-tiny items-center rounded-sm hover:opacity-80 transition-opacity"
-          aria-label="Leibniz Universität Hannover"
+          aria-label={demonstratorFormat("demonstrator.footer.newTab", locale, { name: demonstratorText("demonstrator.partner.luh", locale) })}
         >
           <LuhLogo className="h-tiny" />
         </a>
-        {!iconOnly && <span className="whitespace-nowrap">{locale === "de" ? "und" : "and"}</span>}
+        {!iconOnly && <span className="whitespace-nowrap">{demonstratorText("demonstrator.footer.and", locale)}</span>}
         <a
           href={UDK_URL}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex h-tiny items-center rounded-sm hover:opacity-80 transition-opacity"
-          aria-label="Universität der Künste Berlin"
+          aria-label={demonstratorFormat("demonstrator.footer.newTab", locale, { name: demonstratorText("demonstrator.partner.udk", locale) })}
         >
           <UdkLogo className="h-tiny" />
         </a>

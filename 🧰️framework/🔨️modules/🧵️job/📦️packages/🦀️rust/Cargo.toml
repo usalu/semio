@@ -18,30 +18,32 @@ name = "semio_framework_job"
 path = "🦀️.rs"
 
 [features]
-testkit = ["semio-framework-async/testkit"]
+testkit = ["semio-framework-async/testkit","semio-framework-job-context/testkit","dep:semio-framework-job-testing-caller"]
 
 [dependencies]
+semio-framework-job-context = { workspace = true }
+semio-framework-job-testing-caller = { workspace = true, optional = true }
 semio-framework-trace = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-async = { workspace = true }
-semio-framework-value = { workspace = true }
+semio-framework-value-retained-clone = { path = "../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-shared-issuance = { path = "../../../🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job-testing-caller = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-testing-allocator = { path = "../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-async = { workspace = true, features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 
-[[test]]
-name = "original-turn-failure"
-required-features = ["testkit"]
-path = "../../⚠️failure/🧪️tests/🦀️.rs"
 
 [[test]]
 name = "original-close-context"
+required-features = ["testkit"]
 path = "../../♻️retirement/🎟️context/🧪️tests/🦀️.rs"
 
 [[test]]

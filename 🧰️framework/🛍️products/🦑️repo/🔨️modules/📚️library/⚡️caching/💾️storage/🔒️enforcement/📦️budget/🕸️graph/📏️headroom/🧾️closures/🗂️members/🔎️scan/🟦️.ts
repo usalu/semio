@@ -279,8 +279,8 @@ export async function supersedeBuildGraphClosuresV1(root:string,ports:Pick<Membe
 }
 
 /** 📉️ What one least-recently-used pass over the optional graph cache did: its bytes before and after (the logical size of every optional leaf, the measure of the optional ledger) against the ledger's fixed limit and the pass's target, and how many groups were retired, busy (their writer is taken), in use (an optional leaf written within the protected idle time) or excluded (the caller's own namespace). */
-export type OptionalLruReportV1=Readonly<{usedBytes:number;maximumBytes:number;targetBytes:number;remainingBytes:number;groups:number;retiredGroups:number;retiredFiles:number;retiredBytes:number;busy:number;protected:number;excluded:number;cancelled:boolean}>;
-type OptionalLeafV1=Readonly<{name:string;path:string;bytes:number;rank:number}>;
+export type OptionalLruReportV1=Readonly<{usedBytes:number;maximumBytes:number;targetBytes:number;remainingBytes:number;groups:number;retiredGroups:number;retiredFiles:number;retiredBytes:number;busy:number;protected:number;excluded:number;excludedBytes:number;cancelled:boolean}>;
+type OptionalLeafV1=Readonly<{name:string;path:string;bytes:number;rank:number;mtimeMs:number}>;
 const optionalLeafPatternV1=new RegExp(graphStorageSchema.definitions.OptionalQuota.definitions.OptionalPath.const,"u");
 const optionalDirectoryOfV1=(root:string,group:string)=>join(root,"inference",...(group==="canonical"?[]:group.split("/")));
 
@@ -295,7 +295,7 @@ function optionalLeavesOfV1(root:string,group:string):{leaves:OptionalLeafV1[];n
    if(!entry.isFile()||!optionalLeafPatternV1.test(prefix+name))continue;
    const path=join(directory,name);let row;try{row=lstatSync(path);}catch(error){if(absent(error))continue;throw error;}
    if(!row.isFile()||row.nlink!==1)continue;newest=Math.max(newest,row.mtimeMs);
-   leaves.push({name,path,bytes:row.size,rank:/(?:^|\/)ob\//u.test(name)?2:/\.pack(?:\.[a-f0-9]{8}\.tmp)?$/u.test(name)?1:0});
+   leaves.push({name,path,bytes:row.size,mtimeMs:row.mtimeMs,rank:/(?:^|\/)ob\//u.test(name)?2:/\.pack(?:\.[a-f0-9]{8}\.tmp)?$/u.test(name)?1:0});
   }
  }
  return{leaves:leaves.sort((left,right)=>left.rank-right.rank||(left.name<right.name?-1:left.name>right.name?1:0)),newest};
@@ -305,11 +305,11 @@ function optionalLeavesOfV1(root:string,group:string):{leaves:OptionalLeafV1[];n
 export async function retireBuildGraphOptionalGroupsLruV1(root:string,ports:Pick<MemberIndexPortsV1,"lease">,control:MemberScanControlV1,{targetBytes=graphStorageSchema.definitions.OptionalQuota.definitions.DefaultPolicy.const.lowWaterBytes,dryRun=false,exclude=[],protectedMilliseconds=M.groupProtectedIdleMilliseconds,now=Date.now()}:Readonly<{targetBytes?:number;dryRun?:boolean;exclude?:readonly string[];protectedMilliseconds?:number;now?:number}>):Promise<OptionalLruReportV1>{
  if(!Number.isSafeInteger(targetBytes)||targetBytes<0)throw Error("exact-optional-graph-target-bytes-required");
  const groups=["canonical",...listBuildGraphMemberGroupsV1(root).filter(group=>group.startsWith("selections/")||group.startsWith("contexts/"))].map(group=>{const{leaves,newest}=optionalLeavesOfV1(root,group);return{group,newest,bytes:leaves.reduce((sum,leaf)=>sum+leaf.bytes,0)};}).filter(row=>row.bytes>0).sort((left,right)=>left.newest-right.newest||(left.group<right.group?-1:left.group>right.group?1:0));
- const usedBytes=groups.reduce((sum,row)=>sum+row.bytes,0);let remaining=usedBytes,retiredGroups=0,retiredFiles=0,retiredBytes=0,busy=0,protectedGroups=0,excluded=0,cancelled=false;
+ const usedBytes=groups.reduce((sum,row)=>sum+row.bytes,0);let remaining=usedBytes,retiredGroups=0,retiredFiles=0,retiredBytes=0,busy=0,protectedGroups=0,excluded=0,excludedBytes=0,cancelled=false;
  for(let at=0;at<groups.length&&remaining>targetBytes;at++){
   if(control.cancelled()){cancelled=true;break;}
   const row=groups[at]!;await control.progress(row.group,at,groups.length);await turn();
-  if(exclude.includes(row.group)){excluded++;continue;}
+  if(exclude.includes(row.group)){excluded++;excludedBytes+=row.bytes;continue;}
   if(memberGroupProtectedV1(row.newest,now,protectedMilliseconds)){protectedGroups++;continue;}
   if(dryRun){retiredGroups++;retiredBytes+=row.bytes;remaining-=row.bytes;continue;}
   const[kind,identity]=row.group.split("/") as [string,string|undefined],lease=await ports.lease(kind==="contexts"?"dataset":kind==="selections"?"selection":"canonical",identity??"");
@@ -318,12 +318,44 @@ export async function retireBuildGraphOptionalGroupsLruV1(root:string,ports:Pick
    const{leaves,newest}=optionalLeavesOfV1(root,row.group);
    if(memberGroupProtectedV1(newest,Date.now(),protectedMilliseconds)){protectedGroups++;continue;}
    let bytes=0;for(const leaf of leaves){try{unlinkSync(leaf.path);}catch(error){if(absent(error))continue;throw error;}retiredFiles++;bytes+=leaf.bytes;}
-   const target=join(root,...directoryOf(row.group).split("/"),MEMBER_INDEX_FILE_V1),index=parseMemberIndexV1(indexText(root,row.group),row.group);
-   if(index.valid&&index.count){const live=new Map(leavesOf(root,row.group).map(leaf=>[leaf.name,leaf.stamp])),temporary=target+".tmp";writeFileSync(temporary,compactMemberIndexV1(index,row.group,live));renameSync(temporary,target);}
+   compactGroupIndexV1(root,row.group);
    retiredGroups++;retiredBytes+=bytes;remaining-=row.bytes;
   }finally{lease.release();}
  }
- return Object.freeze({usedBytes,maximumBytes:graphStorageSchema.definitions.OptionalQuota.definitions.DefaultPolicy.const.maximumBytes,targetBytes,remainingBytes:Math.max(0,remaining),groups:groups.length,retiredGroups,retiredFiles,retiredBytes,busy,protected:protectedGroups,excluded,cancelled});
+ return Object.freeze({usedBytes,maximumBytes:graphStorageSchema.definitions.OptionalQuota.definitions.DefaultPolicy.const.maximumBytes,targetBytes,remainingBytes:Math.max(0,remaining),groups:groups.length,retiredGroups,retiredFiles,retiredBytes,busy,protected:protectedGroups,excluded,excludedBytes,cancelled});
+}
+
+/** 🧺️ The retirement unit of an optional leaf inside one group: a record header with its packs and temporaries (`np|ip|rr/<24 hex>.json…`), a memory record pack with its index (`mr/<stem>`), else the leaf itself. Observation blocks are shared by headers and belong to no unit, the supersede sweep retires them once no header names them. */
+export function optionalEntryOfV1(name:string):string|undefined{
+ if(/(?:^|\/)ob\//u.test(name))return undefined;
+ return /^((?:np|ip|rr)\/[a-f0-9]{24}\.json)(?:\.|$)/u.exec(name)?.[1]??/^(mr\/[0-9a-z]+-[0-9]+-[a-f0-9]{16})\.(?:pack|idx)/u.exec(name)?.[1]??name;
+}
+
+/** 📉️ What one in-group pass did: the group's bytes plus the bytes of the other groups before and after, against the target, and how many units were retired or protected. */
+export type OptionalEntriesReportV1=Readonly<{usedBytes:number;targetBytes:number;remainingBytes:number;entries:number;retiredEntries:number;retiredFiles:number;retiredBytes:number;protected:number;cancelled:boolean}>;
+
+/** ♻️ Retires the least recently written units of ONE group (the writer's own, whose group a pass over other groups must keep) until its bytes plus `otherBytes` are at most `targetBytes`, so a full cache whose bytes sit in the live group still takes new records instead of declining every publication for ever. A unit written within the protected idle time stays; a unit goes header first, packs after, so a pass cut short never leaves a header naming a removed pack; the member index is compacted to the leaves that remain. The caller holds the group's writer lease. */
+export async function retireBuildGraphOptionalEntriesLruV1(root:string,group:string,control:MemberScanControlV1,{targetBytes=graphStorageSchema.definitions.OptionalQuota.definitions.DefaultPolicy.const.lowWaterBytes,otherBytes=0,dryRun=false,protectedMilliseconds=M.groupProtectedIdleMilliseconds,now=Date.now()}:Readonly<{targetBytes?:number;otherBytes?:number;dryRun?:boolean;protectedMilliseconds?:number;now?:number}>={}):Promise<OptionalEntriesReportV1>{
+ if(!Number.isSafeInteger(targetBytes)||targetBytes<0||!Number.isSafeInteger(otherBytes)||otherBytes<0)throw Error("exact-optional-graph-target-bytes-required");
+ const{leaves}=optionalLeavesOfV1(root,group),units=new Map<string,{key:string;newest:number;bytes:number;leaves:OptionalLeafV1[]}>();
+ for(const leaf of leaves){const key=optionalEntryOfV1(leaf.name);if(key===undefined)continue;const unit=units.get(key)??{key,newest:0,bytes:0,leaves:[]};unit.newest=Math.max(unit.newest,leaf.mtimeMs);unit.bytes+=leaf.bytes;unit.leaves.push(leaf);units.set(key,unit);}
+ const order=[...units.values()].sort((left,right)=>left.newest-right.newest||(left.key<right.key?-1:left.key>right.key?1:0)),usedBytes=leaves.reduce((sum,leaf)=>sum+leaf.bytes,0)+otherBytes;
+ let remaining=usedBytes,retiredEntries=0,retiredFiles=0,retiredBytes=0,protectedEntries=0,cancelled=false;
+ for(let at=0;at<order.length&&remaining>targetBytes;at++){
+  if(control.cancelled()){cancelled=true;break;}
+  const unit=order[at]!;await control.progress(group+"/"+unit.key,at,order.length);await turn();
+  if(memberGroupProtectedV1(unit.newest,now,protectedMilliseconds)){protectedEntries++;continue;}
+  if(!dryRun){for(const leaf of unit.leaves.sort((left,right)=>left.rank-right.rank||(left.name<right.name?-1:left.name>right.name?1:0))){try{unlinkSync(leaf.path);}catch(error){if(absent(error))continue;throw error;}retiredFiles++;}}
+  retiredEntries++;retiredBytes+=unit.bytes;remaining-=unit.bytes;
+ }
+ if(!dryRun&&retiredEntries>0)compactGroupIndexV1(root,group);
+ return Object.freeze({usedBytes,targetBytes,remainingBytes:Math.max(0,remaining),entries:order.length,retiredEntries,retiredFiles,retiredBytes,protected:protectedEntries,cancelled});
+}
+
+/** 🗜️ Rewrites the member index of a group to the leaves that still exist. */
+function compactGroupIndexV1(root:string,group:string):void{
+ const target=join(root,...directoryOf(group).split("/"),MEMBER_INDEX_FILE_V1),index=parseMemberIndexV1(indexText(root,group),group);
+ if(index.valid&&index.count){const live=new Map(leavesOf(root,group).map(leaf=>[leaf.name,leaf.stamp])),temporary=target+".tmp";writeFileSync(temporary,compactMemberIndexV1(index,group,live));renameSync(temporary,target);}
 }
 
 /** 🧒️ Binds the closure read child: the captured worker, heap and wire bounds the closure proof uses, one cohort of requests per child under the caller's lease control, each leaf its own request so that its answer is its own. */

@@ -39,11 +39,6 @@ impl Default for NumericalOutcomeDesk {
     }
 }
 
-/// 🎟️ Whether one grant covers one quoted demand with at least one item.
-pub fn numerical_grant_covers(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
-    grant.maximum_items != 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth
-}
-
 /// 🚪️ Whether a grant admits one close turn: a payload or writer frontier must be covered by its own quote, an owner rung is bounded by its own release limit.
 pub fn numerical_close_gate(grant: RetainedCloneGrant, frontier: Option<RetirementDemand>) -> bool {
     match frontier {
@@ -60,12 +55,6 @@ pub fn numerical_rung_demand(terminal: bool) -> RetirementDemand {
     if terminal { RetirementDemand::default() } else { RetirementDemand { release_bytes: NUMERICAL_CLOSE_RELEASE_BYTES, depth: 1, ..Default::default() } }
 }
 
-/// 🧯️ Maps one payload or writer close turn onto the job close vocabulary.
-pub fn numerical_close_result(step: Result<RetainedCloneStep, ValueError>) -> Result<InteractiveJobCloseStep, ValueError> {
-    let (RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) = step?;
-    Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress } })
-}
-
 /// 📏️ A job's own quote for its next close turn, read from its four declared demand currencies.
 pub fn numerical_close_demand(job: &impl InteractiveJob) -> Result<RetirementDemand, ValueError> {
     let copy_bytes = job.next_close_copy_byte_demand()?;
@@ -76,11 +65,12 @@ pub fn numerical_close_demand(job: &impl InteractiveJob) -> Result<RetirementDem
 /// when that wallet covers the job's quote, its effects are debited once, and a terminal owner reports `Complete`.
 pub fn numerical_close_original<J>(cx: &mut StepContext<'_>, owner: &mut J, demand: RetirementDemand, turn: impl FnOnce(&mut J, RetainedCloneGrant) -> Result<InteractiveJobCloseStep, ValueError>, terminal: impl FnOnce(&J) -> bool) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
     let step = close_original_retained_step(cx, demand, |grant| {
-        Ok(match turn(owner, grant)? {
+        let result = turn(owner, grant).map(|step| match step {
             InteractiveJobCloseStep::Complete { progress } => RetainedCloneStep::Complete(progress),
             InteractiveJobCloseStep::Pending { progress } => RetainedCloneStep::Progress(progress),
             InteractiveJobCloseStep::Blocked => RetainedCloneStep::Progress(RetainedCloneProgress::default()),
-        })
+        });
+        RetainedWorkOutcome { result, work: 1 }
     })?;
     Ok(if terminal(owner) { InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
 }
@@ -111,8 +101,12 @@ pub enum NumericalBatchEnd {
 }
 
 /// ▶️ Advances one native numerical batch under its persistent caller's actual original context.
-pub fn numerical_batch_step<J: InteractiveJob>(job: &mut J, context: &mut StepContext<'_>) -> Result<NumericalBatchEnd, OriginalTurnFailure> {
-    Ok(match job.step(context)? {
+pub fn numerical_batch_step<J: InteractiveJob>(job: &mut J, context: &mut StepContext<'_>, claim: &mut OriginalJobReturnClaim<'_>) -> Result<NumericalBatchEnd, OriginalTurnFailure> {
+    let outcome = match job.step(context, claim) {
+        InteractiveJobStep::Outcome(outcome) => outcome,
+        InteractiveJobStep::Continuation(failure) => return Err(failure),
+    };
+    Ok(match outcome {
         None | Some(JobOutcomeBorrow::Yield { .. } | JobOutcomeBorrow::PreviewReady { .. } | JobOutcomeBorrow::CheckpointReady { .. }) => NumericalBatchEnd::Continue,
         Some(JobOutcomeBorrow::Complete { .. }) => NumericalBatchEnd::Complete,
         Some(JobOutcomeBorrow::Fault { .. }) => NumericalBatchEnd::Fault,
@@ -142,30 +136,7 @@ pub fn numerical_payload_close(payload: &mut RetainedJobPayload, grant: Retained
     if !numerical_grant_covers(grant, demand) {
         return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
     }
-    numerical_close_result(payload.close_step(grant))
-}
-
-/// 🧯️ Closes one half-built writer slot under a grant that covers its own quote; `None` when the slot is empty.
-pub fn numerical_writer_close(slot: &mut Option<RetainedJobPayloadWriter>, grant: RetainedCloneGrant) -> Option<Result<InteractiveJobCloseStep, ValueError>> {
-    let writer = slot.as_mut()?;
-    writer.begin_close();
-    let demand = match writer.retirement_demands() {
-        Ok(demand) => demand,
-        Err(error) => return Some(Err(error)),
-    };
-    if !numerical_grant_covers(grant, demand) {
-        return Some(Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() }));
-    }
-    let step = numerical_close_result(writer.close_step(grant));
-    if writer.terminal_is_empty() {
-        *slot = None;
-    }
-    Some(step)
-}
-
-/// 📏️ Quotes a half-built writer slot's next close turn; `None` when the slot is empty.
-pub fn numerical_writer_demand(slot: &Option<RetainedJobPayloadWriter>) -> Option<Result<RetirementDemand, ValueError>> {
-    slot.as_ref().map(RetainedJobPayloadWriter::retirement_demands)
+    numerical_close_result(payload.close_step(grant).result)
 }
 
 /// 🔁️ Advances past each decoded checkpoint page, then retires the whole payload from its last page down to the operation ledger from the calling step's own wallet; true once the payload is terminal-empty.
@@ -181,8 +152,8 @@ pub fn numerical_restore_close_due(payload: &mut RetainedJobPayload, context: &m
     if !numerical_grant_covers(grant, demand) {
         return Ok(false);
     }
-    let step = payload.close_step(grant).map_err(|_| NumericalCheckpointFault::Admission)?;
-    context.consume_retained(step.progress()).map_err(|_| NumericalCheckpointFault::Admission)?;
+    let turn = payload.close_step(grant);
+    receive_original_retained_work(context, turn).map_err(|_| NumericalCheckpointFault::Admission)?;
     Ok(payload.terminal_is_empty())
 }
 
@@ -239,10 +210,8 @@ impl NumericalOutcomeDesk {
         let demand = payload.retirement_demands()?;
         let grant = cx.retained_grant();
         if numerical_grant_covers(grant, demand) {
-            let progress = match payload.close_step(grant)? {
-                RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => progress,
-            };
-            cx.consume_retained(progress)?;
+            let turn = payload.close_step(grant);
+            receive_original_retained_work(cx, turn).map_err(numerical_turn_error)?;
         }
         if payload.terminal_is_empty() {
             self.lent = None;

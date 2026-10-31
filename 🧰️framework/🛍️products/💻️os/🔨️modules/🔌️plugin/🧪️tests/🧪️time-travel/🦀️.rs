@@ -24,7 +24,6 @@ use semio_framework_ui_runtime::ComponentTree;
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_plugin_extension::extension_runtime_lift::extension_retirement::ExtensionResourceOwner;
 use semio_framework_ui_layout::layout::FRAMEWORK_HISTORY_BODY_KEY;
-#[cfg(test)]
 use semio_framework_ui_locale::{Label, Locale, LocalizedLabel, Terminology};
 use semio_framework_plugin_window_kits::{LabelAxes, WindowKit};
 use semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1;
@@ -122,7 +121,7 @@ impl ArtifactApp for ToyHistoryApp {
         (example_id == "five").then(|| Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&example)))))
     }
 
-    fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework::Fault>>{Some(||{
         Ok(TestSnapshot::default())
     })}
 
@@ -171,23 +170,23 @@ impl ArtifactApp for ToyHistoryApp {
     }
 
     fn build_presence_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(mutation_fixture::no_state::presence_store_disposer())
+        Some(crate::mutation_fixture_no_state::presence_store_disposer())
     }
 
     fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(mutation_fixture::no_state::transient_store_disposer())
+        Some(crate::mutation_fixture_no_state::transient_store_disposer())
     }
 
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(mutation_fixture::no_state::presence_peer_retirement_factory())
+        Some(crate::mutation_fixture_no_state::presence_peer_retirement_factory())
     }
 
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(mutation_fixture::no_state::presence_local_root_retirement_factory())
+        Some(crate::mutation_fixture_no_state::presence_local_root_retirement_factory())
     }
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(mutation_fixture::no_state::transient_local_root_retirement_factory())
+        Some(crate::mutation_fixture_no_state::transient_local_root_retirement_factory())
     }
 }
 //#endregion 🧸️ToyHistoryApp

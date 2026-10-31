@@ -18,28 +18,28 @@ impl<T: RetireOwned> RetirementCursor for HistoryPageRetirement<T> {
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
         match self.next_depth_demand() {
-            Err(error) => return RetirementStep::Failure(error),
-            Ok(depth) if grant.maximum_depth < depth => return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit, "Store history page exceeds admitted depth")),
+            Err(error) => return RetirementStep::Failure(error, 0),
+            Ok(depth) if grant.maximum_depth < depth => return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit, "Store history page exceeds admitted depth"), 0),
             _ => {}
         }
         if let Some(active) = self.active.as_mut() {
             if active.terminal_is_empty() {
                 drop(self.active.take());
-                return RetirementStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() });
+                return RetirementStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }, 1);
             }
             return match active.step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }) {
-                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => RetirementStep::Progress(progress),
-                Err(error) => RetirementStep::Failure(error),
+                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => RetirementStep::Progress(progress, 1),
+                Err(error) => RetirementStep::Failure(error, 1),
             };
         }
         if let Some(value) = self.original.pop() {
             *self.active = Some(ControlledRetirement::new(value).unwrap_or_else(|_| unreachable!("history entry declares controlled retirement")));
-            return RetirementStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() });
+            return RetirementStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }, 1);
         }
-        let Some(release) = self.original.next_empty_page_release_byte_demand() else { return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated, "empty history page lost its release extent")); };
-        if release == 0 { return RetirementStep::Complete; }
+        let Some(release) = self.original.next_empty_page_release_byte_demand() else { return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated, "empty history page lost its release extent"), 0); };
+        if release == 0 { return RetirementStep::Complete(0); }
         if grant.maximum_release_bytes < release { return RetirementStep::BudgetExhausted; }
-        if !self.original.release_empty_page() { return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated, "history page changed after exact release inquiry")); }
+        if !self.original.release_empty_page() { return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated, "history page changed after exact release inquiry"), 0); }
         RetirementStep::Bytes(release)
     }
     fn terminal_is_empty(&self) -> bool { self.original.is_empty() && self.original.capacity() == 0 && self.active.is_none() }
@@ -73,7 +73,7 @@ impl RetirementCursor for GroupVisibilityRetirement {
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {copy_bytes:usize::from(self.remaining!=0),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
-        if !self.terminal_is_empty() && grant.maximum_depth == 0 { return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit, "group visibility requires its original owner depth")); }
+        if !self.terminal_is_empty() && grant.maximum_depth == 0 { return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit, "group visibility requires its original owner depth"), 0); }
         if self.remaining != 0 {
             let bytes = self.remaining.min(grant.maximum_copy_bytes);
             if bytes == 0 { return RetirementStep::BudgetExhausted; }
@@ -81,7 +81,7 @@ impl RetirementCursor for GroupVisibilityRetirement {
             return RetirementStep::ProcessedBytes(bytes);
         }
         drop(self.original.take());
-        RetirementStep::Complete
+        RetirementStep::Complete(1)
     }
     fn terminal_is_empty(&self) -> bool { self.original.is_none() && self.remaining == 0 }
     fn next_work_byte_demand(&self) -> Result<usize, ValueError> { Ok(usize::from(self.remaining != 0)) }

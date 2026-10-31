@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "source": {
+    "items": 4096,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 64,
+    "fuel": 16384,
+    "deadlineUs": 1000000
+  },
+  "maximumTurns": 4096,
+  "stages": [
+    "returned",
+    "received",
+    "inserted"
+  ],
+  "borrowWork": 0,
+  "borrowCapacityBytes": 0,
+  "borrowReleaseBytes": 0,
+  "renewsSource": false,
+  "cases": [
+    {
+      "name": "callback",
+      "view": [
+        "Original callback cause",
+        "Original receipt refusal",
+        "Original context refusal",
+        null,
+        null,
+        false
+      ]
+    },
+    {
+      "name": "receipt-qualification",
+      "view": [
+        null,
+        null,
+        null,
+        null,
+        "Original receipt qualification",
+        true
+      ]
+    }
+  ]
+}

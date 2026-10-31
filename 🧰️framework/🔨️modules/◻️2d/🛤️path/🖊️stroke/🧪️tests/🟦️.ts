@@ -1,7 +1,7 @@
 /** 🧮️ Shared stroke alpha vectors and independent SVG paint. */
 import {expect,test,vi} from "vitest";
 import Ajv from "ajv";
-import sharp from "sharp";
+import {reference} from "./🔮️oracle/🟦️.ts";
 import {createCanvas} from "@napi-rs/canvas";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
@@ -28,7 +28,7 @@ test("async stroke wrapper retires unpublished completed candidates on final abo
   expect(observed).toHaveLength(1);const record=observed[0]!;expect(record.privatePolygons).toBeGreaterThan(0);expect(record.owner.output).toBeNull();expect(record.owner.job.terminalIsEmpty()).toBe(true);expect(record.work).toBe(15);expect(record.maximumGrant).toBe(1);
  }
 });
-import type {Vec2} from "../../../🟦️.ts";
+import type {Vec2} from "../../../📐️drawing-contract/🟦️.ts";
 const validate=new Ajv({strict:true}).compile(schema);
 type MutableStrokeInput=Omit<StrokeOutlineInput,"contours">&{contours:{points:[number,number][];closed:boolean}[]};
 function input(row:typeof fixture[number]):MutableStrokeInput {
@@ -44,14 +44,7 @@ function mask(source:StrokeOutlineInput,extent:readonly number[],budget:number):
  const contours=complete(source,budget),coverage=new CoverageJob({width:extent[0]!,height:extent[1]!,contours,transform:source.transform,rule:"nonzero"});
  while(!coverage.advance(4096).done){}return coverage.result().coverage;
 }
-async function reference(source:StrokeOutlineInput,extent:readonly number[]):Promise<number[]> {
- const scale=128,w=extent[0]!,h=extent[1]!,s=source.style;
- const d=source.contours.filter(c=>c.points.length>1||c.closed).map(c=>c.points.length?`M${c.points.map(p=>p.join(",")).join("L")}${c.closed?"Z":""}`:"").join("");
- const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w*scale}" height="${h*scale}" viewBox="0 0 ${w} ${h}"><path d="${d}" transform="matrix(${source.transform.join(" ")})" fill="none" stroke="red" stroke-width="${s.width}" stroke-linecap="${s.cap}" stroke-linejoin="${s.join}" stroke-miterlimit="${s.miterLimit}" stroke-dasharray="${s.dash.length?s.dash.join(" "):"none"}" stroke-dashoffset="${s.dashOffset}"/></svg>`;
- const pixels=await sharp(Buffer.from(svg)).ensureAlpha().raw().toBuffer(),out:number[]=[];
- for(let at=0;at<w*h;at++){const x=at%w,y=Math.floor(at/w);let sum=0;for(let dy=0;dy<scale;dy++)for(let dx=0;dx<scale;dx++)sum+=pixels[((y*scale+dy)*w*scale+x*scale+dx)*4+3]!;out.push(Math.round(sum/(scale*scale)));}
- return out;
-}
+
 for(const row of fixture)test(row.name,async()=>{
  const source=input(row),before=structuredClone(source);expect(validate(source)).toBe(true);
  for(const budget of [1,7,4096])expect([...mask(source,row.extent,budget)]).toEqual(row.expected);

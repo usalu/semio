@@ -4,22 +4,22 @@ use semio_framework_value::{RetirementDemand,ValueError,retirement::RetireOwned}
 use semio_framework_tool_typing_edit::OriginalTypingFold;
 
 /// 🪢️ An explicit algebra selects a split, the actual incoming owner, or an original bounded producer.
-pub enum OriginalTypingFoldPolicy<M:RetireOwned+Send+Sync+'static>{
+pub enum OriginalTypingFoldPolicy<M:RetireOwned+Send+'static>{
  Split,
  ReplaceIncoming,
  Factory(&'static dyn ArtifactOriginalTypingFoldFactory<M>),
 }
-impl<M:RetireOwned+Send+Sync+'static> Copy for OriginalTypingFoldPolicy<M>{}
-impl<M:RetireOwned+Send+Sync+'static> Clone for OriginalTypingFoldPolicy<M>{fn clone(&self)->Self{*self}}
+impl<M:RetireOwned+Send+'static> Copy for OriginalTypingFoldPolicy<M>{}
+impl<M:RetireOwned+Send+'static> Clone for OriginalTypingFoldPolicy<M>{fn clone(&self)->Self{*self}}
 
 /// 🏭️ A declared native algebra admits its concrete producer before either original net may move.
-pub trait ArtifactOriginalTypingFoldFactory<M:RetireOwned+Send+Sync+'static>:Send+Sync{
+pub trait ArtifactOriginalTypingFoldFactory<M:RetireOwned+Send+'static>:Send+Sync{
  fn birth_demands(&self,previous:&[M],incoming:&[M],body:usize)->Result<RetirementDemand,ValueError>;
  fn admit(&self,previous:&[M],incoming:&[M],cx:&mut StepContext<'_>,output:&mut Option<Box<dyn ArtifactOriginalTypingFoldProducer<M>>>)->Result<bool,OriginalTurnFailure>;
 }
 
 /// 🧶️ The actual pair stays borrowed until its retained decision is received and the producer closes.
-pub trait ArtifactOriginalTypingFoldProducer<M:RetireOwned+Send+Sync+'static>:Send{
+pub trait ArtifactOriginalTypingFoldProducer<M:RetireOwned+Send+'static>:Send{
  fn demands(&self,previous:&[M],incoming:&[M],body:usize)->Result<RetirementDemand,ValueError>;
  fn advance(&mut self,previous:&[M],incoming:&[M],cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>;
  fn ready(&self)->bool;

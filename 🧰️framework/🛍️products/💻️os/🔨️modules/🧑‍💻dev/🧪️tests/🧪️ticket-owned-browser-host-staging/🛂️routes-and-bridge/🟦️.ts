@@ -6,7 +6,7 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
   const { ACTOR_COMPONENT_EXPORTS, assertActorComponentExports, descriptorRouteDecision, finalizePluginDescriptor, join, mkdirSync, mkdtempSync, pluginComponentBridgeSource, readFileSync, repoRoot, rmSync, stateProbeCandidates, stateProbeChangedPaths, stateProbeSnapshot, tmpdir, writeFileSync } = dependencies;
   const { describe, expect, it } = vitest;
   const { itLong, generatedBridge, retainedGuestSource } = createTestKit(vitest, dependencies, source);
-  const budget = { fuel: 1, wallMs: 4, maxEffects: 1, maxPatchBytes: 4096 };
+  const budget = { maxEffects: 1, maxPatchBytes: 4096, maxFrames: 1 };
 
   type PackValue = import("@semio-tech/framework-os").PackValue;
   type ParityDump = import("../../../⚖️parity/🏗️structure/🟦️.ts").ParityDump;
@@ -61,7 +61,6 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
     });
   });
 
-  //#region 🔖️T-P8-tests
   describe("pluginComponentBridgeSource", () => {
     itLong("stages a command page and a cold-pair page through the guest exports before its single-event poll, like the native component host", async () => {
       const { createShardCommandIngressPages } = await import("@semio-tech/framework-actor/shard-client");
@@ -215,7 +214,8 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
 
     it("adapts the retained original turn and the actor grant into the reactor budget vocabulary", () => {
       const source = pluginComponentBridgeSource("plugin", "plugin.core.wasm");
-      expect(source).toContain("fuel: BigInt(turn.fuel), deadlineUs: turn.deadlineUs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: budget.maxFrames");
+      expect(source).toContain("reactor.poll(wireEvents, originalBudgetWit(turn, budget))");
+      expect(source).toContain("reactor[method](originalTurnWit(turn), originalGrantWit(turn.input.grant))");
     });
 
     it("normalizes the scalar command-ingress wire record without relying on async variant discriminants", () => {
@@ -233,5 +233,4 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
       expect(source).not.toContain('await import("./🟦️")');
     });
   });
-  //#endregion 🔖️T-P8-tests
 }

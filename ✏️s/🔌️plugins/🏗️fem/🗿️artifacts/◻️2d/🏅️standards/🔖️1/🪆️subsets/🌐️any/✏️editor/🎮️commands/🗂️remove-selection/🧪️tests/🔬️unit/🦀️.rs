@@ -100,7 +100,7 @@ fn remove_selection_orders_dependencies_and_restores_exact_snapshot() {
         assert_eq!(cursor, before);
     }
     assert_eq!(resolve_selection_ids(&before, &["scope:1:4:load4:dead2:l1".into(), "scope:1:4:load4:dead2:l1".into(), "scope:1:4:node7:missing".into()]), vec!["scope:1:4:load4:dead2:l1"]);
-    println!("[DEBUG] FEM2d selection deletion resolves loads, deduplicates targets, orders dependencies and replays exact inverses");
+    
 }
 
 #[semio_framework_async_macros::async_test]
@@ -108,31 +108,14 @@ async fn remove_selection_mounted_publication_is_atomic_for_selected_and_unselec
     mounted_delete_body().await;
 }
 
-#[test]
-fn mounted_future_layout_probe() {
-    fn bytes<F>(_factory: impl FnOnce() -> F) -> usize { std::mem::size_of::<F>() }
-    fn manifest() -> semio_framework_plugin::App { semio_framework_plugin::App { definition: semio_s_artifact_fem_2d_editor::editor::fem2d::create_fem2d_app(), examples: Vec::new() } }
-    let mut identity = semio_framework_plugin::artifact_app_laws::fixture_identity();
-    let authority = &mut identity;
-    let constructor_bytes = bytes(move || semio_framework_plugin::artifact_app_laws::new_app_with_registry::<semio_framework_plugin::EditorApp<semio_s_artifact_fem_2d_editor::editor::fem2d::Fem2dPlayApp>>(manifest, semio_framework_os_kernel::ActorId("probe".into()), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), authority));
-    log_phase(format!("[DEBUG] FEM2d mounted future layout: app={} constructor={} deletion={}", std::mem::size_of::<semio_s_artifact_fem_2d_editor::editor::fem2d::unit_tests::context::Fem2dApp>(), constructor_bytes, bytes(mounted_delete_body)));
-}
-
-fn log_phase(message: String) { std::io::Write::write_all(&mut std::io::stderr(), (message + "\n").as_bytes()).expect("debug phase"); }
-
 async fn mounted_delete_body() {
-    log_phase(format!("[DEBUG] FEM2d mounted delete entered; fixture app bytes={}", std::mem::size_of::<semio_s_artifact_fem_2d_editor::editor::fem2d::unit_tests::context::Fem2dApp>()));
     let (fixture, before) = selection_fixture();
     for selection in ["completeSelection", "loadSelection", "protectedSelection"] {
-        log_phase(format!("[DEBUG] FEM2d mounted delete {selection}: constructing app"));
         let mut app = fem2d_empty_app();
-        log_phase(format!("[DEBUG] FEM2d mounted delete {selection}: app constructed"));
         let semio_framework::kernel::Effect::LoadDocument { pack, spr } = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::reset_document_effect(&before) else { panic!("document fixture effect") };
         semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("mount shared wire fixture");
-        log_phase(format!("[DEBUG] FEM2d mounted delete {selection}: document mounted"));
         let ids: Vec<String> = serde_json::from_value(fixture[selection].clone()).expect("selection ids");
         dispatch(&mut app, Fem2dCommand::RemoveSelection(RemoveSelection { ids })).await;
-        log_phase(format!("[DEBUG] FEM2d mounted delete {selection}: command settled"));
         let after = app.snapshot().expect("published snapshot");
         if selection == "completeSelection" {
             assert!(after.nodes.is_empty() && after.elements.is_empty() && after.materials.is_empty() && after.sections.is_empty() && after.supports.is_empty() && after.load_cases.is_empty() && after.combinations.is_empty());
@@ -143,5 +126,5 @@ async fn mounted_delete_body() {
             assert_eq!(after, before, "an unselected referrer blocks the complete transaction");
         }
     }
-    println!("[DEBUG] FEM2d mounted selection deletion publishes complete prepared transactions; referenced-node refusal preserves the full snapshot");
+    
 }

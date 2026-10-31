@@ -1,0 +1,1453 @@
+{
+  "roots": [
+    "🧰️framework",
+    "✏️s"
+  ],
+  "excludedDirectories": [
+    ".bun",
+    ".cache",
+    ".git",
+    "dist",
+    "node_modules",
+    "target",
+    "🗑️generated"
+  ],
+  "limit": 60000,
+  "rustFilesScanned": 36675,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🧳️update/🦀️.rs",
+      "types": [
+        "PersistentSplice"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 32,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 56,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 57,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 58,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 59,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 61,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 62,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 63,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 69,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 85,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 86,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 87,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 106,
+          "operations": [
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🦀️.rs",
+      "types": [
+        "PersistentSet"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 56,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 59,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 95,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 100,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 104,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 122,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 123,
+          "operations": [
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🦀️.rs",
+      "types": [
+        "PersistentSet"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 34,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 59,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 61,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 62,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 68,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 71,
+          "operations": [
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+      "types": [
+        "PersistentListBuilder"
+      ],
+      "testOnly": true,
+      "operations": [
+        {
+          "line": 18,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 20,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 21,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 22,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 23,
+          "operations": [
+            "advance",
+            "take"
+          ]
+        },
+        {
+          "line": 31,
+          "operations": [
+            "advance",
+            "project"
+          ]
+        },
+        {
+          "line": 32,
+          "operations": [
+            "advance",
+            "adopt",
+            "finish",
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 38,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 39,
+          "operations": [
+            "take"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🦀️.rs",
+      "types": [
+        "PersistentSet"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 8,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 25,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 26,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 27,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 35,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 39,
+          "operations": [
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+      "types": [
+        "PersistentListBuilder",
+        "PersistentSet"
+      ],
+      "testOnly": true,
+      "operations": [
+        {
+          "line": 10,
+          "operations": [
+            "advance",
+            "adopt",
+            "finish",
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 11,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 12,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 15,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 16,
+          "operations": [
+            "advance",
+            "take",
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🦀️.rs",
+      "types": [
+        "observe_rank"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 31,
+          "operations": [
+            "observe_rank",
+            "project"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust/🦀️.rs",
+      "types": [
+        "PersistentSet"
+      ],
+      "testOnly": false,
+      "operations": []
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🦀️.rs",
+      "types": [
+        "PersistentListBuilder",
+        "PersistentListRead",
+        "PersistentSet",
+        "PersistentSplice",
+        "observe_rank"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 24,
+          "operations": [
+            "finish"
+          ]
+        },
+        {
+          "line": 55,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 68,
+          "operations": [
+            "observe_rank"
+          ]
+        },
+        {
+          "line": 102,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 104,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 114,
+          "operations": [
+            "take"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🦀️.rs",
+      "types": [
+        "PersistentListRead"
+      ],
+      "testOnly": false,
+      "operations": []
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🧪️tests/🦀️.rs",
+      "types": [
+        "PersistentListRead"
+      ],
+      "testOnly": true,
+      "operations": [
+        {
+          "line": 5,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 11,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 20,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 21,
+          "operations": [
+            "advance"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🎟️work/🧪️tests/🦀️.rs",
+      "types": [
+        "PersistentListRead"
+      ],
+      "testOnly": true,
+      "operations": [
+        {
+          "line": 3,
+          "operations": [
+            "advance",
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🦀️.rs",
+      "types": [
+        "PersistentSplice"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 28,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 30,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 31,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 38,
+          "operations": [
+            "take"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🧪️tests/🦀️.rs",
+      "types": [
+        "PersistentSplice"
+      ],
+      "testOnly": true,
+      "operations": [
+        {
+          "line": 5,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 11,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 12,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 17,
+          "operations": [
+            "advance"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧪️tests/🦀️.rs",
+      "types": [
+        "PersistentSet"
+      ],
+      "testOnly": true,
+      "operations": [
+        {
+          "line": 7,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 10,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 18,
+          "operations": [
+            "project"
+          ]
+        },
+        {
+          "line": 19,
+          "operations": [
+            "project"
+          ]
+        },
+        {
+          "line": 20,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 22,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 42,
+          "operations": [
+            "advance"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🦀️.rs",
+      "types": [
+        "PersistentListBuilder"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 27,
+          "operations": [
+            "adopt",
+            "take"
+          ]
+        },
+        {
+          "line": 37,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 39,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 46,
+          "operations": [
+            "take"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🧪️tests/🦀️.rs",
+      "types": [
+        "PersistentListBuilder"
+      ],
+      "testOnly": true,
+      "operations": [
+        {
+          "line": 13,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 14,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 22,
+          "operations": [
+            "adopt"
+          ]
+        },
+        {
+          "line": 23,
+          "operations": [
+            "finish",
+            "take"
+          ]
+        },
+        {
+          "line": 32,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 40,
+          "operations": [
+            "adopt",
+            "finish"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🎟️work/🧪️tests/🦀️.rs",
+      "types": [
+        "PersistentListBuilder"
+      ],
+      "testOnly": true,
+      "operations": [
+        {
+          "line": 5,
+          "operations": [
+            "adopt",
+            "finish"
+          ]
+        },
+        {
+          "line": 6,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 7,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 9,
+          "operations": [
+            "take",
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/♻️close/🧪️tests/🦀️.rs",
+      "types": [
+        "PersistentListBuilder"
+      ],
+      "testOnly": true,
+      "operations": [
+        {
+          "line": 4,
+          "operations": [
+            "adopt",
+            "close_step"
+          ]
+        },
+        {
+          "line": 5,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 6,
+          "operations": [
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️update/🧪️tests/🦀️.rs",
+      "types": [
+        "PersistentListBuilder",
+        "PersistentSet",
+        "PersistentSplice"
+      ],
+      "testOnly": true,
+      "operations": [
+        {
+          "line": 5,
+          "operations": [
+            "advance",
+            "adopt",
+            "finish",
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 7,
+          "operations": [
+            "advance",
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 8,
+          "operations": [
+            "advance",
+            "take"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🦀️.rs",
+      "types": [
+        "PersistentListBuilder"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 49,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 50,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 51,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 53,
+          "operations": [
+            "adopt"
+          ]
+        },
+        {
+          "line": 54,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 55,
+          "operations": [
+            "finish"
+          ]
+        },
+        {
+          "line": 56,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 59,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 62,
+          "operations": [
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️paged-one-item/🧬️mutation-apply/🧪️tests/🧳️semantics/🔺️apply/🦀️.rs",
+      "types": [
+        "PersistentSet",
+        "PersistentSplice"
+      ],
+      "testOnly": true,
+      "operations": [
+        {
+          "line": 18,
+          "operations": [
+            "advance",
+            "take"
+          ]
+        },
+        {
+          "line": 28,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 29,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 30,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 31,
+          "operations": [
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 32,
+          "operations": [
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 56,
+          "operations": [
+            "project"
+          ]
+        },
+        {
+          "line": 57,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 60,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 61,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 62,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 63,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 65,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 66,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 67,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 68,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 73,
+          "operations": [
+            "take"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏗️fem/⚙️engine/🧱️material/📋️table/🧪️tests/🦀️.rs",
+      "types": [
+        "PersistentSet",
+        "PersistentSplice"
+      ],
+      "testOnly": true,
+      "operations": [
+        {
+          "line": 17,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 19,
+          "operations": [
+            "advance",
+            "take"
+          ]
+        },
+        {
+          "line": 21,
+          "operations": [
+            "advance",
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 22,
+          "operations": [
+            "advance",
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 23,
+          "operations": [
+            "advance",
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 35,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 36,
+          "operations": [
+            "take"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🦀️.rs",
+      "types": [
+        "PersistentListRead"
+      ],
+      "testOnly": true,
+      "operations": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧳️state/🧪️tests/🦀️.rs",
+      "types": [
+        "PersistentSet",
+        "observe_rank"
+      ],
+      "testOnly": true,
+      "operations": [
+        {
+          "line": 29,
+          "operations": [
+            "advance",
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 30,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 31,
+          "operations": [
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 36,
+          "operations": [
+            "advance",
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 50,
+          "operations": [
+            "observe_rank",
+            "project"
+          ]
+        },
+        {
+          "line": 51,
+          "operations": [
+            "advance",
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 53,
+          "operations": [
+            "advance",
+            "take",
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧳️state/🪡️fields/🔎️key/🦀️.rs",
+      "types": [
+        "PersistentListRead"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 26,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 28,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 31,
+          "operations": [
+            "take",
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️native-singletons/📊️outputs/🦀️.rs",
+      "types": [
+        "observe_rank"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 38,
+          "operations": [
+            "observe_rank"
+          ]
+        },
+        {
+          "line": 40,
+          "operations": [
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 41,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 42,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 45,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 46,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 48,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 49,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 52,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 54,
+          "operations": [
+            "advance",
+            "take"
+          ]
+        },
+        {
+          "line": 57,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 60,
+          "operations": [
+            "take",
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️native-lifecycle/✂️deletion/🛂️guard/🔗️reference/🦀️.rs",
+      "types": [
+        "PersistentListRead"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 11,
+          "operations": [
+            "advance",
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 17,
+          "operations": [
+            "take",
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️native/🏷️text/🔎️name/🦀️.rs",
+      "types": [
+        "PersistentListRead"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 13,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 14,
+          "operations": [
+            "advance",
+            "project"
+          ]
+        },
+        {
+          "line": 15,
+          "operations": [
+            "close_step"
+          ]
+        },
+        {
+          "line": 16,
+          "operations": [
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 19,
+          "operations": [
+            "take",
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️native/🧱️row/🦀️.rs",
+      "types": [
+        "PersistentSet",
+        "PersistentSplice"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 49,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 50,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 52,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 54,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 56,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 57,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 67,
+          "operations": [
+            "take"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️native/🧱️row/🌱️admission/🦀️.rs",
+      "types": [
+        "PersistentListRead"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 14,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 19,
+          "operations": [
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️native/🧱️row/📋️change/🦀️.rs",
+      "types": [
+        "PersistentSet",
+        "PersistentSplice"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 9,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 12,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 17,
+          "operations": [
+            "close_step"
+          ]
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️native/🔢️scalar/🦀️.rs",
+      "types": [
+        "PersistentSet"
+      ],
+      "testOnly": false,
+      "operations": [
+        {
+          "line": 99,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 100,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 104,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 109,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 111,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 113,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 115,
+          "operations": [
+            "advance"
+          ]
+        },
+        {
+          "line": 116,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 122,
+          "operations": [
+            "take"
+          ]
+        },
+        {
+          "line": 128,
+          "operations": [
+            "take",
+            "close_step"
+          ]
+        },
+        {
+          "line": 138,
+          "operations": [
+            "take",
+            "close_step"
+          ]
+        }
+      ]
+    }
+  ],
+  "limitation": "Bounded lexical owner/call map, not type-resolved or macro/alias-complete."
+}

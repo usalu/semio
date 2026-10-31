@@ -1,0 +1,17 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🎟️work/📐️.json",
+    "sha256": "3fb5c5fa71aedfa35c1e021f2b5464ae275b3de7e044e098378a1e61c94217e6",
+    "bytes": 781
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🎟️work/🔣️.json",
+    "sha256": "5b24c5f22110e27edd9b79acae42c68a652aa01b9db76536ea885a38292dd875",
+    "bytes": 1315
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🎟️work/bidi.test.ts",
+    "sha256": "568f06fe94013aa4330fe25f4a1b0e1ba597e8f599e457bcf16690cc047bb490",
+    "bytes": 9201
+  }
+]

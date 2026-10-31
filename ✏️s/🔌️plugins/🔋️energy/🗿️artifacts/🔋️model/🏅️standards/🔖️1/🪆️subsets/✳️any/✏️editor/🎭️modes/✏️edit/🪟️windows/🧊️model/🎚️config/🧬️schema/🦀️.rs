@@ -17,7 +17,7 @@ pub struct EnergyModelCameraPose {
 }
 
 impl Default for EnergyModelCameraPose {
-    /// 🎥️ The framework's own default world camera, three-quarter from the south-west and above. A
+    /// 🎞️ The framework's own default world camera, three-quarter from the south-west and above. A
     /// fresh window never actually shows it: `render` only publishes a STORED pose, and an unstored
     /// window gets the model-derived camera plus `fit_json`'s one-shot framing instead.
     fn default() -> Self {
@@ -90,5 +90,18 @@ impl protocol::DiffAlgebra<EnergyModelWindowConfig> for EnergyModelWindowConfigD
 impl protocol::ColdDiffAlgebra<EnergyModelWindowConfig> for EnergyModelWindowConfigDiff {
     fn inverse(&self, base: &EnergyModelWindowConfig) -> Self {
         Self { camera: self.camera.map(|_| base.camera) }
+    }
+}
+
+impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for EnergyModelCameraPose {
+    fn native_default_demand() -> semio_framework_value::RetirementDemand {
+        semio_framework_value::RetirementDemand { copy_bytes: 2 * std::mem::size_of::<Self>(), depth: 1, ..Default::default() }
+    }
+    fn native_default(grant: semio_framework_value::RetainedCloneGrant) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        let demand = <Self as semio_framework_value_native_owned::native_decoding::owned::NativeDefault>::native_default_demand();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "a native camera default requires its physical birth grant"));
+        }
+        Ok((Self::default(), semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
     }
 }

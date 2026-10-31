@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.writer.typing-fold.original.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "previous": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "mutation"
+              ],
+              "properties": {
+                "mutation": {
+                  "enum": [
+                    "editText",
+                    "renameWriter"
+                  ]
+                },
+                "text": {
+                  "type": "string"
+                },
+                "newId": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "incoming": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "mutation"
+              ],
+              "properties": {
+                "mutation": {
+                  "enum": [
+                    "editText",
+                    "renameWriter"
+                  ]
+                },
+                "text": {
+                  "type": "string"
+                },
+                "newId": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "compositionCase": {
+            "type": "string"
+          },
+          "expected": {
+            "enum": [
+              "split",
+              "replaceIncoming",
+              "net"
+            ]
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "previous",
+              "incoming"
+            ],
+            "properties": {
+              "previous": {
+                "$ref": "#/properties/cases/items/properties/previous"
+              },
+              "incoming": {
+                "$ref": "#/properties/cases/items/properties/incoming"
+              }
+            }
+          },
+          {
+            "required": [
+              "compositionCase"
+            ],
+            "properties": {
+              "compositionCase": {
+                "$ref": "#/properties/cases/items/properties/compositionCase"
+              }
+            }
+          }
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

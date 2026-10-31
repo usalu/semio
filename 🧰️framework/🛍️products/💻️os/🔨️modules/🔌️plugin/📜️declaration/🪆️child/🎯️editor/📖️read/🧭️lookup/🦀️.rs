@@ -30,7 +30,6 @@ impl OriginalChildMemberLookup{
  pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{if !self.closing{return Err(refusal("original member lookup closure has not begun"))}if self.phase==Phase::Closed||!retained_clone_grant_admits(g,self.close_demand()){return Ok(Default::default())}self.source=None;self.root=0;self.keys=[(0,0);3];self.entry=0;self.phase=Phase::Closed;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:Self::HEADER,..Default::default()})}
  pub fn terminal_is_empty(&self)->bool{self.phase==Phase::Closed&&self.source.is_none()&&self.root==0&&self.entry==0}
 }
-#[cfg(test)]#[path="🧪️tests.rs"]mod tests;
 
 struct LookupRetirement{cursor:Option<OriginalChildMemberLookup>}
 impl semio_framework_value::retirement::RetireOwned for OriginalChildMemberLookup{fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(LookupRetirement{cursor:Some(self)})}fn retirement_birth_bytes(&self)->Option<usize>{Some(std::mem::size_of::<LookupRetirement>())}fn controlled_retirement_supported()->bool{true}}

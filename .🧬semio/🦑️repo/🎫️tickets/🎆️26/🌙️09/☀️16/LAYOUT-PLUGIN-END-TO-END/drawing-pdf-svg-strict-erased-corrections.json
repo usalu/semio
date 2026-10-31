@@ -1,0 +1,17 @@
+{
+  "scope": "two actual strict diagnostics; no value/assertion/stock/runtime change",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/📦️owned/📜️pages/🧪️tests/pages.test.ts",
+      "beforeSha256": "53a8c76ffb1f380828a68b4d1807644a67dd0df623872770d62ed3ee3fa7913b",
+      "sha256": "9f6673b65100a5583889bf403987bb753d3d4f1a173051735278ddda99cc2f6a",
+      "wholeInverse": true
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🧪️tests/owned.test.ts",
+      "beforeSha256": "3e95b4e93b21427532f86c6afc7086bd577c53ddc01dfc56f968752f14711929",
+      "sha256": "bebbf4d8c4f5477387447ca686418e1daa8ca19daf8ac4d8b9e449d007311489",
+      "wholeInverse": true
+    }
+  ]
+}

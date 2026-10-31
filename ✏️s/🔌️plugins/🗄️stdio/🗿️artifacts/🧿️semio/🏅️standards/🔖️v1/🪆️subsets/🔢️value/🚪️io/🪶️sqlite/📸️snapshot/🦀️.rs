@@ -23,8 +23,6 @@ pub mod projection;
 pub(crate)fn admit_values(snapshot:&SemioValueSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;projection::admit(snapshot,phase,control)}
 /// 🏛️ Checks the exact authored layout before native ownership.
 pub(crate)fn admit_layout(limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
-/// 📦️ Counts actual binary primitive cells before typed construction.
-pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
 /// 📃️ Counts actual document primitive cells before typed construction.
 pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
 /// 🔎️ Resolves the actual paid, sorted borrowed identifier frontier.
@@ -84,11 +82,11 @@ fn from_sqlite_database(database: &SqliteDatabase, control: &mut SqliteSnapshotC
 }
 
 impl SemioValueSnapshot {
-    /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
+    /// 🔤️ Restores the owned typed subset inside its independently declared relational composition.
     pub fn reconstruct_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Self,ValueError>{reconstruction::reconstruct(database,control,declared_schema)}
 }
 
-/// 🌱️ Bounds the actual typed SemioValue variants without resolving graph references.
+/// 🎭️ Bounds the actual typed SemioValue variants without resolving graph references.
 pub fn native_values(roots: &[SemioValue], b: &mut Bound<'_, '_>) -> Result<(),ValueError> {
     let mut pending=b.allocate_frontier(roots.len())?;pending.extend(roots.iter().rev());
     while let Some(value) = pending.pop() {

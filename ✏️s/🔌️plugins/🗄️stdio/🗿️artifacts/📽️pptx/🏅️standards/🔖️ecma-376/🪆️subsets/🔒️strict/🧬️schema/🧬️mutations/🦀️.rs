@@ -35,23 +35,23 @@ use semio_s_artifact_stdio_zip::opc::diff::{OpcDiff, OpcOwnerModification, OpcOw
 //#region 🔖️Dialect
 /// 🏷️ ISO/IEC 29500-4 Transitional PresentationML main namespace.
 pub const TRANSITIONAL_MAIN_NS: &str = "http://schemas.openxmlformats.org/presentationml/2006/main";
-/// 🏷️ ISO/IEC 29500-1 Strict PresentationML main namespace.
+/// 📛️ ISO/IEC 29500-1 Strict PresentationML main namespace.
 pub const STRICT_MAIN_NS: &str = "http://purl.oclc.org/ooxml/presentationml/main";
-/// 🏷️ The main-markup pair, `[transitional, strict]` — the order that makes the class stamp
+/// 🎢️ The main-markup pair, `[transitional, strict]` — the order that makes the class stamp
 /// bijective and therefore exactly invertible.
 pub const MAIN_NAMESPACES: [&str; 2] = [TRANSITIONAL_MAIN_NS, STRICT_MAIN_NS];
 /// 🎨️ ISO/IEC 29500-4 Transitional DrawingML namespace.
 pub const TRANSITIONAL_DRAWING_NS: &str = "http://schemas.openxmlformats.org/drawingml/2006/main";
-/// 🎨️ ISO/IEC 29500-1 Strict DrawingML namespace.
+/// ✏️ ISO/IEC 29500-1 Strict DrawingML namespace.
 pub const STRICT_DRAWING_NS: &str = "http://purl.oclc.org/ooxml/drawingml/main";
-/// 🎨️ The DrawingML pair, `[transitional, strict]` — a second namespace family a deck carries
+/// 🌀️ The DrawingML pair, `[transitional, strict]` — a second namespace family a deck carries
 /// independently of its PresentationML one.
 pub const DRAWING_NAMESPACES: [&str; 2] = [TRANSITIONAL_DRAWING_NS, STRICT_DRAWING_NS];
 /// 🔗️ ISO/IEC 29500-4 Transitional `officeDocument` relationships namespace and relationship base.
 pub const TRANSITIONAL_REL: &str = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
-/// 🔗️ ISO/IEC 29500-1 Strict `officeDocument` relationships namespace and relationship base.
+/// 🧱️ ISO/IEC 29500-1 Strict `officeDocument` relationships namespace and relationship base.
 pub const STRICT_REL: &str = "http://purl.oclc.org/ooxml/officeDocument/relationships";
-/// 🔗️ The `officeDocument` relationships pair, `[transitional, strict]`.
+/// 🌁️ The `officeDocument` relationships pair, `[transitional, strict]`.
 pub const RELATIONSHIP_NAMESPACES: [&str; 2] = [TRANSITIONAL_REL, STRICT_REL];
 
 /// 🧩️ The content type a legacy VML drawing part resolves. `pptx_part_is_xml` classifies `.vml` as
@@ -59,9 +59,9 @@ pub const RELATIONSHIP_NAMESPACES: [&str; 2] = [TRANSITIONAL_REL, STRICT_REL];
 /// a package that stores an XML part as opaque OPC bytes.
 pub const VML_CONTENT_TYPE: &str = "application/vnd.openxmlformats-officedocument.vmlDrawing";
 
-/// 🧩️ The markup-compatibility namespace an `mc:AlternateContent` fallback declares.
+/// 🌂️ The markup-compatibility namespace an `mc:AlternateContent` fallback declares.
 pub const MARKUP_COMPATIBILITY_NS: &str = "http://schemas.openxmlformats.org/markup-compatibility/2006";
-/// 🧩️ The element name a markup-compatibility fallback carries.
+/// 🔹️ The element name a markup-compatibility fallback carries.
 pub const ALTERNATE_CONTENT_ELEMENT: &str = "mc:AlternateContent";
 //#endregion 🔖️Dialect
 
@@ -89,7 +89,7 @@ pub mod set_relationship_base;
 //#region 🔖️Leaves
 //#endregion 🔖️Leaves
 
-/// 📐️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
+/// 🔤️ Typed mutation for this subset. `NoMutation` was dropped: `#[derive(dsl::Mutations)]` requires
 /// every variant to wrap exactly one leaf payload and a unit variant wraps none.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -173,7 +173,7 @@ fn declared_pair_member(base: &PptxSnapshot, pair: [&str; 2]) -> Option<String> 
     pair.into_iter().find(|candidate| base.xml_parts.iter().any(|part| part.document.root.as_ref().is_some_and(|root| declares_namespace(root, candidate)))).map(str::to_string)
 }
 
-/// 🔎️ The relationship-type base the deck's own relationships are built on.
+/// 🌃️ The relationship-type base the deck's own relationships are built on.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn declared_relationship_base(base: &PptxSnapshot, pair: [&str; 2]) -> Option<String> {
     pair.into_iter().find(|candidate| base.opc.relationships.groups().map(|(_, relationships)| relationships).flatten().any(|relationship| relationship.rel_type.starts_with(candidate))).map(str::to_string)
@@ -185,7 +185,7 @@ fn root_attribute(document: &XmlDocument, name: &str) -> Option<String> {
     attrs.iter().find(|attr| attr.name == name).map(|attr| attr.value.clone())
 }
 
-/// 🔎️ The main part's root `conformance` attribute, if it declares one.
+/// 🌱️ The main part's root `conformance` attribute, if it declares one.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn conformance_attribute(base: &PptxSnapshot) -> Option<String> {
     root_attribute(&xml_part(base, &main_part_path(base)?)?.document, "conformance")
@@ -199,7 +199,7 @@ fn diff_retarget_namespace(base: &PptxSnapshot, from: [&str; 2], to: &str) -> Pp
     root_edits_diff(base.xml_parts.iter().filter_map(|part| retarget_attribute_values_diff(part.document.root.as_ref()?, &from, to).map(|edit| (part.path.clone(), edit))).collect())
 }
 
-/// 🔺️ The diff of retargeting the `officeDocument` relationship TYPE base, owner by owner.
+/// 🔀️ The diff of retargeting the `officeDocument` relationship TYPE base, owner by owner.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_retarget_relationship_base(base: &PptxSnapshot, from: [&str; 2], to: &str) -> PptxDiff {
     let mut modified = Vec::new();
@@ -222,26 +222,26 @@ fn diff_retarget_relationship_base(base: &PptxSnapshot, from: [&str; 2], to: &st
     PptxDiff { schema: None, opc: Some(OpcDiff { relationships: Some(OpcOwnersDelta { modified, ..Default::default() }), ..Default::default() }), xml_parts: None }
 }
 
-/// 🔺️ The diff of setting — or removing — the main part's root `conformance` attribute.
+/// 🎚️ The diff of setting — or removing — the main part's root `conformance` attribute.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_conformance_attribute(base: &PptxSnapshot, value: Option<&str>) -> PptxDiff {
     let Some(path) = main_part_path(base) else { return PptxDiff::default() };
     let Some(part) = xml_part(base, &path) else { return PptxDiff::default() };
     root_attribute_diff(&part.document, "conformance", value).map(|edit| root_edits_diff(vec![(part.path.clone(), edit)])).unwrap_or_default()
 }
-/// 🔺️ The diff of adding a legacy VML drawing part, at `index` among the XML parts and with its override at `override_index` (each appended when `None`).
+/// ➕️ The diff of adding a legacy VML drawing part, at `index` among the XML parts and with its override at `override_index` (each appended when `None`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_insert_vml_part(base: &PptxSnapshot, path: &str, document: &XmlDocument, index: Option<usize>, override_index: Option<usize>) -> PptxDiff {
     insert_xml_part_diff(base, path, VML_CONTENT_TYPE, document, index, override_index).unwrap_or_default()
 }
 
-/// 🔺️ The diff of removing a legacy VML drawing part and its content-type override.
+/// 🌄️ The diff of removing a legacy VML drawing part and its content-type override.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_remove_vml_part(base: &PptxSnapshot, path: &str) -> PptxDiff {
     remove_xml_part_diff(base, path).unwrap_or_default()
 }
 
-/// 🧩️ The canonical markup-compatibility fallback this vocabulary inserts.
+/// 📥️ The canonical markup-compatibility fallback this vocabulary inserts.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn alternate_content_node() -> XmlNode {
     XmlNode::Element {
@@ -251,14 +251,14 @@ pub fn alternate_content_node() -> XmlNode {
     }
 }
 
-/// 🧭️ The root children of `document` that are markup-compatibility fallbacks, optionally only the one at `only`.
+/// 👶️ The root children of `document` that are markup-compatibility fallbacks, optionally only the one at `only`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn alternate_content_positions(document: &XmlDocument, only: Option<usize>) -> Vec<(usize, XmlNode)> {
     let Some(XmlNode::Element { children, .. }) = document.root.as_ref() else { return Vec::new() };
     children.iter().enumerate().filter(|(index, child)| only.is_none_or(|only| only == *index) && matches!(child, XmlNode::Element { name, .. } if name == ALTERNATE_CONTENT_ELEMENT)).map(|(index, child)| (index, child.clone())).collect()
 }
 
-/// 🧭️ The final index a fallback inserted at `index` lands on in the root of `document`.
+/// 🔖️ The final index a fallback inserted at `index` lands on in the root of `document`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn alternate_content_landing(document: &XmlDocument, index: Option<usize>) -> usize {
     let length = match document.root.as_ref() {
@@ -268,7 +268,7 @@ fn alternate_content_landing(document: &XmlDocument, index: Option<usize>) -> us
     index.map_or(length, |index| index.min(length))
 }
 
-/// 🔺️ The diff of inserting one markup-compatibility fallback (`node`, canonical by default) into a part's root element at `index` (appended when `None`).
+/// 🔵️ The diff of inserting one markup-compatibility fallback (`node`, canonical by default) into a part's root element at `index` (appended when `None`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_insert_alternate_content(base: &PptxSnapshot, path: &str, node: Option<&XmlNode>, index: Option<usize>) -> PptxDiff {
     let Some(part) = xml_part(base, path) else { return PptxDiff::default() };
@@ -276,7 +276,7 @@ fn diff_insert_alternate_content(base: &PptxSnapshot, path: &str, node: Option<&
     root_children_diff(&part.document, Some((landing, node.cloned().unwrap_or_else(alternate_content_node))), &[]).map(|edit| root_edits_diff(vec![(part.path.clone(), edit)])).unwrap_or_default()
 }
 
-/// 🔺️ The diff of stripping the markup-compatibility fallbacks from a part's root element: every one, or only the one at `index`.
+/// 🌅️ The diff of stripping the markup-compatibility fallbacks from a part's root element: every one, or only the one at `index`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_remove_alternate_content(base: &PptxSnapshot, path: &str, index: Option<usize>) -> PptxDiff {
     let Some(part) = xml_part(base, path) else { return PptxDiff::default() };
@@ -292,19 +292,19 @@ pub(crate) fn namespace_inverse(base: &PptxSnapshot) -> Vec<PptxStrictMutation> 
     declared_pair_member(base, MAIN_NAMESPACES).map(|namespace| PptxStrictMutation::SetMainNamespace(set_main_namespace::SetMainNamespace { namespace })).into_iter().collect()
 }
 
-/// ↩️ The mutation that restores the DrawingML namespace the deck declares.
+/// 🌆️ The mutation that restores the DrawingML namespace the deck declares.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn drawing_namespace_inverse(base: &PptxSnapshot) -> Vec<PptxStrictMutation> {
     declared_pair_member(base, DRAWING_NAMESPACES).map(|namespace| PptxStrictMutation::SetDrawingNamespace(set_drawing_namespace::SetDrawingNamespace { namespace })).into_iter().collect()
 }
 
-/// ↩️ The mutation that restores the `officeDocument` relationship base the deck declares.
+/// 🌇️ The mutation that restores the `officeDocument` relationship base the deck declares.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn relationship_base_inverse(base: &PptxSnapshot) -> Vec<PptxStrictMutation> {
     declared_relationship_base(base, RELATIONSHIP_NAMESPACES).map(|target| PptxStrictMutation::SetRelationshipBase(set_relationship_base::SetRelationshipBase { base: target })).into_iter().collect()
 }
 
-/// ↩️ The mutation that restores the main part's `conformance` attribute: its value, or its absence.
+/// 🌈️ The mutation that restores the main part's `conformance` attribute: its value, or its absence.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn conformance_attribute_inverse(base: &PptxSnapshot, forward_changes: bool) -> Vec<PptxStrictMutation> {
     match conformance_attribute(base) {
@@ -314,7 +314,7 @@ pub(crate) fn conformance_attribute_inverse(base: &PptxSnapshot, forward_changes
     }
 }
 
-/// ↩️ The mutation that undoes inserting a VML part: its removal, unless the part already existed.
+/// 🌉️ The mutation that undoes inserting a VML part: its removal, unless the part already existed.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn insert_vml_part_inverse(base: &PptxSnapshot, path: &str) -> Vec<PptxStrictMutation> {
     let key = path.trim_start_matches('/');
@@ -324,21 +324,21 @@ pub(crate) fn insert_vml_part_inverse(base: &PptxSnapshot, path: &str) -> Vec<Pp
     vec![PptxStrictMutation::RemoveVmlPart(remove_vml_part::RemoveVmlPart { path: path.to_string() })]
 }
 
-/// ↩️ The mutation that undoes removing a VML part: its insertion at the part and override positions it held.
+/// 🌊️ The mutation that undoes removing a VML part: its insertion at the part and override positions it held.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn remove_vml_part_inverse(base: &PptxSnapshot, path: &str) -> Vec<PptxStrictMutation> {
     let (Some(part), Some((index, override_index))) = (xml_part(base, path), xml_part_positions(base, path)) else { return Vec::new() };
     vec![PptxStrictMutation::InsertVmlPart(insert_vml_part::InsertVmlPart { path: path.to_string(), document: part.document.clone(), index: Some(index), override_index })]
 }
 
-/// ↩️ The mutation that undoes inserting a fallback: removing exactly the child it landed on.
+/// 🌋️ The mutation that undoes inserting a fallback: removing exactly the child it landed on.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn insert_alternate_content_inverse(base: &PptxSnapshot, path: &str, index: Option<usize>) -> Vec<PptxStrictMutation> {
     let Some(part) = xml_part(base, path) else { return Vec::new() };
     vec![PptxStrictMutation::RemoveAlternateContent(remove_alternate_content::RemoveAlternateContent { path: path.to_string(), index: Some(alternate_content_landing(&part.document, index)) })]
 }
 
-/// ↩️ The mutations that undo removing fallbacks: one insertion of each removed node at its index, listed last-to-first because replay applies them in reverse.
+/// 🧹️ The mutations that undo removing fallbacks: one insertion of each removed node at its index, listed last-to-first because replay applies them in reverse.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn remove_alternate_content_inverse(base: &PptxSnapshot, path: &str, index: Option<usize>) -> Vec<PptxStrictMutation> {
     let Some(part) = xml_part(base, path) else { return Vec::new() };
@@ -349,6 +349,13 @@ pub(crate) fn remove_alternate_content_inverse(base: &PptxSnapshot, path: &str, 
         .collect()
 }
 //#endregion 🔖️Inverses
+
+//#region 🚪️Codecs
+#[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+mod text_codec;
+#[path = "../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+mod binary_codec;
+//#endregion 🚪️Codecs
 
 //#region 🧪️Tests
 #[cfg(test)]

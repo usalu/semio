@@ -5,7 +5,9 @@ import {Database} from "bun:sqlite";
 import schema from "../🧬️schema/🔣️.json";
 import policy from "../🔣️policy.json";
 import fixture from "./🧫️fixtures/🔣️.json";
-import {elasticCapacityV1,readRepositoryCacheBudgetV1} from "../🟦️.ts";
+import {elasticCapacityV1,pinnedCapacityV1,readRepositoryCacheBudgetV1,repositoryCacheBudgetV1} from "../🟦️.ts";
+import {mkdtempSync,mkdirSync,writeFileSync,rmSync} from "node:fs";
+import {tmpdir} from "node:os";
 import {repositoryStrictStorageV1} from "../../🟦️.ts";
 import {cleanProtectedPrefixes,cleanRemovalProtection} from "../../../../../🧼️workspace-cleanup/🛡️protection/🟦️.ts";
 import {cleanRemovePath} from "../../../../../🧼️workspace-cleanup/🗑️removal/🟦️.ts";
@@ -27,7 +29,7 @@ test("cache backing and mount expectations agree with the neutral backend corpus
 
 /** 🎚️ Keeps authored logical observation limits independent of every physical capacity charge. */
 test("closed repository publication logical observation policy leaves the physical ledger unchanged",()=>{
- const database=new Database(":memory:"),validate=new Ajv({strict:true}).compile(schema),cases=new Ajv({strict:true}).compile(schema.$defs.logicalCase);try{expect((policy.partitions.tools as any).maximumLogicalBytes).toBe(68719476736);const physical=Object.fromEntries(Object.entries(policy.partitions).map(([id,row])=>[id,row.capacityBytes]));for(const row of fixture.logicalCases){expect(cases(row),row.id).toBe(true);const value:any=structuredClone(policy);if(row.missing)delete value.partitions.tools.maximumLogicalBytes;else value.partitions.tools.maximumLogicalBytes=row.maximumLogicalBytes;const encoded=JSON.stringify(value),oracle=database.query("SELECT json_type(?1,'$.partitions.tools.maximumLogicalBytes') IN('integer','real') AND json_extract(?1,'$.partitions.tools.maximumLogicalBytes')=CAST(json_extract(?1,'$.partitions.tools.maximumLogicalBytes') AS INTEGER) AND json_extract(?1,'$.partitions.tools.maximumLogicalBytes') BETWEEN 1 AND 68719476736 accepted,(SELECT sum(json_extract(value,'$.capacityBytes')) FROM json_each(?1,'$.partitions')) bytes").get(encoded)as{accepted:number|null;bytes:number};expect(validate(value),row.id).toBe(row.accepted);expect(Boolean(oracle.accepted),row.id).toBe(row.accepted);expect(oracle.bytes).toBe(fixture.expectedPartitionBytes);if(row.accepted){const actual:any=readRepositoryCacheBudgetV1(value);expect(actual.partitionBytes).toBe(fixture.expectedPartitionBytes);expect(actual.headroomBytes).toBe(fixture.expectedHeadroomBytes);expect(actual.partitions.tools.maximumLogicalBytes).toBe(row.maximumLogicalBytes);expect(Object.fromEntries(Object.entries(actual.partitions).map(([id,part]:[string,any])=>[id,part.capacityBytes]))).toEqual(physical);}else expect(()=>readRepositoryCacheBudgetV1(value)).toThrow();}expect(physical.tools).toBe(8589934592);expect((policy.partitions.tools as any).maximumLogicalBytes).toBeGreaterThan(physical.tools!);}finally{database.close();}
+ const database=new Database(":memory:"),validate=new Ajv({strict:true}).compile(schema),cases=new Ajv({strict:true}).compile(schema.$defs.logicalCase);try{expect((policy.partitions.tools as any).maximumLogicalBytes).toBe(68719476736);const physical=Object.fromEntries(Object.entries(policy.partitions).map(([id,row])=>[id,row.capacityBytes]));for(const row of fixture.logicalCases){expect(cases(row),row.id).toBe(true);const value:any=structuredClone(policy);if(row.missing)delete value.partitions.tools.maximumLogicalBytes;else value.partitions.tools.maximumLogicalBytes=row.maximumLogicalBytes;const encoded=JSON.stringify(value),oracle=database.query("SELECT json_type(?1,'$.partitions.tools.maximumLogicalBytes') IN('integer','real') AND json_extract(?1,'$.partitions.tools.maximumLogicalBytes')=CAST(json_extract(?1,'$.partitions.tools.maximumLogicalBytes') AS INTEGER) AND json_extract(?1,'$.partitions.tools.maximumLogicalBytes') BETWEEN 1 AND 103080263680 accepted,(SELECT sum(json_extract(value,'$.capacityBytes')) FROM json_each(?1,'$.partitions')) bytes").get(encoded)as{accepted:number|null;bytes:number};expect(validate(value),row.id).toBe(row.accepted);expect(Boolean(oracle.accepted),row.id).toBe(row.accepted);expect(oracle.bytes).toBe(fixture.expectedPartitionBytes);if(row.accepted){const actual:any=readRepositoryCacheBudgetV1(value);expect(actual.partitionBytes).toBe(fixture.expectedPartitionBytes);expect(actual.headroomBytes).toBe(fixture.expectedHeadroomBytes);expect(actual.partitions.tools.maximumLogicalBytes).toBe(row.maximumLogicalBytes);expect(Object.fromEntries(Object.entries(actual.partitions).map(([id,part]:[string,any])=>[id,part.capacityBytes]))).toEqual(physical);}else expect(()=>readRepositoryCacheBudgetV1(value)).toThrow();}expect(physical.tools).toBe(8589934592);expect((policy.partitions.tools as any).maximumLogicalBytes).toBeGreaterThan(physical.tools!);}finally{database.close();}
 });
 
 test("closed repository cache partitions agree with independent SQLite byte and path admission",()=>{
@@ -149,3 +151,67 @@ print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.string
  const budget=readRepositoryCacheBudgetV1(grown);expect(budget.partitions.graph.filesystemBytes).toBe(12*2**30-1048576);expect(budget.partitionBytes).toBe(readRepositoryCacheBudgetV1(policy).partitionBytes+6*2**30);expect(budget.headroomBytes).toBe(readRepositoryCacheBudgetV1(policy).headroomBytes);
 });
 
+
+test("a policy target changed after birth leaves an existing image at its own size until the explicit reset births a new one, and agrees with an independent Python model",()=>{
+ const declared=policy.partitions.dependencies,unit=1048576,rows=[
+  {id:"born-smaller",receipt:{maximumPhysicalBytes:8*2**30},expected:8*2**30},
+  {id:"born-equal",receipt:{maximumPhysicalBytes:declared.capacityBytes},expected:declared.capacityBytes},
+  {id:"born-larger-than-declared",receipt:{maximumPhysicalBytes:declared.capacityBytes+unit},expected:declared.capacityBytes},
+  {id:"unaligned",receipt:{maximumPhysicalBytes:8*2**30+1},expected:declared.capacityBytes},
+  {id:"below-minimum",receipt:{maximumPhysicalBytes:unit},expected:declared.capacityBytes},
+  {id:"not-a-number",receipt:{maximumPhysicalBytes:"8589934592"},expected:declared.capacityBytes},
+  {id:"no-receipt",receipt:null,expected:declared.capacityBytes},
+  {id:"unreadable",receipt:"{",expected:declared.capacityBytes}
+ ],model=`import json,sys
+d,rows=json.loads(sys.argv[1]),json.loads(sys.argv[2])
+out={}
+for r in rows:
+    v=r["bytes"]
+    ok=isinstance(v,int) and not isinstance(v,bool) and v%1048576==0 and v>=33554432 and v<=d
+    out[r["id"]]=v if ok else d
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,JSON.stringify(declared.capacityBytes),JSON.stringify(rows.map(row=>({id:row.id,bytes:row.receipt&&typeof row.receipt==="object"?row.receipt.maximumPhysicalBytes:null})))]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString());
+ const pinRust=(root:string)=>{mkdirSync(join(root,".cache","b"),{recursive:true});const rustDirectory=join(root,policy.partitions.rust.directory);mkdirSync(rustDirectory,{recursive:true});writeFileSync(join(rustDirectory,"image.json"),JSON.stringify({maximumPhysicalBytes:policy.partitions.rust.capacityBytes}));},control=mkdtempSync(join(tmpdir(),"budget-pin-")),base=(()=>{try{pinRust(control);return repositoryCacheBudgetV1(control);}finally{rmSync(control,{recursive:true,force:true});}})();
+ for(const row of rows){
+  const root=mkdtempSync(join(tmpdir(),"budget-pin-"));
+  try{
+   pinRust(root);const directory=join(root,declared.directory);mkdirSync(directory,{recursive:true});
+   if(row.receipt!==null)writeFileSync(join(directory,"image.json"),typeof row.receipt==="string"?row.receipt:JSON.stringify(row.receipt));
+   expect(pinnedCapacityV1(directory,declared.capacityBytes),row.id).toBe(row.expected);expect(independent[row.id],row.id).toBe(row.expected);
+   const budget=repositoryCacheBudgetV1(root),partition=budget.partitions.dependencies;
+   expect(partition.capacityBytes,row.id).toBe(row.expected);expect(partition.filesystemBytes,row.id).toBe(row.expected-unit);
+   expect(budget.partitionBytes-base.partitionBytes,row.id).toBe(row.expected-declared.capacityBytes);
+   expect(budget.maximumBytes-base.maximumBytes,row.id).toBe(row.expected-declared.capacityBytes);
+   expect(budget.headroomBytes,row.id).toBe(base.headroomBytes);
+  }finally{rmSync(root,{recursive:true,force:true});}
+ }
+});
+
+/** 📐️ An elastic image honours its receipt like a pinned one: clamped down to the rule maximum, never snapped up to the declared minimum, and compared with an independent Python model. */
+test("elastic capacity reads image receipts like pinned capacity",()=>{
+ const {effectiveCapacityV1}=require("../📐️elastic/🟦️.ts"),mib=1048576,minimum=64*mib,rule={needBytes:minimum,headroomPercent:0,hostFreeReservePercent:0,alignBytes:mib,maximumBytes:256*mib,automatic:true,pressureFreeBytes:0},
+ rows=[{id:"smaller",bytes:32*mib},{id:"between",bytes:128*mib},{id:"above-maximum",bytes:512*mib},{id:"unaligned",bytes:128*mib+1},{id:"below-floor",bytes:mib},{id:"text",bytes:"x"},{id:"malformed",bytes:null}],
+ model=`import json,sys
+m,x,rows=int(sys.argv[1]),int(sys.argv[2]),json.loads(sys.argv[3])
+out={}
+for r in rows:
+    v=r["bytes"]
+    ok=isinstance(v,int) and not isinstance(v,bool) and v%1048576==0 and v>=33554432
+    out[r["id"]]=min(v,x) if ok else m
+print(json.dumps(out))`,run=Bun.spawnSync(["python3","-I","-c",model,String(minimum),String(rule.maximumBytes),JSON.stringify(rows)]);
+ expect(run.exitCode,run.stderr.toString()).toBe(0);const independent=JSON.parse(run.stdout.toString());
+ for(const row of rows){
+  const root=mkdtempSync(join(tmpdir(),"budget-elastic-"));
+  try{writeFileSync(join(root,"image.json"),row.bytes===null?"{":JSON.stringify({maximumPhysicalBytes:row.bytes}));expect(effectiveCapacityV1(root,minimum,rule),row.id).toBe(independent[row.id]);}finally{rmSync(root,{recursive:true,force:true});}
+ }
+});
+
+test("a tiny foreign receipt of one partition is ignored for that partition and never breaks the budget of the repository",()=>{
+ const root=mkdtempSync(join(tmpdir(),"budget-tiny-"));
+ try{
+  mkdirSync(join(root,".cache","b"),{recursive:true});const rustDirectory=join(root,policy.partitions.rust.directory);mkdirSync(rustDirectory,{recursive:true});writeFileSync(join(rustDirectory,"image.json"),JSON.stringify({maximumPhysicalBytes:policy.partitions.rust.capacityBytes}));
+  const declared=policy.partitions.dependencies,directory=join(root,declared.directory);mkdirSync(directory,{recursive:true});writeFileSync(join(directory,"image.json"),JSON.stringify({maximumPhysicalBytes:33554432}));
+  expect(pinnedCapacityV1(directory,declared.capacityBytes)).toBe(33554432);
+  const budget=repositoryCacheBudgetV1(root);expect(budget.partitions.dependencies.maximumLogicalBytes).toBeGreaterThan(0);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});

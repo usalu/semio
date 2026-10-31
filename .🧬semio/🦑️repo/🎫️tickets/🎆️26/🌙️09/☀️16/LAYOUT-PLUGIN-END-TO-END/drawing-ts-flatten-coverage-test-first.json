@@ -1,0 +1,27 @@
+{
+  "state": "schema-and-law-authored-unexecuted",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/🎨️coverage/🔣️.json",
+      "sha256": "2f784fb91b998b576ce3b46911a2c6bff953ddc443af7de7f2b80076d7cc5c93"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/🎨️coverage/coverage.test.ts",
+      "sha256": "0c14439f1c2d5f7b379efe643de9a0da77c34593e8414fcb0cd284ed966afe1b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/🎨️coverage/📐️.json",
+      "sha256": "da09d2724ddd0a13773e1b50ff45aa2c8d83fd71e019cd6dd7a3e3616e8c9cd5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/🎨️coverage/oracle.d.mts",
+      "sha256": "5ed56f2c0e7ae91caaf66b4efbed5f9afb6605a840a4860519bde503798479f6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/🎨️coverage/oracle.mjs",
+      "sha256": "2904d321986dead25645ebd041ac54ae4d582eae5a4dc6ed6e94efe2bda48765"
+    }
+  ],
+  "cases": 28,
+  "pending": "Export existing test-only Bank/complete/projection/retire helpers after held17 review; capture new actual closure before runtime. Original whole CoverageJob/async/retirement law migration remains mandatory."
+}

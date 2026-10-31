@@ -1,0 +1,10 @@
+{
+  "actualOuterExit": 1,
+  "testSummary": "0pass1fail12assertions107ms",
+  "intendedFailure": "SQL actual loan CPU0 vs expected1 after real body/receipt128 assertions",
+  "matchingInputs": 12,
+  "drift": [],
+  "logBytes": 3626,
+  "logSha256": "4a4bfd9dd928d6d0486b68872c4bdd55d4cb7cf3420f7172f3d8ac06ade1849f",
+  "holdReleased": true
+}

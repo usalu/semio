@@ -1,0 +1,28 @@
+{
+  "state": "source-authored-unexecuted",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🟦️.ts",
+      "bytes": 22578,
+      "sha256": "adb63a77a2824b407eb27c791548c2af7273cc71f8c8ce15b9ec8261e9c7028c",
+      "beforeSha256": "2b61bc37dc1ccd074a837e5de8079dc1c062a282f187b43889bc0c39bfb39c3c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🧪️tests/🧵️flow/🟦️.ts",
+      "bytes": 5161,
+      "sha256": "11ae3f263c5a1ad3d941b420e98809df4c7b463b2a6aaeefa466cedd0435eeca"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🧪️tests/🧵️flow/📇️addressed.ts",
+      "bytes": 3665,
+      "sha256": "f0b44d9ba3b60b1de74af1702f5ecf1302454a789833b8cef820e466373c88d2"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🧪️tests/🧵️flow/🔗️label.ts",
+      "bytes": 2806,
+      "sha256": "20d15ae06a231ba780c6b676014b58841bb531e96bf3f90412847fb61f88e032"
+    }
+  ],
+  "testFirst": "layout-paragraph-loan-test-first.json",
+  "scope": "Actual StoryFlow, AddressedFlow and LinkLabel real-loan/CPU/semantic/read/close migration. Explicit Addressed maxWork uses existingcaller limits.maxWork, no newdefault byte credits. Original datasets/oracles/stock unchanged; no runtime claim."
+}

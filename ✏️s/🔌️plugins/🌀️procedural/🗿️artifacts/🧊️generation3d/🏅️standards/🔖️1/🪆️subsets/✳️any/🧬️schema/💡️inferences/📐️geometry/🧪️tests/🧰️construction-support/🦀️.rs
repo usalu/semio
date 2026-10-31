@@ -6,6 +6,7 @@
 
 #![allow(dead_code)]
 
+use semio_s_artifact_procedural_3d_geometry_compute::testing::step_with_fuel;
 use semio_s_artifact_procedural_3d_model::catalogue::Kind;
 use semio_s_artifact_procedural_3d_model::catalogue::PortType;
 use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
@@ -319,12 +320,12 @@ pub fn assert_cancellable(catalogue: &'static Catalogue, lookup: Lookup, text: &
         let kind = kind_of(catalogue, case["kind"].as_str().expect("case kind"));
         let entry = entries.iter().find(|entry| entry.id == kind.id).expect("registered kind");
         let mut job = (entry.start)(kind, inputs_of(catalogue, lookup, kind, case));
-        if let WidgetStep::Done(_) = job.step(1) {
+        if let WidgetStep::Done(_) = step_with_fuel(&mut *job, 1) {
             continue;
         }
         job.cancel();
         job.cancel();
-        match job.step(1) {
+        match step_with_fuel(&mut *job, 1) {
             WidgetStep::Done(evaluation) => {
                 let fault = evaluation.fault.expect("a cancelled job answers with a fault");
                 assert_eq!(fault.code, "generation3d.geometry.cancelled", "{}: cancelled code", case["name"]);

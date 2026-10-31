@@ -17,12 +17,12 @@ from the format's own committed specification:
   — `document = artifact-mark schema-line canvas-line styles-line layers-line`, the four
   single-letter `node` tags with `G`'s genuinely recursive `children`, the six `segment` tags, and
   the three `option-` productions;
-* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio` and its
-  Kaitai mirror, which declare `format` and the varint-length-prefixed `schema` and then stop at one
-  opaque `payload` chain by their own admission. That layer was DERIVED from the committed
-  `✉️base/📚️examples/🖍️sketch` bytes against their readable DSL twin — which between them exhibit
-  every node tag and every segment tag, including the arc — and the derivation is pinned by
-  re-encoding that committed file byte for byte, which a misreading could not do;
+* the pack body is the derived record document of the shared record-document codec
+  (`🧿️semio/🚪️io/💾️binary/🎒️record-document/🐍️.py`), driven by this subset's committed record spec
+  `…/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json`: the SPK container, the fixed-Huffman deflate, the BLAKE3
+  content hash and the schema-hashed record body are specified by `🧰️framework/🔨️modules/🎒️pack` and
+  re-implemented there, not here. The committed `🎒️.pack.semio` files were written by the Rust record
+  pack, so `parse_pack`/`pack_bytes` reproducing them is a cross-language byte agreement;
 * the seventeen verbs, their argument lists and their JSON wire form are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, the committed proto mirror and the
   committed per-kind `(before, mutation, after)` specification vectors, which pin each verb's
@@ -54,13 +54,44 @@ def _load(alias, folder):
 
 
 _load("mutate_semio_drawing_text", "📝️text-carrier")
-_load("mutate_semio_drawing_pack", "📦️pack-carrier")
 _load("mutate_semio_drawing_verbs", "🧬️mutation-verbs")
 
 from mutate_semio_drawing_text import ARTIFACT_DSL, ARTIFACT_PACK, print_f32, parse_dsl, print_dsl
-from mutate_semio_drawing_pack import parse_pack, pack_bytes
 from mutate_semio_drawing_verbs import clone, apply_mutation, inverse_mutation
 # endregion 🔖️Imports
+
+
+# region 🔖️Pack
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _load_shared(alias, *parts):
+    """🧬️ Loads a shared module from the `stdio.semio` artifact root, six folders above this case, and registers it under an importable name."""
+    if alias in sys.modules:
+        return sys.modules[alias]
+    path = os.path.join(_HERE, *[os.pardir] * 6, *parts)
+    spec = importlib.util.spec_from_file_location(alias, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[alias] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+record_document = _load_shared("record_document", "🚪️io", "💾️binary", "🎒️record-document", "🐍️.py")
+RECORD_SPEC = record_document.load_record_spec(os.path.join(_HERE, os.pardir, os.pardir, "🧬️schema", "📸️snapshot", "🗺️record-spec", "🔣️.json"))
+
+
+def parse_pack(data: bytes) -> dict:
+    """📦️ A `.pack.semio` file as the JSON snapshot its record document carries, an absent optional field left out like the text carrier leaves it."""
+    return record_document.decode_pack(RECORD_SPEC, data, omit_nulls=True)
+
+
+def pack_bytes(document: dict) -> bytes:
+    """🔍️ The writing direction of `parse_pack`, envelope included."""
+    return record_document.encode_pack(RECORD_SPEC, document)
+
+
+# endregion 🔖️Pack
 
 
 # region 🔖️Scenario input
@@ -70,7 +101,7 @@ def step_uris(ctx: Context, prefix: str) -> list:
 
 
 def snapshot_json(ctx: Context, uri: str):
-    """🧫️ A declared fixture read as JSON."""
+    """🪑️ A declared fixture read as JSON."""
     return json.loads(ctx.input_bytes(uri).decode("utf-8"))
 
 
@@ -130,7 +161,7 @@ def shape_report(document: dict) -> dict:
 
 # region 🔖️Handlers
 def mutate(ctx: Context) -> Outcome:
-    """🎯️ One verb applied to the real derived drawing by this implementation alone."""
+    """📱️ One verb applied to the real derived drawing by this implementation alone."""
     document = artifact(ctx)
     mutation = snapshot_json(ctx, next(uri for uri in step_uris(ctx, "shared://🖊️mutate-semio-drawing/") if uri.endswith("/🦠️mutation/🔣️.json")))
     applied = apply_mutation(document, mutation)
@@ -153,7 +184,7 @@ def inverse(ctx: Context) -> Outcome:
 
 
 def spec_vector(ctx: Context) -> Outcome:
-    """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector — a THIRD
+    """➡️ The same verb on its committed handcrafted `(before, mutation, after)` vector — a THIRD
     statement of what the verb means, independent of both implementations."""
     uris = ctx.step_input_uris()
     before = snapshot_json(ctx, uris[0])

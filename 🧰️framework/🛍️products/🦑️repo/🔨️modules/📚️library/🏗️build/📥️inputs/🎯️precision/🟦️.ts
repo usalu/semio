@@ -16,6 +16,7 @@ export type InputPrecisionRuleV1 = {readonly id: string; readonly description: s
 export type InputPrecisionReadV1 =
   | {readonly profile: string}
   | {readonly globs: readonly string[]}
+  | {readonly manager: Readonly<{ecosystem:string;role:"locks"|"scope"}>}
   | {readonly kinds: readonly string[]; readonly under: readonly string[]; readonly named?: boolean}
   | {readonly cargo: {readonly packages?: readonly string[]; readonly directories?: readonly string[]}}
   | {readonly script: {readonly source: string}}
@@ -30,6 +31,7 @@ export type InputPrecisionDecisionV1 = {readonly version: 1; readonly rule: stri
 export type InputPrecisionTargetV1 = {readonly project: string; readonly target: string; readonly command?: string; readonly outputs?: readonly string[]};
 /** 🧰️ The file system, the taxonomy and the dependency analyses the engine consults; every one is injected so the engine owns no I/O. */
 export type InputPrecisionHostV1 = {
+  readonly managerFiles?: (ecosystem:string,role:"locks"|"scope") => readonly string[];
   readonly exists: (path: string) => boolean;
   readonly readText: (path: string) => string | undefined;
   readonly listDirectory: (path: string) => readonly {readonly name: string; readonly directory: boolean}[];
@@ -628,6 +630,11 @@ export async function deriveInputsV1(document: InputPrecisionDocumentV1, rule: I
     if ("input" in read) {
       groups.push(read.input);
       name = `input:${read.input}`;
+    } else if ("manager" in read) {
+      const names=host.managerFiles?.(read.manager.ecosystem,read.manager.role)??fail("Selected manager file provider required");
+      if(!names.length)fail("Selected manager file role is empty");
+      for(const path of names){if(!path||path.includes("\\")||/[!*?{}]/u.test(path)||path.split("/").some(part=>!part||part==="."||part===".."))fail("Relative selected manager file required");patterns.push(WORKSPACE+path);}
+      name="manager:"+read.manager.ecosystem+":"+read.manager.role;
     } else if ("globs" in read) {
       patterns.push(...read.globs);
       name = "globs";

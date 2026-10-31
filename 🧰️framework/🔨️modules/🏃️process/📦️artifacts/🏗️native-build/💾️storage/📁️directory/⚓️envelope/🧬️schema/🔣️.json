@@ -1,0 +1,1425 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://process/directory-envelope-publication",
+  "definitions": {
+    "Identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dev",
+        "ino",
+        "mode"
+      ],
+      "properties": {
+        "dev": {
+          "type": "string",
+          "pattern": "^[0-9]{1,20}$"
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,19}$"
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "Anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "underlying"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "directory-partition"
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "underlying": {
+          "$ref": "#/definitions/Identity"
+        },
+        "caseFold": {
+          "const": "insensitive"
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "initialState",
+        "receiptSha256",
+        "directory",
+        "backing",
+        "root"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "enum": [
+            "current-publication",
+            "current-exact-publication",
+            "current-prepared-publication",
+            "current-retained-inactive-publication"
+          ]
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "directory": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino"
+          ],
+          "properties": {
+            "dev": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            },
+            "ino": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            }
+          }
+        },
+        "backing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino",
+            "size",
+            "allocatedBytes"
+          ],
+          "properties": {
+            "dev": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            },
+            "ino": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "allocatedBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          }
+        },
+        "root": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino"
+          ],
+          "properties": {
+            "dev": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            },
+            "ino": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]*$",
+              "maxLength": 20
+            }
+          }
+        },
+        "initialState": {
+          "enum": [
+            "mounted",
+            "inactive"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "enum": [
+                    "current-publication",
+                    "current-exact-publication",
+                    "current-prepared-publication"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "const": "current-retained-inactive-publication"
+                },
+                "initialState": {
+                  "const": "mounted"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "Witness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "digest",
+        "files",
+        "directories",
+        "links",
+        "sockets",
+        "bytes",
+        "journalSha256",
+        "applicationSha256",
+        "service"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "directories": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "links": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sockets": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "bytes": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "journalSha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "applicationSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "service": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "identity",
+                "digest",
+                "files",
+                "directories",
+                "bytes"
+              ],
+              "properties": {
+                "identity": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "uuid",
+                    "directory",
+                    "file"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "darwin-fsevents"
+                    },
+                    "uuid": {
+                      "type": "string",
+                      "pattern": "^[A-F0-9]{8}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{4}-[A-F0-9]{12}$"
+                    },
+                    "directory": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "ino",
+                        "mode",
+                        "uid",
+                        "gid"
+                      ],
+                      "properties": {
+                        "ino": {
+                          "type": "string",
+                          "pattern": "^[1-9][0-9]*$"
+                        },
+                        "mode": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 4095
+                        },
+                        "uid": {
+                          "type": "string",
+                          "pattern": "^(0|[1-9][0-9]*)$"
+                        },
+                        "gid": {
+                          "type": "string",
+                          "pattern": "^(0|[1-9][0-9]*)$"
+                        }
+                      }
+                    },
+                    "file": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "ino",
+                        "mode",
+                        "uid",
+                        "gid",
+                        "sha256"
+                      ],
+                      "properties": {
+                        "ino": {
+                          "type": "string",
+                          "pattern": "^[1-9][0-9]*$"
+                        },
+                        "mode": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 4095
+                        },
+                        "uid": {
+                          "type": "string",
+                          "pattern": "^(0|[1-9][0-9]*)$"
+                        },
+                        "gid": {
+                          "type": "string",
+                          "pattern": "^(0|[1-9][0-9]*)$"
+                        },
+                        "sha256": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      }
+                    }
+                  }
+                },
+                "digest": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "files": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "directories": {
+                  "const": 1
+                },
+                "bytes": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                }
+              }
+            }
+          ]
+        },
+        "exactServicePayload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "version",
+            "withoutServiceMetadataSha256",
+            "serviceContentSha256",
+            "serviceMetadataSha256",
+            "authority"
+          ],
+          "properties": {
+            "version": {
+              "const": 1
+            },
+            "withoutServiceMetadataSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "serviceContentSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "serviceMetadataSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "authority": {
+              "const": false
+            }
+          }
+        }
+      }
+    },
+    "FileIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dev",
+        "ino",
+        "mode",
+        "size",
+        "nlink",
+        "mtimeNs",
+        "ctimeNs"
+      ],
+      "properties": {
+        "dev": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$",
+          "maxLength": 20
+        },
+        "ino": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$",
+          "maxLength": 20
+        },
+        "mode": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "maxLength": 20
+        },
+        "size": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "maxLength": 20
+        },
+        "nlink": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "maxLength": 20
+        },
+        "mtimeNs": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "maxLength": 20
+        },
+        "ctimeNs": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "maxLength": 20
+        }
+      }
+    },
+    "File": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "sha256"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/definitions/FileIdentity"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "AnchorFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "sha256",
+        "value"
+      ],
+      "properties": {
+        "identity": {
+          "$ref": "#/definitions/FileIdentity"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "value": {
+          "$ref": "#/definitions/Anchor"
+        }
+      }
+    },
+    "Prepared": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "platform",
+        "parent",
+        "name",
+        "stage",
+        "prior",
+        "retainedName",
+        "names",
+        "authority",
+        "windows"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "platform": {
+          "enum": [
+            "posix",
+            "windows"
+          ]
+        },
+        "parent": {
+          "$ref": "#/definitions/FileIdentity"
+        },
+        "name": {
+          "const": "fixed.dir"
+        },
+        "stage": {
+          "$ref": "#/definitions/NamedFile"
+        },
+        "prior": {
+          "$ref": "#/definitions/File"
+        },
+        "retainedName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "names": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[^/\\\\\\u0000]+$"
+          }
+        },
+        "authority": {
+          "const": false
+        },
+        "windows": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/WindowsPrepared"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "platform": {
+                  "const": "posix"
+                },
+                "windows": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "platform": {
+                  "const": "windows"
+                },
+                "windows": {
+                  "$ref": "#/definitions/WindowsPrepared"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "Transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "prepared",
+        "before",
+        "after",
+        "nextReceiptSha256",
+        "volume",
+        "witness",
+        "authority"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "current-directory-envelope-publication"
+        },
+        "prepared": {
+          "$ref": "#/definitions/Prepared"
+        },
+        "before": {
+          "$ref": "#/definitions/AnchorFile"
+        },
+        "after": {
+          "$ref": "#/definitions/AnchorFile"
+        },
+        "nextReceiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "volume": {
+          "$ref": "#/definitions/Identity"
+        },
+        "witness": {
+          "$ref": "#/definitions/Witness"
+        },
+        "authority": {
+          "const": false
+        }
+      }
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "anchor",
+        "stage",
+        "retained",
+        "receiptSha256",
+        "root",
+        "volume",
+        "pendingSwap"
+      ],
+      "properties": {
+        "anchor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/File"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stage": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/File"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retained": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/File"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "root": {
+          "$ref": "#/definitions/Identity"
+        },
+        "volume": {
+          "$ref": "#/definitions/Identity"
+        },
+        "pendingSwap": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Policy": {
+      "const": {
+        "version": 1,
+        "maximumRecordBytes": 4096,
+        "maximumRecords": 3,
+        "anchor": "fixed.dir",
+        "authority": false,
+        "minimumRecords": 2
+      }
+    },
+    "NamedFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "identity",
+        "sha256"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "identity": {
+          "$ref": "#/definitions/FileIdentity"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "Plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "parent",
+        "name",
+        "retainedName",
+        "names",
+        "authority",
+        "stage",
+        "windows"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "posix",
+            "windows"
+          ]
+        },
+        "parent": {
+          "$ref": "#/definitions/FileIdentity"
+        },
+        "name": {
+          "const": "fixed.dir"
+        },
+        "retainedName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "names": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[^/\\\\\\u0000]+$"
+          }
+        },
+        "authority": {
+          "const": false
+        },
+        "stage": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "windows": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/WindowsPlan"
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "platform": {
+                  "const": "posix"
+                },
+                "windows": {
+                  "type": "null"
+                }
+              }
+            },
+            {
+              "properties": {
+                "platform": {
+                  "const": "windows"
+                },
+                "windows": {
+                  "$ref": "#/definitions/WindowsPlan"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "Preparation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "before",
+        "target",
+        "planned",
+        "volume",
+        "witness",
+        "authority"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "prepare-current-directory-envelope"
+        },
+        "before": {
+          "$ref": "#/definitions/AnchorFile"
+        },
+        "target": {
+          "$ref": "#/definitions/Anchor"
+        },
+        "planned": {
+          "$ref": "#/definitions/Plan"
+        },
+        "volume": {
+          "$ref": "#/definitions/Identity"
+        },
+        "witness": {
+          "$ref": "#/definitions/Witness"
+        },
+        "authority": {
+          "const": false
+        }
+      }
+    },
+    "UnpreparedMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "declaration",
+        "parent",
+        "anchor",
+        "receiptSha256",
+        "root",
+        "volume",
+        "names",
+        "stage",
+        "pendingSwap"
+      ],
+      "properties": {
+        "declaration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "filesystemBytes",
+            "maximumPhysicalBytes"
+          ],
+          "properties": {
+            "filesystemBytes": {
+              "type": "integer",
+              "minimum": 33554432,
+              "maximum": 1099511627776
+            },
+            "maximumPhysicalBytes": {
+              "type": "integer",
+              "minimum": 33554432,
+              "maximum": 1099511627776
+            }
+          }
+        },
+        "parent": {
+          "$ref": "#/definitions/FileIdentity"
+        },
+        "anchor": {
+          "$ref": "#/definitions/File"
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "root": {
+          "$ref": "#/definitions/Identity"
+        },
+        "volume": {
+          "$ref": "#/definitions/Identity"
+        },
+        "names": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 33,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          }
+        },
+        "stage": {
+          "anyOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "kind",
+                "identity",
+                "text"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64
+                },
+                "kind": {
+                  "const": "file"
+                },
+                "identity": {
+                  "$ref": "#/definitions/FileIdentity"
+                },
+                "text": {
+                  "type": "string",
+                  "maxLength": 4096
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pendingSwap": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PreparedRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "parent",
+        "stage",
+        "windowsStage",
+        "nextReceiptSha256",
+        "authority"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "prepared-current-directory-envelope"
+        },
+        "parent": {
+          "$ref": "#/definitions/FileIdentity"
+        },
+        "stage": {
+          "$ref": "#/definitions/File"
+        },
+        "windowsStage": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/WindowsFile"
+            }
+          ]
+        },
+        "nextReceiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "authority": {
+          "const": false
+        }
+      }
+    },
+    "MetadataRoleProtocol": {
+      "const": {
+        "version": 1,
+        "role": "current-unprepared-directory-anchor-stage",
+        "owner": "native-image-publication",
+        "baseNames": [
+          ".publication",
+          "fixed.dir",
+          "image.json",
+          "m",
+          "v"
+        ],
+        "stagePattern": "^\\.[a-f0-9]{8}$",
+        "maximumFileBytes": 4096,
+        "fileMode": 384,
+        "namespaceMode": 448,
+        "authority": "fresh-private-defining-owner-kernel-ex-descriptor-role",
+        "historicalInodeOwned": false,
+        "adoptPayload": false
+      }
+    },
+    "WindowsFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volumeSerial",
+        "fileId",
+        "attributes",
+        "security",
+        "streams"
+      ],
+      "properties": {
+        "volumeSerial": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$",
+          "maxLength": 20
+        },
+        "fileId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "attributes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "security": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "streams": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "WindowsPrepared": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parent",
+        "stage",
+        "prior"
+      ],
+      "properties": {
+        "parent": {
+          "$ref": "#/definitions/WindowsFile"
+        },
+        "stage": {
+          "$ref": "#/definitions/WindowsFile"
+        },
+        "prior": {
+          "$ref": "#/definitions/WindowsFile"
+        }
+      }
+    },
+    "FixedReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "platform",
+        "dev",
+        "ino",
+        "size",
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "mountDirectory"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "dev": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "ino": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1099511627776
+        },
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "mountDirectory": {
+          "$ref": "#/definitions/Identity"
+        }
+      }
+    },
+    "InitialMetadataEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "identity"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "intent.json",
+            "receipt.json"
+          ]
+        },
+        "kind": {
+          "const": "file"
+        },
+        "identity": {
+          "$ref": "#/definitions/FileIdentity"
+        }
+      }
+    },
+    "InitialMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "declaration",
+        "parent",
+        "anchor",
+        "receipt",
+        "root",
+        "volume",
+        "names",
+        "namespace",
+        "pendingSwap",
+        "marker",
+        "receiptSha256"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "declaration": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "filesystemBytes",
+            "maximumPhysicalBytes"
+          ],
+          "properties": {
+            "filesystemBytes": {
+              "type": "integer",
+              "minimum": 33554432,
+              "maximum": 1099511627776
+            },
+            "maximumPhysicalBytes": {
+              "type": "integer",
+              "minimum": 33554432,
+              "maximum": 1099511627776
+            }
+          }
+        },
+        "parent": {
+          "$ref": "#/definitions/FileIdentity"
+        },
+        "anchor": {
+          "$ref": "#/definitions/AnchorFile"
+        },
+        "receipt": {
+          "$ref": "#/definitions/FixedReceipt"
+        },
+        "root": {
+          "$ref": "#/definitions/Identity"
+        },
+        "volume": {
+          "$ref": "#/definitions/Identity"
+        },
+        "names": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "maxLength": 64
+          }
+        },
+        "namespace": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "entries"
+          ],
+          "properties": {
+            "identity": {
+              "$ref": "#/definitions/FileIdentity"
+            },
+            "entries": {
+              "type": "array",
+              "minItems": 0,
+              "maxItems": 2,
+              "items": {
+                "$ref": "#/definitions/InitialMetadataEntry"
+              }
+            }
+          }
+        },
+        "pendingSwap": {
+          "type": "boolean"
+        },
+        "marker": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/InitialHeader"
+            }
+          ]
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "WindowsPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parent",
+        "prior"
+      ],
+      "properties": {
+        "parent": {
+          "$ref": "#/definitions/WindowsFile"
+        },
+        "prior": {
+          "$ref": "#/definitions/WindowsFile"
+        }
+      }
+    },
+    "InitialHeader": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "phase",
+        "request",
+        "before",
+        "target",
+        "volume",
+        "authority"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "initial-no-effect-directory-envelope"
+        },
+        "phase": {
+          "const": "observed"
+        },
+        "request": {
+          "$ref": "#/definitions/Request"
+        },
+        "before": {
+          "$ref": "#/definitions/AnchorFile"
+        },
+        "target": {
+          "$ref": "#/definitions/Anchor"
+        },
+        "volume": {
+          "$ref": "#/definitions/Identity"
+        },
+        "authority": {
+          "const": false
+        }
+      }
+    },
+    "InitialFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "before",
+        "target",
+        "volume"
+      ],
+      "properties": {
+        "before": {
+          "$ref": "#/definitions/AnchorFile"
+        },
+        "target": {
+          "$ref": "#/definitions/Anchor"
+        },
+        "volume": {
+          "$ref": "#/definitions/Identity"
+        }
+      }
+    },
+    "WitnessRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "planned",
+        "witness",
+        "authority"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "witnessed-directory-envelope"
+        },
+        "planned": {
+          "$ref": "#/definitions/Plan"
+        },
+        "witness": {
+          "$ref": "#/definitions/Witness"
+        },
+        "authority": {
+          "const": false
+        }
+      }
+    },
+    "BaselineNamespace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entries"
+      ],
+      "properties": {
+        "entries": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "text"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^\\.[a-f0-9]{10}$"
+              },
+              "text": {
+                "type": "string",
+                "maxLength": 4096
+              }
+            }
+          }
+        }
+      }
+    },
+    "InitialRecoveryObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 4096
+        }
+      }
+    },
+    "InitialRecoveryProtocol": {
+      "const": {
+        "maximumBytes": 4096,
+        "maximumLines": 1,
+        "terminator": "LF",
+        "authority": false
+      }
+    }
+  }
+}

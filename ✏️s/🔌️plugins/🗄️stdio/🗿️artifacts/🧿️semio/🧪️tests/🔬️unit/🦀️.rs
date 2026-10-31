@@ -34,7 +34,7 @@ fn large_nested_snapshot_retirement_is_multi_turn_and_terminal_empty() {
     loop {
         turns += 1;
         let grant = quoted(retirement.next_demand(0).expect("quoted close demand"));
-        let step = retirement.close_step(grant).expect("bounded close step");
+        let step = retirement.close_step(grant).result.expect("bounded close step");
         assert!(step.progress().fits(grant));
         if matches!(step, RetainedCloneStep::Complete(_)) {
             break;
@@ -52,35 +52,73 @@ fn empty_retirement_grant_preserves_resumable_ownership() {
     let factory = SemioSnapshotRetirementFactory::<text::SemioTextSnapshot>(PhantomData);
     let mut retirement = retire_snapshot(&factory, Arc::new(text::SemioTextSnapshot::default()));
     let empty = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 };
-    assert_eq!(retirement.close_step(empty).expect("empty grant"), RetainedCloneStep::Progress(Default::default()));
+    assert_eq!(retirement.close_step(empty).result.expect("empty grant"), RetainedCloneStep::Progress(Default::default()));
     assert!(!retirement.terminal_is_empty());
     let mut turns = 0;
-    while !matches!(retirement.close_step(quoted(retirement.next_demand(0).expect("quoted close demand"))).expect("resumed retirement"), RetainedCloneStep::Complete(_)) {
+    while !matches!(retirement.close_step(quoted(retirement.next_demand(0).expect("quoted close demand"))).result.expect("resumed retirement"), RetainedCloneStep::Complete(_)) {
         turns += 1;
         assert!(turns < 20_000, "resumed retirement stopped making progress");
     }
     assert!(retirement.terminal_is_empty());
 }
 
-/// 🔒️ A cloned public read lease keeps the exact owner alive; the retirement never drops one
-/// Arc and lets another reader become an unbounded last owner behind its terminal witness.
+/// 🔒️ A closing snapshot alias is a lease: a snapshot another reader still holds survives it, the alias only drops its
+/// count and reaches the terminal-empty witness without waiting, and the last alias to drop retires the payload.
 #[test]
-fn shared_snapshot_read_blocks_until_the_exact_owner_is_unique() {
+fn shared_snapshot_lease_closes_without_waiting_for_other_readers() {
     let factory = SemioSnapshotRetirementFactory::<text::SemioTextSnapshot>(PhantomData);
     let snapshot = Arc::new(text::SemioTextSnapshot::default());
     let reader = snapshot.clone();
     let mut retirement = retire_snapshot(&factory, snapshot);
-    for _ in 0..8 {
-        let _ = retirement.close_step(quoted(retirement.next_demand(0).expect("quoted close demand")));
-        assert!(!retirement.terminal_is_empty(), "a shared owner never reaches its terminal-empty witness");
-    }
-    drop(reader);
     let mut turns = 0;
     while !retirement.terminal_is_empty() {
-        retirement.close_step(quoted(retirement.next_demand(0).expect("quoted close demand"))).expect("unique owner retirement");
+        retirement.close_step(quoted(retirement.next_demand(0).expect("quoted close demand"))).result.expect("lease retirement");
         turns += 1;
-        assert!(turns < 20_000, "unique owner retirement stopped making progress");
+        assert!(turns < 20_000, "lease retirement stopped making progress");
     }
+    assert_eq!(Arc::strong_count(&reader), 1, "the closed lease dropped exactly its own alias");
+    assert_eq!(*reader, text::SemioTextSnapshot::default(), "the remaining reader still sees the intact payload");
+}
+
+/// 🔒️ The contract is the framework's alias `Clone` plus explicit retire (`admit_shared_retirement(.., lease_only = true)`):
+/// when every other reader is gone the retiring alias is the last owner and pays the payload drop through funded retirement
+/// turns; it never drops the payload behind its terminal-empty witness.
+#[test]
+fn last_snapshot_alias_retires_the_payload_through_funded_turns() {
+    let factory = SemioSnapshotRetirementFactory::<text::SemioTextSnapshot>(PhantomData);
+    let snapshot = Arc::new(text::SemioTextSnapshot::default());
+    let reader = snapshot.clone();
+    let mut retirement = retire_snapshot(&factory, snapshot);
+    drop(reader);
+    assert!(!retirement.terminal_is_empty(), "an unretired last alias is not terminal-empty");
+    let mut turns = 0;
+    while !retirement.terminal_is_empty() {
+        retirement.close_step(quoted(retirement.next_demand(0).expect("quoted close demand"))).result.expect("last alias retirement");
+        turns += 1;
+        assert!(turns < 20_000, "last alias retirement stopped making progress");
+    }
+    assert!(turns > 1, "the last alias pays the payload retirement over funded turns, not in one unfunded drop");
+}
+
+/// 🧮️ The sqlite binary path of a record-pack subset enforces the caller's database limits before typed construction, keeps the
+/// cancellation and limit kinds of the pack decoder instead of laundering them to `InvalidValue`, and prices the record body it builds.
+#[test]
+fn record_pack_binary_enforces_limits_and_keeps_refusal_kinds() {
+    use semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshotHost as _;
+    use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits};
+    use semio_framework_value::ValueRefusalKind;
+    let snapshot = text::SemioTextSnapshot { schema: "stdio.semio.text".into(), runs: (0..64).map(|index| text::SemioTextRun { language: format!("language-{index}"), content: "payload".repeat(16), ..Default::default() }).collect(), ..Default::default() };
+    let encode = |limits: SqliteDatabaseLimits| semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut |_| true, |control| semio_s_artifact_stdio_contract::testing::with_encoding(|owner| snapshot.encode_sqlite_snapshot_native(SnapshotEncoding::Binary, control, owner)));
+    let payload = encode(SqliteDatabaseLimits::default()).expect("binary encoding under default limits");
+    let decode = |limits: SqliteDatabaseLimits, keep: bool| semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(limits, &mut |_| keep, |control| semio_s_artifact_stdio_contract::testing::with_decoding(|owner| text::SemioTextSnapshot::decode_sqlite_snapshot_native(&payload, control, owner)));
+    assert_eq!(decode(SqliteDatabaseLimits::default(), true).expect("binary decoding under default limits"), snapshot);
+    let rows = decode(SqliteDatabaseLimits { max_rows: 8, ..SqliteDatabaseLimits::default() }, true).expect_err("a row ceiling below the record count is refused before typed construction");
+    assert_eq!(rows.kind, ValueRefusalKind::OwnershipLimit);
+    let canceled = decode(SqliteDatabaseLimits::default(), false).expect_err("a canceled decode is refused");
+    assert_eq!(canceled.kind, ValueRefusalKind::Canceled);
+    let body = match &payload { dsl::io::IoPayload::Binary(bytes) => bytes.len(), dsl::io::IoPayload::Text(text) => text.len() };
+    let priced = encode(SqliteDatabaseLimits { max_allocation_bytes: body + body / 2, ..SqliteDatabaseLimits::default() }).expect_err("the record body and its copy are both charged to the writer's allocation budget");
+    assert_eq!(priced.kind, ValueRefusalKind::OwnershipLimit);
 }
 
 /// 🧸️ Every composable subset must be reachable through `create_semio_member` — an unlisted
@@ -102,7 +140,7 @@ async fn every_composable_subset_dispatches_to_a_real_child_store() {
     assert!(unknown.to_string().contains("no member dialect"));
 }
 
-/// 🧸️ `create_semio_member` must MINT a real child store and `open_semio_member` must REOPEN it
+/// 🆕️ `create_semio_member` must MINT a real child store and `open_semio_member` must REOPEN it
 /// from its own persisted envelope — the whole point of "children have their own version
 /// history". The reopen half only works because the persisted `.spr` now carries the dialect the
 /// subset is recovered from. Every subset reopens through `OriginalRecordMemberSnapshotOpen`, which
@@ -154,7 +192,7 @@ async fn every_record_subset_mints_and_reopens_a_real_child_envelope() {
 /// displaced-owner queue owns the snapshot the lease aliased — now frees its slot on the returning
 /// thread and never parks in the returned queue. `returned_snapshot_read_count() == 2` was therefore
 /// asserting the OLD return path, not this law, and is gone. What the law forbids is unchanged and
-/// is pinned directly instead: the cursor starts in `ReturnedLeases`, it REFUSES (`Blocked`) while
+/// is pinned directly instead: the cursor starts in `ReturnedReads`, it REFUSES (`Blocked`) while
 /// any lease is still in the registry rather than walking on into the displaced-owner queue, and
 /// once the registry is clear the same close converges to `Complete` with its terminal-empty
 /// witness.
@@ -185,10 +223,10 @@ async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them
     semio_framework_plugin::with_authoring_identity!(|identity| ReferenceSpaceMember::undo(&mut store, &mut identity).await).expect("derived undo of the last commit");
 
     let outstanding = store.snapshot_read().expect("third snapshot read lease");
-    assert!(store.close_owned_phase_witness().starts_with("semio/ReturnedLeases/"), "the close cursor must open on the lease registry, got {}", store.close_owned_phase_witness());
+    assert!(store.close_owned_phase_witness().starts_with("ReturnedReads/"), "the close cursor must open on the lease registry, got {}", store.close_owned_phase_witness());
     let refused = store.close_owned_step(quoted(store.close_owned_demands(4096).expect("quoted store close demand"))).expect("bounded value-store close");
     assert!(matches!(refused, RetainedCloneStep::Progress(progress) if progress == Default::default()), "a close that still holds a snapshot read must refuse, not advance past the lease registry: {refused:?}");
-    assert!(store.close_owned_phase_witness().starts_with("semio/ReturnedLeases/"), "a refused close stays in the lease phase, got {}", store.close_owned_phase_witness());
+    assert!(store.close_owned_phase_witness().starts_with("ReturnedReads/"), "a refused close stays in the lease phase, got {}", store.close_owned_phase_witness());
     drop(outstanding);
 
     for _ in 0..100_000 {
@@ -203,7 +241,7 @@ async fn returned_read_leases_retire_before_the_displaced_owners_that_alias_them
     panic!("value store close must converge");
 }
 
-/// 🧹️ Every member store is retired explicitly over bounded turns before it drops — the store's
+/// 🧑️ Every member store is retired explicitly over bounded turns before it drops — the store's
 /// drop witness refuses an unretired owner.
 fn close_member(member: &mut SemioMembers) {
     for _ in 0..100_000 {
@@ -247,7 +285,7 @@ async fn supersession_and_prefix_owners_follow_the_exact_semio_close_cursor() {
     let phases = case["phases"].as_array().unwrap();
     for _ in 0..case["max_steps"].as_u64().unwrap() {
         let witness = store.close_owned_phase_witness();
-        if reached < phases.len() && witness.starts_with(&format!("semio/{}/", phases[reached].as_str().unwrap())) { reached += 1; }
+        if reached < phases.len() && witness.starts_with(&format!("{}/", phases[reached].as_str().unwrap())) { reached += 1; }
         let demand = store.close_owned_demands(max_bytes).expect("quoted genuine Semio close demand");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: max_items, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
         match store.close_owned_step(grant).expect("bounded genuine Semio close") {

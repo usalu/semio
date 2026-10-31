@@ -30,13 +30,13 @@ impl std::fmt::Debug for OracleValues{fn fmt(&self,f:&mut std::fmt::Formatter<'_
 impl PartialEq<&BTreeMap<String,Arc<WidgetEvaluation>>> for OracleValues{fn eq(&self,other:&&BTreeMap<String,Arc<WidgetEvaluation>>)->bool{std::ops::Deref::deref(self)==*other}}
 impl PartialEq<&OracleValues> for OracleValues{fn eq(&self,other:&&OracleValues)->bool{std::ops::Deref::deref(self)==std::ops::Deref::deref(*other)}}
 impl Clone for OracleValues{fn clone(&self)->Self{Self{values:ManuallyDrop::new(Some(std::ops::Deref::deref(self).clone())),caller:Rc::clone(&self.caller)}}}
-impl Drop for OracleValues{fn drop(&mut self){let original=self.values.take().unwrap();let mut owner=ControlledRetirement::new(original).ok().unwrap();let mut source=self.caller.borrow_mut();let caller=source.caller.as_mut().unwrap();for _ in 0..100000{if owner.terminal_is_empty(){break}caller.turn(fixture_stock(),|cx|{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;Ok(())}).unwrap();}assert!(owner.terminal_is_empty());}}
+impl Drop for OracleValues{fn drop(&mut self){let original=self.values.take().unwrap();let mut owner=ControlledRetirement::new(original).ok().unwrap();let mut source=self.caller.borrow_mut();let caller=source.caller.as_mut().unwrap();for _ in 0..100000{if owner.terminal_is_empty(){break}caller.turn(fixture_stock(),|cx|{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;Ok(())}).unwrap();}assert!(owner.terminal_is_empty());}}
 struct EngineFixture{engine:NativeGeometryEngine,caller:Rc<RefCell<FixtureCaller>>}
 impl std::ops::Deref for EngineFixture{type Target=NativeGeometryEngine;fn deref(&self)->&Self::Target{&self.engine}}
 impl std::ops::DerefMut for EngineFixture{fn deref_mut(&mut self)->&mut Self::Target{&mut self.engine}}
 impl EngineFixture{
  fn new(catalogue:Arc<Catalogue>,computes:Arc<dyn semio_s_artifact_procedural_3d_geometry_compute::GeometryComputeContext>,budget:usize)->Self{Self{engine:NativeGeometryEngine::new(catalogue,computes,budget),caller:Rc::new(RefCell::new(FixtureCaller{caller:Some(OriginalJobFixtureCaller::admit(OperationId(751),Generation(1),fixture_stock(),fixture_clock,1_000_000_000,32_000_000))}))}}
- fn close(&mut self){let mut source=self.caller.borrow_mut();let caller=source.caller.as_mut().unwrap();for _ in 0..100000{if self.engine.terminal_is_empty(){return}let outcome=caller.turn(fixture_stock(),|cx|Ok(self.engine.close_original_step(cx))).unwrap();match outcome{Ok(true)=>return,Ok(false)=>{},Err(original)=>{self.engine.hold_failure(original);let original=caller.turn(fixture_stock(),|cx|self.engine.admit_failure(cx)).unwrap();if let Some(original)=original{let mut owner=ControlledRetirement::new(original).ok().unwrap();while !owner.terminal_is_empty(){caller.turn(fixture_stock(),|cx|{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;Ok(())}).unwrap();}}}}}assert!(self.engine.terminal_is_empty());}
+ fn close(&mut self){let mut source=self.caller.borrow_mut();let caller=source.caller.as_mut().unwrap();for _ in 0..100000{if self.engine.terminal_is_empty(){return}let outcome=caller.turn(fixture_stock(),|cx|Ok(self.engine.close_original_step(cx))).unwrap();match outcome{Ok(true)=>return,Ok(false)=>{},Err(original)=>{self.engine.hold_failure(original);let original=caller.turn(fixture_stock(),|cx|self.engine.admit_failure(cx)).unwrap();if let Some(original)=original{let mut owner=ControlledRetirement::new(original).ok().unwrap();while !owner.terminal_is_empty(){caller.turn(fixture_stock(),|cx|{let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;Ok(())}).unwrap();}}}}}assert!(self.engine.terminal_is_empty());}
  fn start(&mut self,digest:String,snapshot:Generation3dSnapshot,mode:CacheMode,cancellation:&str){self.close();let mut donor=Some(EngineAdmission::new(digest,snapshot,mode,cancellation.to_string()));let mut source=self.caller.borrow_mut();let caller=source.caller.as_mut().unwrap();for _ in 0..100000{if caller.turn(fixture_stock(),|cx|Ok(self.engine.start_original_step(&mut donor,cx))).unwrap().unwrap(){return}}panic!("original engine admission did not advance")}
  fn restart(&mut self,mode:CacheMode,cancellation:&str){let snapshot=self.engine.base().unwrap().clone();self.start("fixture restarted source".into(),snapshot,mode,cancellation)}
  fn step(&mut self,fuel:usize)->Result<EngineStep,protocol::InferenceWorkFailure>{let mut source=self.caller.borrow_mut();let caller=source.caller.as_mut().unwrap();let mut result=None;caller.turn(fixture_stock(),|cx|{cx.with_original_work_loan(fuel as u64,cx.deadline_us(),|cx|{let mut total=EngineStep::default();loop{match self.engine.step(cx){Ok(step)=>{total.done=step.done;total.fuel_used+=step.fuel_used;total.computed+=step.computed;total.hits+=step.hits;total.completed=step.completed;total.total=step.total;total.fraction=step.fraction;let stop=step.done||step.fuel_used==0||cx.should_yield();result=Some(Ok(total));if stop{break}},Err(original)=>{result=Some(Err(original));break}}}Ok(())})?;Ok(())})?;result.unwrap()}
@@ -361,12 +361,14 @@ struct Slow {
 }
 
 impl WidgetJob for Slow {
-    fn step(&mut self, fuel: usize) -> WidgetStep {
+    fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<WidgetStep>, semio_framework_job::OriginalTurnFailure> {
+        let fuel = semio_s_artifact_procedural_3d_geometry_compute::fuel_budget(cx);
         self.remaining -= fuel.min(self.remaining);
+        semio_s_artifact_procedural_3d_geometry_compute::spend(cx, fuel.min(3));
         if self.remaining > 0 {
-            return WidgetStep::Working { progress: 1.0 - self.remaining as f32 / 3.0 };
+            return Ok(Some(WidgetStep::Working { progress: 1.0 - self.remaining as f32 / 3.0 }));
         }
-        WidgetStep::Done(self.done.clone())
+        Ok(Some(WidgetStep::Done(self.done.clone())))
     }
 
     fn cancel(&mut self) {
@@ -481,7 +483,7 @@ fn geometry_compute_context_injection_controls_actual_inference() {
     assert_eq!(*engine.oracle_values()["n"].outputs.get("value").unwrap(),GeometryValue::Number(41.0));
 }
 
-/// 🧪️ Native dependency scalars and shared parameters keep the independently authored IO hash literal shape.
+/// 🔗️ Native dependency scalars and shared parameters keep the independently authored IO hash literal shape.
 #[test]
 fn semantic_wire_dependency_literals_match_independent_json_oracle() {
     use semio_framework_artifact_flow_flow::neural::ColdRetire;

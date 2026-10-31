@@ -1,0 +1,498 @@
+{
+  "state": "prepared-unexecuted",
+  "expectedOwningLaws": 35,
+  "inputs": [
+    {
+      "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-affine-whole-2.test.ts",
+      "bytes": 354,
+      "sha256": "b509a7ef3d96de82f4c59d5279b5d87af72439c35e01d5f24815a5dab3052373",
+      "absoluteUtf16Units": 128
+    },
+    {
+      "path": "bun.lock",
+      "bytes": 603865,
+      "sha256": "b27bdace86f04889c66e59f5227d0bdef7568b22c550798705d3c911d1c88faf",
+      "absoluteUtf16Units": 36
+    },
+    {
+      "path": "package.json",
+      "bytes": 21673,
+      "sha256": "9605466756ffe292a2e5c425e8beec9cda9b60967cadccc33fef9d20c617f98b",
+      "absoluteUtf16Units": 40
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts",
+      "bytes": 3591,
+      "sha256": "f3761d394a0b4c94ec77d870124d9c794afa9c2c706d50a699456360f61b38f1",
+      "absoluteUtf16Units": 83
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+      "bytes": 15909,
+      "sha256": "9822f5bbbd11c46366e3241c35376519f936ae5c9daaae07d0ce6220d4b9f939",
+      "absoluteUtf16Units": 82
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts",
+      "bytes": 8458,
+      "sha256": "fddf2ea0a8c7a9b718ce958b213b8afe9da21b6c2bd77f67c616a25a821b36d2",
+      "absoluteUtf16Units": 113
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/📐️.json",
+      "bytes": 904,
+      "sha256": "bf9213a43bb67ebe68b051ac54203dd0322ddfdedccf84eba5a381337bdba568",
+      "absoluteUtf16Units": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/🔣️.json",
+      "bytes": 1075,
+      "sha256": "838288ca57cea238289af71cfe9bb0fd4f2d28884839359181f587bbead40f13",
+      "absoluteUtf16Units": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 4243,
+      "sha256": "2ffdf1ff32c18b39b3214228e80ce03b2b33b1c339f9fdbd306fe432d599ab4b",
+      "absoluteUtf16Units": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧬️schema/🔣️.json",
+      "bytes": 4999,
+      "sha256": "bf831ed411f8a838adb2e3de244e1a0d328bda88e38ab248944dedfcc5a66d96",
+      "absoluteUtf16Units": 94
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts",
+      "bytes": 1677,
+      "sha256": "98e33379591bea207abb9c53360fd6e92d7b07ad76db3b8ec574f4eac47d25b5",
+      "absoluteUtf16Units": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "bytes": 4766,
+      "sha256": "868556db6df93a13c327fb7d6d7ea403a687657b6f94b5205a8430b79400c6d7",
+      "absoluteUtf16Units": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "bytes": 3282,
+      "sha256": "480a86a9e9ddb878ec4736c41e72cf376a48a7cb35a94b42446894ccd5377f69",
+      "absoluteUtf16Units": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "bytes": 25510,
+      "sha256": "6041275db1facb4ef2b68af32c727bfa22d8a3d28b3a0997b4a9efb652638858",
+      "absoluteUtf16Units": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/📦️owned/🟦️.ts",
+      "bytes": 2250,
+      "sha256": "7251a76df1056cda5388bc592d0e8a9ebd7f625fde64d43a7588a18b52a8a5db",
+      "absoluteUtf16Units": 87
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts",
+      "bytes": 26554,
+      "sha256": "e265ef0a5a80c742cb72ef36d2e551472dc1ec6e8d199e4258c41d12a61852a8",
+      "absoluteUtf16Units": 78
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/owned.test.ts",
+      "bytes": 4554,
+      "sha256": "99ce2ee620f0238b980b045a10f183c46d6a1560f6452995c70fb9afa22ed588",
+      "absoluteUtf16Units": 110
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/📐️.json",
+      "bytes": 354,
+      "sha256": "156b85aaa4e61978f2cb1f0559d2e97e87def215c300b28a17584d1afde5ca9a",
+      "absoluteUtf16Units": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/🔣️.json",
+      "bytes": 1025,
+      "sha256": "ce79c4e7ef4f1f5e23a9df79c5456d83a55abb9c04f28aa12ec523d476e8f4dd",
+      "absoluteUtf16Units": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "bytes": 18725,
+      "sha256": "64920f177ef23e572e39fcc09bee1ce79934fdb6d16ce7c0b82814b0752dd187",
+      "absoluteUtf16Units": 89
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🔭️oracles/🟦️.ts",
+      "bytes": 2576,
+      "sha256": "fc6a8689ea4acee1e79b63cf351df7d7e06dc96000d567d7837f2b4a09e45391",
+      "absoluteUtf16Units": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+      "bytes": 14855,
+      "sha256": "d357f86f63912500864d6c565811d7ca1f6f822bf1c1d2e6cd5617cabcceea95",
+      "absoluteUtf16Units": 98
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 12336,
+      "sha256": "222a241cb18a943a9909a6412df22d5a00d67d59b33b55184360b71be30245c5",
+      "absoluteUtf16Units": 112
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🧫️fixtures/🧹️retirement/🔣️.json",
+      "bytes": 2414,
+      "sha256": "0b403043b1c89f797e19073afb3f1a38d62ba4b73c55457e556573ce4a03e3b1",
+      "absoluteUtf16Units": 126
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧬️schema/🔣️.json",
+      "bytes": 2695,
+      "sha256": "fd7fdaf7f52ee78b166d0e2a69dfbd572fa218875332803b23add4c36c3310fa",
+      "absoluteUtf16Units": 101
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts",
+      "bytes": 460,
+      "sha256": "8692bd178739930545ad0d2727f7cb204b6f0da5fa625ccd61a20d78a782126d",
+      "absoluteUtf16Units": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🎨️sampling/↗️affine/🟦️.ts",
+      "bytes": 433,
+      "sha256": "08dbee90e6bf59dd86f01f2b3f091f76489abb6ea48886c9d4098492e449d075",
+      "absoluteUtf16Units": 115
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts",
+      "bytes": 21342,
+      "sha256": "f21d59240bbb334cdd07bdae7ba86ecf028ef3e0866a09d7ab4a755a0260261a",
+      "absoluteUtf16Units": 80
+    }
+  ],
+  "literalEdges": [
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-affine-whole-2.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/owned.test.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/owned.test.ts"
+    },
+    {
+      "from": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-affine-whole-2.test.ts",
+      "specifier": "../../../../../../../🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+      "specifier": "./🔭️oracles/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🔭️oracles/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+      "specifier": "./🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+      "specifier": "../🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+      "specifier": "../../../🖊️coverage/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+      "specifier": "../../../✍️editing/📦️owned/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/📦️owned/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+      "specifier": "../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+      "specifier": "../../../../◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+      "specifier": "./🧫️fixtures/🧹️retirement/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🧫️fixtures/🧹️retirement/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts",
+      "specifier": "../../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts",
+      "specifier": "../../../../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts",
+      "specifier": "../../🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts",
+      "specifier": "../../../🧬️schema/🔣️.json",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧬️schema/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts",
+      "specifier": "./📐️.json",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/📐️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts",
+      "specifier": "./🔣️.json",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "specifier": "./⏱️turn/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "specifier": "./📦️bytes/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "specifier": "../⏱️turn/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/⏱️turn/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+      "specifier": "../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+      "specifier": "../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🟦️.ts",
+      "specifier": "../../📐️drawing-contract/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/📦️owned/🟦️.ts",
+      "specifier": "../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/📦️owned/🟦️.ts",
+      "specifier": "../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts",
+      "specifier": "../✍️editing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts",
+      "specifier": "../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts",
+      "specifier": "../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "specifier": "../../✍️editing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "specifier": "../../✍️editing/📦️owned/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/📦️owned/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "specifier": "../../🖊️coverage/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "specifier": "../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "specifier": "../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🔭️oracles/🟦️.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/owned.test.ts",
+      "specifier": "../../🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/owned.test.ts",
+      "specifier": "../../../../../◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts",
+      "to": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/funded.test.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/owned.test.ts",
+      "specifier": "../../🧪️tests/🔭️oracles/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🔭️oracles/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/owned.test.ts",
+      "specifier": "../../🧪️tests/🧫️fixtures/🔣️.json",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🧫️fixtures/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/owned.test.ts",
+      "specifier": "./📐️.json",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/📐️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/owned.test.ts",
+      "specifier": "./🔣️.json",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/🔣️.json"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts",
+      "specifier": "../../../✍️editing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts",
+      "specifier": "../../../✍️editing/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts",
+      "specifier": "../../../✍️editing/📦️owned/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/📦️owned/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🎨️sampling/↗️affine/🟦️.ts",
+      "specifier": "../../../../🎨️sampling/↗️affine/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🎨️sampling/↗️affine/🟦️.ts",
+      "specifier": "../../../../🎨️sampling/↗️affine/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts"
+    },
+    {
+      "from": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🎨️sampling/↗️affine/🟦️.ts",
+      "specifier": "../../../../✍️editing/📦️owned/🟦️.ts",
+      "to": "🧰️framework/🔨️modules/🔲️pixels/✍️editing/📦️owned/🟦️.ts"
+    }
+  ],
+  "unresolved": [],
+  "commands": [
+    {
+      "kind": "test",
+      "cwd": "/Users/ueli/Documents/semio",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "bun",
+        "--",
+        "test",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-affine-whole-2.test.ts"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-affine-whole-2/test",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-affine-whole-2/test/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-affine-whole-2/test/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-affine-whole-2/test/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-affine-whole-2/test/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-affine-whole-2/test/test.log"
+    },
+    {
+      "kind": "strict",
+      "cwd": "/Users/ueli/Documents/semio",
+      "argv": [
+        "repo",
+        "--service=off",
+        "tools",
+        "exec",
+        "bun",
+        "--",
+        "/Users/ueli/Documents/semio/node_modules/typescript/bin/tsc",
+        "--noEmit",
+        "--strict",
+        "--noUncheckedIndexedAccess",
+        "--skipLibCheck",
+        "--resolveJsonModule",
+        "--esModuleInterop",
+        "--target",
+        "ESNext",
+        "--module",
+        "preserve",
+        "--moduleResolution",
+        "bundler",
+        "--allowImportingTsExtensions",
+        "--types",
+        "bun",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/owned.test.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🔭️oracles/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🎨️sampling/↗️affine/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts",
+        "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/✍️editing/📦️owned/🟦️.ts",
+        "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-affine-whole-2.test.ts"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "prototype",
+        "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-affine-whole-2/strict",
+        "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-affine-whole-2/strict/tmp",
+        "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-affine-whole-2/strict/tmp",
+        "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-affine-whole-2/strict/tmp",
+        "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-affine-whole-2/strict/tmp"
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-affine-whole-2/strict/strict.log"
+    }
+  ],
+  "strictRoots": [
+    "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/owned.test.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🔭️oracles/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🎨️sampling/↗️affine/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/✍️editing/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/✍️editing/📦️owned/🟦️.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-affine-whole-2.test.ts"
+  ],
+  "scope": "Three genuine funded affine original-vector and independent geometry/denial/cancellation laws plus five reused finite-bank Flatten laws. Original unfiltered Affine suite and real production callers remain open."
+}

@@ -1,0 +1,25 @@
+{
+  "status": "Source-only working audit paused for NativeDefault/Storage actual owning blocker; only Identity partial outcome body authored; no other production body edit in this packet",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🪪️identity/🦀️.rs",
+      "sha256": "3aa66dc4f72078e7c3673dbe299b82cde44ed08778a430f1bdfb98b26e7f8e5e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🛂️authority/🦀️.rs",
+      "sha256": "0a4c55845439fb19df89f79e339fa5c38f31c1c1d6364c908ce92e3f8fe4eb7b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🦀️.rs",
+      "sha256": "fcf330963c9f782a57aa6ebf450f7cb15d6a5e116d0ebd1c1fe103010848d486"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🛫️encode/🧭️tree/🦀️.rs",
+      "sha256": "871293e13b427a3edb292e5c9091d36b22331dd9630ff26a6a9e1a3036f6f835"
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/🧳️source/🦀️.rs",
+      "sha256": "b6beb976e4bd0efeae45141f8215cfd0f0dcb42d8ebd83fd7caec93cef8369d7"
+    }
+  ]
+}

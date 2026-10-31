@@ -1,0 +1,7 @@
+# Genuine SVG Product Ownership
+
+The original SVG route borrows a ScenePlanRead for its entire lifetime; producer and output retirement never close or mutate that source. Actual output pages are RetainedWorkBytes held in a genuine paged RetainedWorkBuffer, with eight logical bytes per page reference. A bounded pending fragment is an actual retained UTF-16 string element in its own paid buffer, charged two logical bytes per code unit; this is a representation policy, not a V8 allocation or GC claim. No placeholder token owns an unfunded output Array.
+
+The existing scalar state machine, XML escaping, gradients, blend/group order, path commands, PNG data URI and byte limits remain authoritative. Real PNG children borrow image bytes and retain their own encoded output until same-bank close. Every fragment allocation, actual byte write, child turn, final publication and close uses the same issued runtime loan and finite caller bank. Pure custody settlement has semantic zero; semantic steps and actual CPU remain separate.
+
+The closed neutral contract is authored before production. The next actual owning laws retain all six existing Sharp pixel rows and their tolerances, original image byte identity/PNG decode, Unicode/XML, unresolved content refusal, cancellation, output/work limits, and all five positive denial axes. The original fourteen glyph product assertions remain separate required coverage; no runtime has been launched.

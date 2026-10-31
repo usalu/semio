@@ -1,0 +1,38 @@
+{
+  "value": [
+    17,
+    23
+  ],
+  "bytes": 16,
+  "deniedWork": 0,
+  "reserveWork": 1,
+  "initializeWork": 1,
+  "releaseWork": 1,
+  "nullWork": 1,
+  "cachedWork": 0,
+  "stock": {
+    "items": 10000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "fuel": 10000,
+    "maximumTurns": 10000
+  },
+  "pureInitializers": [
+    "u64",
+    "String",
+    "Option",
+    "Vec",
+    "array",
+    "derived",
+    "tuple"
+  ],
+  "initializeCopyBytes": 0,
+  "takeIntoWork": 1,
+  "liveReleaseWork": 0,
+  "opaqueConstructors": false,
+  "moveText": "original🧳",
+  "occupiedOutputWork": 0,
+  "nullKind": "AllocationFailed"
+}

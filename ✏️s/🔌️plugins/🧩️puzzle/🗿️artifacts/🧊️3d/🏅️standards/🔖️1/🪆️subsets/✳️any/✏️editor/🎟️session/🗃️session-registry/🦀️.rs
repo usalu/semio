@@ -186,7 +186,7 @@ fn puzzle3d_session_check_in(lease: Puzzle3dSessionLease, app: &Puzzle3dSession)
 /// 🧹️ Vacates every slot `app_instance_id` owns — what a scene_snapshot app does when it is dropped, so one law's
 /// session never outlives it into the process-global row the next law probes. The page-run upload sweep is
 /// left to the production retirements, so a concurrent law's open upload is never swept by another's drop.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 pub fn puzzle3d_session_release(app_instance_id: u32) {
     let mut registry = puzzle3d_session_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
     for slot in Puzzle3dSessionRegistry::candidates(app_instance_id).collect::<Vec<_>>() {

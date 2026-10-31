@@ -1,0 +1,3 @@
+# Bidi Close Header
+
+The actual Bidi work fixture/schema/owning laws authored by the producer owner precede this suffix edit, including pending fixed control and cancellation phases. After all genuine buffers and Buffer archives drain, borrowed source/data clear to null; no replacement raw Array, Uint8Array or object is allocated. Pending scalar cell/run/paragraph/status/pair/bracket/mirror/sequence records and continuation strings clear in the existing one paid final control turn at copy0. The authentic Buffer archive close helpers remain unchanged. Exact producer prefix hash is preserved. No tests or compilation ran.

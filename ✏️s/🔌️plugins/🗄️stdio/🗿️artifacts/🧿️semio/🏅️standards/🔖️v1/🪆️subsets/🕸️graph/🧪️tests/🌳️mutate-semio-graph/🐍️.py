@@ -26,16 +26,12 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 * the eleven verbs and their argument lists are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is the
   committed per-kind specification vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/`;
-* the pack body's `format u8` + varint-length-prefixed `schema` is the committed protocol
-  `…/📸️snapshot/💾️binary/📡️.protocol.semio`, whose prose then names — but declines to
-  frame — "per-node varint-length-prefixed id/kind/label strings plus a fixed 16-byte position,
-  nested ports/properties lists; per-edge four length-prefixed strings". That named-but-unframed
-  layout was written out here from the protocol's own sentence, with the port-kind and value-tag
-  ordinals read off the grammar's own `i|o|x` and `Z|B|I|F|S|Y|L|M|R` orders, and is PINNED by
-  `pack_bytes` re-encoding the committed `🎒️.pack.semio` byte for byte, which a misreading
-  could not do. The committed artifact carries `int` and `str` values only, so the `bytes`/`list`/
-  `map`/`ref` arms of the BINARY value codec below are the natural extension of the four that are
-  pinned rather than themselves pinned — no scenario in this case exercises them.
+* the pack body is the derived record document of the shared record-document codec
+  (`🧿️semio/🚪️io/💾️binary/🎒️record-document/🐍️.py`), driven by this subset's committed record spec
+  `…/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json`: the SPK container, the fixed-Huffman deflate, the BLAKE3
+  content hash and the schema-hashed record body are specified by `🧰️framework/🔨️modules/🎒️pack` and
+  re-implemented there, not here. The committed `🎒️.pack.semio` files were written by the Rust record
+  pack, so `parse_pack`/`pack_bytes` reproducing them is a cross-language byte agreement.
 
 Nothing here imports, links, wraps or transliterates the Rust subject. Every function was written
 against the documents above; where the two disagree the disagreement is a finding, not something to
@@ -64,13 +60,53 @@ def _load(alias, folder):
 
 
 _load("mutate_semio_graph_text", "📝️text-carrier")
-_load("mutate_semio_graph_pack", "📦️pack-carrier")
 _load("mutate_semio_graph_verbs", "🧬️mutation-verbs")
 
-from mutate_semio_graph_text import TOWER_DSL, TOWER_PACK, WIRES_DSL, WIRES_PACK, parse_dsl, print_dsl
-from mutate_semio_graph_pack import parse_pack, pack_bytes
+from mutate_semio_graph_text import TOWER_DSL, TOWER_PACK, WIRES_DSL, WIRES_PACK, number, parse_dsl, print_dsl, word
 from mutate_semio_graph_verbs import apply_mutation, inverse_mutation, apply_all
 # endregion 🔖️Imports
+
+
+# region 🔖️Pack
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _load_shared(alias, *parts):
+    """🧬️ Loads a shared module from the `stdio.semio` artifact root, six folders above this case, and registers it under an importable name."""
+    if alias in sys.modules:
+        return sys.modules[alias]
+    path = os.path.join(_HERE, *[os.pardir] * 6, *parts)
+    spec = importlib.util.spec_from_file_location(alias, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[alias] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+record_document = _load_shared("record_document", "🚪️io", "💾️binary", "🎒️record-document", "🐍️.py")
+RECORD_SPEC = record_document.load_record_spec(os.path.join(_HERE, os.pardir, os.pardir, "🧬️schema", "📸️snapshot", "🗺️record-spec", "🔣️.json"))
+
+
+def with_words(document: dict, convert) -> dict:
+    """🔢️ Every geometry number of the document — a node's position, width and height — through `convert`, the projection's `{"bits"}` word or its plain number."""
+    nodes = []
+    for node in document["nodes"]:
+        position = {axis: convert(node["position"][axis]) for axis in ("x", "y")}
+        nodes.append({**node, "position": position, "width": convert(node["width"]), "height": convert(node["height"])})
+    return {**document, "nodes": nodes}
+
+
+def parse_pack(data: bytes) -> dict:
+    """📦️ A `.pack.semio` file as the JSON snapshot its record document carries, an absent optional field left out like the text carrier leaves it and the geometry as words."""
+    return with_words(record_document.decode_pack(RECORD_SPEC, data, omit_nulls=True), word)
+
+
+def pack_bytes(document: dict) -> bytes:
+    """🔍️ The writing direction of `parse_pack`, envelope included."""
+    return record_document.encode_pack(RECORD_SPEC, with_words(document, number))
+
+
+# endregion 🔖️Pack
 
 
 # region 🔖️Scenario input
@@ -118,7 +154,7 @@ def inverse(ctx: Context) -> Outcome:
 
 
 def spec_vector(ctx: Context) -> Outcome:
-    """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
+    """➡️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
     is a THIRD statement of what the verb means, independent of both implementations."""
     before_uri, mutation_uri, after_uri = ctx.step_input_uris()[:3]
     before = snapshot_json(ctx, before_uri)
@@ -154,7 +190,7 @@ def carrier_pair(ctx: Context, dsl_uri: str, pack_uri: str, what: str) -> dict:
 
 
 def identity_round_trip(ctx: Context) -> Outcome:
-    """🔁️ Both graphs, in both encodings — four files, all four reproduced byte for byte.
+    """📄️ Both graphs, in both encodings — four files, all four reproduced byte for byte.
 
     All four files were written by THIS implementation from the grammar and the protocol, so the
     Rust codec has to reproduce THEM — 364 ports and 366 typed properties among the tower's — which

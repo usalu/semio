@@ -1,0 +1,42 @@
+[
+  {
+    "name": "quiescent-boundaries",
+    "requests": [
+      "before",
+      "after"
+    ],
+    "accepted": [
+      true,
+      true
+    ]
+  },
+  {
+    "name": "same-reader-is-not-quiescent",
+    "requests": [
+      "inside"
+    ],
+    "accepted": [
+      false
+    ]
+  },
+  {
+    "name": "unrelated-reader-is-not-quiescent",
+    "requests": [
+      "concurrent"
+    ],
+    "accepted": [
+      false
+    ]
+  },
+  {
+    "name": "held-reader-then-drained",
+    "requests": [
+      "concurrent",
+      "after"
+    ],
+    "accepted": [
+      false,
+      true
+    ]
+  }
+]

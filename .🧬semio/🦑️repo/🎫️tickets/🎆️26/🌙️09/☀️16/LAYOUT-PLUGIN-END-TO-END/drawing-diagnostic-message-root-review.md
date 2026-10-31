@@ -1,0 +1,7 @@
+# Diagnostic Message Root Source Review
+
+Root read the defining owner, actual owning tests, neutral cases/schema and package dependencies. Whole owner imports the value facade, including currently active Numeric production; no diagnostic native run is released until that reached closure stabilizes. Diagnostic helper success does not prove Drawing publication is funded.
+
+Source preflights all positive birth axes before physical effects, retains partial fallible String/Scope allocations, preserves exact typed candidate ownership, and publishes via zero-payload-copy item/depth take. Cached failure/receiver refusal retains custody. Actual strings and Scope backing release one allocation at a time under explicit grants. Construction uses the default FaultScope (five absent optional strings), so its inline initialization adds no hidden owned child birth. The existing diagnostic library has one actual global allocator in retained tests; native execution must still establish observed physical equivalence.
+
+The first law tested denied take but never successful transfer. Root strengthened the owning tests with a positive zero-copy transfer law for all three neutral messages, exact message/scope backing pointers, same independent canonical wire parsed with Serde, empty candidate/drop0, and actual controlled paid closure of the transferred Fault. No production or fixture policy changed. Exact extra packet is drawing-diagnostic-message-root-working-files.json. Tests authored, not executed. Partial allocation failure remains Source-reviewed only.

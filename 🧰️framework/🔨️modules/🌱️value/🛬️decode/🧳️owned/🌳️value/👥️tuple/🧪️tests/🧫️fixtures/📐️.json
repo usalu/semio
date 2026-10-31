@@ -1,0 +1,57 @@
+{
+  "schema": "semio.native-tuple-receiving/v1",
+  "maximumCopyBytes": 4096,
+  "cases": [
+    {
+      "kind": "pair",
+      "input": [
+        17,
+        "β"
+      ],
+      "output": [
+        17,
+        "β"
+      ]
+    },
+    {
+      "kind": "triple",
+      "input": [
+        2024,
+        2,
+        29
+      ],
+      "output": [
+        2024,
+        2,
+        29
+      ]
+    }
+  ],
+  "refusals": [
+    [
+      17
+    ],
+    [
+      17,
+      "β",
+      3
+    ]
+  ],
+  "stock": {
+    "items": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "fuel": 100000
+  },
+  "ownershipCopyBytes": 0,
+  "deniedWork": 0,
+  "bindingObservation": {
+    "foreignEveryActivePhase": true,
+    "source": "same-value-distinct-owned-source",
+    "refusalWork": 0,
+    "refusalHeapBytes": 0,
+    "unchangedBothInputs": true
+  }
+}

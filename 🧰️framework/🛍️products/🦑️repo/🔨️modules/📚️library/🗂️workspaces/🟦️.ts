@@ -9,6 +9,7 @@ import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { ownsPayload, NATIVE_DISCOVERY_OPERATIONS, type PackagePayloadOperations } from "./📦️payload/🟦️.ts";
 import { bunRepositoryPackages } from "./🟦️bun/🟦️.ts";
+import bunSchema from "./🟦️bun/🧬️schema/🔣️.json" with { type: "json" };
 //#endregion 🔌️Adapters
 
 //#region 🔎️WorkspaceRoot
@@ -53,10 +54,9 @@ export function declaredWorkspaces(repoRoot: string): readonly string[] {
 //#region 🔣️Constants
 const MANIFEST_FILENAME = "package.json";
 
-/** 🧺️ Directory names never descended into — build/vendor/scratch trees, never real workspace source.
- * Includes the schema-owned opaque `compose` boundary (same isolation as `DISCOVERY_SKIP_DIRS`) so
- * workspace generation cannot reintroduce its intentionally deleted memberships. */
-const WORKSPACE_SCAN_SKIP_DIR_NAMES = new Set(["🗑️generated", "node_modules", "target", "dist", "build", "🤖️generated", "storybook-static", "temp", "coverage", "🔌️plugin-modules", ".🧬semio", "compose"]);
+/** 🧺️ Directory names never descended into — the schema-owned gitignored build/vendor/scratch output names (`OutputDirectories`, shared with the Bun ownership walk), never real workspace source. */
+const WORKSPACE_SCAN_SKIP_DIR_NAMES: ReadonlySet<string> = new Set<string>(bunSchema.$defs.OutputDirectories.const);
+const WORKSPACE_SCAN_SKIP_DIR_PATTERN = new RegExp(bunSchema.$defs.OutputDirectoryPattern.const, "u");
 
 //#endregion 🔣️Constants
 
@@ -110,7 +110,7 @@ function walk(absDir: string, repoRoot: string, results: WorkspaceCandidate[], o
   checkCancellation(options);
   for (const entry of entries) {
     checkCancellation(options);
-    if (entry.kind !== "directory" || entry.name.startsWith(".") || WORKSPACE_SCAN_SKIP_DIR_NAMES.has(entry.name)) continue;
+    if (entry.kind !== "directory" || entry.name.startsWith(".") || WORKSPACE_SCAN_SKIP_DIR_NAMES.has(entry.name) || WORKSPACE_SCAN_SKIP_DIR_PATTERN.test(entry.name)) continue;
     const absChild = join(absDir, entry.name);
     const manifestPath = join(absChild, MANIFEST_FILENAME);
     if (operations.state(manifestPath) !== "missing") {

@@ -1,0 +1,27 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🎟️work/📐️.json",
+    "bytes": 171,
+    "sha256": "1529b770cb6d164bae1c759d13166e2ff0b46d7579fdec6128415d4d5efb1fcc"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🎟️work/🔣️.json",
+    "bytes": 631,
+    "sha256": "262737ca4e52ab11ae11b4940366ba92efc508aa21189e1874e8805368342423"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🟦️.ts",
+    "bytes": 1290,
+    "sha256": "481167e4ce6f3eb244073e10e7243ab31008e52ba67bc2eaddcc5ac294dcd0d5"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🦀️.rs",
+    "bytes": 8762,
+    "sha256": "72005c2ed9602613e63771ca92a55b4c3383c9a274fca8eae4ad280f107edeb7"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🧪️tests/🧫️fixtures/🔣️.json",
+    "bytes": 297,
+    "sha256": "272a7966b15ec801c587fe0542d2447dab64d48bef9326e1d8a12709f554dc69"
+  }
+]

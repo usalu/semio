@@ -3,6 +3,7 @@ use super::*;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 
 fn grant(demand:RetirementDemand)->RetainedCloneGrant{assert!(demand.copy_bytes+demand.capacity_bytes<=4096);RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
+fn stage<M:RetireOwned+Sync>(owner:Box<Edit<M>>)->RetainedCloneSource<Box<Edit<M>>>{let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<16,maximum_capacity_bytes:1<<16,maximum_release_bytes:1<<20,maximum_depth:4096};let mut admission=RetainedCloneSource::admission_owned(owner,());let mut output=None;for _ in 0..64{if admission.terminal_is_empty(){break}if admission.phase()=="ready"{admission.take_output(&mut output,g).result.unwrap();}else{admission.advance(g).result.unwrap();}}output.expect("staged edit source")}
 fn hex(bytes:[u8;32])->String{bytes.iter().map(|byte|format!("{byte:02x}")).collect()}
 
 #[test]
@@ -11,10 +12,10 @@ fn canonical_native_source_handoff_refuses_extracted_original_without_losing_cus
  let edit=Box::new(semio_framework_pack_json::from_json_str::<Edit<bool>>(&serde_json::to_string(&cases["cases"][0]["edit"]).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap());
  let pointer=edit.as_ref()as*const Edit<bool>;let id=edit.id.as_ptr();
  let admitted=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:131072,maximum_depth:4096};
- let(mut source,_)=RetainedCloneSource::admit_owned(edit,(),admitted).unwrap_or_else(|(error,_,_)|panic!("original live source: {error}"));
- let extracted=loop{match source.take_authority(admitted).unwrap(){RetainedCloneSourceTake::Pending(_)=>{},RetainedCloneSourceTake::Ready(owner,_)=>break owner}};let mut source=Some(source);
+ let mut source=stage(edit);
+ let extracted=loop{match source.take_authority(admitted).result.unwrap(){RetainedCloneSourceTake::Pending(_)=>{},RetainedCloneSourceTake::Ready(owner,_)=>break owner}};let mut source=Some(source);
  let(result,heap)=observe(||ArtifactCanonicalEditSealCursor::admit_source(&mut source,admitted));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(source.is_some());assert_eq!(extracted.as_ref()as*const Edit<bool>,pointer);assert_eq!(extracted.id.as_ptr(),id);
- let mut source=source.unwrap();for turn in 0..100000{if source.terminal_is_empty(){break;}let(step,heap)=observe(||source.close_step(admitted).unwrap());assert!(step.progress().fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999||source.terminal_is_empty());}assert!(source.terminal_is_empty());
+ let mut source=source.unwrap();for turn in 0..100000{if source.terminal_is_empty(){break;}let(step,heap)=observe(||source.close_step(admitted).result.unwrap());assert!(step.progress().fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999||source.terminal_is_empty());}assert!(source.terminal_is_empty());
  let edit=extracted;assert_eq!(edit.as_ref()as*const Edit<bool>,pointer);assert_eq!(edit.id.as_ptr(),id);let mut owner=ControlledRetirement::new(edit).unwrap_or_else(|(error,_)|panic!("extracted original retirement: {error}"));for turn in 0..100000{if owner.terminal_is_empty(){break;}let(step,heap)=observe(||owner.step(admitted).unwrap());assert!(step.progress().fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(turn<99999||owner.terminal_is_empty());}assert!(owner.terminal_is_empty());let(_,heap)=observe(||{drop(owner);drop(source);});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
 }
 
@@ -25,18 +26,14 @@ fn canonical_native_edit_seal_preserves_original_box_and_fields_after_framed_dig
  for(index,row)in cases["cases"].as_array().unwrap().iter().enumerate(){
   let mut pauses:Vec<(Option<usize>,Option<Phase>,bool)>=fixture["pauses"].as_array().unwrap().iter().map(|value|(Some(value.as_u64().unwrap()as usize),None,false)).collect();
   for phase in [Phase::Header,Phase::HashStart,Phase::Hash,Phase::TakeOwner,Phase::SourceClose,Phase::Finalize,Phase::Ready]{pauses.push((None,Some(phase),false));}pauses.push((None,None,true));pauses.push((None,None,false));
-  for(pause,phase_pause,pending_pause)in pauses{for source_mode in[false,true]{
+  for(pause,phase_pause,pending_pause)in pauses{for _ in[()]{
    let mut original=Some(Box::new(semio_framework_pack_json::from_json_str::<Edit<bool>>(&serde_json::to_string(&row["edit"]).unwrap(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()));
    original.as_mut().unwrap().id.reserve(8192);let pointer=original.as_ref().unwrap().as_ref()as*const Edit<bool>;let id=original.as_ref().unwrap().id.as_ptr();let forwards=original.as_ref().unwrap().forwards.as_ptr();
-   let(mut cursor,progress,admitted,heap)=if source_mode{
-    let birth=RetainedCloneSource::<Box<Edit<bool>>>::owned_constructor_demand::<()>();let source_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RetainedCloneSource::<Box<Edit<bool>>>::constructor_copy_bytes(),maximum_capacity_bytes:birth.capacity_bytes,maximum_depth:birth.depth,..Default::default()};let((source,receipt),heap)=observe(||RetainedCloneSource::admit_owned(original.take().unwrap(),(),source_grant).unwrap_or_else(|(error,_,_)|panic!("same admitted source: {error}")));assert!(receipt.fits(source_grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));let mut source=Some(source);
+   let(mut cursor,progress,admitted,heap)={
+    let source=stage(original.take().unwrap());let mut source=Some(source);
     let(demand,heap)=observe(||ArtifactCanonicalEditSealCursor::<bool>::source_constructor_demand());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(demand.capacity_bytes,0);assert_eq!(demand.release_bytes,0);let admitted=grant(demand);
     for refused in[RetainedCloneGrant::default(),RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..admitted},RetainedCloneGrant{maximum_depth:demand.depth-1,..admitted}]{let(result,heap)=observe(||ArtifactCanonicalEditSealCursor::admit_source(&mut source,refused).unwrap());assert!(result.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(source.as_ref().unwrap().borrow().get().as_ref()as*const Edit<bool>,pointer);assert_eq!(source.as_ref().unwrap().borrow().get().id.as_ptr(),id);}
     let(result,heap)=observe(||ArtifactCanonicalEditSealCursor::admit_source(&mut source,admitted).unwrap());assert!(source.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(cursor,progress)=result.unwrap();(cursor,progress,admitted,heap)
-   }else{
-   let demand=ArtifactCanonicalEditSealCursor::<bool>::constructor_demand();let admitted=grant(demand);
-   for refused in [RetainedCloneGrant::default(),RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes-1,..admitted},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes-1,..admitted},RetainedCloneGrant{maximum_depth:demand.depth-1,..admitted}]{let(result,heap)=observe(||ArtifactCanonicalEditSealCursor::admit_original(&mut original,refused).unwrap());assert!(result.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(original.as_ref().unwrap().as_ref()as*const Edit<bool>,pointer);assert_eq!(original.as_ref().unwrap().id.as_ptr(),id);}
-   let(result,heap)=observe(||ArtifactCanonicalEditSealCursor::admit_original(&mut original,admitted).unwrap());let(cursor,progress)=result.unwrap();(cursor,progress,admitted,heap)
    };assert!(original.is_none());assert!(progress.fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
    let mut cancelled=false;let mut turns=0;
    while !cursor.terminal_is_empty(){

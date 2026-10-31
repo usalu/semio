@@ -1,7 +1,7 @@
 /// 📇️ Window action, archive import and hub genesis laws of the generation2d editor routes.
 
 //#region 📇️WindowActionLawTests
-/// 📇️ THE window-kind action law, generation2d's half (ticket 26/09/09/PROCEDURAL-3D-END-TO-END) —
+/// 🪟️ THE window-kind action law, generation2d's half (ticket 26/09/09/PROCEDURAL-3D-END-TO-END) —
 /// the exact twin of generation3d's `every_emitted_action_is_declared_on_its_window_kind`, kept
 /// assertion-for-assertion identical so the two apps cannot drift.
 ///
@@ -57,7 +57,6 @@ async fn every_emitted_action_is_declared_on_its_window_kind() {
 /// replay (ticket 26/09/23 slice S19).
 #[semio_framework_async_macros::async_test]
 async fn a_document_archive_loads_into_a_fresh_instance_through_the_import_door() {
-    let _serial = semio_s_artifact_procedural_2d_testkit::publication_authority::lock();
     let mut source = app_with_registry().await;
     context::dispatch(&mut source, Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None })).await;
     let archive = PluginApp::document_archive(&mut source.0).await.expect("the open document exports as a framework archive");

@@ -1,0 +1,168 @@
+{
+  "state": "source-authored-unexecuted",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts",
+      "status": "created",
+      "sha256": "868556db6df93a13c327fb7d6d7ea403a687657b6f94b5205a8430b79400c6d7",
+      "bytes": 4766,
+      "scope": "Actual generic existing producer owner relocated neutral with mandatory issued-loan constructor auth before property access; no ledger/stock/cap/semantic currency change."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+      "before": "60465aadec328569f5a06023b1f02b2bd328e91786586e756c2d2c86f6cb0345",
+      "sha256": "ef91dedb1c17f9712244a3a20fb6ab7624765bc288143034be3b6ec110753cf5",
+      "bytes": 11230,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "before": "0f4b06fd8cad8c49a8ff433f63592f738c133b524696f536511f833c00f81545",
+      "sha256": "9af5c3f9090fc98eae7818a502b4cdd18f1f02376752e250bf871408b26be3ab",
+      "bytes": 32961,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📄️paragraph/🟦️.ts",
+      "before": "76054af04eccb8d071b4e47035bcf98de7053e36af7589f25b772bddae8286a3",
+      "sha256": "1b2c3976361eddb10b38dc47ceed0c9f5cbcb93665a2def8cd5109332d4f8080",
+      "bytes": 29348,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts",
+      "before": "5a05448ef413e62f6a930046168fd0e8bfe9e67ab354f48a776cfe5258f2d6e7",
+      "sha256": "a1fb58ba0257858b6b565c818d8ca91915637e418cd11445718bf6669eb7f351",
+      "bytes": 13617,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+      "before": "3caf3c9e4afc65e7a78f3614125ae0360ea44ec3e7e903569f05ca21c06129d4",
+      "sha256": "681ec7aee296db9213b7e4e42e68e732c1269030fac068207613101db5e1b3d4",
+      "bytes": 11242,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🟦️.ts",
+      "before": "49c71203355625951ab9bfa27c5d32ce43b5eda98c0c212e64bc099f2538571b",
+      "sha256": "3c08402a7019739b8bfd4ff783be393c7bf08e310043b690fdba06fde6f16ba8",
+      "bytes": 17044,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "before": "160a6e90b015138ebc31e6a9f6c8d2bdc40425ca22e8bdffd8a98f6fb6dbb985",
+      "sha256": "9b98f2bd18a869d2a3d33f7b7a0fb02f9e34ce0b0a5fdac19c69ce42a265bc43",
+      "bytes": 15356,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts",
+      "before": "31596f229188f00fa4488ca4fe70f9fc5499ed95f6fd4f9334a485dab74927fa",
+      "sha256": "b9924d5f915f3c0087389e9379eaaa6baf103693b3f2fdd93671e80e351c4336",
+      "bytes": 10390,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts",
+      "before": "50ffe4f80b8971853ce85d566018dacbd5064965e3fc7f1741b88d5bd436bdd1",
+      "sha256": "ec66c086d637f17b70b4d0809e7a0fb9e8a8741730c55ff73d6a65b4be10b091",
+      "bytes": 5747,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts",
+      "before": "d2b77ad5f384173eae6e86b8d05bc688a38285c381c9c50fa4ec953f0df3afbb",
+      "sha256": "c86033b15f6e1961a3f2d4bfcb2a1443a67b7c089a52e07648106fbf53c73ed0",
+      "bytes": 11454,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "before": "5a25329288d4ce7e66568e42a05c3b1d7605c4b00f6b02c138a546b9fe36e139",
+      "sha256": "5539022852eaaf1aeff2e2bddd649718f23d21810364edde1a8f1ddcec9e0597",
+      "bytes": 25005,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+      "before": "0a1c8055bf432fa5a6492a17fa0f1cf4efad92adf9513882ccad7db45a0f27f5",
+      "sha256": "5ee6811f7c752d250f376005b0547bf9407f29657551c9bd0ab668130e0ee7da",
+      "bytes": 10959,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+      "before": "a704398e7497129e2fa633524a19d18e04cef0ee668fa113109360392aa3058b",
+      "sha256": "7f101cfe22389ae9613a08c9c2430edc628598ff62631e20998ba8efe72eebb4",
+      "bytes": 5530,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+      "before": "540bd58a49cf8a7c69cd68d6994bbdfcf50a6490861389e9931c8982aa0b1c8e",
+      "sha256": "d8f2c809480b64ce2266fc7c58461fc05ad0878c6602074f1fc6163e4c402847",
+      "bytes": 15649,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🟦️.ts",
+      "before": "29b445ec63e84863e559ade03b3ab5be0c295ded41cc3df2b38eb2aebe322e61",
+      "sha256": "8cf9e0bd29295ed51a76f02db1f1025d62f8030d6f896ac74ca470c7a38535c5",
+      "bytes": 37674,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+      "before": "8197644094b1f78702b5d6f3a71c396b498bc85610e329f4b5ca85a3d7771754",
+      "sha256": "2f048fd471e9292c628ee447ead7cc5f79d6b86d27bd6c4e0e243effe97f3db7",
+      "bytes": 10821,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts",
+      "before": "1dc7040ce71a165a02c41ccc495f50bad7302efb6f7a2aea16e7d33db1333f38",
+      "sha256": "e05b74c19b7e65c507c33fe8c94149dfc3ed8e229e328445cf8b8b66e78bc874",
+      "bytes": 6094,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "before": "f39c8dd265579993c0137659b97e469a172ba507e5cdd8ad4e0aef50c41e1e9b",
+      "sha256": "366d44354057d3f3d5d2295c0cc78d0dfd9a2677314095f00e821fa62700bb65",
+      "bytes": 6969,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+      "before": "62bc63235f28357f95be84cd5c6fe1759a78049a1870e36437c759b88c03b78c",
+      "sha256": "2f0a364e9f17c16d18934a7cf72165656fe1cb3555182920230701861c2d4489",
+      "bytes": 7452,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "before": "db06a7272c06d98d53bcd0ebdac42b308b20f6d88e8040f422b0d1aec3f23582",
+      "sha256": "859f7c0d5ee3c0eb9ade323402fa7e5fa765a6c23d3104b3b0358870132f2f3e",
+      "bytes": 14601,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts",
+      "before": "f064d6212b2fb264bc6134aa6d9e24999dc84f92d9b05d709fbd99e1bb205aa4",
+      "sha256": "30f613bf96e48a5504498fdd5193d07cca9b080b3acc2e8ebaa84da270ed3934",
+      "bytes": 5956,
+      "scope": "Exact direct canonical producer imports/names only; own algorithms, stocks and peer retirement bodies preserved."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts",
+      "status": "removed",
+      "before": "d5804e1d21c567322861b32238216e8c113a1af0711379f6004e1e0b8e8d3c1f",
+      "scope": "No stale Font producer alias/facade retained."
+    }
+  ],
+  "priorDefinerSha256": "d5804e1d21c567322861b32238216e8c113a1af0711379f6004e1e0b8e8d3c1f",
+  "remainingOldSymbols": [],
+  "noClaims": "Prior Font28 current-at-capture proof is historical after actual helper relocation/caller byte changes; fresh affected checks required."
+}

@@ -1379,5 +1379,64 @@
    "basisPoints": 7500,
    "expected": 5
   }
+ ],
+ "priors": [
+  {
+   "name": "a cold component build",
+   "classes": [
+    "component",
+    "component/abc"
+   ],
+   "temperature": "cold",
+   "expected": {
+    "bytes": 5905580032,
+    "rampMilliseconds": 900000
+   }
+  },
+  {
+   "name": "a warm component build",
+   "classes": [
+    "component"
+   ],
+   "temperature": "warm",
+   "expected": {
+    "bytes": 3221225472,
+    "rampMilliseconds": 600000
+   }
+  },
+  {
+   "name": "a cargo check uses the general cold prior",
+   "classes": [
+    "cargo/check",
+    "cargo/check/host"
+   ],
+   "temperature": "cold",
+   "expected": {
+    "bytes": 2147483648,
+    "rampMilliseconds": 600000
+   }
+  },
+  {
+   "name": "a cargo check uses the general warm prior",
+   "classes": [
+    "cargo/check"
+   ],
+   "temperature": "warm",
+   "expected": {
+    "bytes": 805306368,
+    "rampMilliseconds": 300000
+   }
+  },
+  {
+   "name": "the prefix must lead the class",
+   "classes": [
+    "cargo/component"
+   ],
+   "temperature": "cold",
+   "expected": {
+    "bytes": 2147483648,
+    "rampMilliseconds": 600000
+   }
+  }
  ]
 }

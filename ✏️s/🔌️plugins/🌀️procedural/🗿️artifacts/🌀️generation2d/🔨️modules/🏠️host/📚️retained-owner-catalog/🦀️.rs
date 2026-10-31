@@ -127,7 +127,7 @@ pub const GENERATION2D_RETAINED_MUTATION_OWNERS: [&str; GENERATION2D_MUTATION_VA
 ];
 
 #[derive(Default)]
-struct Generation2dMutationSynapseOwner {
+pub(super) struct Generation2dMutationSynapseOwner {
     pub(super) id: String,
     pub(super) from: String,
     pub(super) to: String,

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "owned-observation",
+    "purpose": "observe-current-artifact-input-group",
+    "extra": false,
+    "accept": true
+  },
+  {
+    "id": "stage-purpose-is-distinct",
+    "purpose": "stage-fresh-immutable-artifact-input-group",
+    "extra": false,
+    "accept": false
+  },
+  {
+    "id": "data-does-not-grant-freshness",
+    "purpose": "observe-current-artifact-input-group",
+    "extra": true,
+    "accept": false
+  }
+]

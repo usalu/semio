@@ -1,0 +1,8 @@
+import fs from "node:fs";
+import path from "node:path";
+import {readRustSourceClosureV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+const root=process.cwd(),ticket=path.join(root,".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END"),seen=new Map<string,number>();
+const cfg=["test","feature=testkit","target_os=macos","target_family=unix","unix","target_pointer_width=64","target_endian=little"];
+const entry=path.join(root,"🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/🦀️.rs");
+const result=await readRustSourceClosureV1([entry],root,cfg,async name=>{let stat;try{stat=fs.statSync(name);}catch(error){if((error as any).code==="ENOENT")return null;throw error;}if(!stat.isFile())return null;if(stat.size>262144||(!seen.has(name)&&seen.size>=128))throw Error("Bounded diagnostic census refused");seen.set(name,stat.size);if([...seen.values()].reduce((a,b)=>a+b,0)>4194304)throw Error("Bounded diagnostic census bytes refused");return fs.readFileSync(name);},{manifestDirectory:path.dirname(entry),generated:()=>undefined});
+const output=path.join(ticket,"🗑️generated/context-source-census.json");fs.writeFileSync(output,JSON.stringify({state:"read-only-declared-test-cfg-census-not-canonical-source-admission",cfg,files:result,totalBytes:result.reduce((a,b)=>a+b.bytes,0),activeLines:result.reduce((a,b)=>a+b.activeLines,0)},null,2)+"\n");process.stdout.write(JSON.stringify({files:result.length,totalBytes:result.reduce((a,b)=>a+b.bytes,0),testFiles:result.filter(v=>v.path.includes("tests")).map(v=>({path:v.path,bytes:v.bytes}))})+"\n");

@@ -1,0 +1,92 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🆔️ids/🛬️receiving/🦀️.rs",
+    "line": 3,
+    "excerpt": "use semio_framework_value_native_owned::native_decoding::{NativeReceive,owned::{NativeReceiveMap,NativeMappedReceiver,tree::NativeValueSource}};"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🆔️ids/🛬️receiving/🦀️.rs",
+    "line": 4,
+    "excerpt": "impl NativeReceiveMap<String> for SchemaId{fn from_native(value:String)->Self{Self(value)}}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🆔️ids/🛬️receiving/🦀️.rs",
+    "line": 11,
+    "excerpt": "impl NativeReceiveMap<[u8;32]> for PayloadHash{fn from_native(value:[u8;32])->Self{Self(value)}}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/📡️replication/🆔️ids/🛬️receiving/🧪️tests/🦀️.rs",
+    "line": 16,
+    "excerpt": "#[test]fn schema_identity_adopts_the_completed_native_text_owner(){let text=String::from(\"schema:original\");let pointer=text.as_ptr();let owner=<SchemaId as NativeReceiveMap<String>>::from_native(text);assert_eq!(owner.0.as_ptr(),pointer);drain(owner);}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs",
+    "line": 67,
+    "excerpt": "pub use mapped::{NativeReceiveMap,NativeMappedReceiver};"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🦀️.rs",
+    "line": 6,
+    "excerpt": "pub trait NativeReceiveMap<T>:RetireOwned{fn from_native(value:T)->Self;}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🦀️.rs",
+    "line": 8,
+    "excerpt": "pub struct NativeMappedReceiver<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>>{inner:T::Receiver,pending:ManuallyDrop<Option<T>>,output:ManuallyDrop<Option<U>>,retirement:RetainedCloneClose,closing:bool,marker:PhantomData<fn(&I)->U>}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🦀️.rs",
+    "line": 11,
+    "excerpt": "impl<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>> NativeMappedReceiver<I,T,U>{pub fn new()->Self{Self{inner:T::receiver(),pending:ManuallyDrop::new(None),output:ManuallyDrop::new(None),retirement:Default::default(),closing:false,marker:PhantomData}}}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🦀️.rs",
+    "line": 12,
+    "excerpt": "impl<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>>NativeReceiver<I,U>for NativeMappedReceiver<I,T,U>{"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🦀️.rs",
+    "line": 23,
+    "excerpt": "impl<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>>Drop for NativeMappedReceiver<I,T,U>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,\"native mapped receiving requires funded closure\");if empty{unsafe{ManuallyDrop::drop(&mut self.pending);ManuallyDrop::drop(&mut self.output);}}}}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🦀️.rs",
+    "line": 5,
+    "excerpt": "impl NativeReceiveMap<String> for Wrapped{fn from_native(value:String)->Self{Self(value)}}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🏷️label/🛬️receiving/🦀️.rs",
+    "line": 3,
+    "excerpt": "use semio_framework_value_native_owned::native_decoding::{NativeReceive,owned::{NativeReceiveMap,NativeMappedReceiver,tree::NativeValueSource}};"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🏷️label/🛬️receiving/🦀️.rs",
+    "line": 10,
+    "excerpt": "impl NativeReceiveMap<NativeLabelTerminologies> for LocalizedLabel{"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/🏷️label/🛬️receiving/🦀️.rs",
+    "line": 11,
+    "excerpt": " fn from_native(value:NativeLabelTerminologies)->Self{Self{cells:[[Cow::Owned(value.native.en),Cow::Owned(value.native.de)],[Cow::Owned(value.reuse.en),Cow::Owned(value.reuse.de)]]}}"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/🗂️expanded/🦀️.rs",
+    "line": 49,
+    "excerpt": "impl semio_framework_value_native_owned::native_decoding::owned::NativeReceiveMap<Vec<String>> for DagExpandedPaths{"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/🗂️expanded/🦀️.rs",
+    "line": 50,
+    "excerpt": " fn from_native(mut values:Vec<String>)->Self{values.sort_unstable();values.dedup();Self::from_admitted(values)}"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️receive/🦀️.rs",
+    "line": 4,
+    "excerpt": "use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeReceive,NativeReceiver,owned::{NativeDefault,NativeMappedReceiver,NativeReceiveMap,tree::{NativeReceiveSlot,NativeScalarReceiver,NativeScalarValue,NativeValueSource,add_receipt,child_grant,fixed,invalid,nested,receipt}}};"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️receive/🦀️.rs",
+    "line": 24,
+    "excerpt": "impl NativeReceiveMap<OrderedMap<Value>> for Dictionary{fn from_native(pairs:OrderedMap<Value>)->Self{Self{pairs}}}"
+  }
+]

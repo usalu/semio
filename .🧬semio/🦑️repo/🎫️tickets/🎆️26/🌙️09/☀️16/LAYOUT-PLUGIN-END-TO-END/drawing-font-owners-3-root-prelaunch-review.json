@@ -1,0 +1,11 @@
+{
+  "state": "root-prelaunch-review-no-result",
+  "commandSha256": "a9352bc0526807d5b3c20e6b1f6212d265dea6c66736bf799e088928d9e02cf9",
+  "inputs": 22,
+  "literalEdges": 48,
+  "strictRoots": 9,
+  "expectedLaws": 9,
+  "actualOutcomes": null,
+  "authorization": "One exact captured normal owning invocation then sequential strict9,22 held through both terminals/postchecks",
+  "scope": "Current real pages/direct CPU admission8 plus normalization1/3 ICU cases; broader Font/Drawing/IO not proved"
+}

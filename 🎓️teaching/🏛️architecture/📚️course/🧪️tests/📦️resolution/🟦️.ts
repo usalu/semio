@@ -8,8 +8,8 @@ import { exports as resolveExports } from "resolve.exports";
 import { parse as parseJsonc, type ParseError } from "jsonc-parser";
 import ts from "typescript";
 import { expect, inject, it } from "vitest";
-import fixture from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/📦️workspace-exports/🧫️fixtures/🔣️json/🟦️.ts" with { type: "json" };
-import schema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/📦️workspace-exports/🧬️schema/🔣️json/🟦️.ts" with { type: "json" };
+import fixture from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/📦️workspace-exports/🧫️fixtures/🔣️json/🟦️.ts";
+import schema from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/📦️workspace-exports/🧬️schema/🔣️json/🟦️.ts";
 import { publicRuntimePackageExportsV1, workspaceTestAliasesV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🧪️testing/📦️workspace-exports/🟦️.ts";
 import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 

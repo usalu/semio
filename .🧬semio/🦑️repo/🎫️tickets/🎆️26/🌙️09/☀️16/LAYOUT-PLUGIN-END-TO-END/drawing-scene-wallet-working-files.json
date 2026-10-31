@@ -1,0 +1,41 @@
+{
+  "state": "source-migrated-no-runtime-counters-still-under-integration",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "817439177cb8d33d30e060debed254634d2013e08adcab60498bd4c1753aaf94",
+      "sha256": "d6157a3697656a8b2f9e3fc95db7ac912a01379b22c8a087d5c052508e40ccd6",
+      "scope": "same finite wallet through Vector/Paint/prepared output and actual close; fresh per-turn ledgers"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "5657ed8a34e29299fa61887af7bd88bb41986a8978f426f0841b6fad0336e213",
+      "sha256": "003f2d934529ff8cb016b6605f3685833b704c486f5eb699e61766eff8560b32",
+      "scope": "same finite wallet through Vector/Paint/prepared output and actual close; fresh per-turn ledgers"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🎛️selection-laws/🦀️.rs",
+      "beforeSha256": "449d50604de0ddc3d456544921c97767ff419fb50f2a74b0516dd86cd91dfa95",
+      "sha256": "90bf65753efdf92bcb4566cfcf09f43a097106735ba4523d941564f145fe062e",
+      "scope": "same finite wallet through Vector/Paint/prepared output and actual close; fresh per-turn ledgers"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️canvas-tool/🦀️.rs",
+      "beforeSha256": "c47f806bd60b7bf750883bc29357e4b433217c3f8a46518d2b207e4860a8873a",
+      "sha256": "c0572d652977a6a267de933a77d8d0e2806fb89db72fc2164ab86889c6ad2888",
+      "scope": "same finite wallet through Vector/Paint/prepared output and actual close; fresh per-turn ledgers"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧰️testkit/🦀️.rs",
+      "sha256": "0c4aab808c5e8f56a27f9238c6ecfe7e8783d3039dc1b5c68979faa122e6d9c0",
+      "scope": "explicit existing Wallet turn and actual demand-bound close macros"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "2b162d66e0bbcd0fb65a25dcb8eae971342d28e383af3e3919e19480ec023773",
+      "sha256": "0a6d4688ff3ac346123a095b5b83c29bc317208d1d500bf77d57c191fa7597d6",
+      "scope": "existing semantic/count/cancel corpus uses one finite wallet through prepared output paid close"
+    }
+  ],
+  "sharedWallet": "🧰️framework/🔨️modules/◻️2d/🛤️path/🎟️work/🧪️tests/🦀️.rs"
+}

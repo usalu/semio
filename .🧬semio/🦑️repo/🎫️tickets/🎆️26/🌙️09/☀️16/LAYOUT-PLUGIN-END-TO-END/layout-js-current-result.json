@@ -1,0 +1,14 @@
+{
+  "outerExitCode": 1,
+  "unsealedDiagnostic": true,
+  "logBytes": 1666952,
+  "logSha256": "20001e9aeadcc204c3c0fccc89fb10cc0f17b7ef61d8e0dc53050be11f1edd4f",
+  "counts": [
+    "graph: 0 of 887 projects inferred by 3 worker processes in 644 s (863 failed, 0 lost, 0 restarts)",
+    "@semio-tech/layout-js: 5 tests failed:",
+    "@semio-tech/layout-js:  35 pass",
+    "@semio-tech/layout-js:  5 fail",
+    "@semio-tech/layout-js:  298 expect() calls",
+    "@semio-tech/layout-js: Ran 40 tests across 16 files. [5.40s]"
+  ]
+}

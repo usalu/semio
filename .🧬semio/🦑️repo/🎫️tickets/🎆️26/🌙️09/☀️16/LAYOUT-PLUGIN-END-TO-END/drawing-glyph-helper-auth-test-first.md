@@ -1,0 +1,3 @@
+# Glyph Retirement Helper Entry Provenance
+
+Closed neutral schema/cases and actual sixth owning law were authored before changing the helper. Unissued, copied and genuinely expired loans are tested against both genuine empty owner and hostile owner getter/prototype traps. Authentication must precede any owner or loan property reads. Exact rejection message distinguishes membership refusal from stale-method failure. Primary assertion and actual finite-wallet cleanup failures are retained separately/aggregated. Genuine active helper close is positive CPU1, then cached completion0. Existing five laws and their neutral JSON/stocks/fuel are unchanged. No runtime executed.

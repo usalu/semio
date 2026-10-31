@@ -25,16 +25,6 @@ macro_rules! __semio_actor_exports {
             async fn close_actor_context(input: $crate::component::wasip2::exports::semio::framework::reactor::RetainedTurnInput,retained_policy:$crate::component::wasip2::exports::semio::framework::reactor::RetainedGrant) -> $crate::component::wasip2::exports::semio::framework::reactor::ActorContextCloseCall {
                 $crate::reactor::original_actor_context::exports::close_wit(input,retained_policy)
             }
-            async fn reserve_poll_input(extent:u64,budget:$crate::component::wasip2::exports::semio::framework::reactor::Budget)->Result<$crate::component::wasip2::exports::semio::framework::reactor::ActorPollInputCall,$crate::component::wasip2::exports::semio::framework::reactor::ActorCallRefusal>{
-                $ensure();
-                $crate::reactor::original_actor_context::exports::reserve_poll_input_wit(extent,budget)
-            }
-            async fn write_poll_input(page:$crate::component::wasip2::exports::semio::framework::reactor::PollInputPage,budget:$crate::component::wasip2::exports::semio::framework::reactor::Budget)->Result<$crate::component::wasip2::exports::semio::framework::reactor::ActorPollInputCall,$crate::component::wasip2::exports::semio::framework::reactor::ActorCallRefusal>{
-                $crate::reactor::original_actor_context::exports::write_poll_input_wit(page,budget)
-            }
-            async fn close_poll_input(budget:$crate::component::wasip2::exports::semio::framework::reactor::Budget)->Result<$crate::component::wasip2::exports::semio::framework::reactor::ActorPollInputCall,$crate::component::wasip2::exports::semio::framework::reactor::ActorCallRefusal>{
-                $crate::reactor::original_actor_context::exports::close_poll_input_wit(budget)
-            }
             async fn poll(
                 events: Vec<$crate::component::wasip2::exports::semio::framework::reactor::Event>,
                 budget: $crate::component::wasip2::exports::semio::framework::reactor::Budget,

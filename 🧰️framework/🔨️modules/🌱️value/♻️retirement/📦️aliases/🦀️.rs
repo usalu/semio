@@ -45,7 +45,7 @@ impl<P> OriginalAliasBatch<P>{
         if let Some(owner)=self.active.as_mut(){
             if !owner.terminal_is_empty(){
                 let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-                let step=owner.close_step(child)?;
+                let step=owner.close_step(child).result?;
                 if !step.progress().fits(child)||matches!(step,RetainedCloneStep::Complete(_))&&!owner.terminal_is_empty(){return Err(refusal("original alias child violated its admitted receipt"));}
                 return Ok(RetainedCloneStep::Progress(step.progress()));
             }

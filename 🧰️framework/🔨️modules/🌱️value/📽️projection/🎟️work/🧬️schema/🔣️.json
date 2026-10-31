@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Snapshot Projection Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "value",
+    "maximumTurns",
+    "maximumCpuWork",
+    "stock",
+    "expected"
+  ],
+  "properties": {
+    "value": {
+      "const": 17
+    },
+    "maximumTurns": {
+      "const": 1048576
+    },
+    "maximumCpuWork": {
+      "const": 1048576
+    },
+    "stock": {
+      "const": {
+        "maximumItems": 1048576,
+        "maximumCopyBytes": 16777216,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 33554432,
+        "maximumDepth": 256
+      }
+    },
+    "expected": {
+      "const": {
+        "deniedCpu": 0,
+        "birthCpu": 1,
+        "bindingCpu": 1,
+        "copyCpu": 1,
+        "takeCpu": 1,
+        "cachedCpu": 0
+      }
+    }
+  }
+}

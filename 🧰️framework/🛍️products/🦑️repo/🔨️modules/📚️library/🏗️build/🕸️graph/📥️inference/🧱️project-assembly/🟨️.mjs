@@ -1,3 +1,4 @@
+import{selectPackageManagerV1,packageManagerSourceFilesV1 as managerSourceFilesV1}from"../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
 import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
 import{requireCanonicalTestAggregateV1}from"../../../../⚡️caching/🗂️suites/🧮️aggregate/🟦️.ts";
 import{applyBuildGeneratedTaskDependenciesV1,buildSourceContractGroupsV1}from"../../🚪️admission/🟦️.ts";
@@ -176,7 +177,7 @@ function precisionReceiptsV1(workspaceRoot) {
 const precisionDocumentsV1 = new Map();
 /** 📏️ The input precision rules as every project that applies them records them: read once per process, and the facts of that read (the engine, its schema and the rules) are replayed into each receiving project, so the rows of a project never depend on which project of the same process asked first (a farm worker infers in a fresh process). */
 export function readProjectInputPrecisionV1() {
-  return memoizedObservedComputationV1(precisionDocumentsV1, PRECISION_RULES, () => { for (const file of PRECISION_FILES) readFileSync(join(LIBRARY_ROOT, file)); const rules = join(LIBRARY_ROOT, PRECISION_RULES); return existsSync(rules) ? readInputPrecisionV1(JSON.parse(readFileSync(rules, "utf8"))) : null; }) ?? undefined;
+  return memoizedObservedComputationV1(precisionDocumentsV1, PRECISION_RULES, () => { for (const file of PRECISION_FILES) readFileSync(join(LIBRARY_ROOT, file)); for(const file of managerSourceFilesV1())readFileSync(file); const rules = join(LIBRARY_ROOT, PRECISION_RULES); return existsSync(rules) ? readInputPrecisionV1(JSON.parse(readFileSync(rules, "utf8"))) : null; }) ?? undefined;
 }
 
 /** 🎯️ The input precision rules and the engine host of one graph construction. */
@@ -194,6 +195,7 @@ function precisionContextV1(workspaceRoot, facts, scripts) {
     cargoManifests: () => manifests ??= precisionCargoManifestsV1(workspaceRoot),
     cargoRoots: (crate) => nativeDependencyRoots(crate, workspaceRoot, true, cargo.cache, cargo.closures),
     cargoSources: (root, named) => cargoSourcesOrRefuseV1(root, workspaceRoot, facts, named, !named),
+    managerFiles: (ecosystem,role) => {const manager=selectPackageManagerV1(ecosystem);return role==="locks"?manager.lockFileNames():manager.configurationNames("scope");},
     cargoToolchain: POLICY.toolchains.cargo.files,
     cargoIdentity: (directory) => (readToml(join(workspaceRoot, directory, "Cargo.toml")).package ? loaded.cargoLockInput(loaded.cargoManifestInputV1(directory||"."), workspaceRoot) : undefined),
     program: precisionProgramHostV1(workspaceRoot, scripts, () => document, () => (compiler ??= parserTypescriptV1())),

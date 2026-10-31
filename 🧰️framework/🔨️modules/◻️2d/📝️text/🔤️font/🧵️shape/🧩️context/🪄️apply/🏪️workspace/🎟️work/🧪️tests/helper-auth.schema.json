@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "owners",
+    "untrustedOwnerReads",
+    "untrustedLoanReads",
+    "rejectedCpu",
+    "validCloseCpu",
+    "message"
+  ],
+  "properties": {
+    "cases": {
+      "const": [
+        "unissued",
+        "copied",
+        "expired"
+      ]
+    },
+    "owners": {
+      "const": [
+        "genuine",
+        "trap"
+      ]
+    },
+    "untrustedOwnerReads": {
+      "const": 0
+    },
+    "untrustedLoanReads": {
+      "const": 0
+    },
+    "rejectedCpu": {
+      "const": 0
+    },
+    "validCloseCpu": {
+      "const": 1
+    },
+    "message": {
+      "const": "Retained work turn loan is unissued or expired"
+    }
+  }
+}

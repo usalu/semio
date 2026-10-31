@@ -35,6 +35,10 @@ runCmd(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"
 }if(["flow-original","native-prefix"].includes(segments[0]!)&&segments[1]==="source"){
 const path=resolve(this.root,"../../🏅️standards/🔖️v1/🪆️subsets/"+(segments[0]==="native-prefix"?"✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🫙️prefix/🟦️.ts":"🌊️flow/🚪️io/💾️binary/📸️snapshot/🧪️tests/🧾️original/🟦️.ts"));runCmd(process.execPath,["test",path],{cwd:this.repoRoot});
 runCmd(process.execPath,[join(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--resolveJsonModule","--allowImportingTsExtensions","--esModuleInterop","--skipLibCheck",path],{cwd:this.repoRoot});return;
+}if(segments[0]==="record-document"){
+const directory=resolve(this.root,"../../🧪️tests/🎒️record-document");
+runCmd(process.execPath,["test",join(directory,"🟦️.ts"),"--timeout","120000"],{cwd:this.repoRoot});
+runCmd("python3",["-I",join(directory,"🐍️.py")],{cwd:this.repoRoot});return;
 }if (segments[0] === "stdio-document-contract") {
 const { testSemioObjectDocumentContract } = await import("../../🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
 testSemioObjectDocumentContract();

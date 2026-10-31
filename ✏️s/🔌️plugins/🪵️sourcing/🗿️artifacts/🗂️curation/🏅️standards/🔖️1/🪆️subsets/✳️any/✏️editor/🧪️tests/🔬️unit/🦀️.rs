@@ -18,7 +18,7 @@ pub(crate) mod context {
 
     semio_framework_plugin::history_edit_acceptance_law!("sourcing", SourcingCurationApp, sourcing_manifest_for_tests, "../..");
     
-    /// 🧪️ The app wired to the real manifest registry — the ONLY constructor this app has.
+    /// 📱️ The app wired to the real manifest registry — the ONLY constructor this app has.
     /// `semio_framework_plugin::artifact_app_laws::new_app`'s bare, registry-less instance is unreachable here:
     /// `bounded_first_step_tool_proofs!` declares fifteen tool rows, and `tool_job_registration`
     /// admits a row only when its id is `InteractiveJobClassification::Migrated` in the LIVE registry,
@@ -43,7 +43,7 @@ pub(crate) mod context {
     pub struct SourcingTestApp(pub SourcingApp, pub OriginalFixtureScope);
 
     impl SourcingTestApp {
-        /// 🧹️ Closes the registered app through its exact retained close state machine under the scope's original caller; closing a closed app is a no-op.
+        /// 🔄️ Closes the registered app through its exact retained close state machine under the scope's original caller; closing a closed app is a no-op.
         pub fn close_fixture(&mut self) {
             close_registered_fixture_app(&mut self.0, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, self.1.cx()).expect("original caller paid app close");
         }
@@ -154,7 +154,7 @@ pub(crate) mod context {
         node.children.iter().find_map(table_scene_of)
     }
 
-    /// 📊️ Renders `body_key` through the live app and decodes its table scene's column ids and row records.
+    /// 🖼️ Renders `body_key` through the live app and decodes its table scene's column ids and row records.
     pub async fn table_of(app: &mut SourcingTestApp, body_key: &str) -> (Vec<String>, Vec<serde_json::Value>) {
         observe_registered_fixture_app(&mut app.0, body_key, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native), app.1.cx(), |root| {
             let scene = table_scene_of(root).expect("a table scene in the rendered body");
@@ -377,7 +377,7 @@ fn demonstrator_contributions_pack() -> String {
     semio_framework_pack_json::to_json_string(&entries)
 }
 
-/// ⚖️ LAW: the REAL demonstrator pack crosses this app's registered `setContributions` admission and
+/// 🎁️ LAW: the REAL demonstrator pack crosses this app's registered `setContributions` admission and
 /// distils to a roster the retained contributions lane holds.
 ///
 /// 🏁️ Before the per-app admission, sourcing priced `setContributions` on the 8 KiB gesture envelope
@@ -421,7 +421,7 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     assert_eq!(ids.len(), 14, "every SourcingCurationCommand row must be covered by every_command()");
 }
 
-/// ⚖️ LAW: the PRODUCTION action bridge covers every declared row. `ArtifactEditor`'s default
+/// 🌉️ LAW: the PRODUCTION action bridge covers every declared row. `ArtifactEditor`'s default
 /// `command_from_action` rejects app-owned actions outright, so an app that declares actions but
 /// never overrides it ships a UI whose every control faults — which is exactly how this pane's
 /// `setActiveExample` (and with it the whole `demo-stock` example) was dead in the demonstrator.
@@ -436,7 +436,7 @@ async fn the_production_action_bridge_admits_every_declared_command() {
     }
 }
 
-/// ⚖️ LAW: the framework's own conformance harness — it walks the actions this app's window kinds
+/// 🎞️ LAW: the framework's own conformance harness — it walks the actions this app's window kinds
 /// actually RENDER, stages each one's declared args exactly as the host does, and knows which ids
 /// are framework-injected (`undo`/`copy`/`recordTutorial`/…) and must be skipped. Strictly stronger
 /// than enumerating the command rows: it catches an action that chrome declares but no command row
@@ -446,7 +446,7 @@ async fn every_rendered_action_bridges_through_the_framework_harness() {
     artifact_app_laws::assert_declared_actions_bridge_to_commands::<EditorApp<SourcingCurationApp>>(sourcing_manifest_for_tests).await;
 }
 
-/// ⚖️ LAW: the bridge reads the manifest's OWN arg names — `setActiveExample` declares a select
+/// 📛️ LAW: the bridge reads the manifest's OWN arg names — `setActiveExample` declares a select
 /// arg keyed `exampleId` (`🔖️Manifest`), and the payload field is `example_id`; the two
 /// vocabularies are joined here and nowhere else.
 #[semio_framework_async_macros::async_test]
@@ -458,7 +458,7 @@ async fn the_action_bridge_reads_the_declared_arg_names() {
     assert!(<SourcingCurationApp as ArtifactEditor>::command_from_action("noSuchAction", None, None).is_err(), "an undeclared action must fault, not silently no-op");
 }
 
-/// ⚖️ LAW (S15 matrix, 2026-09-25): the rail stages `curationSetCount`'s `delta`/`value` through the argument schema
+/// 🔲️ LAW (S15 matrix, 2026-09-25): the rail stages `curationSetCount`'s `delta`/`value` through the argument schema
 /// the manifest declares, and the bridge reads them as numbers. Declared as text, the staged `"1"` read as no delta,
 /// the command resolved to a no-op and the rail journaled a row that changed nothing. The count args are numeric, and
 /// the numeric staging reaches the command as the delta the user entered.
@@ -474,7 +474,7 @@ async fn the_rail_stages_numeric_curation_counts_into_one_curated_edit() {
     assert_eq!(built, SourcingCurationCommand::CurationSetCount(curation_set_count::CurationSetCount { object_id: "beam-glulam-gl24h".into(), delta: Some(1.0), value: None }));
 }
 
-/// ⚖️ LAW: text and binary are two projections of the same command, for every single row — the
+/// 📝️ LAW: text and binary are two projections of the same command, for every single row — the
 /// permanent successor of the old `📡️protocol` crate's
 /// `sourcing_curation_command_op_text_round_trips_every_variant`.
 #[semio_framework_async_macros::async_test]
@@ -484,7 +484,7 @@ async fn every_command_round_trips_through_text_and_binary() {
     }
 }
 
-/// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — copied
+/// 🎫️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — copied
 /// verbatim from each `app_commands!` row's `as "…"` literal (NOT a mechanical kebab-case of the
 /// manifest action id: `loadDocumentJson`/`document-json`, `setActiveExample`/`active-example`, the whole
 /// missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record prints with no
@@ -517,7 +517,7 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     }
 }
 
-/// ⚖️ The rows whose `Option` fields make `None`/`Some` distinct wire cases, pinned to the exact bytes
+/// ➖️ The rows whose `Option` fields make `None`/`Some` distinct wire cases, pinned to the exact bytes
 /// captured from the pre-merge `semio-s-app-sourcing-curation-protocol` crate
 /// (`wire-baseline-before.txt` in this ticket's folder). A regression here is a real format break, not
 /// a test-fixture mismatch.
@@ -574,7 +574,7 @@ async fn app_definition_labels_resolve_german() {
 }
 
 
-/// 🧩️ One host `sourcing.module` contribution for a module this crate does NOT author.
+/// 🏠️ One host `sourcing.module` contribution for a module this crate does NOT author.
 fn sourcing_reuse_contribution() -> String {
     let kind = crate::ObjectKind { id: "reuse-salvaged-oak".into(), name: "Salvaged Oak Beam".into(), module_id: "reuse".into(), typology_path: vec!["reuse".into()], availability: 4, geometry: Box::new(crate::GeometryRecipe::Box { width: 0.2, height: 0.2, depth: 3.0 }) };
     let entry = semio_framework::ProgramContributionEntry {

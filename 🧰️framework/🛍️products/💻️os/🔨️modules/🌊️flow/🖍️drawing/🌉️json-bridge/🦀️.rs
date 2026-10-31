@@ -107,23 +107,7 @@ pub fn dispose_drawing(handle: &str) {
     }
 }
 
-/// 🔍️ Autotraces a bitmap mask into path segments JSON.
-pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, simplify_epsilon: f64) -> String {
-    drawing_kernel()
-        .lock()
-        .ok()
-        .and_then(|mut store| match store.trace_bitmap(width, height, mask, threshold, simplify_epsilon) {
-            Ok(handle) => match store.flatten_scene(&handle) {
-                Ok(scene) => {
-                    let segments = scene.nodes.into_iter().find_map(|node| if let DrawingNode::Path { segments } = node.node { Some(segments) } else { None });
-                    segments.map(|segs| serde_json::json!({ "segments": segs.iter().map(PathSegmentJson::from).collect::<Vec<_>>() }).to_string())
-                }
-                Err(error) => Some(json_error(error)),
-            },
-            Err(error) => Some(json_error(error)),
-        })
-        .unwrap_or_else(json_kernel_unavailable)
-}
+
 
 /// 🔀️ Boolean-combines two path segment arrays.
 pub fn boolean_segments_json(a_json: &str, b_json: &str, operation: &str) -> String {

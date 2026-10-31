@@ -29,7 +29,7 @@ mod tests {
 
     #[test]
     fn shared_neutral_basis_radius_cases() {
-        let data: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/radius-cases.json")).unwrap();
+        let data: serde_json::Value = serde_json::from_str(&fixture!("⭕️circle/🧪️tests/radius-cases.json")).unwrap();
         for row in data["cases"].as_array().unwrap() {
             let axis = |key: &str| std::array::from_fn(|index| row[key][index].as_f64().unwrap());
             let actual = circle_basis_radius(row["radius"].as_f64().unwrap(), axis("u"), axis("v"));

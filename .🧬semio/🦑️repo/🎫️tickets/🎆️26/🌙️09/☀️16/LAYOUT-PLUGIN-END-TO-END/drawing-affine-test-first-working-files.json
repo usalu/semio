@@ -1,0 +1,17 @@
+{
+  "phase": "test-first-before-affine-body",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/📐️.json",
+      "sha256": "156b85aaa4e61978f2cb1f0559d2e97e87def215c300b28a17584d1afde5ca9a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/🔣️.json",
+      "sha256": "ce79c4e7ef4f1f5e23a9df79c5456d83a55abb9c04f28aa12ec523d476e8f4dd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🎟️work/🟦️ts/owned.test.ts",
+      "sha256": "5ac86abf833cca6c7f13a9969016f0253c48f806982d9e68ef5b1c9206c83366"
+    }
+  ]
+}

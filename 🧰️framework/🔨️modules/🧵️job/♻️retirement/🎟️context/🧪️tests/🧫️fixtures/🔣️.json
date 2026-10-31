@@ -26,22 +26,17 @@
   "protocol": "same-borrowed-caller-cx",
   "receipt": "consume-original-effects-once-preserve-both-causes",
   "granted": {
-    "fuelPerBody": 1,
     "bodyGrant": "caller-remaining-retained-grant",
     "progress": "debited-once-after-body",
     "refusal": "whole-value-error-debited-then-original-failure",
-    "exhaustedFuel": "pending-without-running-body"
+    "exhaustedFuel": "pending-without-running-body",
+    "work": "direct-producer-outcome"
   },
   "nested": {
     "bodyContext": "same-borrowed-caller-cx",
     "debit": "reported-minus-posted-by-nested-callers",
-    "underReport": "invariant-violated"
-  },
-  "selfFunded": {
-    "lentGrant": "exactly-the-supplied-grant",
-    "fuel": "unbounded",
-    "deadline": "unbounded",
-    "failure": "returned-whole"
+    "underReport": "invariant-violated",
+    "work": "already-posted-by-context-aware-body"
   },
   "cases": [
     {
@@ -206,5 +201,22 @@
       ],
       "admitted": false
     }
-  ]
+  ],
+  "originalLifetime": {
+    "items": 100000,
+    "copyBytes": 262144,
+    "capacityBytes": 262144,
+    "releaseBytes": 262144,
+    "depth": 128,
+    "fuel": 100000,
+    "maximumTurns": 100000
+  },
+  "freshRootPerTurn": false,
+  "readOnlyCallbackWork": 0,
+  "genuineCaller": {
+    "lentGrant": "exactly-the-current-caller-view",
+    "fuel": "one-finite-original-lifetime",
+    "deadline": "same-original-absolute-deadline",
+    "failure": "returned-whole"
+  }
 }

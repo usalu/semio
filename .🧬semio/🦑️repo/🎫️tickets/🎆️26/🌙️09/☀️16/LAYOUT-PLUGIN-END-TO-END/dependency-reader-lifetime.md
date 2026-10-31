@@ -1,0 +1,21 @@
+# Dependency Reader Lifetime During Activation
+
+## Current Supported Observation
+
+One supported repo --service=off leases status observation is retained at 🗑️generated/setup-dependency-reader-status.log. It reports71held,0waiting and0deadlockcycles. Process17101 has a shared native-fixed-image:<workspace>/.cache/b/d claim held6031seconds. The same live holder also has outputs, Graph, Tools and Products shared images, a Graph snapshot pin, and exclusive bazel-slot-s2. Its command text is truncated to --tool=bazel ru; the activation association comes from Root, not an inferred full command. The status activity line says dependencies:generation-verify:86016. No peer was contacted, stopped or otherwise changed.
+
+The activity text is a published work counter, not a current execution stack or orphan classification. Generation storage tick at76 publishes that resource while validating; it does not create a distinct lease named generation-verify. Duration and a retained activity label cannot establish a stuck verifier, leaked lease or dead owner. The supported status view does classify the physical claim as held and shows other actual retained build resources. No unrelated recent order records were interpreted as this holders current failure.
+
+## Defining Lifetime Is the Whole Awaited Build
+
+The ordinary runtime opens Dependencies at build/command/runtime/🟦️.ts:70 around the entire remaining command. It awaits graph planning/pins, backend execution at121 and the nested command scopes before that callback can return. Bazel execute itself awaits runBazelTasksV1 (backend/🟦️.ts:execute), not just readiness. Additionally withBazelStorageV1 at bazel/storage/🟦️.ts:35 retains Tools, Dependencies and Products through its body, and its paths.modules is physically inside Dependencies at28. Thus there are live build consumers of the actual backing beyond initial generation verification.
+
+withRepositoryCacheStoreV1 at Store:114–117 obtains the image and reservation, awaits repositoryCacheStoreBodyV1, and invokes image.close only in finally after that body settles. StoreBody:106–107 runs settleConsumers, then verifies the store before return. settleConsumers:63 first awaits the body and then drains all registered pending consumers; enrollConsumer:66 tracks each pending child and owner activity. These are explicit all-consumer lifetime contracts, not an early readiness handoff. The native fixed receiver acquires and records its shared reader before ready at fixed:219 and its image.close is the controlled lifetime terminal at106. The existing maintenance method transitions only after closing its own qualified reader and cannot close a different processs retained receiver.
+
+The read-custody and reservation interfaces require the same live owner/private store/frame and current physical identity for use. They do not provide a read-only detach-after-readiness contract under which the backend may keep using paths after releasing the image. Moving the current shared release to the readiness check would violate these lifetime guarantees and permit protected publication/detach while the still-running build consumes Dependencies.
+
+## Conclusion and Coordination
+
+No concrete leaked-reader or release bug is established by this observation. The long shared claim is consistent with the intended whole-build lifetime and the actual multiple retained Bazel resources. Parent generation/recipe changes do not revoke the old Original or justify stealing its physical custody; that old live consumer remains protected until its authentic command and registered descendants settle.
+
+The current safe coordination is natural settlement followed by a fresh supported lease observation and a separately authorized canonical setup attempt. Independent Cargo work is Source-permitted as described in setup-busy-admission.md. A first-class queued protected maintenance owner could provide cooperative future scheduling and prevent starvation, but is not present at this prepublication boundary and would be an explicitly assigned schema/test/owner feature. Releasing all Dependencies SH immediately after verification is not an available supported optimization. No policy change, setup retry, compiler, cache preview, manual release or Native effect ran in this diagnosis.

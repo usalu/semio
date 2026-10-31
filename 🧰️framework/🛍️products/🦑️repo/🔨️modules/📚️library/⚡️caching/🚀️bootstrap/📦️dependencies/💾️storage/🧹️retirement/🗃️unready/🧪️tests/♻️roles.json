@@ -1,0 +1,350 @@
+{
+  "version": 1,
+  "roles": [
+    {
+      "id": "unready-generation-package",
+      "container": "unready-generation",
+      "parts": [
+        "package.json"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "id": "unready-generation-modules",
+      "container": "unready-generation",
+      "parts": [
+        "node_modules"
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "id": "unready-generation-module-leaf",
+      "container": "unready-generation",
+      "parts": [
+        "node_modules",
+        "a",
+        "index.js"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "id": "unready-generation-borrowed-slot",
+      "container": "unready-generation",
+      "parts": [
+        "w",
+        "0",
+        "node_modules"
+      ],
+      "kind": "link",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "id": "unready-generation-ready",
+      "container": "unready-generation",
+      "parts": [
+        "bindings.json"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "id": "unready-generation-outside-slot",
+      "container": "unready-generation",
+      "parts": [
+        "w",
+        "1",
+        "package.json"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "id": "unready-generation-unknown",
+      "container": "unready-generation",
+      "parts": [
+        "unknown"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "id": "unready-generation-escape",
+      "container": "unready-generation",
+      "parts": [
+        "node_modules",
+        ".."
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "id": "retained-unready-package",
+      "container": "retained-unready",
+      "parts": [
+        "p",
+        "package.json"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "id": "retained-unready-modules",
+      "container": "retained-unready",
+      "parts": [
+        "p",
+        "node_modules"
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "id": "retained-unready-module-leaf",
+      "container": "retained-unready",
+      "parts": [
+        "p",
+        "node_modules",
+        "a",
+        "index.js"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "id": "retained-unready-borrowed-slot",
+      "container": "retained-unready",
+      "parts": [
+        "p",
+        "w",
+        "0",
+        "node_modules"
+      ],
+      "kind": "link",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "id": "retained-unready-ready",
+      "container": "retained-unready",
+      "parts": [
+        "p",
+        "bindings.json"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "id": "retained-unready-outside-slot",
+      "container": "retained-unready",
+      "parts": [
+        "p",
+        "w",
+        "1",
+        "package.json"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "id": "retained-unready-unknown",
+      "container": "retained-unready",
+      "parts": [
+        "p",
+        "unknown"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "id": "retained-unready-escape",
+      "container": "retained-unready",
+      "parts": [
+        "p",
+        "node_modules",
+        ".."
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "id": "capsule-intent",
+      "container": "retained-unready",
+      "parts": [
+        "i"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "id": "capsule-receipt",
+      "container": "retained-unready",
+      "parts": [
+        "r"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "id": "capsule-payload",
+      "container": "retained-unready",
+      "parts": [
+        "p"
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": true
+    },
+    {
+      "id": "capsule-payload-link",
+      "container": "retained-unready",
+      "parts": [
+        "p"
+      ],
+      "kind": "link",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "id": "capsule-intent-child",
+      "container": "retained-unready",
+      "parts": [
+        "i",
+        "data"
+      ],
+      "kind": "file",
+      "members": 1,
+      "accepted": false
+    },
+    {
+      "id": "capsule-unknown",
+      "container": "retained-unready",
+      "parts": [
+        "other"
+      ],
+      "kind": "directory",
+      "members": 1,
+      "accepted": false
+    }
+  ],
+  "admissions": [
+    {
+      "kind": "unready-generation",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "kind": "unready-generation",
+      "fault": "current",
+      "accepted": false
+    },
+    {
+      "kind": "unready-generation",
+      "fault": "root",
+      "accepted": false
+    },
+    {
+      "kind": "unready-generation",
+      "fault": "bindings",
+      "accepted": false
+    },
+    {
+      "kind": "unready-generation",
+      "fault": "status",
+      "accepted": false
+    },
+    {
+      "kind": "retained-unready",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "kind": "retained-unready",
+      "fault": "current",
+      "accepted": false
+    },
+    {
+      "kind": "retained-unready",
+      "fault": "root",
+      "accepted": false
+    },
+    {
+      "kind": "retained-unready",
+      "fault": "bindings",
+      "accepted": false
+    },
+    {
+      "kind": "retained-unready",
+      "fault": "status",
+      "accepted": false
+    },
+    {
+      "kind": "unready-metadata",
+      "fault": "none",
+      "accepted": true
+    },
+    {
+      "kind": "unready-metadata",
+      "fault": "current",
+      "accepted": false
+    },
+    {
+      "kind": "unready-metadata",
+      "fault": "root",
+      "accepted": false
+    },
+    {
+      "kind": "unready-metadata",
+      "fault": "bindings",
+      "accepted": false
+    },
+    {
+      "kind": "unready-metadata",
+      "fault": "status",
+      "accepted": false
+    },
+    {
+      "kind": "unready-generation",
+      "fault": "ready-receipt",
+      "accepted": false
+    },
+    {
+      "kind": "retained-unready",
+      "fault": "generation",
+      "accepted": false
+    },
+    {
+      "kind": "retained-unready",
+      "fault": "fingerprint",
+      "accepted": false
+    },
+    {
+      "kind": "retained-unready",
+      "fault": "same-current-generation",
+      "accepted": true
+    },
+    {
+      "kind": "unready-metadata",
+      "fault": "payload",
+      "accepted": false
+    }
+  ]
+}

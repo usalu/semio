@@ -25,6 +25,42 @@ pub fn energy_grant_covers(grant: RetainedCloneGrant, demand: RetirementDemand) 
     grant.maximum_items != 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth
 }
 
+/// 🧱️ Quotes the next funded retirement of a boxed payload builder: its pages and ledger first, then the box allocation itself.
+pub fn energy_builder_demand(builder: &semio_framework_job::RetainedPayloadBuilder) -> Result<RetirementDemand, ValueError> {
+    if builder.terminal_is_empty() {
+        Ok(semio_framework_job::RetainedPayloadBuilder::boxed_release_demands())
+    } else {
+        builder.retirement_demands()
+    }
+}
+
+/// ♻️ Retires a boxed payload builder one funded step at a time; the box allocation is released only on the last, separately paid step.
+pub fn energy_builder_close(slot: &mut Option<Box<semio_framework_job::RetainedPayloadBuilder>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    let Some(builder) = slot.as_mut() else { return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())) };
+    if !energy_grant_covers(grant, energy_builder_demand(builder)?) {
+        return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
+    }
+    if builder.terminal_is_empty() {
+        drop(slot.take());
+        return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: std::mem::size_of::<semio_framework_job::RetainedPayloadBuilder>(), ..Default::default() }));
+    }
+    builder.close_step_granted(grant).result.map(|step| RetainedCloneStep::Progress(step.progress()))
+}
+
+/// 🧾️ Wraps one owner step into the work-counted outcome the original retained-step ports account: one work unit iff the step made progress.
+pub fn energy_outcome(step: Result<RetainedCloneStep, ValueError>) -> semio_framework_value::RetainedWorkOutcome {
+    let work = match &step {
+        Ok(step) => u64::from(step.progress() != RetainedCloneProgress::default()),
+        Err(_) => 0,
+    };
+    semio_framework_value::RetainedWorkOutcome { result: step, work }
+}
+
+/// 🎟️ Runs one funded retained step under the original caller from a plain owner step.
+pub fn energy_retained_step(cx: &mut semio_framework_job::StepContext<'_>, demand: RetirementDemand, advance: impl FnOnce(RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
+    semio_framework_job::close_original_retained_step(cx, demand, |grant| energy_outcome(advance(grant)))
+}
+
 /// 🛡️ Closes one owner frontier only when the grant covers its own quote, otherwise reports an idle turn.
 pub fn energy_guarded(grant: RetainedCloneGrant, demand: Result<RetirementDemand, ValueError>, close: impl FnOnce() -> Result<RetainedCloneStep, ValueError>) -> Result<RetainedCloneStep, ValueError> {
     if !energy_grant_covers(grant, demand?) {

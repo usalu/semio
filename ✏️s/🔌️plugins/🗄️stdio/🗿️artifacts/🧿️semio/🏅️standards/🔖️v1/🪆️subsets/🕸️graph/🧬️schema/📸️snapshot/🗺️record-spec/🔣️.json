@@ -1,0 +1,491 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "s.stdio.semio.graph",
+ "schemaHash": "0feea6b7d5f6f3a7dabb5a8997af80c9bb4e155159753062c1319e80e99bd6be",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "nodes",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 1
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "edges",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 2
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 3
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "kind",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "label",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "position",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "width",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 5,
+    "key": "height",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 6,
+    "key": "ports",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 5
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 7,
+    "key": "properties",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 6
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 3
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "source",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 3
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "target",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 3
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "kind",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "label",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 5,
+    "key": "source-port",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 6,
+    "key": "target-port",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 7,
+    "key": "properties",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 6
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "x",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "y",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "name",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "kind",
+    "optional": false,
+    "shape": {
+     "kind": "enum",
+     "variants": [
+      [
+       0,
+       "in"
+      ],
+      [
+       1,
+       "out"
+      ],
+      [
+       2,
+       "in-out"
+      ]
+     ]
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "category",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "properties",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 6
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "key",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "bool",
+        7
+       ],
+       [
+        "bytes",
+        8
+       ],
+       [
+        "float",
+        9
+       ],
+       [
+        "int",
+        9
+       ],
+       [
+        "list",
+        10
+       ],
+       [
+        "map",
+        11
+       ],
+       [
+        "null",
+        12
+       ],
+       [
+        "ref",
+        13
+       ],
+       [
+        "str",
+        3
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "uint"
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "lexeme",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "items",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "bool",
+        7
+       ],
+       [
+        "bytes",
+        8
+       ],
+       [
+        "float",
+        9
+       ],
+       [
+        "int",
+        9
+       ],
+       [
+        "list",
+        10
+       ],
+       [
+        "map",
+        11
+       ],
+       [
+        "null",
+        12
+       ],
+       [
+        "ref",
+        13
+       ],
+       [
+        "str",
+        3
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "entries",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 6
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 3
+    }
+   }
+  ]
+ ],
+ "annotations": {
+  "single": [
+   [
+    6,
+    1
+   ]
+  ],
+  "verbatim": [
+   [
+    6,
+    1
+   ],
+   [
+    10,
+    0
+   ]
+  ]
+ }
+}

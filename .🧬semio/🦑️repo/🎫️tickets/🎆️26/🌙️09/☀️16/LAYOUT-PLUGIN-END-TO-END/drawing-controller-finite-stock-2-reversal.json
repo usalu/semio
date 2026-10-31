@@ -1,0 +1,60 @@
+{
+  "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/controller.test.ts",
+  "before": "641ad6f542981d3854a25152be7e9d01b5a24239abedbe925bf968f49e7df425",
+  "after": "886c4fefa7c49353114c7fb081cd176ea71e3c9013e026eddae0428634a786a1",
+  "wholeBeforeReconstructed": "641ad6f542981d3854a25152be7e9d01b5a24239abedbe925bf968f49e7df425",
+  "function": "individually valid loans exhaust the same original stock without resetting it",
+  "oldPrefix": "const row=law.lifecycleCases.find(x=>x.name===\"individually-valid-loans-exhaust-same-stock\");if(!row||!(\"stock\" in row))throw Error(\"Missing closed finite-stock case\");",
+  "newPrefix": "const row=law.lifecycleCases.find(x=>x.name===\"individually-valid-loans-exhaust-same-stock\");if(!row)throw Error(\"Missing closed finite-stock case\");const{stock:caseStock,loan:caseLoan,receipt:caseReceipt,turns:caseTurns,fuel:caseFuel}=row,expectedBodyCalls=row.expect.bodyCalls,expectedProviderCalls=row.expect.providerCalls;if(caseStock===undefined||caseLoan===undefined||caseReceipt===undefined||caseTurns===undefined||caseFuel===undefined||expectedBodyCalls===undefined||expectedProviderCalls===undefined)throw Error(\"Missing closed finite-stock fields\");const expectedCopiedItems=caseReceipt[0],expectedCopiedBytes=caseReceipt[1],expectedCapacity=caseReceipt[2],expectedRelease=caseReceipt[3];if(expectedCopiedItems===undefined||expectedCopiedBytes===undefined||expectedCapacity===undefined||expectedRelease===undefined)throw Error(\"Missing closed finite-stock receipt\");",
+  "tailReplacements": [
+    {
+      "before": "grant(row.stock)",
+      "after": "grant(caseStock)",
+      "count": 1
+    },
+    {
+      "before": "fuel:row.fuel",
+      "after": "fuel:caseFuel",
+      "count": 1
+    },
+    {
+      "before": "grant(row.loan)",
+      "after": "grant(caseLoan)",
+      "count": 1
+    },
+    {
+      "before": "row.loan[",
+      "after": "caseLoan[",
+      "count": 8
+    },
+    {
+      "before": "row.turns",
+      "after": "caseTurns",
+      "count": 1
+    },
+    {
+      "before": "row.stock[",
+      "after": "caseStock[",
+      "count": 2
+    },
+    {
+      "before": "row.expect.providerCalls",
+      "after": "expectedProviderCalls",
+      "count": 1
+    },
+    {
+      "before": "row.expect.bodyCalls",
+      "after": "expectedBodyCalls",
+      "count": 1
+    },
+    {
+      "before": "{copiedItems:row.receipt[0],copiedBytes:row.receipt[1],retainedCapacityBytes:row.receipt[2],releasedBytes:row.receipt[3]}",
+      "after": "{copiedItems:expectedCopiedItems,copiedBytes:expectedCopiedBytes,retainedCapacityBytes:expectedCapacity,releasedBytes:expectedRelease}",
+      "count": 1
+    }
+  ],
+  "allOther10SourceBodiesIdentical": true,
+  "newImporterSameContents": true,
+  "assertionCountBefore": 10,
+  "assertionCountAfter": 10
+}

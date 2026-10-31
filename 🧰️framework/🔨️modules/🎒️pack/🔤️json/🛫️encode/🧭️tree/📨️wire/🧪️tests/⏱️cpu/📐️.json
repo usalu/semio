@@ -1,0 +1,7 @@
+{
+  "denied": 0,
+  "cachedTerminal": 0,
+  "selectedWork": 1,
+  "genuineFault": 1,
+  "fault": "wire source explicit fault"
+}

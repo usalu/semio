@@ -1,5 +1,5 @@
 /** 📏️ Finite JSON encoding reservations shared by source-owned staged requests. */
-import caps from './limits.json';
+import caps from './limits.json' with {type:'json'};
 import type {StagedFormControl} from './🟦️.ts';
 export interface StagedFormLimits {readonly utf8Bytes:number;readonly nodes:number;readonly depth:number}
 export interface StagedFormCensus {readonly utf8Bytes:number;readonly nodes:number;readonly depth:number}

@@ -1,7 +1,6 @@
 //! 🧬️ editor of `semio-s-artifact-stdio-csv` — a path-preserving carve of the artifact root mounts.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 pub use crate::editor::csv::edit_rules::artifact_items_2::{CSV_ARTIFACT_SCHEMA_ID};
 

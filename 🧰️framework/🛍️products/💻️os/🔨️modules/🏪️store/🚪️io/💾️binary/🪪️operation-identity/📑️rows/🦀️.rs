@@ -16,7 +16,7 @@ impl ErasedSnapshotRetirement for OperationWireRows{
     fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.active.as_ref().map(Vec::capacity).or_else(||self.rows.as_ref().map(|rows|rows.last().map(Vec::capacity).unwrap_or_else(||rows.capacity()*size_of::<Vec<u8>>()))).unwrap_or(0))}
     fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(!self.terminal_is_empty()))}
     fn terminal_is_empty(&self)->bool{self.active.is_none()&&self.rows.is_none()}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"operation wire rows require admitted retirement depth"));}
@@ -25,5 +25,5 @@ impl ErasedSnapshotRetirement for OperationWireRows{
         if self.active.is_some(){self.active=None;}else if self.rows.as_ref().is_some_and(|rows|!rows.is_empty()){self.rows.as_mut().unwrap().pop();}else{self.rows=None;}
         let progress=RetainedCloneProgress{copied_items:1,released_bytes:release,..Default::default()};
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)})
-    }
+    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
 }

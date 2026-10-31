@@ -53,7 +53,7 @@ impl MeshTranslationInput {
     /// 🎟️ Quotes the actual boxed retirement ticket needed for the retained cold input.
     pub fn retirement_birth_bytes(&self)->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<Self>()}
     /// 🧹️ Moves the same cold source to paid typed retirement or returns the unchanged input on denial.
-    pub fn into_retirement(self,grant:RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Self)> {semio_framework_value::retirement::admit_owned_retirement(self,grant)}
+    pub fn into_retirement(self,grant:RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Self)> {semio_framework_value::retirement::admit_owned_retirement(self,grant).result}
 }
 
 impl semio_framework_value::retirement::RetireOwned for MeshTranslationInput {

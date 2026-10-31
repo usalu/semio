@@ -28,8 +28,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
                 return Err(self.diagnostic("process3d-envelope.snapshot-pack-odd-hex", token.start));
             }
             let expected = usize::try_from(span / 2).map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-length", token.start))?;
-            let maximum_items = process3d_publication_item_credit(self.operation, self.generation).map_err(|_| self.diagnostic("process3d-envelope.snapshot-item-authority", token.start))?;
-            *self.session = Some(semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::binary::snapshot::process3d_mounted_pack_session(expected, maximum_items).map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-preflight", token.start))?);
+            *self.session = Some(semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::binary::snapshot::process3d_mounted_pack_session(expected, PROCESS3D_MAXIMUM_DOMAIN_ITEMS).map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-preflight", token.start))?);
             self.token = Some(token);
             self.state = Process3dSnapshotDecodeState::Ingest;
         }

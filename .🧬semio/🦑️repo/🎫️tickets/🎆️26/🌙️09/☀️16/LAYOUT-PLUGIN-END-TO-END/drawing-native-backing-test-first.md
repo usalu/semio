@@ -1,0 +1,3 @@
+# Native Backing Test First
+
+Closed fixture/schema and actual NativeDecodeControl retained Vec/String backing law were authored before the defining admission methods. Real allocator null and before-effect denial preserve empty destination and cumulative ownership0; real body births retain output before post-effect refusal and report independent CPU/physical receipt. serde_json independently validates empty allocated bodies. One finite stock pays both births and actual controlled cleanup. This is a direct native control law, not an Original issuer; Native-decoding --lib and actual Original callers remain mandatory.

@@ -244,7 +244,7 @@ impl semio_framework_value::retirement::RetirementCursor for RasterPoolRetiremen
 
     fn close_step(&mut self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
         use semio_framework_value::{retained_clone::RetainedCloneProgress,retirement::RetirementStep};
-        if self.terminal_is_empty(){return RetirementStep::Complete}
+        if self.terminal_is_empty(){return RetirementStep::Complete(0)}
         if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
         let bytes=self.next_close_byte_demand().unwrap();
         if bytes>grant.maximum_release_bytes{return RetirementStep::BudgetExhausted}
@@ -252,7 +252,7 @@ impl semio_framework_value::retirement::RetirementCursor for RasterPoolRetiremen
         else if self.state.slots.capacity()!=0{self.state.slots=Vec::new();}
         else if !self.state.gpu_residents.is_empty(){self.state.gpu_residents.pop();}
         else{self.state.gpu_residents=Vec::new();}
-        RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..RetainedCloneProgress::default()})
+        RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..RetainedCloneProgress::default()},1)
     }
     fn terminal_is_empty(&self)->bool{self.state.slots.is_empty()&&self.state.slots.capacity()==0&&self.state.gpu_residents.is_empty()&&self.state.gpu_residents.capacity()==0}
     fn next_close_byte_demand(&self)->Option<usize>{Some(if let Some(slot)=self.state.slots.last(){Self::pixel_capacity(slot)}else if self.state.slots.capacity()!=0{self.state.slots.capacity()*size_of::<RasterSlot>()}else if !self.state.gpu_residents.is_empty(){0}else{self.state.gpu_residents.capacity()*size_of::<Option<SceneRasterGpuRecord>>()})}

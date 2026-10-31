@@ -5,7 +5,7 @@ use semio_framework_job::*;
 mod original_payload;
 #[global_allocator]
 static ORIGINAL_PHYSICAL_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
-fn close(original:&mut original_payload::OriginalTestPayload,grant:RetainedCloneGrant)->(bool,RetainedCloneProgress,(usize,usize)){let(done,heap)=original_payload::observe(||original.advance(grant,|builder,cx|Ok(builder.close_step(cx)?)).unwrap());(done,original.caller.receipt(),heap)}
+fn close(original:&mut original_payload::OriginalTestPayload,grant:RetainedCloneGrant)->(bool,RetainedCloneProgress,(usize,usize)){let(done,heap)=original_payload::observe(||original.original_turn(grant,|builder,cx|{let demand=builder.retirement_demands()?;close_original_retained_step(cx,demand,|actual|builder.close_step_granted(actual))?;Ok(builder.terminal_is_empty())}).unwrap());(done,original.caller.receipt(),heap)}
 #[test]
 fn retained_payload_physical_close_preserves_short_pages_until_the_exact_backing_grant(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/📦️physical-close/🔣️.json")).unwrap();assert_eq!(fixture["pageBytes"],JOB_PAYLOAD_PAGE_BYTES);

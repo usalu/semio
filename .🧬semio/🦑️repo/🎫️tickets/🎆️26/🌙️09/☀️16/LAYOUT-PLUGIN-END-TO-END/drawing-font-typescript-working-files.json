@@ -1,0 +1,84 @@
+{
+  "state": "partial-source-integration-not-ready",
+  "files": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎟️work/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/controller.test.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/catalog.json",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/catalog.schema.json",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/catalog.test.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.json",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.schema.json",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/normalize.test.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/📐️.json",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/🔣️.json",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🟦️.ts",
+    "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/📐️.json",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🔣️.json",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/📐️.json",
+    "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🔣️.json",
+    "🧰️framework/🔨️modules/🔲️pixels/📷️png/✍️encode/🧪️tests/🟦️.ts"
+  ],
+  "source": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎟️work/🟦️.ts",
+      "sha256": "d6e6a968c265f649ed4b6c54d17ab021b1996a3e020ec0c71850bfce71bfae2a",
+      "bytes": 12856
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🟦️.ts",
+      "sha256": "365f0e4e2f4272d8c9fc6b787ca26036a1501c6a7973e15a47802f100b22b08c",
+      "bytes": 9745
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🟦️.ts",
+      "sha256": "ac29ef71b6e2c92f94e28652de7e3261138a6b3d1bbda09581c11cb99d6d9672",
+      "bytes": 41374
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🟦️.ts",
+      "sha256": "5c50e7fb936ffd67087afa1c969291663aefd22fb5039d7304303683a15dab9b",
+      "bytes": 2577
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🔣️.json",
+      "sha256": "57838f80ed2ab8942f58d867ad91bd77002463ad8cf095b454cd2c17a854c58f",
+      "bytes": 1108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/📐️.json",
+      "sha256": "ccdc94dca18c9d3874c833406589117120ec70cb01df18b6381bd2db4c526f3e",
+      "bytes": 1731
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/📦️bytes/🧪️tests/🟦️.ts",
+      "sha256": "05391a8636147f644c7e3ddca99a57cc6c6a000490cc9041ce6d2c85c6ff56ec",
+      "bytes": 3782
+    }
+  ],
+  "notes": "Own producer/controller/text/vector/PNG and explicit byte/numeric subset attribution only. Font files share Cursor import/retirement sections; only stated producer and narrowly agreed fixed-field close hunks ours. No full SourceReady. Existing numeric scoped runtime evidence separate; changed shared work closure requires fresh relevant checks. No Source copies.",
+  "sharedHunks": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts",
+      "hunk": "Only final explicit RetainedWorkBytes reexport; neutral core implementation belongs to drawing_cursor."
+    }
+  ],
+  "currentSubpackets": [
+    "drawing-font-producer-admission-working-files.json",
+    "drawing-font-normalization-working-files.json",
+    "drawing-font-catalog-working-files.json",
+    "drawing-bytes-actual-turn-working-files.json",
+    "drawing-png-typescript-working-files.json"
+  ]
+}

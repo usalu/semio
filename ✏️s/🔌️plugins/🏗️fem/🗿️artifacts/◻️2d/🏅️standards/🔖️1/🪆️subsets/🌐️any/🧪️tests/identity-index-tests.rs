@@ -85,5 +85,7 @@ fn sorting_cancellation_and_duplicate_or_absent_keys_keep_original_custody() {
     duplicate.nodes[1].id = duplicate.nodes[0].id.clone();
     let error = FemIdentityIndex::receive(&duplicate, &mut NativeSnapshotDecodeOwner::new(&mut native, grant())).err().unwrap();
     assert_eq!(error.kind, ValueRefusalKind::InvalidValue);
-    assert!(!native.has_retirement_owner());
+    while native.has_retirement_owner() {
+        native.close_retirement_recipient(grant()).unwrap();
+    }
 }

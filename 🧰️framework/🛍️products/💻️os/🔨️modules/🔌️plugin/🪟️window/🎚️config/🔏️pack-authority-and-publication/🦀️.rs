@@ -22,8 +22,8 @@ pub struct WindowConfigAuthority {
     pub generation: u64,
     pub revision: [u8; 32],
     pub snapshot: WindowConfigSnapshot,
-    pub(super) pending_snapshot:Option<WindowConfigSnapshot>,
-    pub(super) retired_snapshots:semio_framework_value_retirement_queue::RetirementQueue,
+    pub pending_snapshot:Option<WindowConfigSnapshot>,
+    pub retired_snapshots:semio_framework_value_retirement_queue::RetirementQueue,
 }
 
 #[doc(hidden)]
@@ -46,7 +46,7 @@ pub trait ErasedWindowConfigPublication: Send {
 pub struct TypedWindowConfigPublication<O: WindowConfigOwner> {
     #[doc(hidden)]
     pub window_id: ControlledRetirement<String>,
-    pub(crate) operation: semio_framework_job::OperationId,
+    pub operation: semio_framework_job::OperationId,
     #[doc(hidden)]
     pub generation: u64,
     #[doc(hidden)]
@@ -55,12 +55,12 @@ pub struct TypedWindowConfigPublication<O: WindowConfigOwner> {
     pub actor: Option<ControlledRetirement<semio_framework_value::SharedUtf8>>,
     #[doc(hidden)]
     pub pending: std::mem::ManuallyDrop<Vec<O::Mutation>>,
-    pub(super) transaction: Option<protocol::TransactionRef>,
+    pub transaction: Option<protocol::TransactionRef>,
     #[doc(hidden)]
     pub publication: std::mem::ManuallyDrop<Option<store::os_store::one_item_publication::ArtifactStoreBatchPublication<O::State, O::Mutation>>>,
-    pub(super) ingress: ControlledRetirement<FactoryBoxedPublication<O::Mutation>>,
-    pub(super) cancelled: Option<ControlledRetirement<Box<FactoryBoxedValue<O::Mutation>>>>,
-    pub(crate) closing: bool,
+    pub ingress: ControlledRetirement<FactoryBoxedPublication<O::Mutation>>,
+    pub cancelled: Option<ControlledRetirement<Box<FactoryBoxedValue<O::Mutation>>>>,
+    pub closing: bool,
 }
 
 impl<O: WindowConfigOwner> TypedWindowConfigPublication<O> {

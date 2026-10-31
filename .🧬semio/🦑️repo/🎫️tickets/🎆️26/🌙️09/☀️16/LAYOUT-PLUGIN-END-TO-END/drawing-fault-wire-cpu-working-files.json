@@ -1,0 +1,71 @@
+{
+  "status": "authored-uncompiled",
+  "runtimeAuthorized": false,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚠️diagnostic/📤️wire/👣️cursor/🦀️.rs",
+      "sha256": "1a860f94587aab65e90fd94c9701cc6ac5e61a3c91df936dd7ca657f47daecef",
+      "bytes": 17543
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚠️diagnostic/📤️wire/👣️cursor/🧬️schema/🔣️.json",
+      "sha256": "d8fd67b59b18703d33924f26d225c1721d20d3220fa2974bdada469b309a2d7f",
+      "bytes": 998
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚠️diagnostic/📤️wire/👣️cursor/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "f924a0498fdc1a13a384fadf420492e071bf6544a20b6fe63ab2a2e9dc1dbbc9",
+      "bytes": 306
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚠️diagnostic/📤️wire/👣️cursor/🧪️tests/🦀️.rs",
+      "sha256": "a1e7f476f7e47685aad85c8f7ccb3058a208bb0aa9f5833f12079d3fcac73667",
+      "bytes": 18281
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/🦀️.rs",
+      "sha256": "d760b69f7fa36260f3c6b8766c38afde8e73e36608e00ddf479d8b8282a2e595",
+      "bytes": 7957
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/🧬️schema/🔣️.json",
+      "sha256": "fb21d5a7a9d582fa8e84ba37b23f0673705a395f00c9889fd503c2ed22743a6d",
+      "bytes": 780
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "e69bb981a10c922afbe791d107b4df241e37c8e92625c9dfcc3c1c4b07f6ea02",
+      "bytes": 268
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/🧪️tests/🦀️.rs",
+      "sha256": "5703f3a70c44d5bb7f034beb1d518b4a25467082c2950949dc145176af52a5b7",
+      "bytes": 8098
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "38e0827e1f12c4a4cd89530ad86710deec22c2e54e15e38c358957c9ad38e67f",
+      "bytes": 755
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🦀️.rs",
+      "sha256": "7d692f802a3444ac468355da894d35cce46361b99f42dd1ed34e55d6999cb1cc",
+      "bytes": 6994
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🧪️tests/🎟️work/🦀️.rs",
+      "sha256": "42bee4f04080ad0d9b06ac7d354b76f404d3acb756438dd5b44fecdc05b9a15f",
+      "bytes": 11564
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+      "sha256": "f5791eaa01da9e1dda15c512820d376d4178631edff90ddb24fa92da8a517f8a",
+      "bytes": 50922
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚠️diagnostic/🏭️message/🧪️tests/🦀️.rs",
+      "sha256": "08433e4aaa33a3a5c94757f97ae222dfed306dc5bdd4579422272533051cc031",
+      "bytes": 8342
+    }
+  ]
+}

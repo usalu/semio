@@ -1,0 +1,60 @@
+{
+  "state": "authored-uncompiled",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🦀️.rs",
+      "bytes": 21741,
+      "sha256": "7bccbf9502e37d61b7fc1187c336c013900397012494fd7475ec29daaec86723",
+      "absoluteUtf16Units": 85
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 3345,
+      "sha256": "236b73a10b38200451a913532dff33fb0c1ca8c30429ca1b31b7d8910d4341d7",
+      "absoluteUtf16Units": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/case.json",
+      "bytes": 973,
+      "sha256": "d5f16ff7415675cfb9d135b077ec47a4f4ae48e2bbfac14deae1f82ea2876591",
+      "absoluteUtf16Units": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/case.schema.json",
+      "bytes": 2131,
+      "sha256": "b69277fcede82d0620533a854ddc0873e3ba291668f6b9bc173a4a7d8941c23b",
+      "absoluteUtf16Units": 104
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/🦀️.rs",
+      "bytes": 2943,
+      "sha256": "a183eb83855ea0c1aa99c225d8adae0e972e13f31e68430c291ff1c67a296636",
+      "absoluteUtf16Units": 94
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/🧪️tests/🦀️.rs",
+      "bytes": 5106,
+      "sha256": "fef7922ee14a9ef16b0cf050e17dea56f6f62b299eb9cb9dc607624c698a8531",
+      "absoluteUtf16Units": 103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs",
+      "bytes": 56903,
+      "sha256": "201c3d224bf7043f56c9baf9a105b19a450371a2b5ae8dafd660734d8cd7afed",
+      "absoluteUtf16Units": 75
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/🦀️.rs",
+      "bytes": 17680,
+      "sha256": "82502b8ce07d95f12ac27d104443ad80b1759b6d3ff5c72c4d45e4cf49060e03",
+      "absoluteUtf16Units": 101
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🦀️.rs",
+      "bytes": 825,
+      "sha256": "244d59f8b05d958eb848d75ba6c0f1f69376b481a234b7f5fbae29c611e85cab",
+      "absoluteUtf16Units": 91
+    }
+  ],
+  "scope": "Canonical held-credit wrapper, same Source binding and two existing currencies; existing Rust-authored place law mounted intact before body. Shared files attribute only explicit seam hunks. No runtime or arbitrary wake qualification. Existing neutral case/schema/law retains original three cuts with a new same-bank premature parent-retirement guard; original parent stays borrowable while actual heldclaims remain. All uncompiled."
+}

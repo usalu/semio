@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "invalid",
+      "items": 1,
+      "work": 0,
+      "receiptItems": 0,
+      "error": true
+    },
+    {
+      "name": "denied",
+      "items": 0,
+      "work": 0,
+      "receiptItems": 0,
+      "error": false
+    },
+    {
+      "name": "removed",
+      "items": 1,
+      "work": 1,
+      "receiptItems": 1,
+      "error": false
+    },
+    {
+      "name": "cached",
+      "items": 1,
+      "work": 0,
+      "receiptItems": 0,
+      "error": false
+    }
+  ],
+  "heap": [
+    0,
+    0
+  ],
+  "sameBank": true
+}

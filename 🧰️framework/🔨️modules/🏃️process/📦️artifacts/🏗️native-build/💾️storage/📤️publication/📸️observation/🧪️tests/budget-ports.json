@@ -1,0 +1,26 @@
+[
+  {
+    "id": "mounted-actual-old-bound",
+    "mounted": true,
+    "bytes": 7,
+    "accept": true
+  },
+  {
+    "id": "mounted-cannot-spend-current-config",
+    "mounted": true,
+    "bytes": 9,
+    "accept": false
+  },
+  {
+    "id": "linux-directory-fresh-bound",
+    "mounted": false,
+    "bytes": 7,
+    "accept": true
+  },
+  {
+    "id": "windows-directory-cannot-spend-current-config",
+    "mounted": false,
+    "bytes": 9,
+    "accept": false
+  }
+]

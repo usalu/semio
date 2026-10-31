@@ -1,0 +1,12 @@
+{
+  "file": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧪️tests/🦀️.rs",
+  "before": "43bfd238f3c1f7e9addf8d851c9038a0276d97567884bbc90c14c0ab4f83b122",
+  "after": "24b238c306b3eec408007dc49b6682bf92c958f3a240fa34ee92648daf27e1a5",
+  "change": "removed one unmatched closing parenthesis in Row receiving close output mapping",
+  "beforeOpen": 6,
+  "beforeClose": 7,
+  "afterOpen": 6,
+  "afterClose": 6,
+  "exactSingleCharacterInverseVerified": true,
+  "assertionsCasesStocksUnchanged": true
+}

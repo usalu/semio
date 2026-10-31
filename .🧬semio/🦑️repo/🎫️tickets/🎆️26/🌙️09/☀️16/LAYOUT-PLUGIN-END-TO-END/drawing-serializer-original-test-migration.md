@@ -1,0 +1,5 @@
+# Serializer Vector Original Test Migration
+
+Root owns only the SVG1.1/PDF1.4 writer test files and one shared test-only Vector fixture helper. Three numeric Vector preparation loops now use the actual OriginalJobFixtureCaller/decoder and advance_original seam, finite stock from the existing neutral composition fixture, exact per-turn demand, retained receipt/heap and separate CPU checks. Constructor birth must be heap-free. The same original caller remains alive in VectorFixture until the original post-writer close point, then drains Vector/decoder with actual funded retirement and checks terminal drop for no hidden heap. No item-to-byte grant derivation or production fallback is introduced.
+
+Existing SVG/PDF writer finish functions, XML/styles/foreign PNG/Poppler/pixel/source identity/cancel/refusal assertions are unchanged. Only Vector setup and its close call migrate. Exact paths/hashes are in drawing-serializer-original-test-working-files.json. All new paths fit256 characters/UTF16 units. Source authored only: no compile, test, Source-fit or runtime claim. Native implementation and defining lower funding are still in progress.

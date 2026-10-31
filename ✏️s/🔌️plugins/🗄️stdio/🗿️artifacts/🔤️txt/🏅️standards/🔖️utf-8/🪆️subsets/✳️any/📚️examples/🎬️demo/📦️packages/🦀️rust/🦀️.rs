@@ -1,7 +1,6 @@
 //! 🎬️ examples of `semio-s-artifact-stdio-txt` — a path-preserving carve of the artifact root mounts.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 pub use crate::editor::txt::edit_rules::artifact_items_2::{TXT_ARTIFACT_SCHEMA_ID};
 

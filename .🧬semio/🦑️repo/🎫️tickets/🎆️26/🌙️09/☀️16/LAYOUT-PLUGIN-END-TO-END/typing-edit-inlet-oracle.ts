@@ -21,3 +21,13 @@ patch.applyPatch(pending,[{op:"replace",path:"/cursor",value:{incoming:second}},
 if(pending.resident!==saved)throw Error("cancelled staged edit changed the actual retained resident");
 if(process.argv[2]){const log=await readFile(process.argv[2],"utf8");const line=log.split("\n").find(line=>line.startsWith("mounted-typing-edit="));if(!line)throw Error("actual native mounted typing edit record missing");const native=JSON.parse(line.slice("mounted-typing-edit=".length));for(const key of Object.keys(expected))if(native[key]!==expected[key])throw Error("actual native typing edit differs: "+key);}
 console.log(JSON.stringify({neutralSchema:true,mountedTypingEdit:expected,underfundedUnchanged:denied,cancelKeepsPrevious:pending.resident===saved,nativeExecuted:false}));
+
+const custody=[false,true].map(cancelled=>{
+ const leaf={name:first},owner={source};const state={owner,resident:{net:[leaf]},incoming:{net:[{name:second}]},result:null,cursor:true};const units=[];
+ const step=(operation:any)=>{units.push([operation]);patch.applyPatch(state,[operation],true,true);};
+ if(cancelled)step({op:"remove",path:"/incoming"});else{step({op:"move",from:"/resident/net",path:"/result"});step({op:"move",from:"/incoming/net",path:"/resident/net"});step({op:"remove",path:"/incoming"});}
+ const sameOwner=state.owner===owner;const originalLeafPointer=(cancelled?state.resident.net[0]:state.result[0])===leaf;const priorRetainedOrPublished=originalLeafPointer;step({op:"remove",path:"/cursor"});
+ return {cancelled,oneItemTurns:units.every(unit=>unit.length===1),sameOwner,originalLeafPointer,priorRetainedOrPublished,closed:state.cursor===undefined};
+});
+if(process.argv[2]){const log=await readFile(process.argv[2],"utf8");const native=log.split("\n").filter(line=>line.startsWith("original-typing-edit-custody=")).map(line=>JSON.parse(line.slice("original-typing-edit-custody=".length)));if(native.length!==custody.length)throw Error("actual typing edit custody case count differs");for(const expected of custody){const found=native.find(row=>row.cancelled===expected.cancelled);for(const key of Object.keys(expected))if(found?.[key]!==expected[key])throw Error("actual native typing ownership differs: "+key);}}
+console.log(JSON.stringify({custodyRecords:custody,nativePointerAndItemProof:"asserted only by the native case",nativeExecuted:false}));

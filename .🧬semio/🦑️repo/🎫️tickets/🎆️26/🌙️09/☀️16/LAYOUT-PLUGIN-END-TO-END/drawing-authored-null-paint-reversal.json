@@ -1,0 +1,77 @@
+{
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+      "beforeSha256": "3f4f32fefe771a4c2a7eecc21d8942844cd4c650837cc42e25bb39b1037e9493",
+      "sha256": "c255e5a2265c09577de49c2355619d4886b67e5c4e960a936a6a65392f4b2e94",
+      "bytes": 30360,
+      "inverseWholeFile": "3f4f32fefe771a4c2a7eecc21d8942844cd4c650837cc42e25bb39b1037e9493"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
+      "beforeSha256": "2b60025b2c2e55d0283328528ec2dcb82216df1bf9599c27836f4486b60d54ea",
+      "sha256": "5ca4122d378cb817033c522a43b934f08927b8f3f5f3d002bd81cf5d14e12aeb",
+      "bytes": 15575,
+      "inverseWholeFile": "2b60025b2c2e55d0283328528ec2dcb82216df1bf9599c27836f4486b60d54ea"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "beforeSha256": "2fff565872f26aaaad411a2e56956f3a512cdd5b1725f32742f5a00a63b0d62d",
+      "sha256": "d9ce297f89f6ef10f1923e7cf9fefc5661b44e837431e833a43359b405cad8b1",
+      "bytes": 21833,
+      "inverseWholeFile": "2fff565872f26aaaad411a2e56956f3a512cdd5b1725f32742f5a00a63b0d62d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🟦️.ts",
+      "beforeSha256": "da71e45a163efc6ac2dac0c25d3cf8cc0db1c0bb7b6b56fdced38df8b2d3e8c9",
+      "sha256": "3f069f9f40d2421ae24eaec6a015338e0aa9ce002b27db37f3010c6f5e8e11a3",
+      "bytes": 34667,
+      "inverseWholeFile": "da71e45a163efc6ac2dac0c25d3cf8cc0db1c0bb7b6b56fdced38df8b2d3e8c9"
+    }
+  ],
+  "diffOriginalDefinitionOrder": [
+    "DrawingAssetsDelta",
+    "DrawingLayersDelta",
+    "DrawingLayerAddress",
+    "DrawingLayerRemoval",
+    "DrawingLayerInsertion",
+    "DrawingLayerRelocation",
+    "DrawingLayerModification",
+    "DrawingLayerPatch",
+    "DrawingTransform",
+    "DrawingTraceParams",
+    "DrawingFillValue",
+    "DrawingFill_Color",
+    "DrawingFill_Stops"
+  ],
+  "artifactOriginalDefinitionOrder": [
+    "DrawingLayerNode",
+    "DrawingImageAsset",
+    "DrawingArtboard",
+    "PathSegment",
+    "StrokeCap",
+    "StrokeJoin",
+    "StrokeStyle",
+    "FillRule",
+    "DrawingFontFamily"
+  ],
+  "schemaInverse": "Move canonical artifact FillStyle/FillColor/FillStops back to Diff DrawingFillValue.anyOf[0]/DrawingFill_Color/DrawingFill_Stops, map refs back, restore Diff definition order; remove new artifact defs/fill property and restore stroke's exact original reference+UI object. Both complete files reconstructed equal before write.",
+  "typeEdits": [
+    {
+      "before": "fill?:DrawingFill;stroke?:DrawingStroke",
+      "after": "fill?:DrawingFill|null;stroke?:DrawingStroke|null"
+    },
+    {
+      "before": "if(v.fill!==undefined){",
+      "after": "if(v.fill===null)out.fill=null;\n else if(v.fill!==undefined){"
+    },
+    {
+      "before": "if(v.stroke!==undefined){",
+      "after": "if(v.stroke===null)out.stroke=null;\n else if(v.stroke!==undefined){"
+    }
+  ],
+  "erasedImport": {
+    "before": "type DrawingArtifact,type DrawingLayerNode,",
+    "after": "type DrawingArtifact,type DrawingLayerNode,type DrawingPathSegment,"
+  }
+}

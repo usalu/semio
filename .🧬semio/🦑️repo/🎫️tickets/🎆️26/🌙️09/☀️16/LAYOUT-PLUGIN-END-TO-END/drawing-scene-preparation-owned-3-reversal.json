@@ -1,0 +1,25 @@
+{
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🎟️owned/🧪️tests/owned.test.ts",
+      "beforeSha256": "2137d6737a468406a8d93fe37b8b2bf67771cdd2848ec4fb3e5c413115f1c198",
+      "sha256": "64683036fa8fa0ff957e19b35e6eca77ba667c7d3e603de1e2a6dd63ea71b3fa",
+      "bytes": 7971,
+      "before": "const demand=job.nextWorkDemand();for(const[axis,key,value]",
+      "after": "const demand=job.nextWorkDemand();if(!found.has(\"capacity\")&&demand.capacityBytes===0){const probe=w.run(job,work=>job.advance(1,work),1,{maximumCapacityBytes:0});if(probe.result.done)break;continue;}for(const[axis,key,value]",
+      "inverseWholeFile": "2137d6737a468406a8d93fe37b8b2bf67771cdd2848ec4fb3e5c413115f1c198"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️attributes/🧪️tests/paint.test.ts",
+      "beforeSha256": "15427b42b6bcbc200199c7517e0cdb636e96cc917acaf467b19a96c021a26c8f",
+      "sha256": "7974f567778cc70ea92217ce8efd079f29982163469bcd7324f8d84a82414f29",
+      "bytes": 3356,
+      "importBefore": "import Ajv from \"ajv\";\n",
+      "importAfter": "import Ajv from \"ajv\";\nimport addFormats from \"ajv-formats\";\n",
+      "registrationBefore": "ajv.addSchema(artifactSchema);",
+      "registrationAfter": "addFormats(ajv,[\"double\"]);ajv.addSchema(artifactSchema);",
+      "inverseWholeFile": "15427b42b6bcbc200199c7517e0cdb636e96cc917acaf467b19a96c021a26c8f"
+    }
+  ],
+  "scope": "ONLY two Root-approved test fixes; genuine capacity0 discovery charges actual Runtime CPU/effects in same bank before unchanged repeated denial assertions, and installed Ajv formats double registration. Production/allcases/stock/profile unchanged."
+}

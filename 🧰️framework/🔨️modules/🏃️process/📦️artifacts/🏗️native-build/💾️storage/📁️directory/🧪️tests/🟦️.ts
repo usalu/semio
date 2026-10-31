@@ -1,3 +1,4 @@
+import "../⚓️envelope/🧪️tests/🟦️.ts";
 import {expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../🧪️testing/🧰️toolchain/🟦️.ts";
 import Ajv from "ajv";
@@ -34,7 +35,7 @@ test("anchor bytes are canonical, closed and agree with Ajv",()=>{
 
 test("exchange outcomes agree with the declared refusal table and prove identities moved",()=>{
  const base=scratch();try{
-  for(const row of fixture.ports){const a=join(base,row.id+"-a"),b=join(base,row.id+"-b");mkdirSync(a);mkdirSync(b);const before=[observeNativeDirectoryIdentityV1(a),observeNativeDirectoryIdentityV1(b)];
+  for(const row of fixture.ports){const a=join(base,row.id+"-a"),b=join(base,row.id+"-b");mkdirSync(a);mkdirSync(b);const before=[observeNativeDirectoryIdentityV1(a),observeNativeDirectoryIdentityV1(b)]as const;
    const port:NativeDirectoryPlatformPortV1=createNativeDirectoryExchangePortV1(row.effect==="swap"?{exchange:(first,second)=>{const hold=first+".held";renameSync(first,hold);renameSync(second,first);renameSync(hold,second);return{status:0,errno:0};}}:row.effect==="nothing"?{exchange:()=>({status:0,errno:0})}:{exchange:()=>({status:row.status!,errno:row.errno!})});
    if(row.effect==="swap"){const after=exchangeNativeDirectoriesV1(a,b,port);expect(after.first,row.id).toEqual(before[1]);expect(after.second,row.id).toEqual(before[0]);}
    else{const unsupported=(row.unsupportedOn as string[]).includes(process.platform);expect(()=>exchangeNativeDirectoriesV1(a,b,port),row.id).toThrow(row.effect==="nothing"?"Ambiguous directory exchange":unsupported?protocol.refusals.unsupported:"Directory exchange failed");expect(observeNativeDirectoryIdentityV1(a),row.id).toEqual(before[0]);}}
@@ -49,13 +50,13 @@ test("the real kernel exchange swaps two names atomically and an independent pyt
  const base=scratch();try{
   const first=join(base,"first"),second=join(base,"second");mkdirSync(first);mkdirSync(second);writeFileSync(join(first,"marker"),"first");writeFileSync(join(second,"marker"),"second");
   const ino=(path:string)=>Number(sh("stat",process.platform==="darwin"?"-f":"-c",process.platform==="darwin"?"%i":"%i",path).stdout.toString().trim());
-  const before=[ino(first),ino(second)],port=nativeDirectorySystemPortV1();
+  const before=[ino(first),ino(second)]as const,port=nativeDirectorySystemPortV1();
   exchangeNativeDirectoriesV1(first,second,port);
   expect([ino(first),ino(second)]).toEqual([before[1],before[0]]);expect(readFileSync(join(first,"marker"),"utf8")).toBe("second");
   const python=testPythonV1();
   if(python){const program=process.platform==="darwin"?"import ctypes,sys;l=ctypes.CDLL('/usr/lib/libSystem.B.dylib');r=l.renameatx_np(-2,sys.argv[1].encode(),-2,sys.argv[2].encode(),2)":"import ctypes,sys;l=ctypes.CDLL(None);r=l.renameat2(-100,sys.argv[1].encode(),-100,sys.argv[2].encode(),2)";
    const run=sh(python,"-c",program+";sys.exit(0 if r==0 else 1)",first,second);
-   if(run.exitCode===0){expect([ino(first),ino(second)]).toEqual(before);expect(readFileSync(join(first,"marker"),"utf8")).toBe("first");}}
+   if(run.exitCode===0){expect<readonly number[]>([ino(first),ino(second)]).toEqual(before);expect(readFileSync(join(first,"marker"),"utf8")).toBe("first");}}
  }finally{rmSync(base,{recursive:true,force:true});}
 });
 

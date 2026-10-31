@@ -16,14 +16,14 @@
     64
   ],
   "admissionReceipt": [
-    1,
+    2,
     0,
     0,
     0
   ],
-  "ownedFuel": 6,
+  "ownedFuel": 5,
   "guestWork": 2,
-  "remainingFuel": 4,
+  "remainingFuel": 3,
   "guestReceipt": [
     1,
     7,
@@ -63,5 +63,13 @@
   "consumingOriginalActorIssuer": true,
   "actorReceiptRejoinedBeforePolling": true,
   "originalIssuerRetainedWithReply": true,
-  "borrowedSourceLoanCancellation": true
+  "borrowedSourceLoanCancellation": true,
+  "partialAdmissionRetainedOnPostingRefusal": true,
+  "sameOriginalPaidPartialClose": true,
+  "minimumDelegationItems": 2,
+  "minimumDelegationFuel": 2,
+  "issuerRetainedDuringAdmission": true,
+  "admissionFailureCausesIndependent": true,
+  "actorAdmissionReturnsOwnedPending": true,
+  "sourceAliasOwnsReturnedHeader": true
 }

@@ -1,0 +1,13 @@
+{
+  "stock": {
+    "items": 4096,
+    "copy": 16777216,
+    "capacity": 16777216,
+    "release": 16777216,
+    "depth": 128
+  },
+  "sameBankForSourcesComparisonAndClose": true,
+  "quoteBodyBytes": 257,
+  "maximumTurns": 10000,
+  "caseValuesUnchanged": true
+}

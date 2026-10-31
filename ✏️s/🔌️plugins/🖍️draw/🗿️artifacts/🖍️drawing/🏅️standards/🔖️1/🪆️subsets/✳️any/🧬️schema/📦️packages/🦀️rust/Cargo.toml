@@ -54,3 +54,6 @@ semio-s-artifact-draw-drawing-io = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 
 semio-framework-trace-memory-testing = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+
+semio-framework-trace = { workspace = true }
+tiny-skia = { workspace = true }

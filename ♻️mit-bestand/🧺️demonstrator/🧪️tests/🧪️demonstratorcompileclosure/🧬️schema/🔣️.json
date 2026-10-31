@@ -15,8 +15,8 @@
     },
     "entries": {
       "type": "array",
-      "minItems": 16,
-      "maxItems": 16,
+      "minItems": 17,
+      "maxItems": 17,
       "uniqueItems": true,
       "items": {
         "type": "string",

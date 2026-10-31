@@ -2,7 +2,6 @@
 //! `CONVERSION` that registers and declares their composer rows.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as store;
 
@@ -95,7 +94,7 @@ fn register() {
     register_composer_entries(entries()).expect("static Stdio registration must be available and conflict-free");
 }
 
-/// 🧾️ The file bytes of `drawing` in `format` — the one call every domain artifact that projects
+/// 📄️ The file bytes of `drawing` in `format` — the one call every domain artifact that projects
 /// into a drawing makes, so each standard format has exactly one writer in the repository.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_drawing(drawing: &semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, format: SemioDrawingFormat) -> Result<Vec<u8>, String> {

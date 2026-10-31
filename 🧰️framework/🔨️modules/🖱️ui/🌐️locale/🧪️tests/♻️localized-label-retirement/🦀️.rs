@@ -49,7 +49,7 @@ fn localized_label_original_backing_direct_cursor_preserves_every_denied_cell(){
    for denied in [RetainedCloneGrant{maximum_items:0,..funding},RetainedCloneGrant{maximum_depth:0,..funding}].into_iter().chain((capacity>0).then_some(RetainedCloneGrant{maximum_release_bytes:capacity.saturating_sub(1),..funding})){
     let(_,physical)=observed(||cursor.close_step(denied));assert_eq!(physical,(0,0));assert_eq!(cursor.index,index);assert_eq!(cursor.current().unwrap().as_ptr(),pointer);assert_eq!(cursor.next_close_byte_demand(),Some(capacity));
    }
-   let(step,physical)=observed(||cursor.close_step(funding));assert_eq!(physical,(0,capacity));let RetirementStep::Progress(receipt)=step else{panic!("original cell must produce one physical receipt")};assert_eq!(receipt.copied_items,1);assert_eq!(receipt.released_bytes,capacity);assert!(receipt.fits(funding));
+   let(step,physical)=observed(||cursor.close_step(funding));assert_eq!(physical,(0,capacity));let RetirementStep::Progress(receipt,_)=step else{panic!("original cell must produce one physical receipt")};assert_eq!(receipt.copied_items,1);assert_eq!(receipt.released_bytes,capacity);assert!(receipt.fits(funding));
   }
   assert!(cursor.terminal_is_empty());let(_,physical)=observed(||drop(cursor));assert_eq!(physical,(0,0));
  }

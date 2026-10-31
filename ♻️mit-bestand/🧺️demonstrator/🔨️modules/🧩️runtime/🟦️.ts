@@ -1,4 +1,4 @@
-import catalog from "./🔣️.json";
+import catalog from "./🔣️.json" with { type: "json" };
 import { runtimeComponentClosure } from "@semio-tech/repo-lib/inventory/tooling";
 import { PLAYGROUND_BUILD_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/playgrounds";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "@semio-tech/s-dev-catalog-ts/generated/plugins";

@@ -1,0 +1,18 @@
+# Source-Neutral Sealed and Precision Inputs
+The lock and configuration files remain covered through semantic selected-manager roles. Sealed stampedFiles accepts a closed static-path or ecosystem/role request; actual selected lock names are resolved by the existing ESM manager registry. Every selected lock is stamped or remembered absent. Drift also refuses a current selected role with no captured file/absence proof, so a manager switch cannot silently retain the previous manager's inputs.
+
+The three precision rules request the selected JavaScript scope configuration through an injected managerFiles host. Existing tsconfig and language globs remain. The actual project-assembly MJS host uses the same defining ESM registry and observes its exact module/descriptor source set. A bounded production consumer scan found no native Rust parser of these fields; the direct consumers are sealed TypeScript and graph MJS. The graph host already imports TypeScript modules via its existing bridge. No workspace package or external runtime library was introduced.
+
+Schema and neutral two-manager fixtures were authored before implementation. Independent SQLite chooses the expected file roles; actual behavior laws cover all locks/configs, changed lock bytes, newly present missing lock, changed manager selection, and missing/escaping host refusal.
+
+Actual64114 exposed a production CommonJS named-export incompatibility in captured snapshots. That failure was not reclassified as a fixture-only issue: sealed and graph dependencies now use the existing ESM registry. The new handwritten fixture imports real first-party sealed/manager modules at their original checkout paths into the genuine captured closure. It proves captured code remains A after live helper becomes B, actual descriptor-backed drift sees the edit, and a naive snapshot read stays blind. No checked-in source file is copied. Fixture worlds use the configured ticket artifact directory and actual-checkout capture receives a separate fixture-owned memo path.
+
+Final normal32276 passed32, skipped1 preexisting opt-in repository scan, failed0,10188assertions. Genuine current repo --service=off --help ended0. The defining-manager current full suite and same12root canonical strict replay are dependency-agent-owned; exact final receipts remain to be merged. Earlier66533 passed before the memo-location defect was discovered and is historical, not the final scope seal.
+
+Exact13 touched paths and hashes are in neutral-manager-working-files.json. The new CommonJS declaration facet was fully removed when the ESM path became canonical. The accidental checkout memo remains preserved pending complete ownership proof; root-memo-custody.md states that refusal. No setup/native/preview/publication/retirement action ran in this lane.
+
+## Generated Memo Custody Resolved
+Independent defining-collector review proved the extra schema directory is observed data rather than compiled source. Root's conditional whole-record proof then succeeded with exact graph/directory/current facts. The own generated memo was preserved and moved without overwriting a destination; checkout scratch name is absent. No previous root-file contents or restoration are claimed. root-memo-custody.md and root-memo-66533.md retain both refused and successful stages. This was metadata-only own-output custody, not cache/publication maintenance.
+
+## Defining Owner Receipts
+Dependency owner authoritatively reports current normal67262:94tests/0fail/845assertions, manager oracle34021EXIT0, and memo-corrected canonical strict12session53118EXIT0. Exact retained logs are recorded in the working packet. These complete this scoped source seal; they do not prove successful live dependency publication or compiler space.

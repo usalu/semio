@@ -113,8 +113,8 @@ impl<P,D:RetainedDiffFragment<P>> RetainedDiffOwner<P,D>{
   let apply=self.apply.as_mut().expect("original required diff plan");
   if !apply.terminal_is_empty(){let step=apply.close_step(grant)?;let step=admit_retained_clone_close(grant,step,apply.terminal_is_empty(),"retained central diff child closure")?;return Ok(RetainedCloneStep::Progress(step.progress()));}
   if let Some(messages)=self.messages.as_mut(){let step=messages.close_step(grant)?;if messages.terminal_is_empty(){*self.messages=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-  if self.original.is_some(){return RetainedCloneBinding::close_one(&mut self.original,grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-  if self.diff.is_some(){return RetainedCloneBinding::close_one(&mut self.diff,grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
+  if self.original.is_some(){return RetainedCloneBinding::close_one(&mut self.original,grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+  if self.diff.is_some(){return RetainedCloneBinding::close_one(&mut self.diff,grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
   drop(self.apply.take());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))
  }
  /// 🫙️ Original aliases and the typed plan body have all settled.
@@ -124,8 +124,8 @@ impl<P,D:RetainedDiffFragment<P>> RetainedDiffOwner<P,D>{
 /// 📖️ Central read-only preflight admits receipts before transferring original diagnostics or authorizing inversion.
 pub fn preflight_retained_diff<P,D:RetainedDiffFragment<P>>(owner:&mut RetainedDiffOwner<P,D>,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:RetainedCloneRef<'_,P>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightStep,ValueError>{
  let demand=owner.preflight_demand(diff,original,post,body)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedDiffPreflightStep::Progress(Default::default()));}
- if let Some(progress)=diff.bind(&mut owner.diff,grant)?{return Ok(RetainedDiffPreflightStep::Progress(progress));}
- if let Some(progress)=original.bind(&mut owner.original,grant)?{return Ok(RetainedDiffPreflightStep::Progress(progress));}
+ if let Some(progress)=diff.bind(&mut owner.diff,grant).result?{return Ok(RetainedDiffPreflightStep::Progress(progress));}
+ if let Some(progress)=original.bind(&mut owner.original,grant).result?{return Ok(RetainedDiffPreflightStep::Progress(progress));}
  if owner.post_identity.is_none(){owner.post_identity=Some(post.reference_identity());return Ok(RetainedDiffPreflightStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
  if let Some(requested)=owner.pending_preflight{
   let receipt=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
@@ -142,7 +142,7 @@ pub fn preflight_retained_diff<P,D:RetainedDiffFragment<P>>(owner:&mut RetainedD
 /// 🔑️ Only the shared central applier issues capability after original preflight and inverse preparation.
 pub fn commit_retained_diff<P,D:RetainedDiffFragment<P>>(owner:&mut RetainedDiffOwner<P,D>,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:&mut P,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
  let demand=owner.commit_demand(diff,original,post,grant.maximum_copy_bytes)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
- if diff.bind(&mut owner.diff,grant)?.is_some()||original.bind(&mut owner.original,grant)?.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"central diff commit lost original preflight bindings"));}
+ if diff.bind(&mut owner.diff,grant).result?.is_some()||original.bind(&mut owner.original,grant).result?.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"central diff commit lost original preflight bindings"));}
  let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<bool>(),maximum_depth:grant.maximum_depth-1,..grant};let step=semio_framework_mutation_diff::diff::with_retained_apply_capability::<D,_>(diff,grant,|capability|owner.apply.as_mut().expect("original typed diff apply").commit(diff,original,post,child,capability))?;let mut receipt=step.progress();receipt.copied_bytes=receipt.copied_bytes.checked_add(size_of::<bool>()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"central diff commit receipt overflow"))?;let receipt=admit_retained_clone_progress(grant,receipt,"retained central diff commit")?;
  if matches!(step,RetainedCloneStep::Complete(_)){owner.finished=true;Ok(RetainedCloneStep::Complete(receipt))}else{Ok(RetainedCloneStep::Progress(receipt))}
 }

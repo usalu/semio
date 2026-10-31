@@ -1,0 +1,111 @@
+{
+  "state": "production-check1-green-prior-snapshot-owning11-authored-unrun",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/📦️original/🦀️.rs",
+      "bytes": 9942,
+      "sha256": "21712caec93215d0ef6c91c50aed26cf8447cc98bddadbe6983d99c18bbef81f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs",
+      "bytes": 20133,
+      "sha256": "59602896ccca1f08e583e9f0758c1531c87152464b746c6087342c095d6a0463"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🦀️.rs",
+      "bytes": 18414,
+      "sha256": "e37d1239d3928f52cffe1aee6a5514efe4cfad3dc9ad4015ba0f0084a6579d74"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 13571,
+      "sha256": "a8388abc51063a5f496b14f25df5d964e62e90d8efb8721fab9c1098ba957f18"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️admission/🦀️.rs",
+      "bytes": 10618,
+      "sha256": "9c9d1d4ec51f0be06b66380eba9335304ad0c0e2f3c2fcecfe21ab308e44b0eb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️admission/case.json",
+      "bytes": 638,
+      "sha256": "4202ccb57271954c8e077de2a87743fdf53eaf83fee53ea73a0ce16b51cf9555"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️admission/case.schema.json",
+      "bytes": 1466,
+      "sha256": "9955e512cdb5e539d1de74fd03bebd6e5f3d09a4c92b2bf46de9784826545acf"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️admission/🧪️tests/🦀️.rs",
+      "bytes": 8083,
+      "sha256": "61e9433a14646f963eb2a0bc8740d5f7dfceebe3a4c6ebd5cc41120be7c8dceb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/🦀️.rs",
+      "bytes": 4005,
+      "sha256": "34596a302b0ea24ef14c227283005b99bbc1c2aa3839b1a69f933339bc0ff183"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🦀️.rs",
+      "bytes": 10743,
+      "sha256": "3eac5f4c48567172a1f008d39e4b39d9e08cca22992a601d30073e9f21c2ab83"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🎟️header/🦀️.rs",
+      "bytes": 6701,
+      "sha256": "60fbfe442fa481233a3dab1edfeb84017aad81c7949a15d28fef2237cf64bdf2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/📌️retain/🦀️.rs",
+      "bytes": 3566,
+      "sha256": "56e745ff392d2edf8a33eea3056e1c77622d7d579deeb1c54ca920825672bac4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️query/🦀️.rs",
+      "bytes": 7505,
+      "sha256": "ad180dc09b0b4c09be3f9dd108dddf6bdc2b3240a6d5f0b91f4e87af8e1e2f27"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🎟️header.json",
+      "bytes": 865,
+      "sha256": "06b4cf64812fa0318c2d5b87ecc17381ca8d155cce5b4bd3448a3c3c248c30e5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 4037,
+      "sha256": "2d9586077ed66cb429eab3083a33ec2d96a1c48d160957f31251120aab24988a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 389,
+      "sha256": "bcbdaba722cf3a3d1ac8f4a5566ed881e05db8c179ce4918f9caae67841ce302"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️work/🧬️schema/🔣️.json",
+      "bytes": 844,
+      "sha256": "cb51294297a41b2462a34660b38ecc0da1efeb5b4deb2f2be8a550e66453b207"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🎟️header.json",
+      "bytes": 1100,
+      "sha256": "01d88e6e81a408bbc2b5cb7e316c1cdfbf0691df39eba81e86d8d278a5c4a84c"
+    }
+  ],
+  "declaredOwningLaws": {
+    "preserved": 7,
+    "new": 4
+  },
+  "remainingMandatory": [
+    "Read all-target/doc owning rerun",
+    "original-slot owning rerun",
+    "all higher Source constructor consumers",
+    "old Sealed prepare/materialize consumers",
+    "Value original unmounted/source corpus owning doors"
+  ],
+  "unchangedBudget": {
+    "sourceBytes": 262144,
+    "sourceFiles": 32,
+    "activeLines": 4000
+  }
+}

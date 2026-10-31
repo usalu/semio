@@ -1,0 +1,3 @@
+# Native Receive Outcome Test First
+
+Closed language-neutral work fixture/schema and an actual NativeScalarReceiver/RetainedCloneSource owning law were authored before changing NativeReceiver advance/close. The same finite bank is monotonically debited through source birth, denied/paid input binding and scalar read, output transfer and paid receiver/source closure. serde_json independently produces the scalar output; the linked allocation observer compares real retained effects with physical receipts. No grant is derived from demand or renewed. Native-owned --lib is mandatory; all source/tests remain unexecuted. Mapping Box allocation and split receiver birth require further genuine laws before their bodies change.

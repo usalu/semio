@@ -17,7 +17,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { writeAssetArtifacts } from "../../../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🏗️builder/📦️publication/🟦️.ts";
-import publication from "../../../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🏗️builder/📦️publication/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts" with { type: "json" };
+import publication from "../../../../../🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/🏗️builder/📦️publication/🧪️testing/🧫️fixtures/🔣️json/🟦️.ts";
 import { scratch } from "./🧰️deploy-fixtures/🟦️.ts";
 import { registerCancellationAndStagingTests } from "./🛑️cancellation-and-staging/🟦️.ts";
 import { registerDockerContextAndImageTests } from "./🐳️docker-context-and-image/🟦️.ts";

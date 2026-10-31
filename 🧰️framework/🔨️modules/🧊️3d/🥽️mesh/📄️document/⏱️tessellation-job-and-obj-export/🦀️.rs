@@ -70,7 +70,7 @@ impl MeshTessellationJob {
     /// 🧹️ Transfers the existing tessellation payload to its shared typed retirement authority.
     pub fn retirement_birth_bytes(&self)->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<Self>()}
     pub fn into_retirement(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Self)> {
-        semio_framework_value::retirement::admit_owned_retirement(self,grant)
+        semio_framework_value::retirement::admit_owned_retirement(self,grant).result
     }
     pub fn source(&self) -> &HalfedgeMesh { &self.mesh }
     pub fn take_source(&mut self)->HalfedgeMesh { std::mem::replace(&mut self.mesh,HalfedgeMesh::empty()) }

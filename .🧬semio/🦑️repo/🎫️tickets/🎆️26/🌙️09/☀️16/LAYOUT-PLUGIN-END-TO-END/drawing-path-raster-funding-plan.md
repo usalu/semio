@@ -1,0 +1,11 @@
+# Native Path Raster Funding Scope
+
+Root owns native geometry/PathRaster plus exact direct callers/tests, reached pixels CoverageJob and model PreparedFill preparation. Rust owns Flatten/Stroke/PaintedPath; Cursor owns sceneRaster/AffineImage/Composite/Boolean/placement. Native primitive29PASS remains separate.
+
+Coverage currently allocates mask/areas in construction, grows edges/events/indices without grants, allocates merge-sort scratch and drops retired scratch during success. Root will retain owned invalid input in an allocation-free constructor, phase actual mask/area initialization, preflight every real Vec birth/replacement/copy/metadata-slot write, retain actual spent sorter buffers and drain them under explicit close. Real shared ledger, exact demand and separate CPU reach every lower step. No allocating numeric or consuming-into-result bypass remains.
+
+PreparedFill currently clones/sorts gradient stops in borrowed construction. The funded path will own its actual FillStyle and prepare the sorted ramp resumably. Standalone single-sample/constant queries can be allocation-free bounded scans of original stops, with stable duplicate-stop rules preserved. They must not invoke a synchronous allocating retained preparation route. PathRaster will move owned fill, fund actual stroke-dash copies, retained segment/contour/child/archive storage, candidate bytes and pixel writes, preserve typed lower errors and transfer cancellation custody inline.
+
+Tests first: closed language-neutral Coverage five-axis/finite-stock/full-rectangle contract plus actual native constructor/denial/heap/stock/custody/TinySkia output laws were authored BEFORE Coverage production changes. Existing coverage/mask/phase/cancel/lower geometry and paint cases remain; hand-migrate real calls and paid close without dropping their assertions. New tiny-skia dependency is tests-only. Exact first packet is drawing-coverage-test-first-working-files.json. Production unchanged at this packet; no native/compiler/runtime was launched.
+
+Next: implement Coverage defining owner; migrate actual AffineImage caller with Cursor and existing Coverage tests; then owned PreparedFill and PathRaster schema/laws/body/callers. Concrete gap remains until entire reached closure is funded. No SourceReady, full Drawing/19 or browser outcome is claimed.

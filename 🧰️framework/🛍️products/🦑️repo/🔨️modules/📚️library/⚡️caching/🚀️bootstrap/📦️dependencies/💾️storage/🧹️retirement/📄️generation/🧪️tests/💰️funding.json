@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "ceiling": {
+    "version": 1,
+    "root": "/store",
+    "leaseDirectory": "/leases",
+    "capacityBytes": 67108864,
+    "maximumWorkspaceBytes": 66060288,
+    "maximumArtifactBytes": 66060288
+  },
+  "retained": {
+    "version": 1,
+    "root": "/store",
+    "leaseDirectory": "/leases",
+    "capacityBytes": 33554432,
+    "maximumWorkspaceBytes": 32505856,
+    "maximumArtifactBytes": 32505856
+  },
+  "allocationBytes": 32505856,
+  "backingMaximumPhysicalBytes": 33554432,
+  "cases": [
+    {
+      "mode": "lower",
+      "accepted": true
+    },
+    {
+      "mode": "equal",
+      "accepted": true
+    },
+    {
+      "mode": "over-ceiling",
+      "accepted": false
+    },
+    {
+      "mode": "wrong-root",
+      "accepted": false
+    },
+    {
+      "mode": "wrong-lease",
+      "accepted": false
+    },
+    {
+      "mode": "wrong-capacity",
+      "accepted": false
+    },
+    {
+      "mode": "unfunded-workspace",
+      "accepted": false
+    },
+    {
+      "mode": "unfunded-artifact",
+      "accepted": false
+    },
+    {
+      "mode": "over-backing",
+      "accepted": false
+    },
+    {
+      "mode": "no-allocation",
+      "accepted": false
+    },
+    {
+      "mode": "fraction",
+      "accepted": false
+    },
+    {
+      "mode": "extra",
+      "accepted": false
+    }
+  ]
+}

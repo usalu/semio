@@ -9,7 +9,7 @@
 /// bare `wfcbitmaptransient` made `print_dsl`'s own `expect` PANIC the guest the first time the solve
 /// was published on the transient lane, trapping every later dispatch in the shell
 /// (found live on the bitmap playground, 2026-09-18).
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[artifact(id = "wfc.bitmaptransient")]
 #[artifact(extension = "wfcbitmaptransient")]
@@ -69,23 +69,18 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 
 }
 
-/// 🖼️ The optional solved pixels set to a value or cleared.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
-#[value(rename_all = "camelCase", default)]
-pub struct BitmapTransientText {
-    pub value: Option<String>,
-}
-
-
 /// 🔺️ Field-sparse diff of [`BitmapTransient`]: each field is an optional absolute value.
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase", default)]
 pub struct BitmapTransientDiff {
-    pub output_pixels: Option<BitmapTransientText>,
+    pub output_pixels: Option<Option<String>>,
     pub contradiction: Option<bool>,
     pub output_width: Option<u32>,
     pub output_height: Option<u32>,
 }
+
+protocol::retained_row_patch!(pub retained_fields for BitmapTransientDiff => BitmapTransient { output_pixels: Option<String>, contradiction: bool, output_width: u32, output_height: u32 });
+protocol::retained_patch_diff!(BitmapTransientDiff => BitmapTransient);
 
 impl protocol::DiffAlgebra<BitmapTransient> for BitmapTransientDiff {
     fn is_empty(&self) -> bool {
@@ -96,7 +91,7 @@ impl protocol::DiffAlgebra<BitmapTransient> for BitmapTransientDiff {
 impl protocol::ColdDiffAlgebra<BitmapTransient> for BitmapTransientDiff {
     fn inverse(&self, base: &BitmapTransient) -> Self {
         Self {
-            output_pixels: self.output_pixels.as_ref().map(|_| BitmapTransientText { value: base.output_pixels.clone() }),
+            output_pixels: self.output_pixels.as_ref().map(|_| base.output_pixels.clone()),
             contradiction: self.contradiction.as_ref().map(|_| base.contradiction.clone()),
             output_width: self.output_width.as_ref().map(|_| base.output_width.clone()),
             output_height: self.output_height.as_ref().map(|_| base.output_height.clone()),
@@ -126,7 +121,7 @@ impl protocol::ColdMutationDiff<BitmapTransient> for BitmapTransientDiff {
         let base = &*unpublished;
         let mut next = base.clone();
         if let Some(value) = &self.output_pixels {
-            next.output_pixels.clone_from(&value.value);
+            next.output_pixels.clone_from(value);
         }
         if let Some(value) = &self.contradiction {
             next.contradiction.clone_from(value);
@@ -145,4 +140,9 @@ impl protocol::ColdMutationDiff<BitmapTransient> for BitmapTransientDiff {
 mod mutations;
 pub use mutations::*;
 
-
+impl semio_framework_value_snapshot_projection::SnapshotProjection for BitmapTransient {
+    type Output = Self;
+    type Projection = semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
+    fn projection_birth_demand() -> semio_framework_value::RetirementDemand { Self::Projection::birth_demand() }
+    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_value::ValueError> { Self::Projection::begin(grant) }
+}

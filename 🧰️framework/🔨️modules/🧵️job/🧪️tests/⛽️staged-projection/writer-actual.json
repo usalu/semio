@@ -1,0 +1,31 @@
+{
+  "stock": {
+    "items": 1000000,
+    "copy": 268435456,
+    "capacity": 268435456,
+    "release": 268435456,
+    "depth": 32
+  },
+  "source": [
+    2,
+    0,
+    255,
+    1
+  ],
+  "failedInitializedBytes": 2,
+  "expectedPublishedPrefix": [
+    2,
+    0
+  ],
+  "sourceWork": 1,
+  "deniedWork": 0,
+  "fixedHeaderCopyBytes": 0,
+  "pageAdmissionStages": [
+    "ledgerAlias",
+    "counterReservation",
+    "fallibleBacking",
+    "pageHandoff"
+  ],
+  "sameOriginalBank": true,
+  "maximumTurns": 16
+}

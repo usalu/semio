@@ -1,0 +1,40 @@
+{
+  "status": "Authored uncompiled/unexecuted",
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🦀️.rs",
+      "sha256": "0a941a23379a3f53dd5b4d7d1120315676e233979d8c5fba136b93302e3ea1f4",
+      "bytes": 15172
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🦀️.rs",
+      "sha256": "bebcc5e3ba15efd75d9211162641b0ed6e54b9fa286699b3fd1c3b1c14167553",
+      "bytes": 4996
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/⏸️park/🦀️.rs",
+      "sha256": "757d13c0b43feda37d15abf6f9a5bb3af6ca60308453ec57fa469ed188ae40b3",
+      "bytes": 10126
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🦀️.rs",
+      "sha256": "a7dd1c5089cc341192528e56f43c32ba83954f82c994b17e4b349e966f95ae31",
+      "bytes": 11566
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🧪️tests/🪪️qualification/🦀️.rs",
+      "sha256": "acda0e56c7591b20f9b40b2a05690894963465d13335731edb5b642aaf99318e",
+      "bytes": 3124
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🧪️tests/🪪️qualification/🔣️.json",
+      "sha256": "80494f3b37f426ba728589ab87799c1f40e1b58409b9e924bd505390ccb17b3f",
+      "bytes": 359
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🧪️testing/🎟️caller/🧪️tests/🪪️qualification/📐️.json",
+      "sha256": "c994c3a68c5dca4a73939335fb462013db18aaac7c0cfb8647088e7124f9c036",
+      "bytes": 510
+    }
+  ]
+}

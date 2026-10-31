@@ -39,9 +39,9 @@
  ],
  "managers": {
   "bun": {
-   "descriptorSha256": "a7efe0a5820fd354cb1b2e1073e7d7ade734dad3de9a47e972d974dfa5b30d46",
+   "descriptorSha256": "024ae9c81e43fd060ace4a9b5bc89780637ff1378ba63cfd4bf7b368f2767ff4",
    "materialized": {
-    "install": "6564e8a88fb7e5aae54f8fbf5aa83e3108e3ba12950f1866e5a0a35f16aeb84e",
+    "install": "2922c5f9bfb6858a0005ec1b6236252d39ec13be6323c85c6b333bd58f946e18",
     "generation": "90aa6a9627ac1261d4d91fdc10c721702e5354b4d1ddd1887ceb5c8e8b93e464"
    },
    "render": [
@@ -59,7 +59,7 @@
        "install",
        "--lockfile-only",
        "--ignore-scripts",
-       "--linker=isolated",
+       "--linker=hoisted",
        "--backend=clonefile",
        "--cache-dir",
        "/work/cache"
@@ -81,7 +81,7 @@
        "install",
        "--lockfile-only",
        "--ignore-scripts",
-       "--linker=isolated",
+       "--linker=hoisted",
        "--backend=copyfile",
        "--cache-dir",
        "/work/cache"
@@ -103,7 +103,7 @@
        "install",
        "--lockfile-only",
        "--ignore-scripts",
-       "--linker=isolated",
+       "--linker=hoisted",
        "--backend=copyfile",
        "--cache-dir",
        "/work/cache"
@@ -193,7 +193,7 @@
        "install",
        "--frozen-lockfile",
        "--ignore-scripts",
-       "--linker=isolated",
+       "--linker=hoisted",
        "--backend=clonefile",
        "--cache-dir",
        "/work/cache"
@@ -215,7 +215,7 @@
        "install",
        "--frozen-lockfile",
        "--ignore-scripts",
-       "--linker=isolated",
+       "--linker=hoisted",
        "--backend=copyfile",
        "--cache-dir",
        "/work/cache"
@@ -237,7 +237,7 @@
        "install",
        "--frozen-lockfile",
        "--ignore-scripts",
-       "--linker=isolated",
+       "--linker=hoisted",
        "--backend=copyfile",
        "--cache-dir",
        "/work/cache"
@@ -328,7 +328,7 @@
        "--frozen-lockfile",
        "--dry-run",
        "--ignore-scripts",
-       "--linker=isolated",
+       "--linker=hoisted",
        "--backend=clonefile",
        "--cache-dir",
        "/work/cache"
@@ -351,7 +351,7 @@
        "--frozen-lockfile",
        "--dry-run",
        "--ignore-scripts",
-       "--linker=isolated",
+       "--linker=hoisted",
        "--backend=copyfile",
        "--cache-dir",
        "/work/cache"
@@ -374,7 +374,7 @@
        "--frozen-lockfile",
        "--dry-run",
        "--ignore-scripts",
-       "--linker=isolated",
+       "--linker=hoisted",
        "--backend=copyfile",
        "--cache-dir",
        "/work/cache"
@@ -742,7 +742,7 @@
        "text": "locké"
       }
      ],
-     "expected": "699571c153bc522bc15d2302d8c570e03f4bfd83d65e616a01f3c4c4694f4e0f"
+     "expected": "24364b4515417d9eaab26000f027f0dca1aa4a00f0e3015249af278c8c0d1f38"
     },
     {
      "root": "/work/scope",
@@ -768,7 +768,7 @@
        "text": "locké"
       }
      ],
-     "expected": "8d1832e5fc69f684909f960005e5430755e6bcb88c3759b95682444ba7af4776"
+     "expected": "c4d95f8490a199e55b14cadb98d3a457829c1db184b1fa7c402115ce837828e1"
     },
     {
      "root": "/work/scope",
@@ -794,7 +794,7 @@
        "text": "locké"
       }
      ],
-     "expected": "cf42729857c7f0e4af3401d97932ea37138bf772fca0a06f6f517d49b6286bae"
+     "expected": "fe3ced50afa52d8bea94898c7db11d9a979a65b46f423a6e731d5d96069b0f52"
     },
     {
      "root": "/work/scope",
@@ -820,7 +820,7 @@
        "text": "locké"
       }
      ],
-     "expected": "1337868683036057dde8f025cc0034d1275d01e8b7caa46b142e5d3b7fbd3bde"
+     "expected": "e13ecf7d53c49ed3181f8bc84be484fb4b2ba540eb90c98d100d61a33cde76df"
     },
     {
      "root": "/work/scope",
@@ -842,7 +842,7 @@
        "text": "{\"name\":\"x\"}"
       }
      ],
-     "expected": "9a500b8d0f1d8ff3b8843027dc9dbaf0b19e52d20e85e0b1026b3ec1f20b4583"
+     "expected": "7a1978131f3ea4e1118fc9d7c910a7df6134e71b5d0525fd021efcfc5cd45a6e"
     }
    ],
    "bootstrapKey": [
@@ -862,7 +862,7 @@
      },
      "probe": "1.3.14\n",
      "lock": "lock bytes\n",
-     "expected": "f054118d46a2334c5ef9a1225124bf38fed690792af8dbeef3160756a84429a5"
+     "expected": "41dca4c7ee8f12e8ff2ea14b4af7daea586bfb3a57dee834352f3e1d281cf36b"
     }
    ],
    "lock": [
@@ -946,35 +946,35 @@
       {
        "name": "@babel/code-frame",
        "version": "7.29.7",
-       "entry": "@babel+code-frame@7.29.7"
+       "entry": "@babel/code-frame"
       },
       {
        "name": "@babel/compat-data",
        "version": "7.29.7",
-       "entry": "@babel+compat-data@7.29.7"
+       "entry": "@babel/compat-data"
       },
       {
        "name": "@iarna/toml",
        "version": "2.2.5",
-       "entry": "@iarna+toml@2.2.5"
+       "entry": "@iarna/toml"
       },
       {
        "name": "semver",
        "version": "6.3.1",
-       "entry": "semver@6.3.1"
+       "entry": "semver"
       },
       {
        "name": "typescript",
        "version": "5.9.3",
-       "entry": "typescript@5.9.3"
+       "entry": "typescript"
       }
      ],
      "listing": [
-      "@babel+code-frame@7.29.7",
-      "@babel+compat-data@7.29.7+0123456789abcdef",
-      "@iarna+toml@2.2.5",
-      "semver@6.3.1+0123456789abcdef",
-      "typescript@5.9.3"
+      "@babel/code-frame",
+      "@babel/compat-data",
+      "@iarna/toml",
+      "semver",
+      "typescript"
      ],
      "expected": {
       "status": "match",
@@ -988,34 +988,34 @@
       {
        "name": "@babel/code-frame",
        "version": "7.29.7",
-       "entry": "@babel+code-frame@7.29.7"
+       "entry": "@babel/code-frame"
       },
       {
        "name": "@babel/compat-data",
        "version": "7.29.7",
-       "entry": "@babel+compat-data@7.29.7"
+       "entry": "@babel/compat-data"
       },
       {
        "name": "@iarna/toml",
        "version": "2.2.5",
-       "entry": "@iarna+toml@2.2.5"
+       "entry": "@iarna/toml"
       },
       {
        "name": "semver",
        "version": "6.3.1",
-       "entry": "semver@6.3.1"
+       "entry": "semver"
       },
       {
        "name": "typescript",
        "version": "5.9.3",
-       "entry": "typescript@5.9.3"
+       "entry": "typescript"
       }
      ],
      "listing": [
-      "@babel+compat-data@7.29.7+0123456789abcdef",
-      "@iarna+toml@2.2.5",
-      "semver@6.3.1+0123456789abcdef",
-      "typescript@5.9.3"
+      "@babel/compat-data",
+      "@iarna/toml",
+      "semver",
+      "typescript"
      ],
      "expected": {
       "status": "mismatch",
@@ -1024,7 +1024,7 @@
        {
         "name": "@babel/code-frame",
         "version": "7.29.7",
-        "entry": "@babel+code-frame@7.29.7"
+        "entry": "@babel/code-frame"
        }
       ],
       "truncated": false
@@ -1903,7 +1903,7 @@
      },
      "probe": "11.16.0\n",
      "lock": "lock bytes\n",
-     "expected": "7712f383e81275cd36f495df11b1fe6cca53cbbb39ca85c5bb9b094c607501bb"
+     "expected": "e98a6f0d786b3c4b2985171445b3422d0722ad7ae39be3c0290ccedcd99541b9"
     }
    ],
    "lock": [
@@ -2743,7 +2743,7 @@
      },
      "probe": "cargo 1.99.0-nightly (3efb1f477 2026-07-17)\n",
      "lock": "lock bytes\n",
-     "expected": "cae4259dd62d7b73a77fba4668cb47d2aec757e9c62e4aa34afaa1dbfadbec7d"
+     "expected": "6c1542eee76afa9704e58fd14f84926f6101ec2c58eb831cd6794083b1051ed9"
     }
    ],
    "lock": [
@@ -4739,7 +4739,7 @@
      },
      "probe": "uv 0.11.15 (3cffe97c2 2026-05-18 aarch64-apple-darwin)\n",
      "lock": "lock bytes\n",
-     "expected": "d9d8b44fa1b7309a070004fa6adcdb975d3b74fcc13569f5aec5d90f8b85767c"
+     "expected": "f3dc3d78fd793777ff21dbe956512e2f7c12e76661c8b8040009ced4621d49c0"
     }
    ],
    "lock": [

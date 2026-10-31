@@ -1,7 +1,9 @@
 //! 🔺️ Indexed and named collection edit plans over persistent lists — wiring only. Domain lives at the owner `🦀️.rs` files.
 
+pub use semio_framework_value_control_contract::RetainedWorkOutcome;
 use semio_framework_value_control_contract::{ValueError, ValueRefusalKind};
 use semio_framework_value_intrinsic::{DslValue, Number};
+pub use semio_framework_value_native_decoding::OriginalReceivingPrimary;
 use semio_framework_value_native_decoding::{NativeDecodeConstructionRecipient, NativeDecodeControl};
 use semio_framework_value_native_owned::native_decoding;
 use semio_framework_value_persistent::{list, original_vector_concat::OriginalVectorConcat};
@@ -9,8 +11,7 @@ use semio_framework_value_retained_clone::retained_clone;
 use semio_framework_value_retirement::{artifact_retire_leaf, retirement, RetirementDemand};
 use semio_framework_value_shared_issuance as shared_issuance;
 
-#[path = "../../../../📶️sort/🦀️.rs"]
-pub mod sort;
+pub use semio_framework_value_sort as sort;
 pub use sort::{HeapSortCursor, HeapSortFault, HeapSortWork};
 #[path = "../../🦀️.rs"]
 pub mod indexed_edit;

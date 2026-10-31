@@ -1,0 +1,1 @@
+Real domain owner extracted after actual P2 Source32 refusal; same physical WorkLedger source/neutral data/laws. Defining import reaches canonical PagedList directly; no P dependency cycle. Same caps. Work+P unfiltered gates required alongside Eq.

@@ -1,0 +1,7 @@
+# OriginalSlot Return Control Audit
+
+The new staged cancellation law and internal-ready handoff fix are authored before Context4 capture. Current Context4's conservative824 inputs include OriginalSlot production, tests and actual schema/fixture, so this lane is holding them unchanged until terminal/postcheck.
+
+A separate current-code observation is retained for the next defining review: RetainedOriginalRead::return_original sets returning=true immediately before delegating child work. The first paid close-control transition is not separately quoted/counted. That resembles the Source admission's already-explicit closing-control case. The clean direction is to quote/pay the first returning flag as its own item/depth/control turn, then delegate actual child work on later calls; do not infer it from the child's receipt or add default CPU. A neutral exact first-return law should precede that hunk after the current hold. No Source edit or runtime has been made for this observation.
+
+The original seven-law candidate metadata is prepared conservatively (17 manifests,316 inputs,204Rust,zero unresolved), but no command/launch is released while Root Context4 runs. Existing old law cases remain; old ready prefix2 is state-driven under its unchanged row-scaled guard. The new partial matrix includes internal publication before outward handoff and uses one explicit finite profile. Existing old law demand-derived grants still do not establish complete whole-case physical funding, and are not relabeled as such.

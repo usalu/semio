@@ -1,0 +1,25 @@
+{
+  "stock": {
+    "items": 10000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "maximumTurns": 10000,
+    "fuel": 10000
+  },
+  "input": 17,
+  "deniedWork": 0,
+  "bindingWork": 1,
+  "readWork": 1,
+  "invalidReadWork": 1,
+  "cachedCloseWork": 0,
+  "axes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "sourceAdmissionWork": 6
+}

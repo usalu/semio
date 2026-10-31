@@ -287,9 +287,9 @@ fn create_puzzle3d_app_part_3(builder: semio_framework_plugin::app::EditorBuilde
                     )
                         .introduce(window_element_id(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID))
                         .interact(vec![
-                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::zoom(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, "Zoom")),
-                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::pan(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, "Pan")),
-                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::orbit(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, "Orbit")),
+                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::zoom(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, LocalizedLabel::native("Zoom", "Zoomen"))),
+                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::pan(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, LocalizedLabel::native("Pan", "Verschieben"))),
+                            ::semio_framework_async::poll::resolve_ready(IntroductionInteraction::orbit(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID, LocalizedLabel::native("Orbit", "Orbitieren"))),
                         ]),
                     IntroductionStepDefinition::new(
                         "catalogue",
@@ -310,7 +310,7 @@ fn create_puzzle3d_app_part_3(builder: semio_framework_plugin::app::EditorBuilde
                         .introduce(panel_tab_first_draggable_element_id(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID))
                         .show(vec![panel_tab_element_id(semio_framework_plugin::FRAMEWORK_PANEL_TAB_CATALOGUE_ID), window_element_id(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)])
                         .placement(IntroductionPlacement::Right)
-                        .interact(vec![::semio_framework_async::poll::resolve_ready(IntroductionInteraction::action("addObjectKind", "Add an object"))]),
+                        .interact(vec![::semio_framework_async::poll::resolve_ready(IntroductionInteraction::action("addObjectKind", LocalizedLabel::native("Add an object", "Objekt hinzufügen")))]),
                     IntroductionStepDefinition::new(
                         "transform-utility",
                         puzzle3d_localized_phrase(|l| l.objects, |w| format!("Transform {w}"), |w| format!("{w} transformieren")),
@@ -322,7 +322,7 @@ fn create_puzzle3d_app_part_3(builder: semio_framework_plugin::app::EditorBuilde
                     )
                         .introduce(semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID)
                         .show(vec![window_element_id(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID)])
-                        .interact(vec![::semio_framework_async::poll::resolve_ready(IntroductionInteraction::utility(semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID, "Activate Transform"))]),
+                        .interact(vec![::semio_framework_async::poll::resolve_ready(IntroductionInteraction::utility(semio_s_artifact_puzzle_3d_editor_transform::UTILITY_ID, LocalizedLabel::native("Activate Transform", "Transformieren aktivieren")))]),
                 ],
             })
             .dialog(

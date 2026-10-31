@@ -1,0 +1,329 @@
+{
+  "state": "bounded-metadata-snapshot-only-not-source-fit-or-complete-compiler-input-census",
+  "selectedPackage": "semio-framework-value-sort",
+  "selectedDoor": "unfiltered all tests",
+  "rootManifest": "🧰️framework/🔨️modules/🌱️value/📶️sort/📦️packages/🦀️rust/Cargo.toml",
+  "workspaceManifest": "🧰️framework/Cargo.toml",
+  "dependencyMetadata": {
+    "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/drawing-value-sort-owning-1/cargo-metadata.json",
+    "sha256": "c08fdbe60688b7c056ea209a2c922a5a49795ab821261c9d6a9508e4dcf89de0"
+  },
+  "collectorLimits": {
+    "maximumManifests": 128,
+    "maximumRustSources": 2048,
+    "maximumInputs": 4096,
+    "maximumFileBytes": 2097152,
+    "maximumTotalBytes": 33554432
+  },
+  "firstPartyManifests": 5,
+  "rustSourceFiles": 27,
+  "inputs": [
+    {
+      "path": ".cargo/config.toml",
+      "bytes": 5289,
+      "sha256": "f89b00359d23322ceb5609f8f1656db7892700ab2343ec309b51a503587f9381",
+      "utf16PathUnits": 46
+    },
+    {
+      "path": "Cargo.lock",
+      "bytes": 743250,
+      "sha256": "39462e638f14896d8f28b57aff215967f2add9f73a4c258176fe7cddcd039484",
+      "utf16PathUnits": 38
+    },
+    {
+      "path": "Cargo.toml",
+      "bytes": 128349,
+      "sha256": "bd68cb063285a2c011c2cfe714b4b87ca48bf876fe12e9a8e700e77c48f602cd",
+      "utf16PathUnits": 38
+    },
+    {
+      "path": "package.json",
+      "bytes": 21673,
+      "sha256": "9605466756ffe292a2e5c425e8beec9cda9b60967cadccc33fef9d20c617f98b",
+      "utf16PathUnits": 40
+    },
+    {
+      "path": "rust-toolchain.toml",
+      "bytes": 165,
+      "sha256": "9dcece5e7ef6f9522160838201b29e57af801c0afca85755c50ef85771e9bee9",
+      "utf16PathUnits": 47
+    },
+    {
+      "path": "🧰️framework/Cargo.lock",
+      "bytes": 308020,
+      "sha256": "b97d312eecb12e265d5a04b717de07d3997626a7745784e87c9a94fc24d3a033",
+      "utf16PathUnits": 51
+    },
+    {
+      "path": "🧰️framework/Cargo.toml",
+      "bytes": 125858,
+      "sha256": "014bee0bf6a458f9527aafd525a68b72fc382f96ee3487f22663e7683a5307de",
+      "utf16PathUnits": 51
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🏁️tail/🦀️.rs",
+      "bytes": 2039,
+      "sha256": "d4eff3ba69d88a7c90e21ec01fb36e35633d4199ba33d0bdd535aae42026d8c3",
+      "utf16PathUnits": 82
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🏁️tail/🧪️tests/🏁️tail/🦀️.rs",
+      "bytes": 5525,
+      "sha256": "fd54e87b2c2cbe3ddd322f16b03eb3ffdc057bb46326838299c0c615b0148d64",
+      "utf16PathUnits": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🏁️tail/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 2462,
+      "sha256": "34af46ef3efe177c47517bcd724301f89ebcebe5b2858ed27587529c0c5bc5be",
+      "utf16PathUnits": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧪️tests/🔬️standalone/🦀️.rs",
+      "bytes": 1498,
+      "sha256": "01df047329df89f1cf48056eaa57af9084e3f1bb33347abf5d4b16341d3c492a",
+      "utf16PathUnits": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧪️tests/🧪️contention/🦀️.rs",
+      "bytes": 9827,
+      "sha256": "8166867847fcb40c2afe119eafc12f3fbcb7e012cc67b8cad51cea346e31771a",
+      "utf16PathUnits": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/⏱️clock/🧪️tests/🧫️fixtures/🧪️contention/🔣️.json",
+      "bytes": 2144,
+      "sha256": "95b70e06770b9b295c570026effeca2e282fcdd5d1706fd4f1a058cc502a4e60",
+      "utf16PathUnits": 111
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🐕️timers-and-watchdog/🦀️.rs",
+      "bytes": 8758,
+      "sha256": "236d969e123d395c0a749b9597db526dd736f0ba9a367d9a53b7a22a501f51f0",
+      "utf16PathUnits": 89
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📈️percentile/🔐️gate/🦀️.rs",
+      "bytes": 1158,
+      "sha256": "076980fbe9d3b227636d13ecc254e627ad8022a2294dfc9c2ef351b30732c303",
+      "utf16PathUnits": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📈️percentile/🔐️gate/🧪️tests/🦀️.rs",
+      "bytes": 2098,
+      "sha256": "cd3be2f79295ea5edba2aded81e8f0086ee9dbbf4b226adc346782293f8e723b",
+      "utf16PathUnits": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📈️percentile/🔐️gate/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 237,
+      "sha256": "04341acb0fb9b298436aa5579d6032b3cf5b42b7ccda266f287027da71a68ed2",
+      "utf16PathUnits": 111
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📊️sample-rings-and-sites/🦀️.rs",
+      "bytes": 5966,
+      "sha256": "5f9869fe6ca289d153e8ffbd8a462f4d07cf6ade8bc493eefdd5516c6af7cce9",
+      "utf16PathUnits": 92
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📏️ceilings-and-diagnostics/🦀️.rs",
+      "bytes": 5820,
+      "sha256": "0ce39b090370a4124d8515a349629d3fd47b70d6be1f6e7333cd461d7348a40f",
+      "utf16PathUnits": 94
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📒️overrun-ledger/🦀️.rs",
+      "bytes": 5400,
+      "sha256": "302b9adcaf8f3d2fa4465e5cb672894625a77cb03cbc6acb26698fe29ee66a90",
+      "utf16PathUnits": 84
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📝️record/🦀️.rs",
+      "bytes": 26389,
+      "sha256": "d16aceafe4944038de3b08c2e58c0639f2db671653787eeb518993f0cf51e130",
+      "utf16PathUnits": 76
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📝️record/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 14235,
+      "sha256": "f40a1cd2f38414a03f034f6623bd169e59c224f2417572b7539d63bda559d325",
+      "utf16PathUnits": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📝️record/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 3011,
+      "sha256": "af4d5d2d821fc0e808a787e07b910d27ee6f9ad9be9bacca1415ba01d26ba6a7",
+      "utf16PathUnits": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📝️record/🧬️schema/🔣️.json",
+      "bytes": 2063,
+      "sha256": "3360e13ce097693b3ee9af6acdceb126a47841ce3eac014a113c3cfd3edcda9e",
+      "utf16PathUnits": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 1160,
+      "sha256": "4b4d9c0b10588fe34fa55d51d3c911f9921a02d2f7fe76f189483ebe348acfb8",
+      "utf16PathUnits": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 432,
+      "sha256": "c0a3c4faee63223dd0dba8e51a2bf87df9ad6b2b951cd31562e7b8034dd7a250",
+      "utf16PathUnits": 86
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🕰️clock/🦀️.rs",
+      "bytes": 2639,
+      "sha256": "9eb81a09131e615121f9c4307cf2f5cabde00522d06295250ae3144848f9c6f4",
+      "utf16PathUnits": 75
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🛰️operations-and-trace/🦀️.rs",
+      "bytes": 8874,
+      "sha256": "a61c74efe10820517d7514ce8e17674038d447b5e8a9132e724923d5e55ef4fb",
+      "utf16PathUnits": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🦀️.rs",
+      "bytes": 6153,
+      "sha256": "066165d3acff43956eadbf7d21f20ce7d2d69cdad78b22343b74ad8dc76cb06d",
+      "utf16PathUnits": 66
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 6317,
+      "sha256": "c75474da6cbc3f5c202a996aa1d9424f5f0d104b19b216047fb3f01c9017d2c5",
+      "utf16PathUnits": 83
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧪️tests/🧫️fixtures/🛰️span-vocabulary/🔣️.json",
+      "bytes": 1688,
+      "sha256": "a38d0f6f9b7019e1ddd9e4f2a62516d7f7b2d3002a6b8eb563000e8ac35830ef",
+      "utf16PathUnits": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🦀️.rs",
+      "bytes": 13612,
+      "sha256": "2b31753459929ee2d24e7f107f4229e5db4c20a68c36b69db43ce52e2dcb143a",
+      "utf16PathUnits": 76
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️tests/🔬️memory/🦀️.rs",
+      "bytes": 7441,
+      "sha256": "576d7035d3d08d9c14da8c32ddd86175cd99620d1730a4bbe7a18fbb5ec0097e",
+      "utf16PathUnits": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧬️schema/🔣️.json",
+      "bytes": 2658,
+      "sha256": "9096ecf00a18b3bfbc3cf7bdf43ef02d9db85414e5c47ce243bbe812d59d104b",
+      "utf16PathUnits": 88
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏱️trace/🧵️thread-roles-and-counters/🦀️.rs",
+      "bytes": 7304,
+      "sha256": "5aaccc32d4a50fd15e6ad6e6725e56ff3534d12b712fff090c5c8d84390b534e",
+      "utf16PathUnits": 95
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📶️sort/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 895,
+      "sha256": "6e6e495e43cb9010e980f6b024795463e4c6fd1c5884b6cf0708b151c0d0894e",
+      "utf16PathUnits": 99
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📶️sort/🦀️.rs",
+      "bytes": 5376,
+      "sha256": "1166915a772d443c3e677402c8517d2ebb5d4789b56d210cea111d08b625a66a",
+      "utf16PathUnits": 75
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🦀️.rs",
+      "bytes": 2566,
+      "sha256": "779dc465d663cd97421d8de5fa41e0fef711d3c15fb29e8d748390595570c1de",
+      "utf16PathUnits": 84
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 633,
+      "sha256": "08761982a94bd50bcc3a10a90a367105767e5ead94c7f32d268fd2d603ddc31f",
+      "utf16PathUnits": 98
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 727,
+      "sha256": "65548eb4d7608fc34c0e8b6eedd3a2ab4a7523c9b269b1562432ad4005659cb4",
+      "utf16PathUnits": 115
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/🦀️.rs",
+      "bytes": 3663,
+      "sha256": "f981059700189c20989d6be0994b8b00aefc6a40ab49f19961290d12d28c3bb5",
+      "utf16PathUnits": 91
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/🧪️tests/🦀️.rs",
+      "bytes": 1553,
+      "sha256": "23cff0aa198e8cb548cce41a6bfcba26ade5d7bdebe4846b012bddfb6af3c9f9",
+      "utf16PathUnits": 100
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 335,
+      "sha256": "0bb538fcd726a5306036f43c76c5b53cacde1d9fef423ec728f43d447493d7b3",
+      "utf16PathUnits": 114
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 672,
+      "sha256": "1b297b5986c137af8cd057b2ff06469e4eb2adb891391388e6d55f9812a3c00e",
+      "utf16PathUnits": 117
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/🦀️.rs",
+      "bytes": 6147,
+      "sha256": "092fba437d2ed0e2d9dfde528b30976c0bea19182d18d978cb176acd77f82439",
+      "utf16PathUnits": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust/Cargo.toml",
+      "bytes": 744,
+      "sha256": "e91557aeac1877d141736f3d606ad9c007f30d4f14b88e43ee2c9f86fa33006e",
+      "utf16PathUnits": 108
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/🦀️.rs",
+      "bytes": 6673,
+      "sha256": "6f7a5f07c4da850493d8ac526638b603e2c7204717e5db4aaba5303dbddf984a",
+      "utf16PathUnits": 84
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/🧪️tests/🦀️.rs",
+      "bytes": 5378,
+      "sha256": "c9438129bb7b2c1fda4d14c49ed9fcf0568ddd531e56ff2c84687ef96ee4d9b2",
+      "utf16PathUnits": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/🧪️tests/🧫️fixtures/📊️.csv",
+      "bytes": 546,
+      "sha256": "47bfb5996444a1420eeb9e17a4ac193ba9b85bba58e8aea3e5f83601ef238ead",
+      "utf16PathUnits": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️budget/🕰️clock.json",
+      "bytes": 1674,
+      "sha256": "4c2c1d0a95092baf6a904fb2099d911eb5772bce73575fd20857b1555e73cfd8",
+      "utf16PathUnits": 81
+    }
+  ],
+  "unresolvedLiteralObservations": [],
+  "limitations": [
+    "All declared cfg/optional path dependencies and source branches are conservatively observed, not resolved compiler features.",
+    "Only selected-root dev dependencies are selected; dependency package test modules are conservatively extra source observations, not executed suites.",
+    "Literal fixture macros resolve relative to their actual owning Cargo manifest; literal include macros resolve relative to their source file.",
+    "Inline module directory contexts, computed paths/proc-macro output and registry/git/patch resolution remain owned by canonical Cargo Source/dependency admission; unresolved literals are explicit, never silently counted resolved."
+  ]
+}

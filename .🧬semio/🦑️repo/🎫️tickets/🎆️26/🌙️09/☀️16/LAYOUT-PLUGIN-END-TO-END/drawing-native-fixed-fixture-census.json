@@ -1,0 +1,18 @@
+{
+  "root": "🧰️framework",
+  "rustFiles": 9018,
+  "bytes": 97920988,
+  "matches": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs",
+      "line": 16,
+      "text": "pub struct OriginalConstructionFixture;"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs",
+      "line": 18,
+      "text": "impl super::NativeDecodeConstructionRecipient for OriginalConstructionFixture{"
+    }
+  ],
+  "state": "bounded-framework-source-census"
+}

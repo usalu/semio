@@ -18,6 +18,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-s-artifact-energy-model-snapshot = { workspace = true }
 semio-s-artifact-energy-model-diff = { workspace = true }
+semio-s-artifact-energy-model-diff-patch = { workspace = true }
 semio-framework-trace = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-pack-record-preflight = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/📦️packages/🦀️rust" }
 semio-framework-manifest-media = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🎞️media/📦️packages/🦀️rust" }
@@ -53,3 +54,4 @@ semio-framework-async = { path = "../../../../../../../../../../../../../../🧰
 semio-framework-replication = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-s-plugin-energy-engine-bestest = { workspace = true }

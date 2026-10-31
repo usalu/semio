@@ -142,7 +142,7 @@ pub fn imported_projection(settled: &Puzzle3dSettled) -> Value {
         Effect::LoadDocument { pack, .. } => Some(pack.clone()),
         _ => None,
     });
-    let document = <Puzzle3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&pack.expect("an import publishes one whole-document load")).expect("the load carries a puzzle 3D document");
+    let document = <Puzzle3dSnapshot as protocol::snapshot::ArtifactPack>::decode_pack(&pack.expect("an import publishes one whole-document load")).expect("the load carries a puzzle 3D document");
     semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&document))
 }
 
@@ -240,7 +240,7 @@ pub async fn dispatch_reporting_with_items(
 fn action_args(args: Option<&Value>, window_id: &str) -> Option<semio_framework_value::DslValue> {
     let mut value = args.cloned().unwrap_or_else(|| Value::Object(Default::default()));
     if let Value::Object(object) = &mut value {
-        object.insert("windowId".into(), Value::String(window_id.into()));
+        object.insert("windowId", Value::String(window_id.into()));
     }
     Some(semio_framework_pack_json::to_dsl_value(&value))
 }

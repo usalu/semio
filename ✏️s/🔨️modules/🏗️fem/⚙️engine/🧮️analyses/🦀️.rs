@@ -33,6 +33,9 @@ use semio_s_fem_sparse_subspace::EigenPairs;
 use semio_s_fem_sparse_ldlt::LdltFactor;
 use semio_framework_value_paged_list::list::PagedList;
 use semio_framework_job::InteractiveJob;
+use semio_framework_job::InteractiveJobStep;
+use semio_s_fem_payload_turns::NumericalStep;
+use semio_framework_job::OriginalJobReturnClaim;
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_job::JobOutcomeDescriptor;
 use semio_framework_job::JobOutcomeBorrow;
@@ -254,16 +257,8 @@ impl FemJobGraph {
 }
 
 impl InteractiveJob for FemJobGraph {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
-        if self.desk.retire_due(cx, self.operation) {
-            self.desk.retire_delivered(cx)?;
-            return Ok(None);
-        }
-        let run = match self.desk.take_pending() {
-            Some(run) => run,
-            None => self.run(cx),
-        };
-        Ok(self.desk.admit(cx, run)?)
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>, _: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> {
+        InteractiveJobStep::from_callback(self.step_plain(cx))
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
@@ -287,6 +282,20 @@ impl InteractiveJob for FemJobGraph {
 
     fn terminal_is_empty(&self) -> bool {
         self.desk.terminal_is_empty() && self.state.plans.is_empty() && self.state.plans.capacity() == 0
+    }
+}
+
+impl NumericalStep for FemJobGraph {
+    fn step_plain<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
+        if self.desk.retire_due(cx, self.operation) {
+            self.desk.retire_delivered(cx)?;
+            return Ok(None);
+        }
+        let run = match self.desk.take_pending() {
+            Some(run) => run,
+            None => self.run(cx),
+        };
+        Ok(self.desk.admit(cx, run)?)
     }
 }
 

@@ -3,7 +3,7 @@
 use crate::editor::wfc2d::transient::mutations::{Wfc2dTransient, Wfc2dTransientDiff};
 use crate::editor::wfc2d::transient::Wfc2dAssignment;
 
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "set-solve")]
@@ -46,3 +46,5 @@ where
     })())
 }
 }
+
+protocol::retained_set_record!(SetSolve => Wfc2dTransient, Wfc2dTransientDiff, Wfc2dTransientMutation { authored: SetSolve = |leaf| leaf, patch: |value: SetSolve| Wfc2dTransientDiff { assignments: Some(value.assignments), contradiction: Some(value.contradiction) }, inverse: |root: Wfc2dTransient| SetSolve { assignments: root.assignments, contradiction: root.contradiction }.into() });

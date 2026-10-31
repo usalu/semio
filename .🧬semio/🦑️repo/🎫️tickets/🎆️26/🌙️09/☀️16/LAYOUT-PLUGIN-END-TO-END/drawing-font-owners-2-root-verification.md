@@ -1,0 +1,7 @@
+# Foundational Font Second Root Actual Verification
+
+Root independently verified actual6041 test and96317 strict terminal receipts and exact log hashes, actual nine success registrations/439 assertions, no strict diagnostics, and all22 current input hashes against immutable second command66210abe5048e44c710306033887059538de751ed5e3866808082de95ed6fde0. Actual9passed/0failed/439assertions1355ms and strict8 EXIT0. Test log12136bytes SHA1df418c71993911c6f2b9912eaa43c8f35ace96c67a87b650aa2d8d5215faef3; strict log21120bytes SHA9244c2cbfd29657232d74d68b7bf2dc85fbc6a58c9c2290849b48bfa62f6334a.
+
+The two exact test-only matcher type annotations are recorded with complete old-file reconstruction; all first outcomes/strict red remain immutable. This scoped result proves the selected semantic/CPU/logical-slot behavior, including the unchanged Face cap law and genuine Unicode child denied custody/ICU cases. It is NOT generic V8 allocator parity: genuine RetainedWorkBuffer backing repair remains approved, pending the next existing-API behavioral RED and schema/owning laws. Typed Byte/PNG backing results stay separately scoped.
+
+Root releases the exact22 TS hold after this postcheck. Dep may prepare the normal existing-API intrinsic-mutation RED for review; no buffer production body may change before its actual baseline and test-first contract. NativeFlatten33329 remains independently live with462 native inputs held. Full other native/Font/Drawing/Flow/Layout19/publication/browser acceptance remains open.

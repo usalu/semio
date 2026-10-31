@@ -1,3 +1,4 @@
+use semio_s_artifact_procedural_3d_geometry_compute::testing::step_with_fuel;
 use semio_framework_3d::mesh::{MeshModelingOps};
 use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;
 use super::harness::{self as h, oracle};
@@ -66,16 +67,16 @@ fn a_started_job_reports_monotone_progress_and_finishes_at_every_fuel() {
 #[test]
 fn work_is_charged_to_the_grant_not_done_at_start() {
     let mut job = start("mesh.edit.triangulate", vec![("mesh", GeometryValue::Mesh(sphere(4)))]);
-    assert!(matches!(job.step(1), WidgetStep::Working { .. }), "one fuel unit cannot finish 5120 faces");
+    assert!(matches!(step_with_fuel(&mut *job, 1), WidgetStep::Working { .. }), "one fuel unit cannot finish 5120 faces");
 }
 
 #[test]
 fn a_cancelled_job_answers_a_localized_cancellation_and_nothing_else() {
     let mut job = start("mesh.edit.triangulate", vec![("mesh", GeometryValue::Mesh(sphere(4)))]);
-    assert!(matches!(job.step(1), WidgetStep::Working { .. }));
+    assert!(matches!(step_with_fuel(&mut *job, 1), WidgetStep::Working { .. }));
     job.cancel();
     job.cancel();
-    let WidgetStep::Done(evaluation) = job.step(1) else { panic!("a cancelled job is done") };
+    let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 1) else { panic!("a cancelled job is done") };
     let fault = evaluation.fault.expect("a cancellation fault");
     assert_eq!(fault.code, CANCELLED);
     assert!(evaluation.outputs.is_empty() && fault.message.en != fault.message.de);
@@ -85,7 +86,7 @@ fn a_cancelled_job_answers_a_localized_cancellation_and_nothing_else() {
 fn a_cancel_before_the_first_step_never_builds_the_kernel_job() {
     let mut job = start("mesh.edit.triangulate", vec![("mesh", GeometryValue::Mesh(sphere(1)))]);
     job.cancel();
-    let WidgetStep::Done(evaluation) = job.step(100) else { panic!("done") };
+    let WidgetStep::Done(evaluation) = step_with_fuel(&mut *job, 100) else { panic!("done") };
     assert_eq!(evaluation.fault.expect("fault").code, CANCELLED);
 }
 

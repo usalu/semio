@@ -129,6 +129,12 @@ export function nativeBuildPassInputRequestsV1(plan: Pick<NativeBuildPlanV1, "pa
   return plan.passes.map(pass => Object.freeze({ manifest: pass.manifest, cwd: options.cwd, arguments: cargoConfigurationArgumentsV1(nativeBuildPassArgsV1(pass), undefined, options.build), environment: Object.freeze({ ...options.environment, CARGO_TARGET_DIR: options.target, CARGO_BUILD_BUILD_DIR: options.build }), control: options.control }));
 }
 
+/** 🎟️ The registry read of the memory-admitting scheduler crate a driver builds when it is handed none: declared beside the pass requests, so the reader that spans the whole driver covers it instead of refusing it as an undeclared selection. */
+export function nativeBuildSchedulerInputRequestV1(options: Readonly<{ cwd: string; build: string; target: string; environment: Readonly<Record<string, string | undefined>>; control: CompilerAdmissionControl }>): CargoCompilerInputsRequestV1 {
+  const selected = schedulerCargoSelectionV1(false, options.environment.SEMIO_BUILD_MODE === "prototype" ? "prototype" : "release");
+  return Object.freeze({ manifest: selected.manifest, cwd: options.cwd, arguments: cargoConfigurationArgumentsV1(selected.args, undefined, options.build), environment: Object.freeze({ ...options.environment, CARGO_TARGET_DIR: options.target, CARGO_BUILD_BUILD_DIR: options.build }), control: options.control });
+}
+
 /** 📁️ Names finite generation-owned component bytes without granting filesystem custody. */
 export function nativeBuildComponentStagePathV1(generation:Pick<NativeBuildGenerationV1,"root">,pass:Pick<NativeBuildPassV1,"id"|"manifest"|"profile">,row:NativeBuildPackageV1):string{const key=createHash("sha256").update(JSON.stringify([pass.id,pass.manifest,pass.profile,row.name,row.manifest])).digest("hex").slice(0,24);return requireMaterializedPathV1(join(generation.root,"w",key,"component.wasm"));}
 

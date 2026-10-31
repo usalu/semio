@@ -1,0 +1,75 @@
+{
+  "state": "source-only-lower-final-review-in-progress-no-runtime",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🦀️.rs",
+      "bytes": 17565,
+      "sha256": "b70fcbb56ceab37deac9d56b146cb7a31e2e9cbb41635c2dea586af8fc355b8d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🧪️tests/🦀️.rs",
+      "bytes": 12439,
+      "sha256": "c5fecaab7f115be48b0fd91bc0f520ef9a2be13989b63f5e4e3da1b7bafad263"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🦀️.rs",
+      "bytes": 10837,
+      "sha256": "92ff1e8f4da8e3c457ff3a0bf9789eb86b3320caff55be2800186b4879ae5f94"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 11930,
+      "sha256": "0e43853b672a304aaf831870e17477819ca8524285012aba74d4c3992a430ab4"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🦀️.rs",
+      "bytes": 24164,
+      "sha256": "b7b8b6abe04d4024618061d02f5e57e9c65a525b626a27febb40b185d9f1ddbd"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "bytes": 23013,
+      "sha256": "8443d945ea53f04f2593a9fee0904f88fb83e55bcd088795c5a6da2aaff3bd8e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🎟️work/🔣️.json",
+      "bytes": 1997,
+      "sha256": "ae71c99bb3ef7a6fc7eac7121276ef3e9055e16e4e71fad4942a0f6a20e98451"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🎟️work/🧫️fixtures/🔣️.json",
+      "bytes": 2579,
+      "sha256": "81e3f5b700913888779b6c89753092bc7ca7d65b367c504cce3700231ac24684"
+    }
+  ],
+  "declaredFunctionsNotExecuted": {
+    "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🧪️tests/🦀️.rs": [
+      "shared_exact_area_vectors_are_budget_independent",
+      "cancelled_preparation_and_sweep_never_publish_partial_coverage",
+      "malformed_input_and_grants_are_rejected",
+      "coverage_retirement_transfers_actual_masks_and_drains_private_sweep_owners",
+      "coverage_actual_storage_uses_one_finite_stock_and_matches_independent_tiny_skia",
+      "coverage_refused_owned_input_and_cached_error_preserve_custody_without_heap"
+    ],
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🧪️tests/🔬️unit/🦀️.rs": [
+      "shared_fill_samples",
+      "preparation_owns_stops_and_rejects_invalid_numbers",
+      "prepared_paint_retirement_drains_actual_stop_owners_and_composes_the_real_ramp",
+      "owned_fill_preparation_is_funded_and_matches_tiny_skia",
+      "refused_fill_retains_owned_input_and_cached_failure_has_zero_effects"
+    ],
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs": [
+      "whole_painted_path_retirement_retains_actual_children_private_candidates_and_complete_pixels",
+      "painted_paths_consume_real_flattened_contours_before_conversion",
+      "painted_paths_match_every_shared_rgba_fixture_under_bounded_grants",
+      "painted_paths_cancel_without_publication_and_keep_sticky_failure",
+      "painted_paths_retire_the_actual_stroke_before_downstream_coverage",
+      "painted_stroke_cleanup_keeps_invalid_grants_and_interrupted_pixels_private",
+      "painted_paths_consume_actual_coverage_masks_before_downstream_work",
+      "path_raster_original_storage_and_lower_jobs_share_one_finite_stock",
+      "invalid_owned_raster_and_cached_errors_keep_actual_custody",
+      "raster_owned_retirement_failure_is_staged_before_shared_publication",
+      "uniquely_owned_flattened_points_move_directly_into_the_first_paint_consumer"
+    ]
+  }
+}

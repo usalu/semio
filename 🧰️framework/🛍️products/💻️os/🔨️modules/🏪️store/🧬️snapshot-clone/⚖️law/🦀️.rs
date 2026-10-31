@@ -106,7 +106,7 @@ where
     for close_turns in 0..100_000 {
         if owner.terminal_is_empty() {
             assert_eq!(observe(|| drop(owner)).1.requested_bytes, 0);
-            while !receiving.terminal_is_empty(){let d=receiving.retirement_demands(grant.maximum_copy_bytes).unwrap();let original=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)};let(step,heap)=observe(||receiving.close_step(original).unwrap());assert!(step.progress().fits(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
+            while !receiving.terminal_is_empty(){let d=receiving.retirement_demands(grant.maximum_copy_bytes).unwrap();let original=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)};let(step,heap)=observe(||receiving.close_step(original).result.unwrap());assert!(step.progress().fits(original));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
             report.close_turns = close_turns;
             return report;
         }

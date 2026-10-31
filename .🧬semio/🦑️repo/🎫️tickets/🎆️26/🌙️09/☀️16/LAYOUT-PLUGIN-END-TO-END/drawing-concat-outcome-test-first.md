@@ -1,0 +1,3 @@
+# Original Vector Concat Outcome Laws
+
+Schema and a genuine Serde flatten/pointer/heap/conservation law were authored before the defining rewrite. Existing chunk, wide payload, cancellation and all positive-axis denials remain. The finite explicit million-item/fuel,32MiB-per-byte-axis,depth64 test bank is shared through normal work and close; it never refills or derives authority from demand. Defining stages must separate original input adoption, actual page row publication, output backing birth, original row transfer, new output row store, child close and metadata publication. Fixed ownership moves copy zero. No runtime has been launched; existing laws still await API migration.

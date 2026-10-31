@@ -1,0 +1,14 @@
+{
+  "state": "root-prelaunch-review-complete-no-runtime-result",
+  "commandSha256": "8f00a6c67c05b8fdb16fc9688c5898f7fe98131c33bdbd59d04d816dc159170b",
+  "inputs": 54,
+  "literalEdges": 90,
+  "strictRoots": 16,
+  "currentInputsMatch": true,
+  "authorization": "One captured normal managed Bun owning invocation, then sequential captured strict invocation, exact listed Source held through both terminals/postchecks",
+  "actualOutcomes": null,
+  "limitations": [
+    "Logical backing/declared references and actual explicit CPU; no V8 physical allocation or pointer parity claim",
+    "Wider Font/Drawing/controller/full Layout/browser remain open"
+  ]
+}

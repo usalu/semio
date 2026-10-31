@@ -1,0 +1,4 @@
+#!/bin/bash
+cd /Users/ueli/Documents/semio
+.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/1030-tools/stepctx/chk.sh 4 --tests -p semio-s-artifact-procedural-3d-geometry-compute -p semio-s-artifact-procedural-3d-phased-job -p semio-s-artifact-procedural-3d-brep-boolean -p semio-s-artifact-procedural-3d-analysis-check -p semio-s-artifact-procedural-3d-analysis-measure -p semio-s-artifact-procedural-3d-mesh-support -p semio-s-artifact-procedural-3d-mesh-convert -p semio-s-artifact-procedural-3d-brep-intersect -p semio-s-artifact-procedural-3d-brep-feature -p semio-s-artifact-procedural-3d-brep-solid -p semio-s-artifact-procedural-3d-brep-topology -p semio-s-artifact-procedural-3d-brep-transform -p semio-s-artifact-procedural-3d-brep-evaluate
+.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS/1030-tools/stepctx/chk.sh 5 -p semio-s-artifact-procedural-3d-geometry

@@ -1,0 +1,15 @@
+{
+  "scope": "payload-domain-port-without-host-context-qualification",
+  "stock": {
+    "items": 4096,
+    "copy": 16777216,
+    "capacity": 16777216,
+    "release": 16777216,
+    "depth": 128
+  },
+  "maximumTurns": 1024,
+  "authorityBirthWork": 1,
+  "metadataCopyBytes": 0,
+  "oneBank": true,
+  "renewal": false
+}

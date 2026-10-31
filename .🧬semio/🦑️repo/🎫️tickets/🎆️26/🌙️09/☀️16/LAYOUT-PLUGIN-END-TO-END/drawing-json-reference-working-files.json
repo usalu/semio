@@ -1,0 +1,119 @@
+{
+  "files": [
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🔬️round-trip/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🧩️child/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🌳️typed-json-nodes-and-scalars/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🧾️limits-and-string-sources/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🏗️cursor-construction-and-owner-pages/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📖️expand-document/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🏗️job-admission-and-close/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🧪️tests/🔬️unit/member.json",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🧪️tests/🔬️unit/member.schema.json",
+    "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📖️expand-document/🎨️drawing-nodes/🦀️.rs"
+  ],
+  "sourceState": "authored-awaiting-combined-review",
+  "entries": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+      "status": "updated",
+      "sha256": "b4b62c8d7dcb98f8f8f992ca747baf42501ac95fa49c3be87b5678c5374f1c35"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs",
+      "status": "updated",
+      "sha256": "11fe2b52959d82126e8f2512830ef9ee6d2136e994e38d46555f3eff289b5bd0"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🔬️round-trip/🦀️.rs",
+      "status": "updated",
+      "sha256": "e54edcf72a5a0d092cdf4b941073df0214eac4a8fa7754c2304d03420fa80960"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🧪️tests/🔬️unit/🦀️.rs",
+      "status": "updated",
+      "sha256": "6690f1a98da418eacdf19098c3d5a39b60f6a6e57324defeb8d3a7e6a25f81de"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🧩️child/🦀️.rs",
+      "status": "updated",
+      "sha256": "074da7d433a2c894b5527e4fcef1f8b23e6a7419a896c767a7d3da406252e816"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🌳️typed-json-nodes-and-scalars/🦀️.rs",
+      "status": "updated",
+      "sha256": "fa6e7296ec4533f7219fd257f41666652814ac454326b3a9e90ac6fb638eb0d6"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🧾️limits-and-string-sources/🦀️.rs",
+      "status": "updated",
+      "sha256": "81faec9c55a4cae089efe52bf687d2c87edda3704ef4faf1a0a695a3ca3a1c37"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🏗️cursor-construction-and-owner-pages/🦀️.rs",
+      "status": "updated",
+      "sha256": "9e8f48bd61a0f81b73a12ffe611351c55cf91edd4044b70fecbfd4d760f5f3b1"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📖️expand-document/🦀️.rs",
+      "status": "updated",
+      "sha256": "b2e72b21858df85dc8b68ba44029fb2b3ac47a29f3c83323a3ee47f82fb87e60"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🦀️.rs",
+      "status": "updated",
+      "sha256": "b0b2f443e333888f62e725e3873b242075a4eb9a38830df29124c1a674836df9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🏗️job-admission-and-close/🦀️.rs",
+      "status": "updated",
+      "sha256": "7703ab899defa9636971531a615d2b0cc78ca52a10960cbff527f6480de618f6"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+      "status": "updated",
+      "sha256": "fa4cb0e2e48fd01ba7816024b418d3c9dc4667d79f9fa9ee6624c01b6a44c9c9"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+      "status": "updated",
+      "sha256": "8568226c651662863aed3c33c3a544c39b0acfd1c7303e69c8676b70d2c2ea0c"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+      "status": "updated",
+      "sha256": "84d343f9a36a8bd3ba332b808ffc67eb9263ee15bdf630120ee9b94d9145cf6b"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🧪️tests/🔬️unit/member.json",
+      "status": "created",
+      "sha256": "88f4f8eaa48c97fc017165ce36a8a7b32b08ef034863bbcb90d77201e259bbf4"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/🧪️tests/🔬️unit/member.schema.json",
+      "status": "created",
+      "sha256": "25adbea8b2c8ba1038f134e8b7db3f5bf3ce5f6bc0e63b0d0a1f5e5b3cd4b7fb"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📖️expand-document/🎨️drawing-nodes/🦀️.rs",
+      "status": "removed",
+      "sha256": null
+    }
+  ],
+  "reportsInputs": [
+    "drawing-json-reference-plan.json",
+    "drawing-json-reference-repair.md",
+    "drawing-schema-repair.py"
+  ],
+  "notes": [
+    "Only approved current-reference-only root/export/fixture hunks attributed here. Rust trait/test selection files remain separately attributed.",
+    "Actual6942 compiler failure is RED; current edited laws and schema not yet executed. No Source copies or runtime/cache effects.",
+    "Closed scope17 paths includes14 existing/2 new/1 removed; historical removed path retained."
+  ]
+}

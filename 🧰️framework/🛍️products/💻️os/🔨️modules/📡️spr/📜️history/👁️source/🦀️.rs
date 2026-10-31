@@ -11,7 +11,7 @@ pub struct OriginalHistorySource {
 }
 
 fn invalid(message: &'static str) -> ValueError { ValueError::literal(ValueRefusalKind::InvariantViolated, message) }
-fn refused<T>(error: ValueError) -> NativeConstructionStepOutcome<T, OriginalReceivingPrimary> { NativeConstructionStepOutcome { result: Some(Err(error.into())), receipt_refusal: None, progress: Default::default() } }
+fn refused<T>(error: ValueError) -> NativeConstructionStepOutcome<T, OriginalReceivingPrimary> { NativeConstructionStepOutcome { work: 0, result: Some(Err(error.into())), receipt_refusal: None, progress: Default::default() } }
 
 impl OriginalHistorySource {
     /// 📐️ The defining Arc layout and fixed owner moves are quoted before consuming the original history.
@@ -22,11 +22,11 @@ impl OriginalHistorySource {
         if history.is_none() || output.is_some() { return refused(invalid("original history source requires an occupied input and empty destination")); }
         let demand = Self::birth_demand();
         native.receive_construction_step_typed(demand, |native, _| {
-            if native.owned_bytes().checked_add(demand.capacity_bytes).is_none_or(|bytes| bytes > native.maximum_bytes()) { return NativeConstructionStepResult { result: Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "history shared source exceeds its original decoder ceiling").into()), progress: Default::default() }; }
+            if native.owned_bytes().checked_add(demand.capacity_bytes).is_none_or(|bytes| bytes > native.maximum_bytes()) { return NativeConstructionStepResult { work: 0, result: Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "history shared source exceeds its original decoder ceiling").into()), progress: Default::default() }; }
             *output = Some(Self { source: ManuallyDrop::new(Some(Arc::new(history.take().unwrap()))), closing: ManuallyDrop::new(None), binding: (native.ledger_identity(), native.retirement_recipient_identity()) });
             let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() };
             let allocation_refusal = native.record_constructed_allocation(progress.retained_capacity_bytes).err();
-            NativeConstructionStepResult { result: if allocation_refusal.is_none() { Ok(true) } else { Err(OriginalReceivingPrimary { primary: None, quote_refusal: None, allocation_refusal, progress }) }, progress }
+            NativeConstructionStepResult { work: 0, result: if allocation_refusal.is_none() { Ok(true) } else { Err(OriginalReceivingPrimary { primary: None, quote_refusal: None, allocation_refusal, progress }) }, progress }
         })
     }
 
@@ -51,12 +51,12 @@ impl OriginalHistorySource {
         if let Err(error) = self.validate(native) { return refused(error); }
         if output.is_some() || self.closing.is_some() || self.source.is_none() { return refused(invalid("original history handoff requires the resident root and an empty destination")); }
         let source = self.source.as_ref().unwrap();
-        if Arc::strong_count(source) != 1 || Arc::weak_count(source) != 0 { return NativeConstructionStepOutcome { result: None, receipt_refusal: None, progress: Default::default() }; }
+        if Arc::strong_count(source) != 1 || Arc::weak_count(source) != 0 { return NativeConstructionStepOutcome { work: 0, result: None, receipt_refusal: None, progress: Default::default() }; }
         let demand = RetirementDemand { copy_bytes: 2 * size_of::<HistoryLog>() + size_of::<Option<Arc<HistoryLog>>>(), release_bytes: arc_bytes::<HistoryLog>(), depth: 1, ..Default::default() };
         native.receive_construction_step_typed(demand, |_, _| {
             match Arc::try_unwrap(self.source.take().unwrap()) {
-                Ok(history) => { *output = Some(history); NativeConstructionStepResult { result: Ok(true), progress: RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() } } }
-                Err(source) => { *self.source = Some(source); NativeConstructionStepResult { result: Ok(false), progress: Default::default() } }
+                Ok(history) => { *output = Some(history); NativeConstructionStepResult { work: 0, result: Ok(true), progress: RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, released_bytes: demand.release_bytes, ..Default::default() } } }
+                Err(source) => { *self.source = Some(source); NativeConstructionStepResult { work: 0, result: Ok(false), progress: Default::default() } }
             }
         })
     }

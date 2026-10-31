@@ -1,1 +1,25 @@
-{"version":1,"originalGrant":[1,17,0,0,1],"cuts":[0,1,13,"complete"],"metadataCopyBytes":0,"heapBytesPerTurn":0}
+{
+  "version": 1,
+  "originalGrant": [
+    1,
+    17,
+    0,
+    0,
+    1
+  ],
+  "cuts": [
+    0,
+    1,
+    13,
+    "complete"
+  ],
+  "metadataCopyBytes": 0,
+  "heapBytesPerTurn": 0,
+  "cpu": {
+    "denied": 0,
+    "readonlyRefusal": 0,
+    "admitted": 1,
+    "targetExhaustion": 1,
+    "cached": 0
+  }
+}

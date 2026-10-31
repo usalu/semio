@@ -1,0 +1,11 @@
+{
+  "session": 36151,
+  "exitCode": 1,
+  "testsRun": 0,
+  "capturedInputs": 354,
+  "postDrift": [
+    "\ud83e\uddf0\ufe0fframework/Cargo.lock"
+  ],
+  "logSha256": "3e465b2db87827d0ae92a2595a85625439f9598a8ab1426c304c85d24062b2b5",
+  "scope": "Actual unfiltered Persistent lib; stopped before selected test results, no broader acceptance."
+}

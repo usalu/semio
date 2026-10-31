@@ -109,7 +109,7 @@ impl<'a,'b> IoRunControl<'a,'b>{
  /// 🛑️ Observes only the active original lifetime and ownership ledger.
  pub fn checkpoint(&mut self)->Result<(),ValueError>{match (&mut self.owner,self.active){(Owner::Native{decode,..},IoNativeDirection::Decode)|(Owner::Decode{native:decode,..},IoNativeDirection::Decode)=>decode.checkpoint(),(Owner::Native{encode,..},IoNativeDirection::Encode)|(Owner::Encode{native:encode,..},IoNativeDirection::Encode)=>encode.checkpoint(),_=>Err(Self::opposite())}}
  /// 🧲️ Finishes an original native phase before selecting another available caller ledger.
- pub fn select(&mut self,direction:IoNativeDirection)->Result<(),ValueError>{if direction==self.active{return Ok(())}if !matches!(&self.owner,Owner::Native{..})||self.pending.is_some(){return Err(Self::opposite())}self.checkpoint()?;self.active=direction;self.checkpoint()}
+ pub fn select(&mut self,direction:IoNativeDirection)->Result<(),ValueError>{if direction==self.active{return Ok(())}if !matches!(&self.owner,Owner::Native{..})||self.pending.as_deref().is_some_and(Option::is_some){return Err(Self::opposite())}self.checkpoint()?;self.active=direction;self.checkpoint()}
  /// 📬️ Reborrows the original decoder only after its receiving phase is selected.
  pub fn decode(&mut self)->Result<&mut NativeDecodeControl<'b>,ValueError>{self.select(IoNativeDirection::Decode)?;match &mut self.owner{Owner::Native{decode,..}|Owner::Decode{native:decode,..}=>Ok(decode),_=>Err(Self::opposite())}}
  /// 📩️ Reborrows the original encoder only after its receiving phase is selected.

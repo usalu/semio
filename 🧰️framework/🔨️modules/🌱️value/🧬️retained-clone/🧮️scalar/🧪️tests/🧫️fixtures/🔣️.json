@@ -129,5 +129,16 @@
       "allocatedBytes": 0,
       "releasedBytes": 0
     }
-  ]
+  ],
+  "closeWork": {
+    "maximumCpu": 1048576,
+    "deniedCpu": 0,
+    "cachedCpu": 0
+  },
+  "advanceWork": {
+    "deniedCpu": 0,
+    "bindingCpu": 1,
+    "payloadCpu": 1,
+    "cachedCpu": 0
+  }
 }

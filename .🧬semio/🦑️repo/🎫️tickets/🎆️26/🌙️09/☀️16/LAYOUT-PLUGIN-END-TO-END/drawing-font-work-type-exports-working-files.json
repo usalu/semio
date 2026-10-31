@@ -1,0 +1,43 @@
+{
+  "state": "source-fix-after-actual-declared-layout-js-red",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/🟦️.ts",
+      "before": "c95c95c72f65e647edd38a35f25bda510ed4429d8654f82dcb0c80a60024ce7c",
+      "sha256": "96f328dcb4345871608352d3daf7a5d8af9cc5f395edb4f920116b5afa888f84",
+      "scope": "Actual declared LayoutJS RED: split erased interface exports from genuine runtime values; no compatibility alias."
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖼️canvas/🧵️paragraph-work/🧪️tests/🔮️oracle.mjs",
+      "before": "e1e4e16f73b65988b8049079786ac08348f0a135b6508d10b4f5602b3a201314",
+      "sha256": "c8001bd70b89d21d48555ddf6854b123d62694dea14604296ccd3e900d50d0c0",
+      "scope": "Native Bun test-tool caller uses actual canonical RetainedWorkLedger name in existing barrel; assertions/data/grants unchanged, no legacy alias restored."
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🔤️text-fonts/🧪️tests/🔮️oracle.mjs",
+      "before": "3d58249fe85960d6f8ad4111c214a7ae5386a20a577a0961828ed71dd8285c84",
+      "sha256": "df6c500aa12202a1c5e1075d09bd15a87b260b49c641dcd8d7a007e055c9410b",
+      "scope": "Native Bun test-tool caller uses actual canonical RetainedWorkLedger name in existing barrel; assertions/data/grants unchanged, no legacy alias restored."
+    }
+  ],
+  "types": [
+    "RetainedWorkGrant",
+    "RetainedWorkDemand",
+    "RetainedWorkReceipt",
+    "RetainedWorkRetirementProgress",
+    "RetainedWorkRetirementCursor"
+  ],
+  "runtimeValues": [
+    "RetainedWorkBuffer",
+    "RetainedWorkLedger",
+    "RetainedWorkRetirement",
+    "retireRetainedWorkBuffer",
+    "popRetainedWorkBuffer",
+    "retireRetainedWorkArchive",
+    "retireRetainedWorkBuffers",
+    "retireRetainedWorkChildren",
+    "retainedWorkChildRetirement",
+    "retireRetainedWorkMatcher"
+  ],
+  "runtime": "unexecuted correction; full declared LayoutJS still not accepted"
+}

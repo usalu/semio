@@ -1,0 +1,56 @@
+{
+  "state": "authored-uncompiled-production-checkpoint",
+  "inputs": [
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📥️owned/🦀️.rs",
+      "bytes": 17688,
+      "sha256": "e96e37b100ce0b90cc3b933cf4cd7f1f45ebb824c7ec461eb72f3338e373cb6e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🦀️.rs",
+      "bytes": 2717,
+      "sha256": "f78fcb6f9b4f895f618a1acec4e8a96b97ed8f50a79cf6612854c09c3a0bf276"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/📋️vector/🦀️.rs",
+      "bytes": 6483,
+      "sha256": "98608cbffea8d25aadb4c9c5cd8320be5a1cf74a530caab6842200449622edde"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🧬️contract/🦀️.rs",
+      "bytes": 8511,
+      "sha256": "704040b8958d51bc0d1cb9ff08436804e8f9d01a72bf7fffd43f7fb7c3dde6c1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🌳️intrinsic/🦀️.rs",
+      "bytes": 12164,
+      "sha256": "5631137ef3dffbad88d11534422130924a152b5051e35af0d923fee227df0020"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🎁️wrapping/🦀️.rs",
+      "bytes": 10634,
+      "sha256": "16e204438464d9b5e08381d9867ebc162c66cae6eb19fa3be50ef3e5b8dc0d5d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🔢️array/🦀️.rs",
+      "bytes": 5383,
+      "sha256": "530d11185aa195f0b895c4876efc41148c68e62964de7143cd44eda865994eaa"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/📦️storage/🦀️.rs",
+      "bytes": 5785,
+      "sha256": "775581f5b14e4d0c43ef903debd1bdbde0cd2008d146242f8f17d05993c9865f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🔄️mapping/🦀️.rs",
+      "bytes": 5524,
+      "sha256": "ab7a2e23064bd920c09c1f02f439f436176e3150b9d97f5a5527d6d5a333b04f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🔢️scalar/🦀️.rs",
+      "bytes": 5364,
+      "sha256": "69ed0e2a3f72f351313cad7b3342314248c578cfec66dd66bd9cc96ab6f1808f"
+    }
+  ],
+  "remaining": "Original borrowed IO CPU port Root-owned; typed owning test callers still migrate; actual production compiler oracle required"
+}

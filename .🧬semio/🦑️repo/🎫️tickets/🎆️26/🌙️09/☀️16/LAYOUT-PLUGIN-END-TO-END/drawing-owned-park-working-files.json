@@ -1,0 +1,68 @@
+{
+  "sourceOnly": true,
+  "runtimeAttempts": 0,
+  "sourceReady": false,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/⏸️park/🦀️.rs",
+      "sha256": "669de6c705dc2e9fd702522dd5eff0666231f165707a9e2184ad641165e4347f",
+      "bytes": 13772
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/⏸️park/🧬️schema/🔣️.json",
+      "sha256": "5a53531d61f4473ab4fe26de7c36aa0858e5cd4a772c62765e7714a391b3fa39",
+      "bytes": 4150
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/⏸️park/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "a3607a8ee30a48bb80284a1e14c9cb65665dd185a82552a1b01a87efa7cd1687",
+      "bytes": 1694
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/⏸️park/🧪️tests/🟦️.ts",
+      "sha256": "f6ac9a25c9b9b8042375cd9c82cee8ae7218d3bbd1923fa5e7a293f58345e685",
+      "bytes": 2275
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🦀️.rs",
+      "sha256": "ea7f6284fd63b8071be4452d85563794888082bacfd9f5ed55e55a2b4d9d3305",
+      "bytes": 21707
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🎟️loan/🧪️tests/🦀️.rs",
+      "sha256": "6dd652ee125a4e234dfc8140bfc797b275e2f01436bf5d0f3e36e4913980aa55",
+      "bytes": 6119
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️origin/🦀️.rs",
+      "sha256": "4d1d8b6bda4421b2798a2f0439e826a60085d9e771690d208c850a087640f173",
+      "bytes": 20141
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/⏸️park/🦀️.rs",
+      "sha256": "5185babf0588107854d8253b805b4b63b825da9476cfc590e3baa6293e0b577c",
+      "bytes": 10818
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/💼️job/⏸️park/🧪️tests/🦀️.rs",
+      "sha256": "175503662cc8ce0cac064b66b7c2094fa419d9ddb757c33098f77711179423b1",
+      "bytes": 26128
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🦀️.rs",
+      "sha256": "f60c6c1c13e280922782bb8276421827c285f1017a6f9fe14fa08d448d1237ee",
+      "bytes": 25407
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/🦀️.rs",
+      "sha256": "fe9501f98031cf2aa45581fd4d7021d6b133ceae1c1b6ebd969a1e0d7d822930",
+      "bytes": 4450
+    }
+  ],
+  "knownBlockers": [
+    "actual compiler/tests pending",
+    "same-package context integration-law ownership pending",
+    "higher worker receiver/initializer migration incomplete",
+    "Actor existing native decode cases retain preexisting legacy direct constructor/outcome usages pending full consumer census"
+  ]
+}

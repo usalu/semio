@@ -21,16 +21,16 @@ pub trait OpBinary: Sized {
 /// 🫴️ Admits the actual stored operation cursor through one original caller grant.
 pub trait OpBinaryReceiving: OpBinary + semio_framework_value::retirement::RetireOwned {
     type Receiving: OpBinaryReceivingCursor<Self>;
-    fn admit_receiving(source:&[u8],range:(usize,usize),grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Self::Receiving,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>;
+    fn admit_receiving(source:&[u8],range:(usize,usize),grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Self::Receiving,semio_framework_value::RetainedCloneProgress)>>;
 }
 /// 📩️ Retains original parse, typed binding and output custody across bounded native loans.
 pub trait OpBinaryReceivingCursor<M:semio_framework_value::retirement::RetireOwned>:semio_framework_value::retirement::RetireOwned{
     fn demands(&self,source:&[u8],maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
-    fn step(&mut self,source:&[u8],native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,body:usize,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,semio_framework_value::ValueError>;
+    fn step(&mut self,source:&[u8],native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,body:usize,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress,semio_framework_value_native_owned::OriginalReceivingPrimary>;
     fn is_ready(&self)->bool;
-    fn take_into(&mut self,recipient:&mut Option<M>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,semio_framework_value::ValueError>;
+    fn take_into(&mut self,recipient:&mut Option<M>,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneProgress>;
     fn close_demands(&self,maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>;
-    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>;
+    fn close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<semio_framework_value::RetainedCloneStep>;
     fn terminal_is_empty(&self)->bool;
 }
 //#endregion 🔖️OpBinary

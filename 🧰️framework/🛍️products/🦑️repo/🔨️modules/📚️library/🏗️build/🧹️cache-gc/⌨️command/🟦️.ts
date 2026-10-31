@@ -14,13 +14,14 @@ import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️proc
 import {nativeFreeSpaceSyncV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 
 /** 📝️ The closed arguments of `repo cache status|gc|verify`. */
-export type CacheArgumentsV1=Readonly<{operation:"status"|"gc"|"verify"|"dedupe";json:boolean;deep:boolean;dryRun:boolean;only:ReadonlySet<string>|undefined;language:string|undefined;budget:string|undefined}>;
+export type CacheArgumentsV1=Readonly<{operation:"status"|"gc"|"verify"|"dedupe"|"grow";json:boolean;deep:boolean;dryRun:boolean;only:ReadonlySet<string>|undefined;language:string|undefined;budget:string|undefined}>;
 const both=(key:string,variables:Readonly<Record<string,string|number>>={}):string=>cacheTextV1("en",key,variables)+"\n"+cacheTextV1("de",key,variables);
 const valued=Object.freeze(["--area","--lang","--budget"]),plain=Object.freeze(["--json","--dry-run","--deep"]);
 
 /** 🧷️ Reads `status|gc|verify` with its options; every unknown or repeated option is refused in both languages. */
 export function cacheArgumentsV1(args:readonly string[],ledger:CacheLedgerV1=cacheLedgerV1(),declared:MachinePolicyV1=machinePolicyV1()):CacheArgumentsV1{
- const operation=args[0];if(operation!=="status"&&operation!=="gc"&&operation!=="verify"&&operation!=="dedupe")throw Error(both("error.syntax"));
+ const operation=args[0];if(operation!=="status"&&operation!=="gc"&&operation!=="verify"&&operation!=="dedupe"&&operation!=="grow")throw Error(both("error.syntax"));
+ if(operation==="grow")return Object.freeze({operation,json:false,deep:false,dryRun:args.includes("--dry-run"),only:undefined,language:args.find(argument=>argument.startsWith("--lang="))?.slice(7),budget:undefined});
  const seen=new Set<string>(),values:Record<string,string>={};let json=false,dryRun=false,deep=false;
  for(let index=1;index<args.length;index++){
   const argument=args[index]!,cut=argument.indexOf("="),name=cut<0?argument:argument.slice(0,cut);
@@ -37,7 +38,7 @@ export function cacheArgumentsV1(args:readonly string[],ledger:CacheLedgerV1=cac
 }
 
 /** 🎛️ What the command needs besides the runner ports: the workspace, the environment, the output and the ledger. */
-export type CacheCommandContextV1=Readonly<{workspace:string;environment:Readonly<Record<string,string|undefined>>;write(line:string):void;ledger?:CacheLedgerV1;partitions?:CachePartitionBudgetsV1;verify?(control:MemberScanControlV1):Promise<MemberVerifyReportV1>;machinePolicy?:MachinePolicyV1;freeBytes?(path:string):number|undefined;clone?(source:string,destination:string):Promise<boolean>}>;
+export type CacheCommandContextV1=Readonly<{workspace:string;environment:Readonly<Record<string,string|undefined>>;write(line:string):void;ledger?:CacheLedgerV1;partitions?:CachePartitionBudgetsV1;verify?(control:MemberScanControlV1):Promise<MemberVerifyReportV1>;grow?(args:readonly string[],language:CacheLanguageV1):Promise<number>;machinePolicy?:MachinePolicyV1;freeBytes?(path:string):number|undefined;clone?(source:string,destination:string):Promise<boolean>}>;
 
 /** 💰️ Resolves the disk budget of this machine from `--budget`, the environment and the machine file inside the repository cache root, in that order, falling back to the declared default. */
 async function machineTotalV1(context:CacheCommandContextV1,parsed:CacheArgumentsV1,ledger:CacheLedgerV1){
@@ -88,6 +89,7 @@ export async function runCacheLedgerCommandV1(args:readonly string[],context:Cac
    return report.mismatches||report.closureMismatches?1:0;
   }
   if(parsed.operation==="dedupe")return runDedupeV1(context,parsed,language,ports);
+  if(parsed.operation==="grow"){if(!context.grow){context.write(cacheTextV1(language,"verify.unavailable"));return 1;}return context.grow(args,language);}
   const total=await machineTotalV1(context,parsed,ledger),result=await collectCacheV1(context.workspace,ledger,{dryRun:parsed.dryRun,only:parsed.only,machine:{totalBytes:total.bytes,source:total.source}},ports,{language,write:parsed.json?()=>{}:context.write},context.partitions);
   if(parsed.json)context.write(JSON.stringify({version:1,dryRun:result.dryRun,freedBytes:result.freedBytes,kept:result.kept,removed:result.removed,failed:result.failed,delegated:result.delegated,machine:result.machine,plans:result.plans},null,2));
   else for(const failure of result.failed)context.write(failure.target+"/"+failure.name+": "+failure.message);
@@ -177,6 +179,7 @@ export async function runCacheLedgerV1(root:string,args:readonly string[],invoca
   }
  });
  const verify=async(control:import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts").MemberScanControlV1)=>{const scan=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📏️headroom/🧾️closures/🗂️members/🔎️scan/🟦️.ts"),image=await partitions.openRepositoryCachePartitionV1(root,"graph",phaseControl);try{return await scan.verifyBuildGraphMembersDeepV1(image.root,control);}finally{await image.close();}};
- const code=await runCacheLedgerCommandV1(args,{workspace:root,environment:process.env,write:writeResultLineV1,verify},ports);
+ const grow=async(growArgs:readonly string[],language:CacheLanguageV1)=>{const{runCacheGrowV1}=await import("../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📏️grow/⌨️command/🟦️.ts"),{randomBytes}=await import("node:crypto");return runCacheGrowV1(growArgs,{workspace:root,write:writeResultLineV1,freeBytes:path=>nativeFreeSpaceSyncV1(path)?.availableBytes,signal:invocation.control.signal,lease:imageDirectory=>leases.acquireQueuedResourceLease({directory,resource:"native-fixed-image:"+imageDirectory,mode:"exclusive",owner:randomBytes(16).toString("base64url"),signal:phaseControl.signal,control:phaseControl})},language);};
+ const code=await runCacheLedgerCommandV1(args,{workspace:root,environment:process.env,write:writeResultLineV1,verify,grow},ports);
  if(code!==0)process.exitCode=code;
 }

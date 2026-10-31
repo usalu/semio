@@ -1,0 +1,57 @@
+{
+  "state": "source-only-actual-callers-after-module-red",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🧵️drawing/🖼️composition/🟦️.ts",
+      "before": "9fe243016e941979afdbec99ed57db942602341c3ea3142c87331163b48c2756",
+      "sha256": "db7eb825d0b656f5d234bf6edc089284438feafa87355a6fab459d79e0d9bf6e",
+      "scope": "Hand-migrate actual Layout primitive/helper/type names to existing canonical RetainedWork API; no old alias restored, no algorithm/assertion/stock changes. Further defining loan/caller migration remains explicit."
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🟦️.ts",
+      "before": "8baa857f311f81991236e321f90e9d41d5d7edc914a16ad64b8d3350fa506569",
+      "sha256": "2b61bc37dc1ccd074a837e5de8079dc1c062a282f187b43889bc0c39bfb39c3c",
+      "scope": "Hand-migrate actual Layout primitive/helper/type names to existing canonical RetainedWork API; no old alias restored, no algorithm/assertion/stock changes. Further defining loan/caller migration remains explicit."
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🧪️tests/🧵️flow/📇️addressed.ts",
+      "before": "629a8aa0a26bf062131d2bc6e55516a192e37a011ba98220871604ac81e061e9",
+      "sha256": "0d45d52dab5c5e6d37ccf6559dabf356535c4f8cb178acf55d9959a145f7c54f",
+      "scope": "Hand-migrate actual Layout primitive/helper/type names to existing canonical RetainedWork API; no old alias restored, no algorithm/assertion/stock changes. Further defining loan/caller migration remains explicit."
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/📄️paragraph/🧪️tests/🧵️flow/🟦️.ts",
+      "before": "84c0ff61204d4d776af8b979ccd52e7d8787e7ea341d1b034da4e423e70c3da5",
+      "sha256": "246665732a30214dba57347d6028c72a0648b02aeffe1af0440078ad67516d45",
+      "scope": "Hand-migrate actual Layout primitive/helper/type names to existing canonical RetainedWork API; no old alias restored, no algorithm/assertion/stock changes. Further defining loan/caller migration remains explicit."
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🗃️plan/🟦️.ts",
+      "before": "90ae6c290552cabcdf0951418bc7b165cfae38bc72539fc3ee32607253020dfa",
+      "sha256": "2fab192b43c15e59f5d7ed1a14268e0da893bb72643d28553a39634a7298d0b6",
+      "scope": "Hand-migrate actual Layout primitive/helper/type names to existing canonical RetainedWork API; no old alias restored, no algorithm/assertion/stock changes. Further defining loan/caller migration remains explicit."
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🗃️plan/🧪️tests/🟦️.ts",
+      "before": "a6cb38b3d8e1788df9e6a036295e41cd25c546ce28e330f2ea2bc6f8ca33ad07",
+      "sha256": "59810b0e8d263f1365b354b78cd74deba89673cd07b95a93b8d05811f2ea1bc3",
+      "scope": "Hand-migrate actual Layout primitive/helper/type names to existing canonical RetainedWork API; no old alias restored, no algorithm/assertion/stock changes. Further defining loan/caller migration remains explicit."
+    }
+  ],
+  "mapping": {
+    "FontWorkLedger": "RetainedWorkLedger",
+    "FontBuffer": "RetainedWorkBuffer",
+    "FontRetirement": "RetainedWorkRetirement",
+    "FontRetirementCursor": "RetainedWorkRetirementCursor",
+    "FontRetainedDemand": "RetainedWorkDemand",
+    "FontRetainedGrant": "RetainedWorkGrant",
+    "FontRetainedReceipt": "RetainedWorkReceipt",
+    "retireFontBuffer": "retireRetainedWorkBuffer",
+    "retireFontBuffers": "retireRetainedWorkBuffers",
+    "retireFontArchive": "retireRetainedWorkArchive",
+    "retireFontChildren": "retireRetainedWorkChildren",
+    "fontChildRetirement": "retainedWorkChildRetirement",
+    "popFontBuffer": "popRetainedWorkBuffer"
+  },
+  "noClaims": "No corrected Layout runtime/strict result; old primitive signatures/row readers may expose subsequent integration faults."
+}

@@ -18,7 +18,7 @@ impl RetainedSliceEquality{
  pub fn new()->Self{Self::default()}
  pub fn ready(&self)->bool{self.result.is_some()}
  pub fn equal(&self)->Option<bool>{self.result}
- pub fn fixed_copy_bytes()->usize{size_of::<Self>()*2+size_of::<usize>()*8}
+ pub fn fixed_copy_bytes()->usize{0}
  fn count<T:RetainedEqualityElement>(&self,left:usize,right:usize,body:usize)->Result<usize,ValueError>{
   if self.ready(){return Err(invalid());}if left!=right{return Ok(0);}let remaining=left.checked_sub(self.offset).ok_or_else(invalid)?;
   if size_of::<T>()==0{return Ok(remaining.min(1));}
@@ -30,15 +30,17 @@ impl RetainedSliceEquality{
   let bytes=count.checked_mul(size_of::<T>()).and_then(|bytes|bytes.checked_mul(2)).and_then(|bytes|bytes.checked_add(Self::fixed_copy_bytes())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"slice equality page extent overflow"))?;
   Ok(RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()})
  }
- pub fn advance<T:RetainedEqualityElement>(&mut self,left:&[T],right:&[T],grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn advance<T:RetainedEqualityElement>(&mut self,left:&[T],right:&[T],grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
+  if self.result.is_some(){return Ok(RetainedCloneStep::Complete(Default::default()))}
   let demand=self.demand(left,right,grant.maximum_copy_bytes)?;
-  if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
+  if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
   let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
-  if left.len()!=right.len(){self.result=Some(false);return Ok(RetainedCloneStep::Complete(progress));}
+  if left.len()!=right.len(){self.result=Some(false);work=1;return Ok(RetainedCloneStep::Complete(progress))}
   let end=self.offset+self.count::<T>(left.len(),right.len(),grant.maximum_copy_bytes)?;
-  for index in self.offset..end{if !T::inline_eq(&left[index],&right[index]){self.result=Some(false);return Ok(RetainedCloneStep::Complete(progress));}}
+  work=1;for index in self.offset..end{if !T::inline_eq(&left[index],&right[index]){self.result=Some(false);return Ok(RetainedCloneStep::Complete(progress))}}
   self.offset=end;if end==left.len(){self.result=Some(true);Ok(RetainedCloneStep::Complete(progress))}else{Ok(RetainedCloneStep::Progress(progress))}
- }
+ })();crate::RetainedWorkOutcome{result,work}}
+
 }
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

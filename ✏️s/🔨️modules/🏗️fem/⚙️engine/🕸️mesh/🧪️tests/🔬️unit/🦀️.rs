@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_job_payload::RetainedPayloadBuilder;
 use semio_s_fem_test_support::close_turn;
 
 #[test]
@@ -24,7 +25,7 @@ fn mesh_preparation_refuses_logical_fill_before_mutating_pending_input() {
         for _ in 0..4 {
             let mut sequence_receipt = RetainedCloneProgress::default();
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            assert_eq!(seen_of(job.step(&mut context)), Seen::Yield);
+            assert_eq!(seen_of(job.step_plain(&mut context)), Seen::Yield);
         }
         let admitted = witness(job.preparation.as_ref().unwrap()).2.iter().sum::<usize>();
         let mut fault = false;
@@ -36,13 +37,13 @@ fn mesh_preparation_refuses_logical_fill_before_mutating_pending_input() {
                 if cancelled { token.cancel_now(); }
                 let mut sequence_receipt = RetainedCloneProgress::default();
                 let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, deadline, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
-                let outcome = seen_of(job.step(&mut context));
+                let outcome = seen_of(job.step_plain(&mut context));
                 holds &= outcome == if cancelled { Seen::Cancelled } else { Seen::Yield };
                 holds &= witness(job.preparation.as_ref().unwrap()) == before;
             }
             let mut sequence_receipt = RetainedCloneProgress::default();
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            match seen_of(job.step(&mut context)) {
+            match seen_of(job.step_plain(&mut context)) {
                 Seen::Fault(_) => {
                     fault = true;
                     holds &= witness(job.preparation.as_ref().unwrap()) == before;
@@ -51,7 +52,7 @@ fn mesh_preparation_refuses_logical_fill_before_mutating_pending_input() {
                     drop(context);
                     let mut sequence_receipt = RetainedCloneProgress::default();
                     let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                    match seen_of(job.step(&mut context)) {
+                    match seen_of(job.step_plain(&mut context)) {
                         Seen::Fault(_) => {}
                         _ => holds = false,
                     }
@@ -109,7 +110,7 @@ fn mesh_preparation_owns_each_reservation_and_preserves_lookup_on_handoff() {
         let mut sequence = 0;
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        assert_eq!(seen_of(job.step(&mut context)), Seen::Yield);
+        assert_eq!(seen_of(job.step_plain(&mut context)), Seen::Yield);
         let mut reservations = Vec::new();
         let mut fault = false;
         let mut fault_detail = None;
@@ -122,13 +123,13 @@ fn mesh_preparation_owns_each_reservation_and_preserves_lookup_on_handoff() {
                 if cancel { token.cancel_now(); }
                 let mut sequence_receipt = RetainedCloneProgress::default();
                 let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, deadline, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
-                let outcome = seen_of(job.step(&mut context));
+                let outcome = seen_of(job.step_plain(&mut context));
                 holds &= outcome == if cancel { Seen::Cancelled } else { Seen::Yield };
                 holds &= (job.stage, witness(&job)) == before;
             }
             let mut sequence_receipt = RetainedCloneProgress::default();
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            match seen_of(job.step(&mut context)) {
+            match seen_of(job.step_plain(&mut context)) {
                 Seen::Fault(detail) => { fault_detail = Some(detail); fault = true; }
                 Seen::Yield => {}
                 other => panic!("unexpected preparation outcome: {other:?}"),
@@ -142,7 +143,7 @@ fn mesh_preparation_owns_each_reservation_and_preserves_lookup_on_handoff() {
             let before = (job.stage, witness(&job));
             let mut sequence_receipt = RetainedCloneProgress::default();
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            let Seen::Fault(repeated) = seen_of(job.step(&mut context)) else { panic!("preparation fault must remain sticky") };
+            let Seen::Fault(repeated) = seen_of(job.step_plain(&mut context)) else { panic!("preparation fault must remain sticky") };
             holds &= Some(repeated) == fault_detail;
             holds &= (job.stage, witness(&job)) == before;
         }
@@ -153,7 +154,7 @@ fn mesh_preparation_owns_each_reservation_and_preserves_lookup_on_handoff() {
             for _ in 0..4096 {
                 let mut sequence_receipt = RetainedCloneProgress::default();
                 let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-                assert_eq!(seen_of(job.step(&mut context)), Seen::Yield);
+                assert_eq!(seen_of(job.step_plain(&mut context)), Seen::Yield);
                 if job.stage == MeshJobStage::CountInput { break; }
             }
             let retained = witness(&job);
@@ -193,7 +194,7 @@ fn mesh_preparation_cancellation_closes_each_partial_owner_under_exact_grants() 
         for _ in 0..cut {
             let mut sequence_receipt = RetainedCloneProgress::default();
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            assert_eq!(seen_of(job.step(&mut context)), Seen::Yield);
+            assert_eq!(seen_of(job.step_plain(&mut context)), Seen::Yield);
         }
         let owner = job.preparation.as_ref().unwrap();
         let allocations = [owner.points.capacity() * size_of::<[f64; 2]>(), owner.point_indices.capacity() * size_of::<((u64, u64), usize)>(), owner.constraints.capacity() * size_of::<Edge>()];
@@ -202,7 +203,7 @@ fn mesh_preparation_cancellation_closes_each_partial_owner_under_exact_grants() 
         token.cancel_now();
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), token, || Some(0), &mut sequence, &mut sequence_receipt);
-        assert_eq!(seen_of(job.step(&mut context)), Seen::Cancelled);
+        assert_eq!(seen_of(job.step_plain(&mut context)), Seen::Cancelled);
         assert_eq!(context.fuel_remaining(), 1);
         InteractiveJob::begin_close(&mut job);
         assert_eq!(close_turn(&mut job, RetainedCloneGrant { maximum_items: 0, ..mesh_release_grant(4096) }).expect("mesh close turn"), InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
@@ -249,7 +250,7 @@ fn mesh_edge_authority_uses_completed_faces_and_closes_exact_backing() {
         for _ in 0..256 {
             let mut sequence_receipt = RetainedCloneProgress::default();
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-            assert!(matches!(seen_of(job.step(&mut context)), Seen::Yield), "{}", row["id"]);
+            assert!(matches!(seen_of(job.step_plain(&mut context)), Seen::Yield), "{}", row["id"]);
             if job.stage == MeshJobStage::ConstrainBoundary { break; }
         }
         assert_eq!(job.stage, MeshJobStage::ConstrainBoundary);
@@ -393,7 +394,7 @@ fn drive_mesh_job(mut job: MeshJob) -> (Vec<u8>, usize, StepLatency) {
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(job.operation.operation, job.operation.generation, StepBudget::new(64, 10, TEST_GRANT), cancel.clone(), now, &mut sequence, &mut sequence_receipt);
         let started = Instant::now();
-        let outcome = seen_of(job.step(&mut context));
+        let outcome = seen_of(job.step_plain(&mut context));
         latency.admit(started.elapsed());
         match outcome {
             Seen::Preview(_) => previews += 1,
@@ -535,7 +536,7 @@ fn mesh_job_observes_cancellation_before_mutating() {
     let mut sequence = 0;
     let mut sequence_receipt = RetainedCloneProgress::default();
     let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(64, 10, TEST_GRANT), cancel, now, &mut sequence, &mut sequence_receipt);
-    assert_eq!(seen_of(job.step(&mut context)), Seen::Cancelled);
+    assert_eq!(seen_of(job.step_plain(&mut context)), Seen::Cancelled);
     assert_eq!(job.stage, MeshJobStage::Validate);
     assert!(job.triangulation.is_none());
 }
@@ -563,7 +564,7 @@ fn bounded_mesh_plus_one_fault_retains_the_exact_domain_for_cursor_close() {
     for _ in 0..256 {
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        if matches!(seen_of(job.step(&mut context)), Seen::Fault(_)) {
+        if matches!(seen_of(job.step_plain(&mut context)), Seen::Fault(_)) {
             faulted = true;
             break;
         }
@@ -635,7 +636,7 @@ fn p6h_constraint_flip_interrupts_after_every_edge_phase_and_updates_only_affect
         let mut sequence_receipt = RetainedCloneProgress::default();
         drop(cancelled);
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        assert_eq!(seen_of(job.step(&mut context)), Seen::Yield);
+        assert_eq!(seen_of(job.step_plain(&mut context)), Seen::Yield);
         maximum_micros = maximum_micros.max(started.elapsed().as_micros());
         if job.constraint_cursor == job.constraints.len() {
             break;
@@ -710,7 +711,7 @@ fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_repl
             job.publication_cursor.coordinate,
             job.publication_cursor.triangle,
             job.publication_cursor.index,
-            job.publication_writer.as_ref().and_then(RetainedJobPayloadWriter::staged_page_len),
+            job.publication_writer.as_deref().and_then(RetainedPayloadBuilder::staged_page_len),
             job.mesh.points.len(),
             job.mesh.tris.len(),
         )
@@ -759,7 +760,7 @@ fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_repl
             let mut sequence_receipt = RetainedCloneProgress::default();
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
             let started = Instant::now();
-            let outcome = seen_of(job.step(&mut context));
+            let outcome = seen_of(job.step_plain(&mut context));
             maximum_micros = maximum_micros.max(started.elapsed().as_micros());
             match outcome {
                 Seen::Preview(_) | Seen::Checkpoint(_) => {}
@@ -817,11 +818,11 @@ fn p6h_mounted_mesh_preparation_initialization_finish_publication_interrupt_repl
     for _ in 0..1_000_000 {
         let mut sequence_receipt = RetainedCloneProgress::default();
         let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), root_cancel_token(), || Some(0), &mut sequence, &mut sequence_receipt);
-        match seen_of(interrupted.step(&mut context)) {
+        match seen_of(interrupted.step_plain(&mut context)) {
             Seen::Fault(detail) => panic!("interrupted mesh fixture fault: {detail:?}"),
             _ => {}
         }
-        if interrupted.publication_writer.as_ref().and_then(RetainedJobPayloadWriter::staged_page_len).is_some_and(|length| length > 0) {
+        if interrupted.publication_writer.as_deref().and_then(RetainedPayloadBuilder::staged_page_len).is_some_and(|length| length > 0) {
             break;
         }
     }

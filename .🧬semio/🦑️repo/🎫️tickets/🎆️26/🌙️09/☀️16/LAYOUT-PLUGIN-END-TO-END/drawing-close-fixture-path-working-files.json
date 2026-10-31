@@ -1,0 +1,37 @@
+{
+  "state": "path-only-current-unexecuted",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/🛬️receiving/♻️close/🧪️tests/🦀️.rs",
+      "sha256": "b4dba77964824dc76aacdcdc70a9ea9e7431187f389b74b0ff5ae201cdda5fed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/♻️close/🧪️tests/🦀️.rs",
+      "sha256": "6c70c6e181786049d6105d233b737c97686cbda2b71414969838da34510956a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/👶️child/♻️close/🧪️tests/🦀️.rs",
+      "sha256": "d6b9b27608b7288ce48fc5464b9535c30a314a504c794e7caf2bffc4a85b1f4e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "ba0b474353488be141270732ed4447cfba11996fc0de544da862043235d0443c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🎟️close/🧪️tests/🦀️.rs",
+      "sha256": "e9c626bdbefd0e15f34be12c1e0df7901c30913849277d7024ea7509c1ec1d42"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🎒️pack/🔤️json/🧮️parser-and-grammar-cursor/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "15217d8ee6227942194fd94f11b6083341ccf84e8bec1943eb367a630a4f6efb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/♻️close/🧪️tests/🦀️.rs",
+      "sha256": "068cade3de46fe9792f9659f6d603dc28f428db77f210ee3f6f42685fc3c92a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/🛑️cancel/♻️retirement/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "b530b15ccd63ad6aee2e056da9dfaf57d3a1eb7351438f8d0e734b2603dc448c"
+    }
+  ]
+}

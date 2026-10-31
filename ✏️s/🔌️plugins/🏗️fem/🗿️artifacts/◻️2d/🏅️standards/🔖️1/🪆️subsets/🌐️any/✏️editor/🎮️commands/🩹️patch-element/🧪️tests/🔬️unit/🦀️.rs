@@ -65,12 +65,12 @@ fn sibling_field_commands_and_inverse_preserve_concurrent_intent(){
     let base=semio_framework_pack_json::from_json_str::<Fem2dSnapshot>(include_str!("../../../../../../🕸️mesh/🧪️tests/🧫️fixtures/🧬️mutations/🩹️change-element/🩹️changes/📸️snapshot/⬅️before/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral fixture");
     let first=emit(&base,PatchElement{id:"e1".into(),field:"start".into(),value:"n3".into()}).unwrap().artifact_mutations.remove(0);
     let second=emit(&base,PatchElement{id:"e1".into(),field:"kind".into(),value:"beam".into()}).unwrap().artifact_mutations.remove(0);
-    let first_then_second=vcs::apply_mutation(&vcs::apply_mutation(&base,&first).unwrap().0,&second).unwrap().0;
-    let combined=vcs::apply_mutation(&vcs::apply_mutation(&base,&second).unwrap().0,&first).unwrap().0;
+    let first_then_second=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&base,&first).unwrap().0,&second).unwrap().0;
+    let combined=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&base,&second).unwrap().0,&first).unwrap().0;
     assert_eq!(combined,first_then_second);
     assert!(matches!(&combined.elements[0],crate::FemElement::Beam{start,..} if start=="n3"));
-    let mut undo=combined.clone();for inverse in protocol::ColdMutation::inverse(&first,&base).unwrap().iter().rev(){undo=vcs::apply_mutation(&undo,inverse).unwrap().0;}
-    assert_eq!(undo,vcs::apply_mutation(&base,&second).unwrap().0,"undo owns no sibling field");
+    let mut undo=combined.clone();for inverse in protocol::ColdMutation::inverse(&first,&base).unwrap().iter().rev(){undo=semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&undo,inverse).unwrap().0;}
+    assert_eq!(undo,semio_s_artifact_fem_2d_mutations::cold_laws::apply_cold_mutation(&base,&second).unwrap().0,"undo owns no sibling field");
     let first_diff=protocol::ColdMutation::diff(&first,&base).into_parts().0;let second_diff=protocol::ColdMutation::diff(&second,&base).into_parts().0;
     let mut sum=first_diff.clone();protocol::ColdMutationDiff::absorb(&mut sum,second_diff);
     assert_eq!(protocol::apply_diff_cold(&sum,&base).unwrap(),combined);

@@ -8,7 +8,7 @@ use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshotH
 /// 📚️ Explicit table names for the actual DocBlock types shared by document and presentation.
 #[derive(Clone,Copy)]
 pub struct DocSqliteTables{pub collection:&'static str,pub member:&'static str,pub block:&'static str,pub paragraph:&'static str,pub heading:&'static str,pub run:&'static str,pub list:&'static str,pub list_item:&'static str,pub table:&'static str,pub table_row:&'static str,pub table_cell:&'static str,pub code:&'static str,pub quote:&'static str,pub image_block:&'static str,pub page_break:&'static str}
-/// 📑️ The document's independently declared block table names.
+/// 📄️ The document's independently declared block table names.
 pub const DOCUMENT_TABLES:DocSqliteTables=DocSqliteTables{collection:"semio_document_collection",member:"semio_document_member",block:"semio_document_block",paragraph:"semio_document_paragraph",heading:"semio_document_heading",run:"semio_document_run",list:"semio_document_list",list_item:"semio_document_list_item",table:"semio_document_table",table_row:"semio_document_table_row",table_cell:"semio_document_table_cell",code:"semio_document_code",quote:"semio_document_quote",image_block:"semio_document_image_block",page_break:"semio_document_page_break"};
 #[path="🧮️semantic/🦀️.rs"]
 pub mod semantic;
@@ -57,8 +57,6 @@ Ok(root)}/// 🎟️ Admits all typed Document cells before native forecasting o
 pub(crate)fn admit_values(snapshot:&SemioDocumentSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
 /// 🏛️ Admits the exact authored table and column layout before native ownership.
 pub(crate)fn admit_layout(limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::layout(limits)}
-/// 📦️ Counts the actual native primitive cells before typed ownership.
-pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::binary(body,control,limits)}
 /// 📝️ Counts the actual native primitive cells before typed ownership.
 pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
 
@@ -116,7 +114,7 @@ impl SemioDocumentSnapshot{
 pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.styles.len())?;for style in &self.styles{b.text(&style.id)?;b.text(&style.name)?;b.optional_text(style.based_on.as_deref())?;}b.entities(self.images.len())?;for image in &self.images{b.text(&image.id)?;b.text(&image.mime)?;b.bytes(&image.bytes)?;}native_blocks(&self.blocks,b)?;Ok(())}
 }
 
-/// 📑️ Bounds actual shared DocBlock variants and their typed inline fields iteratively.
+/// 🔗️ Bounds actual shared DocBlock variants and their typed inline fields iteratively.
 pub fn native_blocks(roots:&[DocBlock],b:&mut Bound<'_, '_>)->Result<(),ValueError>{b.entities(roots.len())?;let mut pending:Vec<_>=roots.iter().rev().collect();while let Some(block)=pending.pop(){b.entities(1)?;match block{
 DocBlock::Paragraph{style_id,runs}|DocBlock::Heading{style_id,runs,..}=>{b.scalars(1)?;b.optional_text(style_id.as_deref())?;b.entities(runs.len())?;for run in runs{b.text(&run.text)?;b.scalars(4)?;b.optional_text(run.style.font.as_deref())?;b.optional_text(run.style.color.as_deref())?;b.optional_text(run.style.link.as_deref())?;}},
 DocBlock::List{items,..}=>{b.scalars(1)?;b.entities(items.len())?;for item in items.iter().rev(){b.entities(item.blocks.len())?;pending.extend(item.blocks.iter().rev());}},

@@ -494,7 +494,7 @@ impl ArtifactApp for SingleDocumentApp {
     type TransientMutation = PublicationTransientMutation;
     type Command = TestCommand;
 
-    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework::Fault>>{Some(||{
         Ok(TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() })
     })}
 

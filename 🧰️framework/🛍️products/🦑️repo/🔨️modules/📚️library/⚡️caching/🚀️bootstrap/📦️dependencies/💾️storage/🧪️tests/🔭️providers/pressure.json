@@ -1,0 +1,56 @@
+{
+  "pressure": {
+    "members": 32,
+    "dependencies": 230,
+    "lastMemberDependencies": 222,
+    "providerManifestEdges": 1024,
+    "expectedEdges": 7352,
+    "version": "1.2.3",
+    "range": "^1.0.0",
+    "providerPlacement": "member-aliases-to-shared-hoisted-owner"
+  },
+  "isolation": [
+    {
+      "name": "distinct-owner-versions",
+      "mutation": "none",
+      "accepted": true
+    },
+    {
+      "name": "wrong-range",
+      "mutation": "range",
+      "accepted": false
+    },
+    {
+      "name": "link-cycle",
+      "mutation": "cycle",
+      "accepted": false
+    },
+    {
+      "name": "missing-provider-created-between-replays",
+      "mutation": "negative-created",
+      "accepted": false
+    },
+    {
+      "name": "provider-manifest-mutated-between-replays",
+      "mutation": "manifest",
+      "accepted": false
+    },
+    {
+      "name": "missing-provider-alias-created-between-replays",
+      "mutation": "relink",
+      "accepted": false
+    },
+    {
+      "name": "existing-provider-link-target-replaced-between-replays",
+      "mutation": "link-replaced",
+      "accepted": false
+    }
+  ],
+  "birth": {
+    "owner": "dependency-provider-pressure",
+    "maximumElapsedMilliseconds": 120000,
+    "capabilities": {
+      "artifacts": true
+    }
+  }
+}

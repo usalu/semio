@@ -1,0 +1,236 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+    "matches": [
+      {
+        "line": 3,
+        "source": "import {CoverageJob,type CoverageMask} from \"../../🖊️coverage/🟦️.ts\";"
+      },
+      {
+        "line": 14,
+        "source": " private source:PixelImage|null;private output:PixelImage;private coverage:CoverageJob|null;private mask:CoverageMask|null=null;"
+      },
+      {
+        "line": 30,
+        "source": "   const w=input.source.width,h=input.source.height;this.coverageContour=[[0,0],[w,0],[w,h],[0,h]];this.coverage=new CoverageJob({width:input.width,height:input.height,transform:m,rule:\"nonzero\",contours:[this.coverageContour]});"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🧪️tests/🟦️.ts",
+    "matches": [
+      {
+        "line": 8,
+        "source": "import {CoverageJob} from \"../../../🖊️coverage/🟦️.ts\";"
+      },
+      {
+        "line": 16,
+        "source": "  const before=structuredClone(v),job=new AffineImageJob(v),state=job as any,records:{source:CoverageJob;job:any;work:number}[]=[];"
+      },
+      {
+        "line": 17,
+        "source": "  const original=CoverageJob.prototype.intoRetirement,spy=spyOn(CoverageJob.prototype,\"intoRetirement\").mockImplementation(function(this:CoverageJob){"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🟦️.ts",
+    "matches": [
+      {
+        "line": 40,
+        "source": "export class CoverageJob{"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🧪️tests/🟦️.ts",
+    "matches": [
+      {
+        "line": 9,
+        "source": "import {CoverageJob,polygonCoverage,type CoverageInput} from \"../🟦️.ts\";"
+      },
+      {
+        "line": 13,
+        "source": "  const job=new CoverageJob(input);let previous=0;"
+      },
+      {
+        "line": 59,
+        "source": "    const job=new CoverageJob(fixture[3]!.input as CoverageInput);"
+      },
+      {
+        "line": 67,
+        "source": "  for(const patch of [{width:0},{width:16384,height:16384},{rule:\"inverse\"},{transform:[1,0,0,1,Infinity,0]}])expect(()=>new CoverageJob({...input,...patch} as CoverageInput)).toThrow();"
+      },
+      {
+        "line": 68,
+        "source": "  const job=new CoverageJob({...input,contours:[[[NaN,0],[1,0],[1,1]]]});"
+      },
+      {
+        "line": 70,
+        "source": "  for(const grant of [0,-1,NaN,Infinity,1.5])expect(()=>new CoverageJob(input).advance(grant)).toThrow();"
+      },
+      {
+        "line": 75,
+        "source": "  const mask=await polygonCoverage(input,{workBudget:7,onProgress:progress=>events.push(progress.phase)});"
+      },
+      {
+        "line": 79,
+        "source": "  await expect(polygonCoverage(input,{signal:controller.signal,workBudget:1,onProgress:()=>controller.abort()})).rejects.toThrow(/cancelled/);"
+      },
+      {
+        "line": 80,
+        "source": "  let observed=false;await expect(polygonCoverage(input,{signal:controller.signal,onProgress:()=>{observed=true;}})).rejects.toThrow(/cancelled/);expect(observed).toBe(false);"
+      },
+      {
+        "line": 83,
+        "source": "  const input=fixture[0]!.input as CoverageInput,before=structuredClone(input),job=new CoverageJob(input);"
+      },
+      {
+        "line": 93,
+        "source": "  const before=structuredClone(input),job=new CoverageJob(input),state=job as any;"
+      },
+      {
+        "line": 112,
+        "source": " const input=fixture.find(row=>row.name===\"integer rectangle\")!.input as CoverageInput,original=CoverageJob.prototype.intoRetirement;"
+      },
+      {
+        "line": 113,
+        "source": " for(const failure of [\"abort\",\"callback\"]){const controller=new AbortController(),error=new Error(\"injected coverage callback failure\"),observed:{owner:ReturnType<CoverageJob[\"intoRetirement\"]>;pixels:number;work:number;maximumGrant:number}[]=[];"
+      },
+      {
+        "line": 114,
+        "source": "  const spy=spyOn(CoverageJob.prototype,\"intoRetirement\").mockImplementation(function(this:CoverageJob){const pixels=(this as any).mask.coverage.length,owner=original.call(this),record={owner,pixels,work:0,maximumGrant:0};observed.push(record);const advance=owner.job.advance.bind(owner.job);owner.job.advance=grant=>{const progress=advance(grant);record.work=progress.work;record.maximumGrant=Math.max(record.maximumGrant,grant);return progress;};return owner;});"
+      },
+      {
+        "line": 115,
+        "source": "  try{const result=polygonCoverage(input,{signal:controller.signal,workBudget:1,onProgress:progress=>{if(progress.done){if(failure===\"abort\")controller.abort();else throw error;}}});if(failure===\"abort\")await expect(result).rejects.toThrow(/cancelled/i);else await expect(result).rejects.toBe(error);}finally{spy.mockRestore();}"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🎟️work/🟦️ts/owned.test.ts",
+    "matches": [
+      {
+        "line": 4,
+        "source": "import {CoverageJob,type CoverageInput} from \"../../🟦️.ts\";"
+      },
+      {
+        "line": 13,
+        "source": "export function complete(job:CoverageJob,wallet:Bank,quantum:number):void{for(let at=0;at<law.maximumTurns;at++){if(wallet.turn(job,work=>job.advance(quantum,work),quantum).done)return;}throw Error(\"Actual coverage exceeded original finite turn limit\");}"
+      },
+      {
+        "line": 14,
+        "source": "export function retire(job:CoverageJob,wallet:Bank):void{const moved=job.intoRetirement();wallet.close(moved.job);if(moved.output!==null)wallet.close(moved.output.intoRetirement());wallet.conserved();}"
+      },
+      {
+        "line": 15,
+        "source": "test(\"funded coverage preserves every original eighteen neutral masks at every original quantum\",()=>{expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);for(const row of fixture){if(!validate(row.input))throw Error(\"Original coverage input invalid\");for(const quantum of law.quanta){const before=structuredClone(row.input),wallet=bank(),job=new CoverageJob(row.input),errors:unknown[]=[];try{complete(job,wallet,quantum);const actual=job.result();expect([actual.width,actual.height]).toEq"
+      },
+      {
+        "line": 16,
+        "source": "test(\"funded coverage zero authority creates no backing or actual semantic work\",()=>{const row=fixture[0];if(row===undefined||!validate(row.input))throw Error(\"Original cold coverage source absent\");const wallet=bank(),job=new CoverageJob(row.input);try{const progress=wallet.turn(job,work=>{const result=job.advance(1,work);expect(work.receipt).toEqual(zero);return result;},1,{maximumItems:0,maximumCopyBytes:0,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:0});expect(progress.work).to"
+      },
+      {
+        "line": 17,
+        "source": "test(\"funded coverage actual row demands reject all independent positive underfills\",()=>{const row=fixture[3];if(row===undefined||!validate(row.input))throw Error(\"Original crossing coverage source absent\");const wallet=bank(),job=new CoverageJob(row.input),seen=new Set<string>();try{for(let at=0;at<law.maximumTurns;at++){const probe=wallet.turn(job,work=>job.advance(1,work),1,{maximumCopyBytes:0,maximumCapacityBytes:0});if(probe.done)break;const quote=job.nextWorkDemand();for(const axis of [\"i"
+      },
+      {
+        "line": 18,
+        "source": "test(\"funded coverage published typed backing genuinely refuses release underfill before same-bank close\",()=>{const row=fixture[0];if(row===undefined||!validate(row.input))throw Error(\"Original nonempty mask absent\");const wallet=bank(),job=new CoverageJob(row.input);complete(job,wallet,1);const output=job.result(),snapshot=Uint8Array.from(output.borrow()),moved=job.intoRetirement();expect(moved.output).toBe(output);wallet.close(moved.job);const cursor=output.intoRetirement();let denied=false;f"
+      },
+      {
+        "line": 19,
+        "source": "test(\"funded coverage actual final invalid-point turn retains its own CPU after paid backing and cached refusal is zero\",()=>{const input:CoverageInput={width:3,height:2,transform:[1,0,0,1,0,0],rule:\"nonzero\",contours:[[[NaN,0],[1,0],[1,1]]]},wallet=bank(),job=new CoverageJob(input);let actual:unknown,failed=false;try{for(let at=0;at<law.maximumTurns;at++){try{wallet.turn(job,work=>job.advance(1,work));}catch(error){actual=error;failed=true;break;}}expect(failed).toBe(true);expect(String(actual)"
+      },
+      {
+        "line": 20,
+        "source": "test(\"coverage constructor retains only inline controls and no typed byte backing before a genuine grant\",()=>{const row=fixture[0];if(row===undefined||!validate(row.input))throw Error(\"Original constructor source absent\");const original=globalThis.Uint8Array,observed=new Proxy(original,{construct(target,args,newTarget){births++;return Reflect.construct(target,args,newTarget);}});let births=0,job:CoverageJob|null=null;try{globalThis.Uint8Array=observed;job=new CoverageJob(row.input);expect(birth"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🖊️coverage/🟦️.ts",
+    "matches": [
+      {
+        "line": 2,
+        "source": "export { CoverageJob } from \"../../../🖊️coverage/🟦️.ts\";"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🟦️.ts",
+    "matches": [
+      {
+        "line": 13,
+        "source": "import {CoverageJob} from \"@semio-tech/framework-pixels-ts/coverage\";"
+      },
+      {
+        "line": 24,
+        "source": " for(const segments of curves)for(const transform of [[1,0,0,1,0,0],[.8,.2,-.3,1,1,0]]){const input:PathFlattenInput={segments,transform,tolerance:.0001},contours=complete(input,4096),coverage=new CoverageJob({width:8,height:8,transform,rule:\"nonzero\",contours:contours.map(c=>c.points)});while(!coverage.advance(4096).done){}const actual=Uint8Array.from(coverage.result().coverage),moved=coverage.intoRetirement();while(!moved.job.advance(4096).done){}"
+      }
+    ]
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🧪️tests/🟦️.ts",
+    "matches": [
+      {
+        "line": 9,
+        "source": "import {CoverageJob} from \"@semio-tech/framework-pixels-ts/coverage\";"
+      },
+      {
+        "line": 20,
+        "source": "  if(external)expect(external).toEqual(externalCopy);const paint=moved.output??external;if(paint){const coverage=new CoverageJob({width:base.extent[0]!,height:base.extent[1]!,contours:paint,transform:source.transform,rule:\"nonzero\"});while(!coverage.advance(4096).done){}const pixels=[...coverage.result().coverage];expect(pixels).toEqual(base.expected);const oracle=await reference(source,base.extent);pixels.forEach((pixel,at)=>expect(Math.abs(pixel-oracle[at]!)).toBeLessThanOrEqual(2));const reta"
+      },
+      {
+        "line": 44,
+        "source": " const contours=complete(source,budget),coverage=new CoverageJob({width:extent[0]!,height:extent[1]!,contours,transform:source.transform,rule:\"nonzero\"});"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🟦️.ts",
+    "matches": [
+      {
+        "line": 5,
+        "source": "import {CoverageJob,type CoverageMask} from \"@semio-tech/framework/pixels/coverage\";"
+      },
+      {
+        "line": 26,
+        "source": " private flatten:PathFlattenJob|null=null;private outline:StrokeOutlineJob|null=null;private coverage:CoverageJob|null=null;private fillMask:CoverageMask|null=null;private strokeMask:CoverageMask|null=null;"
+      },
+      {
+        "line": 50,
+        "source": "  if(this.fill&&this.inverse) {this.coverage=new CoverageJob({width:this.width,height:this.height,transform:this.transform,rule:this.rule,contours:this.fillContours});this.enter(\"fillCoverage\");}"
+      },
+      {
+        "line": 54,
+        "source": "  if(this.style&&this.inverse) {this.coverage=new CoverageJob({width:this.width,height:this.height,transform:this.transform,rule:\"nonzero\",contours:this.strokePolygons});this.enter(\"strokeCoverage\");}"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🟦️.ts",
+    "matches": [
+      {
+        "line": 15,
+        "source": "import {CoverageJob} from \"@semio-tech/framework/pixels/coverage\";"
+      },
+      {
+        "line": 25,
+        "source": "  const spies=[PathFlattenJob,StrokeOutlineJob,CoverageJob,PreparedFill].map(kind=>{const prototype=kind.prototype as any,original=prototype.intoRetirement;return spyOn(prototype,\"intoRetirement\").mockImplementation(function(this:object){const result=original.call(this),owner=\"job\"in result?result.job:result,record={source:this,job:owner,work:0};records.push(record);const advance=owner.advance.bind(owner);owner.advance=(unit:number)=>{expect(unit).toBe(1);const p=advance(unit);expect(p.work-reco"
+      },
+      {
+        "line": 164,
+        "source": " const original=CoverageJob.prototype.intoRetirement;let comparisons=0;"
+      },
+      {
+        "line": 165,
+        "source": " for(const row of coverageCases)for(const grant of [1,7,4096]){const source=cases.find(c=>c.name===row.source)!,input=rasterInput(source.input),before=structuredClone(input),job=new PathRasterJob(input),state=job as any,records:{kind:string;owner:ReturnType<CoverageJob[\"intoRetirement\"]>}[]=[];"
+      },
+      {
+        "line": 166,
+        "source": "  const spy=spyOn(CoverageJob.prototype,\"intoRetirement\").mockImplementation(function(this:CoverageJob){const kind=state.phase===\"fillCoverage\"?\"fill\":\"stroke\",mask=this.result(),owner=original.call(this);expect(owner.output).toBe(mask);records.push({kind,owner});return owner;});"
+      }
+    ]
+  }
+]

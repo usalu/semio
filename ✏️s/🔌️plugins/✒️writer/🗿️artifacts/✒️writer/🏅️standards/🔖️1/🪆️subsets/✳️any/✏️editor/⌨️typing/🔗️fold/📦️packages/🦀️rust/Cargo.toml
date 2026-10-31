@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-writer-writer-typing-fold"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Original bounded Writer typing algebra"
+
+[package.metadata.semio]
+role = "library"
+id = "typing-fold"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-app = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-framework-tool-typing-edit = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust" }
+semio-framework-text-splice-native = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/✂️text-splice/🧬️native/📦️packages/🦀️rust" }
+semio-s-artifact-writer-writer-operations = { path = "../../../../../🧬️schema/⚙️operations/📦️packages/🦀️rust" }
+
+semio-framework-ui-scene-views = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/🎬️scenes/📄️views/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-job = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-trace = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }

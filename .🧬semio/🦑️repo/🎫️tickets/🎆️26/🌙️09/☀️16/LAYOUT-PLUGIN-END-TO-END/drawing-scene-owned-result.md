@@ -1,0 +1,7 @@
+# Genuine Scene Owner First Actual Result
+
+Owning direct execution chunk576bad terminated EXIT1: 5 pass, 1 fail, 30,704 assertions in163ms. Strict4 session77799 terminated EXIT0 with no diagnostics. All56 prelaunch, test-post, strict-post and current hashes match. Both immutable logs and receipt remain under generated/drawing-scene-owned.
+
+The constructor/getter authentication law, full0/7/17-node genuine backing identity and independent SQL owner counts, borrowed input isolation, all8 cancellation phases, and actual current positive failing-admission body/CPU law passed. The repeated denial/resume law fails only expect(release).toBe(true), owned.test.ts48:2034. It is not an import/cleanup failure or compiler diagnostic.
+
+Read-only diagnosis: the close law offers release0, thereby discovering nextDemand.releaseBytes, then IMMEDIATELY offers the fully funded grant in the same loop iteration. Its release-denial assertions are only at the NEXT iteration's entry, by which point that one release quote has already been consumed. Source retireOne correctly calls work.releaseBytes and refuses before body effects when underfilled. Proposed test-only correction: inspect the newly discovered release demand after the release0 call and exercise the same three original underfill/zero-effect assertions BEFORE the existing full-grant resume. Preserve all zero-effect assertions, stock/fuel/source/schema bytes and producer implementation. No correction or new runtime has been applied; hold56 awaits Root review.

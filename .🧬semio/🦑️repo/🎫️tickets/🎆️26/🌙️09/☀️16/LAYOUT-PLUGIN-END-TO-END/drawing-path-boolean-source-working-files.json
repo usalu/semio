@@ -1,0 +1,42 @@
+{
+  "state": "authored-not-source-ready-no-runtime",
+  "owner": "semio-framework-2d-booleans",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🦀️.rs",
+      "sha256": "387e64f3a7765036aac4b567c45e9a2e53e0d3725fc96595fba48cc968ab782b",
+      "bytes": 13150
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🧪️tests/🦀️.rs",
+      "sha256": "23d604bc2bd8910fb63aab025bdda1464360c5b48ea69bf3b29e54c32c59b41b",
+      "bytes": 9551
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🧪️tests/🎟️work/📐️.json",
+      "sha256": "e29a8c0eeb6b817a7bc432081255538de0333637233007e180f4017e727841ec",
+      "bytes": 1103
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🧪️tests/🎟️work/🔣️.json",
+      "sha256": "97718b907281b4bdb4a7dd041ab5bf5c25bcd6cac10775473e5247865ba6dade",
+      "bytes": 933
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🧪️tests/🎟️work/🦀️.rs",
+      "sha256": "64830c6c5cff36d605784df753638e13b0fd54470022ab0fdfee2130d1b6667c",
+      "bytes": 7619
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "6823ea03978307204642c7caaf41c03215b55ece573f9d7c0b2134fba20e3073",
+      "bytes": 1217
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "3411b7d29dba297185e8c2326745375da95224f522658ba04498bb9b97c62ba8",
+      "bytes": 7631
+    }
+  ],
+  "attribution": "Path wrapper/laws owned by Rust; generic Boolean body Cursor-owned. Current explicit TinySkia manifest correction was observed from a peer; not attributed to Cursor or Rust."
+}

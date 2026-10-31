@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "quanta",
+    "sourceCases",
+    "maximumTurns",
+    "pointBytes",
+    "scalarBytes",
+    "deniedCpu",
+    "cachedCpu",
+    "oracleTolerance",
+    "cancelSemanticCuts",
+    "ownership"
+  ],
+  "properties": {
+    "contract": {
+      "const": "stroke-same-bank-v1"
+    },
+    "quanta": {
+      "const": [
+        1,
+        7,
+        4096
+      ]
+    },
+    "sourceCases": {
+      "const": 32
+    },
+    "maximumTurns": {
+      "const": 1048576
+    },
+    "pointBytes": {
+      "const": 16
+    },
+    "scalarBytes": {
+      "const": 8
+    },
+    "deniedCpu": {
+      "const": 0
+    },
+    "cachedCpu": {
+      "const": 0
+    },
+    "oracleTolerance": {
+      "const": 2
+    },
+    "cancelSemanticCuts": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        7,
+        15
+      ]
+    },
+    "ownership": {
+      "const": [
+        "source-points-owned",
+        "solid-runs-borrow-source",
+        "dashed-runs-own-points",
+        "round-points-output-owned",
+        "queue-polygons-own-points",
+        "published-output-private-until-transfer",
+        "seam-scalars-owned"
+      ]
+    }
+  }
+}

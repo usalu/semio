@@ -1,0 +1,106 @@
+{
+  "state": "source-authored-uncompiled-not-source-ready",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🛬️receive/🦀️.rs",
+      "bytes": 9942,
+      "sha256": "48b2f7dfed0e062a8ec6c024913f40668e5ccfc2e58a9ba9c7c2bc3967e4ba41",
+      "utf16PathUnits": 87
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🎟️work/📐️.json",
+      "bytes": 433,
+      "sha256": "516b710a51618d65e5ec39143e3f1ec84123ada0e784da6ed24e926b3f41b75c",
+      "utf16PathUnits": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🎟️work/🔣️.json",
+      "bytes": 990,
+      "sha256": "fac6c6ef697ef04ddebf769aaf186a3eb844070117c3a6a46cc46b9253a15840",
+      "utf16PathUnits": 107
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 5358,
+      "sha256": "ccfec3bee2f33dd7e58400d5213edb918f7410205382626bf6cabe0089c278ad",
+      "utf16PathUnits": 114
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/👯️pair/🦀️.rs",
+      "bytes": 7186,
+      "sha256": "210f0619337c4f96ca5d8e4d0b261893a6280d9f922b835ca36ae8613989b53e",
+      "utf16PathUnits": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/📦️slot/🦀️.rs",
+      "bytes": 4537,
+      "sha256": "6e75424289047bc803ab316cf91c0e3fe021b64d342623ae5c973ad4ea62ba07",
+      "utf16PathUnits": 105
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🔢️array/🦀️.rs",
+      "bytes": 6796,
+      "sha256": "d0cfb2afe06b2797a00e1a7fd5de47810bd1a009fd8c9823add7dabd8f45be15",
+      "utf16PathUnits": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🦀️.rs",
+      "bytes": 6879,
+      "sha256": "a277f145ad5cfd47c37a1dd8cea27d6ecaa334e88ef7630274be5a1292b9da88",
+      "utf16PathUnits": 97
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧪️tests/🟦️.ts",
+      "bytes": 1255,
+      "sha256": "b6d6a85c88f5d107241f179c16518ed6af41a3922698273935064938c5fc497c",
+      "utf16PathUnits": 106
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 195,
+      "sha256": "bb8b4c2b209a49db611d3f3dc26ea4754ecce2748121589174724810d3e7296e",
+      "utf16PathUnits": 120
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🧬️schema/🔣️.json",
+      "bytes": 462,
+      "sha256": "2855cf762db17b77a1f40c53f7fb7d37e7301dbbcef11aac6c04cafa958b7ef0",
+      "utf16PathUnits": 109
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🗂️map/🦀️.rs",
+      "bytes": 12374,
+      "sha256": "e9c2825190781a14df4cd85c9e4ed2812c99046adc91ea05a206bcfdba875506",
+      "utf16PathUnits": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs",
+      "bytes": 4333,
+      "sha256": "9d39fd1f473f3d679fbe2e6660c88c4cd242888b3c22512cc0a8f199a44bd79d",
+      "utf16PathUnits": 86
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🦀️.rs",
+      "bytes": 11293,
+      "sha256": "dfd6eb421e4b7e213e1d6fe937227f63025c498e68a34b0ee9c4326fc754b5f7",
+      "utf16PathUnits": 93
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🛬️receive/🦀️.rs",
+      "bytes": 5511,
+      "sha256": "b6982b3a4ae01f187b1b990db74d971099050e0b07a5376e7f18c59d687c39b9",
+      "utf16PathUnits": 90
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🦀️.rs",
+      "bytes": 5667,
+      "sha256": "a5fe1a9a9e9f95aedc02ed82b9aeaf0802966cec1dacaf68a2e9e37ddfb51026",
+      "utf16PathUnits": 91
+    }
+  ],
+  "remaining": [
+    "shared NativeReceive derive missing-field/unit-default generation after P hold",
+    "old native/default/paged default owning tests actual cursor migration",
+    "NativeReceive enum and record full outcome/typed partial backing closure"
+  ]
+}

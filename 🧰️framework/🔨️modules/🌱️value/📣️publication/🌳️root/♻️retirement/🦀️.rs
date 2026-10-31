@@ -12,13 +12,20 @@ impl<T:RetireOwned> RootRetirement<T>{
  fn demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(active)=self.active.as_ref(){return if active.terminal_is_empty(){Ok(header::<Option<ControlledRetirement<RootPayload<T>>>>())}else{active.next_demand(body).and_then(nested)}}if let Some(active)=self.decision.as_ref(){return if active.terminal_is_empty(){Ok(header::<Option<FactoryAuthority>>())}else{active.demands(body).and_then(nested)}}if self.root.original.is_some(){return Ok(header::<RootPayload<T>>())}if let Some(candidate)=self.root.candidate.as_ref(){if candidate.root.is_some(){return Ok(header::<T>())}if candidate.decision.is_some(){return Ok(header::<FactoryAuthority>())}return Ok(RetirementDemand{release_bytes:size_of::<Candidate<T>>(),depth:1,..Default::default()})}Ok(Default::default())
  }
- fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.demand(grant.maximum_copy_bytes)?;if !permits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}if let Some(active)=self.active.as_mut(){if !active.terminal_is_empty(){return active.step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map(|step|RetainedCloneStep::Progress(step.progress()))}self.active=None;}else if let Some(active)=self.decision.as_mut(){if !active.terminal_is_empty(){return active.step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map(|step|RetainedCloneStep::Progress(step.progress()))}self.decision=None;}else if let Some(original)=self.root.original.take(){self.active=Some(ControlledRetirement::retain(RootPayload::Original(original)));}else if let Some(candidate)=self.root.candidate.as_mut(){if let Some(original)=candidate.root.take(){self.active=Some(ControlledRetirement::retain(RootPayload::Candidate(original)));}else if let Some(decision)=candidate.decision.take(){self.decision=Some(decision.into_retirement());}else{drop(self.root.candidate.take());}}Ok(RetainedCloneStep::Progress(progress(d)))
+ fn step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{
+  let mut work=0;let result=(||{
+   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.demand(grant.maximum_copy_bytes)?;if !permits(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}
+   if let Some(active)=self.active.as_mut(){if !active.terminal_is_empty(){let result=active.step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});work=active.last_turn_work();return result.map(|step|RetainedCloneStep::Progress(step.progress()))}self.active=None;
+   }else if let Some(active)=self.decision.as_mut(){if !active.terminal_is_empty(){let turn=active.step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()))}self.decision=None;
+   }else if let Some(original)=self.root.original.take(){self.active=Some(ControlledRetirement::retain(RootPayload::Original(original)));
+   }else if let Some(candidate)=self.root.candidate.as_mut(){if let Some(original)=candidate.root.take(){self.active=Some(ControlledRetirement::retain(RootPayload::Candidate(original)));}else if let Some(decision)=candidate.decision.take(){self.decision=Some(FactoryAuthority::new(decision));}else{drop(self.root.candidate.take());}}
+   work=1;Ok(RetainedCloneStep::Progress(progress(d)))
+  })();crate::RetainedWorkOutcome{result,work}
  }
 }
 impl<T:RetireOwned> RetirementCursor for RootRetirement<T>{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demand(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.step(grant){Ok(RetainedCloneStep::Complete(p))if p==Default::default()=>RetirementStep::Complete,Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{let turn=self.step(grant);match turn.result{Ok(RetainedCloneStep::Complete(p))if p==Default::default()=>RetirementStep::Complete(turn.work),Ok(step)=>RetirementStep::Progress(step.progress(),turn.work),Err(error)=>RetirementStep::Failure(error,turn.work)}}
  fn terminal_is_empty(&self)->bool{self.root.original.is_none()&&self.root.candidate.is_none()&&self.active.is_none()&&self.decision.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demand(0)?.copy_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.demand(body).ok().map(|d|d.capacity_bytes)}

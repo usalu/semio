@@ -14,6 +14,7 @@ pub use retirement::arc_custody::{shared_retirement_birth_bytes,shared_retiremen
 #[path="../../../⚠️refusal/♻️retirement/🦀️.rs"]
 mod refusal_retirement;
 artifact_retire_leaf!(RetainedCloneGrant);
+artifact_retire_leaf!(RetirementDemand);
 artifact_retire_leaf!(RetainedCloneProgress);
 artifact_retire_leaf!(ValueRefusalKind);
 

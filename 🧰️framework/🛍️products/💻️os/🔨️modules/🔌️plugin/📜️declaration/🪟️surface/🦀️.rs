@@ -46,7 +46,7 @@ use semio_framework_ui_runtime::ComponentTree;
 use std::collections::HashMap;
 /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `AsyncTask`'s boxed `run` closure/future.
 use std::future::Future;
-/// 🧵️ Used only by `artifact_app_laws`' spawned-task shape, so a plain `cargo check` reports it
+/// 📱️ Used only by `artifact_app_laws`' spawned-task shape, so a plain `cargo check` reports it
 /// unused while `--all-targets` needs it — do not remove on the strength of that warning.
 #[allow(unused_imports)]
 use std::pin::Pin;
@@ -68,7 +68,7 @@ use semio_framework::ArtifactKindSpec;
 /// `ArtifactApp::{media_ports, export_media, import_media, media_fingerprint}` — re-exported so
 /// implementers never need a direct `semio-framework-core` dependency just to satisfy this trait.
 use semio_framework::{Media, MediaError, MediaFingerprint, MediaPayload};
-/// 🧬️ `MediaClass`/`MediaType` also live in `semio-framework-core` — re-exported so callers can build
+/// 💚️ `MediaClass`/`MediaType` also live in `semio-framework-core` — re-exported so callers can build
 /// `ArtifactKindSpec.media_type` and `AppBuilder::media_input(...)`/`media_output(...)` port specs
 /// without a direct `semio-framework-core` dependency.
 use semio_framework::{MediaClass, MediaType};
@@ -140,6 +140,7 @@ use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolJob;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission;
+use semio_framework_plugin_ownership::store_lifecycle::{DocumentStoreLivePublication, DocumentStorePublicationToken};
 use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;

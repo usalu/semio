@@ -1,0 +1,5 @@
+# Native Sequence Storage Source
+
+Removed the consuming begin_storage Result route. NativeSequenceCollection.admit_storage now receives the actual caller-owned Option storage and returns the full physical/CPU outcome. Vec delegates to NativeDecodeControl.admit_vec, preserving real null work and output custody on receipt refusal. The array and PagedList implementations admit their fixed inline empty state with item/depth/CPU, copy0; cached storage is zero work. Parent phase8 separately publishes already-owned storage on a later control turn. Paged reserve now folds its genuine outcome through receive_retained_work after the actual reserve instead of precharging declared capacity.
+
+Schema and real owning law preceded the body. No compilation/runtime was run. Map/set/bulk/derived receivers and Persistent builder normal stages remain blockers for NativeOwned compilation; old source companion test helpers still require canonical API/finite-wallet migration. This is not SourceReady for that package.

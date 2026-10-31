@@ -1,0 +1,3 @@
+# Native Default Owned Cursor Test First
+
+Root-approved canonical NativeDefault associated owned cursor replaces synchronous whole-array/tuple default routes. Closed neutral cases and genuine original default producer laws authored before production require pure allocation-free header construction, actual per-step CPU, one finite100k-item/fuel32MiB-axis/depth64 bank including error/cancel/close, real allocator refusal/retry and independent Serde/standard output. The new4097 zero-sized-element array law must consume at least4097 actual CPU; no aggregate one-turn semantic collapse. Existing empty-array refusal is retained. Existing default owning cases are preserved for hand migration. Tests are unmounted/unexecuted.

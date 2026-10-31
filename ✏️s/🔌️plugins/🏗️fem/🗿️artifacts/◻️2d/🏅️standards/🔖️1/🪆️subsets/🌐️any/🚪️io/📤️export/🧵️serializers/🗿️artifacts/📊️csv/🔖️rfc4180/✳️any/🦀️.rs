@@ -22,7 +22,7 @@ pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standar
 pub fn csv_text(from: &Fem2dSnapshot) -> String {
     let record = |values: Vec<String>| CsvRecord { fields: values.into_iter().map(|value| CsvField { value, quoted: false }).collect() };
     let mut records = vec![record(vec!["id".into(), "x".into(), "y".into()])];
-    records.extend(from.nodes.iter().map(|node| record(vec![node.id.clone(), node.x.to_string(), node.y.to_string()])));
+    records.extend(from.nodes.iter().map(|node| record(vec![node.id.as_str().to_owned(), node.x.to_string(), node.y.to_string()])));
     encode_csv(&CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: true, records })
 }
 

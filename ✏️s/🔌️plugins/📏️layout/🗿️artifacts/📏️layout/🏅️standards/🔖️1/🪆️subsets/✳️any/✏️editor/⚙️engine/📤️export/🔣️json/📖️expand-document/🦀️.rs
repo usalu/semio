@@ -8,9 +8,6 @@ mod document_and_page_nodes;
 #[path = "🖼️layer-frame-and-page-geometry-nodes/🦀️.rs"]
 mod layer_frame_and_page_geometry_nodes;
 
-#[path = "🎨️drawing-nodes/🦀️.rs"]
-mod drawing_nodes;
-
 #[path = "📦️package-and-manifest-nodes/🦀️.rs"]
 mod package_and_manifest_nodes;
 
@@ -135,89 +132,6 @@ impl TypedJsonCursor {
                 Self::string(if referenced { StringSource::ReferencedTargetSubset } else { StringSource::ChildTargetSubset }),
                 Self::static_node(b"}"),
             ]),
-            TypedJsonNode::Drawing => self.push_sequence(vec![
-                Self::static_node(b"{\"schema\":"),
-                Self::string(StringSource::DrawingSchema),
-                Self::static_node(b",\"canvas\":"),
-                TypedJsonNode::DrawCanvas,
-                Self::static_node(b",\"styles\":"),
-                TypedJsonNode::DrawStyles { index: 0, opened: false },
-                Self::static_node(b",\"layers\":"),
-                TypedJsonNode::DrawLayers { index: 0, opened: false },
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::DrawCanvas => {
-                let scene = self.drawing_scene(snapshot)?;
-                let value = &scene.canvas;
-                let mut nodes = vec![Self::static_node(b"{\"width\":"), Self::scalar(&value.width)?, Self::static_node(b",\"height\":"), Self::scalar(&value.height)?];
-                if let Some(background) = value.background {
-                    nodes.extend([Self::static_node(b",\"background\":"), TypedJsonNode::DrawRgba(background)]);
-                }
-                nodes.push(Self::static_node(b"}"));
-                self.push_sequence(nodes);
-            }
-            TypedJsonNode::DrawRgba(value) => self.push_sequence(vec![
-                Self::static_node(b"{\"r\":"),
-                Self::scalar(&value.r)?,
-                Self::static_node(b",\"g\":"),
-                Self::scalar(&value.g)?,
-                Self::static_node(b",\"b\":"),
-                Self::scalar(&value.b)?,
-                Self::static_node(b",\"a\":"),
-                Self::scalar(&value.a)?,
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::DrawStyles { index, opened } => {
-                let len = self.drawing_scene(snapshot)?.styles.len();
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::DrawStyles { index, opened: true }]);
-                } else if index < len {
-                    self.push_sequence(vec![if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") }, TypedJsonNode::DrawStyle(index), TypedJsonNode::DrawStyles { index: index + 1, opened: true }]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::DrawStyle(index) => self.expand_draw_style(index, snapshot)?,
-            TypedJsonNode::DrawLayers { index, opened } => {
-                let len = self.drawing_scene(snapshot)?.layers.len();
-                if !opened {
-                    self.push_sequence(vec![Self::static_node(b"["), TypedJsonNode::DrawLayers { index, opened: true }]);
-                } else if index < len {
-                    self.push_sequence(vec![if index == 0 { Self::static_node(b"") } else { Self::static_node(b",") }, TypedJsonNode::DrawLayer(index), TypedJsonNode::DrawLayers { index: index + 1, opened: true }]);
-                } else {
-                    self.stack.push(Self::static_node(b"]"));
-                }
-            }
-            TypedJsonNode::DrawLayer(index) => self.expand_draw_layer(index, snapshot)?,
-            TypedJsonNode::DrawNode { layer, path } => self.expand_draw_node(layer, path, snapshot)?,
-            TypedJsonNode::DrawChildren { layer, path, index, opened } => self.expand_draw_children(layer, path, index, opened, snapshot)?,
-            TypedJsonNode::DrawSegments { layer, path, index, opened } => self.expand_draw_segments(layer, path, index, opened, snapshot)?,
-            TypedJsonNode::DrawSegment { layer, path, segment } => self.expand_draw_segment(layer, path, segment, snapshot)?,
-            TypedJsonNode::DrawPoint2(value) => self.push_sequence(vec![Self::static_node(b"{\"x\":"), Self::scalar(&value.x)?, Self::static_node(b",\"y\":"), Self::scalar(&value.y)?, Self::static_node(b"}")]),
-            TypedJsonNode::DrawPoint3(value) => {
-                self.push_sequence(vec![Self::static_node(b"{\"x\":"), Self::scalar(&value.x)?, Self::static_node(b",\"y\":"), Self::scalar(&value.y)?, Self::static_node(b",\"z\":"), Self::scalar(&value.z)?, Self::static_node(b"}")]);
-            }
-            TypedJsonNode::DrawQuaternion(value) => self.push_sequence(vec![
-                Self::static_node(b"{\"x\":"),
-                Self::scalar(&value.x)?,
-                Self::static_node(b",\"y\":"),
-                Self::scalar(&value.y)?,
-                Self::static_node(b",\"z\":"),
-                Self::scalar(&value.z)?,
-                Self::static_node(b",\"w\":"),
-                Self::scalar(&value.w)?,
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::DrawTransform(value) => self.push_sequence(vec![
-                Self::static_node(b"{\"translation\":"),
-                TypedJsonNode::DrawPoint3(value.translation),
-                Self::static_node(b",\"rotation\":"),
-                TypedJsonNode::DrawQuaternion(value.rotation),
-                Self::static_node(b",\"scale\":"),
-                TypedJsonNode::DrawPoint3(value.scale),
-                Self::static_node(b"}"),
-            ]),
-            TypedJsonNode::DrawBytes { layer, path, index, opened } => self.expand_draw_bytes(layer, path, index, opened, snapshot)?,
             TypedJsonNode::ReferencedModel => self.push_sequence(vec![
                 Self::static_node(b"{\"target\":"),
                 TypedJsonNode::ArtifactRef { referenced: true },
@@ -255,7 +169,7 @@ impl TypedJsonCursor {
                 }
             }
             TypedJsonNode::ManifestLink(index) => self.expand_manifest_link(index, snapshot)?,
-            TypedJsonNode::Dictionary(_) | TypedJsonNode::FragmentStart | TypedJsonNode::FragmentEnd | TypedJsonNode::Static { .. } | TypedJsonNode::Scalar { .. } | TypedJsonNode::String { .. } | TypedJsonNode::OwnedString { .. } => {
+            TypedJsonNode::Child(_) | TypedJsonNode::Dictionary(_) | TypedJsonNode::FragmentStart | TypedJsonNode::FragmentEnd | TypedJsonNode::Static { .. } | TypedJsonNode::Scalar { .. } | TypedJsonNode::String { .. } | TypedJsonNode::OwnedString { .. } => {
                 unreachable!("leaf nodes are handled before expansion")
             }
         }

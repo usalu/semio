@@ -1,0 +1,68 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️session-admission/🦀️.rs",
+    "bytes": 11978,
+    "sha256": "b426876a9634bcd1a966a9d561304e8971375679e69112c44ad92032f975a5d1",
+    "utf16PathUnits": 96
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️session-admission/case.json",
+    "bytes": 739,
+    "sha256": "3400160305a4807fa20f280a43af9fb37deef687b366c9628063c91f4b421504",
+    "utf16PathUnits": 99
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️session-admission/case.schema.json",
+    "bytes": 1445,
+    "sha256": "54b5a551574688ed33b69a0883ffb496dd3d00bfcec90849533abd18fa19e229",
+    "utf16PathUnits": 106
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️session-admission/🧪️tests/🦀️.rs",
+    "bytes": 9070,
+    "sha256": "5d4180abf98284a1a2fd169c81d1b4fb8526ff1f7e9cff395e88aeac5b497421",
+    "utf16PathUnits": 105
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/♻️session-return/🔐️handle/🦀️.rs",
+    "bytes": 2268,
+    "sha256": "ca789c040888a6e0ab1a009f8f06c6cc4ae67c1e21e56247952ecb7991ca74cd",
+    "utf16PathUnits": 92
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🕳️retirement-slots-and-nodes/🦀️.rs",
+    "bytes": 9007,
+    "sha256": "cb53d10665d00a51638251538cf5396ec36bdcd71950e147042c1b7d1da4dcd1",
+    "utf16PathUnits": 105
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/🚪️admission/🦀️.rs",
+    "bytes": 7855,
+    "sha256": "63ca8cc4dc740d7c5b2d89d7d74b98fbfbffdf4de753db0cffc3c2d3d91c6114",
+    "utf16PathUnits": 101
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🧵️worker-job-session/🦀️.rs",
+    "bytes": 22309,
+    "sha256": "f49550f8a43b12a6556a95c018f425968d1865853c25990c1b2f208a799b5475",
+    "utf16PathUnits": 97
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🧰️mounted-and-batch-sessions/🦀️.rs",
+    "bytes": 16078,
+    "sha256": "643cc8b40991c35a49f41dab8bb0c662bbc3d3784305e11e54d11f5cceb643af",
+    "utf16PathUnits": 105
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/🦀️.rs",
+    "bytes": 5834,
+    "sha256": "8360cc831f3e18510af452cb614c0fac1ccaa648c4b0a46c1006a587fb9be525",
+    "utf16PathUnits": 75
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust/Cargo.toml",
+    "bytes": 1424,
+    "sha256": "c9523e43502884105a6fd0185fa93a0fa45e40ba328163e08a7f3106c8038e79",
+    "utf16PathUnits": 99
+  }
+]

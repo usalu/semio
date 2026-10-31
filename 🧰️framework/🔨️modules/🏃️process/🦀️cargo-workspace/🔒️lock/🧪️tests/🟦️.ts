@@ -4,7 +4,7 @@ import{tmpdir}from"node:os";
 import{dirname,join}from"node:path";
 import{spawn}from"node:child_process";
 import Ajv from"ajv";
-import{ensureCargoLockV1,cargoLockStaleOutputV1,cargoLockMissingCrateV1,CargoLockRefusedV1,type CargoLockOutcomeV1,type CargoLockPortV1,type CargoLockRunV1}from"../🟦️.ts";
+import{ensureCargoLockV1,cargoLockMissingPathManifestV1,cargoLockStaleOutputV1,cargoLockMissingCrateV1,CargoLockRefusedV1,type CargoLockOutcomeV1,type CargoLockPortV1,type CargoLockRunV1}from"../🟦️.ts";
 import schema from"../🧬️schema/🔣️.json";
 import corpus from"./🧫️fixtures/🔣️.json";
 
@@ -83,4 +83,22 @@ test("lock refusal retains bounded original resolver streams and nested causes",
   expect(Buffer.from(failure.texts.en,"utf8").toString("utf8")).toBe(failure.texts.en);expect(Buffer.from(failure.texts.de,"utf8").toString("utf8")).toBe(failure.texts.de);expect(cause.truncated).toBe(cause.stderr!==run.stderr||cause.stdout!==run.stdout);expect(released).toBe(1);
   if(row.name==="nested-manifest-cause"){expect(Bun.inspect(failure)).toContain("package workspace root is missing");expect(failure.diagnostic).toBe(cause);expect(cause.stderr).toContain("package workspace root is missing");expect(failure.texts.en).not.toContain("package workspace root is missing");}
  }}finally{db.close();}
+});
+
+
+test("the missing path manifest is recognised from the OS error code, not from the English text, on every platform",()=>{
+ const wrap=(cause:string)=>"error: failed to get `x` as a dependency\n\nCaused by:\n  failed to read `C:\\w\\x\\Cargo.toml`\n\nCaused by:\n  "+cause+"\n";
+ for(const cause of ["No such file or directory (os error 2)","Das System kann die angegebene Datei nicht finden. (os error 2)","The system cannot find the path specified. (os error 3)","Le fichier specifie est introuvable. (os error 2)"])expect(cargoLockMissingPathManifestV1(wrap(cause)),cause).toBe("C:\\w\\x\\Cargo.toml");
+ expect(cargoLockMissingPathManifestV1(wrap("Permission denied (os error 13)"))).toBeNull();
+});
+
+/** 🕳️ act13: a peer declared a path dependency on a crate that was not created yet; the refresh went online for it ("missing from the shared registry") and failed minutes later. The refusal now says what it is, at once. */
+test("a path dependency whose manifest does not exist is refused at once as such, without going online",async()=>{
+ const stderr="error: failed to get `semio-framework-os-store-test-support` as a dependency of package `semio-framework-os-store-presence v0.1.0 (/w/presence)`\n\nCaused by:\n  failed to load source for dependency `semio-framework-os-store-test-support`\n\nCaused by:\n  unable to update /w/presence/test-support\n\nCaused by:\n  failed to read `/w/presence/test-support/Cargo.toml`\n\nCaused by:\n  No such file or directory (os error 2)\n";
+ expect(cargoLockMissingPathManifestV1(stderr)).toBe("/w/presence/test-support/Cargo.toml");expect(cargoLockMissingPathManifestV1("error: no matching package named `serde` found")).toBeNull();expect(cargoLockMissingCrateV1(stderr)).toBe("semio-framework-os-store-test-support");
+ const calls:string[][]=[],lines:string[]=[];
+ const port:CargoLockPortV1={run:async args=>{calls.push([...args]);return args[0]==="locate-project"?{status:0,stdout:"/w/Cargo.toml\n",stderr:""}:{status:101,stdout:"",stderr};},tryHold:async()=>({release(){}}),pause:async()=>undefined,report:line=>lines.push(line)};
+ const failure=await ensureCargoLockV1({workspaceRoot:"/w",manifest:"/w/presence/Cargo.toml",receiptDirectory:null,language:"en",offline:false,force:true},port).then(()=>null,error=>error);
+ expect(failure).toBeInstanceOf(CargoLockRefusedV1);expect((failure as CargoLockRefusedV1).texts.en).toContain("whose manifest does not exist");expect((failure as CargoLockRefusedV1).texts.de).toContain("Manifest nicht existiert");
+ expect(calls.filter(call=>call[0]==="update"&&!call.includes("--offline")).length,"no online update was tried").toBe(0);
 });

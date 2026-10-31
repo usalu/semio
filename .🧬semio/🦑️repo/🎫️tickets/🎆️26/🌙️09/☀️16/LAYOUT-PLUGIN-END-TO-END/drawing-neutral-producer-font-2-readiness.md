@@ -1,0 +1,7 @@
+# Neutral Outcome and Module Boundary Affected Gate
+
+PREP ONLY. Actual helper relocation/direct21 Font imports require refreshing the old captured Font28 scope. Three genuine neutral outcome laws join it. The actual declared LayoutJS native-Bun module RED then exposed erased interface value exports; explicit export type/value correction is pinned by two real native ESM/createRequire and independent compiler-AST laws, bringing expected33. No earlier31 semantic request ran. Exact current closure/package/lock/dynamic test interfaces/assets and canonical strict21 roots are captured with fresh all-five environment paths and separate logs.
+
+Source packets: drawing-neutral-producer-working-files.json, drawing-neutral-producer-test-first.json, drawing-font-work-type-exports-working-files.json and module-regression.json. Six actual Layout caller name migrations are separate source-only work; none of their later old row/loan algorithms is claimed fixed or passed by this scope. Genuine owned Scene six laws are authored before its absent body and not mounted by this importer. No byte/stock/cap/semantic formula or Original issuer is invented; no Rust/manifest edits or Source copies.
+
+Root review/release required before exactly one normal test and sequential strict. No request is launched by preparation; exact captured inputs are proposed held through any actual authorized terminals/postcheck.

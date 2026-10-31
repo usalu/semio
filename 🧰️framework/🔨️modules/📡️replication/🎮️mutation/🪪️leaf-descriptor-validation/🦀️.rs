@@ -132,41 +132,110 @@ pub const fn validate_mutation_leaf_descriptor_roster(mutation_root: &'static st
     validate_mutation_leaf_descriptor_roster_uniqueness(mutation_root, descriptors, owner_layout)
 }
 
-/// 🧮️ Checks cross-leaf uniqueness and roster completeness after individual leaf source validation. The pairwise scan is quadratic in the roster, so a roster of several hundred leaves legitimately exceeds the const evaluator's loop-progress heuristic.
-#[allow(long_running_const_eval)]
+/// 🧮️ Checks cross-leaf uniqueness and roster completeness after individual leaf source validation, one hashed pass per identity field (linear in the roster, each key hashed over at most its last 48 bytes so evaluation stays far below the const-eval step budget).
 pub const fn validate_mutation_leaf_descriptor_roster_uniqueness(mutation_root: &'static str, descriptors: &'static [MutationLeafDescriptor], owner_layout: MutationOwnerLayout) -> Result<(), MutationLeafDescriptorRosterValidationError> {
     if let MutationOwnerLayout::DomainOperations(owners) = owner_layout {
         if owners.is_empty() || owners.len() != descriptors.len() {
             return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "owner", first_index: 0, index: 0 });
         }
     }
+    let fields = ["semanticKind", "owner", "textOpcode", "binaryTag"];
+    let mut field = 0;
+    while field < 4 {
+        let duplicate = if descriptors.len() <= 512 {
+            first_duplicate::<1024>(descriptors, field as u8)
+        } else if descriptors.len() <= 2048 {
+            first_duplicate::<4096>(descriptors, field as u8)
+        } else {
+            first_duplicate::<65536>(descriptors, field as u8)
+        };
+        if let Some((first, second)) = duplicate {
+            return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: fields[field], first_index: first, index: second });
+        }
+        field += 1;
+    }
+    Ok(())
+}
+
+const fn identity_key(descriptor: &MutationLeafDescriptor, field: u8) -> Option<&'static str> {
+    match field {
+        0 => Some(descriptor.semantic_kind),
+        1 => Some(descriptor.owner),
+        _ => descriptor.text_opcode,
+    }
+}
+
+const IDENTITY_HASH_TAIL_BYTES: usize = 32;
+
+const IDENTITY_HASH_HEAD_BYTES: usize = 16;
+
+const IDENTITY_HASH_STRIDE_SAMPLES: usize = 32;
+
+pub(super) const fn identity_hash(descriptor: &MutationLeafDescriptor, field: u8) -> Option<u32> {
+    if field == 3 {
+        return match descriptor.binary_tag {
+            Some(tag) => Some(tag.wrapping_mul(2654435761)),
+            None => None,
+        };
+    }
+    let Some(key) = identity_key(descriptor, field) else { return None };
+    let bytes = key.as_bytes();
+    let mut hash = (2166136261u32 ^ bytes.len() as u32).wrapping_mul(16777619);
+    let stride = bytes.len() / IDENTITY_HASH_STRIDE_SAMPLES + 1;
+    let mut index = 0;
+    while index < bytes.len() {
+        hash = (hash ^ bytes[index] as u32).wrapping_mul(16777619);
+        index += stride;
+    }
+    index = 0;
+    while index < bytes.len() && index < IDENTITY_HASH_HEAD_BYTES {
+        hash = (hash ^ bytes[index] as u32).wrapping_mul(16777619);
+        index += 1;
+    }
+    index = if bytes.len() > IDENTITY_HASH_TAIL_BYTES { bytes.len() - IDENTITY_HASH_TAIL_BYTES } else { 0 };
+    while index < bytes.len() {
+        hash = (hash ^ bytes[index] as u32).wrapping_mul(16777619);
+        index += 1;
+    }
+    Some(hash)
+}
+
+const fn same_identity(left: &MutationLeafDescriptor, right: &MutationLeafDescriptor, field: u8) -> bool {
+    if field == 3 {
+        return match (left.binary_tag, right.binary_tag) {
+            (Some(a), Some(b)) => a == b,
+            _ => false,
+        };
+    }
+    match (identity_key(left, field), identity_key(right, field)) {
+        (Some(a), Some(b)) => mutation_leaf_descriptor_str_eq(a, b),
+        _ => false,
+    }
+}
+
+const fn first_duplicate<const SLOTS: usize>(descriptors: &'static [MutationLeafDescriptor], field: u8) -> Option<(usize, usize)> {
+    if descriptors.len() >= SLOTS { panic!("mutation leaf descriptor roster exceeds the uniqueness table"); }
+    let mut table = [0u32; SLOTS];
     let mut index = 0;
     while index < descriptors.len() {
-        let descriptor = &descriptors[index];
-        let mut duplicate = index + 1;
-        while duplicate < descriptors.len() {
-            let other = &descriptors[duplicate];
-            if mutation_leaf_descriptor_str_eq(descriptor.semantic_kind, other.semantic_kind) {
-                return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "semanticKind", first_index: index, index: duplicate });
-            }
-            if mutation_leaf_descriptor_str_eq(descriptor.owner, other.owner) {
-                return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "owner", first_index: index, index: duplicate });
-            }
-            if let (Some(left), Some(right)) = (descriptor.text_opcode, other.text_opcode) {
-                if mutation_leaf_descriptor_str_eq(left, right) {
-                    return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "textOpcode", first_index: index, index: duplicate });
+        if let Some(hash) = identity_hash(&descriptors[index], field) {
+            let mut slot = (hash as usize) % SLOTS;
+            loop {
+                let held = table[slot];
+                if held == 0 {
+                    table[slot] = index as u32 + 1;
+                    break;
                 }
-            }
-            if let (Some(left), Some(right)) = (descriptor.binary_tag, other.binary_tag) {
-                if left == right {
-                    return Err(MutationLeafDescriptorRosterValidationError { owner: mutation_root, field: "binaryTag", first_index: index, index: duplicate });
+                let other = held as usize - 1;
+                if same_identity(&descriptors[other], &descriptors[index], field) {
+                    return Some((other, index));
                 }
+                slot = (slot + 1) % SLOTS;
             }
-            duplicate += 1;
         }
         index += 1;
     }
-    Ok(())
+    None
 }
 
 const MUTATION_ROOT_MARKER: &[u8] = "/🧬️mutations/".as_bytes();

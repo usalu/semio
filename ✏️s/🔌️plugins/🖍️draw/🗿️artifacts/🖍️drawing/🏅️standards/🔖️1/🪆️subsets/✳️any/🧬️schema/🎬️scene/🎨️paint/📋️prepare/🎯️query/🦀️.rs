@@ -1,7 +1,7 @@
 //! 🖱️ Pointer selection borrows one complete cache and retains only bounded query metadata.
 use super::{PreparedScene,PreparedPaint};
 use super::super::{PreparedRegionStamp,PreparedRegionQueryJob};
-use crate::preparation::DocumentSceneNode;
+use crate::preparation::{DocumentSceneNode,DocumentSceneError};
 #[path="🪢️lasso/🦀️.rs"]
 mod lasso;
 use lasso::{SegmentEnclosureCursor,LassoInteriorCursor};
@@ -25,17 +25,17 @@ fn quad_contains(quad:[[f64;2];4],point:[f64;2],tolerance:f64)->bool{let mut win
 struct RectangleCursor{min:[f64;2],max:[f64;2],slot:usize,contour:usize,edge:usize}
 struct LassoCursor{slot:usize,contour:usize,edge:usize,seen:bool,segment:Option<SegmentEnclosureCursor>,interior:Option<LassoInteriorCursor>}
 /// 🎯️ Partial candidate indices stay private until the exact cache query is complete.
-pub struct PreparedScenePickJob{identity:PreparedSceneIdentity,query:PreparedScenePick,max_hits:usize,next:Option<usize>,active:usize,path:Option<PreparedRegionQueryJob>,rectangle:Option<RectangleCursor>,lasso_bounds:Option<[f64;4]>,lasso:Option<LassoCursor>,hits:Vec<usize>,phase:&'static str,work:u64,cancelled:bool,failure:Option<String>}
+pub struct PreparedScenePickJob{identity:PreparedSceneIdentity,query:PreparedScenePick,max_hits:usize,next:Option<usize>,active:usize,path:Option<PreparedRegionQueryJob>,rectangle:Option<RectangleCursor>,lasso_bounds:Option<[f64;4]>,lasso:Option<LassoCursor>,hits:Vec<usize>,phase:&'static str,work:u64,cancelled:bool,failure:Option<DocumentSceneError>}
 impl PreparedScenePickJob{
- pub fn new(identity:PreparedSceneIdentity,query:PreparedScenePick,max_hits:usize)->Result<Self,String>{
+ pub fn new(identity:PreparedSceneIdentity,query:PreparedScenePick,max_hits:usize)->Result<Self,DocumentSceneError>{
   if !identity.valid()||max_hits==0||max_hits>256{return Err("Invalid prepared scene query contract".into());}
   match &query{PreparedScenePick::Point{point:p,tolerance,required_flatness}=>{PreparedRegionQueryJob::new(identity.stamp(0),*p,*tolerance,*required_flatness)?;},PreparedScenePick::Rectangle{start,end,..}=>{if !point(*start)||!point(*end){return Err("Invalid prepared scene rectangle".into());}},PreparedScenePick::Lasso{points}=>{if !(3..=256).contains(&points.len())||!points.iter().copied().all(point){return Err("Invalid prepared scene lasso".into());}}}
   let lasso_bounds=if let PreparedScenePick::Lasso{points}=&query{Some(points.iter().fold([f64::INFINITY,f64::INFINITY,f64::NEG_INFINITY,f64::NEG_INFINITY],|[x,y,r,b],p|[x.min(p[0]),y.min(p[1]),r.max(p[0]),b.max(p[1])]))}else{None};
   Ok(Self{identity,query,max_hits,next:None,active:0,path:None,rectangle:None,lasso_bounds,lasso:None,hits:Vec::new(),phase:"nodes",work:0,cancelled:false,failure:None})
  }
- fn authority(&self,live:PreparedSceneIdentity)->Result<(),String>{if self.cancelled{return Err("Prepared scene query cancelled".into());}if let Some(error)=&self.failure{return Err(error.clone());}if !self.identity.matches(live){return Err("Prepared scene query authority changed".into());}Ok(())}
- fn admit(&mut self,index:usize)->Result<(),String>{if self.hits.len()>=self.max_hits{return Err("Prepared scene query exceeds result capacity".into());}self.hits.push(index);Ok(())}
- fn step(&mut self,scene:&PreparedScene,live:PreparedSceneIdentity)->Result<(),String>{
+ fn authority(&self,live:PreparedSceneIdentity)->Result<(),DocumentSceneError>{if self.cancelled{return Err("Prepared scene query cancelled".into());}if let Some(error)=&self.failure{return Err(error.clone());}if !self.identity.matches(live){return Err("Prepared scene query authority changed".into());}Ok(())}
+ fn admit(&mut self,index:usize)->Result<(),DocumentSceneError>{if self.hits.len()>=self.max_hits{return Err("Prepared scene query exceeds result capacity".into());}self.hits.push(index);Ok(())}
+ fn step(&mut self,scene:&PreparedScene,live:PreparedSceneIdentity)->Result<(),DocumentSceneError>{
   if self.phase=="paint"{
    if let Some(cursor)=self.lasso.as_mut(){let PreparedScenePick::Lasso{points}=&self.query else{return Err("Prepared scene lasso owner changed".into());};let paint=&scene.geometry[self.active].paint;
     if let PreparedPaint::Path(regions)=paint{if regions.flatness!=live.flatness{return Err("Prepared scene cache precision changed".into());}}
@@ -57,12 +57,12 @@ impl PreparedScenePickJob{
    PreparedScenePick::Lasso{..}=>{if let Some([x,y,r,b])=geometry.bounds{let[min_x,min_y,max_x,max_y]=self.lasso_bounds.unwrap();if x>=min_x&&y>=min_y&&r<=max_x&&b<=max_y{self.lasso=Some(LassoCursor{slot:0,contour:0,edge:0,seen:false,segment:None,interior:None});self.active=index;self.phase="paint";}}}
   }Ok(())
  }
- pub fn advance(&mut self,scene:&PreparedScene,live:PreparedSceneIdentity,grant:usize)->Result<PreparedScenePickProgress,String>{
+ pub fn advance(&mut self,scene:&PreparedScene,live:PreparedSceneIdentity,grant:usize)->Result<PreparedScenePickProgress,DocumentSceneError>{
   if grant==0||grant as u128>9007199254740991{return Err("Invalid prepared scene query work grant".into());}self.authority(live).map_err(|error|{if !self.cancelled&&self.failure.is_none(){self.failure=Some(error.clone());}error})?;
-  if scene.flatness!=self.identity.flatness||scene.geometry.len()!=scene.plan.nodes.len()||scene.geometry.len()>1024{let error="Prepared scene cache precision or structure changed".to_string();self.failure=Some(error.clone());return Err(error);}
+  if scene.flatness!=self.identity.flatness||scene.geometry.len()!=scene.plan.nodes.len()||scene.geometry.len()>1024{let error=DocumentSceneError::literal("Prepared scene cache precision or structure changed");self.failure=Some(error.clone());return Err(error);}
   for _ in 0..grant{if self.phase=="complete"{break;}if let Err(error)=self.step(scene,live){self.failure=Some(error.clone());return Err(error);}self.work+=1;}Ok(PreparedScenePickProgress{phase:self.phase,work:self.work,done:self.phase=="complete"})
  }
- pub fn result(&self,live:PreparedSceneIdentity)->Result<&[usize],String>{self.authority(live)?;if self.phase!="complete"{return Err("Prepared scene query incomplete".into());}Ok(&self.hits)}
+ pub fn result(&self,live:PreparedSceneIdentity)->Result<&[usize],DocumentSceneError>{self.authority(live)?;if self.phase!="complete"{return Err("Prepared scene query incomplete".into());}Ok(&self.hits)}
  pub fn cancel(&mut self){self.cancelled=true;}
 }
 /// 📐️ Selection presentation and pointer handles share cached bounds and unlocked ancestry.

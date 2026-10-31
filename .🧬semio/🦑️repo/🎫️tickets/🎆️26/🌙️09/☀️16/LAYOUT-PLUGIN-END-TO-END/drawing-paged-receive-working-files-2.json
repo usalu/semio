@@ -1,0 +1,60 @@
+{
+  "scope": "Source-only; production defining37 +Append and original paged owning law migrations; no compiler/test acceptance",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🛬️receive/🦀️.rs",
+      "bytes": 10657,
+      "sha256": "f46ec2acc6378f3021aab14f3cd9c1250689e541d8a33d36924c94d74da5f7d6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🛬️receive/🗂️map/🦀️.rs",
+      "bytes": 11113,
+      "sha256": "3d56e7a7dd3cc66ac6d7469448c57e36d34c24bee9a2e1dfdce5e1ff66b7a93a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs",
+      "bytes": 13266,
+      "sha256": "bb7f734480f19c0e27327c9ba4b81f0f8011e421f06bc993b9b065abe5fb8674"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🛬️receive/🧪️tests/🦀️.rs",
+      "bytes": 6054,
+      "sha256": "3e43be8f92c29b7cbdfa66e4c383557591c0db364764c91e721e8aed30832580"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🛬️receive/🗂️map/🧪️tests/🦀️.rs",
+      "bytes": 4973,
+      "sha256": "70ee032f43478c30e0e32eb580a2beffd657cc7503fe8add12e8f5da8e97b985"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🛬️receive/🎟️work/🔣️.json",
+      "bytes": 246,
+      "sha256": "63625c17c70bfaf21fbaeda988add42b0a8626f4d39fbc6d9ebd0945590bc15a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🛬️receive/🎟️work/📐️.json",
+      "bytes": 424,
+      "sha256": "b7a8b50fe93d10cb6998ccdcfd0c8ae7ff5e36f6582a21dfa90b5f246455b6b7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🛬️receive/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 1206,
+      "sha256": "777acb5747322a0aed0be97bc480c209b48a05c50e37deea0946c617533f59ab"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🎟️work/🔣️.json",
+      "bytes": 2319,
+      "sha256": "bd29513d7c8c836ab6e0640d9b08f382f6c99ec44de7ff4d13992cd35fc3cbc6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🎟️work/📐️.json",
+      "bytes": 1627,
+      "sha256": "85a8357b0031ca172edc05403d50e81e7c6d7751822af0fbc14d5e1e6a8c52b7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🎟️work/🧪️tests/🦀️.rs",
+      "bytes": 6004,
+      "sha256": "e3bacf90ed29a098d92afd664468c51071634c5efd2ff59b8df248100dcfcda6"
+    }
+  ]
+}

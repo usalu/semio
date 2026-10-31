@@ -4,7 +4,7 @@ import {createCanvas,ImageData} from "@napi-rs/canvas";
 import type {AffineImageInput} from "../../🟦️.ts";
 function polygonArea(ring:readonly(readonly number[])[]):number{let total=0;const anchor=ring[0]!;for(let i=1;i+1<ring.length;i++){const a=ring[i]!,b=ring[i+1]!;total+=(a[0]!-anchor[0]!)*(b[1]!-anchor[1]!)-(a[1]!-anchor[1]!)*(b[0]!-anchor[0]!);}return Math.abs(total)/2;}
 export function areaOracle(v:AffineImageInput):Uint8Array{
- const output=new Uint8Array(v.width*v.height*4),m=v.transform;if(m[0]!*m[3]!-m[1]!*m[2]===0)return output;
+ const output=new Uint8Array(v.width*v.height*4),m=v.transform,a=m[0],b=m[1],c=m[2],d=m[3];if(a===undefined||b===undefined||c===undefined||d===undefined)throw Error("Original affine matrix absent");if(a*d-b*c===0)return output;
  const map=(x:number,y:number):[number,number]=>[m[0]!*x+m[2]!*y+m[4]!-v.origin[0],m[1]!*x+m[3]!*y+m[5]!-v.origin[1]];
  for(let y=0;y<v.height;y++)for(let x=0;x<v.width;x++){
   const target:[number,number][]=[[x,y],[x+1,y],[x+1,y+1],[x,y+1],[x,y]];let alpha=0;const rgb=[0,0,0];

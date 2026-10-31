@@ -4,9 +4,7 @@ use super::*;
 
 //#region 🏭️RetainedSessions
 impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
-    pub fn try_admit_owned(job:&mut Option<J>,params:&mut Option<BatchJobParams>,control:&mut impl WorkerJobAdmissionControl)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
-        WorkerJobSession::try_admit_owned(job,params,control).map(|admitted|admitted.map(|(session,progress)|(Self{session,ticket:None,checked_out:None},progress)))
-    }
+
 
     pub fn generation(&self) -> Generation {
         self.session.generation()
@@ -14,68 +12,6 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
 
     pub fn poll(&self) -> WorkerJobPoll {
         if self.checked_out.is_some() { WorkerJobPoll::CheckedOut } else { self.session.poll() }
-    }
-
-    /// ⛽️ `J: Send` for the same reason as [`WorkerJobSession::try_submit_step`] — this is the
-    /// pool-submitting half of the mounted session, not the single-threaded drive path.
-    pub fn pump_one(&mut self, pool: &WorkerPool, lane: Lane,retained:RetainedCloneGrant) -> Result<WorkerJobPoll, MountedWorkerJobPumpFault>
-    where
-        J: Send,
-    {
-        if self.checked_out.is_some() {
-            return Err(MountedWorkerJobPumpFault::CheckedOut);
-        }
-        match self.session.poll() {
-            WorkerJobPoll::Idle => {
-                #[cfg(not(target_arch = "wasm32"))]
-                if lane == Lane::Interactive {
-                    let (ticket, poll) = self
-                        .session
-                        .try_step_on_caller(retained)
-                        .map_err(|contention| MountedWorkerJobPumpFault::Submit(WorkerJobSubmitFault::Contention(contention)))?;
-                    self.ticket = Some(ticket);
-                    return match poll {
-                        WorkerJobPoll::Outcome | WorkerJobPoll::Terminal => self.pump_one(pool, lane,retained),
-                        other => Ok(other),
-                    };
-                }
-                let ticket = self.session.try_submit_step(pool, lane,retained).map_err(MountedWorkerJobPumpFault::Submit)?;
-                self.ticket = Some(ticket);
-                Ok(WorkerJobPoll::Submitted)
-            }
-            WorkerJobPoll::Submitted => Ok(WorkerJobPoll::Submitted),
-            WorkerJobPoll::Outcome => {
-                let ticket = self.ticket.take().ok_or(MountedWorkerJobPumpFault::MissingTicket)?;
-                let owner = self.session.take_outcome(ticket).map_err(MountedWorkerJobPumpFault::Take)?;
-                self.checked_out = Some(owner);
-                Ok(WorkerJobPoll::Outcome)
-            }
-            WorkerJobPoll::Terminal => {
-                let owner = self.session.take_terminal().map_err(MountedWorkerJobPumpFault::Take)?;
-                self.checked_out = Some(owner);
-                Ok(WorkerJobPoll::Terminal)
-            }
-            WorkerJobPoll::Rejected => {
-                let owner = self.session.take_rejected().map_err(MountedWorkerJobPumpFault::Take)?;
-                owner.resume();
-                Ok(WorkerJobPoll::Rejected)
-            }
-            poll => Ok(poll),
-        }
-    }
-
-    /// 🧵️ Runs the session's next step on the calling thread and checks its outcome out. For a caller
-    /// that already owns a bounded slice of its own — a guest `semio.infer` `step-job` crossing —
-    /// where handing the step to a pool and waiting for it only adds a round trip per step.
-    pub fn step_on_caller(&mut self,retained:RetainedCloneGrant) -> Result<WorkerJobPoll, MountedWorkerJobPumpFault> {
-        if self.checked_out.is_some() {
-            return Err(MountedWorkerJobPumpFault::CheckedOut);
-        }
-        let (ticket, poll) = self.session.try_step_on_caller(retained).map_err(|contention| MountedWorkerJobPumpFault::Submit(WorkerJobSubmitFault::Contention(contention)))?;
-        if poll==WorkerJobPoll::Idle{return Ok(poll)}
-        let owner = if poll == WorkerJobPoll::Terminal { self.session.take_terminal() } else { self.session.take_outcome(ticket) };
-        self.checked_out = Some(owner.map_err(MountedWorkerJobPumpFault::Take)?);
-        Ok(poll)
     }
 
     /// 🕰️ See [`WorkerJobSession::last_step_end_us`].
@@ -86,14 +22,14 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
     /// 🏃️ Executes the admitted business producer on the same original caller without renewing any budget.
     pub fn pump_one_for_interactive_turn(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobPoll,OriginalTurnFailure>{
         if self.checked_out.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original worker outcome must be returned before another callback").into())}
-        let before=cx.retained_progress();
+        let before=cx.retained_progress();let held=cx.reserved_return_progress();
         let granted=cx.retained_grant();
         let Some((ticket,poll))=self.session.try_step_on_original_caller(cx)?else{return Ok(WorkerJobPoll::Idle)};
         if poll==WorkerJobPoll::Idle{return Ok(poll)}
         let owner=if poll==WorkerJobPoll::Terminal{self.session.take_terminal()}else{self.session.take_outcome(ticket)};
         self.checked_out=Some(owner.map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback lost its exact checked-out producer"))?);
         let (issued,progress)=self.checked_out_retained_step_receipt().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback omitted its physical receipt"))?;
-        if *issued!=granted||!progress.fits(granted)||before.checked_add(*progress)?!=cx.retained_progress(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback receipt differs from its issued authority or posted effects").into())}
+        if *issued!=granted||!progress.fits(granted)||semio_framework_job_worker_authority::original_worker_current_progress(before,cx.retained_progress(),held,cx.reserved_return_progress())?!=*progress{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original callback receipt differs from its issued authority or posted effects").into())}
         Ok(poll)
     }
 
@@ -106,6 +42,8 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
     /// 🧾️ Borrows the actual same-owner worker receipt before transferring its outcome.
     pub fn checked_out_retained_step_progress(&self)->Option<RetainedCloneProgress>{self.checked_out.as_ref().map(WorkerJobOutcome::retained_step_progress)}
 
+    /// 🪪️ Exposes the complete borrowed continuation after the same physical receipt fence.
+    pub fn checked_out_continuation(&self)->Option<OriginalJobContinuationView<'_>>{self.checked_out.as_ref().and_then(WorkerJobOutcome::continuation)}
     pub fn checked_out_outcome(&self)->Result<Option<JobOutcomeView<'_>>,ValueError>{match self.checked_out.as_ref(){Some(original)=>original.outcome(),None=>Ok(None)}}
 
     /// 🎫️ Observes the same paid descriptor through its separate acknowledgement and removal phases.
@@ -122,7 +60,7 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
         self.checked_out.as_ref().and_then(WorkerJobOutcome::overrun_ledger)
     }
 
-    pub fn acknowledge_checked_out_outcome(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{self.checked_out.as_mut().map_or(RetainedCloneStep::Complete(Default::default()),|original|original.acknowledge_outcome(grant))}
+    pub fn acknowledge_checked_out_outcome(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{match self.checked_out.as_mut(){Some(original)=>original.acknowledge_outcome(cx),None=>Ok(true)}}
 
     pub fn checked_out_job_mut(&mut self) -> Option<&mut J> {
         self.checked_out.as_mut().and_then(|original|original.job_mut().ok())
@@ -157,7 +95,7 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
         let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
         if let Some(mut owner)=self.checked_out.take(){
             if let Some(demand)=owner.authority.as_ref().and_then(OriginalWorkerJobAuthority::outcome_demands){
-                let result=close_original_retained_step(cx,demand,|grant|Ok(owner.acknowledge_outcome(grant)));self.checked_out=Some(owner);return result.map(|step|match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},InteractiveJobCloseStep::Blocked=>WorkerJobCloseStep::Blocked})
+                let _=demand;let before=cx.retained_progress();let result=owner.acknowledge_outcome(cx);let after=cx.retained_progress();self.checked_out=Some(owner);return result.map(|_|WorkerJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}})
             }
             let progress=RetainedCloneProgress{copied_items:1,..Default::default()};if let Err(error)=cx.consume_retained(progress){self.checked_out=Some(owner);return Err(error.into())}cx.consume_fuel(1);owner.begin_close();return Ok(WorkerJobCloseStep::Pending{progress})
         }
@@ -171,8 +109,8 @@ impl<J: InteractiveJob + 'static> MountedWorkerJobSession<J> {
     }
 
     /// ✖️ Preserves checkout ownership while forwarding the caller's borrowed original cancellation root.
-    pub fn return_original_cancel_alias_step(&self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,WorkerJobDemandError>{
-        if self.checked_out.is_some(){return Ok(None);}
+    pub fn return_original_cancel_alias_step(&self,witness:&CancelToken,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>{
+        if self.checked_out.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0};}
         self.session.return_original_cancel_alias_step(witness,grant)
     }
 
@@ -200,9 +138,7 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
         unsafe{self.session.inner.put_authority_quiet(authority,phase)};Ok(identity)
     }
 
-    pub fn try_admit_owned(job:&mut Option<J>,params:&mut Option<BatchJobParams>,control:&mut impl WorkerJobAdmissionControl)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
-        WorkerJobSession::try_admit_owned(job,params,control).map(|admitted|admitted.map(|(session,progress)|(Self{session,ticket:None,checked_out:None},progress)))
-    }
+
 
     /// 🤝️ Hands the same prepared native authority to Batch on a separate paid metadata turn.
     pub fn admit_prepared(original:&mut Option<WorkerJobSession<J>>,control:&mut impl WorkerJobAdmissionControl)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
@@ -230,15 +166,6 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
         Ok(poll)
     }
 
-    pub fn step(&mut self,retained:RetainedCloneGrant) -> Result<WorkerJobPoll, WorkerJobContention> {
-        if self.checked_out.is_some() {
-            return Err(WorkerJobContention::CheckedOut(self.session.generation()));
-        }
-        let (ticket, poll) = self.session.try_step_on_caller(retained)?;
-        if poll!=WorkerJobPoll::Idle{self.ticket = Some(ticket);}
-        Ok(poll)
-    }
-
     pub fn poll(&self) -> WorkerJobPoll {
         if self.checked_out.is_some() { WorkerJobPoll::CheckedOut } else { self.session.poll() }
     }
@@ -248,7 +175,7 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
 
     pub fn take_checked_out_retained_step_receipt(&mut self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.checked_out.as_mut().and_then(WorkerJobOutcome::take_retained_step_receipt)}
 
-    pub fn acknowledge_outcome(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{self.checked_out.as_mut().map_or(RetainedCloneStep::Progress(Default::default()),|original|original.acknowledge_outcome(grant))}
+    pub fn acknowledge_outcome(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{match self.checked_out.as_mut(){Some(original)=>original.acknowledge_outcome(cx),None=>Ok(false)}}
 
     pub fn checkout_outcome(&mut self) -> bool {
         if self.checked_out.is_some() {
@@ -269,6 +196,8 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
         true
     }
 
+    /// 🗂️ Exposes the complete borrowed continuation after the same physical receipt fence.
+    pub fn checked_out_continuation(&self)->Option<OriginalJobContinuationView<'_>>{self.checked_out.as_ref().and_then(WorkerJobOutcome::continuation)}
     pub fn checked_out_outcome(&self)->Result<Option<JobOutcomeView<'_>>,ValueError>{match self.checked_out.as_ref(){Some(original)=>original.outcome(),None=>Ok(None)}}
 
     pub fn callback_verdict(&self) -> Option<&semio_framework_trace::CallbackVerdict> {
@@ -316,7 +245,7 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
     /// ❌️ Preserves checkout custody before inspecting the original borrowed cancellation witness.
     pub fn has_original_cancel_alias_witness(&self,witness:&CancelToken)->Result<bool,WorkerJobDemandError>{if self.checked_out.is_some(){return Ok(false)}self.session.has_original_cancel_alias_witness(witness)}
     /// 🪜️ Returns the original alias through its sole session after checkout custody has returned.
-    pub fn return_original_cancel_alias_step(&self,witness:&CancelToken,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,WorkerJobDemandError>{if self.checked_out.is_some(){return Ok(None)}self.session.return_original_cancel_alias_step(witness,grant)}
+    pub fn return_original_cancel_alias_step(&self,witness:&CancelToken,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<RetainedCloneStep>,WorkerJobDemandError>{if self.checked_out.is_some(){return semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0}}self.session.return_original_cancel_alias_step(witness,grant)}
 
     pub fn terminal_is_empty(&self) -> bool {
         self.checked_out.is_none() && self.session.terminal_is_empty()

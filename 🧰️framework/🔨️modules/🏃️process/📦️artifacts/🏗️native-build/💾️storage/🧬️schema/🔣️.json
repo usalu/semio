@@ -90,6 +90,9 @@
         },
         "namespace": {
           "$ref": "#/definitions/NamespaceReceipt"
+        },
+        "funding": {
+          "$ref": "#/definitions/FundingReplacement"
         }
       }
     },
@@ -219,6 +222,72 @@
             },
             "namespace": {
               "$ref": "#/definitions/NamespaceReceipt"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "expectedSequence",
+            "allocation"
+          ],
+          "properties": {
+            "type": {
+              "const": "funding-reserved"
+            },
+            "expectedSequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "allocation": {
+              "$ref": "#/definitions/Allocation"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "expectedSequence",
+            "allocation"
+          ],
+          "properties": {
+            "type": {
+              "const": "funding-settled"
+            },
+            "expectedSequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "allocation": {
+              "$ref": "#/definitions/Allocation"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "expectedSequence",
+            "allocation"
+          ],
+          "properties": {
+            "type": {
+              "const": "funding-aborted"
+            },
+            "expectedSequence": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "allocation": {
+              "$ref": "#/definitions/Allocation"
             }
           }
         }
@@ -1992,7 +2061,10 @@
           "const": 1
         },
         "purpose": {
-          "const": "staged-immutable-artifact-input-group"
+          "enum": [
+            "staged-immutable-artifact-input-group",
+            "observed-current-artifact-input-group"
+          ]
         },
         "inputSha256": {
           "type": "string",
@@ -2050,18 +2122,50 @@
       }
     },
     "BootSessionRead": {
-      "const": { "version": 1, "maximumAttempts": 3 },
+      "const": {
+        "version": 1,
+        "maximumAttempts": 3
+      },
       "description": "The boot session identifier is read by one idempotent child; a child whose terminal events the host lost is refused with its closed cause and read again, at most maximumAttempts times in all, and no other failure is repeated."
     },
     "BootSessionReadCase": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "outcomes", "attempts", "result"],
+      "required": [
+        "id",
+        "outcomes",
+        "attempts",
+        "result"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "outcomes": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "enum": ["ok", "lost", "fault"] } },
-        "attempts": { "type": "integer", "minimum": 1, "maximum": 3 },
-        "result": { "enum": ["value", "lost", "fault"] }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "outcomes": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "enum": [
+              "ok",
+              "lost",
+              "fault"
+            ]
+          }
+        },
+        "attempts": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "result": {
+          "enum": [
+            "value",
+            "lost",
+            "fault"
+          ]
+        }
       }
     },
     "BootSession": {
@@ -2424,6 +2528,724 @@
         "expected": {
           "const": "first-stop-after-drain"
         }
+      }
+    },
+    "FundingPredecessor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "kind",
+        "bytes",
+        "phase"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "kind": {
+          "const": "artifact-publication"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "phase": {
+          "const": "committed"
+        }
+      }
+    },
+    "FundingReplacement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "phase",
+        "predecessor",
+        "targetBytes",
+        "contextSha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "phase": {
+          "enum": [
+            "reserved",
+            "settled"
+          ]
+        },
+        "predecessor": {
+          "$ref": "#/definitions/FundingPredecessor"
+        },
+        "targetBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "contextSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "FundingReplacementRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "expectedSequence",
+        "predecessor",
+        "contextSha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "expectedSequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "predecessor": {
+          "$ref": "#/definitions/FundingPredecessor"
+        },
+        "contextSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "FundingReplacementRecoveryRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "expectedSequence",
+        "id",
+        "owner",
+        "contextSha256"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "expectedSequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "contextSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "FundingPublishedBacking": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesystemBytes",
+        "maximumPhysicalBytes",
+        "size",
+        "allocatedBytes",
+        "observedFilesystemBytes"
+      ],
+      "properties": {
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "allocatedBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "observedFilesystemBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      }
+    },
+    "ProtectedArtifactExistingInputGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "group"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "observe-current-artifact-input-group"
+        },
+        "group": {
+          "$ref": "#/definitions/ProtectedArtifactInputGroup"
+        }
+      }
+    },
+    "FundedArtifactUsage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "allocation",
+        "bytes",
+        "maximumBytes",
+        "authority"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "current-artifact-funding-usage"
+        },
+        "allocation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "authority": {
+          "const": false
+        }
+      }
+    },
+    "FundingMetadataRoleDeclaration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "id",
+        "owner",
+        "targetName",
+        "intentName",
+        "maximumTargetBytes",
+        "policy",
+        "preparedPurpose"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-z0-9:-]+$"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "targetName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "intentName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "maximumTargetBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "policy": {
+          "$ref": "#/definitions/Policy"
+        },
+        "preparedPurpose": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9-]+$"
+        }
+      }
+    },
+    "FundingMetadataBaseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "roleSha256",
+        "allocation",
+        "contextSha256",
+        "backingStamp",
+        "expectedSequence",
+        "parent",
+        "prior",
+        "names",
+        "plan"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "plan-funded-system-metadata"
+        },
+        "roleSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "allocation": {
+          "$ref": "#/definitions/FundingMetadataAllocation"
+        },
+        "contextSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "backingStamp": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "expectedSequence": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "parent": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/filesystem/observation/descriptor/component.json#/definitions/RelativeFilePublicationIdentityData"
+        },
+        "prior": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "sha256"
+          ],
+          "properties": {
+            "identity": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/filesystem/observation/descriptor/component.json#/definitions/RelativeFilePublicationIdentityData"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "names": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": "^[^/\\\\\\u0000]+$"
+          }
+        },
+        "plan": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "stageName",
+            "retainedName",
+            "windows"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[^/\\\\\\u0000]+$"
+            },
+            "stageName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[^/\\\\\\u0000]+$"
+            },
+            "retainedName": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[^/\\\\\\u0000]+$"
+            },
+            "windows": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "parent",
+                    "prior"
+                  ],
+                  "properties": {
+                    "parent": {
+                      "$ref": "https://json.schemas.assets.semio-tech.com/framework/filesystem/observation/descriptor/component.json#/definitions/RelativeWindowsPublicationFacts"
+                    },
+                    "prior": {
+                      "$ref": "https://json.schemas.assets.semio-tech.com/framework/filesystem/observation/descriptor/component.json#/definitions/RelativeWindowsPublicationFacts"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    "FundingMetadataProtocol": {
+      "const": {
+        "version": 1,
+        "maximumIntentBytes": 32768,
+        "maximumTargetBytes": 4096,
+        "metadataMode": 384,
+        "maximumAncestorCount": 64,
+        "currentRole": true,
+        "historicalInodeProved": false,
+        "payloadAdopted": false,
+        "windowsCurrentFactsFenced": true
+      }
+    },
+    "FundingMetadataFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parent",
+        "names",
+        "prior",
+        "windows",
+        "stage"
+      ],
+      "properties": {
+        "parent": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/filesystem/observation/descriptor/component.json#/definitions/RelativeFilePublicationIdentityData"
+        },
+        "names": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": "^[^/\\\\\\u0000]+$"
+          }
+        },
+        "prior": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "identity",
+            "sha256"
+          ],
+          "properties": {
+            "identity": {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/filesystem/observation/descriptor/component.json#/definitions/RelativeFilePublicationIdentityData"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "windows": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "parent",
+                "prior"
+              ],
+              "properties": {
+                "parent": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/filesystem/observation/descriptor/component.json#/definitions/RelativeWindowsPublicationFacts"
+                },
+                "prior": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/filesystem/observation/descriptor/component.json#/definitions/RelativeWindowsPublicationFacts"
+                }
+              }
+            }
+          ]
+        },
+        "stage": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "kind",
+                "identity",
+                "bytesBase64",
+                "windows"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255,
+                  "pattern": "^[^/\\\\\\u0000]+$"
+                },
+                "kind": {
+                  "enum": [
+                    "file",
+                    "directory",
+                    "link",
+                    "other"
+                  ]
+                },
+                "identity": {
+                  "$ref": "https://json.schemas.assets.semio-tech.com/framework/filesystem/observation/descriptor/component.json#/definitions/RelativeFilePublicationIdentityData"
+                },
+                "bytesBase64": {
+                  "type": "string",
+                  "maxLength": 5464,
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                },
+                "windows": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "https://json.schemas.assets.semio-tech.com/framework/filesystem/observation/descriptor/component.json#/definitions/RelativeWindowsPublicationFacts"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "FundingMetadataDraftCase": {
+      "type": "object",
+      "required": [
+        "id",
+        "cut",
+        "change",
+        "accept"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "cut": {
+          "enum": [
+            "empty",
+            "identity",
+            "stage-name",
+            "retained-name",
+            "complete",
+            "utf8"
+          ]
+        },
+        "change": {
+          "enum": [
+            "none",
+            "foreign",
+            "newline"
+          ]
+        },
+        "accept": {
+          "type": "boolean"
+        }
+      }
+    },
+    "FundingMetadataAllocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "kind",
+        "bytes",
+        "phase",
+        "funding"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "kind": {
+          "const": "artifact-publication"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "phase": {
+          "const": "committed"
+        },
+        "funding": {
+          "$ref": "#/definitions/FundingReplacement"
+        }
+      }
+    },
+    "FundingInitializationObservation": {
+      "type": "object",
+      "required": [
+        "version",
+        "backend",
+        "currentEnvelope",
+        "journalState",
+        "publicationAbsent",
+        "fundingIntentAbsent",
+        "entries"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "backend": {
+          "enum": [
+            "mounted-volume",
+            "directory-partition"
+          ]
+        },
+        "currentEnvelope": {
+          "type": "boolean"
+        },
+        "publicationAbsent": {
+          "type": "boolean"
+        },
+        "fundingIntentAbsent": {
+          "type": "boolean"
+        },
+        "entries": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "kind",
+              "sameDevice",
+              "nlink",
+              "size"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              "kind": {
+                "enum": [
+                  "file",
+                  "directory",
+                  "link",
+                  "other"
+                ]
+              },
+              "sameDevice": {
+                "type": "boolean"
+              },
+              "nlink": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "size": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        },
+        "journalState": {
+          "enum": [
+            "absent",
+            "empty",
+            "funded"
+          ]
+        }
+      }
+    },
+    "FundingInitializationProtocol": {
+      "const": {
+        "version": 1,
+        "serviceBackend": "mounted-volume",
+        "services": [
+          {
+            "name": ".fseventsd",
+            "kind": "directory"
+          },
+          {
+            "name": ".metadata_never_index",
+            "kind": "file",
+            "nlink": 1,
+            "size": 0
+          }
+        ],
+        "authority": false,
+        "allocator": "existing-canonical-only",
+        "nonempty": "retain-refuse",
+        "journalName": "storage-events.jsonl"
       }
     }
   }

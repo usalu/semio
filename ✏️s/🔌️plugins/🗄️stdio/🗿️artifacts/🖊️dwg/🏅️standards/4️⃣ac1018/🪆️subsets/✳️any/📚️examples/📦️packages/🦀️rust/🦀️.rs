@@ -1,7 +1,6 @@
 //! 📚️ `stdio.dwg` examples: the demo document and the committed architectural drawing.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as store;
 

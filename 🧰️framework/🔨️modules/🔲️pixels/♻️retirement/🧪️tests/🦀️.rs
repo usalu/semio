@@ -1,16 +1,9 @@
 //! 🧪️ Neutral backing witnesses exercise refused, borrowed and final mask releases.
 use super::*;
-use std::{alloc::{GlobalAlloc,Layout,System},cell::Cell};
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneStep,RetainedCloneGrant}};
-thread_local!{static TRACK:Cell<Option<(usize,usize)>>=const{Cell::new(None)};}
-struct PhysicalAllocator;
 #[global_allocator]
-static ALLOCATOR:PhysicalAllocator=PhysicalAllocator;
-unsafe impl GlobalAlloc for PhysicalAllocator {
- unsafe fn alloc(&self,layout:Layout)->*mut u8 {let pointer=unsafe{System.alloc(layout)};if !pointer.is_null(){let _=TRACK.try_with(|track|if let Some((allocated,released))=track.get(){track.set(Some((allocated+layout.size(),released)));});}pointer}
- unsafe fn dealloc(&self,pointer:*mut u8,layout:Layout){let _=TRACK.try_with(|track|if let Some((allocated,released))=track.get(){track.set(Some((allocated,released+layout.size())));});unsafe{System.dealloc(pointer,layout);}}
-}
-pub(crate) fn observed<T>(step:impl FnOnce()->T)->(T,(usize,usize)){TRACK.with(|track|{assert!(track.get().is_none());track.set(Some((0,0)));});let output=step();let bytes=TRACK.with(|track|track.replace(None).unwrap());(output,bytes)}
+static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+pub(crate) fn observed<T>(step:impl FnOnce()->T)->(T,(usize,usize)){let(output,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(step);assert!(!heap.overflowed,"physical test allocator observation overflow");(output,(heap.requested_bytes,heap.released_bytes))}
 pub(crate) fn drain<T:RetireOwned>(value:T)->(usize,usize){
  let mut owner=ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("unsupported test owner: {error}"));let mut allocated=0;let mut released=0;
  for _ in 0..2_000_000 {if owner.terminal_is_empty(){break;}let copy=owner.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(if copy>0{copy}else{owner.next_release_byte_demand().unwrap()}).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
@@ -19,14 +12,19 @@ pub(crate) fn drain<T:RetireOwned>(value:T)->(usize,usize){
  }
  assert!(owner.terminal_is_empty());let (_,physical)=observed(||drop(owner));assert_eq!(physical,(0,0));(allocated,released)
 }
+#[path="../../../◻️2d/🛤️path/🎟️work/🧪️tests/🦀️.rs"] pub(crate) mod test_wallet;
+pub(crate) use test_wallet::Wallet;
+pub(crate) fn physical_wallet()->Wallet{let value:serde_json::Value=serde_json::from_str(crate::text("🖊️coverage/🎟️work/🧫️fixtures/🔣️.json")).unwrap();let stock=&value["stock"];let n=|key|stock[key].as_u64().unwrap()as usize;Wallet::from_grant(RetainedCloneGrant{maximum_items:n("items"),maximum_copy_bytes:n("copy"),maximum_capacity_bytes:n("capacity"),maximum_release_bytes:n("release"),maximum_depth:n("depth")},value["maximumTurns"].as_u64().unwrap()as usize)}
+pub(crate) fn funded_turn<R>(wallet:&mut Wallet,items:usize,run:impl FnOnce(&mut semio_framework_value::work::RetainedWorkLedger)->R)->R{wallet.turn_observed(items,|work|{let(result,(allocated,released))=observed(||run(work));(result,test_wallet::HeapObservation{requested_bytes:allocated,released_bytes:released,overflowed:false})})}
+pub(crate) fn funded_close_owned<T:RetireOwned>(value:T,wallet:&mut Wallet)->(usize,usize){let(mut owner,heap)=observed(||ControlledRetirement::retain(value));assert_eq!(heap,(0,0));let mut total=(0,0);for _ in 0..2_000_000{if owner.terminal_is_empty(){break}let d=owner.next_demand(wallet.remaining().maximum_copy_bytes).unwrap();let step=wallet.close_turn_observed(d,|grant|{let(result,(allocated,released))=observed(||owner.step(grant));total.0+=allocated;total.1+=released;(result,test_wallet::HeapObservation{requested_bytes:allocated,released_bytes:released,overflowed:false})}).unwrap();assert_ne!(step.progress(),Default::default());}assert!(owner.terminal_is_empty());let((),heap)=observed(||drop(owner));assert_eq!(heap,(0,0));total}
 #[test]
 fn retained_physical_raster_children_obey_allocator_grants(){
  use crate::{coverage::{CoverageInput,CoverageJob,CoverageRule},affine_sampling::{AffineImageInput,AffineImageJob,AffineSampling},compositing::{CompositeJob,CompositeLayer,CompositeContent,CompositeBlend}};
  let fixture:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for stop in fixture["interruptions"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
-  let mut coverage=CoverageJob::new(CoverageInput{width:8,height:8,transform:[1.,0.,0.,1.,0.,0.],rule:CoverageRule::NonZero,contours:vec![vec![[0.,0.],[8.,0.],[8.,8.],[0.,8.]]]}).unwrap();if stop>0{coverage.advance(stop).unwrap();}coverage.cancel();let retired=coverage.into_retirement().0;let(a,r)=drain(retired);assert!(r>a);
-  let source=Arc::new(RasterImage{width:2,height:2,pixels:vec![255;16]});let mut sample=AffineImageJob::new(AffineImageInput{source:source.clone(),width:8,height:8,origin:[0.,0.],transform:[4.,0.,0.,4.,0.,0.],sampling:AffineSampling::Area}).unwrap();if stop>0{sample.advance(stop).unwrap();}sample.cancel();let(a,r)=drain(sample.into_retirement().0);assert!(r>a);assert_eq!(source.pixels,vec![255;16]);assert_eq!(Arc::strong_count(&source),1);
-  let mut compositor=CompositeJob::new_owned(8,8,[0.,0.],vec![("image".into(),RasterLease(source.clone()))],vec![CompositeLayer{opacity:1.,blend:CompositeBlend::Normal,visible:true,transform:[4.,0.,0.,4.,0.,0.],mask:None,content:CompositeContent::Pixels("image".into())}]).unwrap();if stop>0{compositor.advance(stop).unwrap();}compositor.cancel();let(a,r)=drain(compositor.into_retirement().0);assert!(r>a);assert_eq!(Arc::strong_count(&source),1);
+  let mut wallet=physical_wallet();let mut coverage=CoverageJob::new(CoverageInput{width:8,height:8,transform:[1.,0.,0.,1.,0.,0.],rule:CoverageRule::NonZero,contours:vec![vec![[0.,0.],[8.,0.],[8.,8.],[0.,8.]]]});if stop>0{funded_turn(&mut wallet,stop,|work|coverage.advance(stop,work)).unwrap();}coverage.cancel();let retired=coverage.into_retirement().0;let(a,r)=funded_close_owned(retired,&mut wallet);assert!(r>a);
+  let source=Arc::new(RasterImage{width:2,height:2,pixels:vec![255;16]});let mut wallet=physical_wallet();let mut sample=AffineImageJob::new(AffineImageInput{source:source.clone(),width:8,height:8,origin:[0.,0.],transform:[4.,0.,0.,4.,0.,0.],sampling:AffineSampling::Area});if stop>0{funded_turn(&mut wallet,stop,|work|sample.advance(stop,work)).unwrap();}sample.cancel();let(a,r)=funded_close_owned(sample.into_retirement(),&mut wallet);if stop==0{assert_eq!(r,a);}else{assert!(r>=a);}assert_eq!(source.pixels,vec![255;16]);assert_eq!(Arc::strong_count(&source),1);
+  let mut wallet=physical_wallet();let mut compositor=CompositeJob::new_owned(8,8,[0.,0.],vec![("image".into(),RasterLease(source.clone()))],vec![CompositeLayer{opacity:1.,blend:CompositeBlend::Normal,visible:true,transform:[4.,0.,0.,4.,0.,0.],mask:None,content:CompositeContent::Pixels("image".into())}]);if stop>0{funded_turn(&mut wallet,stop,|work|compositor.advance(stop,work)).unwrap();}compositor.cancel();let(a,r)=funded_close_owned(compositor.into_retirement(),&mut wallet);assert!(r>a);assert_eq!(Arc::strong_count(&source),1);
  }
 }
 #[test]
@@ -34,8 +32,8 @@ fn retained_physical_geometry_children_obey_allocator_grants(){
  use semio_framework_2d::{PathSegment,flatten::{PathFlattenInput,PathFlattenJob},stroke::{StrokeOutlineInput,StrokeOutlineJob,StrokeContour,StrokeGeometryStyle,StrokeGeometryCap,StrokeGeometryJoin}};
  let fixture:serde_json::Value=serde_json::from_str(crate::text("♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for stop in fixture["interruptions"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){
-  let mut flatten=PathFlattenJob::new(PathFlattenInput{segments:vec![PathSegment::Move{to:[0.,0.]},PathSegment::Cubic{ctrl1:[0.,8.],ctrl2:[8.,8.],to:[8.,0.]},PathSegment::Close],transform:[1.,0.,0.,1.,0.,0.],tolerance:0.1}).unwrap();if stop>0{flatten.advance(stop).unwrap();}flatten.cancel();let(a,r)=drain(flatten.into_retirement().0);assert!(r>a);
-  let mut stroke=StrokeOutlineJob::new(StrokeOutlineInput{contours:vec![StrokeContour{points:vec![[0.,0.],[8.,0.],[8.,8.]],closed:false}],transform:[1.,0.,0.,1.,0.,0.],tolerance:0.1,style:StrokeGeometryStyle{width:2.,cap:StrokeGeometryCap::Round,join:StrokeGeometryJoin::Round,miter_limit:4.,dash:vec![1.,1.],dash_offset:0.}}).unwrap();if stop>0{stroke.advance(stop).unwrap();}stroke.cancel();let(a,r)=drain(stroke.into_retirement().0);assert!(r>a);
+  let mut wallet=physical_wallet();let mut flatten=PathFlattenJob::new(PathFlattenInput{segments:vec![PathSegment::Move{to:[0.,0.]},PathSegment::Cubic{ctrl1:[0.,8.],ctrl2:[8.,8.],to:[8.,0.]},PathSegment::Close],transform:[1.,0.,0.,1.,0.,0.],tolerance:0.1});if stop>0{let mut reached=false;for _ in 0..2_000_000{let p=funded_turn(&mut wallet,1,|work|flatten.advance(1,work)).unwrap();if p.work>=stop as u64||p.done{reached=true;break;}}assert!(reached);}flatten.cancel();let((retired,output),heap)=observed(||flatten.into_retirement());assert_eq!(heap,(0,0));assert!(output.is_none());let(a,r)=funded_close_owned(retired,&mut wallet);assert!(r>a);
+  let mut wallet=physical_wallet();let mut stroke=StrokeOutlineJob::new(StrokeOutlineInput{contours:vec![StrokeContour{points:vec![[0.,0.],[8.,0.],[8.,8.]],closed:false}],transform:[1.,0.,0.,1.,0.,0.],tolerance:0.1,style:StrokeGeometryStyle{width:2.,cap:StrokeGeometryCap::Round,join:StrokeGeometryJoin::Round,miter_limit:4.,dash:vec![1.,1.],dash_offset:0.}});if stop>0{let mut reached=false;for _ in 0..2_000_000{let p=funded_turn(&mut wallet,1,|work|stroke.advance(1,work)).unwrap();if p.work>=stop as u64||p.done{reached=true;break;}}assert!(reached);}stroke.cancel();let((retired,output),heap)=observed(||stroke.into_retirement());assert_eq!(heap,(0,0));assert!(output.is_none());let(a,r)=funded_close_owned(retired,&mut wallet);assert!(r>a);
  }
 }
 #[test]

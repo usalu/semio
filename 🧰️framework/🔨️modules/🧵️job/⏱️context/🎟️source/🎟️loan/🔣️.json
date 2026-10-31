@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "deniedWork",
+    "admittedWork",
+    "cachedWork",
+    "receiptRefusalRetainsLoan",
+    "copiedBytes",
+    "stock"
+  ],
+  "properties": {
+    "operation": {
+      "const": 443
+    },
+    "generation": {
+      "const": 9
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "admittedWork": {
+      "const": 1
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "receiptRefusalRetainsLoan": {
+      "const": true
+    },
+    "copiedBytes": {
+      "const": 0
+    },
+    "stock": {
+      "const": {
+        "items": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 64,
+        "fuel": 100000,
+        "maximumTurns": 100000
+      }
+    }
+  }
+}

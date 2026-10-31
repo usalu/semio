@@ -47,7 +47,7 @@ pub struct FlowEvalTick {
 
 /// ✅️ One `evaluate` answer, echoed back onto the response action by `reactor::extension_response_args`
 /// together with the window address the request carried.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "flow-eval-resolve")]
 pub struct FlowEvalResolve {
     pub window_id: String,
@@ -55,7 +55,7 @@ pub struct FlowEvalResolve {
     pub node_hash: u64,
     pub output: semio_framework_value::DslValue,
     #[value(default)]
-    pub fault: Option<semio_framework::Fault>,
+    pub fault: Option<semio_framework_value::DslValue>,
     #[value(default)]
     pub extension_id: String,
     #[value(default)]
@@ -90,7 +90,7 @@ impl PreviewEvalTarget {
 /// 🪟️ One attached preview window: its instance id, its kind and the session it evaluates.
 pub type PreviewEvalWindow<'a> = (&'a str, &'static str, PreviewEvalTarget);
 
-/// ⏱️ The evaluation hop the run job hands the host, addressed to ONE preview window.
+/// 🏃️ The evaluation hop the run job hands the host, addressed to ONE preview window.
 pub fn tick_effect(window_id: &str, window_kind_id: &str) -> Effect {
     Effect::DispatchAction { req: semio_framework_plugin::RequestId(PREVIEW_EVAL_HOP_REQUEST), action: "flowEvalTick".into(), args: Some(window_args(window_id, window_kind_id)), delay_ms: 0 }
 }
@@ -101,7 +101,7 @@ pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSna
     semio_framework_os_flow::unserved_flow_operator_kinds(host_snapshot, &semio_framework_os_flow::flow_operator_registry()).is_empty()
 }
 
-/// 🪟️ The one argument object every hop carries, on the redispatch and on the extension request alike.
+/// 🙏️ The one argument object every hop carries, on the redispatch and on the extension request alike.
 pub fn window_args(window_id: &str, window_kind_id: &str) -> semio_framework_value::DslValue {
     semio_framework_value::DslValue::object([
         ("windowId".to_string(), semio_framework_value::DslValue::String(window_id.to_string())),
@@ -109,13 +109,13 @@ pub fn window_args(window_id: &str, window_kind_id: &str) -> semio_framework_val
     ])
 }
 
-/// 🪟️ Every attached preview window, in roster order, with the target its kind evaluates; `targets`
+/// 🌬️ Every attached preview window, in roster order, with the target its kind evaluates; `targets`
 /// is the surface's own kind table.
 pub fn attached_preview_windows<'a>(view: Option<&'a ViewModel>, targets: &[(&'static str, PreviewEvalTarget)]) -> Vec<PreviewEvalWindow<'a>> {
     view.map(|view| view.window_instances.iter().filter_map(|window| targets.iter().find(|(kind, _)| *kind == window.window_kind_id).map(|(kind, target)| (window.id.as_str(), *kind, *target))).collect()).unwrap_or_default()
 }
 
-/// 🧵️ Marks every attached preview window as owing an evaluation and wakes the live run job.
+/// ⏰️ Marks every attached preview window as owing an evaluation and wakes the live run job.
 pub fn owe_attached_previews(sessions: PreviewEvalSessions<'_>, link: &mut PreviewEvalRunLink, windows: &[PreviewEvalWindow<'_>], grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     let PreviewEvalSessions { document, generation } = sessions;
     for (window_id, _, target) in windows {
@@ -156,7 +156,7 @@ pub fn owe_attached_previews_carrying<M, C, D>(sessions: PreviewEvalSessions<'_>
 //#endregion 🪟️Addressing
 
 //#region ⏱️Tick
-/// ⏱️ What one evaluation hop owes its caller: the extension work it parked and whether the target
+/// 🌀️ What one evaluation hop owes its caller: the extension work it parked and whether the target
 /// session's evaluation text changed.
 pub struct FlowEvalTickOutcome {
     pub extension_invocations: Vec<ExtensionInvocation>,
@@ -201,7 +201,7 @@ pub fn evaluate_tick(window_id: &str, window_kind_id: &str, host_snapshot: &semi
     Ok(FlowEvalTickOutcome { extension_invocations, publication: session.eval_publication_for(retained_eval) })
 }
 
-/// 🧬️ The hop a generate preview owes while no generation is selected: it ran, it has nothing to
+/// 👆️ The hop a generate preview owes while no generation is selected: it ran, it has nothing to
 /// evaluate, and it clears the evaluation it would otherwise keep showing.
 pub fn settle_empty_tick(window_id: &str, session: &mut FlowEvalSession, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), semio_framework_value::ValueError> {
     session.begin_window_tick(window_id, grant)?;
@@ -212,7 +212,7 @@ pub fn settle_empty_tick(window_id: &str, session: &mut FlowEvalSession, grant: 
     Ok(())
 }
 
-/// ✅️ Folds one `evaluate` answer into `session` and settles the window's outstanding answer. An
+/// 🗜️ Folds one `evaluate` answer into `session` and settles the window's outstanding answer. An
 /// answer that cannot fold (a faulted invocation, a cancelled envelope) gives the window up rather than
 /// parking the identical request again.
 pub fn resolve_eval(payload:&FlowEvalResolve,receiver:&mut semio_framework_os_flow::FlowEvaluationReplyReceiver,session:&mut FlowEvalSession,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{

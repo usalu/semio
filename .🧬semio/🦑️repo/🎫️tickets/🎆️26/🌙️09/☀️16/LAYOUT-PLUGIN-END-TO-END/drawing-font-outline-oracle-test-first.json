@@ -1,0 +1,17 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🧪️tests/🎟️work/📐️.json",
+    "sha256": "80eebffe9055444f3c4b07dcbb26fd57283869a2e36dd7e70cdfef8878b18e73",
+    "bytes": 2952
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🧪️tests/🎟️work/🔣️.json",
+    "sha256": "361f94eb5c0c50f6ea67bd015b57f3ed3f9ea07e9f5ad636d72c7ae01a63c6e2",
+    "bytes": 4264
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🧪️tests/🎟️work/outline.test.ts",
+    "sha256": "98482091eb3ec070122cb7a9f8becb99b54836746d7266ab69c88d3736496072",
+    "bytes": 9399
+  }
+]

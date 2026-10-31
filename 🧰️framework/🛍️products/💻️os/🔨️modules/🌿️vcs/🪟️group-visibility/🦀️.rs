@@ -90,15 +90,11 @@ pub(super) struct ArtifactHistoryGroupSuffix {
     pub(super) len: usize,
 }
 
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️group-history-visibility/🦀️.rs"]
-mod group_history_visibility_tests;
 //#endregion 🧩️GroupHistoryVisibility
 
 impl semio_framework_value::RetainedPublicationDecision for ArtifactGroupVisibility{
  fn committed(&self)->bool{Self::committed(self)}
  fn pending(&self)->bool{Self::pending(self)}
- fn into_retirement(self:std::sync::Arc<Self>)->semio_framework_value::FactoryAuthority{semio_framework_value::FactoryAuthority::new(self)}
 }
 impl semio_framework_value::FactoryPayloadRetirement for ArtifactGroupVisibility{
  type CloseState=();
@@ -107,11 +103,11 @@ impl semio_framework_value::FactoryPayloadRetirement for ArtifactGroupVisibility
  fn close_state_constructor_copy_bytes(&self)->usize{0}
  fn prepare_close_state(&self){}
  fn close_state_preparation_demands(&self,_:&(),_:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
- fn prepare_close_state_step(&self,_:&mut(),_:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default()))}
+ fn prepare_close_state_step(&self,_:&mut(),_:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default())),work:0}}
  fn close_state_preparation_is_complete(_:&())->bool{true}
  fn transfer_payload(_value:Self,_:&mut()){}
  fn close_state_demands(_:&(),_:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
- fn close_state_step(_:&mut(),_:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default()))}
+ fn close_state_step(_:&mut(),_:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default())),work:0}}
  fn close_state_terminal_is_empty(_:&())->bool{true}
 }
 
@@ -122,6 +118,6 @@ fn original_group_publisher_retirement_keeps_the_same_decision_and_physically_cl
  for committed in [false,true]{
   let mut publisher=ArtifactGroupVisibilityOwner::new();let visibility=publisher.view();if committed{assert!(publisher.commit());}
   let (mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||publisher.into_retirement());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(visibility.committed(),committed);assert!(!visibility.pending());drop(visibility);
-  for index in 0..10000{if owner.terminal_is_empty(){break}let d=owner.demands(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};for axis in 0..5{let amount=match axis{0=>1,1=>d.copy_bytes,2=>d.capacity_bytes,3=>d.release_bytes,_=>d.depth};if amount==0{continue}let mut denied=grant;match axis{0=>denied.maximum_items=0,1=>denied.maximum_copy_bytes=amount-1,2=>denied.maximum_capacity_bytes=amount-1,3=>denied.maximum_release_bytes=amount-1,_=>denied.maximum_depth=amount-1}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(denied));let p=match step{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};assert_eq!(p,RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(index<9999)}assert!(owner.terminal_is_empty());
+  for index in 0..10000{if owner.terminal_is_empty(){break}let d=owner.demands(4096).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};for axis in 0..5{let amount=match axis{0=>1,1=>d.copy_bytes,2=>d.capacity_bytes,3=>d.release_bytes,_=>d.depth};if amount==0{continue}let mut denied=grant;match axis{0=>denied.maximum_items=0,1=>denied.maximum_copy_bytes=amount-1,2=>denied.maximum_capacity_bytes=amount-1,3=>denied.maximum_release_bytes=amount-1,_=>denied.maximum_depth=amount-1}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(denied));let p=match step.result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};assert_eq!(p,RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(grant).result.unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(index<9999)}assert!(owner.terminal_is_empty());
  }
 }

@@ -104,3 +104,10 @@ Only do this if a cold rust cache is acceptable. Everything cargo or wasm has to
 ## Files
 - Created: `C/1029-tools/diskcap/{plan.ts,owners.ts,verify.sh}`, the two owner manifests, this file.
 - Edited: see "References updated".
+
+## act03 failure: receipt-pinned capacity for every partition (10-29, later)
+- Symptom: `Exact canonical persistent Native publication required: .cache/b/d {"filesystemBytes":[8588886016,38653657088],…}`. The `d` image was born at 8 GiB. The policy now declares `dependencies` at 36 GiB (82dd1da2006, 10-28). The receiver inspector (`native-build/💾️storage/🧹️cleanup/🎛️command/🟦️.ts`, `inspectPersistentReceiver`) requires `authored.filesystemBytes === options.filesystemBytes`, and the options come from `repositoryCacheBudgetV1`.
+- Root cause: only the elastic partitions (graph, products, rust) pinned their capacity to the image receipt. Every other partition took the declared capacity, so any change of a declared target after birth made the existing image unopenable.
+- Fix (budget, not the inspector, so receipt-vs-backing exactness is untouched): `pinnedCapacityV1(directory, declared)` in `…/📦️budget/📐️elastic/🟦️.ts`, used by `repositoryCacheBudgetV1` for every partition without an elastic rule (re-exported from the package entry). An existing receipt whose `maximumPhysicalBytes` is an integer, a MiB multiple, at least 32 MiB and not above the declared capacity pins the partition (capacity, filesystem bytes, logical bytes and the repository total follow it). Larger, unaligned, non-numeric or unreadable receipts fall back to the declared capacity, so the inspector refuses them exactly as before. A larger declared target applies only to the next image born by the explicit reset.
+- Law test: `…/📦️budget/🧪️tests/🟦️.ts`, "a policy target changed after birth …" (8 receipt cases, an independent Python model, the budget totals and headroom).
+- Check now: probe `C/1029-tools/diskcap/budget.ts` reports `dependencies 8589934592 / 8588886016` (equal to the d receipt), headroom 461373440. Run logs: `C/🗑️generated/1029/diskcap3-*.txt|rc` (see status below).

@@ -1,0 +1,27 @@
+{
+  "state": "source-authored-unexecuted",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🗃️plan/🟦️.ts",
+      "bytes": 3652,
+      "sha256": "bf86e2860061b795ae16f3a9d3066c5d1226670d328a596d7f15f649dfbb0df7",
+      "beforeSha256": "2fab192b43c15e59f5d7ed1a14268e0da893bb72643d28553a39634a7298d0b6"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🗃️plan/🧪️tests/🟦️.ts",
+      "bytes": 4906,
+      "sha256": "b2325727845a526e4ca948b09e9d0641cfd2d9bedf586ec2509290b349bd34dd",
+      "beforeSha256": "59810b0e8d263f1365b354b78cd74deba89673cd07b95a93b8d05811f2ea1bc3"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🗃️plan/🧪️tests/🎟️work/plan.test.ts",
+      "bytes": 6847,
+      "sha256": "0a88a33801bdbee9530c909360cdca874369a8c0e11d4ccf2142139bbe753d89"
+    }
+  ],
+  "testFirst": "layout-export-plan-loan-test-first.json",
+  "originalFixtureStockAndAssertionsUnchanged": true,
+  "callerScope": "Bounded actual ExportPlanList scan found only original owning test caller. All4 direct reserve/push calls now issue/authenticate/expire genuine accounting loans; append owns private real counter and explicit ledger. Other Layout Paragraph/composition callers remain open.",
+  "originalCallerWholeInverseMatches": true,
+  "originalCallerReconstructedSha256": "59810b0e8d263f1365b354b78cd74deba89673cd07b95a93b8d05811f2ea1bc3"
+}

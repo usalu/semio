@@ -90,7 +90,8 @@ impl ArtifactStoreBackboneRetirement {
 
 impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { if let Some(outbox)=self.outbox.as_ref().filter(|owner|!owner.terminal_is_empty()){outbox.close_demands(body)}else if let Some(paged)=self.paged.as_ref().filter(|owner|!owner.terminal_is_empty()){paged.next_demand(body)}else{self.demands()} }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
+        let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -144,6 +145,9 @@ impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
             }
         }
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+    })();
+        let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default()));
+        semio_framework_value::RetainedWorkOutcome { result, work }
     }
     fn terminal_is_empty(&self) -> bool { self.outbox.is_none() && self.paged.is_none() && self.backbone.is_none() && self.queue.is_none() && self.message.is_none() && self.bytes.is_none() && self.wake.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands()?.copy_bytes) }

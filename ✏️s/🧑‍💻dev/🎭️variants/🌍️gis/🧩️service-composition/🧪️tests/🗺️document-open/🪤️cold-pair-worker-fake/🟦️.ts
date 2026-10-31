@@ -44,6 +44,8 @@ export function createColdPairWorkerClass({ vitest, dependencies, fakes, probe, 
   const { expect } = vitest;
   const { encodePackValue, decodePackValue } = dependencies;
   const { exactDocumentBackboneMessage } = fakes;
+  const owedSurfaces: Record<string, any>[] = [];
+  let lazyPending = false;
   class ColdPairWorker {
     port!: MessagePort;
     binding!: { schema: string; nonce: string; generation: string };
@@ -111,9 +113,12 @@ export function createColdPairWorkerClass({ vitest, dependencies, fakes, probe, 
         const acknowledged = lifecycleAck?.tag === "captured";
         const patchAck = events[0]?.tag === "patch-ack" ? events[0].val : null;
         const patchRejection = events[0]?.tag === "patch-rejected" ? events[0].val : null;
-        const panelRefresh = events[0]?.tag === "surface-visible" && events[0].val.surface.surface !== windowKindId;
+        expect(events.length).toBeLessThanOrEqual(1);
+        const continuation = events[0]?.tag === "surface-visible" && owedSurfaces.length !== 0;
+        const panelRefresh = events[0]?.tag === "surface-visible" && (continuation || events[0].val.surface.surface !== windowKindId);
         if (panelRefresh) {
-          expect(events).toEqual([...panelVisible(state.browserActorViewState!), ...sectionVisible(state.browserActorViewState!, false)]);
+          if (!continuation) owedSurfaces.push(...panelVisible(state.browserActorViewState!), ...sectionVisible(state.browserActorViewState!, false));
+          expect(events).toEqual([owedSurfaces.shift()]);
           probe.panelRefreshes++;
         }
         const visible = events[0]?.tag === "surface-visible" && !panelRefresh ? events[0].val : null;
@@ -138,7 +143,9 @@ export function createColdPairWorkerClass({ vitest, dependencies, fakes, probe, 
           const visibleView = decodePackValue(visible.viewState) as Record<string, unknown>;
           expect(visibleView).toEqual(state.browserActorViewState);
           visibleViews.push(visibleView);
-          expect(events.slice(1)).toEqual([secondWindowVisible(state.browserActorViewState!), ...panelVisible(state.browserActorViewState!), ...sectionVisible(state.browserActorViewState!, visibleViews.length === 1)]);
+          owedSurfaces.length = 0;
+          owedSurfaces.push(secondWindowVisible(state.browserActorViewState!), ...panelVisible(state.browserActorViewState!), ...sectionVisible(state.browserActorViewState!, visibleViews.length === 1));
+          if (visibleViews.length === 1) lazyPending = true;
         }
         if (wake) {
           expect(renderEvents[0]).toBe("surface-visible");
@@ -177,6 +184,7 @@ export function createColdPairWorkerClass({ vitest, dependencies, fakes, probe, 
               ? { tag: "retired", val: { lifetime: lifecycleAck.val.lifetime, requestSequence: lifecycleAck.val.requestSequence, closeGeneration: lifecycleAck.val.closeGeneration } }
               : null;
         const initialScene = wake && probe.renderWakes === corpus.browserRender.lazyWakeTurns;
+        if (initialScene) lazyPending = false;
         const lifetime = probe.activeLifetime;
         const node = {
           id: 0,
@@ -276,7 +284,7 @@ export function createColdPairWorkerClass({ vitest, dependencies, fakes, probe, 
               effects,
               presence: [],
               nextWake: null,
-              status: { tag: (visible && visibleViews.length === 1) || (wake && !initialScene) ? "more-work" : "idle" },
+              status: { tag: lazyPending || (wake && !initialScene) ? "more-work" : "idle" },
               fuelUsed: 1n,
               commandIngress: { kind: commandSequence === null ? 0 : 4, cursor: { owner: 0n, generation: 0n, commandIndex: 0, commandCount: 0, instance: 0, seq: 0n, kind: 0, pageIndex: 0, pageCount: 0, itemCount: 0, metadata: 0 }, fault: [] },
               coldPairIngress,

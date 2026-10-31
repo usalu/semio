@@ -43,5 +43,5 @@ fn committed_json_is_canonical() {
 /// ⚖️ The inverse steps' diffs sum, by `absorb`, to the negative of the forward diff.
 #[semio_framework_async_macros::async_test]
 async fn inverse_diffs_sum_to_negative_diff() {
-    protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&laws::decoded_mutation(MUTATION.as_str()), &laws::decoded_snapshot(BEFORE.as_str())).await;
+    semio_s_artifact_fem_2d_mutations::cold_laws::assert_cold_mutation_inverse_sum_law(&laws::decoded_mutation(MUTATION.as_str()), &laws::decoded_snapshot(BEFORE.as_str())).await;
 }

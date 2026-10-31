@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "cancelPrefixes",
+    "maximumTurns",
+    "deniedWork",
+    "nullWork",
+    "maximumTurnWork",
+    "stock"
+  ],
+  "properties": {
+    "cases": {
+      "const": [
+        [
+          [
+            "c",
+            3
+          ],
+          [
+            "b",
+            2
+          ],
+          [
+            "a",
+            1
+          ]
+        ],
+        [
+          [
+            "a",
+            1
+          ],
+          [
+            "c",
+            3
+          ],
+          [
+            "b",
+            2
+          ]
+        ],
+        [
+          [
+            "a",
+            1
+          ],
+          [
+            "b",
+            2
+          ],
+          [
+            "c",
+            3
+          ]
+        ],
+        [
+          [
+            "c",
+            3
+          ],
+          [
+            "a",
+            1
+          ],
+          [
+            "b",
+            2
+          ]
+        ],
+        [
+          [
+            "b",
+            2
+          ],
+          [
+            "b",
+            7
+          ]
+        ]
+      ]
+    },
+    "cancelPrefixes": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        5,
+        8,
+        13,
+        21
+      ]
+    },
+    "maximumTurns": {
+      "const": 100000
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "nullWork": {
+      "const": 1
+    },
+    "maximumTurnWork": {
+      "const": 1
+    },
+    "stock": {
+      "const": {
+        "items": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 512,
+        "fuel": 100000
+      }
+    }
+  }
+}

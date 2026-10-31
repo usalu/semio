@@ -1,0 +1,36 @@
+{
+  "stock": {
+    "items": 1000000,
+    "fuel": 1000000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "maximumTurns": 1000000
+  },
+  "chunks": [
+    [],
+    [
+      "first",
+      "雪/opaque"
+    ],
+    [],
+    [
+      "last"
+    ],
+    []
+  ],
+  "expected": [
+    "first",
+    "雪/opaque",
+    "last"
+  ],
+  "ownershipCopyBytes": 0,
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ]
+}

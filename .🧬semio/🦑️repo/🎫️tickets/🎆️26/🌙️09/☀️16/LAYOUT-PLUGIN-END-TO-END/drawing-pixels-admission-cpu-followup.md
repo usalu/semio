@@ -1,0 +1,9 @@
+# Pixels Admission CPU Follow-Up
+
+Read-only inspection while immutable NativeOwned8 waits in the ordinary compiler picker. No Pixels source edits or new runtime requests occurred. This is an exact open definer/caller map, not readiness.
+
+Affine sampling advance still compares retained receipts before/after a step to infer a paid prep unit when step_work is0. The canonical native Ledger now exposes defining cumulative actual_work at actual reserve/push/Arc sites. Affine must consume that direct witness, keeping its own bounded sampling/control CPU and Coverage child.last_turn_work independent; a child ledger delta must not be counted twice. Existing vec_push branches currently also assign step_work1 for the same actual leaf effect, so replacing receipt comparison with an unqualified sum is wrong. A tagged direct-own/ledger-leaf/child outcome or equivalent explicit per-phase distinction is needed, with denied0, paid reservation1 even when pending, and error outcome CPU preserved.
+
+Composite advance likewise uses receipt changes and Result branch shape for prep CPU. Its compiling phase performs original image duplicate scans, BTree nth/index scans and active mask Arc aliases before slot admission. These are genuine work that needs explicit bounded phases and defining alias custody; a signature/counter replacement cannot establish the closure. All existing original RGBA/blend/tile/geometry/depth/cancellation/heap/source-identity fixtures and finite banks remain required.
+
+Root has authored the genuine RasterStack planner and PathRaster/Coverage/PreparedFill source since the older Boolean/Pixels report. That older report's synchronous-stack blocker is historical, not a statement of current defining stack source. Its compilation/owning verification and the Affine/Composite counter and lower SceneRaster closure remain open; no pass is inferred from Source authorship.

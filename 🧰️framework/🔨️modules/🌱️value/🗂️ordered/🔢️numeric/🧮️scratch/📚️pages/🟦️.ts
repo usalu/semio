@@ -1,7 +1,8 @@
 /** 📚️ Fixed-fanout scalar custody with one original metadata block per reserve or close step. */
 export interface NumericNode<V>{key:number;value:V|undefined;generation:number;countGeneration:number;count:number;height:number;left:number|undefined;right:number|undefined;parent:number|undefined}
 export interface NumericPageProgress{progressed:boolean;allocatedBytes:number;releasedAllocationBytes:number}
-const FANOUT=16,BRANCH_BYTES=256,LEAF_BYTES=256+FANOUT*128;
+export const NUMERIC_NODE_BYTES=128;
+const FANOUT=16,BRANCH_BYTES=256,LEAF_BYTES=256+FANOUT*NUMERIC_NODE_BYTES;
 type Page<V>={level:0;rows:NumericNode<V>[]}|{level:number;children:(Page<V>|undefined)[]};
 const emptyNode=<V>():NumericNode<V>=>({key:0,value:undefined,generation:0,countGeneration:0,count:0,height:0,left:undefined,right:undefined,parent:undefined});
 const progress=(allocatedBytes=0,releasedAllocationBytes=0):NumericPageProgress=>({progressed:allocatedBytes+releasedAllocationBytes>0,allocatedBytes,releasedAllocationBytes});

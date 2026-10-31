@@ -1,0 +1,21 @@
+# Native Diagnostic Continuation Flags
+
+**Superseded by actual Native10 refusal:** the genuine current Cargo test planner rejects `--keep-going` before selected Source admission. See `layout-native-10-independent-audit.md`. The source analysis below establishes argument forwarding and unchanged gates only; its suitability recommendation for the combined flags was incorrect. Existing Cargo build usage did not prove Cargo test support. No successful planner acceptance is claimed.
+
+The current repository argument path permits adding Cargo `--keep-going --no-fail-fast` to the unchanged full19 `test` argument list, before Cargo's final `-- --nocapture` separator. No target filter, owner exclusion, Source-admission bypass, quota adjustment or profile change follows from either flag in the inspected first-party source. Root may use them for a genuine full19 request, while retaining actual admission and terminal success as mandatory gates. This is a bounded source review; no help, probe, Cargo, test or graph command was executed.
+
+## Exact Argument and Gate Evidence
+
+Library `🏃️process/🦀️cargo/🚪️launcher/🟦️.ts` lines 64–77 parse only the repo options before the first separator. The Cargo tail is copied unchanged after validating the subcommand and generic argument bounds. Lines 182 and 232 carry those arguments into artifact configuration. Lines 233 and 218 still capture the actual compilation graph, admit its Source boundaries, recheck storage, acquire compiler controls and execute under the same owner and automatic storage-retry mechanism. Neither requested flag has a special branch in this launcher or its admission subtree.
+
+Process `📦️artifacts/🏗️native-build/🟦️.ts` lines 191–204 retain ordinary Cargo arguments and the final test-runtime tail while injecting/checking the canonical compiler configuration, build directory and selected profile. Profile conflicts still refuse. No change to `-p` selectors, `--lib` or `--features=testkit` is required.
+
+Process `📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts` lines 23–26 return a copy of test arguments unchanged: the special subcommand projection is only `run` to `build`. Line 73 keeps the final runtime tail separate while adding locked/offline/unit-graph planning options before it. Thus the new flags remain Cargo options during planning and execution, rather than becoming libtest filters. The actual Cargo planner must still accept the request; this review does not substitute for that admission.
+
+Process `📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts` lines 26–28 continue over all workspace-provenance graph units, validate the closed boundary policy and enforce the minimum of global and per-unit file/byte/line limits. The flags do not enter those limit calculations. Existing first-party precedent uses `--keep-going` in `native-build/🧩️component-pass/🟦️.ts` line 123 for a canonical Cargo build with explicit packages, lib, target and profile. The bounded Layout and native-build search found no existing `--no-fail-fast` usage; no prior empirical acceptance is claimed for that combination.
+
+## Interpretation and Limits
+
+The intended standard Cargo behavior is to continue independent compilation after a compile failure (`--keep-going`) and continue other test executables after a failing executable (`--no-fail-fast`). The latter does not disable fail-fast behavior inside a test executable. Neither guarantees every selected binary will run: failed prerequisites, storage refusal, owner cancellation or the existing deadline can still prevent downstream execution. A nonzero final Cargo result remains failure even when additional binaries produce useful results. Actual postprocessor authority must continue to follow Root's explicit baseline and owning-record conditions; partial successes do not establish a full19 pass.
+
+Current defining hashes: native-build `🟦️.ts` is `f75baa379aee89e43e3e5c273f1d49dd5b0fd3605466e004e95996a235c884f3`; unit capture is `a3609c6fff0ddfa0a9a6b863e44f5849f0a0dd77d31fe63774a6aecada786bde`; run-projection policy is `419025020ddcea8316b8b1222209452b8e4238c4d1ce9abc61138b85d1ff28c1`. Full absolute roots are `/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process` and `/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library`.

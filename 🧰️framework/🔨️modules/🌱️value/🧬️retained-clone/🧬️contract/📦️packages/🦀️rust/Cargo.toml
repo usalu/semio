@@ -35,3 +35,11 @@ semio-framework-value-derive = { path="../../../../✨️derive/📦️packages/
 serde_json = { workspace = true }
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 semio-framework-value-clone-source-testing = { path = "../../../🔗️source/🧪️testing/📦️packages/🦀️rust" }
+
+[[test]]
+name = "take"
+path = "../../📜️clone-and-cursor-traits/🧪️tests/take.rs"
+
+[[test]]
+name = "bulk-logical-body"
+path = "../../../🚚️bulk-vec/🧪️tests/logical-body.rs"

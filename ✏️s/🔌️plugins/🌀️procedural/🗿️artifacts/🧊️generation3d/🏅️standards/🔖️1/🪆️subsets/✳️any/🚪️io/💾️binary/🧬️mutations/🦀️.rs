@@ -71,6 +71,6 @@ mod tests;
 //#endregion 🧪️Tests
 
 
-use semio_s_artifact_procedural_3d_io_text::mutations::Generation3dOperationDsl;
-use semio_s_artifact_procedural_3d_io_text::mutations::generation3d_operation_to_dsl;
-use semio_s_artifact_procedural_3d_io_text::mutations::generation3d_operation_from_dsl;
+use crate::text::Generation3dOperationDsl;
+use crate::text::generation3d_operation_to_dsl;
+use crate::text::generation3d_operation_from_dsl;

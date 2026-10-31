@@ -1,0 +1,33 @@
+{
+  "operation": 2605,
+  "generation": 19,
+  "deadline": 1500,
+  "fuel": 65536,
+  "stock": {
+    "items": 1000000,
+    "copy": 10000000,
+    "capacity": 10000000,
+    "release": 10000000,
+    "depth": 128
+  },
+  "turn": {
+    "items": 1,
+    "copy": 64,
+    "capacity": 8,
+    "release": 10000000,
+    "depth": 128
+  },
+  "closeTurn": {
+    "items": 1,
+    "copy": 64,
+    "capacity": 10000000,
+    "release": 10000000,
+    "depth": 128
+  },
+  "maxTurns": 65536,
+  "expectedAllocationBytes": 8,
+  "expected": {
+    "primary": "canonical original vector ordinal is absent",
+    "postingRefusal": true
+  }
+}

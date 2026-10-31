@@ -1,0 +1,7 @@
+# Current Actual Font Page Read Corrections
+
+The canonical LayoutJS2 headless a.face failure reads output.glyphs[at] from a genuine Buffer; changed only that operand to get(at), preserving all independent OpenType assertions. The actual interactive0vs13 publication likewise reads original.glyphs[index] and original.segments[index]; both now use get. Each entire old file is reconstructed by reversing those exact replacements. No fixture/geometry/tolerance/case/stock changes and no runtime.
+
+This is only the concrete current readonly page seam. LayoutOutlinePublication still owns raw JSON string parts under a numeric-only render API; its genuine retained writer/controller integration remains open, and this correction does not claim funded output or full closure. Composed-path dx remains a separate actual geometry/caller classification. Real Paragraph/ExportPlan loan migration remains underway.
+
+The composition ink scan has the same two stale glyph/segment [] reads. Undefined glyphs skip every outline and call includeTextExtent with empty bounds, which can alter the fitted affine dx for other paths. Both reads now use genuine get, with exact whole-file inverse and no geometry/golden changes. This is a concrete upstream source defect; its causal sufficiency for the actual composed-dx assertion remains unproved until the genuine owning rerun. NumericIndex/body accounting and composition retirement remain separately open; this is no full funding claim.

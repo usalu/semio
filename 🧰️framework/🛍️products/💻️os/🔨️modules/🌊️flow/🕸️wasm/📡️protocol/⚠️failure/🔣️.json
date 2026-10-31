@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/os/flow/failure/receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "generation",
+    "deadline",
+    "fuel",
+    "stock",
+    "turn",
+    "closeTurn",
+    "maxTurns",
+    "expectedAllocationBytes",
+    "expected"
+  ],
+  "properties": {
+    "operation": {
+      "const": 2605
+    },
+    "generation": {
+      "const": 19
+    },
+    "deadline": {
+      "const": 1500
+    },
+    "fuel": {
+      "const": 65536
+    },
+    "stock": {
+      "const": {
+        "items": 1000000,
+        "copy": 10000000,
+        "capacity": 10000000,
+        "release": 10000000,
+        "depth": 128
+      }
+    },
+    "turn": {
+      "const": {
+        "items": 1,
+        "copy": 64,
+        "capacity": 8,
+        "release": 10000000,
+        "depth": 128
+      }
+    },
+    "closeTurn": {
+      "const": {
+        "items": 1,
+        "copy": 64,
+        "capacity": 10000000,
+        "release": 10000000,
+        "depth": 128
+      }
+    },
+    "maxTurns": {
+      "const": 65536
+    },
+    "expectedAllocationBytes": {
+      "const": 8
+    },
+    "expected": {
+      "const": {
+        "primary": "canonical original vector ordinal is absent",
+        "postingRefusal": true
+      }
+    }
+  }
+}

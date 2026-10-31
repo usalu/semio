@@ -1,0 +1,12 @@
+{
+  "axes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "tile": 256,
+  "referenceBytes": 4,
+  "compileSemanticWork": 0
+}

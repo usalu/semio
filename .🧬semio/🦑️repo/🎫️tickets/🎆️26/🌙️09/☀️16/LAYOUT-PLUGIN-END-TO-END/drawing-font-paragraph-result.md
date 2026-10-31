@@ -1,0 +1,7 @@
+# Paragraph and Run Actual Scoped Result
+
+Actual normal managed owning request33931 ended outer0: seventeen pass, zero fail, 2,759,685 assertions in3.81s. Every existing Run+Bidi ten, both original Paragraph/linked-flow laws and all five new Paragraph laws executed unfiltered. Actual independent OpenType/Sharp geometry, SQLite bank conservation, genuine denial/cancellation and CURRENT final-failing-child CPU assertions passed. This is actual runtime evidence for the captured closure, not source-only readiness.
+
+Sequential canonical strict11 request57967 ended outer0 with no diagnostics. All76 captured input bytes matched before test, after test, after strict and in the final current observation. Both finalized log hashes and actual outer terminals are retained in [the receipt](🗑️generated/drawing-ts-font-paragraph/launch-receipt.json). The reviewed immutable command is [drawing-font-paragraph-command.json](drawing-font-paragraph-command.json). Exact76 remain held pending Root independent review; no source changed during either Original.
+
+This scope proves the readonly Run span seam and genuine Paragraph producer/close/callers under the original finite catalog bank/limits/fuel. It does not establish whole original Font14, all-shipped-font/controller lifecycle, broader Drawing/lower closure, full Native acceptance or browser/setup readiness. The disjoint original full Font output-page caller migration is authored/unrun and remains a separate next gate. Historical predecessor proofs and actual reds remain preserved.

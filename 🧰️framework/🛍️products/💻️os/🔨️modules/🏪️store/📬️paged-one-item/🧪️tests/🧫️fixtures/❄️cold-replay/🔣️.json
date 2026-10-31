@@ -1,0 +1,25 @@
+{
+  "base": {
+    "title": "t",
+    "nodes": [
+      { "id": "a", "text": "alpha" },
+      { "id": "b", "text": "beta é" },
+      { "id": "c", "text": "gamma" },
+      { "id": "d", "text": "delta" }
+    ]
+  },
+  "edits": [
+    { "kind": "insert", "index": 2, "id": "x", "text": "new 🐚" },
+    { "kind": "set-text", "index": 0, "text": "ALPHA" },
+    { "kind": "remove", "index": 1 },
+    { "kind": "remove-range", "start": 1, "count": 2 },
+    { "kind": "insert", "index": 1, "id": "y", "text": "why" }
+  ],
+  "posts": [
+    [["a", "alpha"], ["b", "beta é"], ["x", "new 🐚"], ["c", "gamma"], ["d", "delta"]],
+    [["a", "ALPHA"], ["b", "beta é"], ["x", "new 🐚"], ["c", "gamma"], ["d", "delta"]],
+    [["a", "ALPHA"], ["x", "new 🐚"], ["c", "gamma"], ["d", "delta"]],
+    [["a", "ALPHA"], ["d", "delta"]],
+    [["a", "ALPHA"], ["y", "why"], ["d", "delta"]]
+  ]
+}

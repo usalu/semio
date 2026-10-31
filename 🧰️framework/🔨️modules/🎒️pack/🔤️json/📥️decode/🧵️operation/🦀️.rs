@@ -22,7 +22,7 @@ fn debit(total:RetainedCloneGrant,used:&mut RetainedCloneProgress,receipt:Retain
     if !used.fits(total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON operation exceeded original cumulative authority").with_retained_progress(receipt));}Ok(())
 }
 fn admit<T:RetireOwned>(original:&mut Option<T>,closing:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-    match semio_framework_value::admit_owned_retirement(original.take().expect("original JSON outcome retained before admission"),grant){
+    match semio_framework_value::admit_owned_retirement(original.take().expect("original JSON outcome retained before admission"),grant).result{
         Ok((owner,receipt))=>{*closing=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},
         Err((error,value))=>{*original=Some(value);Err(error)},
     }
@@ -64,8 +64,8 @@ impl<'operation,'callback,S:JsonReadSource+Copy,V:JsonParsedValue> JsonReadOpera
     pub fn close_step(&mut self,turn:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         self.retirement_step=Default::default();
         let admitted=intersect(normal_remaining(self.policy.retirement,self.retirement)?,turn);
-        let result=if self.closing.is_some(){semio_framework_value::close_factory_ticket(&mut self.closing,admitted)}else if let Some(cursor)=self.cursor.take(){
-            let result=cursor.into_retirement(admitted);
+        let result=if self.closing.is_some(){semio_framework_value::close_factory_ticket(&mut self.closing,admitted).result}else if let Some(cursor)=self.cursor.take(){
+            let result=cursor.into_retirement(admitted).result;
             match result{
                 Ok((owner,receipt))=>{*self.closing=Some(owner);self.close_started=true;Ok(RetainedCloneStep::Progress(receipt))},
                 Err((error,cursor))=>{*self.cursor=Some(cursor);Err(error)},

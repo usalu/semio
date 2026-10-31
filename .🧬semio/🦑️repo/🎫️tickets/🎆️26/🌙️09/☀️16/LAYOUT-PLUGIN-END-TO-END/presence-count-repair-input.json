@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "state": "current-peer-source-already-correct-read-only-confirmation",
+  "sourceChangedByThisPacket": false,
+  "actualRedSession": 74693,
+  "actualRedReceipt": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-native-2/terminal.json",
+  "currentSources": {
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧪️artifact-app-laws/👥️presence-round-trip-law/🦀️.rs": "68520ee8644a5ffd0ad1e4a268b52abc795dc4d5edc9cf9518f8ab4ad3f9f1c0",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🫂️peer-presence/🦀️.rs": "34467080a71748db8d4ca534dd648c1b1378ac58951b5a240e32c37a3937ee9c",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📦️packages/🦀️rust/Cargo.toml": "fc0b48c511ca13cfb2c1719d2a0480897e58a1aa44d025ce6aeeaed9f8ddae9c"
+  },
+  "logicalCount": "PeerPresenceRoot.len field, not fixed entries capacity",
+  "peerCorrectionPreserved": true,
+  "ownEditedSourceFiles": [],
+  "runtimeLaunched": false,
+  "report": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/presence-count-compile-repair.md",
+  "focusedOption": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "check",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/Cargo.toml",
+    "-p",
+    "semio-framework-plugin-testing-laws",
+    "--lib"
+  ],
+  "fullLayout15StillRequired": true
+}

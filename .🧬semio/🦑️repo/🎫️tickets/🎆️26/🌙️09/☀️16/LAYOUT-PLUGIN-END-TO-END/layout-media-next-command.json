@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "state": "prepared-only-not-launched",
+  "purpose": "optional focused alternative to the already prepared full Layout15 gate; do not duplicate after that gate passes",
+  "cwd": "/Users/ueli/Documents/semio",
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-media-next",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-media-next/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-media-next/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-media-next/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-media-next/tmp"
+  },
+  "argv": [
+    "repo",
+    "--service=off",
+    "cargo",
+    "--store=shared",
+    "--configuration=prototype",
+    "--",
+    "test",
+    "--manifest-path",
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/Cargo.toml",
+    "-p",
+    "semio-s-artifact-layout-layout-editor-tests",
+    "-p",
+    "semio-s-artifact-layout-layout-engine-export-unit-tests",
+    "--lib",
+    "original_media",
+    "--features=testkit",
+    "--",
+    "--nocapture"
+  ],
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-media-next/native.log",
+  "authoredFunctions": [
+    "original_media_export_handoff_preserves_snapshot_and_closes_completed_or_cancelled_custody",
+    "original_media_projection_reads_the_genuinely_registered_drawing_child",
+    "original_media_vector_projection_escapes_and_cancels_with_original_writer_and_credit"
+  ],
+  "requiredNativeRecords": {
+    "media-handoff": 2,
+    "media-child": 1,
+    "media-child-cancel": 1
+  },
+  "postprocessArgv": [
+    "repo",
+    "--service=off",
+    "tools",
+    "exec",
+    "python",
+    "--",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/media-handoff-oracle.py",
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/layout-media-next/native.log"
+  ],
+  "releaseRequired": true
+}

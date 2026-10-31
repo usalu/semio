@@ -8,7 +8,7 @@ fn fault(message:&'static str)->ValueError {ValueError::literal(ValueRefusalKind
 use semio_framework_value_original_slot::{RetainedOriginalReadOwner,RetainedOriginalRead,RetainedOriginalReadReturn};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub struct ArtifactHistoryReadKey {authority:usize,issuance:u64,pub(super) key:ArtifactHistoryKey}
+pub struct ArtifactHistoryReadKey {pub authority:usize,pub issuance:u64,pub key:ArtifactHistoryKey}
 
 impl<T> ArtifactHistoryLedger<T> {
  /// 🗝️ Captures this exact ledger backing, slot generation and visible group decision.
@@ -26,7 +26,7 @@ impl<T> ArtifactHistoryLedger<T> {
   if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let read_head=self.read_head;
   let slot=self.slot_mut(key.key.index);
-  if let Some(read)=slot.read.as_mut(){if !read.matches_factory(factory){return Err(fault("history read issuer changed from its original catalog"));}return read.advance(grant);}
+  if let Some(read)=slot.read.as_mut(){if !read.matches_factory(factory){return Err(fault("history read issuer changed from its original catalog"));}return read.advance(grant).result;}
   let original=slot.value.take().ok_or_else(||fault("history read lost its original slot value"))?;
   slot.read=Some(Box::new(RetainedOriginalRead::new(original,Arc::clone(factory))));
   slot.read_next=read_head;slot.read_previous=None;
@@ -34,10 +34,10 @@ impl<T> ArtifactHistoryLedger<T> {
   self.read_head=Some(key.key.index);self.read_count+=1;
   Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))
  }
- /// 🧷️ Borrows a genuine root lease; callers project their recorded forward operation by field and index.
+ /// 🤲️ Borrows a genuine root lease; callers project their recorded forward operation by field and index.
  pub fn retained_read(&self,key:ArtifactHistoryReadKey)->Result<RetainedCloneRef<'_,T>,ValueError>{self.original_read_slot(key)?.read.as_ref().ok_or_else(||fault("history read requires granted original source birth"))?.borrow()}
  /// 📽️ Retains the genuine slot source after validating its original ledger key.
- pub fn retain_read(&self,key:ArtifactHistoryReadKey,grant:RetainedCloneGrant)->Result<(semio_framework_value::retained_clone::RetainedOwnedProjection<T>,RetainedCloneProgress),ValueError>where T:Sync{self.original_read_slot(key)?.read.as_ref().ok_or_else(||fault("history read requires granted original source birth"))?.retain_original(grant)}
+ pub fn retain_read(&self,key:ArtifactHistoryReadKey,grant:RetainedCloneGrant)->Result<(semio_framework_value::retained_clone::RetainedOwnedProjection<T>,RetainedCloneProgress),ValueError>where T:Sync{self.original_read_slot(key)?.read.as_ref().ok_or_else(||fault("history read requires granted original source birth"))?.retain_original(grant).result}
  /// 🧭️ Observes the next original leased slot in constant time for Store cancellation.
  pub fn next_retained_read_key(&self)->Option<ArtifactHistoryReadKey>{let index=self.read_head?;Some(ArtifactHistoryReadKey{authority:self.authority(),issuance:self.read_issuance,key:ArtifactHistoryKey{index,generation:self.slot(index).generation}})}
  /// 🚪️ Queries exact source return through the caller's unchanged body allowance.
@@ -48,13 +48,10 @@ impl<T> ArtifactHistoryLedger<T> {
   if returned_factory.is_some(){return Err(fault("history source issuer return requires an empty original slot"));}
   let slot=self.slot_mut(key.key.index);
   let Some(read)=slot.read.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()));};
-  match read.return_original(grant)?{
+  match read.return_original(grant).result?{
    RetainedOriginalReadReturn::Pending(receipt)=>Ok(RetainedCloneStep::Progress(receipt)),
    RetainedOriginalReadReturn::Ready(original,factory,receipt)=>{if !read.terminal_is_empty(){return Err(fault("history source claimed original return before terminal custody"));}slot.value=Some(original);*returned_factory=Some(factory);drop(slot.read.take());let previous=slot.read_previous.take();let next=slot.read_next.take();if let Some(previous)=previous{self.slot_mut(previous).read_next=next;}else{self.read_head=next;}if let Some(next)=next{self.slot_mut(next).read_previous=previous;}self.read_count-=1;Ok(RetainedCloneStep::Complete(receipt))}
   }
  }
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

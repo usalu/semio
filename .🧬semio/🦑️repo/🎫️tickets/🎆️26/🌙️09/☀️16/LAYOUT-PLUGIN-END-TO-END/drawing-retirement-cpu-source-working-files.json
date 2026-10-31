@@ -1,0 +1,899 @@
+{
+  "state": "Current Root normal work source, preserved scoped gates, named/async test integration",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🎟️alias/🧪️tests/🦀️.rs",
+      "sha256": "5ba296303843920386bf197e99bcc242a1f22047ef66905c075e6703c89d0d8a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🎟️root/🧪️tests/actual.json",
+      "sha256": "204eb138f9f6f89e731ac421251bc9df924c4777eebebdd7749b256096ebc71a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🎟️root/🧪️tests/actual.rs",
+      "sha256": "50045bac94f5aa6227395d31864204f54f92b61d89d9011738c4304fee7314a9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🎟️root/🧪️tests/actual.schema.json",
+      "sha256": "390e935f06c3ee242c14641f07853c764fadf8db8e1bc56cbde596b15ade3b34"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/⛔️cancel-token/🦀️.rs",
+      "sha256": "3946196c843c96c1060eca5f820f70fb6c9801147790da495b06f6bfe1b8acc9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "69ec6775e889603f67ae6b030012190d47c1b244e558f7f58716aa6690d356e1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/⚖️result/🦀️.rs",
+      "sha256": "818daeb7e1de862767fb02b137db55277ff198453fe3da03930507015050e2b9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🌱️dynamic/🦀️.rs",
+      "sha256": "8efa98942fea423c3fae8e85d4393d3ff0e9ba4176e2e124c442d6ffbcea6f33"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️tickets/🎯️selection/🦀️.rs",
+      "sha256": "5071d2518f79c3693d76c51e6abf83a854e3c9c5e45ceedc0043af665aaeeaa4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️tickets/🦀️.rs",
+      "sha256": "600567bd96717a12fbd083b9bf8ec58a9f29350e9e2e9d32efcd391c30c0b1ef"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎟️turn/🦀️.rs",
+      "sha256": "97865428a3602d72d6ecb6d6957f45dd83b3ee4fc3976345c3fc8a44a31385d3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs",
+      "sha256": "12e6ace52217915f7dea3405621546e6f0f707b61b8348499392c0f3120f616e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🦀️.rs",
+      "sha256": "5f053971df1a1a8dc2964116d172c4207e5d6f009607b7b9082354307374f263"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧪️tests/🦀️.rs",
+      "sha256": "628b9393a1155fa082854013544c41873a91bf98c0fd7361e99be8f26adfb4cb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️boxed/🦀️.rs",
+      "sha256": "f5d866098c187ee98c95401e545dbc09c49423d9bd0dca906fad4bba3e04939c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🦀️.rs",
+      "sha256": "fc240ab8ac92d4087fe840e76f3fd8c6dac1ffa4c898bfa10259058b13101af7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🧪️tests/🦀️.rs",
+      "sha256": "dee55cd1026994063746939dc1c8d6e655c083289cb5a78a8e74fdf1708c0870"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🚼️construction/🦀️.rs",
+      "sha256": "eb1e8e86b793ec8ad4185723e83955048086debc267a808940e1be6d44d76583"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🚼️construction/🧪️tests/🦀️.rs",
+      "sha256": "d5a7fbf7e8c0f37904349f212d497737df2f40d40aadeba2a2b14258eb668e74"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs",
+      "sha256": "48316fb0625eeb3e9a53fd92909fb7558bddf788465582db4097e46bd104dcf2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧪️testing/🦀️.rs",
+      "sha256": "bd91efb5b49fe5283675373fec79906d404f8429eb0cdf113edd0e980b27578b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧪️tests/🦀️.rs",
+      "sha256": "c1eb83276bfb5c569ee4bb42f1dcb9c5d34bb6812084c8842c16ee59ab9391ca"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "c6080a51d9251b402e721339deac572834b8f33462f6e1e75f4dc01d017399ce"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🦀️.rs",
+      "sha256": "14cb0f9918155170e81a7aa23c7c674df4c35b5cae37c88d2701f6d0164ee7dd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🧪️tests/🦀️.rs",
+      "sha256": "94841de0d888918ce37347a5d23c4b90add6a85c09cdb06d4e47215cbb76df40"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "46f6aa491e7a6a901f930ab50a8988a7fe555de44edb84ec5dfda45dce81abec"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🦀️.rs",
+      "sha256": "b2949f3c7af3c1d1b9d5a82546c03c4c5f94a282f1b69cd71ca7487e1e0877a7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🧪️tests/actual.json",
+      "sha256": "26c26a8460732c1f5c2cc6af9d520330bdab594883c6bae56f2a38cdac6a54c0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🧪️tests/actual.rs",
+      "sha256": "666e6cf74022137200426a8c40f6924aae8b1473f68b8f9b415eda26f98b02b7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🧪️tests/actual.schema.json",
+      "sha256": "a29b13989ac21610cf91c330858f6dc83140d138e3f116e98978a8b975dac28e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "ec0ce4e3ab91d7e5e71c9e43391f1baa4d1d7c490652b0f147aab53a7002f75b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "0a30c3d5d768dc64f61537417b168bf903d37fbd0d1a1f698bfa54afdddf36d4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🔗️shared/🦀️.rs",
+      "sha256": "04c012b3460929542c34521f2cbce35ade81878c9ae22dc677b761552bfa83d3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🔗️shared/🧪️tests/🦀️.rs",
+      "sha256": "1043cac8fe03f8df129428a528c9bb1c1ff801c58ad279241d2e8756d9c97f2c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🔗️shared/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "7cbbdddc2eadc6fe9115983c47a599eb0cfa92a1d856ea7469b57b60ca70e0d0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🔗️shared/🧬️schema/🔣️.json",
+      "sha256": "21a53f927271e237c2902bb84307341a6a6f05629b38f45bd902114d9cf3019b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🦀️.rs",
+      "sha256": "79af624a5d852af5f572dfe60f092af183eca83f714c62fc99ae514864b3895f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🧪️tests/🦀️.rs",
+      "sha256": "1ef9aa5ea9f1ed7c9f704d98354fc12918c7c16039355737575437ead1dbac46"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🧪️tests/🧫️fixtures/📦️return.json",
+      "sha256": "f8f5ac7ef1a6ef7aa04c599d9a8ecc86c6617b0f17cfafec49b82b028f28ecfb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️allocation-return/🧬️schema/🔣️.json",
+      "sha256": "9e0a82a4eaa1b717d38d55ea9ee47f9192585db59721b07c4945f6c86d333a42"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️box/🦀️.rs",
+      "sha256": "9703077a9162c20bb1db94b439f584bd0452c6ff89a247c1fb41d2ba211d1733"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔐️mutex/🦀️.rs",
+      "sha256": "3ea25fcefb5785979746e3b9ee7763e3033d8243559e9ca9ee8f0dd5a646a487"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🏭️factory/🦀️.rs",
+      "sha256": "5baf2878d18f65012a21d76030750d4d1b681ee3226ffbe1d1596f14f69ada6b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🏭️factory/🧪️tests/🔐️custody/🦀️.rs",
+      "sha256": "2330982f9281a29dd2c5d4d1c04bcc5b8541b261f75575993c084d2ec65b425d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🏭️factory/🧪️tests/🦀️.rs",
+      "sha256": "3dfdad19b668825a9fa8dc6912e163f9c6d222ca38e214e8771c6fecfbd3f0e7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/📦️original/🦀️.rs",
+      "sha256": "f8ea305513019d5c9e0f1961c239c2a9d0121434bf8bb7d1d93a0491b6a1602a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔐️unique/🧪️tests/🦀️.rs",
+      "sha256": "a30d9e13986f9dff44ca4d1569e0d7a75d12aeac1472d845f07bd0c795b85fc1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🎟️work/🧪️tests/alias.json",
+      "sha256": "08a86048a6e7da22cabce51ae45f851cca6a46e0f1ed7c3c1178d8d2cb2d8921"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🎟️work/🧪️tests/alias.schema.json",
+      "sha256": "4a952b65bb58a62dc0fc5b8180c080edd2efa4a04b9db24f54f8c45a58254d92"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "70f591ef192f6fbcc7f159703aa17711f6a077920537fbf693292a59493e9083"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "fd80d6a717d0e337df2beff572c306f107749d1bae752b7b783a9f82d0a89775"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "eb478e402f697c5a5b295a0a41cd56c1ec0fb1b52b841c1b55e04f2630dd4ea0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "1c004b0d84541b7ed6104ee0cb4d519d825dd350c6031c0f8300ede25ea812af"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "a4db1fdc4b71f5c16b93f28035b6c0a8d92bfd70e947ddb607d01f1c5dc82a29"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🚚️frontier/🧪️tests/🟦️.ts",
+      "sha256": "4ed3e45067d96e6bcbdc4f7de1d1ebae86b3b7a8bfa3b9e28b4ce4d6685f799e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🚚️frontier/🧪️tests/🥒️.feature",
+      "sha256": "9dc5207dc1e421801e98e274c8162c07c1573037567ea8a8cf997e8351b3ee75"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🚚️frontier/🧪️tests/🦀️.rs",
+      "sha256": "dc2b5219fbb811add6cdefac4b51410e94695d53dedb0957d255a0afb32164c7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🚚️frontier/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "3f54ef9645b882c5f8e63be1f3468e90c9fee481f0f815d8708bf472b234c03c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🚚️frontier/🧬️schema/🔣️.json",
+      "sha256": "329602de5dadbbda1bea6d10db07a5824de24159c94bdbfd3f99eb7aac585043"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs",
+      "sha256": "914936367822183c90b70314905ef05b2bd0189c94f05746aa2be0fb39798753"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🧪️tests/🟦️.ts",
+      "sha256": "f39b10cf5be1d96d79e8739ef5d6fc2537f11dc02d5831d6b9f82f4d2e591826"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🧪️tests/🦀️.rs",
+      "sha256": "424c5d5cb0308feda7bfb18027d2a7ce74795cf629ceed514235c28c0e623c33"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "7d7ffea7f9ac5e05582ec94cf177f817a3b23ac6d4cf95c43db2eb70f5967cc4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🧬️schema/🔣️.json",
+      "sha256": "012c54e838ca8da6fea5f194846d8aec8fd9682cc6f4af41b3c0c322c2c4fca6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🦀️.rs",
+      "sha256": "a758b6e16de13d75394e328505454e3106ef536bf463896c936b1bf4d53f1068"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🦀️.rs",
+      "sha256": "1507c386e083c938a8178abaacaf387f192eb6759d2ca83e1a5add924c55a86d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🧬️contract/🦀️.rs",
+      "sha256": "275ba7186322139a0bc72368e3166a034ca6d865923f422ec5b9cff231db4a14"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🏭️factory/🦀️.rs",
+      "sha256": "4ff38c694bda6608579b437fa1c4af6e9c2be5a06b85a28f2fc297685d90801a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🦀️.rs",
+      "sha256": "2957467b17d4e3b4ea919772e52ae0df2251b0c7671af638f3365f5a5701473b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/✨️derive/🧬️retained-clone/🦀️.rs",
+      "sha256": "cf13da8a7627d2152d53c2ae8609a7f2bbb3d4fedb2a5be86ddcd3274742c8ec"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🎟️control/🧬️contract/🦀️.rs",
+      "sha256": "b667b6a25cc4d31179b9df9f9ba25d561caabf842475d86647b0fd7e468956f8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🦀️.rs",
+      "sha256": "eea1a8580cf8231f6935d277948ce3e338791abdc1a95743c08cf2195c707442"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/actual.json",
+      "sha256": "a188273cbc281aa0757d1f890abd17220f64ba0139df2626e010e39a41d5c1ec"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/actual.schema.json",
+      "sha256": "211f769174d1c9ad4ef2b896c4ed72f6c41873b829c3600d876ecd233cc92300"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "f1798e283f25383e7f481bfdd75573f4837ccea8c185748ac3b2467b9bdb9347"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "cc69e73a69d35a3edf0e0cb379098eabf2fe6b01548d1afd3b2503f78cc0b752"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🦀️.rs",
+      "sha256": "8ebbc9fd4833dd5ca74fd1d6682f611718fc9a693655a92620791c53a76c656f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧬️clone/🦀️.rs",
+      "sha256": "4e8264aaa4ebfc7689878f6a1c3d604a33e416c9407008c08eecb3a12c207675"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "0b3bb9979b0824206b5e11574080eb8e166c41f38f15280c47b7b1527a812bce"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🦀️.rs",
+      "sha256": "6525d30e084a3a162312805549ab2b397a037517b5f61a578270d1ad69dfaa13"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+      "sha256": "965802a809e9f450c9b3a77369260fcf9e42719ec54dfb72172c1145b7e47910"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🦀️.rs",
+      "sha256": "52e0e6d4b074fa4ec36aef283c900a87c766b66e4dcb3017a6bdd289381bfe9c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🦀️.rs",
+      "sha256": "7742f9ff4a91a391e70c50a340213a9547667fac51675b3ef1df0ecc89924da5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🦀️.rs",
+      "sha256": "6f8025ec3e4c7b4acf0b932f8450aba7bd8c734f54857efca6c9c459db70b967"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🦀️.rs",
+      "sha256": "139498422a682e6bd7b28ffc2910f453db8d1cbac4830ebe549d2831c8e0c12a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/actual.json",
+      "sha256": "16a9749d687a02a1d6042016b37e99472a9aeab644823b2697833c32bd01b0e9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/actual.rs",
+      "sha256": "97cddbef38174c4d0af0303a544d37686a003e51cbd6b647b561c2e56ee91f27"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/actual.schema.json",
+      "sha256": "a7cf1b40f7ba3f0b3f686a726143d3550d706219706f64617b5a7e4a8e5eda8b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+      "sha256": "8035741430a9f1d48391295061b50da92f31d7963d998e44f551481a09bbf457"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🦀️.rs",
+      "sha256": "64abc0335460a89d464acc2aa58841c2590bc607f377afc5e92a15ca954c36f7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs",
+      "sha256": "18f333e8eb652f4bb0df22118b219c6205f7bb7e1dba25c2f270d50fcdeebdb8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🦀️.rs",
+      "sha256": "f220473def309b5ea489b2a1dc8349b4786444fcafeada3b59c93aaac8ed66d2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🧪️tests/actual.json",
+      "sha256": "65af2ba56fad8ca7322b3d5f909f804408b1576c657c52445012c979083a7489"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🧪️tests/actual.rs",
+      "sha256": "e5966cbe4d0afdfc3a4b6c393edef215bc7a90fd7b23872de5b41ff72a4267f4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧳️ranked/🧪️tests/actual.schema.json",
+      "sha256": "607c71517e877bc1841050a3f505956ef652fdc115c6deec6cc403e214f8d0c7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🦀️.rs",
+      "sha256": "c2578b621dfea858fa8fa0f4369f891e0b325f020d9d2ff52c8c5db5e5cc5a5d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs",
+      "sha256": "3039a6b4d0e24bef92c7f06bb9789533a3b7996c29518d28498c86c4f08479b1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🦀️.rs",
+      "sha256": "868111714b0a6b26e6c6adaaac4d2b5ad1a4a34801fd9ea6080ed3a2c39bf7ab"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/actual.json",
+      "sha256": "ed7430ef3e9927eec1ff977a08a802b90e3a8805371a120df104acd2681f4c9d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/actual.rs",
+      "sha256": "8bf7436b1e8896999e78a6ef6dc8bcdf1fa19fd7b79098a54ce5d741d1365863"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/actual.schema.json",
+      "sha256": "d64d358b6d7766a2bfbf43273a0b73c3328c17370f27795f331359f78fa09dff"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/🦀️.rs",
+      "sha256": "26eb03a2b7c150b558d7f8945f1fbeb9c08ed3d623b68fe35ce61cbc56f47c8d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs",
+      "sha256": "78589c565dcbbbca9e0298048e52096aea17d638453fef7af6629fcd3beea000"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📝️shared-utf8/🧬️clone/🦀️.rs",
+      "sha256": "2eb0c0ad86593bca4fe2ba1dd050a6ff9c378c4c5ac00152b564dde8eef1592d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "cac2e269935e7cab081c4e1eaea4f96816c19e9204bcdcf5e379b43ebeb526f6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "7bbb6f06f25ca5ab656637a004e633ea9f423305e2eb954d89ff1dec68c7371c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "760ea41ea656e56151ac7dd8ca6fbe893d70b2e7662d01959f3a90af32b05618"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "33e7e769b5bb588385634934e4df56bf02980afbcc84892852bf92e22fddff77"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/👁️post/🧪️tests/🦀️.rs",
+      "sha256": "0a87e8d2b946c37fd0417929ecb98dac80a29245e66ba5efdcb71757f7cb1aed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/📦️owned/🦀️.rs",
+      "sha256": "d0375a69c3896d994614d5b29fcd9b2e44cf408c637473818f8460608b15b44d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "8a3529e176e4d3dae533e4138c333ee1a5ff336e2400f7963a5deef4fa150795"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/🦀️.rs",
+      "sha256": "2995357740a665105359f1e35d47c2c1daad154bda12353cc7089d0cbc1b871f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/📦️owned/🦀️.rs",
+      "sha256": "d3af317e1c9770a3a6091220573ff7eb7c4eecc680b6de7d58ca383230460c47"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/🧪️tests/🦀️.rs",
+      "sha256": "60702f4e9b6b9277e4e5ef337a0b4f65f6403a4067f7f2d48577facd0807e915"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/boxed.json",
+      "sha256": "446ad93df56a719bdfe036610bfbcce5362020850bebc960df35a237e14a0ede"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/boxed.schema.json",
+      "sha256": "67969e1198c29a7d873c5e07069c6338de08d5c8328ba130417660d4e197c527"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📽️projection/🧳️record/🧪️tests/🦀️.rs",
+      "sha256": "c12331168a02bcfae021c44f409236e0dc8b9bd3956968ebdd54b46a82761793"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🎟️work/♻️retirement/🧪️tests/🦀️.rs",
+      "sha256": "4f2bf65ac1d42919d937d5d7c918bea5bc9d5164cc4f84b6ca8379d07ccb7dff"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🎟️work/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "8c75f1cafa5baa9c93de7913eea62e404b7a2e17f4d93870e7a25313acf7001a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🎟️work/♻️retirement/🧬️schema/🔣️.json",
+      "sha256": "3341a86a84135dc0f95a8ad0cefd5f016411fb175d8ab7d0f5009a40b7af9299"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs",
+      "sha256": "8b265d002749dc3cd95925e307bf5daff128f0ae3af484c876163316e8993d3a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🦀️.rs",
+      "sha256": "ba2bb5f3a059ad5b1642b0e74f6058e395378463a6818480e32405addcdef1a7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛫️encode/🫴️recipient/🦀️.rs",
+      "sha256": "db052242e55a582636a47cea2e77a8ef0815e77e36d3234ab1f12cb2bc3aa7f7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🦀️.rs",
+      "sha256": "864825dc133124f226ca0fcf459c75f200eee4d8d3b0dfaaf6daf048b803c547"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+      "sha256": "292935220822508379c0718b20842e41d37c7ea8fa9c9637c9333e754da13330"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/♻️retirement/🦀️.rs",
+      "sha256": "527ddfe391c8b76af00f59956955cb04c373e8ed1a5b908efe0cdb63c324b246"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "cff26442cf25136592e7c2cb84be2c537d8d8882d344955126d7ceb93bd6fad2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "ec8bfa370814ef7b4366cc98f92b6676f2c5955e6181264bd5c3c9b95d4f548d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "62eadf21ef7dd581b064da85730be09a42501d7a39855f71f1290bd7afaaacfc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🦀️.rs",
+      "sha256": "a25bee7b640f08476a9172eeb78bf5c65a2579ab92e6349c638963dfacf96c2b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/🦀️.rs",
+      "sha256": "f981059700189c20989d6be0994b8b00aefc6a40ab49f19961290d12d28c3bb5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🟦️.ts",
+      "sha256": "b70d0952151275d518c1ab05fed2e55ca4d5e60961d86b0dd21b51a29b47bdbc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🟦️.ts",
+      "sha256": "1882a1385e9e74196ba903685405f637798989aa3961b89efc3f601f72486363"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🦀️.rs",
+      "sha256": "fd794981ed18c5bc8e52c20bda03268048a5b4018cbbb3a9ea91bc5db1699dff"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "d0d3f543b9c5729d25f362d4f4945f53fbd9c689085ae491e2faf66a28ddb47a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧪️tests/🧫️owner/🦀️.rs",
+      "sha256": "161f36743ab66ac4b702b0353e5fc8d2c56a02eae033422f42979c44102c251a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🎟️demand/🧬️schema/🔣️.json",
+      "sha256": "6a3000efc30c5f57d0c83d6519dcf5d78865d508b6cfdcc0dc1c3a607f3a73fa"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🦀️.rs",
+      "sha256": "80c31d9c2587f27dead61564e6a307992db1aab68058bbbbde80353a4b284919"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🧪️tests/🦀️.rs",
+      "sha256": "728fc8c5ab2c2166b17dfa449af43e4e394501e0919db8693e633638e1709a1b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "d65195581c314aad4fc5d923f5970e8f3b9a6def99a4589ab7e8f4479fc48381"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🦀️.rs",
+      "sha256": "6c6a1d3f1b65867dbe5bd2ab2a01462796fd3ab7f39d569b428444931b92c3c4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/owner.rs",
+      "sha256": "67ef97c1cb09d5209f3f3e2d20aecb9422266c2a54bd4a68df6a35d326b20e12"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/private.rs",
+      "sha256": "61913f2f54ea2d4519a5528eca0beb299ba53e51f3fbfb38540441ded1b0b1ea"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/protocol.rs",
+      "sha256": "03f0d36b27faa33211e5c65ec9846b3f3dfb95bda76080f40708df6a5c2b2759"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🦀️.rs",
+      "sha256": "110f12253e659eafe0b7c099f719a8cc70c3953d667d7a05d40fad87d485acac"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️field/🦀️.rs",
+      "sha256": "56ca1c3acf92db2a8acb9c1002c5b91ffdbe8ef50782640cda681c1489d9091b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🦀️.rs",
+      "sha256": "dcff417c496ee6ace374740ed473c656c4f694b5c4d764b1f629063b7cb5649f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "4e7c50120a73a81512141c8a0d38cdd3c5c15b1c4961fbef2150e2820c6e1c09"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🧫️fixtures/📦️copy/🔣️.json",
+      "sha256": "077879646bcc6bc28b6227b26e03bff93904a9930e0632aa2c59b00b82b3423e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️paged-list/🧪️tests/🧬️schema/♻️spent-close.json",
+      "sha256": "35e56e522174447b87faa16a14a9b0c8676be395caddd06229673c32b2f680fe"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/♻️retirement/🦀️.rs",
+      "sha256": "787f63bea572e168a1afb43f0ba4fb32a5e75804342c08a37adc3a6c8c844205"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "b16d64fb8fc316ef051bb926e9975f53bfcc46be6726617a7e10a66de1a8e77b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🦀️.rs",
+      "sha256": "edec495632f6049f375c0166a318e748fe1af425da5444e30c12ef72a385165c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/actual.json",
+      "sha256": "e54f04fc728952893c5a4f797e1d0adfe54a22c2079b7ae81cef04007c4746a3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/actual.schema.json",
+      "sha256": "81b9d23145b72439100ee09c8118090a559e36de4a9885dc37d2a54f9bccbb80"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🦀️.rs",
+      "sha256": "03c37bed8a1499ae8dcf2df4db37afcdf59f82e91e92248646b2d3744f095065"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️paged/🦀️.rs",
+      "sha256": "5275943a10f5e923fa44f12619ad899ef8e9343418c01a5a825daca801b3177a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️issuance-clone/🦀️.rs",
+      "sha256": "4b59f886d51d25561814be976a2111b9f2462f946cba6a9114f949f3a98a1b2a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️projection/🦀️.rs",
+      "sha256": "baf199e1f2a0960244e25f622322c3b3ac8b03b848566acb909a59fb05645e32"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "b348b56dca90b8e4003a4f1864198750d4a78fcc43254db8001321663fdc2846"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "5f598d1086b6e8cd47a13f933d3afa65f035bdb8e7b6bdabe3a2a2b089fd745b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "389c6d5541ca2789905115d2f6a2c7d22ef694c6876faeda153a755bae8b160e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "48d39d600a3cc7847fa2979b01daf5741174c686d1a3f5fbdb89af530da404e4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "ab7b73e271f353bd7a30f4780e65b08df977cee0ae38f9177df9cf23e5d5f285"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "ffbbd5bb9f08ad43cc7ed18e312f035b6cd32c323220d860d60f55e591fc491b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🟦️.ts",
+      "sha256": "833f5f6d213bdeb7e37fa77735f2990d1e317c0f675cc5486dfcea8f6f36afab"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🦀️.rs",
+      "sha256": "210ee46a9589a7857adbe93a3a372a0abf5f2cb11c9c5017ea233e8d12b6ba16"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "0cfc2d57fea808b2dcdf84f875c33941f00e23bee97ac6175d5c3c293851e45d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "0d9af2172567f7283377cb734c8366933ad38e4e00939f21c1a74cbf0d4c8199"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️testing/🦀️.rs",
+      "sha256": "bcdc7bf3ff23502f5df51bcaf292d3ae43ce29bbd145f05dbed3d85e54a1b707"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🎟️header/🦀️.rs",
+      "sha256": "dcda611a2ea7e3b7eb41fc5653af71d263236008b96ff73854e805cee0072a27"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🏭️factory/🦀️.rs",
+      "sha256": "880bf9374c3dad5f0924e62e010621841222f3f1f86292a79682f7d1c6a791db"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/📌️retain/🟦️.ts",
+      "sha256": "9e79bbab80b6b4082dae410cc29d5baea44622dd9cb336730a50ec3edbee46da"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/📌️retain/🦀️.rs",
+      "sha256": "882e3026ac8fccf62431dc6f5b88c23db4f09d91d26367db9804b21a5ad74ac1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/📌️retain/🧫️fixtures/🔣️.json",
+      "sha256": "a8f595a534c9341764e9c5b301bf52bc7eac6b694be8ec48e6ea144cf3cd7e4b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/📌️retain/🧬️schema/🔣️.json",
+      "sha256": "7095d471ab549e4b7bc4835c6537bcf336172a50732edcfb21c6f85cfc3315a1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🟦️.ts",
+      "sha256": "18a37b60aba151a6f7cd527fcc0c1b880834df52a0e40be7ce9d96eb6a8d3235"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🥒️.feature",
+      "sha256": "60d70bfebac108ba91b815b5b303f867175bb1c9b6d7c444e2d2bac9ad64e4c7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️custody/🦀️.rs",
+      "sha256": "3fb76c22a2a7efc450ebb7103e67ef9a3f3f947909bf99a757a5ee9249066875"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔐️query/🦀️.rs",
+      "sha256": "d08645c1e7ed25335811eeb48927bc1b99d8495b2cc71a45ec2aa19940521422"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "cdac0d69d85034c0d8ab6762fa3e8068ee1bc6f1fc4857181fa46afe2389c8af"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🎟️header.json",
+      "sha256": "202cfa370319ed6e27620539566434c3f8396fd346405c759cd9b990d7f70a3d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🎟️owned-birth/🔣️.json",
+      "sha256": "6f19973d91e4d5ac77751a7b6e6e804e210e9799d961de16bcf461893b1a0c80"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🔐️custody.json",
+      "sha256": "7eb9f84e0e0f4caac9f9a6f4377c55ab258b239ea43b6003c2c28140337bd18d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "290c8840375aeb6e8faef1c2b98b781f4891c90ceca8028f06bdd5f1b57abcc9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🎟️header.json",
+      "sha256": "ca4f4247a2ab73a913b3b8f152430ce9f63212c336aa34cf92bdc496586c7826"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🎟️owned-birth/🔣️.json",
+      "sha256": "89d227d8fc3de53eb30199baa6cbd06a09237ce807ac90edda06d205696aeb2a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🎟️terminal-ticket.json",
+      "sha256": "5b0545636be5be8a71b227f4c171a8a384e8cdff19ced9fb6fd33dcef9252b1c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🧬️schema/🔣️.json",
+      "sha256": "520e2056e0fda1f00146343ee08138637ff27803f1e957612c4f307bc7502f47"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➖️remove/🧪️tests/🦀️.rs",
+      "sha256": "23e807d8b953157cff8ec37f7857f87cbb75c30b7446eb5431d17a6cb079b44f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔁️clone-cursor/🦀️.rs",
+      "sha256": "f7cc1e48238ff5e671d3c5e198acc0afdbe0d50339e009295f215def534d118c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔎️lookup-cursor/🦀️.rs",
+      "sha256": "aa9f39df7027feb7bd7f2675b5d0bfe3f478a8aa63d96ad1eecca9a1c178aafc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔢️bounded-ord/🦀️.rs",
+      "sha256": "75fafbf588786f1d7f2202bd3e5d608ed9779782752a2e1a1958b4f7d6a8637b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔢️bounded-ord/🧪️tests/actual.json",
+      "sha256": "34550f5301c607fbe6fed03e0124979df3fc229d8025c9657b4b7cfdb8a70250"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔢️bounded-ord/🧪️tests/actual.schema.json",
+      "sha256": "d11ccb8d542c35e16c2e58b0e59ae76657814e008aa9250a152c8fce7f1312bb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔢️bounded-ord/🧪️tests/🦀️.rs",
+      "sha256": "0ade75125356dc7e968bf5064a57de066d9c8ec2013cda07000e5fb3420edb7c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "99b69bd78637d7ed46b8fb1cf96502f4a64f73f0582a5b2781c4041871f6d3b1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🚚️bulk-vec/🧪️tests/🦀️.rs",
+      "sha256": "5873f4b039ed1315e52d64425cb938eb810ce7406ea8f483911db2f4c784a130"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🎁️option-cursor/🦀️.rs",
+      "sha256": "4fd362c70438cfed915866cc454d42dd07a908a33076ef3cb73369b5052ba890"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "6448293252d69096a20113699b12fa66a08101a9dc38a3ca65818117e1dea46a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs",
+      "sha256": "091db56b854e192ce2f15e04750d30b531cdb47b374de3aeddf608d3f77beb2b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs",
+      "sha256": "4865023358421de27a3dceeea40f7e2abcd1ea17cd2578c8fa6bde67a35f4e66"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "2ca299d3d5858015bc4616f7368b962fb51b33254114b588bf06eaacd846a94f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔗️alias/🦀️.rs",
+      "sha256": "07cc03b269467ef40e8eb98359c9fefb1b4adc89561dfdf0d2b727df6b5c2cfd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔢️scalar-cursor/🟦️.ts",
+      "sha256": "ec86aa99ac0331b93de41d04dd48a0692ec6df6b8d3d0b2602dcd31a1125859f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔢️scalar-cursor/🦀️.rs",
+      "sha256": "050b4cd4132dea6a1f960f0251d2e1c4eff58a0eb341c6ef634ae141c08ae76a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🟦️.ts",
+      "sha256": "c0dba7594cde88721afb93375323cd5201f6b9d951c559f04f2138dbee0b06b3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🦀️.rs",
+      "sha256": "c4351d297dfd2684a0be572a852b1725aff1548e0ef44e197a26aa3f0f208beb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🧬️schema/🔣️.json",
+      "sha256": "c520e7d45a668c1d1833974c119e8f447bc1df6f43202da151136a5ac5263a7c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🗃️box-cursor/🦀️.rs",
+      "sha256": "38d285b567ac2cb26f2a1f11bb6bcde6b8cc8c1b35926370d6010c4efdc7bccf"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts",
+      "sha256": "f95f594023d47fb96d34fdeca253a26e35f75ab1872ab9a30b3fe65f0fb7780a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🦀️.rs",
+      "sha256": "76cdddff28fb4ab4da440662f3387642dee6656b3429f8423fe7346fd534da85"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🎯️dispatch/🦀️.rs",
+      "sha256": "4e539dc8fb6cb516bb0dae9d792da5c77b7be9264a7cd23e8368c1f0b17eb423"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🦀️.rs",
+      "sha256": "3b0769478c2b8bd9b6c44c5ede11ce2707b66b7d9f85fca9eb71acfe87f1638b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧬️schema/🔣️.json",
+      "sha256": "de5a3754e318649cae014680bd88e47b562047932e3db327614fa0ce8d36b61b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧮️array-cursor/🦀️.rs",
+      "sha256": "e650b7c03e10a73bded90300569094444ccb3a7f0fa102f690c19b830341ece1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧱️tuple-cursors/🦀️.rs",
+      "sha256": "b2d8df12e5a15768c570b728b707765d0b552be5d1d3b9a8b9da486b79636925"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🦀️.rs",
+      "sha256": "8d93dd686b32784f062abc11f3a4a31d0ef5e0517cde33ab5185c390a6e32eff"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧮️scalar/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "3b5352572bff0edf6107dae617f500fd7fc979ab95cc7a2acd3342fb4a4bc112"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧳️owner/🦀️.rs",
+      "sha256": "32a9bb68eb41efa7ae35d1593d9ad7be3092eb34facb25370ce96407c36bd34f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🦀️.rs",
+      "sha256": "040a8389d60eaf8807d2df29e751a7c196c7b9b81a2e4c0a585d17fcd58924f7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🧪️tests/🎯️dispatch/🦀️.rs",
+      "sha256": "f1e189e82820ce388a5b2370802c3603310c1e10ae4ef92c57fb0124bae37d4a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧺️std-collections/🧪️tests/🦀️.rs",
+      "sha256": "101710a508328da0e90b784762648e46f955c2a8c082fc51c78d6971f1449ddf"
+    }
+  ],
+  "runtime": "No Root runtime live. Font agent actual28+strict18 completed and held inputs released.",
+  "open": "Root named/indexed actual work and staged alias owning tests remain uncompiled pending Persistent/NativeOwned closure; CancelRoot actualnull owning law unrun Async depends on Value. All fullcompletion-evidence gates stillrequired."
+}

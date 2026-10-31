@@ -1,0 +1,18 @@
+{
+  "state": "schema-law-before-dual-alias-definer",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/actual.json",
+      "sha256": "16a9749d687a02a1d6042016b37e99472a9aeab644823b2697833c32bd01b0e9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/actual.schema.json",
+      "sha256": "a7cf1b40f7ba3f0b3f686a726143d3550d706219706f64617b5a7e4a8e5eda8b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/actual.rs",
+      "sha256": "97cddbef38174c4d0af0303a544d37686a003e51cbd6b647b561c2e56ee91f27"
+    }
+  ],
+  "runtime": "unexecuted"
+}

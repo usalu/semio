@@ -1,0 +1,113 @@
+{
+  "schema": "semio.writer.typing-fold.original.v1",
+  "cases": [
+    {
+      "id": "whole-text-replaces-original-incoming",
+      "previous": [
+        {
+          "mutation": "editText",
+          "text": "before"
+        }
+      ],
+      "incoming": [
+        {
+          "mutation": "editText",
+          "text": "after"
+        }
+      ],
+      "expected": "replaceIncoming"
+    },
+    {
+      "id": "mixed-kinds-split",
+      "previous": [
+        {
+          "mutation": "editText",
+          "text": "before"
+        }
+      ],
+      "incoming": [
+        {
+          "mutation": "renameWriter",
+          "newId": "next"
+        }
+      ],
+      "expected": "split"
+    },
+    {
+      "id": "empty-old-splits",
+      "previous": [],
+      "incoming": [
+        {
+          "mutation": "editText",
+          "text": "next"
+        }
+      ],
+      "expected": "split"
+    },
+    {
+      "id": "multiple-old-leaves-split",
+      "previous": [
+        {
+          "mutation": "editText",
+          "text": "a"
+        },
+        {
+          "mutation": "editText",
+          "text": "b"
+        }
+      ],
+      "incoming": [
+        {
+          "mutation": "editText",
+          "text": "next"
+        }
+      ],
+      "expected": "split"
+    },
+    {
+      "id": "multiple-incoming-leaves-split",
+      "previous": [
+        {
+          "mutation": "editText",
+          "text": "a"
+        }
+      ],
+      "incoming": [
+        {
+          "mutation": "editText",
+          "text": "b"
+        },
+        {
+          "mutation": "editText",
+          "text": "c"
+        }
+      ],
+      "expected": "split"
+    },
+    {
+      "id": "adjacent-native-splice",
+      "compositionCase": "forward-typing",
+      "expected": "net"
+    },
+    {
+      "id": "native-erased-run",
+      "compositionCase": "type-then-erase",
+      "expected": "net"
+    },
+    {
+      "id": "native-disjoint-splice",
+      "compositionCase": "caret-jump-after",
+      "expected": "split"
+    },
+    {
+      "id": "native-repeated-scalar-placement",
+      "compositionCase": "caret-left-of-a-repeated-scalar",
+      "expected": "net"
+    },
+    {
+      "id": "native-astral-splice",
+      "compositionCase": "astral-run",
+      "expected": "net"
+    }
+  ]
+}

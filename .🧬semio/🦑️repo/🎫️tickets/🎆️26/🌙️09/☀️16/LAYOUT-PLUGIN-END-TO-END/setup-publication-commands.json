@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "cwd": "/Users/ueli/Documents/semio",
+  "focused": "repo --service=off tools exec bun -- test './🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🟦️.ts'",
+  "strict": "repo --service=off tools exec bun -- ./node_modules/typescript/bin/tsc --noEmit --strict --noUncheckedIndexedAccess --skipLibCheck --resolveJsonModule --esModuleInterop --target ESNext --module preserve --moduleResolution bundler --allowImportingTsExtensions --types bun './🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🟦️.ts' './🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🟦️.ts' './🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/🧱️fixed/🧪️tests/🟦️.ts' './🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🟦️.ts' './🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🧪️tests/🏗️native-build/📦️owner/🟦️.ts' './🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🟦️.ts'",
+  "owner": "repo --service=off run repo:test-storage-opening-processes",
+  "ownerExecuted": false,
+  "liveSetupExecuted": true,
+  "fixedOwner": "repo --service=off run @semio-tech/framework-process:test-native-storage",
+  "fixedOwnerExecuted": false,
+  "liveSetupSucceeded": false,
+  "liveSetupAttempt": {
+    "session": 24933,
+    "exitCode": 1,
+    "evidence": "setup-live-failure.md",
+    "log": "🗑️generated/setup-live-1.log",
+    "boundary": "pre-witness logical metadata validation",
+    "published": false
+  },
+  "bootstrapVerification": {
+    "sourceReady": true,
+    "focused": {
+      "command": "repo --service=off tools exec bun -- test '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🧪️tests/🟦️.ts' '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🧪️tests/issuer.test.ts' '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🟦️.ts' '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧪️tests/🟦️.ts' > '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-bootstrap-final-focused.log' 2>&1",
+      "session": 59750,
+      "status": "terminal",
+      "exitCode": 0,
+      "passed": 26,
+      "expectations": 943,
+      "log": "🗑️generated/setup-bootstrap-final-focused.log",
+      "admission": "normal-managed-2048MB"
+    },
+    "strict": {
+      "command": "repo --service=off tools exec bun -- '/Users/ueli/Documents/semio/node_modules/typescript/bin/tsc' --noEmit --strict --noUncheckedIndexedAccess --skipLibCheck --resolveJsonModule --esModuleInterop --target ESNext --module preserve --moduleResolution bundler --allowImportingTsExtensions --types bun '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🧪️tests/🟦️.ts' '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🔁️replacement/🧪️tests/issuer.test.ts' '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📤️publication/📸️observation/🧪️tests/🟦️.ts' '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/⚙️setup/🧪️tests/🟦️.ts' '/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/💰️funding/🧾️metadata/🎛️owner/🟦️.ts' '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/🧪️tests/🟦️.ts' '/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/⌨️command/⚙️runtime/🟦️.ts' > '.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-bootstrap-strict-7.log' 2>&1",
+      "session": 10910,
+      "status": "terminal",
+      "log": "🗑️generated/setup-bootstrap-strict-7.log",
+      "exitCode": 0,
+      "admission": "normal-managed-2048MB"
+    },
+    "previousStrict": {
+      "session": 6521,
+      "exitCode": 2,
+      "log": "🗑️generated/setup-bootstrap-strict-6.log",
+      "defects": "only duplicate peer envelope initial variable at75/79; fixed by owner"
+    },
+    "rawLogLoss": "Failed session46477 raw overwritten by retry50047;15pass/3fail retained in setup-bootstrap-transition.md, no reconstructed raw."
+  }
+}

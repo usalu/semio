@@ -1,0 +1,3 @@
+# Page and Bytes Held Return Test First
+
+The neutral closed contract and actual existing original-page-return integration law precede production edits. Both real cancelled reservations must consume two authentic prepaid witnesses with current CPU zero, no heap effects, one actual CPU and one item per witness; the next ordinary loan/body turn remains denied. The same original finite source, quantum1, eight-turn staged bound and32-turn close bound remain. Serde_json independently parses the contract and closed schema. Existing actual page/bytes pointer/content/foreign/null/refusal laws remain mounted and unchanged.

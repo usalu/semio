@@ -25,7 +25,7 @@ async fn to_value_matches_the_existing_serde_wire_string() {
 
 
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneSource,RetainedCloneGrant,RetainedCloneProgress,retained_clone_grant_admits},retirement::{RetireOwned,controlled::ControlledRetirement}};
-use semio_framework_value_native_owned::native_decoding::{NativeReceive,NativeReceiver,NativeDecodeControl,NativeDecodeConstructionRecipient,owned::{NativeRecordKey,tree::NativeValueSource}};
+use semio_framework_value_native_owned::native_decoding::{NativeReceive,NativeReceiver,NativeDecodeControl,NativeDecodeConstructionRecipient,owned::{NativeRecordKey,tree::{NativeValueSource,NativeTreeKind}}};
 use crate::label::observe_locale_test_allocations as observed;
 const BODY:usize=4096;
 const MAXIMUM_TURNS:usize=4096;
@@ -37,12 +37,14 @@ struct OriginalLabels{native:OriginalLanguages,reuse:OriginalLanguages}
 fn invalid_source()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"original locale source has no such field")}
 impl NativeValueSource for OriginalLanguages{
  fn as_source(&self)->&dyn NativeValueSource{self}
+ fn tree_kind(&self)->Option<NativeTreeKind>{Some(NativeTreeKind::Object)}
  fn record_len(&self)->Result<usize,ValueError>{Ok(2)}
  fn record_key(&self,index:usize)->Result<NativeRecordKey<'_>,ValueError>{match index{0=>Ok(NativeRecordKey::Name("en")),1=>Ok(NativeRecordKey::Name("de")),_=>Err(invalid_source())}}
  fn record_child(&self,index:usize)->Result<&dyn NativeValueSource,ValueError>{match index{0=>Ok(&self.en),1=>Ok(&self.de),_=>Err(invalid_source())}}
 }
 impl NativeValueSource for OriginalLabels{
  fn as_source(&self)->&dyn NativeValueSource{self}
+ fn tree_kind(&self)->Option<NativeTreeKind>{Some(NativeTreeKind::Object)}
  fn record_len(&self)->Result<usize,ValueError>{Ok(2)}
  fn record_key(&self,index:usize)->Result<NativeRecordKey<'_>,ValueError>{match index{0=>Ok(NativeRecordKey::Name("native")),1=>Ok(NativeRecordKey::Name("reuse")),_=>Err(invalid_source())}}
  fn record_child(&self,index:usize)->Result<&dyn NativeValueSource,ValueError>{match index{0=>Ok(&self.native),1=>Ok(&self.reuse),_=>Err(invalid_source())}}
@@ -75,7 +77,7 @@ fn retire<T:RetireOwned>(value:T){
 }
 struct Closing<'a,T,R:NativeReceiver<dyn NativeValueSource,T>>{receiver:&'a mut R,output:std::marker::PhantomData<fn()->T>}
 impl<T,R:NativeReceiver<dyn NativeValueSource,T>> semio_framework_value::ErasedSnapshotRetirement for Closing<'_,T,R>{
- fn close_step(&mut self,g:RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,ValueError>{self.receiver.close_step(g)}
+ fn close_step(&mut self,g:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{self.receiver.close_step(g)}
  fn terminal_is_empty(&self)->bool{self.receiver.terminal_is_empty()}
  fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.receiver.close_demands(BODY)?.copy_bytes)}
  fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.receiver.close_demands(body)?.capacity_bytes)}
@@ -83,24 +85,30 @@ impl<T,R:NativeReceiver<dyn NativeValueSource,T>> semio_framework_value::ErasedS
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.receiver.close_demands(BODY)?.depth)}
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.receiver.close_demands(body)}
 }
+fn capture<S:RetireOwned+Sync>(input:S)->RetainedCloneSource<S>{
+ let mut admission=RetainedCloneSource::admission_owned(input,());let mut source=None;
+ for _ in 0..MAXIMUM_TURNS{
+  let g=funding(admission.next_demand().unwrap());
+  let(turn,physical)=observed(||if admission.phase()=="ready"{admission.take_output(&mut source,g)}else{admission.advance(g)});
+  let p=turn.result.unwrap().progress();assert!(p.fits(g));assert_eq!(physical,(p.retained_capacity_bytes,p.released_bytes));
+  if let Some(source)=source{assert!(admission.terminal_is_empty());return source}
+ }
+ panic!("funded locale source admission did not settle");
+}
 fn close_receiver<T,R:NativeReceiver<dyn NativeValueSource,T>>(receiver:&mut R){
  let mut loan=Closing{receiver,output:std::marker::PhantomData::<fn()->T>};
- for _ in 0..MAXIMUM_TURNS{if loan.receiver.terminal_is_empty(){return}let d=semio_framework_value::select_retirement_cursor(&mut loan,BODY).unwrap().demands();for denied in denials(d){let(step,physical)=observed(||semio_framework_value::select_retirement_cursor(&mut loan,BODY).unwrap().step(denied).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(physical,(0,0));assert_eq!(semio_framework_value::select_retirement_cursor(&mut loan,BODY).unwrap().demands(),d);}let g=funding(d);let step=measured(||semio_framework_value::select_retirement_cursor(&mut loan,BODY).unwrap().step(g).unwrap(),|step|step.progress());assert!(step.progress().fits(g));}panic!("selected native locale receiver closure did not settle");
+ for _ in 0..MAXIMUM_TURNS{if loan.receiver.terminal_is_empty(){return}let d=semio_framework_value::select_retirement_cursor(&mut loan,BODY).unwrap().demands();for denied in denials(d){let(step,physical)=observed(||semio_framework_value::select_retirement_cursor(&mut loan,BODY).unwrap().step(denied).result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(physical,(0,0));assert_eq!(semio_framework_value::select_retirement_cursor(&mut loan,BODY).unwrap().demands(),d);}let g=funding(d);let step=measured(||semio_framework_value::select_retirement_cursor(&mut loan,BODY).unwrap().step(g).result.unwrap(),|step|step.progress());assert!(step.progress().fits(g));}panic!("selected native locale receiver closure did not settle");
 }
 fn receive_erased<S:NativeValueSource+RetireOwned+serde::Serialize,T:NativeReceive<dyn NativeValueSource>+serde::Serialize>(input:S,expected:&serde_json::Value,cut:Option<usize>)->usize{
  let original=serde_json::to_value(&input).unwrap();
- let birth=RetainedCloneSource::<S>::owned_constructor_demand::<()>();let d=RetirementDemand{copy_bytes:RetainedCloneSource::<S>::constructor_copy_bytes(),capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()};let g=funding(d);
- let(source,p)=measured(||RetainedCloneSource::admit_owned(input,(),g).unwrap_or_else(|_|panic!("original locale source admission")),|(_,p)|*p);assert!(p.fits(g));
- let d=T::receive_birth_demand();let g=funding(d);
- for denied in denials(d){assert!(!retained_clone_grant_admits(denied,d));let(result,physical)=observed(||T::begin_receive(denied));assert!(result.is_err());assert_eq!(physical,(0,0));}
- let(mut receiver,p)=measured(||T::begin_receive(g).unwrap(),|(_,p)|*p);assert!(p.fits(g));
+ let source=capture(input);let mut receiver=T::receiver();
  let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<24,&mut callback);let mut turns=0;
  while turns<MAXIMUM_TURNS&&!receiver.output_ready()&&cut.is_none_or(|cut|turns<cut){
   let source_ref=source.borrow().project(0,|value|value.as_source());let d=receiver.demands(source_ref,BODY).unwrap();let g=funding(d);let ready=receiver.output_ready();
-  for denied in denials(d){assert!(!retained_clone_grant_admits(denied,d));let mut turn=Turn(denied);let(step,physical)=observed(||control.with_construction_recipient(&mut turn,|control|receiver.advance(source_ref,control,BODY,denied)).unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(physical,(0,0));assert_eq!(receiver.output_ready(),ready);assert_eq!(receiver.demands(source_ref,BODY).unwrap(),d);assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),original);}
-  let mut turn=Turn(g);let step=measured(||control.with_construction_recipient(&mut turn,|control|receiver.advance(source_ref,control,BODY,g)).unwrap(),|step|step.progress());assert!(step.progress().fits(g));assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),original);turns+=1;
+  for denied in denials(d){assert!(!retained_clone_grant_admits(denied,d));let mut turn=Turn(denied);let(step,physical)=observed(||control.with_construction_recipient(&mut turn,|control|Ok::<_,ValueError>(receiver.advance(source_ref,control,BODY,denied))).unwrap().result.unwrap());assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(physical,(0,0));assert_eq!(receiver.output_ready(),ready);assert_eq!(receiver.demands(source_ref,BODY).unwrap(),d);assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),original);}
+  let mut turn=Turn(g);let step=measured(||control.with_construction_recipient(&mut turn,|control|Ok::<_,ValueError>(receiver.advance(source_ref,control,BODY,g))).unwrap().result.unwrap(),|step|step.progress());assert!(step.progress().fits(g));assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),original);turns+=1;
  }
- let output=if cut.is_none(){assert!(receiver.output_ready());let d=receiver.take_demand().unwrap();for denied in denials(d){let(value,physical)=observed(||receiver.take(denied).unwrap());assert!(value.is_none());assert_eq!(physical,(0,0));assert!(receiver.output_ready());assert_eq!(receiver.take_demand().unwrap(),d);}let g=funding(d);let(value,p)=measured(||receiver.take(g).unwrap().unwrap(),|(_,p)|*p);assert!(p.fits(g));assert_eq!(serde_json::to_value(&value).unwrap(),*expected);Some(value)}else{assert_eq!(turns,cut.unwrap());None};
+ let output=if cut.is_none(){assert!(receiver.output_ready());let d=receiver.take_demand().unwrap();for denied in denials(d){let(value,physical)=observed(||receiver.take(denied).result.unwrap());assert!(value.is_none());assert_eq!(physical,(0,0));assert!(receiver.output_ready());assert_eq!(receiver.take_demand().unwrap(),d);}let g=funding(d);let(value,p)=measured(||receiver.take(g).result.unwrap().unwrap(),|(_,p)|*p);assert!(p.fits(g));assert_eq!(serde_json::to_value(&value).unwrap(),*expected);Some(value)}else{assert_eq!(turns,cut.unwrap());None};
  receiver.begin_close();
  close_receiver::<T,_>(&mut receiver);
  assert!(receiver.terminal_is_empty());assert_eq!(serde_json::to_value(source.borrow().get()).unwrap(),original);let(_,physical)=observed(||drop(receiver));assert_eq!(physical,(0,0));if let Some(output)=output{retire(output)}retire(source);turns

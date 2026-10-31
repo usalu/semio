@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "ordinary-reader",
+      "sourceOnly": false,
+      "bodyFailure": false,
+      "afterFailure": false,
+      "refusal": "none"
+    },
+    {
+      "id": "source-only-reader",
+      "sourceOnly": true,
+      "bodyFailure": false,
+      "afterFailure": false,
+      "refusal": "none"
+    },
+    {
+      "id": "body-failure-still-drains",
+      "sourceOnly": false,
+      "bodyFailure": true,
+      "afterFailure": false,
+      "refusal": "body"
+    },
+    {
+      "id": "after-validation-refuses-value",
+      "sourceOnly": false,
+      "bodyFailure": false,
+      "afterFailure": true,
+      "refusal": "after"
+    },
+    {
+      "id": "body-and-after-failures-retained",
+      "sourceOnly": true,
+      "bodyFailure": true,
+      "afterFailure": true,
+      "refusal": "aggregate"
+    }
+  ]
+}

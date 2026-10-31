@@ -1,0 +1,76 @@
+# 1030 result: energy
+
+STATUS: AMBER 10/30. Hub energy wasm GREEN at chk29 (rc 0, 0 errors, includes all view-port + review-fix edits; chk28 died on ENOSPC). Native tests t8: snapshot-tests 24/25 pass, membership 0/6 pass; mounted test not yet run.
+
+## (1) Hub wasm
+chk27 (`C/🗑️generated/1030/energy-chk27.txt`) finished `semio-hub-energy-component`, 0 errors. The Send fix + removed recursion_limit held.
+
+## (2) Snapshot tests
+- Schema hash: STALE TEST RUN, not stale schema. The carrier uses field id 1 (authored `📦️pack/🧪️tests/🔣️.json`, hash 642dddd2...); t4 predated that edit. `the_derived_owned_spec_hashes_to_the_authored_native_schema_hash` PASSES in t8 (24 passed). Schema stays the source of truth.
+- `native_document_link_binding...` STILL RED. Root cause (from backtrace, not my first guess): `central_fragment` -> `retained_diff_birth_demand::<EnergyModelSnapshot,EnergyModelDiff>()` = size_of FragmentApply (2848, `EnergyDocumentApply`) + 2*size_of RetainedDiffOwner (696) = copy 4240 > the 4096 turn frontier; capacity 2848. `EnergyDocumentApply` embeds two inline `RetainedRowPatchApply` (each holds `Option<P::Fields>` + `Option<P>`, P = 320 B model patch / 400 B diff). Fix needs the framework `RetainedRowPatchApply` to hold `Fields` lazily boxed with the capacity charged in its phase-0 step, or the energy apply split into two retained stages; boxing inside `new()` would break the exact heap==capacity law. Not done (shared framework change; no limit raise).
+- mut-membership-tests compile now (fixed `drain(post)` -> `drain(post.into_inner())` in `🧳️native/📋️membership/🧪️tests/🧰️leaf`). Run: 6 load-center/plant-loop membership laws FAIL in `receive_with_ledger` (`heap (0,0)` vs progress retained capacity `(528,0)`): the fixtures hold empty `generator_ids`/`battery_ids` `SealedShared<Vec<EntityId>>`; the receiver charges 528 B capacity for an empty owner but allocates nothing. Looks like a native-owned empty-Vec accounting mismatch (framework), unresolved.
+
+## (3) EnergyModelView read port
+- New in `📸️snapshot/🧳️state/👁️read`: `Rows` (lazy per-row projection: `get/find/iter`, native `positions/holds/native/len`), `EnergyRowsView` (`EnergyModelView::rows(&latch)`), `ProjectionFault` latch.
+- All five `Model::from_value(state.to_value())` copies removed: reduce, artifact tree, inspection panel, viewer simulation, editor-impl simulation (run period passed as `&RunPeriod`). Inspector setters (`🔍️inspector`) now take `&EnergyRowsView`; `schedule_exists` takes `&StateScheduleSet`. Artifact tree sections are index-windowed (`window_indexed_section`/`tree_window_indexed_item`), flat load/control/hvac sections project only the addressed row; select option lists read native cheap fields capped at `SELECT_ITEMS_MAX + 1` (overflow probe kept).
+- Review fix 1 (silent row drop): a row that fails to project is latched in `ProjectionFault`; `reduce` (wrapper `reduce_rows`) fails with `energy.model.projection`, both panels fail with a typed assembly error. No more `.ok()`.
+- Remaining intended whole-model projections: epJSON export bridge, binary io, cold bridge (`to_reference`).
+
+## Review fix 2 (native-cold bridge)
+- `ReferenceEnergyModelDiff::apply` now swaps `base` only after the reference apply and `from_reference` both succeeded; a later retire error no longer reports failure of an already-installed state.
+- `to_reference` copies the model once (`energy_snapshot_owning` moves it; was `to_value`+`from_value`+`model.clone()`). Each protocol call (`diff`, `inverse`, `apply`) still projects once; reducing below that needs the diff to carry its inverse (design change, not done).
+- Regression test: `a_refused_cold_diff_leaves_the_native_base_untouched` in `🔺️diff/🧪️tests/🔬️unit` (not run).
+
+## (4) Mounted pane test
+New test crate `semio-s-artifact-energy-model-editor-mounted-tests` (`✏️editor/🧪️tests/🔬️mounted-bestest`, member added): bestest-600 loads natively and the artifact+inspection bodies render; one `set-node` rename applies, undo restores, redo reapplies. NOT RUN: the first cold build timed out (58 min) compiling `semio-s-artifact-stdio-semio`; run alone next. Note this pulls a new Cargo.lock entry (coordinator `dependencies lock`).
+
+## Reactor contract (6-arg `handle_intent_frame`)
+Read-only review of `plugin-app-impl` + `plugin_dispatch_intent`: all state lives in the instance (`original_typing/original_typed_command/original_emission`) and the retained `OriginalIntentActionSource` (args/fault/meta); every yield returns `Ok(None)` and the next poll re-enters through the `pending()/input_ready()/receipt` branches, so it is resumable. Not exercised by a mounted run yet (the mounted test above would).
+
+## Debug probes
+My two `[DEBUG]` probes are gone (verified by grep).
+
+## Update (continuation, CHECKPOINT)
+STATUS: AMBER, edits in, UNVERIFIED (lock update `energy-lock` queued on cargo registry lease; tests/hub re-check pending).
+- Membership laws root cause: the `mut-membership-tests` crate had no `#[global_allocator] HeapWitness`, so every heap-vs-receipt law saw (0,0) (all 6 failed, not only load-center). Added the witness to its lib (dependency `semio-framework-trace` already present). Not a framework accounting bug.
+- Link-binding: `RetainedRowPatchApply` (framework `🧳️retained/🩹️patch/🚚️apply`) now holds its staged `Fields` as `Option<Box<Fields>>`; phase-0 quote/receipt charge `size_of::<Fields>()` capacity, close releases it (release_bytes). Existing law test already asserts heap == receipt per step; added `the_sparse_apply_header_stays_independent_of_the_field_owner_size`. Expected EnergyDocumentApply well under the 2704-byte ceiling (4096 - 2*696). Unrun.
+- Projections: `to_reference` is one wire projection with the model moved (no clone); each of diff/inverse/apply still projects once (3 per edit). A safe single-projection design needs the diff to carry its inverse; not done (a pointer-identity cache would risk stale aliasing).
+- Lock entry for the mounted crate: `repo cargo ... -- update --workspace --offline` launched (`C/🗑️generated/1030/energy-lock.txt`, waiting on cargo registry exclusive lease).
+NEXT (on resume): when `energy-lock.rc` lands, run `test -p snapshot-tests -p mut-membership-tests -p diff -p editor-mounted-tests` (stdio-semio cold compile long), then hub check.
+
+## Freeze note 18:10
+The RetainedRowPatchApply edit (replication, boxed Fields) and its law test landed BEFORE the freeze; no further edits there. Redundant `update` driver killed (Cargo.lock already carries editor-mounted-tests); t9 (snapshot, membership, diff, mounted) queued: C/🗑️generated/1030/energy-t9.txt.
+
+## Blocker 19:xx
+t9 timed out (58 min cold compile incl. stdio-semio). Relaunch t10 refused at Cargo.lock refresh: `semio-framework-2d` (peer edit, 🧰️framework/🔨️modules/◻️2d) depends on new path crate `semio-framework-2d-path-stroke` (exists on disk) that is missing from the shared registry. Needs coordinator `dependencies sync|lock`; then relaunch: `test -p snapshot-tests -p mut-membership-tests -p diff -p editor-mounted-tests` and a hub check (chk30). Not mine to fix. One-projection-per-edit via diff-carried inverse NOT done (needs ColdMutation protocol change: inverse/apply take only (mutation, base)).
+
+## Resume run (t11-t14)
+- Diff crate lib tests are stale pre-existing (43 errors, written against the reference diff): dropped `-p diff`; my refused-diff regression test moved to snapshot-tests `🔬️bestest-load` (dep `diff-patch` added).
+- t12-t14 stopped on peer breakage in `semio-framework-2d-booleans`/`-regions` (BooleanJob API mid-edit: `advance_work`, `into_result` missing). Not energy. Retry t15 once framework-2d compiles: test -p snapshot-tests -p mut-membership-tests -p editor-mounted-tests, then hub chk30.
+
+## Diff tests ported
+The 43 stale diff lib tests are ported to the reference/native-cold split (explicit `ReferenceEnergyModelDiff`, `crate::snapshot::reference::{EnergyModelSnapshot,energy_snapshot_with_state,ENERGY_MODEL_DOCUMENT_SCHEMA}`); `-p semio-s-artifact-energy-model-diff` is back in the run (t15). UNCOMPILED: t15 still stops on ◻️2d `BooleanJob` (advance_work/into_result missing in regions). Relaunch when ◻️2d compiles.
+
+## PORT WAVE (10/31)
+Pre-ported to the new value API: engine `EntityId`/`ScheduleId` `NativeReceive` -> `fn receiver()`; state test helpers (`receive_with_ledger`, `advance_original`) -> `T::receiver()`, `RetainedWorkOutcome.result` for advance/take/close_step. Energy has no other manual NativeReceive/begin_receive callers (derive output is regenerated by the peer). chk30 stopped in framework (`value-retained-map/-edit`: `next_return_demand`, `admit_owned` missing) - framework red, energy untestable until fwfix reports green. Then: 4 test crates + hub chk31.
+- Also ported: native-singletons action `Leaf` (NativeReceivingOriginal::new(source) at capture; shell/birth steps now no-ops), and 90 call sites of RetainedCloneRef::bind / RetainedCloneBinding::close_one / RetainedCloneClose::{begin,step}_granted across 43 energy files (`.result` appended, mechanical script). Unverified until framework compiles.
+- chk31 (hub wasm) still stops in framework: `replication-mutation-edit` (E0282 at ✏️edit/🦀️.rs:326) and `ui-contract` (🌱️original, merge: RetainedWorkOutcome ? misuse). Energy not reached. Relaunch hub chk + 4 test crates when fwfix reports those green.
+- schedule E0053 fixed: manual `project_root` (EntityId, ScheduleId, native EnergyModelSnapshot) now returns RetainedWorkOutcome. chk32 still red only in framework replication (messages/retirement, causal fold); no energy error reached yet.
+- chk32 reached energy: engine `🧪️sim` uses `semio_framework_job_payload::RetainedJobPayloadWriter` (run, state, packets, wire/packets-and-queues, 4 files + restore tests) but the peer deleted that type (`🧵️job/✍️payload-writer-and-grant/` is an EMPTY directory, mtime 07:07; fem engine mesh/sparse have the same dangling import). Waiting for the job peer to publish the replacement writer API; then port sim (`close_step(..).result` already applied in wire/packets-and-queues:139). Not guessing a new writer.
+- NOTE for fem: same dangling `RetainedJobPayloadWriter` import in fem mesh/sparse; pjob publishes the mapping in C/1030-result-pjob.md "PAYLOAD WRITER" (energy polls it too).
+
+## PAYLOAD WRITER port plan (energy sim, from C/1030-result-pjob.md)
+Sites (engine `🧪️sim`): `🏃️run/🦀️.rs:509-541` (output writer: new, staged commit, finish), `🔍️pipeline/🦀️.rs:539-560` (staged write of encoded fragments), `📮️packets/🦀️.rs:186-264` + `📡️wire/📬️packets-and-queues/🦀️.rs:357` (EnergyWireBuild.writer: new, begin_staged_page_funded, staged_page_len/remaining, write_staged, commit, finish), `🧱️state/🦀️.rs:443`, `🔚️close/🦀️.rs:30-77` (retirement_demands/begin_close/close_step). Mapping: `new`->`RetainedPayloadBuilder::new` + `advance_initialization(cx)` until `is_initialized()`; `begin/write/commit` -> `*_funded(cx[,&source])` one funded turn each, posted with `semio_framework_job::receive_original_retained_work(cx, turn)?`; `finish` -> `seal(cx)` then `take_finished(&mut Option<RetainedJobPayload>,grant)`; close -> `retirement_demands()` + `close_step_granted(grant)`. This is NOT a signature swap: the one-shot sync writes in the pipeline/packet encoders must become resumable multi-turn steps (each funded call is a turn that may return Progress). Redesign-sized (4 files + close + restore tests); not started, no guessed API. Needs a dedicated lane or the sim author.
+
+## Sim payload port DONE (uncompiled)
+Engine `🧪️sim` now drives `Box<RetainedPayloadBuilder>` as resumable per-call funded turns folded into the existing step machine (no sync loop): `energy_post(context, turn)` posts each builder turn via `receive_original_retained_work`. Wire build (`📮️packets::step_wire_build`): admit_boxed -> advance_initialization -> begin_staged_page_funded -> write_staged_source_funded (field advances only on Complete) -> commit_staged_page_funded -> seal -> take_finished -> `wire_ready`. Output (`🏃️run`, `🔍️pipeline::write_output_fragment`): builder admit/init gate; sim-reserved page sources go through `accept_original_page(&mut Some(source))` (restored to the reservation if not taken), then begin_staged (consumes incoming), write, commit; seal + take_finished into `output_payload`; the packet push now also runs when only `output_payload` remains (fixes a pre-existing stall after a refused push). `🔚️close`: builder `retirement_demands` + `close_step_granted(..).result`; payload `close_step(..).result`. Restore test `retained_test_packet` rewritten as the same per-turn state machine. EnergyWireBuild now `{kind,identity,stream,builder,field}`.
+chk33 stopped before energy: framework `semio-framework-job-context` refused by the Rust-crate source boundary (size, peer file `⏱️context/📦️owner`). Re-run hub chk + four test crates when job-context is within its extent.
+
+## Funded builder retirement (static, uncompiled)
+No plain drop of a `Box<RetainedPayloadBuilder>` remains. `🪜️retirement`: `energy_builder_demand` (pages/ledger quote, then `boxed_release_demands()` once terminal) and `energy_builder_close` (`close_step_granted(..).result` until terminal, then one separately granted step that drops the box and reports `released_bytes = size_of::<RetainedPayloadBuilder>()`). Every exit routes through it: cancel/failure of a wire build or output writer in `🔚️close` (`wire_build.builder`, `output_writer`), success of a wire build (`step_wire_build` moves the terminal builder into the new `builder_retiring` slot; `drive_wire_publication` drains it with funded steps before anything else; `start_wire` refuses while it is occupied; close drains it too and `authority_inputs_are_retired` requires it empty), success of the commit output (the terminal builder stays in `output_writer` and is retired by close; the take/seal block runs only while `output_payload` is empty). Test `cancelling_a_wire_build_mid_page_funds_the_whole_builder_release` (`♻️restore/🧪️tests`) cancels after 4 build turns and sums `released_bytes` over the funded close, asserting it covers the builder box. chk34: still refused at `semio-framework-job-context` source admission (size boundary), energy not reached. On admission: hub chk + snapshot/membership/diff/mounted test crates.
+
+## Hub checks after job-context admission (chk35-chk38)
+- chk35: `semio-framework-pack-json` source refused (unbalanced delimiter, peer mid-edit).
+- chk36: reached rustc; framework os crates red (spr/history, store/backing `close_step` E0053, inference, others) - not energy. Energy errors found and fixed: `🪜️retirement` crate has no `semio-framework-job-payload` dep -> uses `semio_framework_job::RetainedPayloadBuilder`.
+- chk37: one energy error: `JobPayloadStream` not in scope in `EnergyWireBuild` -> fully qualified (fixed).
+- chk38: no energy-file errors, but the run was refused at source admission before the compiler: `semio-framework-tool-typing-edit` (unbalanced delimiter, peer mid-edit). So energy crates are not yet proven green, and the four test crates (snapshot, membership, diff, mounted) were not run. Relaunch hub chk + `test -p snapshot-tests -p mut-membership-tests -p diff -p editor-mounted-tests` once framework admission and the os-crate reds clear.

@@ -30,6 +30,8 @@ semio-framework-value-derive = { workspace = true }
 semio-s-fem-app-surface = { workspace = true }
 
 [dev-dependencies]
+serde = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }

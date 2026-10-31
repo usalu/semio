@@ -7,15 +7,15 @@ use std::mem::{ManuallyDrop,size_of};
 /// 🎟️ The command owns its exact framed bytes until the registered native owner takes custody.
 #[derive(Default)]
 pub struct WindowConfigCommandLoad{
- pack:ManuallyDrop<Option<WindowConfigPack>>,
- pack_close:ManuallyDrop<Option<ControlledRetirement<WindowConfigPack>>>,
- load:ManuallyDrop<Option<WindowConfigPackLoad>>,
- source:Option<OriginalSourceBinding>,
- failure:ManuallyDrop<Option<OriginalTurnFailure>>,
- close_failure:ManuallyDrop<Option<OriginalTurnFailure>>,
- compound:ManuallyDrop<Option<OriginalClosureFailure>>,
- closing:bool,
- done:bool,
+ pub pack:ManuallyDrop<Option<WindowConfigPack>>,
+ pub pack_close:ManuallyDrop<Option<ControlledRetirement<WindowConfigPack>>>,
+ pub load:ManuallyDrop<Option<WindowConfigPackLoad>>,
+ pub source:Option<OriginalSourceBinding>,
+ pub failure:ManuallyDrop<Option<OriginalTurnFailure>>,
+ pub close_failure:ManuallyDrop<Option<OriginalTurnFailure>>,
+ pub compound:ManuallyDrop<Option<OriginalClosureFailure>>,
+ pub closing:bool,
+ pub done:bool,
 }
 impl WindowConfigCommandLoad{
  /// 🔄️ Advances only the original registered owner under the decoded command's unchanged caller.
@@ -54,6 +54,4 @@ impl WindowConfigCommandLoad{
 impl Drop for WindowConfigCommandLoad{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original Window command requires native closure before decoded custody ends")}}
 fn invalid(message:&'static str)->OriginalTurnFailure{ValueError::literal(ValueRefusalKind::InvariantViolated,message).into()}
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

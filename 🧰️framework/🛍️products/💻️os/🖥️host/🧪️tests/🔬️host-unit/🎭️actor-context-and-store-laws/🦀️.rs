@@ -14,7 +14,7 @@
             store.add_parameter(&workflow::WorkflowParameterType::Numeric,"First", &mut identity).expect("first edit");
             let document=store.document();
             let encoded=encode_backbone_payload(&document).expect("persist host document");
-            close_backbone_envelope(take_backbone_envelope(document).1).expect("persisted copy retires");
+            close_backbone_envelope(take_backbone_envelope(document).expect("document seats its transitions").1).expect("persisted copy retires");
             close_workflow_fixture(&mut store);
             let reopened=decode_backbone_payload(&encoded,workflow::S_WORKFLOW_SCHEMA).expect("reopen host document");
             let mut store=OsWorkflowStore::new(reopened,reopened_actor.clone()).expect("reopened store");
@@ -23,7 +23,7 @@
             let document=store.document();
             let actors:Vec<_>=document.vcs.edits.iter().map(|edit|edit.actor.as_deref().expect("attributed edit")).collect();
             assert_eq!(serde_json::to_value(actors).expect("independent Serde actor projection"),case["expectedActors"]);
-            close_backbone_envelope(take_backbone_envelope(document).1).expect("actor projection copy retires");
+            close_backbone_envelope(take_backbone_envelope(document).expect("document seats its transitions").1).expect("actor projection copy retires");
             close_workflow_fixture(&mut store);
         }
     }
@@ -50,12 +50,12 @@
     }
 
     /// 🧮️ The complete history position (applied, redo, checkpoint, alternative) the event log of `edits` + `transitions` folds to.
-    fn workflow_history<'a>(document_id: &str, edits: impl IntoIterator<Item = &'a store::Edit<workflow::WorkflowMutation>>, transitions: &[protocol::MutationEnvelope], conflicts: &[protocol::Conflict]) -> protocol::HistoryFold {
+    fn workflow_history<'a>(document_id: &str, edits: impl IntoIterator<Item = &'a store::Edit<workflow::WorkflowMutation>>, transitions: &(impl protocol::HistoryTransitionEvents + ?Sized), conflicts: &[protocol::Conflict]) -> protocol::HistoryFold {
         let head = protocol::ViewerHead::canonical_trunk(&protocol::ArtifactId(document_id.to_string()));
         store::os_store::ledger::fold_event_log::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(document_id, &edits.into_iter().collect::<Vec<_>>(), transitions, conflicts, &head).expect("event log folds")
     }
 
-    /// 🧮️ [`workflow_history`] of one host backbone document.
+    /// 📜️ [`workflow_history`] of one host backbone document.
     fn document_history(document: &OsWorkflowArtifactDocument) -> protocol::HistoryFold {
         workflow_history(&document.id, document.vcs.edits.iter(), &document.transitions, &document.conflicts)
     }
@@ -102,6 +102,23 @@
     }
 
     #[test]
+    fn backbone_transitions_seat_into_the_exact_ledger_and_drain_back_without_a_full_drop() {
+        test_identity!(identity);
+        let mut store = test_workflow_store();
+        store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Committed", &mut identity).expect("first edit");
+        store.add_parameter(&workflow::WorkflowParameterType::Numeric, "Undone", &mut identity).expect("second edit");
+        store.dispatch_text("undo", &mut identity).expect("undo second edit");
+        let mut document = store.document();
+        let rows = std::mem::take(&mut document.transitions);
+        std::mem::forget(document);
+        assert!(!rows.is_empty(), "the undo rides as plain transition rows");
+        let ledger = transitions_ledger(rows.clone()).expect("rows seat into the exact ledger owner");
+        assert_eq!(ledger.len(), rows.len());
+        assert_eq!(drain_transitions(ledger), rows, "draining restores log order and leaves no full ledger to drop");
+        close_workflow_fixture(&mut store);
+    }
+
+    #[test]
     fn backbone_binary_text_and_workflow_store_preserve_the_complete_cursor() {
         test_identity!(identity);
         let mut store = test_workflow_store();
@@ -117,9 +134,16 @@
         let payload = encode_backbone_payload(&document).expect("binary encode");
         let decoded: OsWorkflowArtifactDocument = decode_backbone_payload(&payload, workflow::S_WORKFLOW_SCHEMA).expect("binary decode");
         assert_eq!(document_history(&decoded), history);
-        assert_eq!(document_history(&OsWorkflowStore::new(decoded, store.inner.local_actor_id().clone()).expect("workflow rebuild").document()), history);
+        let mut rebuilt = OsWorkflowStore::new(decoded, store.inner.local_actor_id().clone()).expect("workflow rebuild");
+        let rebuilt_document = rebuilt.document();
+        assert_eq!(document_history(&rebuilt_document), history);
+        rebuilt_document.retire();
+        close_workflow_fixture(&mut rebuilt);
 
         let text = export_backbone_dsl(&document).expect("text encode");
         let parsed = resolve_kernel_future(store::os_store::text_format::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).expect("text decode");
         assert_eq!(workflow_history(&parsed.envelope.id, parsed.envelope.vcs.edits.iter(), &parsed.envelope.transitions, &parsed.envelope.conflicts), history);
+        parsed.into_envelope().retire_unadopted();
+        document.retire();
+        close_workflow_fixture(&mut store);
     }

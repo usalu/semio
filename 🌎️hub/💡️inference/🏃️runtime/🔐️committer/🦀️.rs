@@ -754,7 +754,7 @@ impl<B: ComposedMapCommitBindingV1> RetainedGisMapApprovalCommitterV1<B> {
             return Err(GisMapApprovalCommitErrorV1::Capacity);
         }
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope.clone(), observed.authority_generation).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?);
-        let members = B::member_stores(&key, snapshot, actor);
+        let members = B::member_stores(&key, snapshot, actor).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
         let admission = directory::os_store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(members.parent, members.drawing, members.value);
         let recovery = handle.durable_group_recovery_retained(admission);
         documents.insert(key, RetainedGisMapDocumentStateV1::Recovery { owner: Arc::new(tokio::sync::Mutex::new(recovery)), handle, scope, generation: observed.authority_generation, document_write, fence });

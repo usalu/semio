@@ -203,7 +203,7 @@ fn envelope_and_genesis_preserve_terminal_cursor_physical_grants() {
     struct TerminalCursor<const N: usize>([u8; N]);
     impl<const N: usize> ErasedSnapshotRetirement for TerminalCursor<N> {
             fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
-fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
         fn terminal_is_empty(&self) -> bool { true }
         fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
         fn next_capacity_byte_demand(&self,_:usize)->Result<usize,ValueError>{Ok(0)}
@@ -214,9 +214,9 @@ fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, Val
     struct TerminalSnapshotFactory<const N: usize>;
     impl<const N: usize> ArtifactOwnedValueRetirementFactory<DemoSnapshot> for TerminalSnapshotFactory<N> {
         fn retirement_birth_bytes(&self,_:&DemoSnapshot)->usize { std::mem::size_of::<TerminalCursor<N>>() }
-        fn retire_owned(&self,original:DemoSnapshot,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,DemoSnapshot)> {
+        fn retire_owned(&self,original:DemoSnapshot,grant:RetainedCloneGrant)-> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,DemoSnapshot)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,DemoSnapshot)> {
             admit_artifact_retirement(original,grant,|_|TerminalCursor::<N>([0;N]))
-        }
+        })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
     }
     fn check<const N: usize>(row: &serde_json::Value, admission: usize, failures: &mut Vec<(String, usize, usize, usize)>) {
         let grant=RetainedCloneGrant {maximum_capacity_bytes:admission,maximum_release_bytes:admission,..physical_test_close_grant()};
@@ -267,7 +267,7 @@ fn displaced_store_owner_preserves_terminal_physical_grants() {
     struct TerminalOwner<const N: usize>([u8; N]);
     impl<const N: usize> ErasedSnapshotRetirement for TerminalOwner<N> {
             fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
-fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
         fn terminal_is_empty(&self) -> bool { true }
         fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
         fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
@@ -319,7 +319,7 @@ async fn installed_store_disposer_preserves_terminal_physical_grant() {
     }
     impl<const N: usize> ErasedSnapshotRetirement for TerminalDisposer<N> {
             fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
-fn close_step(&mut self, _: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
         fn terminal_is_empty(&self) -> bool { true }
         fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
         fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }

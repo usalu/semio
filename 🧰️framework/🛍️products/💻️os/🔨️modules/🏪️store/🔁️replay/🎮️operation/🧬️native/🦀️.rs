@@ -152,11 +152,11 @@ impl<P:RetireOwned+Sync,M:RetireOwned+Sync,C:SemanticProjection<P>,E:SemanticEdi
   if !self.edit.terminal_is_empty(){return self.edit.close_step(self.mutations.as_ref().unwrap().as_ref(),grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
   if !self.post_read.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(self.post_read.prepare(&mut self.post,PagedOneItemPostMode::Mutable,grant.maximum_copy_bytes,grant)?.ok_or_else(||invalid("semantic original post return absent"))?));}
   if self.active.is_some(){return semio_framework_value::close_factory_ticket(&mut self.active,grant);}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
+  if !self.retirement.is_empty(){return self.retirement.step_granted(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
   if let Some(rows)=self.rows.as_mut(){if rows.terminal_is_empty(){self.rows.take();return Ok(unit());}return rows.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
   if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source.take();return Ok(unit());}return source.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
   if let Some(input)=self.input.as_mut(){if input.terminal_is_empty(){self.input.take();return Ok(unit());}return input.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-  macro_rules! close{($field:ident)=>{if let Some(step)=self.retirement.begin_granted(&mut self.$field,grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}};}
+  macro_rules! close{($field:ident)=>{if let Some(step)=self.retirement.begin_granted(&mut self.$field,grant).result?{return Ok(RetainedCloneStep::Progress(step.progress()));}};}
   if self.base.is_some(){let Some((authority,p))=CapturedSnapshotSource::admit(&mut self.base,self.snapshots.as_ref().unwrap(),grant)?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.source_authority=Some(authority);return Ok(RetainedCloneStep::Progress(p));}
   close!(source_authority);
   if self.post.is_some(){let Some((frame,p))=semio_framework_value::FactoryOwnedRetirement::<P>::admit_original(&mut self.post,self.snapshots.as_ref().unwrap(),grant)?else{return Ok(RetainedCloneStep::Progress(Default::default()));};*self.active=Some(frame);return Ok(RetainedCloneStep::Progress(p));}

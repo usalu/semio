@@ -1,0 +1,30 @@
+[
+  {
+    "id": "staged-fresh-read",
+    "fresh": true,
+    "observed": false,
+    "copied": false,
+    "accept": true
+  },
+  {
+    "id": "observed-ordinary-read",
+    "fresh": false,
+    "observed": true,
+    "copied": false,
+    "accept": true
+  },
+  {
+    "id": "observed-cannot-claim-fresh",
+    "fresh": true,
+    "observed": true,
+    "copied": false,
+    "accept": false
+  },
+  {
+    "id": "copied-observed-receipt",
+    "fresh": false,
+    "observed": true,
+    "copied": true,
+    "accept": false
+  }
+]

@@ -1,0 +1,36 @@
+{
+  "schema": "semio.os-operation-receiving-work/v1",
+  "stock": {
+    "items": 100000,
+    "fuel": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64
+  },
+  "source": [
+    2
+  ],
+  "body": 4096,
+  "maximumTurns": 10000,
+  "admissionCopyBytes": 0,
+  "admissionWork": 1,
+  "failureWork": 1,
+  "failureItems": 0,
+  "deniedWork": 0,
+  "cachedWork": 0,
+  "failureKind": "InvalidValue",
+  "fullNativeCauses": [
+    "primary",
+    "quoteRefusal",
+    "allocationRefusal"
+  ],
+  "originalStock": {
+    "items": 100000,
+    "fuel": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 16777216,
+    "releaseBytes": 33554432,
+    "depth": 128
+  }
+}

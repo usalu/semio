@@ -23,8 +23,9 @@
 //! use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneCursor,RetainedCloneGrant,RetainedCloneRef,RetainedCloneStep}};
 //! struct Cursor;
 //! impl RetainedCloneCursor<u8> for Cursor {
-//!     fn advance(&mut self,_:RetainedCloneRef<'_,u8>,_:usize,_:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Ok(RetainedCloneStep::Progress(Default::default()))}
-//!     fn take(&mut self)->Option<u8>{None}
+//!     fn advance(&mut self,_:RetainedCloneRef<'_,u8>,_:usize,_:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+//!     fn take_demand(&self)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
+//!     fn take(&mut self,_:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(u8,semio_framework_value::RetainedCloneProgress)>>{semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0}}
 //!     fn begin_close(&mut self)->bool{true}
 //!     fn terminal_is_empty(&self)->bool{true}
 //!     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(0)}
@@ -36,8 +37,9 @@
 //! use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneCursor,RetainedCloneGrant,RetainedCloneRef,RetainedCloneStep}};
 //! struct Cursor;
 //! impl RetainedCloneCursor<u8> for Cursor {
-//!     fn advance(&mut self,_:RetainedCloneRef<'_,u8>,_:usize,_:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Ok(RetainedCloneStep::Progress(Default::default()))}
-//!     fn take(&mut self)->Option<u8>{None}
+//!     fn advance(&mut self,_:RetainedCloneRef<'_,u8>,_:usize,_:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
+//!     fn take_demand(&self)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
+//!     fn take(&mut self,_:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(u8,semio_framework_value::RetainedCloneProgress)>>{semio_framework_value::RetainedWorkOutcome{result:Ok(None),work:0}}
 //!     fn begin_close(&mut self)->bool{true}
 //!     fn terminal_is_empty(&self)->bool{true}
 //!     fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(0)}

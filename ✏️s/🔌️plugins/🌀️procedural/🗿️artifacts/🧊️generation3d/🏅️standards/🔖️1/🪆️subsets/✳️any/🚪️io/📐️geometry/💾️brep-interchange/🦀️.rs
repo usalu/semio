@@ -9,6 +9,7 @@ use semio_s_artifact_procedural_3d_phased_job::Flow;
 use semio_s_artifact_procedural_3d_phased_job::Pipeline;
 use semio_s_artifact_procedural_3d_geometry_compute::finish;
 use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::{fuel_budget, settle};
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
 use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
 use semio_s_artifact_procedural_3d_geometry_value::kernel_fault;
@@ -68,7 +69,7 @@ fn export_step(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
         Ok(Pipeline::new(kind).import(&shape).finish(move |work| {
             let handle = work.handle(0)?;
             let solids = if compound { work.session.brep().explode_sync(&handle).map_err(kernel)? } else { vec![handle] };
-            let text = crate::brep_interchange::export_step(work.session.brep(), &solids).map_err(kernel)?;
+            let text = semio_s_artifact_stdio_step_geometry::geometry::export_step(work.session.brep(), &solids).map_err(kernel)?;
             Ok(outputs([("step", GeometryValue::Text(text))]))
         }))
     })
@@ -98,7 +99,7 @@ fn import_step(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
             return Err(empty("data"));
         }
         Ok(Pipeline::new(kind).once(move |work| {
-            let imported = crate::brep_interchange::import_step(work.session.brep(), &data).map_err(kernel)?;
+            let imported = semio_s_artifact_stdio_step_geometry::geometry::import_step(work.session.brep(), &data).map_err(kernel)?;
             work.groups = vec![imported.into_iter().take(1).collect()];
             if work.groups[0].is_empty() {
                 return Err(WidgetFault::new(EMPTY, "The STEP text holds no solid.", "Der STEP-Text enthält keinen Körper.").at("data"));
@@ -118,12 +119,15 @@ fn faceted(kind: &Kind, inputs: &WidgetInputs, read: impl FnOnce(&str) -> Result
         let mesh = read(&data)?;
         let mut cursor = Some(MeshImportCursor::new(mesh.positions, mesh.normals, mesh.indices, tolerance).map_err(|error| parse_fault("mesh", error))?);
         let mut running: Option<MeshImportCursor> = None;
-        Ok(Pipeline::new(kind).step(move |work, fuel| {
+        Ok(Pipeline::new(kind).step(move |work, cx| {
             if running.is_none() {
                 running = cursor.take();
             }
             let importing = running.as_mut().ok_or_else(|| cancelled_fault())?;
-            match work.session.brep().step_mesh_import_sync(importing, fuel.saturating_mul(IMPORT_UNITS_PER_FUEL)).map_err(kernel)? {
+            let fuel = fuel_budget(cx);
+            let step = work.session.brep().step_mesh_import_sync(importing, fuel.saturating_mul(IMPORT_UNITS_PER_FUEL)).map_err(kernel)?;
+            settle(cx, fuel, step.is_none());
+            match step {
                 Some(handle) => {
                     work.groups = vec![vec![handle]];
                     Ok(Flow::Next)

@@ -1,0 +1,17 @@
+{
+  "work": {
+    "denied": 0,
+    "admitted": 1,
+    "absent": 0
+  },
+  "stock": {
+    "items": 10000,
+    "copyBytes": 1048576,
+    "capacityBytes": 1048576,
+    "releaseBytes": 1048576,
+    "depth": 128,
+    "maximumTurns": 10000
+  },
+  "inputRetainedOnDenial": true,
+  "headerCopyBytes": 0
+}

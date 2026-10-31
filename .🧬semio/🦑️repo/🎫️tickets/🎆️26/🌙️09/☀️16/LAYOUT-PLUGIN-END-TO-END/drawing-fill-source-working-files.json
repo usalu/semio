@@ -1,0 +1,25 @@
+{
+  "state": "source-authored-no-compiler-or-runtime",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🦀️.rs",
+      "sha256": "3d74914b81f27c6f03fcbd4aca4f8c25df14bddfd34b805cc00fca7b22d43c52"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "33c6d66bd9dece496c6b17567e69816c655543171491b54ce578a07924a81d01"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🦀️.rs",
+      "sha256": "bb4c18a6ab02d81fba3fe2da33cd1337397fecd64bc94db6f65195334020174d"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🥣️companion/🦀️.rs",
+      "sha256": "b44ae83452f4f33549e34f3b5ab1e16f103cbd56d77a21e16c4c3d724208c6da"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🦀️.rs",
+      "sha256": "fb5262486899aa296fb9dbaa5b26d2198465354265ad42e952fc0a2883240880"
+    }
+  ]
+}

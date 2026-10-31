@@ -74,7 +74,7 @@ where
     let mut synced = document.clone();
     synced.backbone = Some(resolve_kernel_future(document_backbone_ref(backbone_uri)));
     let result = encode_backbone_payload(&synced).and_then(|payload| port.write(backbone_uri, &payload));
-    close_backbone_envelope(take_backbone_envelope(synced).1)?;
+    close_backbone_envelope(take_backbone_envelope(synced)?.1)?;
     result
 }
 //#endregion 🔖️Backbone

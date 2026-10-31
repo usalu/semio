@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Source Constructor Work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "text",
+    "maximumTurns",
+    "maximumCpuWork",
+    "stock",
+    "expected"
+  ],
+  "properties": {
+    "text": {
+      "const": "Original source 🧱"
+    },
+    "maximumTurns": {
+      "const": 1048576
+    },
+    "maximumCpuWork": {
+      "const": 1048576
+    },
+    "stock": {
+      "const": {
+        "maximumItems": 1048576,
+        "maximumCopyBytes": 16777216,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 33554432,
+        "maximumDepth": 256
+      }
+    },
+    "expected": {
+      "const": {
+        "deniedCpu": 0,
+        "birthCpu": 6,
+        "cachedCloseCpu": 0,
+        "liveCloseMinimumDepth": 1
+      }
+    }
+  }
+}

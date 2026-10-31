@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-job-testing-caller"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Fixture original caller that supplies issuer, source admission, clock and work for job protocol laws."
+
+[package.metadata.semio]
+role = "framework"
+id = "job-testing-caller"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job-context = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-async = { workspace = true, features = ["testkit"] }
+semio-framework-value-retained-clone = { path = "../../../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }

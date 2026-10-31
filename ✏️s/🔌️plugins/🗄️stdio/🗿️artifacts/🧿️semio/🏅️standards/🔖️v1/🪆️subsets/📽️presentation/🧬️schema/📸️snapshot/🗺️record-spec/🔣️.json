@@ -1,0 +1,855 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "s.stdio.semio.presentation",
+ "schemaHash": "e92b607b5b5de13306c170a694016b72cdc7c555d85dc862e13016c674735d59",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "masters",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 1
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "layouts",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 2
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "slides",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 3
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "shapes",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "picture",
+        4
+       ],
+       [
+        "placeholder",
+        5
+       ],
+       [
+        "table",
+        6
+       ],
+       [
+        "text-box",
+        7
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "master-id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "shapes",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "picture",
+        4
+       ],
+       [
+        "placeholder",
+        5
+       ],
+       [
+        "table",
+        6
+       ],
+       [
+        "text-box",
+        7
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "layout-id",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "shapes",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "picture",
+        4
+       ],
+       [
+        "placeholder",
+        5
+       ],
+       [
+        "table",
+        6
+       ],
+       [
+        "text-box",
+        7
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "notes",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "code",
+        8
+       ],
+       [
+        "heading",
+        9
+       ],
+       [
+        "image",
+        10
+       ],
+       [
+        "list",
+        11
+       ],
+       [
+        "page-break",
+        12
+       ],
+       [
+        "paragraph",
+        13
+       ],
+       [
+        "quote",
+        14
+       ],
+       [
+        "table",
+        15
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "frame",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 16
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "image",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 17
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "frame",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 16
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "kind",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "body",
+        12
+       ],
+       [
+        "date-time",
+        12
+       ],
+       [
+        "footer",
+        12
+       ],
+       [
+        "other",
+        18
+       ],
+       [
+        "slide-number",
+        12
+       ],
+       [
+        "subtitle",
+        12
+       ],
+       [
+        "title",
+        12
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "frame",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 16
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "rows",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 19
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "frame",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 16
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "blocks",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "code",
+        8
+       ],
+       [
+        "heading",
+        9
+       ],
+       [
+        "image",
+        10
+       ],
+       [
+        "list",
+        11
+       ],
+       [
+        "page-break",
+        12
+       ],
+       [
+        "paragraph",
+        13
+       ],
+       [
+        "quote",
+        14
+       ],
+       [
+        "table",
+        15
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "language",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "text",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "level",
+    "optional": false,
+    "shape": {
+     "kind": "uint"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "style-id",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "runs",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 20
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "image-id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "alt",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "width",
+    "optional": true,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "height",
+    "optional": true,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "ordered",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "items",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 14
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "style-id",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "runs",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 20
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "blocks",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "code",
+        8
+       ],
+       [
+        "heading",
+        9
+       ],
+       [
+        "image",
+        10
+       ],
+       [
+        "list",
+        11
+       ],
+       [
+        "page-break",
+        12
+       ],
+       [
+        "paragraph",
+        13
+       ],
+       [
+        "quote",
+        14
+       ],
+       [
+        "table",
+        15
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "rows",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 19
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "origin",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 21
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "width",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "height",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "asset-id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "mime",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "bytes",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "uint"
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "cells",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 14
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "text",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "style",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 22
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "x",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "y",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "bold",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "italic",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "underline",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "size",
+    "optional": true,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "font",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 5,
+    "key": "color",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 6,
+    "key": "link",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ]
+ ],
+ "annotations": {
+  "single": [
+   [
+    5,
+    1
+   ]
+  ],
+  "tags": [
+   [
+    1,
+    1,
+    "shapeKind"
+   ],
+   [
+    2,
+    2,
+    "shapeKind"
+   ],
+   [
+    3,
+    2,
+    "shapeKind"
+   ]
+  ],
+  "verbatim": [
+   [
+    1,
+    1
+   ],
+   [
+    2,
+    2
+   ],
+   [
+    3,
+    2
+   ],
+   [
+    3,
+    3
+   ],
+   [
+    5,
+    1
+   ],
+   [
+    7,
+    1
+   ],
+   [
+    14,
+    0
+   ]
+  ]
+ }
+}

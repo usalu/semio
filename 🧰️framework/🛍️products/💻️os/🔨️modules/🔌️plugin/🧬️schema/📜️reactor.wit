@@ -98,24 +98,6 @@ interface reactor {
     max-patch-bytes: u32,
     max-frames: u32,
   }
-  record actor-poll-input-call {
-    input: retained-turn-input,
-    spent: retained-progress,
-    work-units-spent: u64,
-    ready: bool,
-  }
-  record poll-input-page {
-    offset: u64,
-    length: u32,
-    word0: u64,
-    word1: u64,
-    word2: u64,
-    word3: u64,
-    word4: u64,
-    word5: u64,
-    word6: u64,
-    word7: u64,
-  }
   record job-checkpoint {
     state: list<u8>,
     applied-progress: u64,
@@ -247,12 +229,6 @@ interface reactor {
   /// thousands of times per session — allocates nothing in guest memory that outlives it.
   admit-actor-context: async func(input: retained-turn-input, retained-policy: retained-grant) -> actor-admission-call;
   close-actor-context: async func(input: retained-turn-input, retained-policy: retained-grant) -> actor-context-close-call;
-  /// 📥️ Scalar preflight reserves the existing resident Entry before any dynamic input lifting.
-  reserve-poll-input: async func(extent: u64, budget: budget) -> result<actor-poll-input-call, actor-call-refusal>;
-  /// 📄️ Fixed scalar words initialize at most sixty-four bytes of the same reserved source.
-  write-poll-input: async func(page: poll-input-page, budget: budget) -> result<actor-poll-input-call, actor-call-refusal>;
-  /// ♻️ Partial source custody closes under the original actor caller before context closure.
-  close-poll-input: async func(budget: budget) -> result<actor-poll-input-call, actor-call-refusal>;
   /// ⚖️ LAW: `events` carries AT MOST ONE event. A turn serves one event slot and owns one pending output, and turn results
   /// are not mergeable, so the host queues further events and delivers them one per `poll`; a guest refuses a longer list
   /// with `a reactor turn admits at most one event`. The type stays a `list` only because a `list` crosses the canonical

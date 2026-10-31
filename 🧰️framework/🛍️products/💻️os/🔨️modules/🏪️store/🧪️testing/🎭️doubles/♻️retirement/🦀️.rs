@@ -55,7 +55,7 @@ impl ExactDemoSnapshotRetirement {
 
 impl ErasedSnapshotRetirement for ExactDemoSnapshotRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty=RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items==0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -85,7 +85,7 @@ impl ErasedSnapshotRetirement for ExactDemoSnapshotRetirement {
             Ok(counter)=>{drop(counter);Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1,released_bytes: demand.release_bytes,..empty }))},
             Err(original)=>{*self.completed=Some(original);Ok(RetainedCloneStep::Progress(empty))}
         }
-    }
+    })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { self.owner.is_none()&&self.value.is_none()&&self.child.is_none()&&self.completed.is_none()&&self.completion_recorded }
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
     fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.demands(body)?.capacity_bytes)}
@@ -115,9 +115,9 @@ impl ArtifactOwnedValueRetirementFactory<DemoSnapshot> for DemoInitialSnapshotRe
     fn retirement_birth_bytes(&self, value: &DemoSnapshot) -> usize {
         semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default().retirement_birth_bytes(value)
     }
-    fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, DemoSnapshot)> {
+    fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, DemoSnapshot)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, DemoSnapshot)> {
         semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default().retire_owned(value, grant)
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
@@ -127,9 +127,9 @@ impl<Mutation: semio_framework_value::retirement::RetireOwned> ArtifactOwnedValu
     fn retirement_birth_bytes(&self, value: &Mutation) -> usize {
         semio_framework_value::factory::OwnedValueRetirementFactory::<Mutation>::default().retirement_birth_bytes(value)
     }
-    fn retire_owned(&self, value: Mutation, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Mutation)> {
+    fn retire_owned(&self, value: Mutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Mutation)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Mutation)> {
         semio_framework_value::factory::OwnedValueRetirementFactory::<Mutation>::default().retire_owned(value, grant)
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 /// 🧹️ Retires a detached demo envelope a test compared against, through the store's own envelope retirement.

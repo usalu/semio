@@ -104,7 +104,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<FlowPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<FlowPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction, hover: _hover, context, operation: _operation } = *input;
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot, config: _config, history: _history, interaction, hover: _hover, context, operation: _operation, snapshot_read: _ } = *input;
         if self.completed || self.closing {
             return Err(Fault::from("flow-retained-graph-work-terminal"));
         }
@@ -245,6 +245,10 @@ impl FlowGraphOperationJobFactoryProofs {
         contract: flow_graph_operation_contract(),
         tools: ["connectMediaPorts", "reorganize", "renameFlowWidget", "runExtensionAction", "setActiveExample"]
     }
+
+    pub(super) fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        Self::bounded_first_step_tool_proofs()
+    }
 }
 //#endregion 🧵️GraphOperationRetainedRoute
 
@@ -282,6 +286,10 @@ impl FlowDirectStoreJobFactoryProofs {
             "updateGenerationValues",
         ]
     }
+
+    pub(super) fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        Self::bounded_first_step_tool_proofs()
+    }
 }
 
 pub(super) struct FlowHostEffectJobFactoryProofs;
@@ -303,6 +311,10 @@ impl FlowHostEffectJobFactoryProofs {
             "flowEvalResolve" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 1, 16_384, 7_500, 1, 1),
         }
     }
+
+    pub(super) fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        Self::bounded_first_step_tool_proofs()
+    }
 }
 
 pub(super) struct FlowChildGroupJobFactoryProofs;
@@ -321,5 +333,9 @@ impl FlowChildGroupJobFactoryProofs {
             "nodeGraphEdit" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 1, 16_384, 7_500, 1, 1),
             "spotlightCommit" => semio_framework::ToolExecutionContract::resumable(16_384, 256, 1, 16_384, 7_500, 1, 1),
         }
+    }
+
+    pub(super) fn proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        Self::bounded_first_step_tool_proofs()
     }
 }

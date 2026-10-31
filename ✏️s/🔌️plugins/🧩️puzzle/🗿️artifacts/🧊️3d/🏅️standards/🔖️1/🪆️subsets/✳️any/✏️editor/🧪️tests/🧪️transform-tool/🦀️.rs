@@ -104,7 +104,7 @@ fn the_transform_tool_is_a_one_state_statechart_that_commits_per_event() {
     let record = Puzzle3dSelectionRecord::new(["a".to_string()], Puzzle3dSelectionMotion::Scale { factors: [2.0, 2.0, 2.0] });
     let mut runner = ToolMachineRunner::<transform_tool::TransformTool, TransformToolHost>::start(format!("{PUZZLE3D_EDITOR_APP_ID}#scaleSelection"), protocol::ActorId("seed".into()), TransformToolContext, TransformToolHost).expect("the tool starts at rest");
     for tick in 0..2u64 {
-        let step = runner.send(semio_framework::kernel::Event::Records(TransformToolRequest { base: Arc::new(base.clone()), records: vec![record.clone()] }), clock(tick)).expect("an event is admitted");
+        let step = runner.send(transform_tool::Event::Records(TransformToolRequest { base: Arc::new(base.clone()), records: vec![record.clone()] }), clock(tick)).expect("an event is admitted");
         assert!(matches!(step, ToolStep::Committed(..)), "every release is its own committed transaction: {step:?}");
         assert!(runner.at_rest() && runner.transaction().is_none_or(|transaction| transaction.state() != semio_framework_tool_machine::ToolTransactionState::Open), "nothing stays open between gestures");
     }

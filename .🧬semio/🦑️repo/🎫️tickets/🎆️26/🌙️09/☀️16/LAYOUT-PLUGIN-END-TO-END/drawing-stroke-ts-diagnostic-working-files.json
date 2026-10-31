@@ -1,0 +1,11 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🎟️work/🟦️ts/owned.test.ts",
+      "beforeSha256": "48deeba9b897373969fc5dfeb40517e66115dc2392acfe679756ca7adb510fbf",
+      "sha256": "ac25d4093e98519e7b8d8488af5879df187f68cc32a101160cb296d2985f89f7",
+      "inverseVerified": true
+    }
+  ],
+  "delta": "Only preserves both actual primary and cleanup exceptions plus exact case/quantum/frontier; all original assertions and bank unchanged."
+}

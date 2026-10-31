@@ -1,0 +1,685 @@
+{
+ "schema": "semio.pack.record-spec/v1",
+ "envelope": "stdio.semio.drawing",
+ "schemaHash": "6cbd9a7d4a405f2f01be90ff781d05fbfcae7bb257aac2d6f062d3cbb222a0d1",
+ "graph": [
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "schema",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "canvas",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 1
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "styles",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 2
+     },
+     "kind": "list"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "layers",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "record",
+      "record": 3
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "width",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "height",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "background",
+    "optional": true,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "name",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "fill",
+    "optional": true,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "stroke",
+    "optional": true,
+    "shape": {
+     "kind": "record",
+     "record": 4
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "stroke-width",
+    "optional": true,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "opacity",
+    "optional": true,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "id",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "name",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "visible",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "root",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "group",
+        5
+       ],
+       [
+        "image",
+        6
+       ],
+       [
+        "path",
+        7
+       ],
+       [
+        "text",
+        8
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "r",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "g",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "b",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "a",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "transform",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 9
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "children",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "group",
+        5
+       ],
+       [
+        "image",
+        6
+       ],
+       [
+        "path",
+        7
+       ],
+       [
+        "text",
+        8
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "at",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 10
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "width",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "height",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "mime",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "bytes",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "uint"
+     },
+     "kind": "list"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "segments",
+    "optional": false,
+    "shape": {
+     "item": {
+      "kind": "statements",
+      "variants": [
+       [
+        "arc-to",
+        11
+       ],
+       [
+        "close",
+        12
+       ],
+       [
+        "cubic-to",
+        13
+       ],
+       [
+        "line-to",
+        14
+       ],
+       [
+        "move-to",
+        14
+       ],
+       [
+        "quad-to",
+        15
+       ]
+      ]
+     },
+     "kind": "block"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "style",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "value",
+    "optional": false,
+    "shape": {
+     "kind": "text"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "at",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 10
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "style",
+    "optional": true,
+    "shape": {
+     "kind": "text"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "translation",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 16
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "rotation",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 17
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "scale",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 16
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "x",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "y",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "rx",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "ry",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "x-rotation",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "large-arc",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 4,
+    "key": "sweep",
+    "optional": false,
+    "shape": {
+     "kind": "bool"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 5,
+    "key": "to",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 10
+    }
+   }
+  ],
+  [],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "c1",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 10
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "c2",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 10
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "to",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 10
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "to",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 10
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "c",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 10
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "to",
+    "optional": false,
+    "shape": {
+     "kind": "record",
+     "record": 10
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "x",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "y",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "z",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ],
+  [
+   {
+    "flatten": false,
+    "id": 0,
+    "key": "x",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 1,
+    "key": "y",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 2,
+    "key": "z",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   },
+   {
+    "flatten": false,
+    "id": 3,
+    "key": "w",
+    "optional": false,
+    "shape": {
+     "kind": "float"
+    }
+   }
+  ]
+ ],
+ "annotations": {
+  "single": [
+   [
+    3,
+    3
+   ]
+  ],
+  "float32": [
+   [
+    2,
+    4
+   ],
+   [
+    4,
+    0
+   ],
+   [
+    4,
+    1
+   ],
+   [
+    4,
+    2
+   ],
+   [
+    4,
+    3
+   ]
+  ],
+  "verbatim": [
+   [
+    3,
+    3
+   ],
+   [
+    5,
+    1
+   ]
+  ]
+ }
+}

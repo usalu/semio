@@ -118,7 +118,7 @@ impl WindowConfigSnapshot{pub fn try_duplicate(&self)->Result<Self,ValueError>{O
 /// 📖️ Immutable snapshot of one exact window-owned config partition.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct WindowConfigSnapshot {
-    pub(super) authority: WindowConfigAuthorityIdentity,
+    pub authority: WindowConfigAuthorityIdentity,
     #[doc(hidden)]
     pub window_id: semio_framework_value::SharedUtf8,
     #[doc(hidden)]
@@ -136,7 +136,7 @@ pub struct WindowConfigSnapshot {
 pub struct WindowConfigAuthorityIdentity(u64);
 
 impl WindowConfigAuthorityIdentity {
-    pub(super) fn issue() -> Option<Self> {
+    pub fn issue() -> Option<Self> {
         static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
         NEXT.fetch_update(std::sync::atomic::Ordering::Relaxed, std::sync::atomic::Ordering::Relaxed, |next| next.checked_add(1)).ok().map(Self)
     }
@@ -149,7 +149,7 @@ pub struct WindowConfigBorrow<'a> {
     pub window_kind_id: &'static str,
     pub generation: u64,
     pub revision: [u8; 32],
-    pub(super) state: &'a dyn std::any::Any,
+    pub state: &'a dyn std::any::Any,
 }
 
 impl WindowConfigBorrow<'_> {

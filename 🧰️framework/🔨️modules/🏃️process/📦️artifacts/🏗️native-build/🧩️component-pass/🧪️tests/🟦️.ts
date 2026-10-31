@@ -441,3 +441,15 @@ try {
   expect(observed.oracle).toBe(vector.oracle);
   expect([observed.participant, ...(result.staged.length ? ["pass"] : [])].sort()).toEqual(vector.expectedParticipants);
 }, 45_000);
+
+test("the driver declares the scheduler registry selection beside its pass selections so the spanning reader covers it", async () => {
+  const { nativeBuildSchedulerInputRequestV1 } = await import("../🟦️.ts"), { cargoRegistryReadSelectionV1 } = await import("../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟢️ready/📋️selection/🟦️.ts"), root = resolve(import.meta.dir, "../../../../../../../");
+  const control = {} as never, request = nativeBuildSchedulerInputRequestV1({ cwd: root, build: join(root, "b"), target: join(root, "t"), environment: { SEMIO_BUILD_MODE: "prototype" }, control });
+  const manifest = join(root, "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust/Cargo.toml");
+  expect(request.manifest).toBe(manifest);
+  expect(request.arguments).toContain("--locked");
+  expect(request.arguments).not.toContain("--offline");
+  expect(cargoRegistryReadSelectionV1({ manifest: request.manifest, cwd: request.cwd, offline: false })).toBe(JSON.stringify([manifest, root, false]));
+  expect(request.environment.CARGO_TARGET_DIR).toBe(join(root, "t"));
+  expect(request.environment.CARGO_BUILD_BUILD_DIR).toBe(join(root, "b"));
+});

@@ -1,7 +1,7 @@
 [
   "nodes",
   "bounds",
-  
+  "pathInput",
   "path",
   "pathCleanup",
   "complete"

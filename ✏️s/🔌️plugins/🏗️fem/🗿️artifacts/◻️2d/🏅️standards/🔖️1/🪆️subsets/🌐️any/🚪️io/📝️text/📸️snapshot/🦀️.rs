@@ -13,7 +13,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// test fixture.
 pub const FEM2D_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
-/// 📖️ Parses `.fem2d` DSL text into a `Fem2dSnapshot`.
+/// 🔍️ Parses `.fem2d` DSL text into a `Fem2dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Fem2dSnapshot, semio_framework_diagnostic::TextError> {
     <Fem2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)
 }
@@ -22,12 +22,6 @@ pub fn parse_dsl(text: &str) -> Result<Fem2dSnapshot, semio_framework_diagnostic
 pub fn print_dsl(document: &Fem2dSnapshot) -> String {
     pack::snapshot::ArtifactDsl::print_dsl(document)
 }
-
-// #region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-// #endregion 🧪️Tests
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️semio-grammar-conformance/🦀️.rs"]
@@ -42,19 +36,13 @@ pub type Fem2dSnapshotText = String;
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::standards::v1::subsets::any::schema::structure::FemCombination;
-use crate::standards::v1::subsets::any::schema::structure::FemElement;
-use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoadCase, FemRegion, FemSection, FemSupport, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemRegion, FemSection, FemSupport, FemAnalysisSettings, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemRegion, FemSection, FemSupport};
 use semio_s_fem_material::planar::FemMaterialValue;
 use semio_s_fem_node::planar::FemNodeValue;
-use crate::standards::v1::subsets::any::schema::structure::FemRegion;
-use crate::standards::v1::subsets::any::schema::structure::FemSection;
-use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
 impl pack::snapshot::ArtifactDsl for Fem2dSnapshot {
@@ -83,21 +71,14 @@ impl pack::snapshot::ArtifactDsl for Fem2dSnapshot {
 mod snapshot_wire_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::standards::v1::subsets::any::schema::structure::FemCombination;
-use crate::standards::v1::subsets::any::schema::structure::FemElement;
-use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
 use semio_s_fem_material::planar::FemMaterialValue;
 use semio_s_fem_node::planar::FemNodeValue;
-use crate::standards::v1::subsets::any::schema::structure::FemRegion;
-use crate::standards::v1::subsets::any::schema::structure::FemSection;
-use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
+/// 🧬️ Entities this module's schema exports and its crate declares elsewhere.
 
-/// 🔁️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
+/// 🗃️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
 /// language-neutral test adapter. Same reachability wall as `fem2d_mutation_report_json`:
 /// `pack::snapshot::ArtifactDsl`/`pack::snapshot::ArtifactPack` and their error types are unnameable outside this
 /// crate, so the identity law's evidence has to be produced here and handed over as text.
@@ -134,23 +115,16 @@ use crate::standards::v1::subsets::any::schema::*;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
-use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::standards::v1::subsets::any::schema::structure::FemCombination;
-use crate::standards::v1::subsets::any::schema::structure::FemElement;
-use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+/// 📤️ Entities this module's schema exports and its crate declares elsewhere.
 use semio_s_fem_material::planar::FemMaterialValue;
 use semio_s_fem_node::planar::FemNodeValue;
-use crate::standards::v1::subsets::any::schema::structure::FemRegion;
-use crate::standards::v1::subsets::any::schema::structure::FemSection;
-use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 
 /// 🌱️ An empty `Fem2dSnapshot` — every test fixture's blank baseline and the fallback boot document.
 pub fn empty_fem2d_snapshot() -> crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot {
     crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot::default()
 }
 
-/// 🌱️ The document every fresh fem2d surface boots on: the bundled `📚️examples/🎬️demo` DSL received into persistent ownership through the reference wallet, so the
+/// 📄️ The document every fresh fem2d surface boots on: the bundled `📚️examples/🎬️demo` DSL received into persistent ownership through the reference wallet, so the
 /// editor and the viewer both paint a real structure at first frame. A fixture that stops loading is a typed error, never an empty document.
 pub fn default_fem2d_snapshot() -> Result<crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot, semio_framework_diagnostic::TextError> {
     <crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT)

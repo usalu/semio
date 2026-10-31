@@ -1,0 +1,7 @@
+# Selected Core Constructor Census and Migration
+
+The selected conservative298 source corpus was searched for removed Source.admit_owned/admit_borrowed and BorrowAuthority.admit call patterns. The existing dispatch admit::admit_owned is a distinct test-only staged helper, not the removed runtime API; its body already advances canonical admission and preserves actual work/heap.
+
+Take and bulk-logical-body integrations now fund all admission phases/output handoff from each existing aggregate Bank, with unchanged stocks, body limits and turn guards. Private scalar source birth uses its existing finite CPU bank and retains its existing per-turn physical quote law. Private bulk Held and dynamic Source lifetime now use the genuine existing finite SourceTesting fixture. Its new selected-close port debits the same lifetime bank and forwards exact errors/work, so denied and repeated quote assertions remain. The existing fixture lifetime law exercises this selected-close path and still checks pointer/value/cumulative birth-release conservation. All old cases, cuts and denial observations remain.
+
+No whole-case aggregate physical funding claim is added for scalar or old cursor laws that still use per-step physical quotes. No production synchronous constructor/compatibility route is restored. Three Core private files are stable for Cursor NativeOwned7b conservative observation; no further edits during that gate.

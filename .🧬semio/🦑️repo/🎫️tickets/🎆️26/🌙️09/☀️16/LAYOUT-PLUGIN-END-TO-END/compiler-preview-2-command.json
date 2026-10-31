@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "state": "TERMINAL EXIT0 diagnostic preview; no unit-retirement authorization",
+  "executed": true,
+  "cwd": "/Users/ueli/Documents/semio",
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/compiler-preview-2",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/compiler-preview-2/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/compiler-preview-2/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/compiler-preview-2/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/compiler-preview-2/tmp"
+  },
+  "argv": [
+    "repo",
+    "--service=off",
+    "run",
+    "repo-cache-retirement:cache-retire-inactive-preview",
+    "--output=stream"
+  ],
+  "shellCommand": "SEMIO_BUILD_MODE='prototype' SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/compiler-preview-2' TMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/compiler-preview-2/tmp' TMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/compiler-preview-2/tmp' TEMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/compiler-preview-2/tmp' TEMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/compiler-preview-2/tmp' 'repo' '--service=off' 'run' 'repo-cache-retirement:cache-retire-inactive-preview' '--output=stream' > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/compiler-inactive-preview-2.log' 2>&1",
+  "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/compiler-inactive-preview-2.log",
+  "bounds": "existing default600seconds; no override",
+  "authority": "diagnostic plan and normal owning opener recovery/reservations only; no compiler-unit retirement/deletion authorized",
+  "concurrency": "no other owned native/setup/preview; no provider/source edits; no peer action",
+  "session": 12746,
+  "result": {
+    "version": 1,
+    "operation": "preview",
+    "mode": "prototype",
+    "root": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m",
+    "buildDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/b/p",
+    "targetDirectory": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/⚡️cache/rust/fixed/m/t/p",
+    "units": 0,
+    "logicalBytes": 0,
+    "availableBytes": 28874031104,
+    "plannedUnits": 0,
+    "plannedLogicalBytes": 0,
+    "unmetBytes": 0,
+    "planPath": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/compiler-preview-2/turn-H4f0ob/plan.json"
+  },
+  "plan": {
+    "policy": {
+      "version": 1,
+      "retainedBytes": 4294967296,
+      "targetAvailableBytes": 4294967296,
+      "maximumDeletionBytes": 4294967296
+    },
+    "originalAvailableBytes": 28874031104,
+    "plan": {
+      "units": [],
+      "bytes": 0,
+      "remainingBytes": 2857923,
+      "unmetBytes": 0
+    }
+  },
+  "exitCode": 0
+}

@@ -1,0 +1,5 @@
+# Native Active Sequence Binding
+
+Native owning20 reached the original tuple family and failed its unchanged foreign-source refusal assertion after an actual paid original binding. The tuple demand checked binding only in phase0, then later accepted a distinct source. Generic sequence demands had the same defining defect. The neutral tuple/source fixtures now require foreign rejection in every active phase. The existing erased-source owning family additionally creates a genuinely distinct same-value Source from the SAME finite wallet, tests both readonly demand and actual advance refusal, checks zero work/heap/physical effects and unchanged Serde values, and pays error/cursor/output/both Source closure. All original cases/values/cuts/stock remain unchanged; no public hook or compatibility path is introduced.
+
+These law changes precede the defining all-phase binding guard correction. Fresh whole NativeOwned unfiltered all-targets and docs remain mandatory; the previous17+8+2 partial passes do not cover the stopped later targets.

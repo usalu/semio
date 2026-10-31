@@ -1,7 +1,6 @@
 //! 📦️ `stdio.dwg` writer objects: the object-record writer and every non-entity object writer.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 #[path = "."]
 pub mod standards {

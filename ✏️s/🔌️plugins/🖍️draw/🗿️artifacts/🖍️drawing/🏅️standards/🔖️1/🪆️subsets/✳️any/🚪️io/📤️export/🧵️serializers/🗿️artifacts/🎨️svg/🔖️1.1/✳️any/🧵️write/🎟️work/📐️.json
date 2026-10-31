@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "pageBytes": 3072,
+  "logicalUtf16Bytes": 2,
+  "logicalPageReferenceBytes": 8,
+  "quanta": [
+    1,
+    7,
+    4096
+  ],
+  "sourceCases": [
+    "rectangle",
+    "linear gradient",
+    "radial gradient",
+    "multiply blend",
+    "isolated group opacity",
+    "evenodd hole"
+  ],
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "depth",
+    "release"
+  ],
+  "borrowedScene": "unchanged-through-producer-and-output-close",
+  "output": "private-owned-byte-pages",
+  "completedWorkSettlementOnly": true,
+  "childReadyHandoff": "separate-paid-control"
+}

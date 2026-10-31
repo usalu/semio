@@ -1,0 +1,18 @@
+{
+  "kinds": [
+    "yield",
+    "cancelled",
+    "payload"
+  ],
+  "work": [
+    0,
+    1,
+    0
+  ],
+  "copyBytes": 0,
+  "items": [
+    0,
+    1,
+    0
+  ]
+}

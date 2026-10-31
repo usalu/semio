@@ -1,0 +1,352 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/🦀️.rs",
+    "line": 26,
+    "callee": "plan.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/🦀️.rs",
+    "line": 27,
+    "callee": "plan.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/🦀️.rs",
+    "line": 28,
+    "callee": "plan.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/🦀️.rs",
+    "line": 43,
+    "callee": "plan.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/🦀️.rs",
+    "line": 11,
+    "callee": "plan.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🧪️tests/🦀️.rs",
+    "line": 12,
+    "callee": "plan.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs",
+    "line": 15,
+    "callee": "plan.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs",
+    "line": 10,
+    "callee": "plan.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs",
+    "line": 11,
+    "callee": "source.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs",
+    "line": 22,
+    "callee": "owner.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs",
+    "line": 23,
+    "callee": "owner.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs",
+    "line": 24,
+    "callee": "owner.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs",
+    "line": 29,
+    "callee": "owner.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs",
+    "line": 29,
+    "callee": "owner.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🚚️commit/🧪️tests/🦀️.rs",
+    "line": 8,
+    "callee": "RetainedCloneSource::admit_owned"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs",
+    "line": 33,
+    "callee": "plan.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs",
+    "line": 34,
+    "callee": "plan.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs",
+    "line": 35,
+    "callee": "plan.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs",
+    "line": 56,
+    "callee": "plan.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs",
+    "line": 16,
+    "callee": "plan.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs",
+    "line": 17,
+    "callee": "plan.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs",
+    "line": 18,
+    "callee": "plan.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs",
+    "line": 19,
+    "callee": "plan.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🧪️tests/🦀️.rs",
+    "line": 60,
+    "callee": "compare.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 18,
+    "callee": "source.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 31,
+    "callee": "plan.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 31,
+    "callee": "plan.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 22,
+    "callee": "plan.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 22,
+    "callee": "plan.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 31,
+    "callee": "plan.observe_modified_index"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 23,
+    "callee": "owner.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 38,
+    "callee": "owner.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 38,
+    "callee": "owner.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 23,
+    "callee": "owner.take"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 39,
+    "callee": "owner.take"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 20,
+    "callee": "owner.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 20,
+    "callee": "owner.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 21,
+    "callee": "index.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 21,
+    "callee": "index.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 32,
+    "callee": "builder.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 32,
+    "callee": "builder.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 32,
+    "callee": "builder.adopt"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 32,
+    "callee": "builder.finish"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 32,
+    "callee": "builder.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 14,
+    "callee": "RetainedCloneSource::admit_owned"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 32,
+    "callee": "SealedShared::admit"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 23,
+    "callee": "NamedKeyIndexPreparation::new"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 37,
+    "callee": "NamedKeyIndexPreparation::new"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🧪️tests/🦀️.rs",
+    "line": 31,
+    "callee": "NamedEditPlan::new_indexed"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 15,
+    "callee": "owner.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 16,
+    "callee": "owner.take"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 16,
+    "callee": "owner.take"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 11,
+    "callee": "owner.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 11,
+    "callee": "owner.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 16,
+    "callee": "preparation.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 16,
+    "callee": "preparation.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 16,
+    "callee": "preparation.take"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 16,
+    "callee": "reader.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 10,
+    "callee": "builder.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 10,
+    "callee": "builder.advance"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 10,
+    "callee": "builder.adopt"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 10,
+    "callee": "builder.finish"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 10,
+    "callee": "builder.close_step"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 10,
+    "callee": "SealedShared::admit"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 14,
+    "callee": "SealedShared::admit"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 16,
+    "callee": "SealedShared::admit"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 22,
+    "callee": "SealedShared::admit"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 16,
+    "callee": "NamedPersistentRoot::admit_parts"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/♻️transfer/🧪️tests/🦀️.rs",
+    "line": 16,
+    "callee": "NamedPersistentRoot::admit_parts"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🛬️receive/🧪️tests/🦀️.rs",
+    "line": 35,
+    "callee": "reader.close_step"
+  }
+]

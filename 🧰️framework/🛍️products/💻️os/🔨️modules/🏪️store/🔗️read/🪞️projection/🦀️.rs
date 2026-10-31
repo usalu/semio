@@ -1,5 +1,4 @@
 //! 🔗️ Captured context roots retain the exact original Store read issuer.
-use super as store;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement},retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 use std::{mem::ManuallyDrop,sync::Arc};
 
@@ -22,17 +21,17 @@ impl<T:Send+Sync+'static> Cursor<T>{
   if self.root.read.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
   self.active.as_ref().map_or(Ok(Default::default()),|owner|Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?}))
  }
- fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-  let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Default::default());}
-  if self.root.projection.is_some(){drop(self.root.projection.take());return Ok(RetainedCloneProgress{copied_items:1,..Default::default()});}
-  if let Some(read)=self.root.read.take(){return match ControlledRetirement::new(read){Ok(owner)=>{*self.active=Some(owner);Ok(RetainedCloneProgress{copied_items:1,..Default::default()})},Err((error,read))=>{*self.root.read=Some(read);Err(error)}};}
-  let Some(owner)=self.active.as_mut()else{return Ok(Default::default())};if owner.terminal_is_empty(){drop(self.active.take());return Ok(RetainedCloneProgress{copied_items:1,..Default::default()});}owner.step(grant).map(|step|step.progress())
+ fn step(&mut self,grant:RetainedCloneGrant)->Result<(RetainedCloneProgress,u64),ValueError>{
+  let demand=self.demands(grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok((Default::default(),0));}
+  if self.root.projection.is_some(){drop(self.root.projection.take());return Ok((RetainedCloneProgress{copied_items:1,..Default::default()},1));}
+  if let Some(read)=self.root.read.take(){return match ControlledRetirement::new(read){Ok(owner)=>{*self.active=Some(owner);Ok((RetainedCloneProgress{copied_items:1,..Default::default()},1))},Err((error,read))=>{*self.root.read=Some(read);Err(error)}};}
+  let Some(owner)=self.active.as_mut()else{return Ok((Default::default(),0))};if owner.terminal_is_empty(){drop(self.active.take());return Ok((RetainedCloneProgress{copied_items:1,..Default::default()},1));}owner.step(grant).map(|step|(step.progress(),owner.last_turn_work()))
  }
 }
 impl<T:Send+Sync+'static> RetireOwned for SnapshotReadProjection<T>{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(Cursor{root:self,active:ManuallyDrop::new(None)})}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Cursor<T>>())}fn controlled_retirement_supported()->bool{true}}
 impl<T:Send+Sync+'static> RetirementCursor for Cursor<T>{
-    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands(body) }
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}match self.step(grant){Ok(progress)=>RetirementStep::Progress(progress),Err(error)=>RetirementStep::Failure(error)}}
+    fn next_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> { self.demands(body) }
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0);}match self.step(grant){Ok((progress,work))=>RetirementStep::Progress(progress,work),Err(error)=>RetirementStep::Failure(error,0)}}
  fn terminal_is_empty(&self)->bool{self.root.projection.is_none()&&self.root.read.is_none()&&self.active.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.demands(body).ok().map(|demand|demand.capacity_bytes)}

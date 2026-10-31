@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "state": "harness-source-ready-actual-Native-parity-pending",
+  "files": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.test.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.schema.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle-mutants.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-emitter-fixture.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-frontier-mutants.json"
+  ],
+  "reportsInputs": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle-contract.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle-red-command.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle-green-command.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle-final-command.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-frontier-red-command.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-frontier-green-command.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/layout-native-7-oracle-authority.md"
+  ],
+  "sha256": {
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.ts": "88ade6339da94db8c9c217fdce51322ccef3ef3e13b2308bc76d5129449c0b32",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.test.ts": "dab58101dc0c2c0b5ae6a740fb0c79e71f9fcbd50a2814069ad3bb5fefd92c1f",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle.schema.json": "2fef90d2866b377d214b26e1b9110ef7df9d64d7abf233954bdfb2eb21d78d39",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-oracle-mutants.json": "7ab6172319e311c2d9c49f18661937cd22c8abc430e78e9c645f7647fd040842",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-emitter-fixture.json": "0d62d4b2f184082e5ee64c6ac6f5531b39fd6bac6beb85200c44aac16d9a67c6",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/owned-validation-frontier-mutants.json": "cd70e255db46d77e4f6ff939f50d745581ee37d1a41547f55d418e9327ad7ee1"
+  },
+  "readOnlyCanonicalInputs": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🧪️tests/🔣️.json",
+      "sha256": "c2108c2f7247ad81357f0ec9ffe6cc89b6a52a30d9a51d6a62be9ad24e47f897"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/✅️validation/🧳️retained/📦️owned/🧪️tests/📐️.json",
+      "sha256": "fa56ac205d298c8930cc6b45778d84a09695e10d143415826ea90b0830a29f09"
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/✅️validation/🔣️.json",
+      "sha256": "6d80a7c91eb1dba8512875d8e7d2096c9abdf8d40d710f137a209fb34595bdf9"
+    }
+  ],
+  "verification": {
+    "bootstrapRed": 93474,
+    "nonfinalInputDrift": 27646,
+    "preFrontierShapeGreen": 22474,
+    "frontierRed": 12532,
+    "finalGreen": 79183,
+    "actualFinalCounts": {
+      "pass": 31,
+      "fail": 0,
+      "assertions": 65
+    },
+    "allNineInputsStable": true,
+    "lowAudit": "owned-oracle-independent-audit.md"
+  },
+  "actualNativeCompared": false,
+  "notes": [
+    "Only ticket tool/test/schema/fixture inputs attributed; no production Rust or canonical case edits.",
+    "No Source copies; canonical inputs were read only and retain Rust attribution.",
+    "Native7 three postprocessors each conditionally authorized once, none executed; all sequential and actual fresh baseline required."
+  ]
+}

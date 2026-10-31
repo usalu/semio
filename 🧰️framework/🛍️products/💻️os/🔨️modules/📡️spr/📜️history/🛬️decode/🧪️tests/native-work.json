@@ -1,0 +1,14 @@
+{
+  "contract": "semio.history.original-native-work-loan.v1",
+  "scope": "actualNativeWorkOnly",
+  "roles": [
+    "metadataAuthor",
+    "transitionActor",
+    "editActor",
+    "conflictActor"
+  ],
+  "workUnits": 100000,
+  "turnWork": 1,
+  "sameWalletAcrossAllCases": true,
+  "missingRecipient": "UnsupportedOwner"
+}

@@ -24,10 +24,11 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value = { path = "../../../../📦️packages/🦀️rust" }
 semio-framework-value-schema = { path = "../../../../🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-artifact-reference = { workspace = true }
 encoding_rs = "=0.8.35"
 semio-framework-dsl-record-derive = { path = "../../../../../🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }

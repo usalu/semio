@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "originalCase": "closed contour",
+  "parentSemanticCeiling": 1,
+  "repeatedUnderfills": 3,
+  "deniedAxes": [
+    "capacity",
+    "depth"
+  ],
+  "deniedCpu": 0,
+  "deniedSemantic": 0,
+  "handoffSemantic": 0,
+  "pointsAfterSettlement": 1,
+  "nextAlgorithmMustRefuse": true,
+  "sourceUnchanged": true,
+  "sameFiniteBank": true
+}

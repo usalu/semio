@@ -1,0 +1,24 @@
+{
+  "rawOwnedArrayAccepted": false,
+  "rowBytes": 8,
+  "invalidCpu": 0,
+  "values": [
+    7,
+    13
+  ],
+  "expectedTail": 13,
+  "expectedRemaining": 1,
+  "provenance": {
+    "cases": [
+      "buffer",
+      "pop",
+      "archive",
+      "buffers",
+      "children",
+      "matcher",
+      "nullChild"
+    ],
+    "untrustedReads": 0,
+    "cpu": 0
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "lengths",
+    "copyBodies",
+    "itemOffers",
+    "byte",
+    "stock",
+    "maximumTurns",
+    "deniedWork",
+    "cachedWork",
+    "naturalFirstPayloadWork",
+    "oneBank",
+    "sameBackingOnDenial",
+    "forwardNaturalWork"
+  ],
+  "properties": {
+    "lengths": {
+      "const": [
+        0,
+        1,
+        7,
+        4097
+      ]
+    },
+    "copyBodies": {
+      "const": [
+        1,
+        3,
+        4096
+      ]
+    },
+    "itemOffers": {
+      "const": [
+        1,
+        2,
+        31
+      ]
+    },
+    "byte": {
+      "const": 120
+    },
+    "stock": {
+      "const": {
+        "work": 65536,
+        "copy": 16777216,
+        "capacity": 16777216,
+        "release": 16777216,
+        "depth": 64
+      }
+    },
+    "maximumTurns": {
+      "const": 16384
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "naturalFirstPayloadWork": {
+      "const": 2
+    },
+    "oneBank": {
+      "const": true
+    },
+    "sameBackingOnDenial": {
+      "const": true
+    },
+    "forwardNaturalWork": {
+      "const": true
+    }
+  }
+}

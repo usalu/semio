@@ -18,12 +18,12 @@ struct Factory {
 
 impl ArtifactOwnedValueRetirementFactory<Row> for Factory {
     fn retirement_birth_bytes(&self,_:&Row)->usize {semio_framework_value_retirement::owned_retirement_birth_bytes::<Row>()}
-    fn retire_owned(&self,row:Row,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Row)> {
-        self.attempts.fetch_add(1,Ordering::SeqCst);
-        if self.refuse.swap(false,Ordering::SeqCst){return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"exact vector issuer refused first row"),row));}
-        self.order.fetch_update(Ordering::SeqCst,Ordering::SeqCst,|value|Some(value*10+row.id)).unwrap();
-        semio_framework_value_retirement::admit_owned_retirement(row,grant)
-    }
+    fn retire_owned(&self,row:Row,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Row)> {let mut work=0;let result=(||{
+        self.attempts.fetch_add(1,Ordering::SeqCst);work+=1;
+        work+=1;if self.refuse.swap(false,Ordering::SeqCst){return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"exact vector issuer refused first row"),row));}
+        self.order.fetch_update(Ordering::SeqCst,Ordering::SeqCst,|value|Some(value*10+row.id)).unwrap();work+=1;
+        {let turn=semio_framework_value_retirement::admit_owned_retirement(row,grant);work+=turn.work;turn.result}
+    })();crate::RetainedWorkOutcome{result,work}}
 }
 
 fn grant(demand:RetirementDemand)->RetainedCloneGrant {RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}}
@@ -47,9 +47,9 @@ fn factory_vector_retirement_preserves_original_capacity_order_and_refused_row()
         let(demand,heap)=crate::observe_retirement_allocations(||owner.demands(&factory,4096).unwrap());assert_eq!(heap,(0,0));
         let quote=grant(demand);
         let before=owner.pending().map(|row|(row.id,row.text.as_ptr()as usize));
-        let(step,heap)=crate::observe_retirement_allocations(||owner.close_step(&factory,RetainedCloneGrant::default()).unwrap());assert_eq!(heap,(0,0));assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(owner.pending().map(|row|(row.id,row.text.as_ptr()as usize)),before);
+        let(step,heap)=crate::observe_retirement_allocations(||owner.close_step(&factory,RetainedCloneGrant::default()).result.unwrap());assert_eq!(heap,(0,0));assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!(owner.pending().map(|row|(row.id,row.text.as_ptr()as usize)),before);
         let(result,heap)=crate::observe_retirement_allocations(||owner.close_step(&factory,quote));
-        match result{
+        match result.result{
             Ok(step)=>{assert!(step.progress().fits(quote));assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));},
             Err(error)=>{refusals+=1;assert!(error.retained_progress().fits(quote));assert_eq!(heap,(0,0));let row=owner.pending().expect("provider refusal restores exact pending row");assert_eq!(row.id,1);assert_eq!(row.text.as_ptr()as usize,pointers[0]);},
         }
@@ -70,19 +70,19 @@ union SameIssuerSlot{original:ZstOriginal,other:ZstOther}
 thread_local!{static OTHER_CALLS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};}
 impl ArtifactOwnedValueRetirementFactory<Row> for ZstOriginal{
  fn retirement_birth_bytes(&self,_:&Row)->usize{semio_framework_value_retirement::owned_retirement_birth_bytes::<Row>()}
- fn retire_owned(&self,row:Row,g:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Row)>{semio_framework_value_retirement::admit_owned_retirement(row,g)}
+ fn retire_owned(&self,row:Row,g:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Row)>{let mut work=0;let result=(||{{let turn=semio_framework_value_retirement::admit_owned_retirement(row,g);work+=turn.work;turn.result}})();crate::RetainedWorkOutcome{result,work}}
 }
 impl ArtifactOwnedValueRetirementFactory<Row> for ZstOther{
  fn retirement_birth_bytes(&self,_:&Row)->usize{semio_framework_value_retirement::owned_retirement_birth_bytes::<Row>()}
- fn retire_owned(&self,row:Row,_:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Row)>{OTHER_CALLS.set(OTHER_CALLS.get()+1);Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign zero-sized issuer must not receive this original"),row))}
+ fn retire_owned(&self,row:Row,_:RetainedCloneGrant)->crate::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Row)>{let mut work=0;let result=(||{OTHER_CALLS.set(OTHER_CALLS.get()+1);work+=1;Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign zero-sized issuer must not receive this original"),row))})();crate::RetainedWorkOutcome{result,work}}
 }
 /// 🔑️ Distinct zero-sized issuers at the same actual address cannot substitute their method-table authority.
 #[test]
 fn factory_vector_retirement_rejects_same_data_different_method_table_issuer(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["issuerAlias"];let slot=SameIssuerSlot{original:ZstOriginal};let original=unsafe{&slot.original};let foreign=unsafe{&slot.other};assert_eq!(std::ptr::from_ref(original).cast::<()>(),std::ptr::from_ref(foreign).cast::<()>());let identity=FactoryIssuerIdentity::capture(original);assert!(!identity.matches(foreign));OTHER_CALLS.set(0);
  let rows=vec![Row{id:law["pendingId"].as_u64().unwrap()as usize,text:"original zero-sized issuer row".into()}];let pointer=rows[0].text.as_ptr();let allocation=rows.as_ptr()as usize;let(mut owner,_)=FactoryVectorRetirement::admit(rows,grant(FactoryVectorRetirement::<Row>::constructor_demand())).unwrap();
- let q=grant(owner.demands(original,4096).unwrap());owner.close_step(original,q).unwrap();assert_eq!(owner.pending().unwrap().text.as_ptr(),pointer);
- let(result,heap)=crate::observe_retirement_allocations(||owner.close_step(foreign,q));assert!(result.is_err());assert_eq!(heap,(0,0));assert_eq!(owner.pending().unwrap().id,law["pendingId"].as_u64().unwrap()as usize);assert_eq!(owner.pending().unwrap().text.as_ptr(),pointer);assert_eq!(owner.allocation_address(),allocation);assert_eq!(OTHER_CALLS.get(),law["providerCalls"].as_u64().unwrap()as usize);
- for turn in 0..1000{if owner.terminal_is_empty(){break;}let g=grant(owner.demands(original,4096).unwrap());owner.close_step(original,g).unwrap();assert!(turn<999);}
+ let capture=grant(owner.demands(original,4096).unwrap());let turn=owner.close_step(original,capture);assert_eq!(turn.work,1);assert!(turn.result.unwrap().progress().fits(capture));assert!(owner.pending().is_none());let q=grant(owner.demands(original,4096).unwrap());let turn=owner.close_step(original,q);assert_eq!(turn.work,1);assert!(turn.result.unwrap().progress().fits(q));assert_eq!(owner.pending().unwrap().text.as_ptr(),pointer);
+ let(result,heap)=crate::observe_retirement_allocations(||owner.close_step(foreign,q));assert!(result.result.is_err());assert_eq!(heap,(0,0));assert_eq!(owner.pending().unwrap().id,law["pendingId"].as_u64().unwrap()as usize);assert_eq!(owner.pending().unwrap().text.as_ptr(),pointer);assert_eq!(owner.allocation_address(),allocation);assert_eq!(OTHER_CALLS.get(),law["providerCalls"].as_u64().unwrap()as usize);
+ for turn in 0..1000{if owner.terminal_is_empty(){break;}let g=grant(owner.demands(original,4096).unwrap());owner.close_step(original,g).result.unwrap();assert!(turn<999);}
  assert!(owner.terminal_is_empty());
 }

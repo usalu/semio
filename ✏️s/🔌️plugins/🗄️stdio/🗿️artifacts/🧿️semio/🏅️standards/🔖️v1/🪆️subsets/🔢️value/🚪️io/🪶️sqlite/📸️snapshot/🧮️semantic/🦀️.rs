@@ -56,23 +56,6 @@ pub fn value_text(value:&str,ids:Option<&[&str]>,census:&mut Census,control:&mut
   }Ok(())
  })
 }
-/// 🧬️ Counts the nested binary value domain with literal TEXT references for Table consumers.
-pub fn value_binary(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
- control.scoped_depth(64,|control|{
-  control.checkpoint()?;let tag=reader.read_u8().map_err(|_|invalid())?;
-  match tag{
-   0=>census.row(12)?,
-   1=>{if reader.read_u8().map_err(|_|invalid())?>1{return Err(invalid())}census.row(20)?;},
-   2|3|4|8=>{let size=control.borrow_text(native::bytes(reader)?)?.len();census.row(add(if tag==3{13}else{11},size)?)?;},
-   5=>{let size=native::bytes(reader)?.len();census.row(add(13,size)?)?;},
-   6|7=>{
-    census.row(if tag==6{12}else{11})?;let count=native::length(reader)?;census.future(count.checked_mul(2).ok_or_else(invalid)?)?;
-    control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let bytes=if tag==7{add(32,control.borrow_text(native::bytes(reader)?)?.len())?}else{32};census.row(bytes)?;value_binary(reader,census,control,limits)?;control.step()?;}Ok::<_,ValueError>(())})?;
-   },
-   _=>return Err(invalid())
-  }Ok(())
- })
-}
 /// 📃️ Builds only the real paid borrowed identity frontier before the typed graph owner.
 pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
@@ -83,5 +66,3 @@ pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteData
   control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(item)=entries.next(control)?{let(_,value)=item.split_once(':').ok_or_else(invalid)?;value_text(value,Some(&ids),&mut census,control,limits)?;control.step()?;}Ok::<_,ValueError>(())})?;control.checkpoint()
  })
 }
-/// 📦️ Value's own binary body is the same authored UTF-8 document grammar.
-pub(crate)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{let body=control.borrow_text(body)?;document(body,control,limits)}

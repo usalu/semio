@@ -1,108 +1,89 @@
-/** 🖼️ Affine sampling with premultiplied bilinear and per-cell area filtering. */
+/** 🖼️ Affine sampling retains the original premultiplied filters and cell clipper under explicit caller funding. */
 import {validateExtent,validateImage,type PixelImage} from "../../✍️editing/🟦️.ts";
+import {OwnedPixelImage} from "../../✍️editing/📦️owned/🟦️.ts";
 import {CoverageJob,type CoverageMask} from "../../🖊️coverage/🟦️.ts";
-import {UnitRetirement,type WorkRetirement} from "@semio-tech/framework-2d-js/retire";
+import {RetainedWorkBuffer,RetainedWorkBytes,RetainedWorkRetirement,assertRetainedWorkTurn,type RetainedWorkLedger,type RetainedWorkTurn,type RetainedWorkDemand,type RetainedWorkRetirementCursor,type RetainedWorkInputSequence} from "../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts";
+import {RetainedWorkProducerRuntime,type RetainedWorkProducerStep} from "../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts";
 export type AffineSampling="nearest"|"bilinear"|"area"|"auto";
 export type AffineImageInput={source:PixelImage;width:number;height:number;origin:readonly[number,number];transform:readonly number[];sampling:AffineSampling};
 export type AffineImageProgress={phase:"coverage"|"coverageCleanup"|"sampling"|"complete";completed:number;total:number;sampled:number;sampleTotal:number;work:number;done:boolean};
-export type AffineImageOptions={signal?:AbortSignal;workBudget?:number;onProgress?:(progress:AffineImageProgress)=>void};
-const coordinate=(v:number)=>Number.isFinite(v)&&Math.abs(v)<=1e9;
-const byte=(v:number)=>Math.round(Math.max(0,Math.min(255,v)));
+const coordinate=(value:number)=>Number.isFinite(value)&&Math.abs(value)<=1e9;
+const byte=(value:number)=>Math.round(Math.max(0,Math.min(255,value)));
 const invalid=(message:string):never=>{throw new RangeError(message);};
-/** ⏱️ Exact image boundary coverage with one source-cell visit per reduction work unit. */
-export class AffineImageJob {
- private source:PixelImage|null;private output:PixelImage;private coverage:CoverageJob|null;private mask:CoverageMask|null=null;
- private coverageRetirement:WorkRetirement|null=null;private coverageContour:[number,number][]|null=null;private outputExposed=false;private transferred=false;
- private inverse:number[]|null=null;private determinant=0;private filter:AffineSampling;
- private phase:AffineImageProgress["phase"]="coverage";private at=0;private work=0;private cancelled=false;private failed:unknown=null;
- private sampled=0;private sampleTotal=0;private active=false;private x=0;private y=0;private left=0;private right=0;private bottom=0;
- private quad=new Float64Array(8);private scratchA=new Float64Array(24);private scratchB=new Float64Array(24);private sums=new Float64Array(4);
- constructor(input:AffineImageInput) {
-  const count=validateExtent(input.width,input.height);validateImage(input.source);
-  if(input.origin.length!==2||!input.origin.every(coordinate)||input.transform.length!==6||!input.transform.every(coordinate)||!["nearest","bilinear","area","auto"].includes(input.sampling))invalid("Invalid affine image contract");
-  const m=[...input.transform];m[4]!-=input.origin[0];m[5]!-=input.origin[1];if(!m.every(coordinate))invalid("Affine viewport exceeds coordinate budget");
-  this.source=input.source;this.output={width:input.width,height:input.height,pixels:new Uint8Array(count*4)};this.filter=input.sampling;
-  const [a,b,c,d,e,f]=m as [number,number,number,number,number,number],det=a*d-b*c;this.determinant=Math.abs(det);
-  if(det!==0) {
-   const inverse=[d/det,-b/det,-c/det,a/det,(c*f-d*e)/det,(b*e-a*f)/det];
-   if(!inverse.every(Number.isFinite))invalid("Affine inverse exceeds numeric limits");this.inverse=inverse;
-   if(this.filter==="auto"){const u=inverse[0]!*inverse[0]!+inverse[1]!*inverse[1]!,v=inverse[2]!*inverse[2]!+inverse[3]!*inverse[3]!,cross=inverse[0]!*inverse[2]!+inverse[1]!*inverse[3]!;this.filter=(u+v+Math.hypot(u-v,2*cross))/2>1+1e-12?"area":"bilinear";}
-   const w=input.source.width,h=input.source.height;this.coverageContour=[[0,0],[w,0],[w,h],[0,h]];this.coverage=new CoverageJob({width:input.width,height:input.height,transform:m,rule:"nonzero",contours:[this.coverageContour]});
-  }else {this.coverage=null;this.phase="sampling";}
- }
- private point(x:number,y:number):[number,number] {const m=this.inverse!;const p:[number,number]=[m[0]!*x+m[2]!*y+m[4]!,m[1]!*x+m[3]!*y+m[5]!];if(!p.every(Number.isFinite))invalid("Sample footprint exceeds numeric limits");return p;}
- private write(alpha:number):void {
-  const pixels=this.output.pixels,at=this.at*4,a=byte(alpha);
-  if(a&&this.sums[3]!>0){for(let c=0;c<3;c++)pixels[at+c]=byte(this.sums[c]!/this.sums[3]!);pixels[at+3]=a;}
-  this.at++;this.active=false;if(this.at===this.output.width*this.output.height)this.phase="complete";
- }
- private accumulate(x:number,y:number,weight:number):void {const source=this.source!,at=(y*source.width+x)*4,alpha=source.pixels[at+3]!*weight;this.sums[3]!+=alpha;for(let c=0;c<3;c++)this.sums[c]!+=source.pixels[at+c]!*alpha;}
- private area(x:number,y:number):number {
-  let a=this.scratchA,b=this.scratchB,count=4;a.set(this.quad);
-  for(let side=0;side<4&&count;side++) {
-   const axis=side<2?0:1,bound=side===0?x:side===1?x+1:side===2?y:y+1,lower=side===0||side===2;let n=0;
-   for(let i=0;i<count;i++) {
-    const previous=(i+count-1)%count,px=a[previous*2]!,py=a[previous*2+1]!,qx=a[i*2]!,qy=a[i*2+1]!,p=axis===0?px:py,q=axis===0?qx:qy,insideP=lower?p>=bound:p<=bound,insideQ=lower?q>=bound:q<=bound;
-    if(insideP!==insideQ){const t=(bound-p)/(q-p);b[n*2]=px+t*(qx-px);b[n*2+1]=py+t*(qy-py);n++;}
-    if(insideQ){b[n*2]=qx;b[n*2+1]=qy;n++;}
-   }
-   count=n;const temporary=a;a=b;b=temporary;
-  }
-  let area=0;for(let i=1;i+1<count;i++)area+=(a[i*2]!-a[0]!)*(a[(i+1)*2+1]!-a[1]!)-(a[i*2+1]!-a[1]!)*(a[(i+1)*2]!-a[0]!);return Math.abs(area)/2;
- }
- private step():void {
-  if(this.phase==="coverage"){if(this.coverage!.advance(1).done){const retired=this.coverage!.intoRetirement();this.mask=retired.output;this.coverageRetirement=retired.job;this.coverage=null;this.phase="coverageCleanup";}return;}
-  if(this.phase==="coverageCleanup"){this.phase="sampling";return;}
-  if(this.active) {
-   this.accumulate(this.x,this.y,this.area(this.x,this.y));this.sampled++;this.x++;
-   if(this.x>=this.right){this.x=this.left;this.y++;}if(this.y>=this.bottom)this.write(this.sums[3]!*this.determinant);return;
-  }
-  const coverage=this.mask?.coverage[this.at]??0;this.sums.fill(0);
-  if(!this.inverse||!coverage){this.write(0);return;}
-  const source=this.source!,x=this.at%this.output.width,y=Math.floor(this.at/this.output.width);
-  if(this.filter==="area") {
-   let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
-   for(let i=0;i<4;i++){const p=this.point(x+(i===1||i===2?1:0),y+(i>=2?1:0));this.quad[i*2]=p[0];this.quad[i*2+1]=p[1];minX=Math.min(minX,p[0]);maxX=Math.max(maxX,p[0]);minY=Math.min(minY,p[1]);maxY=Math.max(maxY,p[1]);}
-   this.left=Math.max(0,Math.min(source.width,Math.floor(minX)));this.right=Math.max(0,Math.min(source.width,Math.ceil(maxX)));this.y=Math.max(0,Math.min(source.height,Math.floor(minY)));this.bottom=Math.max(0,Math.min(source.height,Math.ceil(maxY)));this.x=this.left;
-   this.sampled=0;this.sampleTotal=(this.right-this.left)*(this.bottom-this.y);this.active=this.sampleTotal>0;if(!this.active)this.write(0);return;
-  }
-  const p=this.point(x+.5,y+.5),clampX=(v:number)=>Math.max(0,Math.min(source.width-1,v)),clampY=(v:number)=>Math.max(0,Math.min(source.height-1,v));
-  if(this.filter==="nearest")this.accumulate(clampX(Math.floor(p[0])),clampY(Math.floor(p[1])),1);
-  else {const sx=clampX(p[0]-.5),sy=clampY(p[1]-.5),left=Math.floor(sx),top=Math.floor(sy),dx=sx-left,dy=sy-top;this.accumulate(left,top,(1-dx)*(1-dy));this.accumulate(clampX(left+1),top,dx*(1-dy));this.accumulate(left,clampY(top+1),(1-dx)*dy);this.accumulate(clampX(left+1),clampY(top+1),dx*dy);}
-  this.write(this.sums[3]!*coverage/255);
- }
- advance(budget:number):AffineImageProgress {
-  if(!Number.isSafeInteger(budget)||budget<=0)invalid("Affine sample work grant must be a positive integer");
-  this.check();try{for(let i=0;i<budget&&this.phase!=="complete";i++){this.step();this.work++;}}catch(error){this.failed=error;throw error;}
-  return {phase:this.phase,completed:this.at,total:this.output.width*this.output.height,sampled:this.sampled,sampleTotal:this.sampleTotal,work:this.work,done:this.phase==="complete"};
- }
- private check():void {if(this.cancelled)throw new DOMException("Affine sample job cancelled","AbortError");if(this.failed)throw this.failed;}
- cancel():void {this.cancelled=true;if(this.outputExposed)this.output={...this.output,pixels:new Uint8Array(0)};}
- result():PixelImage {this.check();if(this.phase!=="complete")throw Error("Affine sample job is incomplete");this.outputExposed=true;return this.output;}
- /** 🧹️ Moves complete pixels and grants the genuine coverage and sampling owners. */
- intoRetirement():{job:WorkRetirement;output:PixelImage|null}{
-  if(this.transferred)throw Error("Affine sample ownership was already transferred");this.transferred=true;
-  const output=!this.cancelled&&!this.failed&&this.phase==="complete"?this.output:null;if(output)this.output={...this.output,pixels:new Uint8Array(0)};
-  this.cancelled=true;if(this.coverage){this.coverage.cancel();this.coverageRetirement=this.coverage.intoRetirement().job;this.coverage=null;}
-  let slot=0;
-  const job=new UnitRetirement(()=>{
-   if(slot===0){if(this.coverageRetirement){if(!this.coverageRetirement.terminalIsEmpty()){this.coverageRetirement.advance(1);return false;}this.coverageRetirement=null;}}
-   else if(slot===1){if(this.coverageContour?.length){this.coverageContour.pop();return false;}this.coverageContour=null;}
-   else if(slot===2)this.mask=null;
-   else if(slot===3)this.source=null;
-   else if(slot===4)this.output={...this.output,pixels:new Uint8Array(0)};
-   else if(slot===5)this.inverse=null;
-   else if(slot===6)this.quad=new Float64Array(0);
-   else if(slot===7)this.scratchA=new Float64Array(0);
-   else if(slot===8)this.scratchB=new Float64Array(0);
-   else if(slot===9)this.sums=new Float64Array(0);
-   else{this.failed=null;this.active=false;}
-   slot++;return slot===11;
-  });return{job,output};
- }
+class AreaScratch{
+ private body=new RetainedWorkBytes();private view:Float64Array|null=null;
+ admit(work:RetainedWorkLedger,turn:RetainedWorkTurn):boolean{assertRetainedWorkTurn(turn);if(this.view!==null)return true;if(this.body.terminalIsEmpty()){this.body.admit(448,work,turn);return false;}if(!work.canStep())return false;this.view=new Float64Array(this.body.bytes.buffer,this.body.bytes.byteOffset,56);turn.commitActualWork();return true;}
+ at(index:number):number{if(this.view===null||!Number.isInteger(index)||index<0||index>=56)throw Error("Affine scratch point absent");return this.view[index]!;}
+ pair(index:number,x:number,y:number,work:RetainedWorkLedger,turn:RetainedWorkTurn):boolean{assertRetainedWorkTurn(turn);if(this.view===null||!Number.isInteger(index)||index<0||index+1>=56)throw Error("Affine scratch pair absent");if(!work.copyBytes(16))return false;this.view[index]=x;this.view[index+1]=y;turn.commitActualWork();work.notePhysicalEffect();return true;}
+ intoRetirement():RetainedWorkRetirementCursor{this.view=null;let body:RetainedWorkBytes|null=this.body;return new RetainedWorkRetirement((work,turn)=>{if(body===null)return true;if(!body.retire(work,turn)||turn.actualWork()>0)return false;if(!work.canStep())return false;body=null;turn.commitActualWork();return false;});}
 }
-/** 🕰️ Yields between grants and exposes only a completed image. */
-export async function sampleAffineImage(input:AffineImageInput,options:AffineImageOptions={}):Promise<PixelImage> {
- const abort=()=>{if(options.signal?.aborted)throw new DOMException("Affine sample job cancelled","AbortError");};abort();const job=new AffineImageJob(input);
- try{for(;;){abort();const progress=job.advance(options.workBudget??4096);options.onProgress?.(progress);abort();if(progress.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}finally{const retired=job.intoRetirement().job,grant=Number.isSafeInteger(options.workBudget)&&options.workBudget!>0?options.workBudget!:4096;while(!retired.terminalIsEmpty()){retired.advance(grant);if(!retired.terminalIsEmpty())await new Promise<void>(resolve=>setTimeout(resolve,0));}}
+/** ⏱️ Paid preparation and completed-child handoffs never add sampling semantic work. */
+export class AffineImageJob{
+ private runtime=new RetainedWorkProducerRuntime();private demand:RetainedWorkDemand={copyBytes:0,capacityBytes:0,releaseBytes:0,depth:1};
+ private source:PixelImage|null;private input:AffineImageInput|null;private output:OwnedPixelImage|null;private coverage:CoverageJob|null=null;private mask:CoverageMask|null=null;private coverageRetirement:RetainedWorkRetirementCursor|null=null;private scratch:AreaScratch|null=null;
+ private matrix:RetainedWorkBuffer<number>|null=new RetainedWorkBuffer<number>(8);private points:RetainedWorkBuffer<readonly[number,number]>|null=new RetainedWorkBuffer<readonly[number,number]>(16);private contours:RetainedWorkBuffer<RetainedWorkInputSequence<RetainedWorkInputSequence<number>>>|null=new RetainedWorkBuffer<RetainedWorkInputSequence<RetainedWorkInputSequence<number>>>(8);
+ private admission:"output"|"matrix"|"points"|"contours"|"coverage"|"ready"="output";private phase:AffineImageProgress["phase"]="coverage";private filter:AffineSampling;private at=0;private work=0;private cancelled=false;private transferred=false;private failed:unknown=null;private coverageReady=false;
+ private readonly width:number;private readonly height:number;private readonly count:number;private readonly nonsingular:boolean;private determinant=0;private a=0;private b=0;private c=0;private d=0;private e=0;private f=0;private ia=0;private ib=0;private ic=0;private id=0;private ie=0;private iff=0;
+ private sampled=0;private sampleTotal=0;private active=false;private x=0;private y=0;private left=0;private right=0;private bottom=0;private sumR=0;private sumG=0;private sumB=0;private sumA=0;private pendingPixel=false;private red=0;private green=0;private blue=0;private alpha=0;private pointX=0;private pointY=0;
+ private areaPhase:"scratch"|"quad"|"quadWrite"|"cellCopy"|"clip"|"intersection"|"vertex"|"side"|"area"|"accumulate"="scratch";private quadAt=0;private minX=0;private minY=0;private maxX=0;private maxY=0;private copyAt=0;private side=0;private clipAt=0;private clipCount=4;private clipNext=0;private clipFrom=8;private clipTo=32;private pendingX=0;private pendingY=0;private vertexX=0;private vertexY=0;private vertexInside=false;private areaAt=1;private areaSum=0;private areaWeight=0;private areaInFlight=false;
+ constructor(input:AffineImageInput){
+  this.count=validateExtent(input.width,input.height);validateImage(input.source);if(input.origin.length!==2||!input.origin.every(coordinate)||input.transform.length!==6||!input.transform.every(coordinate)||!["nearest","bilinear","area","auto"].includes(input.sampling))invalid("Invalid affine image contract");
+  const a=input.transform[0]!,b=input.transform[1]!,c=input.transform[2]!,d=input.transform[3]!,e=input.transform[4]!-input.origin[0],f=input.transform[5]!-input.origin[1];if(!coordinate(e)||!coordinate(f))invalid("Affine viewport exceeds coordinate budget");
+  this.a=a;this.b=b;this.c=c;this.d=d;this.e=e;this.f=f;this.width=input.width;this.height=input.height;this.source=input.source;this.input=input;this.output=new OwnedPixelImage(input.width,input.height);this.filter=input.sampling;const det=a*d-b*c;this.nonsingular=det!==0;this.determinant=Math.abs(det);
+  if(this.nonsingular){this.ia=d/det;this.ib=-b/det;this.ic=-c/det;this.id=a/det;this.ie=(c*f-d*e)/det;this.iff=(b*e-a*f)/det;if(!Number.isFinite(this.ia)||!Number.isFinite(this.ib)||!Number.isFinite(this.ic)||!Number.isFinite(this.id)||!Number.isFinite(this.ie)||!Number.isFinite(this.iff))invalid("Affine inverse exceeds numeric limits");if(this.filter==="auto"){const u=this.ia*this.ia+this.ib*this.ib,v=this.ic*this.ic+this.id*this.id,cross=this.ia*this.ic+this.ib*this.id;this.filter=(u+v+Math.hypot(u-v,2*cross))/2>1+1e-12?"area":"bilinear";}}
+ }
+ lastTurnWork():number{return this.runtime.lastTurnWork();}lastTurnSemanticWork():number{return this.runtime.lastTurnSemanticWork();}nextWorkDemand():RetainedWorkDemand{return this.demand;}failurePending():boolean{return this.failed!==null;}
+ settlementPending():boolean{return this.pendingPixel||this.coverageReady||this.phase==="coverageCleanup"||this.phase==="complete";}
+ progress():AffineImageProgress{return{phase:this.phase,completed:this.at,total:this.count,sampled:this.sampled,sampleTotal:this.sampleTotal,work:this.work,done:this.phase==="complete"};}
+ private check():void{if(this.cancelled||this.transferred)throw new DOMException("Affine sample job cancelled","AbortError");if(this.failed!==null)throw this.failed;}
+ private point(x:number,y:number):void{this.pointX=this.ia*x+this.ic*y+this.ie;this.pointY=this.ib*x+this.id*y+this.iff;if(!Number.isFinite(this.pointX)||!Number.isFinite(this.pointY))invalid("Sample footprint exceeds numeric limits");}
+ private accumulate(x:number,y:number,weight:number):void{const source=this.source!,at=(y*source.width+x)*4,alpha=source.pixels[at+3]!*weight;this.sumA+=alpha;this.sumR+=source.pixels[at]!*alpha;this.sumG+=source.pixels[at+1]!*alpha;this.sumB+=source.pixels[at+2]!*alpha;}
+ private preparePixel(alpha:number):void{this.alpha=byte(alpha);this.red=this.alpha&&this.sumA>0?byte(this.sumR/this.sumA):0;this.green=this.alpha&&this.sumA>0?byte(this.sumG/this.sumA):0;this.blue=this.alpha&&this.sumA>0?byte(this.sumB/this.sumA):0;this.pendingPixel=true;}
+ private nextPixel():void{this.at++;this.active=false;this.areaInFlight=false;this.areaPhase="scratch";if(this.at===this.count)this.phase="complete";}
+ private admit(c:RetainedWorkProducerStep):void{switch(this.admission){
+  case"output":if(!this.output!.admit(c.work,c.retainedTurn))return;this.admission=this.nonsingular?"matrix":"ready";if(!this.nonsingular)this.phase="sampling";return;
+  case"matrix":{const at=this.matrix!.length;if(at<6){if(!c.slot(this.matrix!))return;c.push(this.matrix!,at===0?this.a:at===1?this.b:at===2?this.c:at===3?this.d:at===4?this.e:this.f);return;}if(!c.work.canStep())return;this.admission="points";c.commitControlWork();return;}
+  case"points":{const at=this.points!.length;if(at<4){if(!c.slot(this.points!))return;const w=this.source!.width,h=this.source!.height;c.push(this.points!,[at===1||at===2?w:0,at>=2?h:0]);return;}if(!c.work.canStep())return;this.admission="contours";c.commitControlWork();return;}
+  case"contours":if(!c.slot(this.contours!))return;c.push(this.contours!,this.points!);this.admission="coverage";return;
+  case"coverage":if(!c.work.canStep())return;this.coverage=new CoverageJob({width:this.width,height:this.height,transform:this.matrix!,rule:"nonzero",contours:this.contours!});this.admission="ready";c.commitControlWork();return;
+  case"ready":return;
+ }}
+ private areaStep(c:RetainedWorkProducerStep):void{const scratch=this.scratch!;
+  switch(this.areaPhase){
+   case"scratch":if(this.scratch===null){if(!c.work.canStep())return;this.scratch=new AreaScratch();c.commitControlWork();return;}if(!this.scratch.admit(c.work,c.retainedTurn)||c.hasActualWork())return;if(!c.work.canStep())return;this.quadAt=0;this.minX=Infinity;this.minY=Infinity;this.maxX=-Infinity;this.maxY=-Infinity;this.areaPhase="quad";this.areaInFlight=true;c.commitControlWork();return;
+   case"quad":c.commitControlWork();this.point(this.at%this.width+(this.quadAt===1||this.quadAt===2?1:0),Math.floor(this.at/this.width)+(this.quadAt>=2?1:0));this.pendingX=this.pointX;this.pendingY=this.pointY;this.areaPhase="quadWrite";return;
+   case"quadWrite":if(!scratch.pair(this.quadAt*2,this.pendingX,this.pendingY,c.work,c.retainedTurn))return;this.minX=Math.min(this.minX,this.pendingX);this.maxX=Math.max(this.maxX,this.pendingX);this.minY=Math.min(this.minY,this.pendingY);this.maxY=Math.max(this.maxY,this.pendingY);this.quadAt++;if(this.quadAt<4){this.areaPhase="quad";return;}this.left=Math.max(0,Math.min(this.source!.width,Math.floor(this.minX)));this.right=Math.max(0,Math.min(this.source!.width,Math.ceil(this.maxX)));this.y=Math.max(0,Math.min(this.source!.height,Math.floor(this.minY)));this.bottom=Math.max(0,Math.min(this.source!.height,Math.ceil(this.maxY)));this.x=this.left;this.sampled=0;this.sampleTotal=(this.right-this.left)*(this.bottom-this.y);this.active=this.sampleTotal>0;this.areaInFlight=false;c.postSemanticWork();if(!this.active){this.preparePixel(0);return;}this.copyAt=0;this.areaPhase="cellCopy";return;
+   case"cellCopy":if(!scratch.pair(8+this.copyAt*2,scratch.at(this.copyAt*2),scratch.at(this.copyAt*2+1),c.work,c.retainedTurn))return;this.areaInFlight=true;this.copyAt++;if(this.copyAt===4){this.side=0;this.clipCount=4;this.clipNext=0;this.clipAt=0;this.clipFrom=8;this.clipTo=32;this.areaPhase="clip";}return;
+   case"clip":{if(this.clipAt>=this.clipCount){if(!c.work.canStep())return;this.areaPhase="side";c.commitControlWork();return;}c.commitControlWork();const previous=(this.clipAt+this.clipCount-1)%this.clipCount,px=scratch.at(this.clipFrom+previous*2),py=scratch.at(this.clipFrom+previous*2+1),qx=scratch.at(this.clipFrom+this.clipAt*2),qy=scratch.at(this.clipFrom+this.clipAt*2+1),axis=this.side<2?0:1,bound=this.side===0?this.x:this.side===1?this.x+1:this.side===2?this.y:this.y+1,lower=this.side===0||this.side===2,p=axis===0?px:py,q=axis===0?qx:qy,insideP=lower?p>=bound:p<=bound,insideQ=lower?q>=bound:q<=bound;this.vertexX=qx;this.vertexY=qy;this.vertexInside=insideQ;if(insideP!==insideQ){const t=(bound-p)/(q-p);this.pendingX=px+t*(qx-px);this.pendingY=py+t*(qy-py);this.areaPhase="intersection";}else this.areaPhase="vertex";return;}
+   case"intersection":if(this.clipNext>=12)invalid("Affine clipped footprint exceeds fixed storage");if(!scratch.pair(this.clipTo+this.clipNext*2,this.pendingX,this.pendingY,c.work,c.retainedTurn))return;this.clipNext++;this.areaPhase="vertex";return;
+   case"vertex":if(this.vertexInside){if(this.clipNext>=12)invalid("Affine clipped footprint exceeds fixed storage");if(!scratch.pair(this.clipTo+this.clipNext*2,this.vertexX,this.vertexY,c.work,c.retainedTurn))return;this.clipNext++;}else{if(!c.work.canStep())return;c.commitControlWork();}this.clipAt++;this.areaPhase="clip";return;
+   case"side":if(!c.work.canStep())return;this.clipCount=this.clipNext;this.clipNext=0;this.clipAt=0;this.side++;{const from=this.clipFrom;this.clipFrom=this.clipTo;this.clipTo=from;}if(this.side===4||this.clipCount===0){this.areaAt=1;this.areaSum=0;this.areaPhase="area";}else this.areaPhase="clip";c.commitControlWork();return;
+   case"area":c.commitControlWork();if(this.areaAt+1<this.clipCount){const a=this.clipFrom,i=this.areaAt;this.areaSum+=(scratch.at(a+i*2)-scratch.at(a))*(scratch.at(a+(i+1)*2+1)-scratch.at(a+1))-(scratch.at(a+i*2+1)-scratch.at(a+1))*(scratch.at(a+(i+1)*2)-scratch.at(a));this.areaAt++;return;}this.areaWeight=Math.abs(this.areaSum)/2;this.areaPhase="accumulate";return;
+   case"accumulate":c.commitSemanticWork();this.accumulate(this.x,this.y,this.areaWeight);this.sampled++;this.x++;if(this.x>=this.right){this.x=this.left;this.y++;}this.areaInFlight=false;if(this.y>=this.bottom){this.preparePixel(this.sumA*this.determinant);return;}this.copyAt=0;this.areaPhase="cellCopy";return;
+  }
+ }
+ private step(c:RetainedWorkProducerStep):void{
+  if(this.admission!=="ready"){this.admit(c);return;}
+  if(this.phase==="coverage"){if(this.coverageReady){if(!c.work.canStep())return;const retired=this.coverage!.intoRetirement();if(retired.output===null)throw Error("Complete affine coverage absent");this.mask=retired.output;this.coverageRetirement=retired.job;this.coverage=null;this.coverageReady=false;this.phase="coverageCleanup";c.commitControlWork();return;}const progress=c.advanceChild(this.coverage!);if(progress.done)this.coverageReady=true;return;}
+  if(this.phase==="coverageCleanup"){const child=this.coverageRetirement;if(child!==null&&!child.terminalIsEmpty()){try{child.advance(1,c.work);}finally{c.retainedTurn.commitActualWork(child.lastTurnWork());}return;}if(!c.work.canStep())return;this.coverageRetirement=null;this.phase="sampling";c.commitControlWork();return;}
+  if(this.pendingPixel){if(!this.output!.writeRGBA(this.at,this.red,this.green,this.blue,this.alpha,c.work,c.retainedTurn))return;this.pendingPixel=false;this.nextPixel();return;}
+  if(this.active||this.areaInFlight||this.filter==="area"&&this.areaPhase!=="scratch"){this.areaStep(c);return;}
+  const coverage=this.mask?.borrow()[this.at]??0;this.sumR=0;this.sumG=0;this.sumB=0;this.sumA=0;
+  if(!this.nonsingular||!coverage){c.commitSemanticWork();this.nextPixel();return;}
+  if(this.filter==="area"){this.areaPhase="scratch";this.areaStep(c);return;}
+  c.commitSemanticWork();this.point(this.at%this.width+.5,Math.floor(this.at/this.width)+.5);const source=this.source!,clampX=(value:number)=>Math.max(0,Math.min(source.width-1,value)),clampY=(value:number)=>Math.max(0,Math.min(source.height-1,value));
+  if(this.filter==="nearest")this.accumulate(clampX(Math.floor(this.pointX)),clampY(Math.floor(this.pointY)),1);
+  else{const sx=clampX(this.pointX-.5),sy=clampY(this.pointY-.5),left=Math.floor(sx),top=Math.floor(sy),dx=sx-left,dy=sy-top;this.accumulate(left,top,(1-dx)*(1-dy));this.accumulate(clampX(left+1),top,dx*(1-dy));this.accumulate(left,clampY(top+1),(1-dx)*dy);this.accumulate(clampX(left+1),clampY(top+1),dx*dy);}
+  this.preparePixel(this.sumA*coverage/255);
+ }
+ advance(items:number,work:RetainedWorkLedger):AffineImageProgress{try{return this.runtime.advance(items,work,{maximumWork:Number.MAX_SAFE_INTEGER,workLimitMessage:"Affine sampling work limit exceeded",validate:()=>this.check(),stopped:()=>this.phase==="complete",settlementPending:()=>this.settlementPending(),failurePending:()=>this.failurePending(),semanticWork:()=>this.work,recordSemanticWork:n=>{this.work+=n;},step:c=>{try{this.step(c);}catch(error){if(this.areaInFlight&&c.semanticWork===0)c.postSemanticWork();this.failed=error;throw error;}},progress:()=>this.progress()});}finally{this.demand=work.nextDemand;}}
+ cancel():void{this.cancelled=true;}
+ result():OwnedPixelImage{this.check();if(this.phase!=="complete"||this.output===null)throw Error("Affine sample job is incomplete");return this.output;}
+ intoRetirement():{job:RetainedWorkRetirementCursor;output:OwnedPixelImage|null}{
+  if(this.transferred)throw Error("Affine sample ownership already transferred");const output=!this.cancelled&&this.failed===null&&this.phase==="complete"?this.output:null;this.transferred=true;this.cancelled=true;
+  let outputClose=output===null&&this.output!==null?this.output.intoRetirement():null;this.output=null;
+  if(this.coverage!==null){this.coverage.cancel();this.coverageRetirement=this.coverage.intoRetirement().job;this.coverage=null;}
+  let coverageClose=this.coverageRetirement,maskClose=this.mask===null?null:this.mask.intoRetirement(),scratchClose=this.scratch===null?null:this.scratch.intoRetirement();this.coverageRetirement=null;this.mask=null;this.scratch=null;let phase=0;
+  const job=new RetainedWorkRetirement((work,turn)=>{for(;;){if(phase<4){const child=phase===0?coverageClose:phase===1?maskClose:phase===2?scratchClose:outputClose;if(child!==null){if(!child.terminalIsEmpty()){try{child.advance(1,work);}finally{turn.commitActualWork(child.lastTurnWork());}return false;}if(!work.canStep())return false;if(phase===0)coverageClose=null;else if(phase===1)maskClose=null;else if(phase===2)scratchClose=null;else outputClose=null;phase++;turn.commitActualWork();return false;}phase++;continue;}if(phase<7){const values=phase===4?this.contours:phase===5?this.points:this.matrix;if(values!==null){if(!values.retireOne(work,turn)||turn.actualWork()>0)return false;if(!work.canStep())return false;if(phase===4)this.contours=null;else if(phase===5)this.points=null;else this.matrix=null;phase++;turn.commitActualWork();return false;}phase++;continue;}if(phase===7){if(!work.canStep())return false;this.source=null;this.input=null;this.failed=null;this.active=false;this.areaInFlight=false;phase++;turn.commitActualWork();return false;}return true;}});return{job,output};
+ }
 }

@@ -4,24 +4,13 @@ from __future__ import annotations
 
 
 # region 🔖️Carrier
-BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 DSL_PREAMBLE = "semio stdio.semio.brep.dsl v1"
-PACK_TOKEN = "stdio.semio.brep.pack v1"
 DOCUMENT_SCHEMA = "stdio.semio.brep"
-PACK_FORMAT = 1
 
-#: ➰ `curve = "L" … | "C" … | "E" … | "N" …` in the grammar's own order — which is also the pack
-#: ordinal, as the committed example's `line → 0x00`, `circle → 0x01` and `nurbs → 0x03` show.
-CURVE_ORDER = ("line", "circle", "ellipse", "nurbs")
 CURVE_LETTER = {"line": "L", "circle": "C", "ellipse": "E", "nurbs": "N"}
 LETTER_CURVE = {letter: kind for kind, letter in CURVE_LETTER.items()}
-#: 🗺️ `surface = "P" … | "C" … | "O" … | "S" … | "T" … | "N" …` in the grammar's own order — which is
-#: also the pack ordinal, as the committed example's `nurbs → 0x05` shows.
-SURFACE_ORDER = ("plane", "cylinder", "cone", "sphere", "torus", "nurbs")
 SURFACE_LETTER = {"plane": "P", "cylinder": "C", "cone": "O", "sphere": "S", "torus": "T", "nurbs": "N"}
 LETTER_SURFACE = {letter: kind for kind, letter in SURFACE_LETTER.items()}
-#: ➰️ `curve2 = "L" … | "C" … | "E" … | "N" …` — a coedge's p-curve, the same tags one dimension down.
-CURVE2_ORDER = CURVE_ORDER
 LETTER_CURVE2 = LETTER_CURVE
 
 #: 📐️ The scalar members of each tagged arm, in the order the grammar lists them. `p` is a
@@ -66,7 +55,7 @@ def hex_of(text: str) -> str:
 
 
 def text_of(hexed: str) -> str:
-    """🔡️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
+    """🪄️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
     if len(hexed) % 2 != 0:
         raise AssertionError("hex run %r has an odd digit count" % hexed)
     return bytes.fromhex(hexed).decode("utf-8")
@@ -233,7 +222,7 @@ def read_geometry(reader: Reader, letters: dict, fields: dict, what: str) -> dic
 
 
 def print_geometry(value: dict, letters: dict, fields: dict, what: str) -> str:
-    """🧩️ The writing direction of `read_geometry`."""
+    """🌀️ The writing direction of `read_geometry`."""
     kind = value["kind"]
     if kind not in fields:
         raise AssertionError("unknown %s kind %r" % (what, kind))
@@ -272,7 +261,7 @@ def print_surface(value: dict) -> str:
 
 
 def read_vertex(reader: Reader) -> dict:
-    """📍️ `vertex = "[" hex "," point3 "," number "]"` — the number is the vertex's own `tol`."""
+    """🌁️ `vertex = "[" hex "," point3 "," number "]"` — the number is the vertex's own `tol`."""
     reader.take("[")
     vertex_id = reader.hex()
     reader.take(",")
@@ -434,7 +423,7 @@ def parse_dsl(text: str) -> dict:
 
 
 def print_dsl(document: dict) -> str:
-    """✍️ The writing direction of the same grammar, under the same envelope."""
+    """🌂️ The writing direction of the same grammar, under the same envelope."""
     vertices = ",".join("[%s,%s,%s]" % (hex_of(vertex["id"]), print_point(vertex["point"]), print_number(vertex["tol"])) for vertex in document["vertices"])
     edges = ",".join("[%s,%s,%s,%s,%s]" % (hex_of(edge["id"]), hex_of(edge["startVertex"]), hex_of(edge["endVertex"]), print_curve(edge["curve"]), print_number(edge["tol"])) for edge in document["edges"])
     loops = ",".join("[%s,[%s]]" % (hex_of(loop["id"]), ",".join("[%s,%s]" % (hex_of(item["edge"]), "1" if item["orientation"] else "0") for item in loop["edges"])) for loop in document["loops"])

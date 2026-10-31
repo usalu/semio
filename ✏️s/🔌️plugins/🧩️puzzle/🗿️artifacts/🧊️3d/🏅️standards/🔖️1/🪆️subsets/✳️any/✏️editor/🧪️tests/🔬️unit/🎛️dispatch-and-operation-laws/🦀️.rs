@@ -50,14 +50,14 @@ async fn set_active_example_dispatches_through_the_tool_job_path_and_swaps_the_d
 async fn reserved_refresh_section_payloads_admit_into_the_retained_section_carrier() {
     use semio_framework_plugin::PluginApp;
     let mut app = app().await;
-    let view = semio_framework_plugin::ViewModel { window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: main::WINDOW_KIND_ID.to_string(), window_kind_id: main::WINDOW_KIND_ID.to_string() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
+    let view = semio_framework_plugin::ViewModel { window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: WINDOW_KIND_ID.to_string(), window_kind_id: WINDOW_KIND_ID.to_string() }], ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let payloads = [
         (semio_framework_plugin::UiRefreshSection::Engagements, serde_json::to_string(&app.window_engagements(&view).await).expect("engagements serialize")),
         (semio_framework_plugin::UiRefreshSection::Measures, serde_json::to_string(&app.window_measures(&view).await).expect("measures serialize")),
         (semio_framework_plugin::UiRefreshSection::Tools, serde_json::to_string(&app.tool_measures(&view).await).expect("tool measures serialize")),
     ];
     assert!(payloads[2].1.contains("puzzle3d-fill-count"), "the fill tool must contribute its count slider to the tools section");
-    assert!(payloads[1].1.contains(main::WINDOW_KIND_ID), "the main window instance must key its own entry in the measures section");
+    assert!(payloads[1].1.contains(WINDOW_KIND_ID), "the main window instance must key its own entry in the measures section");
     for (section, payload) in payloads {
         let tree = semio_framework_plugin::section_component_tree(section, &payload).expect("reserved section payload admits into the bounded carrier");
         let projected: serde_json::Value = serde_json::from_str(&semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("carrier projects")).expect("carrier projection is json");

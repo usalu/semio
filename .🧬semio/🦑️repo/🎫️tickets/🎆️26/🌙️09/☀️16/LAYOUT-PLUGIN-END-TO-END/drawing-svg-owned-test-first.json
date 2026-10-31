@@ -1,0 +1,23 @@
+{
+  "chronology": "closed neutral contract before SVG product body",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🎟️work/📐️.json",
+      "sha256": "210b28b32194ec42de7aee06397e37c95bc7653314a0e5455ee8073162978b6e"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🎟️work/🔣️.json",
+      "sha256": "232545e751de23d4cb27af3d75c7ac4fa83f2af632d94c3d129cbe68814e9ef8"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🎟️work/🧪️tests/owned.test.ts",
+      "sha256": "0f4600a7c4ba5fdf6d84768fce324ad4d7969146df675f26c8592f14dd2b24d6"
+    }
+  ],
+  "sourceBefore": {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🟦️.ts",
+    "sha256": "595aa946bb3a21f1caf6b41828eb6fcf8f3005cac85daef43ca89d3018011909"
+  },
+  "laws": 5,
+  "productionUnchanged": true
+}

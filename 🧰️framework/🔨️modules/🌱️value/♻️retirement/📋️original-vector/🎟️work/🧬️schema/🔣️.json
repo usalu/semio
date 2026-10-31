@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Vector Actual Close Work",
+  "type": "array",
+  "const": [
+    {
+      "label": "deniedRelease",
+      "work": 0
+    },
+    {
+      "label": "paidBackingRelease",
+      "work": 1
+    },
+    {
+      "label": "cachedComplete",
+      "work": 0
+    }
+  ]
+}

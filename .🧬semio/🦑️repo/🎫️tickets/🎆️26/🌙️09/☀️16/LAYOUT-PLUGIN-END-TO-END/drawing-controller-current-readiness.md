@@ -1,0 +1,5 @@
+# Actual Controller Unfiltered Readiness
+
+PREP ONLY after Root independently accepted the actual existing-API entry RED and released held12. Production changes exactly the defining guard order: private live(turn) authentication precedes turn.check/property access. Exact inverse reconstructs the entire old module. No protocol body, stock, cap, fixture, Source identity or cause handling changes occur in this guard step.
+
+The fresh actual importer registers all fourteen owning controller laws, not the old focused filter. Original eight matrix/eighteen lifecycle rows, same finite stock/fuel, real typed-byte current capacity/CPU, cause identity and record-before-refusal, reentry/expiry/provider/wait/cancel/output/producer retention and same-stock recovery remain. Expected14 and strict3 are distinct from any actual outcome. Dedicated normal all-five paths and separate logs are prepared; exact12 source closure held for Root review. The previous focused genuine RED and its immutable receipt/log remain. Full Drawing14 glyph-scene and Text/Scene production integration are separate mandatory gates.

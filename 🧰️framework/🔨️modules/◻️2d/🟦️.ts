@@ -5,7 +5,7 @@
 // #endregion 🧲️Header
 import { drawingTextLines, DRAWING_TEXT_LINE_HEIGHT } from "./📝️text/🟦️.ts";
 export { drawingTextLines, drawingTextFallbackExtent, DRAWING_TEXT_LINE_HEIGHT } from "./📝️text/🟦️.ts";
-export { PathFlattenJob, preparePath, type PathFlattenInput, type FlatContour, type PathFlattenProgress, type PathFlattenOptions, type PathFlattenRetirement, type PathFlattenRetirementProgress } from "./🛤️path/📏️flatten/🟦️.ts";
+export { PathFlattenJob, type PathFlattenInput, type FlatContour, type FlatContours, type PathFlattenProgress, type PathFlattenRetirement } from "./🛤️path/📏️flatten/🟦️.ts";
 export { StrokeOutlineJob, prepareStroke, type StrokeGeometryStyle, type StrokeOutlineInput, type StrokeOutlineProgress, type StrokeOutlineOptions } from "./🛤️path/🖊️stroke/🟦️.ts";
 export { BitmapTraceJob, traceBitmap, type BitmapTraceInput, type BitmapTraceProgress, type BitmapTraceOptions, type BitmapTraceRetirement, type BitmapTraceRetirementProgress } from "./🔍️trace/🟦️.ts";
 export { BooleanJob, booleanRegions, type BooleanOperand, type BooleanInput, type BooleanProgress, type BooleanOptions, type BooleanRetirement, type BooleanRetirementProgress } from "./🔀️booleans/🟦️.ts";

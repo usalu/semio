@@ -165,6 +165,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if owner.terminal_is_empty(){let d=owner.shell_close_demands();semio_framework_job::close_original_retained_step(cx,d,|_|{self.tools.original_press_settlement.take();Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;}else{cx.with_retained_loan(grant,|same|owner.close_step(&mut self.tool_machines.presses,same))?;}
             return Ok(RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
         }}
+        if closing{if let Some(owner)=self.tools.original_typing_settlement.as_mut(){
+            if !owner.matches_context(cx){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing source close changed its receiver").into())}
+            let before=cx.retained_progress();
+            if owner.terminal_is_empty(){let d=owner.shell_close_demands();semio_framework_job::close_original_retained_step(cx,d,|_|{self.tools.original_typing_settlement.take();Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;}else{cx.with_retained_loan(grant,|same|owner.close_step(&mut self.tool_machines.typing,same))?;}
+            return Ok(RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
+        }}
         if let Some(owner)=self.tools.original_tool_follow.as_mut(){
             if !closing&&cx.is_cancelled(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"cancelled original maintenance must select its declared source-close lifecycle").into())}
             if owner.terminal_is_empty(){
@@ -178,7 +184,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             cx.with_retained_loan(grant,|same|if closing{owner.close_step(&self.stores.store,&self.stores.config_store,&mut self.stores.window_config_store,&mut self.tool_machines,same)}else{owner.advance(&self.stores.store,&self.stores.config_store,&mut self.stores.window_config_store,&mut self.tool_machines,same)})?;
             return Ok(RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
         }
-        if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some(){return Ok(RetainedCloneStep::Progress(Default::default()))}
+        if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some(){return Ok(RetainedCloneStep::Progress(Default::default()))}
         if self.shared().tool_overlay_alias_retirement_pending()||self.stores.window_config_store.preview_retirement_pending(){return self.tool_overlay_alias_retirement_step(grant).map_err(Into::into)}
         if self.tool_machines.refold_owed{
             if closing||cx.is_cancelled(){
@@ -192,7 +198,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
 
-    /// 🎟️ Original refold Vec/Arc owners wait for this actual full grant; no cold-drain fallback is admitted.
+    /// 🌈️ Original refold Vec/Arc owners wait for this actual full grant; no cold-drain fallback is admitted.
     fn tool_overlay_alias_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if !self.shared().tool_overlay_retirement_pending(){return Ok(RetainedCloneStep::Complete(Default::default()));}
         if self.shared().gesture_retirement_pending(){return self.gesture_retirement_step(grant);}
@@ -231,7 +237,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             semio_framework_plugin_tool_run::tool_jobs_tool_machine::OriginalPressSettlement::<A>::admit(base,actor,emit,0,||(tag.take().expect("original retained press tag"),self.tool_machines.clock()),cx,&mut self.tools.original_press_settlement)?;
             return Ok(false)
         }
-        let owner=self.tools.original_press_settlement.as_mut().unwrap();
+        let Some(owner)=self.tools.original_press_settlement.as_mut()else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original press settlement was not admitted").into())};
         if !owner.matches_context(cx)||!owner.accepts(base,actor,emit){return Ok(false)}
         if !owner.terminal_is_empty(){owner.advance(&mut self.tool_machines.presses,base,actor,emit,cx)?;return Ok(false)}
         let published=owner.result();let mut demand=owner.shell_close_demands();demand.copy_bytes+=std::mem::size_of::<Option<bool>>()+std::mem::size_of::<u64>()+std::mem::size_of::<bool>();
@@ -265,17 +271,25 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if !matches!(machines.operation_tag(operation),Some(ToolTag::Scrub(_))){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original scrub lost its retained operation tag").into())}
             semio_framework_plugin_tool_run::tool_jobs_tool_machine::OriginalPressSettlement::<A>::admit(base,actor,emit,copied,||{let Some(ToolTag::Scrub(tag))=machines.take_operation(operation)else{unreachable!("original scrub tag remains in its mounted registry")};let clock=machines.clock();(tag,clock)},cx,&mut self.tools.original_press_settlement)?;return Ok(false)
         }
-        let final_bytes=std::mem::size_of::<Stage>()+std::mem::size_of::<bool>();let final_grant=cx.retained_grant();if cx.should_yield()||final_grant.maximum_items==0||final_grant.maximum_copy_bytes<final_bytes||final_grant.maximum_depth==0{return Ok(false)}
-        let Some(ToolTag::Typing(tag))=self.tool_machines.take_operation(operation)else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing source lost its retained operation tag").into())};
-        let leaves=std::mem::take(&mut emit.artifact_mutations);let clock=self.tool_machines.clock();let steps=self.tool_machines.typing.send(&tag.window,&tag.tool,&ActorId(actor.into()),TypingInput::Edit{buffer:tag.buffer,leaves},A::typing_fold,clock).map_err(|refusal|Fault::new(FaultOrigin::Framework,FaultCode::new(refusal.code()),format!("typing run {:?} refused its edit",tag.tool)))?;
-        if let Some((transaction,mutations))=steps.into_iter().find_map(|step|if let ToolStep::Committed(transaction,mutations)=step{Some((transaction,mutations))}else{None}){emit.artifact_mutations=mutations;emit.transaction=Some(transaction)}
-        if emit.transaction.is_none(){*command_logged=true}self.follow_tool_machines(true);Ok(true)
+        if result.is_some(){return Ok(true)}
+        if let Some(owner)=self.tools.original_typing_settlement.as_ref(){if !owner.matches_context(cx)||!owner.accepts(operation,base,actor,emit){return Ok(false)}}
+        if self.tools.original_typing_settlement.as_ref().is_none_or(|owner|!owner.captured()){
+            let machines=&mut *self.tool_machines;let copied=machines.operations.len().checked_mul(std::mem::size_of::<(u64,ToolTag)>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original typing tag transfer quote overflow"))?;
+            if !matches!(machines.operation_tag(operation),Some(ToolTag::Typing(_))){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing lost its retained operation tag").into())}
+            semio_framework_plugin_typing_edit::OriginalTypingSettlement::<A>::admit(operation,base,actor,emit,copied,||{let Some(ToolTag::Typing(tag))=machines.take_operation(operation)else{unreachable!("original typing tag remains in its mounted registry")};(tag,machines.clock())},cx,&mut self.tools.original_typing_settlement)?;return Ok(false)
+        }
+        let Some(owner)=self.tools.original_typing_settlement.as_mut()else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original typing settlement was not admitted").into())};
+        if !owner.matches_context(cx)||!owner.accepts(operation,base,actor,emit){return Ok(false)}
+        if !owner.terminal_is_empty(){owner.advance(&mut self.tool_machines.typing,operation,base,actor,emit,cx)?;return Ok(false)}
+        if !owner.received(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original typing edit closed before publication").into())}
+        let published=owner.result();let mut demand=owner.shell_close_demands();demand.copy_bytes+=std::mem::size_of::<Option<bool>>()+2*std::mem::size_of::<bool>()+std::mem::size_of::<u64>();
+        semio_framework_job::close_original_retained_step(cx,demand,|_|{self.tools.original_typing_settlement.take();self.follow_tool_machines(true);if emit.transaction.is_none(){*command_logged=true}*result=Some(published);Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))})?;Ok(result.is_some())
     }
 
 }
 
 impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> RenderRef<'v, A, M, X> {
-    /// 🧪️ The document every render seam reads now: the committed head with every open press's and typing run's provisional
+    /// 📄️ The document every render seam reads now: the committed head with every open press's and typing run's provisional
     /// leaves.
     #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn rendered_snapshot(&self) -> Arc<A::Snapshot> {
@@ -283,7 +297,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
         Arc::clone(self.tool_machines.overlay_or(&committed))
     }
 
-    /// 🧪️ The app config every render seam reads now: the committed config with every held press's config mutations.
+    /// 📱️ The app config every render seam reads now: the committed config with every held press's config mutations.
     #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn rendered_config(&self) -> Arc<A::Config> {
         Arc::clone(self.tool_machines.config_overlay_or(&self.stores.config_store.snapshot_owner()))
@@ -301,7 +315,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
     }
 
     pub fn tool_overlay_retirement_pending(&self)->bool{
-        self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_tool_follow.is_some()||self.tool_machines.refold_owed||self.tool_overlay_alias_retirement_pending()||self.stores.window_config_store.preview_retirement_pending()
+        self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some()||self.tools.original_tool_follow.is_some()||self.tool_machines.refold_owed||self.tool_overlay_alias_retirement_pending()||self.stores.window_config_store.preview_retirement_pending()
     }
 
     fn tool_overlay_refold_owed(&self)->bool{self.tool_machines.refold_owed}
@@ -311,9 +325,10 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
         if closing{if let Some(owner)=self.tools.original_tool_tag_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(owner.shell_close_demands())}else{owner.close_demands(body)}}}
         if closing{if let Some(owner)=self.tools.original_scrub_dispatch.as_ref(){return if owner.terminal_is_empty(){Ok(semio_framework_plugin_scrub_host::OriginalScrubDispatch::<PressLeaf<A::Mutation,A::ConfigMutation>>::shell_close_demands())}else{owner.close_demands(body)}}}
         if closing{if let Some(owner)=self.tools.original_press_settlement.as_ref(){return if owner.terminal_is_empty(){Ok(owner.shell_close_demands())}else{owner.close_demands(body)}}}
+        if closing{if let Some(owner)=self.tools.original_typing_settlement.as_ref(){return if owner.terminal_is_empty(){Ok(owner.shell_close_demands())}else{owner.close_demands(body)}}}
         if let Some(owner)=self.tools.original_tool_follow.as_ref(){return if owner.terminal_is_empty(){Ok(owner.shell_close_demands())}else if closing{owner.close_demands(&self.stores.store,&self.stores.config_store,&self.stores.window_config_store,&self.tool_machines)}else{owner.demands(&self.stores.store,&self.stores.config_store,&self.stores.window_config_store,&self.tool_machines)}}
 
-        if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some(){return Ok(Default::default())}
+        if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some(){return Ok(Default::default())}
         if self.gesture_retirement_pending(){return self.gesture_retirement_demand(body);}
         if let Some(owner)=self.tool_machines.overlay_alias_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ToolOriginalAliasBatch<A::Snapshot>>>(),depth:1,..Default::default()})}else{owner.next_demand(ArtifactStore::<A::Snapshot,A::Mutation>::snapshot_alias_retirement_birth_bytes())};}
         if self.tool_machines.pending_overlay_aliases.is_some(){return Ok(ToolOriginalAliasBatch::<A::Snapshot>::constructor_demand());}

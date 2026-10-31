@@ -44,10 +44,10 @@ impl RetainedWireUtf8Validation{
 
 #[derive(Clone,Copy)]
 enum RetainedWireFieldSource{Plain,Json(RetainedWireJsonStringSource),Range{original_range:(usize,usize)},PrefixedUuid{original_prefix_range:(usize,usize),original_uuid_range:(usize,usize)},Timestamp{original_timestamp_range:(usize,usize),epoch_millis:i64,year:i64,month:u8,day:u8,hour:u8,minute:u8,second:u8,millis:u16,year_width:usize}}
-pub struct RetainedWireFieldDecode{identity:OriginalWireSourceIdentity,output_extent:usize,source:RetainedWireFieldSource,output:ManuallyDrop<Option<Vec<u8>>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,phase:u8,closing:bool,text:bool,utf8:RetainedWireUtf8Validation}
+pub struct RetainedWireFieldDecode{last_work:u64,identity:OriginalWireSourceIdentity,output_extent:usize,source:RetainedWireFieldSource,output:ManuallyDrop<Option<Vec<u8>>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,phase:u8,closing:bool,text:bool,utf8:RetainedWireUtf8Validation}
 impl RetainedWireFieldDecode{
  /// 👁️ Borrows the original payload without allocating any field or receipt backing.
- pub fn new<S:RetainedWireByteSource+?Sized>(source:&S,text:bool)->Self{let identity=source.original_source_identity();Self{identity,output_extent:identity.extent,source:RetainedWireFieldSource::Plain,output:ManuallyDrop::new(None),receipt:None,phase:0,closing:false,text,utf8:RetainedWireUtf8Validation::new()}}
+ pub fn new<S:RetainedWireByteSource+?Sized>(source:&S,text:bool)->Self{let identity=source.original_source_identity();Self{last_work:0,identity,output_extent:identity.extent,source:RetainedWireFieldSource::Plain,output:ManuallyDrop::new(None),receipt:None,phase:0,closing:false,text,utf8:RetainedWireUtf8Validation::new()}}
  /// 📏️ Binds one original field range while retaining the complete source's actual owner identity.
  pub fn new_range<S:RetainedWireByteSource+?Sized>(source:&S,original_range:(usize,usize),text:bool)->Result<Self,ValueError>{let width=original_range.1.checked_sub(original_range.0).filter(|_|original_range.1<=source.original_source_identity().extent).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original wire field escaped its source"))?;let mut owner=Self::new(source,text);owner.output_extent=width;owner.source=RetainedWireFieldSource::Range{original_range};Ok(owner)}
  /// 🔣️ Binds exactly quoted original JSON and defers all syntax scanning and derived writes to paid pieces.
@@ -122,7 +122,9 @@ impl RetainedWireFieldDecode{
   Ok(RetirementDemand{copy_bytes:end-start,depth:1,..Default::default()})
  }
  /// 🔂️ Allocates once and copies one actual original prefix per independently supplied turn.
+ pub fn last_turn_work(&self)->u64{self.last_work}
  pub fn advance<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,grant:RetainedCloneGrant)->Result<RetainedWireFieldStep,ValueError>{
+  self.last_work=0;
   self.validate_source(source)?;
   if self.receipt.is_some()||self.closing||self.phase==3{return Ok(RetainedWireFieldStep::Blocked)}
   if self.phase==2{return Ok(RetainedWireFieldStep::Ready)}
@@ -130,17 +132,17 @@ impl RetainedWireFieldDecode{
   let demand=self.demands(source,grant.maximum_copy_bytes)?;
   if demand.capacity_bytes>grant.maximum_capacity_bytes||demand.copy_bytes>grant.maximum_copy_bytes||demand.release_bytes>grant.maximum_release_bytes{return Ok(RetainedWireFieldStep::Blocked)}
   let progress=if self.phase==4{
-   let mut json=match self.source{RetainedWireFieldSource::Json(json)=>json,_=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original JSON scan cursor is absent"))};let done=json.scan_original_piece(source)?;if done{self.output_extent=json.decoded_extent();self.phase=0}self.source=RetainedWireFieldSource::Json(json);RetainedCloneProgress{copied_items:1,..Default::default()}
+   let mut json=match self.source{RetainedWireFieldSource::Json(json)=>json,_=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original JSON scan cursor is absent"))};self.last_work=1;let done=json.scan_original_piece(source)?;if done{self.output_extent=json.decoded_extent();self.phase=0}self.source=RetainedWireFieldSource::Json(json);RetainedCloneProgress{copied_items:1,..Default::default()}
   }else if self.phase==0{
-   let mut output=Vec::new();output.try_reserve_exact(self.output_extent).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original wire field allocation failed"))?;
+   let mut output=Vec::new();self.last_work=1;output.try_reserve_exact(self.output_extent).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original wire field allocation failed"))?;
    let capacity=output.capacity();*self.output=Some(output);self.phase=1;
    RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()}
   }else{
    let start=self.output.as_ref().unwrap().len();let end=start+demand.copy_bytes;
-   if start==self.output_extent{if self.text&&!self.utf8.is_complete(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original wire UTF8 is truncated"))}self.phase=2;RetainedCloneProgress{copied_items:1,..Default::default()}}
+   if start==self.output_extent{self.last_work=1;if self.text&&!self.utf8.is_complete(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original wire UTF8 is truncated"))}self.phase=2;RetainedCloneProgress{copied_items:1,..Default::default()}}
    else if end==start{return Ok(RetainedWireFieldStep::Blocked)}
    else{
-    let mut validation_source=match self.source{RetainedWireFieldSource::Json(json)=>Some(json),_=>None};let mut validated=self.utf8;for position in start..end{let byte=if let Some(json)=validation_source.as_mut(){json.copy_original_byte(source)?}else{self.source_byte(source,position)?};if self.text{validated=validated.consume(&[byte])?}}
+    self.last_work=1;let mut validation_source=match self.source{RetainedWireFieldSource::Json(json)=>Some(json),_=>None};let mut validated=self.utf8;for position in start..end{let byte=if let Some(json)=validation_source.as_mut(){json.copy_original_byte(source)?}else{self.source_byte(source,position)?};if self.text{validated=validated.consume(&[byte])?}}
     let mut copy_source=match self.source{RetainedWireFieldSource::Json(json)=>Some(json),_=>None};let mut copied_utf8=self.utf8;
     let copy_result=(||->Result<(),ValueError>{for position in start..end{let byte=if let Some(json)=copy_source.as_mut(){json.copy_original_byte(source)?}else{self.source_byte(source,position)?};if self.text{copied_utf8=copied_utf8.consume(&[byte])?}self.output.as_mut().unwrap().push(byte)}Ok(())})();
     if let Some(json)=copy_source{self.source=RetainedWireFieldSource::Json(json)}self.utf8=copied_utf8;
@@ -154,22 +156,25 @@ impl RetainedWireFieldDecode{
  }
  /// 🫴️ Moves the same native byte backing only into the caller's real empty original recipient.
  pub fn take_into(&mut self,recipient:&mut Option<Vec<u8>>,grant:RetainedCloneGrant)->Result<RetainedWireFieldStep,ValueError>{
+  self.last_work=0;
   if recipient.is_some()||!self.is_ready()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedWireFieldStep::Blocked)}
-  *recipient=self.output.take();self.phase=3;self.receipt=Some((grant,RetainedCloneProgress{copied_items:1,..Default::default()}));Ok(RetainedWireFieldStep::Closed)
+  self.last_work=1;*recipient=self.output.take();self.phase=3;self.receipt=Some((grant,RetainedCloneProgress{copied_items:1,..Default::default()}));Ok(RetainedWireFieldStep::Closed)
  }
  /// 📖️ Transfers validated original UTF8 into an empty text slot without changing its allocation.
  pub fn take_text_into(&mut self,recipient:&mut Option<String>,grant:RetainedCloneGrant)->Result<RetainedWireFieldStep,ValueError>{
+  self.last_work=0;
   if !self.text||recipient.is_some()||!self.is_ready()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedWireFieldStep::Blocked)}
-  *recipient=Some(unsafe{String::from_utf8_unchecked(self.output.take().unwrap())});self.phase=3;self.receipt=Some((grant,RetainedCloneProgress{copied_items:1,..Default::default()}));Ok(RetainedWireFieldStep::Closed)
+  self.last_work=1;*recipient=Some(unsafe{String::from_utf8_unchecked(self.output.take().unwrap())});self.phase=3;self.receipt=Some((grant,RetainedCloneProgress{copied_items:1,..Default::default()}));Ok(RetainedWireFieldStep::Closed)
  }
  pub fn cancel(&mut self){self.closing=true}
  /// ♻️ Releases only this original field's actual backing after its original physical release preflight.
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedWireFieldStep,ValueError>{
+  self.last_work=0;
   if self.receipt.is_some()||!self.closing{return Ok(RetainedWireFieldStep::Blocked)}
   if self.phase==3{return Ok(RetainedWireFieldStep::Closed)}
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedWireFieldStep::Blocked)}
   let released=self.output.as_ref().map_or(0,Vec::capacity);if released>grant.maximum_release_bytes{return Ok(RetainedWireFieldStep::Blocked)}
-  drop(self.output.take());self.phase=3;self.receipt=Some((grant,RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}));Ok(RetainedWireFieldStep::Closed)
+  self.last_work=1;drop(self.output.take());self.phase=3;self.receipt=Some((grant,RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}));Ok(RetainedWireFieldStep::Closed)
  }
  pub fn terminal_is_empty(&self)->bool{self.phase==3&&self.output.is_none()&&self.receipt.is_none()}
 }
@@ -181,7 +186,7 @@ impl semio_framework_value::retirement::RetirementCursor for RetainedWireFieldRe
  fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
   use semio_framework_value::retirement::RetirementStep;
   self.0.cancel();self.0.take_receipt();
-  match self.0.close_step(grant){Ok(_)=>{let progress=self.0.take_receipt().map_or(Default::default(),|(_,progress)|progress);if progress==Default::default()&&!self.0.terminal_is_empty(){RetirementStep::BudgetExhausted}else{RetirementStep::Progress(progress)}},Err(error)=>RetirementStep::Failure(error)}
+  let result=self.0.close_step(grant);let work=self.0.last_turn_work();match result{Ok(_)=>{let progress=self.0.take_receipt().map_or(Default::default(),|(_,progress)|progress);if work==0&&!self.0.terminal_is_empty(){RetirementStep::BudgetExhausted}else{RetirementStep::Progress(progress,work)}},Err(error)=>RetirementStep::Failure(error,work)}
  }
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(!self.terminal_is_empty()))}
@@ -204,3 +209,5 @@ mod paged_bytes;
 pub use paged_bytes::RetainedWireBytesDecode;
 
 impl<const N:usize> RetainedWireByteSource for semio_framework_value::paged::PagedBytes<N>{fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{range_start:0,address:self.retained_bytes().contiguous_at(0).map_or(self as*const Self as usize,|page|page.as_ptr()as usize),extent:self.len(),authority:None}}fn byte_at(&self,index:usize)->Option<u8>{self.retained_bytes().get(index).copied()}}
+
+#[cfg(test)]#[path="🎟️work/🧪️tests/🦀️.rs"]mod work_tests;

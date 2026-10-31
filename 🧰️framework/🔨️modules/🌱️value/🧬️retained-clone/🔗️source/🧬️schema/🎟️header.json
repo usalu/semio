@@ -11,7 +11,8 @@
       "items": 1,
       "copyBytes": 0,
       "releaseBytes": 0,
-      "depth": 1
+      "depth": 1,
+      "turns": 6
     },
     "capacity": "actualSharedHeadersAndLeaseBacking",
     "projection": "sameOriginalPointerAndControl",

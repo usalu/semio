@@ -57,7 +57,7 @@ pub const SET_CAMERA_ACTION_ID: &str = semio_s_artifact_energy_model_editor_comm
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
-/// 🎥️ The one verb this window owns. `ActionKind::View`: a camera pose is never document data, so it
+/// 🌬️ The one verb this window owns. `ActionKind::View`: a camera pose is never document data, so it
 /// publishes no model mutation and never enters undo/redo.
 ///
 /// 📐️ It declares its `camera` argument so the host's `{windowId, camera:{position,target,zoom,up?}}`
@@ -102,13 +102,13 @@ pub fn definition() -> WindowKindDefinition {
 /// browser the moment a run started colouring, `🗑️generated/energy-results-w1/console.txt`).
 pub const CAPTION_NODE_ID: &str = "energy.model.3d.caption";
 pub const CAPTION_SCENE_NODE_ID: &str = "energy.model.3d.scene";
-/// 🔑️ The legend column that hosts the caption line and — when the render carries result bounds —
+/// 🏛️ The legend column that hosts the caption line and — when the render carries result bounds —
 /// the ramp strip. It takes the FIRST root-child slot the bare caption used to take.
 pub const LEGEND_NODE_ID: &str = "energy.model.3d.legend";
 pub const LEGEND_STRIP_NODE_ID: &str = "energy.model.3d.legend.strip";
 pub const LEGEND_MINIMUM_NODE_ID: &str = "energy.model.3d.legend.minimum";
 pub const LEGEND_MAXIMUM_NODE_ID: &str = "energy.model.3d.legend.maximum";
-/// 🔑️ `{prefix}{band index}` — one id per swatch, so eight siblings never collide on `#0`.
+/// 🔖️ `{prefix}{band index}` — one id per swatch, so eight siblings never collide on `#0`.
 pub const LEGEND_SWATCH_NODE_ID_PREFIX: &str = "energy.model.3d.legend.band.";
 
 fn caption_error(reason: &'static str) -> PluginAssemblyError {
@@ -132,7 +132,7 @@ pub fn legend_swatch_src(hex: &str) -> String {
     )
 }
 
-/// 🎨️ The ramp strip: `min` · eight swatches low→high · `max`. The colours come from
+/// 🔽️ The ramp strip: `min` · eight swatches low→high · `max`. The colours come from
 /// `crate::editor::model::results::legend_bands()`, which is the SAME array `band_color` indexes to
 /// paint the meshes, so the strip can never describe a ramp the scene is not using.
 fn legend_strip(minimum: f64, maximum: f64,locale:Locale) -> UiAssemblyResult<BuiltNode> {
@@ -205,7 +205,7 @@ pub fn render(model: &impl crate::scene::EnergySceneModel, interaction: &EnergyM
     render_with_camera(model, interaction, overlay, caption, None,locale)
 }
 
-/// 🎥️ The same render, plus the addressed window's RETAINED orbit pose when it has one
+/// 🖼️ The same render, plus the addressed window's RETAINED orbit pose when it has one
 /// (`config::current`). `None` keeps the model-derived camera and lets `fit_json` frame the model
 /// once; `Some` republishes exactly the pose the host last sent, which
 /// `shouldReattachWorldViewportCamera` recognizes as its own echo and therefore does NOT reattach —
@@ -221,7 +221,7 @@ pub fn render_with_camera(
     render_with_legend(model, interaction, overlay, caption, None, camera,locale)
 }
 
-/// 🎨️ The same render again, plus the `(min, max)` the results ramp was normalized over. With
+/// 🔼️ The same render again, plus the `(min, max)` the results ramp was normalized over. With
 /// `bounds` the caption line grows the 8-swatch ramp strip underneath it; without them (and with a
 /// caption that names no scale) only the caption line is drawn. `bounds` is ignored when there is no
 /// caption at all — no overlay, no legend, exactly the bare viewport the edit layout renders.
@@ -246,8 +246,8 @@ pub fn render_with_legend(
     }
 }
 /// 🔎️ Paints each surface directly from bounded reads of the retained original result publication.
-pub fn render_indexed<S:crate::editor_results::indexed::EnergyResultSource>(model:&impl crate::scene::EnergySceneModel,interaction:&EnergyModelInteractionSnapshot,results:Option<&crate::editor_results::indexed::IndexedEnergyResults<S>>,field:crate::editor_results::ResultField,locale:semio_framework_ui_locale::Locale,camera:Option<&config::EnergyModelWindowConfig>)->UiAssemblyResult<BuiltNode>{
- struct Colors<'a,S:crate::editor_results::indexed::EnergyResultSource>{results:&'a crate::editor_results::indexed::IndexedEnergyResults<S>,field:crate::editor_results::ResultField}
+pub fn render_indexed<S:crate::editor_results::indexed::EnergyResultSource>(model:&impl crate::scene::EnergySceneModel,interaction:&EnergyModelInteractionSnapshot,results:Option<&crate::editor_results::indexed::IndexedEnergyResults<S>>,field:crate::editor_config::ResultField,locale:semio_framework_ui_locale::Locale,camera:Option<&config::EnergyModelWindowConfig>)->UiAssemblyResult<BuiltNode>{
+ struct Colors<'a,S:crate::editor_results::indexed::EnergyResultSource>{results:&'a crate::editor_results::indexed::IndexedEnergyResults<S>,field:crate::editor_config::ResultField}
  impl<S:crate::editor_results::indexed::EnergyResultSource> EnergySceneColors for Colors<'_,S>{fn color(&self,id:u32)->Option<[f64;3]>{self.results.color(id,self.field)}}
  let colors=results.map(|results|Colors{results,field});let caption=results.map(|results|results.caption(field,locale));let bounds=results.map(|results|{let[low,high]=results.bounds(field);(low,high)});
  render_with_legend(model,interaction,colors.as_ref().map(|colors|colors as &dyn EnergySceneColors),caption.as_deref(),bounds,camera,locale)

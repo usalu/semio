@@ -1,19 +1,14 @@
 //! 🛬️ Text record receiving borrows actual ordinal fields under the same required native construction port.
 use super::{FieldValue,RecordValue};
-use semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource;
+use semio_framework_value_native_owned::native_decoding::owned::tree::{NativeValueSource,NativeTreeKind};
 use semio_framework_value::{Number, ValueError, ValueRefusalKind};
-use semio_framework_value_native_owned::{native_decoding::owned::NativeRecordKey, native_decoding::owned::NativeRecordSource};
+use semio_framework_value_native_owned::native_decoding::owned::NativeRecordKey;
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"native text record member has a different original type or rank")}
-impl NativeRecordSource for RecordValue{
- fn field_count(&self)->Result<usize,ValueError>{Ok(self.fields.len())}
- fn field_key(&self,index:usize)->Result<NativeRecordKey<'_>,ValueError>{self.fields.get_index(index).map(|(id,_)|NativeRecordKey::Ordinal(*id)).ok_or_else(invalid)}
- fn text_field(&self,index:usize)->Result<&String,ValueError>{match self.fields.get_index(index){Some((_,FieldValue::Text(value)))=>Ok(value),_=>Err(invalid())}}
- fn number_field(&self,index:usize)->Result<Number,ValueError>{match self.fields.get_index(index){Some((_,FieldValue::Int(value)))=>Ok(Number::Int(*value)),Some((_,FieldValue::UInt(value)))=>Ok(Number::UInt(*value)),Some((_,FieldValue::Float(value)))=>Ok(Number::Float(*value)),_=>Err(invalid())}}
-}
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
 
 impl NativeValueSource for RecordValue{
  fn as_source(&self)->&dyn NativeValueSource{self}
+ fn tree_kind(&self)->Option<NativeTreeKind>{Some(NativeTreeKind::Object)}
  fn record_len(&self)->Result<usize,ValueError>{Ok(self.fields.len())}
  fn record_key(&self,index:usize)->Result<NativeRecordKey<'_>,ValueError>{self.fields.get_index(index).map(|(id,_)|NativeRecordKey::Ordinal(*id)).ok_or_else(invalid)}
  fn record_child(&self,index:usize)->Result<&dyn NativeValueSource,ValueError>{self.fields.get_index(index).map(|(_,value)|value as &dyn NativeValueSource).ok_or_else(invalid)}
@@ -21,6 +16,7 @@ impl NativeValueSource for RecordValue{
 fn unblocked(value:&FieldValue)->&FieldValue{if let FieldValue::Block(inner)=value{inner}else{value}}
 impl NativeValueSource for FieldValue{
  fn as_source(&self)->&dyn NativeValueSource{self}
+ fn tree_kind(&self)->Option<NativeTreeKind>{if self.is_null(){return Some(NativeTreeKind::Null)}match unblocked(self){Self::Bool(_)=>Some(NativeTreeKind::Bool),Self::Int(_)|Self::UInt(_)|Self::Float(_)=>Some(NativeTreeKind::Number),Self::Text(_)=>Some(NativeTreeKind::Text),Self::List(_)|Self::Tuple(_)|Self::Statements(_)|Self::Bytes64(_)=>Some(NativeTreeKind::Array),Self::Record(_)|Self::Map(_)=>Some(NativeTreeKind::Object),Self::Value(value)=>value.tree_kind(),_=>None}}
  fn is_null(&self)->bool{matches!(unblocked(self),Self::Statements(values)if values.is_empty())||matches!(unblocked(self),Self::Absent)||matches!(unblocked(self),Self::Value(value)if value.is_null())}
  fn boolean(&self)->Result<bool,ValueError>{match unblocked(self){Self::Bool(value)=>Ok(*value),Self::Value(value)=>value.boolean(),_=>Err(invalid())}}
  fn number(&self)->Result<Number,ValueError>{match unblocked(self){Self::Int(value)=>Ok(Number::Int(*value)),Self::UInt(value)=>Ok(Number::UInt(*value)),Self::Float(value)=>Ok(Number::Float(*value)),Self::Value(value)=>value.number(),_=>Err(invalid())}}

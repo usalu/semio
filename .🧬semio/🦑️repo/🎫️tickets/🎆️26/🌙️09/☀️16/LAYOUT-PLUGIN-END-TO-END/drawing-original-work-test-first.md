@@ -1,0 +1,7 @@
+# Original Work Failure Test First
+
+The neutral schema and eight-case matrix were authored before the owning native law and before production. The law uses actual OriginalJobFixtureCaller issuers and a second genuine operation, actual FaultMessageOwner construction and measured physical receipts. Temporary receiver ceiling/operation drift is confined to the genuine test context and restored before callback return. It asserts exactly one receipt and CPU debit, zero-heap folding, complete primary/receipt/full-native-context projection, preserved message and scope pointers, and producer ownership of successful output during posting refusal. Paid existing domain erasure must preserve the same full projection and post only its actual frame, followed by paid original closure and zero-heap terminal drop.
+
+The independent serde_json interface constructs the expected full fault/cause tree from neutral input, UTF-8 bytes and actual independently measured allocation totals. It does not accept a mode/count whitelist or reproduce the fold. The new test uses the existing Job lib allocator and will be mounted in that actual owner; no new test binary allocator or external runtime dependency is introduced.
+
+This is authored, unexecuted test-first Source. Existing actual compiler RED remains retained separately; no new semantic run is authorized or claimed. Actual Job unfiltered lib and the relevant existing Original failure integration are mandatory future gates. Current test inputs are recorded in drawing-original-work-test-first.json.

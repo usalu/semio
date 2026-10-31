@@ -13,9 +13,9 @@ use crate::topology::compute_generation3d_topology;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_procedural_3d_geometry::Generation3dGeometryRecord;
 //#region 🔖️Inference
-/// 💡️ Everything inferable from a generation3d snapshot. One field per named inference under
+/// 🧲️ Everything inferable from a generation3d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.generation3d.inference")]
 pub struct Generation3dInference {
@@ -53,7 +53,7 @@ impl<'a> protocol::InferenceSpec<GeometryInput<'a>> for Generation3dInference {
 //#endregion 🔖️Inference
 
 //#region 🔖️Descriptor
-/// 💡️ Registers `s.procedural.generation3d.inference`'s facet leaves into the OS-wide inference
+/// 🙂️ Registers `s.procedural.generation3d.inference`'s facet leaves into the OS-wide inference
 /// catalog — call once at plugin init, alongside `generation3d_artifact_schema_descriptor`'s
 /// registration.
 pub fn generation3d_artifact_inference_descriptor() -> ::semio_framework_schema_registry::ArtifactInferenceDescriptor {

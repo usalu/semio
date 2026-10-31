@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/mit-bestand/demonstrator/locale/texts.json",
+  "title": "DemonstratorLocaleTexts",
+  "description": "🌐️ Every user-visible text of the demonstrator page itself, one row per key and one cell per locale. A key without both cells is refused here, so no locale is a silent fallback; lockedLocale is the one locale the whole demonstrator is locked to.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "lockedLocale", "locales", "texts"],
+  "properties": {
+    "version": { "const": 1 },
+    "lockedLocale": { "enum": ["en", "de"] },
+    "locales": { "const": ["en", "de"] },
+    "texts": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^demonstrator(\\.[A-Za-z0-9]+)+$" },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["en", "de"],
+        "properties": {
+          "en": { "type": "string", "minLength": 1, "pattern": "\\S" },
+          "de": { "type": "string", "minLength": 1, "pattern": "\\S" }
+        }
+      }
+    }
+  }
+}

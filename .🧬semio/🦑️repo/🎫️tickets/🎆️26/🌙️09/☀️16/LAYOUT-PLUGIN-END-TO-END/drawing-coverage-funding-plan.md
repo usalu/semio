@@ -1,0 +1,11 @@
+# Coverage: Actual Raster Blocker
+
+After whole funded Flatten33/strict10, the next actual Raster/Paint/pick dependency is CoverageJob. Its current constructor allocates mask/area backing immediately, retained edge/event/index/sort arrays grow outside byte authority, and advance takes only a numeric quantum. This must be repaired at the defining owner, not through a Raster wrapper.
+
+The original native work schema/cold8×8 reference and every original eighteen coverage vector remain unchanged. A closed TypeScript counterpart is authored first with actual mask bytes, logical scalar8/edge32/event24 rows, same finite owning fixture bank, all five denial axes, original Sharp scale128/tolerance2. Sorting, edge/event publication and active-index writes will be phased under the SAME genuine Runtime ledger/turn; typed output owns real RetainedWorkBytes, with real same-bank output close. Fixed controls clear copy0. CPU and completed semantic work remain independent; completed-work settlement alone may continue at a parent's exact semantic ceiling. All original seeded96 crossing tests, clipping/polygon-clipping oracle, async/cancel/retirement assertions must migrate and execute before whole owner acceptance.
+
+The prepared direct existing-API zero-authority baseline calls no future API. Its old structural cleanup is intentionally bootstrap-only and cannot establish funding/heap correctness. Primary and cleanup failures remain separately retained. No production code is changed yet.
+
+Constructor validation remains bounded scalar work only; borrowed contour-header counting moves into actual funded resumable source preparation before body admission. Genuine typed-constructor observation requires no Uint8Array births at construction (not a VM/GC byte claim). Sort scratch uses two authentic reusable paged scalar buffers, with paid row initialization/reset/write and fixed control handoff; no newly allocated parallel Array or fictitious capacity token.
+
+The published CoverageMask is a genuine private typed-byte owner with explicit borrow() and consuming intoRetirement(), matching the approved PNG byte-borrow custody pattern. It does not expose a fabricated raw result or implicit numeric compatibility field. Every old coverage read/caller must hand-migrate; the neutral serialized mask values remain identical across implementations.

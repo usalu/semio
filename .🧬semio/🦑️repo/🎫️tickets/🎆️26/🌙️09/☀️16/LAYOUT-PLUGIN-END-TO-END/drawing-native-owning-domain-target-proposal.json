@@ -1,0 +1,55 @@
+{
+  "actualRefusal": {
+    "outer": 97763,
+    "unit": 15,
+    "units": 30,
+    "package": "semio-framework-value-native-owned",
+    "reason": "files",
+    "refusedInput": "🔄️map/📦️box/📐️.json",
+    "remainingFiles": 0,
+    "maximumBytes": 2904
+  },
+  "unitCause": "The boxed data literal is reached only by the library boxed cfg(test) mount, not the existing native_work target; root-owned->mapped->boxed->tests->data.",
+  "samePackage": true,
+  "capsUnchanged": true,
+  "allTargetsRequired": true,
+  "docsRequired": true,
+  "lawFiles": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🧪️tests/🦀️.rs",
+      "sha256": "8d5abe29e27c04db541411e61a89497aac633e5b6d303e555ee756db4280503e",
+      "lawNames": [
+        "native_mapping_preserves_completed_original_text_and_every_cancelled_child"
+      ],
+      "usesPrivateProductionFields": false,
+      "target": "native_mapping"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/📦️box/🧪️tests/🦀️.rs",
+      "sha256": "7c5bece5ac8d60672bdcce60b900c008d4e3dea460ce1e6a9b21071baca3c00d",
+      "lawNames": [
+        "actual_box_receiving_funds_real_backing_and_every_cancelled_partial_owner"
+      ],
+      "usesPrivateProductionFields": false,
+      "target": "native_mapping"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/👥️tuple/🧪️tests/🦀️.rs",
+      "sha256": "43a73338a0550959ce530df7f3a3647a4925b9700584cb6517f4e7066a9829e3",
+      "lawNames": [
+        "original_heterogeneous_tuple_receiving_preserves_every_paid_prefix_and_wire_kind"
+      ],
+      "usesPrivateProductionFields": false,
+      "target": "native_sequence"
+    }
+  ],
+  "privateRemaining": [
+    "list",
+    "shared callback and exact child custody",
+    "map borrowed fragment",
+    "erased source storage",
+    "recursive Node",
+    "closed-header poison"
+  ],
+  "status": "new public wrappers authored, mount/manifest mutations wait RootNativeIO3 terminal"
+}

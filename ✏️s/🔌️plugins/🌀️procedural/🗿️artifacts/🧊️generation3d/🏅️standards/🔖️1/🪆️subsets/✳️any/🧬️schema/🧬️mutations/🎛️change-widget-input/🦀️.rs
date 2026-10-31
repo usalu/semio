@@ -27,7 +27,7 @@ pub const CHANGE_WIDGET_INPUT_MAXIMUM_CHANNEL: usize = 256;
 /// ✂️ The most characters of a text input a history label prints before it elides the rest with `…`.
 pub const CHANGE_WIDGET_INPUT_LABEL_TEXT: usize = 32;
 
-/// 📐️ A plane literal — an origin point and a normal vector.
+/// ➡️ A plane literal — an origin point and a normal vector.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
@@ -107,7 +107,7 @@ impl WidgetInputValue {
         }
     }
 
-    /// 🧩️ Builds the evaluator-owned typed dictionary, without a portable representation hop.
+    /// 🔤️ Builds the evaluator-owned typed dictionary, without a portable representation hop.
     pub fn neural_value(&self) -> NeuralValue {
         if let Some(items) = self.items() {
             let mut dictionary = Dictionary::with_schema("list");
@@ -146,7 +146,7 @@ impl WidgetInputValue {
         })
     }
 
-    /// 🏷️ Classifies a native homogeneous collection using its declared element type, including empty lists.
+    /// 🔹️ Classifies a native homogeneous collection using its declared element type, including empty lists.
     pub fn of_neural_value_as(value: &NeuralValue, schema: &str) -> Option<Self> {
         let literal = value.as_dictionary()?;
         if literal.schema() != Some("list") { return Self::of_neural_value(value); }
@@ -182,7 +182,7 @@ impl WidgetInputValue {
 //#endregion 🔖️WidgetInputValue
 
 //#region 🔖️ChangeWidgetInput
-/// 🎛️ Sets input `channel` of operator `id` to the typed literal `input` (a text source's `text` to its text).
+/// ⌨️ Sets input `channel` of operator `id` to the typed literal `input` (a text source's `text` to its text).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
@@ -190,6 +190,7 @@ impl WidgetInputValue {
 pub struct ChangeWidgetInput {
     pub id: String,
     pub channel: String,
+    #[value(flatten)]
     pub input: WidgetInputValue,
 }
 
@@ -212,7 +213,7 @@ pub enum InputRefusal {
 }
 
 impl InputRefusal {
-    /// 🏷️ The outcome code of the refusal (9-code vocabulary).
+    /// 🌀️ The outcome code of the refusal (9-code vocabulary).
     pub fn code(&self) -> &'static str {
         match self {
             Self::UnknownChannel => "mutation.target-missing",

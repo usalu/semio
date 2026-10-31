@@ -7,7 +7,7 @@ import { parseArtifactLink } from "../../../../../../../🔨️modules/🧬️sc
 import { decodeJsonSyntax, type JsonSyntaxNode } from "../../../../../../../🔨️modules/🎒️pack/🔤️json/📥️decode/🟦️.ts";
 import { hubSessionFetch } from "../../🔐️hub-session/🟦️.ts";
 import type { SnapshotPackControl } from "../📖️snapshot-read/🟦️.ts";
-import policy from "../📖️snapshot-read/🔣️.json";
+import policy from "../📖️snapshot-read/🔣️.json" with {type:'json'};
 import type { FetchTimeoutResponse } from "@semio-tech/framework";
 import { readBoundedExecutionTargetBody } from "../../📥️execution-target-read/🟦️.ts";
 import { Blake3Hasher, hexLower } from "../../../../../../../🔨️modules/🔏️hash/🟦️.ts";

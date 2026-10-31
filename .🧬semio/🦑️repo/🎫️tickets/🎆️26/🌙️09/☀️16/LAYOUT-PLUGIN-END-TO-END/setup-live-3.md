@@ -1,0 +1,7 @@
+# Canonical Setup Attempt 3
+
+Root explicitly authorized exactly one fresh canonical repo --service=off tools setup all attempt after Writer18275 terminated and a supported lease snapshot reported no Dependencies image or bindings holders. That snapshot was a point-in-time observation, not a retained exclusive grant. Input environment and actual workspace cwd are retained at setup-live-3-command.json. SEMIO_BUILD_MODE=prototype, SEMIO_TEST_ARTIFACT_DIR=ticket-generated/setup-live-3, and TMPDIR/TMP/TEMP/TEMPDIR all point to its tmp child. Only own directories were precreated. No provider Source was edited while the Original ran.
+
+Actual session69189 terminated EXIT1. It captured the actual source and reached dependencies:maintenance-parent-observation, then withFundingParentV1 refused with Genuine dependency funding parent is busy at its actual protected maintenance admission. No producer, installation or publication phase was observed. Combined log: 🗑️generated/setup-live-3.log. Terminal receipt and exact log hash: 🗑️generated/setup-live-3-receipt.json. Actual rematerialization remains unproved.
+
+The new refusal is retained without assuming its historical holder or admission-gate cause. The earlier zero-holder snapshot cannot exclude a later reader or a competing lease admission condition. No peer was stopped, no second setup or Cargo/cache action was launched, and no source change or manual repair occurred. Root retains the next diagnostic/release decision; no automatic retry is authorized.

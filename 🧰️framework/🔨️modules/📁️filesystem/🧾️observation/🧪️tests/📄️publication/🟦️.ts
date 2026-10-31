@@ -1,3 +1,4 @@
+import "./🧵️lifecycle/🟦️.ts";
 import {expect,test} from "bun:test";
 import {mkdir,mkdtemp,readFile,writeFile,rm,link,readdir} from "node:fs/promises";
 import {join,resolve} from "node:path";

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "rejectedInputStock",
+    "productionMaximumDepth",
+    "depthCases",
+    "cancelCuts",
+    "input",
+    "expectedKinds",
+    "depthFailure",
+    "maximumTextFragmentBytes"
+  ],
+  "properties": {
+    "stock": {
+      "const": {
+        "items": 100000,
+        "fuel": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 64,
+        "maximumTurns": 20000
+      }
+    },
+    "rejectedInputStock": {
+      "const": {
+        "items": 100000,
+        "fuel": 100000,
+        "copyBytes": 33554432,
+        "capacityBytes": 33554432,
+        "releaseBytes": 33554432,
+        "depth": 256,
+        "maximumTurns": 20000
+      }
+    },
+    "productionMaximumDepth": {
+      "const": 64
+    },
+    "depthCases": {
+      "const": [
+        0,
+        64,
+        65
+      ]
+    },
+    "cancelCuts": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        7,
+        19,
+        71,
+        512
+      ]
+    },
+    "input": {
+      "const": {
+        "empty": [],
+        "null": null,
+        "flag": true,
+        "number": 17,
+        "rows": [
+          "雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂雪/🙂",
+          {
+            "nested": [
+              false,
+              null,
+              2.5
+            ]
+          }
+        ]
+      }
+    },
+    "expectedKinds": {
+      "const": [
+        "null",
+        "bool",
+        "number",
+        "text",
+        "array",
+        "object"
+      ]
+    },
+    "depthFailure": {
+      "const": "native dynamic subtree exceeds depth limit"
+    },
+    "maximumTextFragmentBytes": {
+      "const": 64
+    }
+  }
+}

@@ -23,7 +23,9 @@ use semio_framework_job::RetainedCloneProgress;
 
 use semio_framework_job_payload::RetainedJobPayload;
 
-use semio_framework_job_payload::RetainedJobPayloadWriter;
+use semio_s_fem_payload_turns::{NumericalPayloadSlot, numerical_begin_page, numerical_commit_page, numerical_finish_writer, numerical_open_writer, numerical_post, numerical_writer_close, numerical_writer_demand};
+use semio_framework_value::ValueError;
+use semio_s_fem_payload_turns::NumericalStep;
 
 use semio_framework_job::RevisionId;
 
@@ -107,26 +109,44 @@ pub fn close_payload(mut payload: RetainedJobPayload) {
     }
 }
 
-/// 🧱️ Rebuilds an owned payload from copied pages so a restore cursor can consume it.
-pub fn payload_from_pages(operation: Operation, stream: JobPayloadStream, pages: &[Vec<u8>]) -> RetainedJobPayload {
-    let mut writer = RetainedJobPayloadWriter::new(stream);
+/// 🪪️ Runs one body inside a fresh single-fuel step context under the shared test wallet.
+fn with_context<T>(operation: Operation, run: impl FnOnce(&mut StepContext<'_>) -> T) -> T {
     let mut sequence = 0;
-    for page in pages {
-        let mut receipt = RetainedCloneProgress::default();
-        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
-        writer.begin_staged_page(&mut context).expect("rebuilt payload page admission");
-        writer.write_staged(page).expect("rebuilt payload page bytes");
-        writer.commit_staged_page().expect("rebuilt payload page commit");
-    }
-    writer.finish().unwrap_or_else(|_| panic!("rebuilt payload writer finishes committed pages"))
+    let mut receipt = RetainedCloneProgress::default();
+    let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX, TEST_GRANT), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
+    run(&mut context)
 }
 
-/// 🧹️ Closes a locally owned writer through its own quoted grants.
-pub fn close_writer(writer: &mut RetainedJobPayloadWriter) {
-    writer.begin_close();
-    while !writer.terminal_is_empty() {
-        let demand = writer.retirement_demands().expect("a locally owned writer quotes its close demand");
-        writer.close_step(close_grant(demand)).expect("a locally owned writer close has no external owner");
+/// 🔁️ Re-enters one shared funded builder turn under fresh contexts until it reports completion.
+fn until_done(operation: Operation, mut turn: impl FnMut(&mut StepContext<'_>) -> Result<bool, ValueError>) {
+    for _ in 0..10_000 {
+        if with_context(operation, |context| turn(context)).expect("a locally owned builder turn is admitted by the test wallet") {
+            return;
+        }
+    }
+    panic!("a locally owned builder turn never completed");
+}
+
+/// 🧱️ Rebuilds an owned payload from copied pages so a restore cursor can consume it.
+pub fn payload_from_pages(operation: Operation, stream: JobPayloadStream, pages: &[Vec<u8>]) -> RetainedJobPayload {
+    let mut slot: NumericalPayloadSlot = None;
+    let mut output = None;
+    until_done(operation, |cx| numerical_open_writer(&mut slot, stream, cx));
+    for page in pages {
+        until_done(operation, |cx| numerical_begin_page(slot.as_deref_mut().expect("boxed builder"), cx));
+        until_done(operation, |cx| { let turn = slot.as_deref_mut().expect("boxed builder").write_staged_source_funded(cx, page.as_slice()); numerical_post(cx, turn) });
+        until_done(operation, |cx| numerical_commit_page(slot.as_deref_mut().expect("boxed builder"), cx));
+    }
+    until_done(operation, |cx| numerical_finish_writer(&mut slot, &mut output, cx));
+    output.expect("rebuilt payload builder hands its sealed payload over")
+}
+
+/// 🧹️ Closes a locally owned writer slot through its own quoted grants, then releases its box.
+pub fn close_writer(writer: &mut NumericalPayloadSlot) {
+    let operation = test_operation(0);
+    while writer.is_some() {
+        let grant = match numerical_writer_demand(writer) { Some(demand) => close_grant(demand.expect("a locally owned builder quotes its close demand")), None => break };
+        if with_context(operation, |_| numerical_writer_close(writer, grant)).is_none() { break; }
     }
 }
 
@@ -140,17 +160,6 @@ pub fn close_payload_page_bytes(mut payload: RetainedJobPayload) -> usize {
         if payload.page_count() < pages {
             released += step.progress().released_bytes;
         }
-    }
-    released
-}
-
-/// 🧹️ Closes a locally owned writer and returns every byte its close turns released.
-pub fn close_writer_released(writer: &mut RetainedJobPayloadWriter) -> usize {
-    writer.begin_close();
-    let mut released = 0;
-    while !writer.terminal_is_empty() {
-        let demand = writer.retirement_demands().expect("a locally owned writer quotes its close demand");
-        released += writer.close_step(close_grant(demand)).expect("a locally owned writer close has no external owner").progress().released_bytes;
     }
     released
 }
@@ -226,22 +235,35 @@ impl OriginalNumericalFixture{
     }
     pub fn close_turn(&mut self,job:&mut impl InteractiveJob,grant:RetainedCloneGrant)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{self.turn(grant,1,u64::MAX,|cx|cx.with_original_retirement(|cx|job.close_step(cx)))}
     pub fn close(&mut self,job:&mut impl InteractiveJob){job.begin_close();for _ in 0..10_000_000{if job.terminal_is_empty(){return}let grant=close_grant(job_close_demand(job));let step=self.close_turn(job,grant).expect("same original numerical close");assert!(!matches!(step,InteractiveJobCloseStep::Blocked));}panic!("same original numerical close stalled")}
-    pub fn step_seen(&mut self,job:&mut impl InteractiveJob,grant:RetainedCloneGrant,fuel:u64,deadline:u64)->Seen{self.turn(grant,fuel,deadline,|cx|Ok(seen_of(job.step(cx)))).expect("same original numerical observation")}
-    pub fn payload_from_pages(&mut self,stream:JobPayloadStream,pages:&[Vec<u8>])->RetainedJobPayload{
-        let mut writer=None;
-        self.turn(TEST_GRANT,1,u64::MAX,|cx|{writer=RetainedJobPayloadWriter::new_funded(stream,cx)?;Ok(())}).expect("original writer header birth");
-        assert!(writer.is_some());
-        for page in pages{
-            assert!(self.turn(TEST_GRANT,1,u64::MAX,|cx|writer.as_mut().unwrap().begin_staged_page_funded(cx).map_err(Into::into)).expect("original staged page birth"));
-            assert!(self.turn(TEST_GRANT,1,u64::MAX,|cx|writer.as_mut().unwrap().write_staged_source_funded(cx,page.as_slice(),0).map_err(Into::into)).expect("original staged source copy"));
-            assert!(self.turn(TEST_GRANT,1,u64::MAX,|cx|writer.as_mut().unwrap().commit_staged_page_funded(cx,0).map_err(Into::into)).expect("original staged page commit"));
+    pub fn step_seen(&mut self,job:&mut impl NumericalStep,grant:RetainedCloneGrant,fuel:u64,deadline:u64)->Seen{self.turn(grant,fuel,deadline,|cx|Ok(seen_of(job.step_plain(cx)))).expect("same original numerical observation")}
+    /// 🔁️ Re-enters one shared funded builder turn under fresh original turns until it reports completion.
+    pub fn until_done(&mut self,mut run:impl FnMut(&mut StepContext<'_>)->Result<bool,ValueError>){
+        for _ in 0..10_000{
+            if self.turn(TEST_GRANT,1,u64::MAX,|cx|run(cx).map_err(OriginalTurnFailure::from)).expect("same original builder turn"){return}
         }
+        panic!("same original builder turn never completed");
+    }
+    pub fn open_writer(&mut self,stream:JobPayloadStream)->NumericalPayloadSlot{
+        let mut slot=None;
+        self.until_done(|cx|numerical_open_writer(&mut slot,stream,cx));
+        slot
+    }
+    pub fn finish_writer(&mut self,mut slot:NumericalPayloadSlot)->RetainedJobPayload{
         let mut output=None;
-        assert!(self.turn(TEST_GRANT,1,u64::MAX,|cx|RetainedJobPayloadWriter::finish_funded(&mut writer,&mut output,cx).map_err(Into::into)).expect("original writer output handoff"));
-        output.unwrap()
+        self.until_done(|cx|numerical_finish_writer(&mut slot,&mut output,cx));
+        output.expect("original builder output handoff")
+    }
+    pub fn payload_from_pages(&mut self,stream:JobPayloadStream,pages:&[Vec<u8>])->RetainedJobPayload{
+        let mut writer=self.open_writer(stream);
+        for page in pages{
+            self.until_done(|cx|numerical_begin_page(writer.as_deref_mut().expect("original boxed builder"),cx));
+            self.until_done(|cx|{let turn=writer.as_deref_mut().expect("original boxed builder").write_staged_source_funded(cx,page.as_slice());numerical_post(cx,turn)});
+            self.until_done(|cx|numerical_commit_page(writer.as_deref_mut().expect("original boxed builder"),cx));
+        }
+        self.finish_writer(writer)
     }
     pub fn close_payload(&mut self,payload:&mut RetainedJobPayload){while !payload.terminal_is_empty(){let demand=payload.retirement_demands().expect("original payload close quote");self.turn(close_grant(demand),1,u64::MAX,|cx|semio_framework_job::close_original_retained_step(cx,demand,|grant|payload.close_step(grant))).expect("same original payload close");}}
-    pub fn close_writer(&mut self,writer:&mut RetainedJobPayloadWriter){writer.begin_close();while !writer.terminal_is_empty(){let demand=writer.retirement_demands().expect("original writer close quote");self.turn(close_grant(demand),1,u64::MAX,|cx|semio_framework_job::close_original_retained_step(cx,demand,|grant|writer.close_step(grant))).expect("same original writer close");}}
+    pub fn close_writer(&mut self,writer:&mut NumericalPayloadSlot){while let Some(demand)=numerical_writer_demand(writer){let demand=demand.expect("original writer close quote");self.turn(close_grant(demand),1,u64::MAX,|cx|{let grant=cx.retained_grant();Ok(numerical_writer_close(writer,grant))}).expect("same original writer close");}}
     pub fn finish(mut self){while !self.decoder.terminal_is_empty(){let grant=self.caller.remaining_grant();self.caller.turn(grant,|cx|semio_framework_job::close_original_retained_step(cx,self.decoder.retirement_demands(grant.maximum_copy_bytes)?,|grant|self.decoder.close_step(grant))).expect("original numerical decoder return");}self.caller.retire(Self::STOCK);}
 }
 

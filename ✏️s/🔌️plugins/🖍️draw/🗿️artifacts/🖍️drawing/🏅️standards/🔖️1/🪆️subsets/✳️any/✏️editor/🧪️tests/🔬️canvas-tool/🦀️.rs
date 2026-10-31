@@ -1,5 +1,7 @@
 //! 🧪️ The canvas tool — hit testing, lasso, drafts, drags and handle transforms as tool transactions — exercised as a child
 //! module of the `canvas-pointer-down` command, whose projected bundle stays exactly its `🦀️.rs`.
+#[path="../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🛤️path/🎟️work/🧪️tests/🦀️.rs"]
+mod scene_funding;
 use super::*;
 
 #[test]
@@ -505,19 +507,21 @@ fn node_marquee_rejects_overflow_and_excludes_hidden_or_locked_ancestors() {
 
 fn stroked_path(name:&str,segments:Vec<PathSegment>)->DrawingLayerNode{let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((name)).to_string().into()).expect("nonempty authored identity"), name,segments.into());semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).attributes.stroke=Some(semio_s_artifact_draw_drawing_model::StrokeStyle{color:[0.0,0.0,0.0,1.0],width:1.0,cap:crate::StrokeCap::Butt,join:crate::StrokeJoin::Miter,dash:None});layer}
 fn filled_path(name:&str,segments:Vec<PathSegment>)->DrawingLayerNode{let mut layer=semio_s_artifact_draw_drawing_model::create_drawing_path_layer(semio_s_artifact_draw_drawing_model::identity::DrawingIdentity::admit(((name)).to_string().into()).expect("nonempty authored identity"), name,segments.into());semio_s_artifact_draw_drawing_model::layer_base_mut(&mut layer).attributes.fill=Some(semio_s_artifact_draw_drawing_model::FillStyle::Solid{color:[0.0,0.0,0.0,1.0]});layer}
-fn prepared(document:&DrawingSnapshot)->semio_s_artifact_draw_drawing_scene::paint::scene::PreparedScene{
- let mut vector=semio_s_artifact_draw_drawing_scene::preparation::DocumentVectorJob::new(document,semio_s_artifact_draw_drawing_editor_interaction::geometry_session::limits(),semio_s_artifact_draw_drawing_editor_interaction::geometry_session::algorithms()).unwrap();while !vector.advance(4096).unwrap().done{}let(mut close,plan)=vector.into_retirement();while !close.advance(4096).unwrap().done{}
- let mut paint=semio_s_artifact_draw_drawing_scene::paint::scene::ScenePaintJob::new(plan.unwrap(),0.001,semio_s_artifact_draw_drawing_editor_interaction::geometry_session::paint_limits());while !paint.advance(4096).unwrap().done{}let(mut close,scene)=paint.into_retirement();while !close.advance(4096).unwrap().done{}scene.unwrap()
+fn prepared(document:&DrawingSnapshot)->scene_funding::Funded<semio_s_artifact_draw_drawing_scene::paint::scene::PreparedScene>{
+ let mut vector=semio_s_artifact_draw_drawing_scene::preparation::DocumentVectorJob::new(document,semio_s_artifact_draw_drawing_editor_interaction::geometry_session::limits(),semio_s_artifact_draw_drawing_editor_interaction::geometry_session::algorithms()).unwrap();let mut scene_wallet=scene_test_work();while !semio_s_artifact_draw_drawing_scene::draw_scene_funded_turn!(vector,4096,scene_wallet).done{}let(mut close,plan)=vector.into_retirement();semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(close,scene_wallet,4096);
+ let mut paint=semio_s_artifact_draw_drawing_scene::paint::scene::ScenePaintJob::new(plan.unwrap(),0.001,semio_s_artifact_draw_drawing_editor_interaction::geometry_session::paint_limits());while !semio_s_artifact_draw_drawing_scene::draw_scene_funded_turn!(paint,4096,scene_wallet).done{}let(mut close,scene)=paint.into_retirement();semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(close,scene_wallet,4096);scene_funding::Funded::from_parts(scene.unwrap(),scene_wallet)
 }
 fn advance_cached(job:&mut TracePointerJob,document:&DrawingSnapshot)->bool{
  let scene=prepared(document);let borrowed=MountedSceneQuery{scene:&scene,source:crate::schema::scene_identity::SceneIdentity{instance:710034,base:11,generation:1,revision:[1;32]},build:1};let done=job.advance(document,&borrowed);
- let mut close=semio_s_artifact_draw_drawing_scene::paint::scene::PreparedSceneCloseJob::new(scene);while !close.advance(4096).unwrap().done{}done
+ let(scene,mut scene_wallet)=scene.into_parts();let mut close=semio_s_artifact_draw_drawing_scene::paint::scene::PreparedSceneCloseJob::new(scene);semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(close,scene_wallet,4096);done
 }
 
 /// 🗂️ Query continuations borrow one genuinely prepared immutable scene until its owner closes.
 fn finish_cached(job:&mut TracePointerJob,document:&DrawingSnapshot){finish_cached_with(job,document,|_,_|{});}
 fn finish_cached_with(job:&mut TracePointerJob,document:&DrawingSnapshot,mut observe:impl FnMut(&TracePointerJob,bool)){
- let scene=prepared(document);let borrowed=MountedSceneQuery{scene:&scene,source:crate::schema::scene_identity::SceneIdentity{instance:710034,base:11,generation:1,revision:[1;32]},build:1};loop{let done=job.advance(document,&borrowed);observe(job,done);if done{break;}}let mut close=semio_s_artifact_draw_drawing_scene::paint::scene::PreparedSceneCloseJob::new(scene);while !close.advance(4096).unwrap().done{}assert!(close.terminal_is_empty());
+ let scene=prepared(document);let borrowed=MountedSceneQuery{scene:&scene,source:crate::schema::scene_identity::SceneIdentity{instance:710034,base:11,generation:1,revision:[1;32]},build:1};loop{let done=job.advance(document,&borrowed);observe(job,done);if done{break;}}let(scene,mut scene_wallet)=scene.into_parts();let mut close=semio_s_artifact_draw_drawing_scene::paint::scene::PreparedSceneCloseJob::new(scene);semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(close,scene_wallet,4096);assert!(close.terminal_is_empty());
 }
 
 fn admitted_shape_key(utility:&str,geometry:[f64;4],ordinal:usize,operation:Option<&AppOperationContext>)->String{let mut observer=|_|true;let mut control=semio_framework_value::NativeEncodeControl::new(1024*1024,&mut observer);semio_s_artifact_draw_drawing_io::text::identity::creation::shape_identity(utility,geometry,ordinal,operation.expect("explicit fixture operation"),&mut control).unwrap().into_key().to_string_owner()}
+
+fn scene_test_work()->scene_funding::Wallet{let v:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️original/🔣️.json")).unwrap();let v=&v["stock"];scene_funding::Wallet::from_grant(semio_framework_value::RetainedCloneGrant{maximum_items:v["items"].as_u64().unwrap()as usize,maximum_copy_bytes:v["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:v["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:v["release"].as_u64().unwrap()as usize,maximum_depth:v["depth"].as_u64().unwrap()as usize},2_000_000)}

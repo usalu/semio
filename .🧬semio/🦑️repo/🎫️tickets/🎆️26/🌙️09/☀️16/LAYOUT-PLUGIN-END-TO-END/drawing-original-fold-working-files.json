@@ -1,0 +1,58 @@
+{
+  "status": "Authored and unexecuted; callers pending",
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🦀️.rs",
+      "sha256": "ecde8dec4960b3ed02adb5631aeb6abbf584596e9978baa18fc8fe50d036b6aa",
+      "bytes": 83364
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/⚠️failure/🦀️.rs",
+      "sha256": "baed883a1d7f641f4a429f819da5f7e1cbd6d4cd14b04db686b741c9ffbc5fb2",
+      "bytes": 5287
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/⚠️failure/🧬️schema/🔣️.json",
+      "sha256": "d514b0abbd7cfc6bb9f6cc2a922cc05e39c37f20ffad4b0c6506767cccb2ab5e",
+      "bytes": 2521
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/⚠️failure/🧪️tests/🦀️.rs",
+      "sha256": "d8051de76c178846d468299650095a19bf93179de081add629c9f5f64647c294",
+      "bytes": 4697
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/⚠️failure/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "426c90741db8d0c33063eba0ae8621082a3d983b9c31ff671392d3b79d4330ff",
+      "bytes": 5679
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🦀️.rs",
+      "sha256": "f1c820618795ffeafc8a9905c74bbd230b237ecb5b61d1d0639d844062acea92",
+      "bytes": 16572
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️original/🦀️.rs",
+      "sha256": "b46ddcf7a7ebe4a17230da10a4d5e8e73b42313b241d2f2ef9d198d05e731eb9",
+      "bytes": 9350
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️original/🔣️.json",
+      "sha256": "49f71c5de55147e15068571fc28790232c73c689981993a23655f5f518ff4f99",
+      "bytes": 1294
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎟️original/📐️.json",
+      "sha256": "c2d57c9ba0d03701f79351dafbac792df5dc2c77c6883d3881d64e337f61956c",
+      "bytes": 2666
+    }
+  ],
+  "scenePaintScope": "ONLY authorized advance_original hunk; all remaining body Root-owned",
+  "prepareScope": "DocumentSceneError module+Display and four owned Original folds; Cursor sections preserved",
+  "tests": "new defining scene error law plus existing composition law adapted to exact wrapper",
+  "newTypedCaseCount": 16,
+  "currentOriginalDenialCases": [
+    "zero real fuel loan",
+    "expired real deadline loan"
+  ]
+}

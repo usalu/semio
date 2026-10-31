@@ -1,6 +1,6 @@
 import {posix} from "node:path";
 import {AsyncLocalStorage} from "node:async_hooks";
-import schema from "./🧬️schema/🔣️.json";
+import schema from "./🧬️schema/🔣️.json"with{type:"json"};
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {requireIssuedResourceControlV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 

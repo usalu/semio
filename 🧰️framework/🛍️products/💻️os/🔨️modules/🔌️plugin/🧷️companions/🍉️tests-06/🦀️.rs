@@ -9,4 +9,5 @@ extern crate semio_framework_os_kernel as protocol;
 pub mod tool_run_support_1;
 #[path = "../../🧪️tests/🧪️time-travel/🦀️.rs"]
 pub mod time_travel_support_1;
-
+#[path = "../../🧪️tests/🧬️mutation-fixtures-no-state/🦀️.rs"]
+pub mod mutation_fixture_no_state;

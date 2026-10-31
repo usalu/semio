@@ -271,15 +271,15 @@ impl protocol::ColdDiffAlgebra<Process3dConfig> for Process3dConfigDiff {
 //#endregion 🔖️Config
 
 //#region 🔖️ConfigOperations
-/// 🎥️ Payload of [`Process3dConfigMutation::SetEngagementInput`]; the record keeps the variant's wire fields byte-identical.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+/// 🎭️ Payload of [`Process3dConfigMutation::SetEngagementInput`]; the record keeps the variant's wire fields byte-identical.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Process3dConfigSetEngagementInput {
     pub value: String,
 }
 
-/// 🎥️ Payload of [`Process3dConfigMutation::SetCamera`].
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+/// 🌀️ Payload of [`Process3dConfigMutation::SetCamera`].
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Process3dConfigSetCamera {
     #[dsl(coord)]
@@ -289,8 +289,8 @@ pub struct Process3dConfigSetCamera {
     pub fov: f64,
 }
 
-/// 🌞️ Payload of [`Process3dConfigMutation::SetSun`].
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+/// 🌁️ Payload of [`Process3dConfigMutation::SetSun`].
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Process3dConfigSetSun {
     pub enabled: bool,
@@ -300,25 +300,25 @@ pub struct Process3dConfigSetSun {
     pub color: String,
 }
 
-/// 🧩️ Payload of [`Process3dConfigMutation::SetContributions`].
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+/// 🌂️ Payload of [`Process3dConfigMutation::SetContributions`].
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Process3dConfigSetContributions {
     pub json: String,
 }
 
-/// ⏱️ Payload of [`Process3dConfigMutation::SetCursor`].
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+/// 🌃️ Payload of [`Process3dConfigMutation::SetCursor`].
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Process3dConfigSetCursor {
     pub value: Option<usize>,
 }
 
-/// 🧮️ [`Process3dConfig`]'s operation enum — one variant per settled interaction (mirrors the pre-B1
+/// 🔢️ [`Process3dConfig`]'s operation enum — one variant per settled interaction (mirrors the pre-B1
 /// `Process3dRuntime` field writes). Every field already carries its own setter, so `backwards()`
 /// returns the SAME variant re-addressed at `base`'s old value — a targeted, in-kind inverse per
 /// this ticket's ban on whole-record replace, rather than a generic whole-config snapshot.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum Process3dConfigMutation {
     #[dsl(key = "engagement-input")]

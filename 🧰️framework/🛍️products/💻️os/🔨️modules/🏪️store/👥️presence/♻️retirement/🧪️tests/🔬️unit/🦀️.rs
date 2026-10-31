@@ -31,7 +31,7 @@ pub(super) fn assert_fixture_descriptor<T: protocol::MutationLeaf>(descriptor: &
 /// committed JSON: it is the canonical Rust wire of the leaf.
 #[test]
 fn committed_wire_witness_is_the_canonical_wire() {
-    semio_framework_value::testing::assert_wire_witness::<ValueMutation>(include_str!("../../🧪️testing/🧬️mutations/🔢️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    semio_framework_os_store_test_support::assert_wire_witness::<ValueMutation>(include_str!("../../🧪️testing/🧬️mutations/🔢️set-value/🧪️tests/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 
 #[test]

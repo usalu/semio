@@ -11,7 +11,7 @@ pub struct OsWorkflowStore {
 
 impl OsWorkflowStore {
     pub fn new(document: OsWorkflowArtifactDocument, actor: protocol::ActorId) -> Result<Self, VcsError> {
-        let (name, envelope) = take_backbone_envelope(document);
+        let (name, envelope) = take_backbone_envelope(document)?;
         let mut inner = resolve_kernel_future(ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, actor))?;
         inner.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners().map_err(|error| VcsError::ValidationFailed(error.to_string()))?).map_err(|(error, owners)| { std::mem::forget(owners); VcsError::ValidationFailed(error.to_string()) })?;
         Ok(Self { inner, name })
@@ -40,7 +40,7 @@ impl OsWorkflowStore {
             id: envelope.id.clone(),
             name: self.name.clone(),
             vcs: envelope.vcs.clone(),
-            transitions: envelope.transitions.clone(),
+            transitions: envelope.transitions.iter().cloned().collect(),
             edit_messages: envelope.edit_messages.iter().cloned().collect(),
             conflicts: envelope.conflicts.clone(),
             backbone: envelope.backbone.clone(),

@@ -1,0 +1,32 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🦀️.rs",
+    "bytes": 35877,
+    "sha256": "51316c96dfb9794d5948882d7ff6d0952cff101163386420d0c83a6559894a16",
+    "utf16PathUnits": 75
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/📦️packages/🦀️rust/Cargo.toml",
+    "bytes": 1196,
+    "sha256": "bff2d60bd53b7c17c068d7214f454a7499ff380bf3b9a599b4ae5d87437744c8",
+    "utf16PathUnits": 99
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🎟️work/🔣️.json",
+    "bytes": 438,
+    "sha256": "6592603186538f317cc8b5f170ad8eaa39de069340b11d1bf7c576020867168c",
+    "utf16PathUnits": 85
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🎟️work/📐️.json",
+    "bytes": 143,
+    "sha256": "6c4caa0a6fea7406af7aa671ff59712b6784d670be5cf2957add9cbd97ed6c77",
+    "utf16PathUnits": 85
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🎟️work/🧪️tests/🦀️.rs",
+    "bytes": 2810,
+    "sha256": "6df355219d96f016d15a5724e4813aed0d93154d570d2fd7c0eda7e5e6332502",
+    "utf16PathUnits": 92
+  }
+]

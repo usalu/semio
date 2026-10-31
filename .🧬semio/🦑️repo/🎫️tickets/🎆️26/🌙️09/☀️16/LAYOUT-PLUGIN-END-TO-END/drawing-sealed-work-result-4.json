@@ -1,0 +1,92 @@
+{
+  "outerExit": 0,
+  "session": 25300,
+  "passed": 15,
+  "failed": 0,
+  "ignored": 0,
+  "filtered": 0,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🦀️.rs",
+      "sha256": "fb8efe4f6e3cb1d51b019f8f5e5025c651c3f35600ef538eeeb2b7f2d1434c0b",
+      "after": "fb8efe4f6e3cb1d51b019f8f5e5025c651c3f35600ef538eeeb2b7f2d1434c0b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🚚️frontier/🧪️tests/🥒️.feature",
+      "sha256": "9dc5207dc1e421801e98e274c8162c07c1573037567ea8a8cf997e8351b3ee75",
+      "after": "9dc5207dc1e421801e98e274c8162c07c1573037567ea8a8cf997e8351b3ee75"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🚚️frontier/🧪️tests/🦀️.rs",
+      "sha256": "01c505ec97fc89f5a56fba25e58ac814747a1b8a992de46e6d4f78f21b7305f7",
+      "after": "01c505ec97fc89f5a56fba25e58ac814747a1b8a992de46e6d4f78f21b7305f7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🚚️frontier/🧪️tests/🟦️.ts",
+      "sha256": "4ed3e45067d96e6bcbdc4f7de1d1ebae86b3b7a8bfa3b9e28b4ce4d6685f799e",
+      "after": "4ed3e45067d96e6bcbdc4f7de1d1ebae86b3b7a8bfa3b9e28b4ce4d6685f799e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🚚️frontier/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "3f54ef9645b882c5f8e63be1f3468e90c9fee481f0f815d8708bf472b234c03c",
+      "after": "3f54ef9645b882c5f8e63be1f3468e90c9fee481f0f815d8708bf472b234c03c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🚚️frontier/🧬️schema/🔣️.json",
+      "sha256": "329602de5dadbbda1bea6d10db07a5824de24159c94bdbfd3f99eb7aac585043",
+      "after": "329602de5dadbbda1bea6d10db07a5824de24159c94bdbfd3f99eb7aac585043"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🧪️tests/🦀️.rs",
+      "sha256": "37ddcd9130d138699cc514ba57a11401a7f95e047a7c7b7f6a54483332dc357e",
+      "after": "37ddcd9130d138699cc514ba57a11401a7f95e047a7c7b7f6a54483332dc357e"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🧪️tests/🟦️.ts",
+      "sha256": "f39b10cf5be1d96d79e8739ef5d6fc2537f11dc02d5831d6b9f82f4d2e591826",
+      "after": "f39b10cf5be1d96d79e8739ef5d6fc2537f11dc02d5831d6b9f82f4d2e591826"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "7d7ffea7f9ac5e05582ec94cf177f817a3b23ac6d4cf95c43db2eb70f5967cc4",
+      "after": "7d7ffea7f9ac5e05582ec94cf177f817a3b23ac6d4cf95c43db2eb70f5967cc4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🧬️schema/🔣️.json",
+      "sha256": "012c54e838ca8da6fea5f194846d8aec8fd9682cc6f4af41b3c0c322c2c4fca6",
+      "after": "012c54e838ca8da6fea5f194846d8aec8fd9682cc6f4af41b3c0c322c2c4fca6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "2e5ac35e79c4fe9aa9f0d62350af49796b0417aba503819b9a5ba47b1f288bfb",
+      "after": "2e5ac35e79c4fe9aa9f0d62350af49796b0417aba503819b9a5ba47b1f288bfb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "fd80d6a717d0e337df2beff572c306f107749d1bae752b7b783a9f82d0a89775",
+      "after": "fd80d6a717d0e337df2beff572c306f107749d1bae752b7b783a9f82d0a89775"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "eb478e402f697c5a5b295a0a41cd56c1ec0fb1b52b841c1b55e04f2630dd4ea0",
+      "after": "eb478e402f697c5a5b295a0a41cd56c1ec0fb1b52b841c1b55e04f2630dd4ea0"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "1c004b0d84541b7ed6104ee0cb4d519d825dd350c6031c0f8300ede25ea812af",
+      "after": "1c004b0d84541b7ed6104ee0cb4d519d825dd350c6031c0f8300ede25ea812af"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🔒️sealed/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "a4db1fdc4b71f5c16b93f28035b6c0a8d92bfd70e947ddb607d01f1c5dc82a29",
+      "after": "a4db1fdc4b71f5c16b93f28035b6c0a8d92bfd70e947ddb607d01f1c5dc82a29"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/📦️original/🦀️.rs",
+      "sha256": "9880c0c200674610d33e64615e0e9aad70250c434bb73a85877bdf208d65d24c",
+      "after": "9880c0c200674610d33e64615e0e9aad70250c434bb73a85877bdf208d65d24c"
+    }
+  ],
+  "logSha256": "608601ac44373cff800570759c1eff147c8613cb7e8208360e709424a23bd41d",
+  "scope": "Current Sealed unfiltered owning lib gate,16 observed input paths exact; no complete transitive source hold or wider Native/Source/Drawing acceptance inferred."
+}

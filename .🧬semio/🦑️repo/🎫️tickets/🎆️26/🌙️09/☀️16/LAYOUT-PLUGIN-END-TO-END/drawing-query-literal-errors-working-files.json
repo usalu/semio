@@ -1,0 +1,20 @@
+{
+  "state": "authored-not-run",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🦀️.rs",
+      "sha256": "5f1a59a695687f25f20533274f90e4e61bc4d909b38c0c452c9c4d065c35a848",
+      "bytes": 32199
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🦀️.rs",
+      "sha256": "674b42898b1344b94cd4071383b7c9bf6132ab68349b45a14df357575fe1a560",
+      "bytes": 11088
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "1206ae76916865687a8da74db566769682e7854d7bd3a26017c3c6d1a6a1406b",
+      "bytes": 19854
+    }
+  ]
+}

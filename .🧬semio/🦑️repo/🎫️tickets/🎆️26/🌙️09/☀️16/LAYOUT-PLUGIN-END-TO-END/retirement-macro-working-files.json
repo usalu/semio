@@ -1,0 +1,175 @@
+{
+  "state": "source-authored-not-run",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🧹️retire/🦀️.rs",
+      "beforeSha256": "093f0d3ff012529a2b22d7d41bffdd4a23bd42db6ad2364cabad449e044c25b4",
+      "sha256": "6e223c6c6873074aee43e1fed5a7983de45edc42484c314db98ed63397492e73",
+      "kind": "updated",
+      "scope": "defining physical-retirement macro and removed grant-minting helper"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🦀️.rs",
+      "beforeSha256": "a23f05473832e50de01efb266d7145f2e58efd967c2ff4d201e291e2229b72ae",
+      "sha256": "380a9c0779c37a91301e8da5d096053d938b1786fd725f753d201e275e660bec",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🦀️.rs",
+      "beforeSha256": "8f4e023578983826bec998c1e74ff0936e9761d502d5dadebc27c09505ae23a5",
+      "sha256": "fadec79ecf8054e178602f97f63e1ba133b6d8368906cb392ea2a9298e2071f5",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🦀️.rs",
+      "beforeSha256": "a732aaa5d53eafc61310e04962abe88ed9feefd2a56a3d1da966e1fa70cd3df7",
+      "sha256": "1683b04dc58a70832d15c83f0db22e5baea941a5fb5242625868cbde0908beb5",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🦀️.rs",
+      "beforeSha256": "5809c429447b88f21ac8ebbe7f37fccd62566cda4631b706fe4a84ada7e89aba",
+      "sha256": "9d31c55d8b3185199716ecf0778fd46082428ffc577893b70b984e44bd43905d",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🦀️.rs",
+      "beforeSha256": "ae85b9ab96b3900458b82ca256b47e08498e8d0c2c7d22770ebee6e46672cc1e",
+      "sha256": "a202a6665ff2b668e702df19598398fea6761695ade353925170baea31b9c099",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🦀️.rs",
+      "beforeSha256": "3f2d8abe03f8582ea0ac6bac5c2bd0b00c2b02488847527d571a881b61513268",
+      "sha256": "c64209f863d0456e376ba6caf7c79c3caef7347a1a0903368943c9d0108ea282",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🦀️.rs",
+      "beforeSha256": "7058b834592528164c5bf6717629175dc78e073c383ddfb758790bdb2575c84c",
+      "sha256": "8bed3cfe2f91c4b15b343ea5db5b51ff9b48548c670d64d996507eda5d629e4d",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🦀️.rs",
+      "beforeSha256": "771f815b7388860f6bec83ab1d1fa12a31cdb77620089b69b8b149fdc5503200",
+      "sha256": "732279f661131383b030914279356abe3e1be2b87fb252fb8cfd799fcc525928",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🦀️.rs",
+      "beforeSha256": "91a7e919932aefc04bb76a1515a4139439457f997a4d15ec5fffe3f870ddd76f",
+      "sha256": "014eabfb230c08184e1fe1b95cf88e7619489bbd20d61c00cec90a79881cb4a7",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🦀️.rs",
+      "beforeSha256": "ff25fb61788cd6b84e69d537c7833ed981ae7ef369193c2b0ada1f7efb444a85",
+      "sha256": "992ff36a73d1c7dd320680669197d4afdd1e75c9cc8a21a39f79ab5d591fb84a",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔀️booleans/🦀️.rs",
+      "beforeSha256": "564ee502777ba0d48ba7dd5ea71f6739598b25b0d782c7610ebf3c1dabc6a0e6",
+      "sha256": "b9614138f25802974620defaae23b56f5397d9ae1346d1f96d3c8b37998d33ca",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔍️trace/🦀️.rs",
+      "beforeSha256": "9cae9ed43204e10254cb55aaac369e87a07c6a973fd9729d1dd8806ca040965b",
+      "sha256": "f9d8a085b7622c451e9f56c91acc7fec8b18d1d0f572a800fd556e47fd5f1eb4",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🦀️.rs",
+      "beforeSha256": "8e7420847f1429de6ef41672b8c832620f59bc901439af46b6dd4677cc735940",
+      "sha256": "0681adcec1344b55cb59d733db69adad364c84f7c03c863e3f4c21e8c31a0054",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📷️raster/🦀️.rs",
+      "beforeSha256": "e168b0a8279accebeade83ccf82c6fb98ed11f7e26450b3282a5eef85aee1a21",
+      "sha256": "2cf7ecd6c32a72053ab120f8e22e4063089d870dbb011800b05b9f8807aa5009",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🦀️.rs",
+      "beforeSha256": "428e2c74463166470cb62702efc387eacb0635377f31266cf76147c83c3e532e",
+      "sha256": "072b8e92145be090aa90bd0c1aaf4d5d2a040cb7181a6a319bbe2bed68b46ccf",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 3
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🦀️.rs",
+      "beforeSha256": "9329924e71ab42f7012815d14a72a5ac5b6ac418c84d0e3f0b309fffe764b333",
+      "sha256": "6866a6e5c34e069f85b0e1902a80522fda5f3f0beca5e57e6d055c8ee41dffa6",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🦀️.rs",
+      "beforeSha256": "c14c62c4bae9f4acb3c2124d8fa8b6ba834487956ece9c5401286fd33850b5cd",
+      "sha256": "a5d62e2843bf2116181f3e465e2961508ca417da8cb86009268c2643bfd468ae",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 1
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🦀️.rs",
+      "beforeSha256": "b1a89c655c795e2c47d01af51b84621ffc2efc15d5894a6ed60a1c1f79b0f13b",
+      "sha256": "e4af773a9568af8bbd84acb05231aa156117815b3a5a48d28570af430b8eba06",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 2
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎨️fill/🎨️sampling/🦀️.rs",
+      "beforeSha256": "cc7bc6a1250f479eb58a3e8efed0f75470493da9cbffc164ef7ede52c25da923",
+      "sha256": "88b183adcc6d61aa36d12fa35e66e67d78edb81441e40e18ff67cb1f8b7d9196",
+      "kind": "updated",
+      "scope": "macro invocation only; peer body preserved",
+      "calls": 2
+    }
+  ],
+  "macroInvocations": 25,
+  "removedApis": [
+    "physical_work_retirement generated numeric advance",
+    "advance_physical_work"
+  ],
+  "canonicalApis": [
+    "close_step(actual RetainedCloneGrant)",
+    "next demand",
+    "terminal_is_empty"
+  ],
+  "peerBodiesClaimed": false
+}

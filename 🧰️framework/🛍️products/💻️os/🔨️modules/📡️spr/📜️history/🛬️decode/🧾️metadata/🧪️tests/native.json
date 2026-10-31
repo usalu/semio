@@ -1,0 +1,29 @@
+{
+  "contract": "semio.history.native-fault-custody.v1",
+  "roles": [
+    "metadataAuthor",
+    "transitionActor",
+    "editActor",
+    "conflictActor"
+  ],
+  "causes": [
+    "original primary",
+    "original quote refusal",
+    "original allocation refusal"
+  ],
+  "progress": {
+    "copiedItems": 0,
+    "copiedBytes": 0,
+    "retainedCapacityBytes": 0,
+    "releasedBytes": 0
+  },
+  "stock": {
+    "maximumItems": 10000,
+    "maximumCopyBytes": 1048576,
+    "maximumCapacityBytes": 1048576,
+    "maximumReleaseBytes": 1048576,
+    "maximumDepth": 64
+  },
+  "workUnits": 10000,
+  "maximumTurns": 1000
+}

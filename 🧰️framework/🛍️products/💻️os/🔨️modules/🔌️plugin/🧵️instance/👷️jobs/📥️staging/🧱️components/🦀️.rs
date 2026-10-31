@@ -115,6 +115,7 @@ pub struct ToolOperations<A: ArtifactApp> {
     pub original_tool_tag_capture:ManuallyDrop<Option<Box<semio_framework_plugin_tool_run::tool_jobs_tool_machine::OriginalToolTagCapture>>>,
     pub original_scrub_dispatch:ManuallyDrop<Option<Box<semio_framework_plugin_scrub_host::OriginalScrubDispatch<semio_framework_plugin_tool_run::tool_jobs_tool_machine::PressLeaf<A::Mutation,A::ConfigMutation>>>>>,
     pub original_press_settlement:ManuallyDrop<Option<Box<semio_framework_plugin_tool_run::tool_jobs_tool_machine::OriginalPressSettlement<A>>>>,
+    pub original_typing_settlement:ManuallyDrop<Option<Box<semio_framework_plugin_typing_edit::OriginalTypingSettlement<A>>>>,
     pub typed_effect_outbox: ArtifactFixedQueue<Effect>,
     pub typed_event_outbox: ArtifactFixedQueue<AppEvent>,
     pub typed_ui_outbox: ArtifactFixedQueue<UiDirtyScope>,
@@ -131,7 +132,7 @@ pub struct ToolOperations<A: ArtifactApp> {
     /// behind any pointer input issued meanwhile. Bounded by the live operation slots; an entry
     /// is consumed by the fold or dropped with its operation's exact removal.
     pub typed_inline_interaction_verbs: Vec<(u64, Vec<(String, Option<DslValue>)>)>,
-    /// 🔀️ The LAST folded verb's leftover `InteractionView` (`AppliedInteractionVerb::leftover`),
+    /// 🗜️ The LAST folded verb's leftover `InteractionView` (`AppliedInteractionVerb::leftover`),
     /// one slot, latest wins (a later verb's snapshot already includes the earlier ones — the
     /// same rule `InlineInteractionFold::leftover` follows). It rides the next `Ui` progress
     /// frame's `output` (`take_typed_operation_ui_progress`) — the typed ladder's twin of the
@@ -167,17 +168,17 @@ pub struct ToolOperations<A: ArtifactApp> {
     pub latest_wins_turn: bool,
 }
 
-/// 🧾️ Original tool registration resources remain retained until the fixed runtime queues are admitted.
+/// 🛠️ Original tool registration resources remain retained until the fixed runtime queues are admitted.
 pub struct OriginalToolOperationsSources{pub registry:AppActionRegistry,pub declared:DeclaredToolCatalogAlias,pub bus:semio_framework::RegisteredActionBusAlias,pub owner:ArtifactInstanceOperationOwnerHandle}
 
 impl<A: ArtifactApp> ToolOperations<A> {
-    /// 📏️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
+    /// 🎞️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
     pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.tool_operations,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.latest_wins_commands,64)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_effect_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_event_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_ui_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_completion_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_composed_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.latest_wins_order,64)?])}
 
     /// 🌱️ Moves original tool registrations into their actual fixed-queue runtime under the same mounted caller.
     pub fn admit_original(sources:&mut Option<OriginalToolOperationsSources>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Self>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if sources.is_none()||output.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original tool runtime birth requires retained registrations and an empty destination").into())}let mut d=Self::birth_demands()?;d.copy_bytes=d.copy_bytes.checked_add(2*std::mem::size_of::<OriginalToolOperationsSources>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original tool source extent overflow"))?;semio_framework_job::admit_original_construction(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:d.depth},|_|{let source=sources.take().unwrap();Ok((Self::from_original(source),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))})?;Ok(output.is_some())}
 
-    /// 📏️ The composite source preserves both original input and actual fixed runtime headers.
+    /// ⌨️ The composite source preserves both original input and actual fixed runtime headers.
     pub fn original_birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let mut demand=Self::birth_demands()?;demand.copy_bytes=demand.copy_bytes.checked_add(2*std::mem::size_of::<OriginalToolOperationsSources>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original tool source extent overflow"))?;Ok(demand)}
     /// 🧱️ An enclosing original construction can admit the same runtime without another transient owner.
     pub fn build_original(source:OriginalToolOperationsSources,grant:semio_framework_value::RetainedCloneGrant)->Result<(Self,semio_framework_value::RetainedCloneProgress),(semio_framework_value::ValueError,OriginalToolOperationsSources)>{let demand=match Self::original_birth_demands(){Ok(demand)=>demand,Err(error)=>return Err((error,source))};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original tool runtime source is not funded"),source))}Ok((Self::from_original(source),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))}
@@ -206,7 +207,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     fn new_with_bus(registry: AppActionRegistry, tool_job_controller_id: String, tool_jobs: ToolActionBus, bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>, bounded_tool_contracts: Vec<ArtifactToolPublicContract>, framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, instance_operation_owner: ArtifactInstanceOperationOwnerHandle) -> Self {
         Self {
             pending_tool_lease_admission: ManuallyDrop::new(None),
-            original_tool_follow:ManuallyDrop::new(None),original_scrub_dispatch:ManuallyDrop::new(None),original_press_settlement:ManuallyDrop::new(None),original_tool_tag_capture:ManuallyDrop::new(None),original_tool_tag_retirement:ManuallyDrop::new(None),
+            original_tool_follow:ManuallyDrop::new(None),original_scrub_dispatch:ManuallyDrop::new(None),original_press_settlement:ManuallyDrop::new(None),original_typing_settlement:ManuallyDrop::new(None),original_tool_tag_capture:ManuallyDrop::new(None),original_tool_tag_retirement:ManuallyDrop::new(None),
             typed_effect_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
             typed_event_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
             typed_ui_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),

@@ -113,7 +113,7 @@ impl<S:NativeReceive<RecordValue>+Send> ErasedSnapshotRetirement for OriginalRec
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(0)?.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand(0)?.depth)}
  fn terminal_is_empty(&self)->bool{self.terminal&&self.request.is_none()&&self.parser.is_none()&&self.record.is_none()&&self.source.is_none()&&self.receiving.is_none()&&self.snapshot.is_none()&&self.record_close.is_none()&&self.snapshot_close.is_none()}
- fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ fn close_step(&mut self, g: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
   if self.terminal{return Ok(RetainedCloneStep::Complete(Default::default()))}
   let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
   if !self.closing{if let Some(r)=self.receiving.as_mut(){r.begin_close();}self.closing=true;return Ok(RetainedCloneStep::Progress(progress(d.copy_bytes)))}
@@ -127,7 +127,7 @@ impl<S:NativeReceive<RecordValue>+Send> ErasedSnapshotRetirement for OriginalRec
   else if let Some(r)=self.request.as_mut(){if !r.terminal_is_empty(){return r.close_step(g)}self.request.take();}
   else{self.terminal=true;}
   Ok(if self.terminal{RetainedCloneStep::Complete(progress(d.copy_bytes))}else{RetainedCloneStep::Progress(progress(d.copy_bytes))})
- }
+ })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 impl<S:NativeReceive<RecordValue>> Drop for OriginalRecordMemberSnapshotOpen<S>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal,"original member open abandoned its received source or output");}}
 

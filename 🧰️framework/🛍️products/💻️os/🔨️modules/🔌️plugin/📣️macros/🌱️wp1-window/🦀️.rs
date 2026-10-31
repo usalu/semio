@@ -8,7 +8,7 @@
 /// `{"kind":"snapshot","transient":…}`) replacing the whole root, its leaf descriptor (`$owner`, `$kind`, `$display`,
 /// `$schema`), its sparse per-field diff `$diff` (`fields` lists the state's fields, see [`sparse_record_diff!`]: the slots where the
 /// requested root differs from the base) and inverse (the root before), JSON op text and binary, and the state's DSL and pack in the semio envelope
-/// `$envelope` (`$extension`). The state stays the plugin's own type: `Clone + Default + PartialEq + ToValue + FromValue`. An
+/// `$envelope` (`$extension`); with `retained: true` before `fields:` the mutation also gets its `RetainedMutation` preparation and the diff its retained central application (the state then needs `RetainedClone` and `SnapshotProjection`). The state stays the plugin's own type: `Clone + Default + PartialEq + ToValue + FromValue`. An
 /// artifact-level transient stops here; a window transient adds [`window_transient_owners!`].
 ///
 /// 🎯️ The one exception to "no whole-record mutations": a transient root keeps its single `Snapshot { transient }` mutation. The
@@ -18,6 +18,34 @@
 /// Persisted configs have no such variant (`config_record!` generates per-field set mutations only).
 #[macro_export]
 macro_rules! transient_root {
+    (
+        state: $state:ident,
+        mutation: $mutation:ident,
+        diff: $diff:ident,
+        owner: $owner:literal,
+        kind: $kind:literal,
+        display_name: $display:literal,
+        payload_schema: $schema:literal,
+        envelope: $envelope:literal,
+        extension: $extension:literal,
+        retained: true,
+        fields: { $($field:ident : $ty:ty),+ $(,)? } $(,)?
+    ) => {
+        $crate::transient_root! {
+            state: $state,
+            mutation: $mutation,
+            diff: $diff,
+            owner: $owner,
+            kind: $kind,
+            display_name: $display,
+            payload_schema: $schema,
+            envelope: $envelope,
+            extension: $extension,
+            derives: [$crate::__value::RetireOwned],
+            fields: { $($field: $ty),+ },
+        }
+        $crate::__kernel::retained_root_record! { state: $state, mutation: $mutation, diff: $diff, fields: { $($field: $ty),+ } }
+    };
     (
         state: $state:ident,
         mutation: $mutation:ident,
@@ -158,7 +186,16 @@ impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
 macro_rules! window_transient_owners {
     (state: $state:ident, mutation: $mutation:ident, windows: { $($owner:ident => $window:expr),+ $(,)? } $(,)?) => {
         $crate::window_transient_transfer! { state: $state, mutation: $mutation }
+        $crate::window_transient_registry! { state: $state, mutation: $mutation, windows: { $($owner => $window),+ } }
+    };
+}
 
+/// 🪟️ The window-transient owners, registration and accessors of [`window_transient_owners!`] without the ephemeral transfer:
+/// for a state whose mutation lives in another crate, which declares [`window_transient_transfer!`] beside the type (an inherent impl
+/// cannot be written outside the type's own crate).
+#[macro_export]
+macro_rules! window_transient_registry {
+    (state: $state:ident, mutation: $mutation:ident, windows: { $($owner:ident => $window:expr),+ $(,)? } $(,)?) => {
         $(
             #[doc = concat!("🪟️ The [`", stringify!($state), "`] owner of window kind `", stringify!($window), "`.")]
             pub struct $owner;

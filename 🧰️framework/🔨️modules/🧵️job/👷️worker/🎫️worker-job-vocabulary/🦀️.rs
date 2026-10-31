@@ -69,23 +69,19 @@ pub enum WorkerJobClosePhase {
     Open,
     /// 🤝️ The authority is checked out, so the cursor has not been handed the session yet.
     CheckedOut,
-    /// ☣️ Releasing the quarantined outcome's retained payload pages.
-    QuarantinedOutcome,
     /// 📦️ Releasing the checked-out step outcome's retained payload pages.
     Outcome,
     /// 🔔️ The turn that hands `begin_close` to the job itself.
     BeginClose,
-    /// 🧨️ Releasing the session's pre-admitted terminal-fault page.
-    PreadmittedFault,
+    /// 🧨️ Releasing the session's prepared fault payload and its actual source receiver.
+    Payload,
     /// 🧩️ The job is releasing its own owners through `InteractiveJob::close_step`.
     Job,
     /// 🗑️ Dropping the released job.
     JobRelease,
     /// 🎛️ Dropping the batch parameters.
     ParamsRelease,
-    /// 📒️ Waiting on the payload ledger's outstanding stream credits.
-    PayloadLedger,
-    /// 🧺️ Releasing the original worker authority backing and its separately owned ledger.
+    /// 🧺️ Releasing the original worker authority backing.
     AuthorityRelease,
     /// 🎟️ Returning the pre-admitted retirement slot.
     RetirementSlot,

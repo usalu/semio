@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "maximum": 8,
+  "face": 0,
+  "elementLogicalBytes": 64,
+  "stock": [
+    256,
+    8192,
+    8192,
+    8192,
+    64
+  ],
+  "turn": [
+    1,
+    8192,
+    8192,
+    8192,
+    64
+  ],
+  "fuel": 256,
+  "maxTurns": 128,
+  "operations": [
+    {
+      "op": "insert",
+      "value": 1
+    },
+    {
+      "op": "insert",
+      "value": 2
+    },
+    {
+      "op": "insert",
+      "value": 3
+    },
+    {
+      "op": "move",
+      "to": 1
+    },
+    {
+      "op": "delete",
+      "count": 1
+    },
+    {
+      "op": "insert",
+      "value": 9
+    },
+    {
+      "op": "move",
+      "to": 3
+    },
+    {
+      "op": "compact"
+    }
+  ],
+  "expected": [
+    1,
+    9,
+    3
+  ],
+  "rules": {
+    "sameStock": true,
+    "actualPages": true,
+    "privateGapCells": true,
+    "twoStoreMove": true,
+    "noUndefinedGlyphCast": true,
+    "partialMoveSemanticZero": true,
+    "completedMoveSemanticOnce": true,
+    "headerCopyZero": true,
+    "denialPreservesOwner": true,
+    "soleTransfer": true,
+    "producerThenOutputClose": true,
+    "sourceIdentityPreserved": true,
+    "oracle": "independent-sqlite-list-state"
+  },
+  "unit": "semantic-glyph-gap-cases-with-typescript-declared-logical-credit-profile"
+}

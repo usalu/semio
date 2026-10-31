@@ -204,3 +204,87 @@ Original handle 46415 terminated with wrapper exit 1 before runtime. The one com
 ## First IDML Native Refusal
 
 The first public/private native request ended before compiler or tests: Cargo's unit graph rejected profile.prototype.trim-paths without the owning workspace's cargo-features opt-in. Added exactly the same trim-paths header already used by the Layout workspace, preserving IDML members and package settings. The repo-owned lock refresh is included in working-file attribution. No test pass is claimed. Both EDIT owners and coordinator were notified on authoritative terminal before another snapshot.
+
+## Joint Native Batch
+
+The coordinator's final joint source-ready barrier authorized one framework-owned native request selecting pure tool core, pure typing EDIT and native TextSplice composition together, all --lib and --nocapture. Full output is generated/typing-joint-native-1.log. The original handle remains active at compiler image headroom; no native proof has yet been produced. The composer oracle's TS-only correction now requires the entire expected fixture, typing-run and 128-generated record tape, plus actual cancellation/expiry records. Its five hostile actual-log corpora are pending a real baseline. Rust source has not changed since the snapshot.
+
+## Joint First Compiler Result
+
+The original joint request terminated with exit 1 after real compilation. Its sole error was E0404 in pure EDIT test helper retire<T:RetireOwned>: the name resolved to a derive macro instead of the actual retirement trait. The defining owner is adding the explicit test-only trait import. No runtime test or native record has executed, and the terminal log remains generated/typing-joint-native-1.log. No assertion, production bound or resource quota is being changed.
+
+The canonical-net representation also has an existing independent Rust reference-test owner, semio-framework-tool-machine-tests under tool-machine/tests/companion. Its transaction/scrub/typing/node/gesture laws are not executed merely by selecting pure core. It remains a required explicit --lib selection in a subsequent framework batch; the current owned job is not restarted to add it. The TS reference conformance pass does not stand in for that native suite.
+
+## Actual Composer Native Pass
+
+The second joint native request compiled and executed the composer suite: 3 passed, 0 failed, 0 ignored, 0 filtered. Actual record counts: {"fixture": 15, "generated": 128, "typing": 20}. All seven cancellation cuts and the expired original-source closure record were emitted. The strict independent TS/cold-then/fast-check/JSON Patch oracle passed against this actual log (35775 reference comparisons, nativeCompared:true). Five hostile corpora derived from the passing actual baseline were all rejected, including missing typing, duplicate fixtures/generated/typing records and missing expiry.
+
+The same batch's pure core passed all 10 tests; its actual 13-scenario/43-step, five-cancel/four-relocation Scrub oracle passed. Pure EDIT executed both laws and failed its source-identity invariant before records (0 passed, 2 failed), so the whole wrapper exited 1. The defining owner is repairing that exact runtime issue. Full terminal output remains generated/typing-joint-native-2.log; no aggregate or end-to-end success is claimed.
+
+## Reference Companion Compiler Corrections
+
+The EDIT/reference request terminated before runtime with six compiler errors in three existing companion law files. Updated four ActorId constructions to its current SharedUtf8 owner, wrapped one actor field in the actual ActorId type, and supplied the actual mutable Option<ScrubInput> receiving slot to ScrubLedger.send. Existing neutral inputs, loops, semantics and assertions remain unchanged. No production code or bound changed. The terminal log is generated/typing-edit-reference-native-1.log. The next request will keep the exact EDIT plus reference-companion selection.
+
+## Repaired EDIT And Reference Native Pass
+
+Original handle 84839 terminated with wrapper exit 0. The preserved Rust reference companion executed all 40 tests, with 0 failed/ignored/filtered. Pure EDIT executed both native functions, with 2 passed and 0 failed/ignored/filtered. Its ten actual case records matched the independent SQLite/JSON Patch oracle (nativeCompared:true, nativeRecords:10). All five corruptions derived from that actual baseline were rejected: duplicate replacing omission, extra duplicate, omission, unknown case and changed output. Full output: generated/typing-edit-reference-native-2.log.
+
+No next native request was started. The coordinator's explicit between-job hold is active for one canonical repo tools setup all validation. SDK-only ActorId allocation quote repairs were prepared outside the completed framework snapshot and still require fresh SDK validation after that barrier; historical host results are not claimed for changed SDK source. Composer 3/core 10 actual passes remain valid for unchanged source.
+
+## Fresh SDK Native Batch After Setup Failure
+
+Canonical setup-all terminated before witness/detach at its bounded witness metadata predicate; the coordinator confirmed its exclusive publisher token closed normally. Its publication intent remains, so no dependency publication success is claimed. The coordinator explicitly released one independent native batch and required another hold after terminal. Original session 26382 selects repository-root Cargo.toml packages semio-framework-plugin-scrub-host, semio-framework-plugin-host-configuration, semio-framework-plugin-original-job-ownership and semio-framework-plugin-instance-typed-ops, all --lib and --nocapture. Full output: generated/sdk-original-native-1.log. The first actual observation is legitimate door.capacity admission waiting; no test binary has executed yet. No publication, cache bypass or duplicate native request was launched.
+
+## Fresh SDK Batch Compiler Result
+
+Original session 26382 terminated with wrapper exit 1 after actual compilation. The sole E0507 was in the host-configuration native test cleanup helper: consuming OriginalJobFixtureCaller.retire was called through a mutable borrow. The helper now owns the actual caller by value, lends it mutably while paying source/output/decoder retirement, then consumes the same caller after the actual decoder is terminal. Both genuine fixture callers transfer that owner into cleanup. No production source, assertion, neutral input, grant or decoder identity was changed. No test binary executed; fresh SDK native equivalence is still pending. Full evidence is generated/sdk-original-native-1.log. The mandatory coordinator hold resumed immediately on terminal; no retry or other native/publication request was started.
+
+The bounded consuming-retire scan found no further borrowed caller cleanup in the selected owners and Layout source subtree (591 Rust files, 41 direct caller.retire sites); details are retained in native-fixture-retirement-scan.md. Coordinator released one same-four-package retry, original session 86334, full output generated/sdk-original-native-2.log. Only the witnessed host test cleanup ownership changed. The mandatory hold resumes after this retry becomes terminal. No test success is claimed while it is pending.
+
+## Fresh SDK Native And Independent Pass
+
+Original session 86334 terminated with wrapper exit 0. All four selected native owners executed: host-configuration 2 passed, typed-operations 2 passed, original-job ownership 2 passed, scrub-host 3 passed. Every owner reported zero failed, ignored or filtered tests (9 total passed). This is a fresh pass after the SDK ActorId capacity-accounting correction and host fixture ownership correction. Full evidence: generated/sdk-original-native-2.log.
+
+Independent actual-record validation passed: host policy 25/25 records; original typing 8/8 strict SQLite/JSON Patch cases; scrub host 7 semantic cases and 5 cancellation cuts. The actual native registry law admitted all 64 owners and preserved full-registry custody. Five hostile typing corpora derived from the actual passing eight-record baseline were all rejected. Outputs are retained as generated/sdk-original-host-policy-oracle.log, sdk-original-typing-original-oracle.log, sdk-original-scrub-host-oracle.log and sdk-original-typing-hostile.log.
+
+The native lane returned to mandatory HOLD immediately on terminal. No subsequent compiler/publication job was launched. A read-only canonical source selection check prepared the future Writer two-package batch: filter original_ matches exactly both provider laws and the one real EditorApp forwarding law. Exact command and actual mounted inputs are retained in writer-native-doors.md and writer-native-selection.md. Writer native execution remains pending explicit release. Layout15, IDML public/private, Store checkpoint and component/browser verification remain pending; the SDK pass is not end-to-end completion.
+
+## Combined Writer Native Request
+
+Coordinator explicitly released one combined Writer native request, original session 27757: actual Writer workspace, typing-fold plus tests-2, --lib original_ --nocapture. Canonical cfg-selected source proves exactly two provider and one EditorApp forwarding functions match; no source/test rename or mount change was made. Full output is generated/writer-original-native-1.log. Native success and ten actual provider record comparisons remain pending. The strict record comparator is now also exposed to writer-fold-hostile.ts, which requires a real passing baseline before testing five actual-derived corruptions. No hostile success is claimed before that baseline exists. The mandatory hold resumes after this request becomes terminal.
+
+## Writer First Compiler Witness
+
+Original session 27757 terminated with wrapper exit 1 before runtime. Three E0277 diagnostics arose in value-retirement: the frozen contract required ErasedSnapshotRetirement:Send+Sync, but controlled move-only cursor owners intentionally are not Sync. The coordinator inspected current sources and found the canonical trait already Send-only (SHA256 76bd576f48d1c300388cfceee423f9d5e018c2851c021796b3eb50f6b3e4b3d4); another writer had corrected that contract after the original snapshot. No Rust source was edited by this packet or the coordinator for this refusal. Full terminal evidence is generated/writer-original-native-1.log. Coordinator released one exact same combined retry on current source: original session 5101, generated/writer-original-native-2.log. It remains pending, with mandatory HOLD after terminal.
+
+## Descriptor Publication And Append Ordinary Verification Pending
+
+See descriptor-publication.md and descriptor-working-files.json. Preliminary light-admission regression: 18 passed, 0 failed, 778 assertions and strict TypeScript EXIT0. Ordinary final replay remains pending; Windows kernel laws are authored but unexecuted here. No live publication/cache action. Writer5101 remains live; no next native request.
+
+## Descriptor And Generation Normal Seal
+
+Consolidated ordinary session2958 EXIT0: 26 passed, 0 failed, 2020 assertions, including actual strict semantic TypeScript. See descriptor-publication.md, generation-absent.md and their exact working-file packets. This replaces the preliminary light-only descriptor verification. Writer5101 is still live; no next native request.
+
+## Writer Retry2 Terminal Before Runtime
+
+Original authoritative session5101 completed EXIT1; Cargo status101. Sole compiler error E0433 in semio-s-artifact-writer-writer-tests (schema/tests/unit/packages/rust/🦀️.rs:86), which unconditionally reexports tests-2::editor::writer without a dependency. Tests-2 already has a normal dependency on tests-1, so adding the reverse edge would create a real cycle. Root owns canonical source-boundary diagnosis; this packet made no Rust correction. Actual log: generated/writer-original-native-2.log. No tests or Writer records ran; no oracle invoked. The intended combined two-package original_ selector remains exactly the provider2 plus actual EditorApp forwarding1. Terminal HOLD is active and no next native request was started.
+
+## Opaque Unready Metadata Normal Seal
+
+See opaque-metadata.md and opaque-metadata-working-files.json. Actual normal RED72295 (missing module) then GREEN49475: 2 passed, 0 failed, 133 assertions, including15neutral cases and strict owner/harness semantics. Source-ready bounded opaque i/r reader; root retains all authority/wiring. Sole Writer14137 remains live, terminal HOLD pending.
+
+## Unready Integrated Gate
+
+Normal37597: 13 behavior laws passed; integrated strict law failed on peer envelope role typing and driver adapter optionality, 1495 assertions total. Own opaque strict passed. Root/dependency owners repair their diagnostics; focused strict retry waits SourceReady. Original Writer14137 remains live.
+
+## Writer Retry3 Terminal Storage Failure
+
+Original14137 EXIT1 before runtime: managed compiler image ENOSPC in stdio-semio-video-model,0.0GiB free of47.8GiB, automatic retry cleaned0 and then failed Original child phase deadline exhausted. No Writer records/oracle; no type error or test pass claimed. See writer-native-storage-failure.md and generated/writer-original-native-3.log. Terminal HOLD active, no manual cache/deadline/capacity intervention.
+
+## Canonical CLI Strict Passed
+
+Normal60686 EXIT0 on13current roots including genuine anchor fixture and Native initial helper/tests, actual TypeScript CLI with requested strict flags and no cap change. Compiler route alignment is now a separate authorized packet; see compiler-preview-route.md. Its normal RED is genuine; GREEN/strict are pending and no preview/retirement/native retry has run.
+
+## Final Current14Root CLI Strict Passed
+
+Ordinary41640 EXIT0, exact current14roots incl new interrupted unlink tests, actual Native owner/initial helper and genuine anchor fixture. No embedded compiler or ceiling change. Preview65226 remains the only live command in this lane, waiting genuine writerEX; no retirement/native action.

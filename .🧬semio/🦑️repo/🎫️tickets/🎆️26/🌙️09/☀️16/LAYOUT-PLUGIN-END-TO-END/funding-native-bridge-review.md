@@ -1,0 +1,17 @@
+# Funding Native Bridge Source Review
+
+Root read the newly authored canonical Native issuer bridge in storage/🟦️.ts and withNativePlatformProtectedFundingReplacementV1 in publication/platform. The canonical singleton uses private claims. Its port validates actual origin-to-proof-to-operation refinements and the real writer proof for the exact native-fixed-image resource. It captures published physical facts before opening journal custody, clamps effective capacity by physical/custody/policy ceilings, and routes journal transactions through the canonical queued Native journal writer. The public protected-parent callback obtains its proof and physical port from the private actual scope, restricts this to a quiescent root without children/effects, keeps mappings through callback and drains issued operations before return. Escaped closures reject new births after callback close. No concrete extra authority defect was found in this bounded source review; it is not Native custody or executed proof.
+
+Provider validation still needs the correct mounted versus directory receipt/anchor branch. fixed.dir is a regular bounded anchor file; directory/🟦️.ts proves this, and the earlier root directory-kind assumption was corrected. A new receipt alone cannot increase that anchor enforcement ceiling, so the separate canonical anchor transition is required. No physical predicate was relaxed.
+
+Root also corrected setup-publication-commands.json: liveSetupExecuted is now true, liveSetupSucceeded is false, and actual terminal24933/exit1/pre-witness evidence is recorded. Its earlier false value was stale after the real failed attempt. The existing framework-process:test-native-storage owner was added as pending, not executed. Focused/strict commands were preserved. The setup owner was told to retain attempted-versus-passed truth in its final packet.
+
+The full Native bridge, actual-funded producer and earliest setup integration are still unfinished/unvalidated; hostile regressions and expanded strict checking remain required. Configuration, live effects, ticket and goal completion remain held.
+
+## Current Frontdoor Wiring Review
+
+The setup owner has authored executable source wiring: actual journal/marker observation precedes current-envelope shortcuts; interrupted reserved/settled funding is reconciled; the actual-funded all-scope producer and conservative obsolete driver run; canonical publication precedes fresh replacement funding; descriptor-relative marker CAS follows settlement. Root read both the current frontdoor and its funding helper. The source includes recovery for settled charge with its old marker still present. Partial-ready desired-root resume, provider anchor transition, focused checks/strict and genuine runtime remain incomplete.
+
+Root requested one further explicit crash case: successful marker publishFile followed by interruption before retained predecessor cleanup. The helper currently returns early on an already matching current row, so durable intent/retained cleanup ownership must be established by the first-party file publication protocol or integrated recovery; unknown names must not be blindly deleted. This is a review request, not an observed live leak.
+
+Hostile67150 terminated at Bun explicit-operand guard before tests. Corrected actual hostile RED job6211 uses absolute operands and generated/setup-funding-hostile-red-corrected.log. It is not a vulnerability regression pass yet. Root asked all subsequent Bun entries use unambiguous absolute operands.

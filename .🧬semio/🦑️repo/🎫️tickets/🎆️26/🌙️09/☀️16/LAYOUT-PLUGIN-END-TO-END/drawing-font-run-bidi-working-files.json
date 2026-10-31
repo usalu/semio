@@ -1,0 +1,52 @@
+{
+  "state": "scoped-source-ready-unexecuted",
+  "changes": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "sha256": "387f43febdaa383328a697f52731a1749d2835da98ac15958fa50775f5858b07",
+      "bytes": 32656
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🟦️.ts",
+      "sha256": "29b445ec63e84863e559ade03b3ab5be0c295ded41cc3df2b38eb2aebe322e61",
+      "bytes": 37590
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🟦️.ts",
+      "sha256": "d0cd4ab7cee3d8a30ca4dc2f3376fc454ca0764ede8e09219949ed00866acd3f",
+      "bytes": 5273
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🎟️work/run.test.ts",
+      "sha256": "613f3c399c95e6320c8d33486907e80bdb1d397d7452e2bbfaf2c12e58d713cc",
+      "bytes": 9877
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🎟️work/📐️.json",
+      "sha256": "1686e0a4cab30d18fb57be45d9ad14b67c19bdca168c48a999a5e2d5d1ca7d79",
+      "bytes": 1154
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🎟️work/🔣️.json",
+      "sha256": "71939a23f4ecc98b6278489fd56731acaf169fa1e0eba39ad4dee2be001c4b8e",
+      "bytes": 1875
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🎟️work/bidi.test.ts",
+      "sha256": "95715104c0f6d911c3a4986f824ce349e0b12a081b5f63991af16b40474aa650",
+      "bytes": 9210
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🎟️work/📐️.json",
+      "sha256": "3fb5c5fa71aedfa35c1e021f2b5464ae275b3de7e044e098378a1e61c94217e6",
+      "bytes": 781
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🧪️tests/🎟️work/🔣️.json",
+      "sha256": "5b24c5f22110e27edd9b79acae42c68a652aa01b9db76536ea885a38292dd875",
+      "bytes": 1315
+    }
+  ],
+  "sharedAttribution": "Run/Bidi producer prefixes and test protocol are my scope; exact retirement suffix/header hunks are Cursor's packets. No blanket peer claims.",
+  "actualOutcomes": null
+}

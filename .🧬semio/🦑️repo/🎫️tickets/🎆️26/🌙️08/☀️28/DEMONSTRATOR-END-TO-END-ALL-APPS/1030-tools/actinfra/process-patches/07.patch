@@ -1,0 +1,15 @@
+--- a/🧰️framework/🔨️modules/🏃️process/🔒️leases/⚖️fairness/🧪️tests/🟦️.ts
++++ b/🧰️framework/🔨️modules/🏃️process/🔒️leases/⚖️fairness/🧪️tests/🟦️.ts
+@@ -298,4 +298,12 @@
+  const second={pid:3,mode:"exclusive" as const,sharedCohort:false,yielding:false,arrivedAtMs:1};
+  expect(queueMayProceedV1({...holder,mode:"exclusive"} as never,[writer],at,hour)).toBe(false);
+  expect(queueMayProceedV1(holder,[writer,second],at,hour)).toBe(true);
++});
++
++
++test("a shared holder tree passes a waiting writer only for the reentrant pass ceiling, then it queues behind it",()=>{
++ const hour=3600000,ceiling=6*hour,writer={pid:9,mode:"exclusive" as const,sharedCohort:false,yielding:false,arrivedAtMs:0},holder={pid:1,mode:"shared" as const,sharedCohort:true,yielding:false,holdsShared:true};
++ const preference=1000*hour;expect(queueMayProceedV1(holder,[writer],5*hour,preference,ceiling)).toBe(true);expect(queueMayProceedV1(holder,[writer],6*hour+1,preference,ceiling)).toBe(false);
++ expect(queueMayProceedV1(holder,[writer],100*hour,preference)).toBe(true);
++ expect(queueMayProceedV1(holder,[{...writer,mode:"shared" as const,sharedCohort:true}],100*hour,hour,ceiling)).toBe(true);
+ });

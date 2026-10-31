@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "elementLogicalBytes": 8,
+  "target": 8,
+  "actualPageElements": 16,
+  "actualPageLogicalBytes": 128,
+  "cachedCompletionDemand": {
+    "copyBytes": 0,
+    "capacityBytes": 0,
+    "releaseBytes": 0,
+    "depth": 1
+  },
+  "rules": {
+    "sameFiniteWallet": true,
+    "noExtraDirectory": true,
+    "noExtraBodyForCachedQuery": true,
+    "fundedFinally": true,
+    "unchangedLimits": true
+  },
+  "nested": {
+    "parentValue": 99,
+    "parentHeldCopy": 8,
+    "scopes": 2,
+    "birthDepth": 5,
+    "completedDepth": 2
+  }
+}

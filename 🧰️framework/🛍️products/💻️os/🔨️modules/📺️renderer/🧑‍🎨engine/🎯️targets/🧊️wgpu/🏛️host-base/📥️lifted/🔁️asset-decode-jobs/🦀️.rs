@@ -204,6 +204,7 @@ pub struct RendererIoNode {
     job: Option<semio_framework_os_services_native_io::NativeIoJob>,
     params: Option<semio_framework_job_worker_authority::BatchJobParams>,
     params_retirement: Option<semio_framework_async::CancelTokenRetirement>,
+    admission: semio_framework_job_worker::WorkerJobSessionAdmission<semio_framework_os_services_native_io::NativeIoJob, semio_framework_job_worker::WorkerJobSession<semio_framework_os_services_native_io::NativeIoJob>>,
     session: Option<semio_framework_job_worker::WorkerJobSession<semio_framework_os_services_native_io::NativeIoJob>>,
     ticket: Option<semio_framework_job_worker::WorkerJobTicket>,
     result: Option<Result<semio_framework_os_services_native_io::NativeIoValue, String>>,
@@ -216,7 +217,7 @@ pub struct RendererIoNode {
 #[cfg(not(target_arch = "wasm32"))]
 impl RendererIoNode {
     fn new(generation: u64, request: semio_framework_os_services_native_io::NativeIoRequest) -> Self {
-        Self { job: Some(semio_framework_os_services_native_io::NativeIoJob::new(request)), params: None, params_retirement: None, session: None, ticket: None, result: None, result_taken: false, detached: false, caller: RendererIoCaller::new(generation), waker: None }
+        Self { job: Some(semio_framework_os_services_native_io::NativeIoJob::new(request)), params: None, params_retirement: None, admission: Default::default(), session: None, ticket: None, result: None, result_taken: false, detached: false, caller: RendererIoCaller::new(generation), waker: None }
     }
 
     fn wake(&mut self) {
@@ -226,12 +227,12 @@ impl RendererIoNode {
     }
 
     fn admit(&mut self) -> bool {
-        let Self { caller, job, params, session, .. } = self;
+        let Self { caller, job, params, admission, session, .. } = self;
         if session.is_some() {
             return true;
         }
         let admitted = caller.turn(|cx| -> Result<bool, semio_framework_job::OriginalTurnFailure> {
-            if params.is_none() {
+            if job.is_some() && params.is_none() {
                 let Some(now) = cx.now_us() else { return Ok(false) };
                 let Some(cancel) = cx.admit_original_cancel_alias()? else { return Ok(false) };
                 *params = Some(semio_framework_job_worker_authority::BatchJobParams {
@@ -248,7 +249,7 @@ impl RendererIoNode {
                     },
                 });
             }
-            if let Some((admitted, _posted)) = semio_framework_job_worker::WorkerJobSession::try_admit_owned(job, params, &mut *cx)? {
+            if let Some(admitted) = admission.advance(job, params, &mut *cx)? {
                 *session = Some(admitted);
             }
             Ok(session.is_some())
@@ -283,8 +284,8 @@ impl RendererIoNode {
 
     fn close_unadmitted_step(&mut self) -> bool {
         use semio_framework_job::InteractiveJob as _;
-        let Self { caller, job, params, params_retirement, .. } = self;
-        if job.is_none() && params.is_none() && params_retirement.is_none() {
+        let Self { caller, job, params, params_retirement, admission, .. } = self;
+        if job.is_none() && params.is_none() && params_retirement.is_none() && admission.terminal_is_empty() {
             return true;
         }
         let _ = caller.turn(|cx| -> Result<(), semio_framework_job::OriginalTurnFailure> {
@@ -293,6 +294,10 @@ impl RendererIoNode {
                 return Ok(());
             }
             let paid = semio_framework_job::RetainedCloneProgress { copied_items: 1, ..Default::default() };
+            if !admission.terminal_is_empty() {
+                admission.close_step(cx)?;
+                return Ok(());
+            }
             if let Some(owner) = job.as_mut() {
                 owner.begin_close();
                 if !owner.terminal_is_empty() {
@@ -328,7 +333,7 @@ impl RendererIoNode {
             }
             Ok(())
         });
-        self.job.is_none() && self.params.is_none() && self.params_retirement.is_none()
+        self.job.is_none() && self.params.is_none() && self.params_retirement.is_none() && self.admission.terminal_is_empty()
     }
 
     fn close_session_step(&mut self) {
@@ -341,10 +346,7 @@ impl RendererIoNode {
                 return Ok(false);
             }
             match owner.take_retained_step_receipt() {
-                Ok(Some((_issued, progress))) => {
-                    cx.consume_retained(progress)?;
-                    return Ok(false);
-                }
+                Ok(Some(_)) => return Ok(false),
                 Ok(None) => {}
                 Err(_) => return Ok(false),
             }
@@ -378,20 +380,16 @@ impl RendererIoNode {
     }
 
     fn receive_outcome(&mut self, mut owner: semio_framework_job_worker::WorkerJobOutcome<semio_framework_os_services_native_io::NativeIoJob>) {
-        use semio_framework_job::{JobOutcomeDescriptor, JobOutcomeKind, RetainedCloneStep};
+        use semio_framework_job::{JobOutcomeDescriptor, JobOutcomeKind};
         let received = self.caller.turn(|cx| -> Result<RendererIoReceipt, semio_framework_job::OriginalTurnFailure> {
             let Some((issued, progress)) = owner.take_retained_step_receipt() else { return Ok(RendererIoReceipt::Fault("native I/O step returned no original receipt")) };
             if !progress.fits(issued) || !progress.fits(cx.retained_grant()) {
                 return Ok(RendererIoReceipt::Fault("native I/O receipt exceeds its original receiving authority"));
             }
-            cx.consume_retained(progress)?;
             let kind = owner.outcome_descriptor().map(JobOutcomeDescriptor::kind);
             let mut acknowledged = false;
             for _ in 0..4 {
-                let step = owner.acknowledge_outcome(cx.retained_grant());
-                cx.consume_retained(step.progress())?;
-                cx.consume_fuel(step.progress().copied_items as u64);
-                if matches!(step, RetainedCloneStep::Complete(_)) {
+                if owner.acknowledge_outcome(cx)? {
                     acknowledged = true;
                     break;
                 }
@@ -431,32 +429,20 @@ impl RendererIoNode {
     }
 
     fn submit_step(&mut self) {
-        use semio_framework_job_worker::WorkerJobSubmitFault;
         let Self { caller, session, ticket, result, .. } = self;
         let Some(session) = session.as_ref() else { return };
-        let submitted = caller.turn(|cx| -> Result<Option<Result<semio_framework_job_worker::WorkerJobTicket, WorkerJobSubmitFault>>, semio_framework_job::OriginalTurnFailure> {
-            let grant = cx.retained_grant();
-            if cx.should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0 {
-                return Ok(None);
-            }
-            Ok(Some(session.try_submit_step(&renderer_worker_pool(), semio_framework_async::Lane::Io, grant)))
-        });
-        match submitted {
-            Ok(Some(Some(Ok(issued)))) => *ticket = Some(issued),
-            Ok(Some(Some(Err(WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Saturated | semio_framework_async::WorkerSubmitErrorKind::Contended))))) => {
-                if let Ok(rejected) = session.take_rejected() {
-                    rejected.resume();
+        match caller.turn(|cx| session.try_step_on_original_caller(cx)) {
+            Ok(Some(Some((issued, poll)))) => {
+                if poll != semio_framework_job_worker::WorkerJobPoll::Idle {
+                    *ticket = Some(issued);
                 }
             }
-            Ok(Some(Some(Err(error)))) => {
-                if let Ok(rejected) = session.take_rejected() {
-                    rejected.begin_close();
-                } else {
-                    let _ = session.begin_close();
-                }
-                *result = Some(Err(format!("native I/O worker submission failed: {error:?}")));
+            Ok(Some(None)) => {}
+            Ok(None) => {}
+            Err(_) => {
+                let _ = session.begin_close();
+                *result = Some(Err("native I/O original step was refused".into()));
             }
-            _ => {}
         }
     }
 

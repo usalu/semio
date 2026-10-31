@@ -1,0 +1,28 @@
+{
+  "value": 17,
+  "cancelPrefixes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ],
+  "maximumTurns": 10000,
+  "stock": {
+    "items": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "fuel": 100000
+  },
+  "maximumTurnWork": 1,
+  "deniedWork": 0
+}

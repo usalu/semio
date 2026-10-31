@@ -1,0 +1,53 @@
+{
+  "state": "source-authored-unexecuted",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🔤️text-fonts/🧪️tests/🔮️oracle.mjs",
+      "beforeSha256": "df6c500aa12202a1c5e1075d09bd15a87b260b49c641dcd8d7a007e055c9410b",
+      "sha256": "8f97a7a9120033b8e172d2d065d328e2c5d86ce99f9a2db79e66373c0dba5239",
+      "bytes": 5406,
+      "wholeInverseMatches": true,
+      "changes": [
+        [
+          "output.glyphs[at]",
+          "output.glyphs.get(at)"
+        ]
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖼️canvas/🧵️paragraph-work/🟦️.ts",
+      "beforeSha256": "fbe69a114217de4e0ae3b7b7802c195d161308e5184a554a6a2f312644a5025f",
+      "sha256": "ad7bfe3bb2714241dbb63f7169f2d4fdf41258eaab8b80ab63c3738abb234765",
+      "bytes": 3601,
+      "wholeInverseMatches": true,
+      "changes": [
+        [
+          "this.original.glyphs[this.glyph]",
+          "this.original.glyphs.get(this.glyph)"
+        ],
+        [
+          "this.original.segments[glyph.segmentStart+this.segment]",
+          "this.original.segments.get(glyph.segmentStart+this.segment)"
+        ]
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🧵️drawing/🖼️composition/🟦️.ts",
+      "beforeSha256": "db7eb825d0b656f5d234bf6edc089284438feafa87355a6fab459d79e0d9bf6e",
+      "sha256": "66cb8cff97668abf9da03f01fed05ac3dc8c9329175b61bf784f0f1ce0202475",
+      "bytes": 16511,
+      "wholeInverseMatches": true,
+      "changes": [
+        [
+          "label.output.glyphs[this.inkGlyph]",
+          "label.output.glyphs.get(this.inkGlyph)"
+        ],
+        [
+          "label.output.segments[glyph.segmentStart+this.inkSegment++]!",
+          "label.output.segments.get(glyph.segmentStart+this.inkSegment++)!"
+        ]
+      ]
+    }
+  ],
+  "scope": "Exact genuine page reads only; no oracle/assertion/golden/budget changes. Outline retained JSON/numeric API closure remains explicitly open, not proven by this read correction."
+}

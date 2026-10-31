@@ -4,13 +4,15 @@ use super::super::super::{ArtifactHistoryLedger,Change,Author,CompositionPin};
 #[path="🎟️original/🦀️.rs"]
 pub mod original;
 
-struct PendingChangeRef<'a> {
-    id: &'a str,
-    edit_ids: &'a [String],
-    description: Option<&'a str>,
-    saved_at: &'a str,
+#[doc(hidden)]
+pub struct PendingChangeRef<'a> {
+    pub id: &'a str,
+    pub edit_ids: &'a [String],
+    pub description: Option<&'a str>,
+    pub saved_at: &'a str,
 }
-fn pending_change_ref_json(pending: &PendingChangeRef<'_>) -> String {
+#[doc(hidden)]
+pub fn pending_change_ref_json(pending: &PendingChangeRef<'_>) -> String {
     let mut object = semio_framework_pack_json::Object::new();
     object.insert("id", semio_framework_pack_json::Value::String(pending.id.to_string()));
     object.insert("editIds", semio_framework_pack_json::Value::Array(pending.edit_ids.iter().map(|id| semio_framework_pack_json::Value::String(id.clone())).collect()));
@@ -94,6 +96,3 @@ pub fn content_addressed_checkpoint_id_with_pending_change(
     content_addressed_checkpoint_id_core(parent_id, change_ids, changes, Some(PendingChangeRef { id: pending_change_id, edit_ids: pending_edit_ids, description: pending_description, saved_at: pending_saved_at }), message, authors, timestamp, pins)
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

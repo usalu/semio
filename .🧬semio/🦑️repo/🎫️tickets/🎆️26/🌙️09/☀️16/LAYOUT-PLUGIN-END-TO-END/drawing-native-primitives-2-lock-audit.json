@@ -1,0 +1,55 @@
+{
+  "state": "read-only-in-memory-reconstruction",
+  "mutation": false,
+  "bound": "two locks, uniquely named ActionB block if present, only five exact expected dependency entries removed in memory",
+  "files": [
+    {
+      "path": "Cargo.lock",
+      "prelaunchSha256": "f844bfdbb1a515ee5324b0e058e3176d823e632b2d687908c6e028d1a25cc7e3",
+      "currentSha256": "4481bf597efb85440d2857f5bd985a74898fe26e42b79ce5b459f38eff28c872",
+      "currentBytes": 741775,
+      "matchingActionBBlocks": 1,
+      "candidateSha256": "f844bfdbb1a515ee5324b0e058e3176d823e632b2d687908c6e028d1a25cc7e3",
+      "candidateBytes": 741634,
+      "exactFullHashReconstruction": true,
+      "removedActionBDependencies": [
+        {
+          "dependency": "semio-framework-2d-engine",
+          "entry": "semio-framework-2d-engine",
+          "line": 6625
+        },
+        {
+          "dependency": "semio-framework-2d-trace",
+          "entry": "semio-framework-2d-trace",
+          "line": 6626
+        },
+        {
+          "dependency": "semio-framework-trace",
+          "entry": "semio-framework-trace",
+          "line": 6635
+        },
+        {
+          "dependency": "semio-framework-trace-memory-testing",
+          "entry": "semio-framework-trace-memory-testing",
+          "line": 6636
+        },
+        {
+          "dependency": "serde_json",
+          "entry": "serde_json",
+          "line": 6639
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/Cargo.lock",
+      "prelaunchSha256": "eec12c8f290109a7e965bdbca5f59ab095f2e680fc1d78a637c339bd7b67c974",
+      "currentSha256": "9afaf5e8f000295b4da31ad1adfd13e2c8fb2ebaff1d1928029b8caa8fdcd6d0",
+      "currentBytes": 305568,
+      "matchingActionBBlocks": 0,
+      "candidateSha256": "9afaf5e8f000295b4da31ad1adfd13e2c8fb2ebaff1d1928029b8caa8fdcd6d0",
+      "candidateBytes": 305568,
+      "exactFullHashReconstruction": false,
+      "removedActionBDependencies": []
+    }
+  ]
+}

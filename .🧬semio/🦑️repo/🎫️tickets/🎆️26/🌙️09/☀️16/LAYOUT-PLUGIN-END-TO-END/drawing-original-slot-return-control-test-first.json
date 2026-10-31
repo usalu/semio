@@ -1,0 +1,20 @@
+{
+  "state": "authored-before-flag-control-body-no-native-run",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🦀️.rs",
+      "sha256": "3496e4f4703f6ca05af7b83eb525f0d8b13318f2a290c5f1d68b497ca7c35f53",
+      "bytes": 28549
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/actual.json",
+      "sha256": "0ce7cbe1cbd755d15de36483d57d9a1a7b7ebd26a4ee610773fa5d8f24cd1488",
+      "bytes": 554
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/actual.schema.json",
+      "sha256": "b85227271591708d28f598229d7d791ffeb2bac54c40a1ad5ca4d2aba790d822",
+      "bytes": 1514
+    }
+  ]
+}

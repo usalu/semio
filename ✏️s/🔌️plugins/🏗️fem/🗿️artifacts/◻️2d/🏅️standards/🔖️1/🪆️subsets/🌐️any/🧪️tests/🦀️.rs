@@ -41,3 +41,9 @@ mod load_tests;
 #[cfg(test)]
 #[path = "examples-tests.rs"]
 mod examples_tests;
+#[cfg(test)]
+#[path = "diff-tests.rs"]
+mod diff_tests;
+#[cfg(test)]
+#[path = "roundtrip-tests.rs"]
+mod roundtrip_tests;

@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "maximumBytes": 4096,
+  "boxedFieldIssuer": true,
+  "wholePayloadCopy": false,
+  "retainsOriginalShell": true
+}

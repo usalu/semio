@@ -56,8 +56,8 @@ use semio_framework_ui_contract::TreeWindow;
 use semio_framework_ui_contract::UI_BUILT_CHILDREN_MAX;
 
 //#region 🔖️Fixtures
-fn demo() -> Fem2dSnapshot {
-    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
+fn demo() -> semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring {
+    semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotRetiring::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().expect("bundled demo loads"))
 }
 
 fn english() -> &'static Fem2dLabels {

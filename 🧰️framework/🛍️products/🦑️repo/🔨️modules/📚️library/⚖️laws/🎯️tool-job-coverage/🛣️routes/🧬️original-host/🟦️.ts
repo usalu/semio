@@ -1,5 +1,5 @@
 /** 🧬️ Source evidence binds reserved producers to their actual original caller and mounted worker custody. */
-import schema from "./📐️.json";
+import schema from "./📐️.json"with{type:"json"};
 import {toolJobProductionSource,toolJobRustBlock} from "../../📋️inventory/🟦️.ts";
 const compact=(source:string):string=>source.replace(/\s+/g,"");
 const body=(source:string,name:string):string=>{

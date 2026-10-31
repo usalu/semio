@@ -1,0 +1,21 @@
+{
+  "state": "test-only-independent-reference-before-owning-gate-no-runtime",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "0572f5c3d6b7a21150250af8453346319edb1cc3ef331280616e2285c9305271"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🔣️.json",
+      "sha256": "d8951ea13181d8b9c88fff4e4d334f65dab3f0b17f6ce41f61b18586d0ab60b3"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/📐️.json",
+      "sha256": "5c80ce222ed49774fe2bbb3089a1fa28bd2861329cbfebb54c4dba6a1c20246d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🦀️.rs",
+      "sha256": "0d79d307b9897c2b67badecab1f9fd12dfa402a3d99ba9eea1eb8b9e31b6f38a"
+    }
+  ]
+}

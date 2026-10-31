@@ -1,0 +1,40 @@
+{
+  "state": "authored-production-and-eight-owning-laws-unrun",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🦀️.rs",
+      "bytes": 19664,
+      "sha256": "018aa17c7dbd90be3e3eae09ccf2f7c9eb4c489e9926fa8e6d703b3f40423d57"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust/🦀️.rs",
+      "bytes": 1062,
+      "sha256": "99bcb5d89d0598e53d666c9fecc20d78ec02b29ec9260d683134427632d15bed"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🦀️.rs",
+      "bytes": 28549,
+      "sha256": "3496e4f4703f6ca05af7b83eb525f0d8b13318f2a290c5f1d68b497ca7c35f53"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/actual.json",
+      "bytes": 554,
+      "sha256": "0ce7cbe1cbd755d15de36483d57d9a1a7b7ebd26a4ee610773fa5d8f24cd1488"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/actual.schema.json",
+      "bytes": 1514,
+      "sha256": "b85227271591708d28f598229d7d791ffeb2bac54c40a1ad5ca4d2aba790d822"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🧫️fixtures/🔣️.json",
+      "bytes": 2551,
+      "sha256": "e6d115c59067d51f9ee1a849d6a942a85d43ea23353e7aea44d3f0058580f032"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧬️schema/🔣️.json",
+      "bytes": 3179,
+      "sha256": "3961f2a1acf41ee1d58cd5d6937de5073fa5a87d68c88a20400f05c50c5c6916"
+    }
+  ]
+}

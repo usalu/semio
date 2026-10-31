@@ -1,0 +1,43 @@
+{
+  "sourceOnly": true,
+  "runtimeAttempts": 0,
+  "sourceReady": false,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/🚪️admission/🧬️schema/🔣️.json",
+      "sha256": "ade8b590475768ea7af4f507f7f6c60c7271b07f6cbae86f9b5d7a93f0cef45c",
+      "bytes": 1846
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/🚪️admission/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "ee0aa4eccf3f4b679d3ae656f38c5872a74e57993c22f36c2a3b07f9e81b257d",
+      "bytes": 959
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/🚪️admission/🧪️tests/🦀️.rs",
+      "sha256": "2f049f32d1ac87a24228967b7f76c92893756a07e73ecce962baa865ab92f365",
+      "bytes": 5269
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/🚪️admission/🦀️.rs",
+      "sha256": "bcd6069f3faf89cdcd737e1bb9694b0a77802174c423cec3d87174170010a10b",
+      "bytes": 7129
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/🦀️.rs",
+      "sha256": "d701d849d5ebd8520d7e40609893f2565bd267b9d194fcb8d35275521f2d94b3",
+      "bytes": 65016
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/👷️worker/🦀️.rs",
+      "sha256": "a9a18cc79712c22c11adf67929adf1f8eeff3a8707ea660f4d720076c553755b",
+      "bytes": 6367
+    }
+  ],
+  "blockers": [
+    "legacy authority payload getters/close/driver still require authentic Core receiver migration",
+    "existing source-less test controls need genuine FixtureCaller migration",
+    "worker initializer callbacks need defining direct work outcomes",
+    "actual owning compiler/test/independent parity not run"
+  ]
+}

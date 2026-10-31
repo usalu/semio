@@ -172,30 +172,4 @@ impl<J> Drop for WorkerJobSessionAdmissionRejected<J> {
     }
 }
 
-pub(super) struct WorkerJobSubmission<J> {
-    pub(super) inner: session_return::SessionHandle<J>,
-    pub(super) authority: Option<OriginalWorkerJobAuthority<J>>,
-    pub(super) ran: bool,
-}
-
-impl<J: InteractiveJob + 'static> WorkerJobSubmission<J> {
-    pub(super) fn run(mut self) {
-        self.ran = true;
-        let mut authority = self.authority.take().expect("submitted worker closure owns exact job authority");
-        let terminal = authority.run_staged_callback();
-        self.inner.last_step_end_us.store(authority.last_step_end_us().unwrap_or(u64::MAX), Ordering::Release);
-        if self.inner.close_requested.load(Ordering::Acquire) {
-            self.inner.terminal_intent.store(1, Ordering::Release);
-        }
-        unsafe { self.inner.put_authority(authority, if terminal { SESSION_TERMINAL } else { SESSION_OUTCOME }) };
-    }
-}
-
-impl<J> Drop for WorkerJobSubmission<J> {
-    fn drop(&mut self) {
-        let Some(authority) = self.authority.take() else { return };
-        let rejected = self.inner.rejection_kind.load(Ordering::Acquire) != u8::MAX;
-        unsafe { self.inner.put_authority(authority, if rejected { SESSION_REJECTED } else { SESSION_CLOSE }) };
-    }
-}
 //#endregion 🏭️RetainedSessions

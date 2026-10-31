@@ -12,7 +12,7 @@ fn quote(demand: RetirementDemand) -> RetainedCloneGrant {
 
 fn source(text: String) -> RetainedCloneSource<String> {
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 4096 };
-    match RetainedCloneSource::admit_owned(text, (), grant) { Ok((source, _)) => source, Err((error, _, _)) => panic!("original field source refused: {error}") }
+    let mut admission = RetainedCloneSource::admission_owned(text, ()); let mut output = None; for _ in 0..64 { if admission.terminal_is_empty() { break; } if admission.phase() == "ready" { admission.take_output(&mut output, grant).result.unwrap(); } else { admission.advance(grant).result.unwrap(); } } output.expect("original field source admitted")
 }
 
 fn close(field: &mut RetainedFieldPreparation<String>, source: &mut RetainedCloneSource<String>) {
@@ -28,7 +28,7 @@ fn close(field: &mut RetainedFieldPreparation<String>, source: &mut RetainedClon
     }
     while !source.terminal_is_empty() {
         let grant = quote(source.next_close_demand(4096).unwrap());
-        assert!(source.close_step(grant).unwrap().progress().fits(grant));
+        assert!(source.close_step(grant).result.unwrap().progress().fits(grant));
     }
 }
 

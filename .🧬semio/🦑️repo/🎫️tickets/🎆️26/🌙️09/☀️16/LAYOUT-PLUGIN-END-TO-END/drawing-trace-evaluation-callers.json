@@ -1,0 +1,77 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🟦️.ts",
+    "line": 10,
+    "text": "export { BitmapTraceJob, traceBitmap, type BitmapTraceInput, type BitmapTraceProgress, type BitmapTraceOptions, type BitmapTraceRetirement, type BitmapTraceRetirementProgress } from \"./🔍️trace/🟦️.ts\";"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🟦️.ts",
+    "line": 149,
+    "text": "export async function traceBitmap(input:BitmapTraceInput,options:BitmapTraceOptions={}):Promise<PathSegment[]> {"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🧪️tests/🟦️.ts",
+    "line": 8,
+    "text": "import {BitmapTraceJob,traceBitmap,type BitmapTraceInput,type BitmapTraceProgress} from \"../🟦️.ts\";"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🧪️tests/🟦️.ts",
+    "line": 64,
+    "text": "const result=await traceBitmap(input,{workBudget:1,onProgress:p=>events.push(p.phase)});clearTimeout(timer);expect(foreground(result,input)).toEqual([1]);expect(events.indexOf(\"timer\")).toBeGreaterThanOrEqual(0);expect(events.indexOf(\"timer\")).toBeLessThan(events.indexOf(\"complete\"));"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🧪️tests/🟦️.ts",
+    "line": 65,
+    "text": "for(const when of [\"scan\",\"complete\"]){const controller=new AbortController();await expect(traceBitmap(input,{workBudget:1,signal:controller.signal,onProgress:p=>{if(p.phase===when)controller.abort();}})).rejects.toThrow(/cancelled/);}"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/🔍️trace/🧪️tests/🟦️.ts",
+    "line": 66,
+    "text": "const controller=new AbortController();controller.abort();let called=false;await expect(traceBitmap(input,{signal:controller.signal,onProgress:()=>{called=true;}})).rejects.toThrow(/cancelled/);expect(called).toBe(false);"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/🟦️.ts",
+    "line": 1,
+    "text": "export { BitmapTraceJob, BooleanJob, DRAWING_REF_PATTERN, DRAWING_TEXT_LINE_HEIGHT, DRAW_BOOLEAN_OPERATIONS, PathBooleanJob, PathFlattenJob, StrokeOutlineJob, booleanPaths, booleanRegions, canvasDrawingPngExportPort, constantGradientColor, drawingRef, drawingSceneFromPreviewPayload, drawingSceneToSvgMarkup, drawingTextFallbackExtent, drawingTextLines, isDrawingRef, paintDrawingScene, pathSegmentsToSvgD, preparePath, prepareStroke, rasterizeDrawingSceneToPng, rasterizeSvgMarkupToPngDataUrl, traceBitmap } from \"../../🟦️.ts\";"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖍️drawing/🦀️.rs",
+    "line": 60,
+    "text": "retain_drawing_handles, trace_bitmap_json, with_drawing_kernel,"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖍️drawing/🌉️json-bridge/🦀️.rs",
+    "line": 111,
+    "text": "pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, simplify_epsilon: f64) -> String {"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🕸️wasm/🎞️actions-b/📤️drawing-export-and-snapshots/🦀️.rs",
+    "line": 230,
+    "text": "Ok(trace_bitmap_json(u32_integer(args, \"width\")?, u32_integer(args, \"height\")?, &mask, number(args, \"threshold\")?, number(args, \"simplifyEpsilon\")?).into_bytes())"
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/🦀️.rs",
+    "line": 41,
+    "text": "SceneNode, StrokeStyle, trace_bitmap_json, with_drawing_kernel,"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 2,
+    "text": "use flow_extension_sdk::{boolean_segments_json, build_manifest_json, dispose_drawing, export_pdf_json, export_svg_json, render_scene_json, retain_drawing_handles, trace_bitmap_json};"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 332,
+    "text": "async fn trace_bitmap_json_returns_segments_for_a_filled_mask() {"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 334,
+    "text": "let json = semio_framework_pack_json::parse(&trace_bitmap_json(4, 4, &mask, 0.5, 0.0), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();"
+  },
+  {
+    "path": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🧪️tests/🔬️unit/🦀️.rs",
+    "line": 341,
+    "text": "let segments_json = trace_bitmap_json(4, 4, &mask, 0.5, 0.0);"
+  }
+]

@@ -256,7 +256,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                     Some(holes_value) => semio_framework_value::FromValue::from_value(semio_framework_pack_json::to_dsl_value(&holes_value)).map_err(|error| MediaError::Payload(port.to_string(), format!("holes: {error}")))?,
                     None => Vec::new(),
                 };
-                let material_id = doc.snapshot.materials.first().map_or_else(|| "unassigned".into(), |material| material.id.clone());
+                let material_id = doc.snapshot.materials.get(0).map_or_else(|| "unassigned".into(), |material| material.id.as_str().to_owned());
                 let id = doc.operation().and_then(|operation| operation.entity_id("r", "regions")).map_err(|fault| MediaError::Payload(port.into(), format!("{fault:?}")))?;
                 let region = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion { id, name: "Imported Geometry".into(), outline, holes, thickness: 0.02, material_id, mesh_size: 0.25 };
                 Ok(Emit::mutations(vec![Fem2dMutation::CreateRegion(semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::create_region::CreateRegion { region, index: None })]))

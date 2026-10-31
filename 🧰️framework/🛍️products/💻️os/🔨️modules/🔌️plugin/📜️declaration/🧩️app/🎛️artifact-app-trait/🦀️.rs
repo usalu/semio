@@ -28,14 +28,14 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 📬️ Measures the original typed completion's exact app-owned cleanup constructor.
     fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<Self>)->Option<usize>{crate::completion_retirement::derived_completion_birth_bytes(value)}
     /// 🎟️ Admits the original completion payload without consuming it on an unfunded or unsupported route.
-    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<Self>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{crate::completion_retirement::derived_admit_completion_retirement(value,grant)}
-    /// 🎟️ Declares the exact first-party scaffold birth for an applying parent mutation source.
+    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<Self>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{crate::completion_retirement::derived_admit_completion_retirement(value,grant)}
+    /// 📱️ Declares the exact first-party scaffold birth for an applying parent mutation source.
     fn owned_mutation_batch_birth_bytes()->Option<usize>{None}
     /// 🪵️ Retains the original parent source on every refused or unfunded admission.
     fn admit_owned_mutation_batch(_values:&mut Option<Vec<Self::Mutation>>,_grant:RetainedCloneGrant)->Result<Option<(store::MemberStoreOwnedBatch,RetainedCloneProgress)>,ValueError>{Ok(None)}
     /// 🪪️ Exact author-owned coordinate stamped into every document envelope.
     const DIALECT: Dialect;
-    /// 🧩️ Projects actual loaded child references; an undeclared owner grants no restore authority.
+    /// 🗂️ Projects actual loaded child references; an undeclared owner grants no restore authority.
     fn child_restore_projection(_snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         Err(plugin_sdk_fault("app did not declare a loaded-parent child projection"))
     }
@@ -47,7 +47,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     fn genesis_child_pack(_snapshot: &Self::Snapshot, _slot: &str, _child_id: &str) -> Result<Option<Vec<u8>>, ValueError> {
         Ok((|| None)())
     }
-    /// 🪪 Stable app id — prefer this over `app_id(&self)` on the path to receiverless ZSTs.
+    /// 🛤️ Stable app id — prefer this over `app_id(&self)` on the path to receiverless ZSTs.
     /// For a hand-written direct `ArtifactApp` impl this IS the real canonical id. `EditorApp<E>`/
     /// `ViewerApp<V>` cannot follow suit — `surface_app_id` is only knowable at runtime from
     /// `E::DIALECT`/`E::ROLE` — so they keep this a fixed placeholder and override `instance_id`
@@ -55,9 +55,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// silently reduces to comparing every surface against the same placeholder (ticket
     /// 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-G).
     const APP_ID: &'static str;
-    /// 🔐️ Marks domains whose atomic replacement must never use the unmanaged peer path.
-    const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = false;
-    /// 🪪️ The real, runtime-resolved app id an ownership check must compare against. Defaults to
+    /// 🏃️ The real, runtime-resolved app id an ownership check must compare against. Defaults to
     /// `Self::APP_ID` (correct for every hand-written impl, where the const already IS the real
     /// id); `EditorApp<E>`/`ViewerApp<V>` override it to return their derived `surface_app_id`.
     async fn instance_id(&self) -> &str {
@@ -79,15 +77,15 @@ pub trait ArtifactApp: Default + Send + 'static {
     fn mounted_job_maintenance_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
-    /// 📏️ Quotes the exact next [`Self::mounted_job_close_step`] turn of the owner-local mounted jobs.
+    /// 💼️ Quotes the exact next [`Self::mounted_job_close_step`] turn of the owner-local mounted jobs.
     fn mounted_job_close_demands(_instance_id: u32, _body: usize) -> Result<RetirementDemand, ValueError> {
         Ok(RetirementDemand::default())
     }
-    /// 🧹️ Advances one owner-local mounted background-job close opportunity.
+    /// 👑️ Advances one owner-local mounted background-job close opportunity.
     fn mounted_job_close_step(_instance_id: u32,cx:&mut semio_framework_job::StepContext<'_>,_grant: RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         Ok(PluginLifecycleStep::Complete(RetainedCloneProgress::default()))
     }
-    /// 🧹️ Exact terminal witness paired with `mounted_job_close_step`. It is also what keeps an app
+    /// 🚪️ Exact terminal witness paired with `mounted_job_close_step`. It is also what keeps an app
     /// with owner-local cleanup still owing OUT of `maintenance_step`'s idle fast path: that path
     /// leaves the round-robin stage cursor untouched, so an app answering `true` here while it still
     /// held work never reached its own stage 15 again — the incremental teardown would simply never
@@ -100,7 +98,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     fn mounted_job_prepare_snapshot_read(_operation: AppRenderOperationContext, _snapshot: &Self::Snapshot, _windows: &WindowConfigOwnerRegistry, _view: Option<&ViewModel>, _grant: RetainedCloneGrant) -> crate::MountedSnapshotReadPreparation {
         crate::MountedSnapshotReadPreparation::default()
     }
-    /// 🧩️ Registers only app-owned exact factories. The empty default contributes no execution
+    /// 🫙️ Registers only app-owned exact factories. The empty default contributes no execution
     /// authority; implementations must bind every factory's `Owner` associated type to `Self`.
     fn register_tool_job_factories(_registry: &mut ArtifactToolFactoryRegistry<'_, Self>) -> Result<(), Fault> {
         Ok(())
@@ -120,7 +118,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     fn register_window_config_owners(_registry: &mut WindowConfigOwnerRegistry) -> Result<(), Fault> {
         Ok(())
     }
-    /// 🎯️ Selects a concrete attached window as the retained command's window-transient owner.
+    /// 👆️ Selects a concrete attached window as the retained command's window-transient owner.
     /// The runtime validates the id and expected kind against the command's trusted ViewModel
     /// roster before it captures mutation authority for the current app and document.
     fn retained_window_transient_target(_command: &Self::Command) -> Option<(&str, &'static str)> {
@@ -193,7 +191,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         Some(store::os_store::document_store_owners::bounded_artifact_store_owners::<Self::Snapshot, Self::Mutation>(grant))
     }
 
-    /// 🎛️ Supplies exact config snapshot/mutation/store retirement authority, framework-owned by
+    /// ⚙️ Supplies exact config snapshot/mutation/store retirement authority, framework-owned by
     /// default beside [`Self::build_config_store_disposer`].
     fn config_store_owners_source_demands()->Result<RetirementDemand,ValueError>{store::os_store::document_store_owners::bounded_artifact_store_owners_source_demands::<Self::Config,Self::ConfigMutation>()}
     fn build_config_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Config, Self::ConfigMutation>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Config, Self::ConfigMutation>>> {
@@ -207,35 +205,35 @@ pub trait ArtifactApp: Default + Send + 'static {
         Some(store::os_store::document_store_owners::bounded_artifact_store_owners::<Self::Draft, Self::DraftMutation>(grant))
     }
 
-    /// 📬️ Supplies the app-owned retained semantic preparation authority for one
+    /// 🛂️ Supplies the app-owned retained semantic preparation authority for one
     /// document mutation. `None` is an explicit fail-closed publication denial.
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         None
     }
 
-    /// 📬️ Supplies the app-owned retained semantic preparation authority for one
+    /// 🌀️ Supplies the app-owned retained semantic preparation authority for one
     /// config mutation. Generic config mutation replay is never substituted.
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         None
     }
 
-    /// 📬️ Supplies the app-owned retained semantic preparation authority for one
+    /// 🌁️ Supplies the app-owned retained semantic preparation authority for one
     /// draft mutation. Generic draft mutation replay is never substituted.
     fn build_draft_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Draft, Self::DraftMutation>>> {
         None
     }
 
-    /// 📬️ Supplies retained shared-live presence preparation. Absence denies the lane.
+    /// 🔗️ Supplies retained shared-live presence preparation. Absence denies the lane.
     fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
         None
     }
 
-    /// 📬️ Supplies retained local-only transient preparation. Absence denies the lane.
+    /// 🏡️ Supplies retained local-only transient preparation. Absence denies the lane.
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
         None
     }
 
-    /// 🧹️ Supplies exact bounded retirement for a displaced local presence root. The framework
+    /// 🛌️ Supplies exact bounded retirement for a displaced local presence root. The framework
     /// owns this lane by default (`bounded_presence_root_retirement_factory`) — an app that wants
     /// its own paging overrides it, but none has to declare one to be allowed to READ its own
     /// presence.
@@ -243,12 +241,12 @@ pub trait ArtifactApp: Default + Send + 'static {
         Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
 
-    /// 🧹️ Supplies exact bounded retirement for a displaced transient root.
+    /// 🌂️ Supplies exact bounded retirement for a displaced transient root.
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
         None
     }
 
-    /// 🏗️ Begins the app's retained semantic-validation/replay/store-construction job — framework-owned by
+    /// ✔️ Begins the app's retained semantic-validation/replay/store-construction job — framework-owned by
     /// default, paired with [`Self::build_document_store_owners`]' bounded default, so every whole-document load
     /// (Import Document, example switch, archive restore) can replace the store; an app with its own owner catalog
     /// supplies its own job. Rejection returns the exact completed envelope and grants no replacement authority.
@@ -262,16 +260,12 @@ pub trait ArtifactApp: Default + Send + 'static {
         Ok(bounded_document_store_initialization_job::<_,_,AppDocumentStoreOwnerProducer<Self>>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
     }
 
-    /// 🔐️ Revalidates domain-owned publication authority in the atomic replacement branch.
-    fn validate_document_store_publication(_operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        if Self::REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY {
-            Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-store.publication-authority-missing"), "registered domain did not supply atomic publication authority"))
-        } else {
-            Ok(())
-        }
+    /// ⚛️ Revalidates domain-owned publication authority in the atomic replacement branch.
+    fn validate_document_store_publication(token: &DocumentStorePublicationToken, live: DocumentStoreLivePublication) -> Result<(), Fault> {
+        token.validate_live(live)
     }
 
-    /// 🧹️ The five bounded close lanes `VcsArtifactApp`'s ladder drives
+    /// 🌃️ The five bounded close lanes `VcsArtifactApp`'s ladder drives
     /// (`drive_artifact_owned_disposer`, lanes 0–4) are FRAMEWORK-owned by default, the same way
     /// the presence retirement lane below is. Each default is built from the app's own
     /// associated types — there is nothing app-specific in any of them — and an app that wants
@@ -300,7 +294,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_store_disposer::<Self::Presence, Self::PresenceMutation>())
     }
 
-    /// 🧹️ The peer half of the same lane, framework-owned by the same default.
+    /// 🏁️ The peer half of the same lane, framework-owned by the same default.
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
         Some(semio_framework_plugin_decl_views::presence_retirement::bounded_presence_root_retirement_factory::<Self::Presence>())
     }
@@ -308,7 +302,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     fn build_transient_store_disposer() -> ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
         Some(bounded_transient_store_disposer::<Self::Transient, Self::TransientMutation>())
     }
-    /// 📜️ Stable document schema id — prefer this over `artifact_schema(&self)`.
+    /// 🌄️ Stable document schema id — prefer this over `artifact_schema(&self)`.
     const DOCUMENT_SCHEMA: &'static str;
     /// 📚️ Document body for `setActiveExample` when this app did not declare that action.
     /// `None` means there is no catalogue. `Some(Ok(body))` is DSL or JSON. An empty id is the initial snapshot.
@@ -336,22 +330,22 @@ pub trait ArtifactApp: Default + Send + 'static {
     type Mutation: ::semio_framework_os_kernel::StoreMutationFor<Self::Snapshot> + Clone + ::protocol::ColdMutation<Self::Snapshot> + protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type ConfigMutation: Clone + ::protocol::ColdMutation<Self::Config> + ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + ::replication::OpBinaryReceiving + 'static;
-    /// 📝️ Volatile draft snapshot — use {@link NoDraft} when the app has no draft lane.
+    /// 🧲️ Volatile draft snapshot — use {@link NoDraft} when the app has no draft lane.
     type Draft: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
-    /// 📝️ Draft-lane operations applied to {@link store::DraftStore}.
+    /// 🏪️ Draft-lane operations applied to {@link store::DraftStore}.
     type DraftMutation: Clone + ::protocol::ColdMutation<Self::Draft> + ::protocol::Mutation<Self::Draft> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     /// 👥️ Shared live presence — use {@link NoPresence} when the app has no shareable live state.
     type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
-    /// 👥️ Presence-lane operations applied to the app's typed presence snapshot.
+    /// 🔤️ Presence-lane operations applied to the app's typed presence snapshot.
     type PresenceMutation: Clone + ::protocol::ColdMutation<Self::Presence> + ::protocol::Mutation<Self::Presence> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     /// 🫧️ Ephemeral LOCAL-ONLY UI state — use {@link NoTransient} when the app has none.
     /// The fourth and last state mechanism; see `NoTransient`'s doc for how it differs from a
     /// draft (which is ephemeral *artifact* content, not UI state).
     type Transient: semio_framework_value::retirement::RetireOwned + Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
-    /// 🫧️ Transient-lane operations applied to {@link store::TransientStore}.
+    /// 🌅️ Transient-lane operations applied to {@link store::TransientStore}.
     type TransientMutation: Clone + ::protocol::ColdMutation<Self::Transient> + ::protocol::Mutation<Self::Transient> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
 
-    /// 👥️🫧️ The two EPHEMERAL lanes this command touches — presence (shared) and
+    /// 🎮️🫧️ The two EPHEMERAL lanes this command touches — presence (shared) and
     /// transient (local-only UI). Separate from `handle` because neither lane has an op log, an
     /// undo group, or a failure mode: they are applied unconditionally and cannot fail, so
     /// folding them into `handle`'s `Result<Emit, Fault>` would misrepresent them.
@@ -361,7 +355,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn ephemeral(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _presence: &PresenceView<'_, Self::Presence>, _transient: &TransientView<'_, Self::Transient>) -> EphemeralEmit<Self> {
         EphemeralEmit::default()
     }
-    /// 🎯️ B1: this app's closed, typed command enum — the SOLE dispatch surface for
+    /// 🔢️ B1: this app's closed, typed command enum — the SOLE dispatch surface for
     /// `handle` below, replacing the deleted stringly-typed `handle_action`/`handle_command`/
     /// `handle_typed_command` trio. Decoded off the wire once, by `VcsArtifactApp::dispatch_typed_command`,
     /// via `OpBinary::decode_op`; framework-reserved verbs (undo/redo/checkpoint/alternative/clipboard/
@@ -376,16 +370,13 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn initial_config() -> Self::Config {
         Self::Config::default()
     }
-    /// 🧭️ Resolves a host-owned control-plane action directly to one event-sourced
+    /// 🏠️ Resolves a host-owned control-plane action directly to one event-sourced
     /// configuration mutation. App interaction commands remain on the retained tool-operation
     /// path; hidden host catalogue publication does not impersonate an interactive reducer.
     fn original_host_configuration(_action:&str)->Option<&'static semio_framework_plugin_decl_emission::OriginalHostConfigurationDeclaration<Self::ConfigMutation>>{None}
-    /// ⌨️ This app's typing algebra: how the leaves `next` of one live typing delivery join the open run's net leaves
-    /// `net` (design §13.2). The default is a single buffer — every delivery's leaves are the whole buffer, so the latest
-    /// replaces the net; an app whose typing verb yields relative leaves (a text splice) composes them, and answers
-    /// `Split` where the edit does not continue the run (a caret that jumped away).
-    fn typing_fold(_net: &[Self::Mutation], _next: &[Self::Mutation]) -> semio_framework_tool_machine::TypingFold<Self::Mutation> {
-        semio_framework_tool_machine::TypingFold::Split
+    /// ⌨️ The original typing algebra keeps independent deliveries separate unless the app declares a bounded fold.
+    fn original_typing_fold() -> crate::tool_contract::OriginalTypingFoldPolicy<Self::Mutation> {
+        crate::tool_contract::OriginalTypingFoldPolicy::Split
     }
     /// 🪧️ The label, in every shell locale, of the entity `id` (one of `kinds`, the reference's declared entity kinds)
     /// in `snapshot` — what a history-edit reference chip reads instead of the raw id. `None` shows the id as data.
@@ -399,7 +390,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     fn selection_reference_id(_kinds: &[String], row: &str) -> Option<String> {
         Some(row.to_string())
     }
-    /// 🎯️ The leaf kinds (`SemanticDescriptor::kind`, e.g. `"drag-selection"`) that state the intent of a transaction the
+    /// 🍃️ The leaf kinds (`SemanticDescriptor::kind`, e.g. `"drag-selection"`) that state the intent of a transaction the
     /// tool `tool` (the stamped `TransactionRef.tool`, `<appId>#<toolId>`) commits (design §19.1): its history row is
     /// labelled by the first of its operations of one of these kinds instead of its first operation, so a gesture whose
     /// support leaves come first still reads as what the user did. Empty (the default): the first operation labels it.
@@ -416,7 +407,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn initial_draft() -> Self::Draft {
         Self::Draft::default()
     }
-    /// 🧩️ B1: the pure heart of the app — a total, side-effect-free function from
+    /// ❤️ B1: the pure heart of the app — a total, side-effect-free function from
     /// `(command, document, config, draft, engines)` to an {@link Emit}. No `&mut self`.
     /// `engines` is the host-owned {@link EngineHandles} bag (empty until WIT engine-derive/read
     /// is threaded through exchange).
@@ -438,7 +429,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn command_id(_command: &Self::Command) -> &'static str {
         "typed-command"
     }
-    /// 🎯️ Builds this app's typed `Command` from a host action id + JSON args — the bridge
+    /// 🌉️ Builds this app's typed `Command` from a host action id + JSON args — the bridge
     /// the React/wgpu shells still speak (`{action,args}`) until every call site sends `OpBinary`
     /// bytes directly. Default rejects (same error as the pre-bridge `dispatch_action` arm); apps
     /// that the shells drive must override this so chrome actions reach `handle`.
@@ -452,7 +443,7 @@ pub trait ArtifactApp: Default + Send + 'static {
             format!("action '{action}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — app actions are dispatched exclusively through the typed command channel now (see `dispatch_typed_command`)"),
         ))
     }
-    /// 🔐️ The agent lane's fill for an omitted [`ActionArgDef::target_revision`] argument: the token the rendered
+    /// 🧓️ The agent lane's fill for an omitted [`ActionArgDef::target_revision`] argument: the token the rendered
     /// binding of the target `args` address carries in `doc` right now, or `None` when this app resolves no such target —
     /// the agent lane then refuses the call by name. The shell lanes never call it (ticket 26/09/23, G12 session 14c).
     async fn agent_target_revision(_action: &str, _args: &DslValue, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
@@ -470,13 +461,13 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn clipboard_media_type() -> Option<MediaType> {
         None
     }
-    /// 📋️ Every `MediaType` this app accepts a paste of — defaults to just `clipboard_media_type()`.
+    /// 🙆️ Every `MediaType` this app accepts a paste of — defaults to just `clipboard_media_type()`.
     /// Override to additionally accept fragments copied from a compatible sibling app (e.g. puzzle
     /// accepting a block kind-definition fragment as a catalog merge).
     async fn clipboard_accepts() -> Vec<MediaType> {
         Self::clipboard_media_type().await.into_iter().collect()
     }
-    /// 📋️ Builds a `ClipboardFragment` from the current selection. Called by `VcsArtifactApp`'s
+    /// 🌆️ Builds a `ClipboardFragment` from the current selection. Called by `VcsArtifactApp`'s
     /// injected `copy` and `cut` actions; `cut` additionally calls `cut_operations`. Default: always
     /// empty (apps that don't override `clipboard_media_type` never reach here in practice, since the
     /// interception only calls this when a media type is declared).
@@ -519,7 +510,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &crate::ArtifactPendingView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
         Vec::new()
     }
-    /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): return type flipped
+    /// 🖼️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): return type flipped
     /// from `ui_wgpu::wgpu::UiNode` to `ui_runtime::ComponentTree` — the choke-point change every
     /// implementer of this trait must follow; see `📓️recipe-plugin.md` in this ticket's folder.
     async fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree>;
@@ -534,7 +525,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         let _ = owner;
         Self::render(body_key, doc, cfg, view_state).await
     }
-    /// 🧮️ Supplies the immutable local request snapshot used by retained reducers to render.
+    /// 🧊️ Supplies the immutable local request snapshot used by retained reducers to render.
     ///
     /// 🕹️ `interaction` reads the framework-owned interaction mechanism (hover + selection) so a
     /// window can paint its own hovered/selected state instead of ever storing it again itself —
@@ -542,13 +533,13 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 🧳️ Retains query state under the original render identity until funded retirement.
     type RenderWork: semio_framework_value::retirement::RetireOwned + Send + 'static = ();
     fn uses_render_work(_body_key: &str) -> bool { false }
-    /// 📨️ Retains only the original donor accepted for this exact window render work.
+    /// 🌬️ Retains only the original donor accepted for this exact window render work.
     fn receive_render_work_request(_work:&mut Self::RenderWork,_request:&mut Option<semio_framework::action_staging::StagedFormRequest>,_view:&ViewModel,_cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<()>,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"staging.render-request-unsupported").into())}
-    /// 🎟️ Creates only the work admitted and receipted by this original turn.
+    /// 🆕️ Creates only the work admitted and receipted by this original turn.
     fn begin_render_work(_body_key: &str, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<Self::RenderWork>, semio_framework_job::OriginalTurnFailure> {
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact did not declare retained render work").into())
     }
-    /// 📏️ Quotes the next original query action before the scheduler lends its independent physical currencies.
+    /// ❓️ Quotes the next original query action before the scheduler lends its independent physical currencies.
     fn render_work_demand(_work:&Self::RenderWork,_maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
     /// 🪢️ Advances the same query owner; a completed tree remains private until retirement.
     async fn render_with_work_context(
@@ -588,7 +579,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
         HashMap::new()
     }
-    /// 🫧️ Projects window chrome from the exact transient root captured for the addressed window.
+    /// 📽️ Projects window chrome from the exact transient root captured for the addressed window.
     ///
     /// 🕹️ `interaction` is the SAME framework-owned hover/selection `render_with_request_context`,
     /// `window_measures_with_request_context` and `context_menu_with_request_context` already carry —
@@ -605,11 +596,11 @@ pub trait ArtifactApp: Default + Send + 'static {
         let _ = (transient, interaction);
         Self::window_engagements(doc, cfg, view_state).await
     }
-    /// 🪟️ See `window_engagements` — same per-window-instance keying.
+    /// 🗝️ See `window_engagements` — same per-window-instance keying.
     async fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::new()
     }
-    /// 🕹️ `window_measures`' interaction-aware twin — the same per-window-instance chrome, plus the
+    /// 🌇️ `window_measures`' interaction-aware twin — the same per-window-instance chrome, plus the
     /// framework-owned hover/selection an option group needs to gate itself on what the user picked
     /// (e.g. puzzle3d's Brush "Placement" picker, which only exists for a hovered/selected vortex).
     /// Default discards `interaction` and falls through to `window_measures`, exactly like
@@ -625,7 +616,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::new()
     }
-    /// 🖱️ Answers an on-demand right-click menu request — the WIT `context-menu` export's SDK
+    /// 🍔️ Answers an on-demand right-click menu request — the WIT `context-menu` export's SDK
     /// counterpart. Called fresh at right-click time (never cached, never part of `refreshUi`);
     /// `request.menu.id` names the target the host resolved (a `UiMenuRef` a plugin attached to a
     /// `UiNode`, or a scene-surface convention id like `"world3d"`/`"nodeGraph"`/`"window"`).
@@ -637,7 +628,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         Vec::new()
     }
-    /// 🕹️ `context_menu`'s interaction-aware twin. `ContextMenuRequest.surface.selection` is
+    /// 🏞️ `context_menu`'s interaction-aware twin. `ContextMenuRequest.surface.selection` is
     /// CLIENT-supplied and only ever carries what that surface itself painted, so a granularity the
     /// surface does not model (a vortex marker, a target volume) never reaches a menu through it;
     /// `interaction` is the authoritative framework-owned selection for every declared domain.
@@ -654,7 +645,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         let _ = interaction;
         Self::context_menu(request, doc, cfg, view_state, registry).await
     }
-    /// 🌱️ Initial mutations applied through normal dispatch right after the store is constructed —
+    /// 🚀️ Initial mutations applied through normal dispatch right after the store is constructed —
     /// replaces the old `seed(&mut ArtifactStore)` direct-store-touch hook (ticket
     /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE M4: this was the only place an app touched a
     /// store directly; routing genesis mutations through the same `ArtifactCommand::Apply` path
@@ -665,7 +656,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         Vec::new()
     }
 
-    /// 🪪️ This app's own config+presence schema descriptor, declared by
+    /// 🌈️ This app's own config+presence schema descriptor, declared by
     /// `PluginBuilder::document_app` the moment this type is bound to a plugin (ticket
     /// 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W1c: app-scope schema is keyed off `Self`, so the
     /// builder call that already names `Self` is the correct place to register it, not a plugin-root
@@ -693,7 +684,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn decode_natural_file(_bytes: &[u8]) -> Result<Self::Snapshot, MediaError> {
         Err(MediaError::NotImplemented)
     }
-    /// 🎞️ Declares this app's workflow ports — delegates to `Self::io().all_ports()` (implicit
+    /// 🌊️ Declares this app's workflow ports — delegates to `Self::io().all_ports()` (implicit
     /// `document:in`/`document:out` plus any app-specific ports) when `io()` is overridden; an app that
     /// never overrides `io()` still gets no ports (matches the old `Vec::new()` default) since there is
     /// no document media type to synthesize the implicit pair from.
@@ -703,7 +694,7 @@ pub trait ArtifactApp: Default + Send + 'static {
             None => Vec::new(),
         }
     }
-    /// 🎞️ Pure export of the current document onto one declared output port — must not mutate
+    /// 📤️ Pure export of the current document onto one declared output port — must not mutate
     /// anything. Called by both the UI (preview/export) and a headless runner (moving media along a
     /// workflow edge). Default: the whole document pack, base64-wrapped, for `"artifact:out"`;
     /// `MediaError::NotImplemented` for any other port (apps declaring extra output ports override
@@ -720,12 +711,12 @@ pub trait ArtifactApp: Default + Send + 'static {
         let bytes=(codec.encode)(doc.snapshot).map_err(|error|MediaError::Payload(port.to_string(),error.to_string()))?;
         Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
-    /// 🧮️ Exports with the exact immutable transient snapshot captured for this request.
+    /// 📸️ Exports with the exact immutable transient snapshot captured for this request.
     async fn export_media_with_request_context(owner: &ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, Self::Snapshot>, transient: &TransientView<'_, Self::Transient>) -> Result<Media, MediaError> {
         let _ = (owner, transient);
         Self::export_media(port, doc).await
     }
-    /// 🎞️ Translates an incoming media value on one declared input port into a document load — never a mutation, so an
+    /// 🔟️ Translates an incoming media value on one declared input port into a document load — never a mutation, so an
     /// import writes no history row: it is the load/genesis path (`Effect::LoadDocument` over a fresh history), the same path a
     /// catalogue example takes. Default: decodes a `"artifact:in"` structured (base64 pack) payload, or a natural file through the
     /// app's codec; `MediaError::NotImplemented` for any other port.
@@ -747,7 +738,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         let snapshot=(codec.decode)(&bytes).map_err(|error| MediaError::Payload(port.to_string(),error.to_string()))?;
         document_reference_load_emit(&snapshot, Self::DOCUMENT_SCHEMA)
     }
-    /// 🎞️ Cheap identity for one output port's current value, without serializing the payload.
+    /// 📼️ Cheap identity for one output port's current value, without serializing the payload.
     /// Default re-derives it from `export_media`; override when a fingerprint is derivable without
     /// materializing the full export (e.g. from a cached head edit id).
     /// 🌀️ `io-async-signatures`: async signature (delegates to the now-async `export_media`

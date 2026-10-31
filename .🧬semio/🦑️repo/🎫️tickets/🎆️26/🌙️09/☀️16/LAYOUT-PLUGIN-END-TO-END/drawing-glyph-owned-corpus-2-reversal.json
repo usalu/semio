@@ -1,0 +1,17 @@
+{
+  "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🔤️text/🧪️tests/🎨️corpus/corpus.test.ts",
+  "beforeSha256": "230f0ac03b16a589f1575225db203dae5a452dadcc0d366a575d5f15cfa1855d",
+  "sha256": "dfe51ddb1073831131dd6c0eb798cd1c070f94d4906e532d7563339b8507e8f4",
+  "inverseWholeFile": "230f0ac03b16a589f1575225db203dae5a452dadcc0d366a575d5f15cfa1855d",
+  "edits": [
+    {
+      "before": "before=JSON.stringify(input.source)",
+      "after": "before=structuredClone(input.source.layers)"
+    },
+    {
+      "before": "expect(JSON.stringify(input.source)).toBe(before)",
+      "after": "expect(input.source.layers).toEqual(before)"
+    }
+  ],
+  "scope": "EXACT two Root-approved test snapshot/deep comparison expressions. All explicit source layers/assets identities, data, geometry/style/stock/quanta/assertions unchanged. No BigInt coercion/global hook or production delta."
+}

@@ -1,0 +1,3 @@
+# Borrow Authority Admission Return Quote Drift
+
+Both prepared captures changed only the Source lib root. Current13677B/SHA0117eb440dec712684dfefcba611aceb56e909385c116fcab042f313e512093d adds exactly105 bytes: RetainedCloneBorrowAuthorityAdmission::next_return_demand forwards its retained Source admission's existing exact return quote. Removing only that line in memory reconstructs the entire captured13572B/SHAa76291a48b3be8c675594ae75fe19be33db23fd67bead6a7959f74bd3d998587. No on-disk reversion. Author is not established. This is a valid missing readonly owned-cancellation quote port; it adds no authority, state, work, allocation or callback. It is preserved for the fresh captures.

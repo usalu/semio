@@ -90,7 +90,7 @@ static NEXT_HISTORY_READ_ISSUANCE:std::sync::atomic::AtomicU64=std::sync::atomic
 pub struct ArtifactHistoryLedger<T> {
     pub(super) pages: std::mem::ManuallyDrop<Option<Box<ArtifactHistoryPageChunk<T>>>>,
     page_count: u32,
-    read_issuance:u64,
+    pub read_issuance:u64,
     read_count:usize,
     replacement_count:usize,
     replacement_decision:Option<usize>,
@@ -197,7 +197,7 @@ impl<T> ArtifactHistoryLedger<T> {
         unsafe { self.slot_page_mut(index / artifact_history_page_slots::<T>()).slots[index % artifact_history_page_slots::<T>()].assume_init_mut() }
     }
 
-    fn authority(&self) -> usize {
+    pub fn authority(&self) -> usize {
         self.pages.as_ref().map(|chunk| chunk.as_ref() as *const ArtifactHistoryPageChunk<T> as usize).unwrap_or(0)
     }
 
@@ -205,7 +205,7 @@ impl<T> ArtifactHistoryLedger<T> {
         self.page_count as usize * artifact_history_page_slots::<T>()
     }
 
-    /// 🎟️ Reports backing required by the next unoccupied history reservation.
+    /// 📜️ Reports backing required by the next unoccupied history reservation.
     pub fn next_reservation_allocation_bytes(&self) -> usize {
         if self.reservation.is_some() || self.free_head.is_some() || (self.initialized as usize) < self.allocated_slots() { return 0; }
         size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().saturating_mul(artifact_history_page_slots::<T>())
@@ -302,9 +302,9 @@ impl<T> ArtifactHistoryLedger<T> {
         Ok(())
     }
 
-    /// 📏️ Prices the next exact native reservation, its typed backing and shared original decision header.
+    /// 🏷️ Prices the next exact native reservation, its typed backing and shared original decision header.
     pub fn group_reservation_demands(&self)->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:size_of::<ArtifactHistoryReservation>()*2+size_of::<ArtifactHistoryGroupSuffix>(),capacity_bytes:self.next_reservation_allocation_bytes(),depth:1,..Default::default()}}
-    /// 🎟️ Stages one real reservation only after every independent original currency is admitted.
+    /// 🎭️ Stages one real reservation only after every independent original currency is admitted.
     pub fn reserve_group_controlled(&mut self,visibility:&std::sync::Arc<ArtifactGroupVisibility>,slot:&mut Option<ArtifactHistoryReservation>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,ValueError>{if slot.is_some()||!visibility.pending()||self.group.as_ref().is_some_and(|group|!std::sync::Arc::ptr_eq(&group.visibility,visibility)){return Err(ValueError::literal(protocol::value::ValueRefusalKind::InvariantViolated,"original group reservation changed its source or recipient"))}let d=self.group_reservation_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(Default::default())}*slot=Some(self.reserve_group_one(visibility).map_err(|_|ValueError::literal(protocol::value::ValueRefusalKind::OwnershipLimit,"original group history reservation refused"))?);Ok(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})}
 
     pub fn reserve_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
@@ -533,7 +533,7 @@ impl<T> ArtifactHistoryLedger<T> {
     /// 🪪️ Identifies the genuine original ledger independently of moves of its containing Store.
     pub fn retained_issuance(&self) -> u64 { self.read_issuance }
 
-    /// 🗝️ Mutably borrows one exact original generation only after every loan and staged history group has returned.
+    /// 🤲️ Mutably borrows one exact original generation only after every loan and staged history group has returned.
     pub fn get_key_mut(&mut self, key: ArtifactHistoryKey) -> Option<&mut T> {
         if self.group.is_some() || self.replacement_count!=0 || key.index >= self.initialized { return None; }
         let slot = self.slot_mut(key.index);
@@ -541,7 +541,7 @@ impl<T> ArtifactHistoryLedger<T> {
         slot.value.as_mut()
     }
 
-    /// 🧭️ Captures the exact generation of the visible entry at `position`.
+    /// 🧢️ Captures the exact generation of the visible entry at `position`.
     pub fn key_at(&self, position: usize) -> Option<ArtifactHistoryKey> {
         let index = self.seek_slot(position)?;
         Some(ArtifactHistoryKey { index, generation: self.slot(index).generation })
@@ -560,12 +560,12 @@ impl<T> ArtifactHistoryLedger<T> {
         self.find_near_position(found).map(|(_, value)| value)
     }
 
-    /// 🔎️ [`Self::find_near`] answering the entry's position in the visible order too.
+    /// 🔦️ [`Self::find_near`] answering the entry's position in the visible order too.
     pub fn find_near_position(&self, found: impl FnMut(&T) -> bool) -> Option<(usize, &T)> {
         self.find_near_entry(found).map(|(position, _, value)| (position, value))
     }
 
-    /// 🗝️ [`Self::find_near`] with the matched generation key.
+    /// 🌀️ [`Self::find_near`] with the matched generation key.
     pub fn find_near_key(&self, found: impl FnMut(&T) -> bool) -> Option<(ArtifactHistoryKey, &T)> {
         self.find_near_entry(found).map(|(_, key, value)| (key, value))
     }
@@ -592,7 +592,7 @@ impl<T> ArtifactHistoryLedger<T> {
         None
     }
 
-    /// 🧭️ The slot at `position` of the visible order, walking forward from the remembered seek when it lies at or
+    /// 🌁️ The slot at `position` of the visible order, walking forward from the remembered seek when it lies at or
     /// before `position`, else from the front; remembers where it landed.
     fn seek_slot(&self, position: usize) -> Option<u32> {
         let (front, _, remaining) = self.visible_bounds();
@@ -611,7 +611,7 @@ impl<T> ArtifactHistoryLedger<T> {
         Some(index)
     }
 
-    /// 🧭️ The remembered `(position, slot)`, only while it still names a live entry and no staged group shifts the order.
+    /// 📛️ The remembered `(position, slot)`, only while it still names a live entry and no staged group shifts the order.
     fn remembered_seek(&self) -> Option<(usize, u32)> {
         let packed = self.seek.load(std::sync::atomic::Ordering::Relaxed);
         if packed == ARTIFACT_HISTORY_NO_SEEK || self.group.is_some() {
@@ -679,10 +679,10 @@ impl<T> ArtifactHistoryLedger<T> {
         self.replacement_count == 0 && self.read_count == 0 && self.len == 0 && self.head.is_none() && self.tail.is_none() && self.reservation.is_none() && self.group.is_none()
     }
 
-    /// 🪹️ Observes the original native backing after logical entry ownership has left.
+    /// 🪵️ Observes the original native backing after logical entry ownership has left.
     pub fn backing_is_empty(&self) -> bool { self.pages.is_none() && self.page_count == 0 }
 
-    /// 🧮️ Observes initialized original headers still retaining their slot visibility leases.
+    /// 📃️ Observes initialized original headers still retaining their slot visibility leases.
     pub fn retained_terminal_slot_count(&self) -> usize { self.initialized as usize }
 
     /// 👁️ Borrows the exact next slot visibility without copying or transferring its Arc.
@@ -694,7 +694,7 @@ impl<T> ArtifactHistoryLedger<T> {
         Ok(slot.visibility.as_ref())
     }
 
-    /// 🎟️ Transfers at most one original empty slot's visibility after item and depth admission.
+    /// 🫙️ Transfers at most one original empty slot's visibility after item and depth admission.
     pub fn retire_terminal_slot(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Option<std::sync::Arc<ArtifactGroupVisibility>>, semio_framework_value::retained_clone::RetainedCloneProgress), ValueError> {
         self.next_terminal_slot_visibility()?;
         if grant.maximum_items == 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit, "history slot retirement requires one admitted item")); }
@@ -708,7 +708,7 @@ impl<T> ArtifactHistoryLedger<T> {
         Ok((visibility, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
-    /// 📏️ Declares the actual last slot slice, page shell, and separately owned empty directory.
+    /// 🍕️ Declares the actual last slot slice, page shell, and separately owned empty directory.
     pub fn next_empty_page_release_byte_demand(&self) -> Result<usize, ValueError> {
         if !self.terminal_is_empty() || self.initialized != 0 { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history page retains original entry or visibility headers")); }
         if self.backing_is_empty() { return Ok(0); }
@@ -769,7 +769,7 @@ impl<T: Clone> Clone for ArtifactHistoryLedger<T> {
     }
 }
 
-/// 🧬️ `ToValue`/`FromValue` for `ArtifactHistoryLedger<T>` — serde's own `Serialize`/`Deserialize`
+/// 📼️ `ToValue`/`FromValue` for `ArtifactHistoryLedger<T>` — serde's own `Serialize`/`Deserialize`
 /// were dropped from this type (see the `Change` struct's docstring above); this is now the only
 /// codec. Same admission path (`try_from_preflighted`) every other ledger construction uses.
 impl<T: ToValue> ToValue for ArtifactHistoryLedger<T> {
@@ -798,7 +798,7 @@ impl<T> Clone for ArtifactHistoryIter<'_, T> {
     }
 }
 
-/// 🧬️ `ToValue` for `ArtifactHistoryIter` — serde's own `Serialize` was dropped from this type
+/// 💧️ `ToValue` for `ArtifactHistoryIter` — serde's own `Serialize` was dropped from this type
 /// (see the `Change` struct's docstring above). This is the exact shape `ArtifactVcsRead` (below)
 /// needs for each of its four group-visibility-consistent fields.
 impl<T: ToValue> ToValue for ArtifactHistoryIter<'_, T> {
@@ -940,9 +940,6 @@ impl protocol::HistoryTransitionEvents for ArtifactHistoryLedger<protocol::Mutat
 mod edit_selection;
 pub use edit_selection::OriginalHistoryEditSelection;
 
-#[cfg(test)]
-#[path="replacements-tests.rs"]
-mod replacements_tests;
 
 #[path="replacements.rs"]
 mod replacements;

@@ -30,7 +30,7 @@ describe("BlockList presentation parity", () => {
   });
 
   it("renders only the shared localized chrome and exposes palette keyboard activation", async () => {
-    const previousLocale = detectShellLocale(uiI18n.resolvedLanguage || uiI18n.language);
+    const previousLocale = detectShellLocale(uiI18n.resolvedLanguage || uiI18n.language) ?? "en";
     try {
       for (const locale of fixture.locales) {
         if (!isShellLocale(locale.locale)) throw new Error(`block-list fixture names an unsupported locale ${locale.locale}`);

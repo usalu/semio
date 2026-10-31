@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/2d/trace/work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "stock",
+    "maxTurns",
+    "allocatorTurn",
+    "blankSemanticWork",
+    "blankMaximumWork",
+    "finalPublicationSemanticWork"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "width",
+          "height",
+          "mask",
+          "epsilon",
+          "foreground"
+        ],
+        "properties": {
+          "width": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "mask": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          },
+          "epsilon": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 8192
+          },
+          "foreground": {
+            "type": "array",
+            "items": {
+              "enum": [
+                0,
+                1
+              ]
+            }
+          }
+        }
+      }
+    },
+    "stock": {
+      "const": {
+        "items": 4194304,
+        "copy": 268435456,
+        "capacity": 33554432,
+        "release": 67108864,
+        "depth": 256
+      }
+    },
+    "maxTurns": {
+      "const": 262144
+    },
+    "allocatorTurn": {
+      "const": {
+        "semanticWork": 0,
+        "actualWork": 1
+      }
+    },
+    "blankSemanticWork": {
+      "const": 8195
+    },
+    "blankMaximumWork": {
+      "const": 8196
+    },
+    "finalPublicationSemanticWork": {
+      "const": 0
+    }
+  }
+}

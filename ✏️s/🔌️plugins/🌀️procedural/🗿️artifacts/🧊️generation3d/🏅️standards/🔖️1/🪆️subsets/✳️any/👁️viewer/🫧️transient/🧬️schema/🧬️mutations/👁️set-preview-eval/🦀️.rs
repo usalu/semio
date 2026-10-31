@@ -1,7 +1,7 @@
 //! 👁️ Replaces the viewer's ephemeral local-only evaluated flow output — the render input
 //! every preview repaint reads instead of re-evaluating the whole fixture from scratch.
 
-use super::{Generation3dViewTransientPatch, Generation3dPreviewEvalChange, Generation3dViewTransient, Generation3dViewTransientMutation};
+use super::{Generation3dViewTransientPatch, Generation3dViewTransient, Generation3dViewTransientMutation};
 
 #[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -26,7 +26,7 @@ impl protocol::MutationKind<Generation3dViewTransient, Generation3dViewTransient
 
 impl protocol::ColdMutationKind<Generation3dViewTransient, Generation3dViewTransientMutation> for SetPreviewEval {
     fn diff(&self, _base: &Generation3dViewTransient) -> protocol::MutationOutcome<Generation3dViewTransientPatch> {
-        protocol::MutationOutcome::new(Generation3dViewTransientPatch { preview_eval_text: Some(Generation3dPreviewEvalChange { text: self.eval_text.clone() }), ..Default::default() })
+        protocol::MutationOutcome::new(Generation3dViewTransientPatch { preview_eval_text: Some(self.eval_text.clone()) })
     }
     fn inverse(&self, base: &Generation3dViewTransient) -> Result<Vec<Generation3dViewTransientMutation>, semio_framework_value::ValueError> {
     Ok((|| {
@@ -35,3 +35,5 @@ impl protocol::ColdMutationKind<Generation3dViewTransient, Generation3dViewTrans
     })())
 }
 }
+
+protocol::retained_set_field!(SetPreviewEval => Generation3dViewTransient, Generation3dViewTransientPatch, Generation3dViewTransientMutation { eval_text: Option<String> => preview_eval_text @ 0 });

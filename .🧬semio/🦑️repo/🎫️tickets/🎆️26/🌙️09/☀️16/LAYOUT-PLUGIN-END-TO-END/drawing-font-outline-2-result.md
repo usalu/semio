@@ -1,0 +1,5 @@
+# Actual Scoped Outline Version2
+
+Authorized normal Bun direct8be374 outer1:5 executed,3pass/2fail,3928 assertions,122ms. Original cancellation and exact semantic ceiling laws plus all hostile directed-contour oracle cases pass. The birth law exposes an incorrect expected next copy quote8: actual240 after the initial root body birth. The actual root is published directly; next action is the genuine240-byte Frame row, not an8-byte child link. The geometry law now matches A but ä reveals OpenType-inserted exact zero-length line commands at quadratic boundaries; other directed endpoints/controls shown in the log agree. These remain actual failures; no production or test fix/retry occurred.
+
+Sequential captured strict4 direct5e2eae outer0, no diagnostics. All17 pre/testpost/strictpost/current hashes match. Full immutable log hashes and actual exits are in generated/drawing-ts-font-outline-2/launch-receipt.json. Scope remains unaccepted pending Root review. Original version1 red and its separate strict typing failure stay retained.

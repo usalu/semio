@@ -23,7 +23,8 @@
         "capturedIssuerRetiresPayload",
         "stepsPerPayloadByte",
         "fixedSteps",
-        "owningProjection"
+        "owningProjection",
+        "readBirthStates"
       ],
       "properties": {
         "maximumItems": {
@@ -62,6 +63,22 @@
         },
         "owningProjection": {
           "const": true
+        },
+        "readBirthStates": {
+          "const": [
+            {
+              "prefix": 0,
+              "state": "cold"
+            },
+            {
+              "prefix": 1,
+              "state": "captured"
+            },
+            {
+              "prefix": 2,
+              "state": "published"
+            }
+          ]
         }
       }
     },

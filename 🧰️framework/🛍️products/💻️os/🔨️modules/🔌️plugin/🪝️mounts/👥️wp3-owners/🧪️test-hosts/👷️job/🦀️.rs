@@ -88,3 +88,10 @@ use semio_framework_plugin_testing_laws::artifact_app_laws;
     include!("../../../../🧪️tests/🤖️agent-lane-preview/🦀️.rs");
 }
 
+#[cfg(test)]
+pub(crate) mod job_unit_6 {
+    use semio_framework_plugin_document_media::ActiveArtifactEnvelopeIngress;
+    use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry, plugin_demand_grant};
+    use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
+    include!("../../../../🧪️tests/🔬️app-artifact-fixed-registry/🦀️.rs");
+}

@@ -17,6 +17,8 @@ import {builtInPackageManagersV1,currentHostV1,packageManagerRegistryV1,selectPa
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import policy from "../🔣️policy.json" with {type:"json"};
 import vectors from "./🔣️.json" with {type:"json"};
+import layoutVector from "./📐️layout.json" with {type:"json"};
+import layoutSchema from "./📐️layout.schema.json" with {type:"json"};
 import fixtures from "./🧫️fixtures/🔣️.json" with {type:"json"};
 import ratchet from "./⚖️ratchet/🔣️.json" with {type:"json"};
 import owned from "../🔣️owned.json" with {type:"json"};
@@ -73,9 +75,9 @@ describe("package manager seam: registry and schema",()=>{
   expect(new Set(names).size).toBe(names.length);
   expect(packageManagerRegistryV1.lockFileNames()).toEqual([...new Set(names)].sort());
  });
- test("the bun keys equal the formulas the live code used before the seam (no cold re-install from the swap itself)",()=>{
+ test("the bun generation and bootstrap keys include the complete declared recipe",()=>{
   const bun=packageManagerRegistryV1.get("bun"),recipe=installSchema.$defs.ProducerRecipeProtocol.const,hostNow=currentHostV1(),manifest={dependencies:{a:"1"},devDependencies:{b:"2"},patchedDependencies:{"c@1":"p"}},lock=bytes("lock\n");
-  const liveBootstrap=createHash("sha256").update(JSON.stringify([manifest.dependencies,manifest.devDependencies,undefined,manifest.patchedDependencies,process.versions.bun,process.platform,process.arch])).update(lock).digest("hex");
+  const liveBootstrap=createHash("sha256").update(JSON.stringify([recipe,manifest.dependencies,manifest.devDependencies,undefined,manifest.patchedDependencies,process.versions.bun,process.platform,process.arch])).update(lock).digest("hex");
   expect(core.bootstrapKeyV1(bun,{manifest,host:hostNow,lock})).toBe(liveBootstrap);
   const members=[{path:"w/0/package.json"}],material=[{path:"/r/package.json",bytes:bytes("{}")},{path:"/r/bun.lock",bytes:bytes("x")}],modes=installSchema.$defs.SourceOwnerInputGroupProtocol.const.modeIdentity;
   const live=createHash("sha256").update(JSON.stringify([recipe,"/r",process.versions.bun,process.platform,process.arch,modes.sync,members]));
@@ -228,10 +230,11 @@ describe("package manager seam: one scenario, any manager",()=>{
   const manager=selectPackageManagerV1("javascript",{}),graph=manager.parseLock((fixtures as Json).bun["tools-excerpt"].text),root=realpathSync(mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR??tmpdir(),"pm-seam-")));
   try{
    const entries=core.expectedProvidersV1(manager,graph).map(row=>row.entry);
-   for(const entry of entries)mkdirSync(join(root,"node_modules",".bun",entry+(entry.startsWith("typescript")?"+0123456789abcdef":"")),{recursive:true});
+   const container=manager.descriptor.installed.containers[0]!;
+   for(const entry of entries)mkdirSync(join(root,container,entry),{recursive:true});
    const port:core.ProviderPortV1={kind:async path=>{try{const stat=await lstat(join(root,path));return stat.isDirectory()?"directory":stat.isSymbolicLink()?"link":stat.isFile()?"file":"other";}catch{return "missing";}},list:async path=>readdir(join(root,path))};
    expect(await core.walkProvidersV1(manager,graph,port)).toEqual({status:"match",examined:entries.length});
-   rmSync(join(root,"node_modules",".bun",entries[0]!),{recursive:true});
+   rmSync(join(root,container,entries[0]!),{recursive:true});
    const broken=await core.walkProvidersV1(manager,graph,port);
    expect(broken.status).toBe("mismatch");
   }finally{rmSync(root,{recursive:true,force:true});}
@@ -268,10 +271,9 @@ describe("package manager seam: third-party cross checks",()=>{
    expect(graph.packages.length).toBeGreaterThan(0);
   }
  });
- test("rendered flags are known to the real tools",()=>{
-  for(const manager of builtInPackageManagersV1){
+ for(const manager of builtInPackageManagersV1)test(manager.id+": rendered flags are known to the real tool",()=>{
    const tool=spawnSync(manager.descriptor.executable,manager.descriptor.runtime.probe.arguments,{encoding:"utf8"});
-   if(tool.error||tool.status!==0)continue;
+   if(tool.error||tool.status!==0)return;
    for(const operation of ["lock","sync","verify"] as const){
     if(!manager.descriptor.operations[operation])continue;
     const invocation=manager.render(operation,{platform:process.platform,cache:"/c",directory:"/d",manifest:"/m"}),leading:string[]=[];
@@ -282,7 +284,6 @@ describe("package manager seam: third-party cross checks",()=>{
     const options=manager.id==="npm"?spawnSync("npm",["config","ls","-l"],{encoding:"utf8"}).stdout:"";
     for(const flag of invocation.arguments.filter(word=>word.startsWith("--")).map(word=>word.split("=")[0]!))expect(text.includes(flag)||options.includes("\n"+flag.slice(2)+" = "),flag).toBe(true);
    }
-  }
  });
 });
 
@@ -422,4 +423,21 @@ describe("package manager seam: neutrality laws",()=>{
   expect(packageManagerRegistryV1.get("bun").render("install-pinned",{platform:"darwin",cache:"/c"}).arguments).toEqual(["install","--frozen-lockfile","--ignore-scripts","--cache-dir","/c","--backend","copyfile"]);
   expect(packageManagerRegistryV1.get("npm").render("install-pinned",{platform:"linux",cache:"/c"}).arguments).toEqual(["ci","--ignore-scripts","--cache","/c"]);
  });
+});
+
+test("portable dependency layout removes repeated long package names and changes generation identity",()=>{
+ expect(ajv.compile(layoutSchema)(layoutVector)).toBe(true);expect(validateJsonSchemaSubset(layoutSchema as never,layoutVector)).toEqual([]);
+ const manager=packageManagerRegistryV1.get("bun"),recipe=manager.recipe(),configuration=parseTomlThirdParty(manager.descriptor.stagedConfiguration) as {install:{linker:string;globalStore:boolean}};
+ expect(parseTomlV1(manager.descriptor.stagedConfiguration)).toEqual(configuration);
+ expect<unknown>(installSchema.$defs.ProducerConfiguration.properties.install.properties.linker.const).toBe(recipe.linker);expect<unknown>(installSchema.$defs.ProducerCompletionProtocol.const.supportedLinkers).toEqual([recipe.linker]);expect(recipe.version).toBe(layoutVector.recipeVersion);expect(recipe.linker).toBe(layoutVector.linker);expect(configuration.install.linker).toBe(layoutVector.linker);expect(configuration.install.globalStore).toBe(false);
+ for(const row of layoutVector.roots){
+  for(const operation of ["lock","sync","verify"] as const)expect(manager.render(operation,{platform:row.platform,cache:"/cache"}).arguments).toContain("--linker="+layoutVector.linker);
+  const flat=[row.root,layoutVector.generation,"node_modules",layoutVector.package].join("/"),isolated=[row.root,layoutVector.generation,"node_modules/.bun",layoutVector.package.replace("/","+")+"@"+layoutVector.resolution,"node_modules",layoutVector.package].join("/");
+  expect(flat.length).toBe(row.flatUnits);expect(isolated.length).toBe(row.isolatedUnits);expect(flat.length).toBeLessThanOrEqual(layoutVector.maximumPathUnits);expect(isolated.length).toBeGreaterThan(layoutVector.maximumPathUnits);
+  const input={root:"/scope",host:{platform:row.platform,arch:"x64",versions:{bun:"1.4.2"}},mode:"locked",members:[],material:[]},changed=core.createPackageManagerV1({...manager.descriptor,recipe:{...recipe,linker:"isolated"}},()=>({packages:[],members:[]}));
+  const actual=core.generationKeyV1(manager,input),reference=createHash("sha256").update(JSON.stringify([recipe,input.root,"1.4.2",row.platform,"x64",input.mode,input.members])).digest("hex");
+  expect(actual).toBe(reference);expect(actual).not.toBe(core.generationKeyV1(changed,input));
+  const manifest={dependencies:{fixture:"1.0.0"}},lock=bytes("fixture-lock\n"),bootstrap={manifest,host:input.host,lock},fields=manager.descriptor.manifestIdentity.bootstrapFields.map(name=>(manifest as Record<string,unknown>)[name]),bootstrapReference=createHash("sha256").update(JSON.stringify([recipe,...fields,"1.4.2",row.platform,"x64"])).update(lock).digest("hex");
+  expect(layoutVector.bootstrapIncludesRecipe).toBe(true);expect(core.bootstrapKeyV1(manager,bootstrap)).toBe(bootstrapReference);expect(core.bootstrapKeyV1(manager,bootstrap)).not.toBe(core.bootstrapKeyV1(changed,bootstrap));
+ }
 });

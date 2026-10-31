@@ -37,4 +37,6 @@ if (import.meta.vitest) {
   await registerMapTileTests(import.meta.vitest, { demonstratorGisMapTileServeMode, DEMONSTRATOR_STATIC_MAP_TILE_Z_MAX_RASTER, DEMONSTRATOR_STATIC_MAP_TILE_Z_MAX_VECTOR });
   const { registerTests1: registerCompileClosureTests } = await import("./🧪️tests/🧪️demonstratorcompileclosure/🟦️.ts");
   await registerCompileClosureTests(import.meta.vitest);
+  const { registerDemonstratorLocaleTests } = await import("./🧪️tests/🧪️demonstratorlocale/🟦️.ts");
+  await registerDemonstratorLocaleTests(import.meta.vitest);
 }

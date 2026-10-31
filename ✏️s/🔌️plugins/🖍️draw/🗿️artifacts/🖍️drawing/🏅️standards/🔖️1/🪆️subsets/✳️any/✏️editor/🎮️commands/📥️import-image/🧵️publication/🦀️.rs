@@ -22,7 +22,7 @@ impl semio_framework_value::retirement::RetireOwned for AppendCursor{
  fn controlled_retirement_supported()->bool{true}
 }
 impl semio_framework_value::retirement::RetirementCursor for AppendCursorRetirement{
- fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;match self.0.close_step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;let turn=self.0.close_step(grant);match turn.result{Err(error)=>RetirementStep::Failure(error,turn.work),Ok(RetainedCloneStep::Complete(progress))if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(turn.work),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,turn.work)}}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.0.next_close_copy_byte_demand()}
  fn next_birth_bytes(&self,body:usize)->Option<usize>{self.0.next_close_capacity_byte_demand(body).ok()}
@@ -39,10 +39,10 @@ impl semio_framework_value::retirement::RetireOwned for PublicationHash{
  fn controlled_retirement_supported()->bool{true}
 }
 impl semio_framework_value::retirement::RetirementCursor for PublicationHashRetirement{
- fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;if self.value.is_none(){return RetirementStep::Complete;}let copy=size_of::<PublicationHash>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy{return RetirementStep::BudgetExhausted;}self.value=None;RetirementStep::ProcessedBytes(copy)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;if self.value.is_none(){return RetirementStep::Complete(0);}if grant.maximum_items==0||grant.maximum_depth==0{return RetirementStep::BudgetExhausted;}self.value=None;RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1)}
  fn terminal_is_empty(&self)->bool{self.value.is_none()}
  fn terminal_release_bytes(&self)->Option<usize>{self.value.is_none().then_some(size_of::<Self>())}
- fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(if self.value.is_some(){size_of::<PublicationHash>()}else{0})}
+ fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}
  fn next_close_byte_demand(&self)->Option<usize>{Some(0)}
  fn next_birth_bytes(&self,_body:usize)->Option<usize>{Some(0)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(usize::from(self.value.is_some()))}
@@ -83,3 +83,7 @@ impl DrawingImagePublicationJob{
  pub fn take_result(&mut self,input:&super::ImportImage,operation:&AppOperationContext,grant:RetainedCloneGrant)->Result<Option<(DrawingImagePublication,RetainedCloneProgress)>,ValueError>{if !self.ready(){return Err(refused("image publication is incomplete"));}let demand=self.work_demands(input,operation,grant.maximum_copy_bytes)?;if grant.maximum_items==0||grant.maximum_depth<1||grant.maximum_copy_bytes<demand.copy_bytes{return Ok(None);}self.phase=15;Ok(Some((DrawingImagePublication{mutations:std::mem::take(&mut self.mutations),selection:std::mem::take(&mut self.selection)},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))}
 }
 
+
+#[cfg(test)]
+#[path="🎟️close/🧪️tests/🦀️.rs"]
+mod close_work_tests;

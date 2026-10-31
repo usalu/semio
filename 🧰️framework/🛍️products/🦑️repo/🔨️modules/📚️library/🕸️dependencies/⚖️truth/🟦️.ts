@@ -1,3 +1,4 @@
+import { testkitLeaksOfRepository } from "../🚧️testkit-leaks/🟦️.ts";
 import { refuseDependencyV1 } from "../📖️texts/🟦️.ts";
 import { existsSync } from "node:fs";
 import {selectPackageManagerV1,packageManagerRegistryV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/📚️catalog/🟦️.ts";
@@ -218,6 +219,14 @@ function dependencyTruthSummaryText(report: DependencyTruthReport): string {
 export interface DependencyVerificationSelfTests { readonly jsLockParity: () => number; readonly truth: () => number; }
 
 /** ⚖️ Runs the dependency truth, parity, inventory, and ratchet command without owning task routing. */
+/** 🚧️ Refuses any production manifest that enables a testkit (feature, crate or fixture caller) outside `[dev-dependencies]`. */
+function dependencyTestkitGate(repoRoot: string): void {
+  const { leaks, manifests } = testkitLeaksOfRepository(repoRoot);
+  for (const leak of leaks.slice(0, 100)) console.error(`  testkit-leak ${leak.manifest}:${leak.line} [${leak.section}] ${leak.text}`);
+  if (leaks.length > 0) throw refuseDependencyV1("breach", "verify.testkit-leaks", { count: leaks.length });
+  console.log(`[verify dependencies testkit] manifests=${manifests.length} clean.`);
+}
+
 export function runDependencyVerification(repoRoot: string, args: string[], selfTests: DependencyVerificationSelfTests): void {
   dependencyAssertRepoPolicyImportBoundary(repoRoot);
   if (args[0] === "locks") {
@@ -259,6 +268,7 @@ export function runDependencyVerification(repoRoot: string, args: string[], self
     console.log("[verify dependencies parity js] clean.");
     return;
   }
+  if (args[0] === "testkit") { dependencyTestkitGate(repoRoot); return; }
   if (args[0] === "self-test") { console.log(`[verify dependencies self-test] hostile-mutations=${selfTests.truth()} clean.`); return; }
   if (args[0] === "summary" || args[0] === "literal-external") {
     const formatIndex = args.indexOf("--format");
@@ -300,5 +310,6 @@ export function runDependencyVerification(repoRoot: string, args: string[], self
     for (const dependency of result.newDeps) console.error(`  ${dependency.ecosystem}:${dependency.name}@${dependency.version} (kinds: ${dependency.kinds.join(",")}; used by: ${dependency.users.slice(0, 3).join(", ")}${dependency.users.length > 3 ? `, +${dependency.users.length - 3} more` : ""})`);
     throw refuseDependencyV1("breach", "verify.new-dependencies", { count: result.newDeps.length });
   }
+  dependencyTestkitGate(repoRoot);
   console.log("[verify dependencies] clean — no new third-party dependencies.");
 }

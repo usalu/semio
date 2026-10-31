@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🪟️Addressing
-/// 🪟️ The evaluation tick names the preview window that OWNS the evaluation it advances.
+/// ⏲️ The evaluation tick names the preview window that OWNS the evaluation it advances.
 ///
 /// The tick publishes into one window's retained window transient, so the retained route is
 /// window-scoped and its work refuses any command that does not name that window. Every tick is a
@@ -29,11 +29,11 @@ pub struct FlowEvalResolve {
     pub node_hash: u64,
     pub output: semio_framework_value::DslValue,
     #[value(default)]
-    pub fault: Option<semio_framework::Fault>,
+    pub fault: Option<semio_framework_value::DslValue>,
     /// 🪪️ Which extension this answer came from, echoed back off the request's own correlation.
     #[value(default)]
     pub extension_id: String,
-    /// ✅️ The SDK's own outcome flag (`reactor::extension_response_args`), present on every answer
+    /// ⚛️ The SDK's own outcome flag (`reactor::extension_response_args`), present on every answer
     /// the runtime builds. Defaulted so a hand-authored fixture may still address only the fields it
     /// cares about.
     #[value(default)]
@@ -55,7 +55,7 @@ pub struct FlowTessellateResolve {
     pub tolerance: f64,
     pub output: semio_framework_value::DslValue,
     #[value(default)]
-    pub fault: Option<semio_framework::Fault>,
+    pub fault: Option<semio_framework_value::DslValue>,
     #[value(default)]
     pub original_input:Option<semio_framework_value::DslValue>,
     pub input_valid:bool,
@@ -66,15 +66,15 @@ pub struct FlowTessellateResolve {
 /// extension actor actually retired — publication-free bookkeeping, kept because a cancel that
 /// retires nothing on an actor that was supposed to be busy is the one symptom that distinguishes
 /// "the gesture reached the kernel" from "the gesture reached only this process".
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "flow-tessellate-cancel-resolve")]
 pub struct FlowTessellateCancelResolve {
     pub window_id: String,
     pub window_kind_id: String,
-    #[value(default)]
+    #[value(default = "null_output")]
     pub output:semio_framework_value::DslValue,
     #[value(default)]
-    pub fault:Option<semio_framework::Fault>,
+    pub fault:Option<semio_framework_value::DslValue>,
     #[value(default)]
     pub ok: bool,
     #[value(default)]
@@ -82,7 +82,7 @@ pub struct FlowTessellateCancelResolve {
     pub input_valid:bool,
 }
 
-/// 🧯️ The hop an aborted or restarted run hands the host to release the kernel work it left behind in
+/// 🏃️ The hop an aborted or restarted run hands the host to release the kernel work it left behind in
 /// the geometry extension's own instance. Never a user gesture: the framework's `toolRunAbort` is the
 /// gesture, and this hop is how its close reaches the registries the guest cannot see. Addressed at a
 /// preview window because `reactor::extension_response_args` echoes the request's fields onto
@@ -96,7 +96,7 @@ pub struct FlowEvalRelease {
     pub window_kind_id: String,
 }
 
-/// 🪪️ The request id every hop effect of the run carries; the hop's own payload is its address.
+/// 🙏️ The request id every hop effect of the run carries; the hop's own payload is its address.
 pub(super) const PREVIEW_EVAL_HOP_REQUEST: u64 = 103;
 
 /// ⏱️ The evaluation hop the run job hands the host, addressed to ONE preview window.
@@ -104,7 +104,7 @@ pub fn tick_effect(window_id: &str, window_kind_id: &str) -> Effect {
     hop_effect("flowEvalTick", window_id, window_kind_id)
 }
 
-/// 🧯️ The kernel release hop, addressed to ONE preview window.
+/// 🎉️ The kernel release hop, addressed to ONE preview window.
 pub fn release_effect(window_id: &str, window_kind_id: &str) -> Effect {
     hop_effect("flowEvalRelease", window_id, window_kind_id)
 }
@@ -134,7 +134,7 @@ pub fn may_rearm(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSna
     semio_framework_os_flow::unserved_flow_operator_kinds(host_snapshot, &semio_framework_os_flow::flow_operator_registry()).is_empty()
 }
 
-/// 🪟️ The one argument object every hop of the chain carries, on the redispatch and on the
+/// 🌀️ The one argument object every hop of the chain carries, on the redispatch and on the
 /// extension request alike — `reactor::extension_response_args` echoes an invocation request's own
 /// fields back onto the response action, so the window address survives the round trip without the
 /// SDK ever learning what it means.
@@ -239,7 +239,7 @@ pub fn owe_attached_previews_carrying<M, C, D>(session: &mut FlowEvalSession, li
     Ok(())
 }
 
-/// 🪟️ The preview window kind this surface recognises, or `None` — the surface hands in its own
+/// 🌬️ The preview window kind this surface recognises, or `None` — the surface hands in its own
 /// roster of preview kind ids (`procedural-preview` + `generation3d-generate-preview` for the
 /// editor, `procedural-view-preview` for the viewer) and the answer is the `'static` id the window
 /// transient owner is keyed by.
@@ -247,10 +247,20 @@ pub fn preview_kind(kind: &str, preview_kinds: &[&'static str]) -> Option<&'stat
     preview_kinds.iter().copied().find(|candidate| *candidate == kind)
 }
 
-/// 🪟️ Every attached preview window, in roster order — the windows a `flowEvalTick` chain can be
+/// 🌁️ Every attached preview window, in roster order — the windows a `flowEvalTick` chain can be
 /// addressed to. Each holds its OWN retained evaluation publication, so each gets its own armed
 /// chain; an empty answer means no surface is mounted yet and NOTHING may be armed at all.
 pub fn attached_preview_windows<'a>(view: Option<&'a ViewModel>, preview_kinds: &[&'static str]) -> Vec<(&'a str, &'static str)> {
     view.map(|view| view.window_instances.iter().filter_map(|window| preview_kind(&window.window_kind_id, preview_kinds).map(|kind| (window.id.as_str(), kind))).collect()).unwrap_or_default()
 }
 //#endregion 🪟️Addressing
+
+/// 🔓️ Decodes one echoed fault wire value into the typed fault; an undecodable value is itself a typed refusal, never a default.
+pub fn echoed_fault(value: semio_framework_value::DslValue) -> semio_framework::Fault {
+    <semio_framework::Fault as semio_framework_value::FromValue>::from_value(value).unwrap_or_else(|error| semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("preview-eval.fault-undecodable"), error.to_string()))
+}
+
+/// ⭕️ The absent answer body of a cancel echo that carries none.
+fn null_output() -> semio_framework_value::DslValue {
+    semio_framework_value::DslValue::Null
+}

@@ -1,0 +1,546 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "missing-none",
+      "before": "missing",
+      "prior": null,
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "none",
+      "accepted": true,
+      "hookCalls": 1
+    },
+    {
+      "id": "missing-hook-refusal",
+      "before": "missing",
+      "prior": null,
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "hook-refusal",
+      "accepted": false,
+      "hookCalls": 1
+    },
+    {
+      "id": "missing-stage-changed",
+      "before": "missing",
+      "prior": null,
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "stage-changed",
+      "accepted": false,
+      "hookCalls": 1
+    },
+    {
+      "id": "missing-roster-changed",
+      "before": "missing",
+      "prior": null,
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "roster-changed",
+      "accepted": false,
+      "hookCalls": 1
+    },
+    {
+      "id": "missing-cancelled",
+      "before": "missing",
+      "prior": null,
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "cancelled",
+      "accepted": false,
+      "hookCalls": 1
+    },
+    {
+      "id": "missing-options-proxy",
+      "before": "missing",
+      "prior": null,
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "options-proxy",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "missing-options-getter",
+      "before": "missing",
+      "prior": null,
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "options-getter",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "missing-options-extra",
+      "before": "missing",
+      "prior": null,
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "options-extra",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "missing-options-inherited",
+      "before": "missing",
+      "prior": null,
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "options-inherited",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "missing-callback-proxy",
+      "before": "missing",
+      "prior": null,
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "callback-proxy",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "missing-thenable-result",
+      "before": "missing",
+      "prior": null,
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "thenable-result",
+      "accepted": false,
+      "hookCalls": 1
+    },
+    {
+      "id": "missing-extra-arity",
+      "before": "missing",
+      "prior": null,
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "extra-arity",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "missing-undefined-hook",
+      "before": "missing",
+      "prior": null,
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "undefined-hook",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "file-none",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "none",
+      "accepted": true,
+      "hookCalls": 1
+    },
+    {
+      "id": "file-hook-refusal",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "hook-refusal",
+      "accepted": false,
+      "hookCalls": 1
+    },
+    {
+      "id": "file-stage-changed",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "stage-changed",
+      "accepted": false,
+      "hookCalls": 1
+    },
+    {
+      "id": "file-roster-changed",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "roster-changed",
+      "accepted": false,
+      "hookCalls": 1
+    },
+    {
+      "id": "file-cancelled",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "cancelled",
+      "accepted": false,
+      "hookCalls": 1
+    },
+    {
+      "id": "file-options-proxy",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "options-proxy",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "file-options-getter",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "options-getter",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "file-options-extra",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "options-extra",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "file-options-inherited",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "options-inherited",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "file-callback-proxy",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "callback-proxy",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "file-thenable-result",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "thenable-result",
+      "accepted": false,
+      "hookCalls": 1
+    },
+    {
+      "id": "file-extra-arity",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "extra-arity",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "file-undefined-hook",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb\\\"\n",
+      "effect": "undefined-hook",
+      "accepted": false,
+      "hookCalls": 0
+    },
+    {
+      "id": "file-prior-changed",
+      "before": "file",
+      "prior": "old \ud83c\udf0d",
+      "bytes": "new \ud83d\udc69\u200d\ud83d\udcbb",
+      "effect": "prior-changed",
+      "accepted": false,
+      "hookCalls": 1
+    }
+  ],
+  "attestations": [
+    {
+      "id": "empty",
+      "bytes": "",
+      "maximumBytes": 1,
+      "effect": "none",
+      "accepted": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "unicode",
+      "bytes": "{\"role\":\"metadata \ud83c\udf0d\"}",
+      "maximumBytes": 128,
+      "effect": "none",
+      "accepted": true,
+      "sha256": "bd7c1a2414542299f81e69d8761dc73ea80c4eb38acd2044f0d734f553213311"
+    },
+    {
+      "id": "undergrant",
+      "bytes": "metadata",
+      "maximumBytes": 2,
+      "effect": "none",
+      "accepted": false,
+      "sha256": "45447b7afbd5e544f7d0f1df0fccd26014d9850130abd3f020b89ff96b82079f"
+    },
+    {
+      "id": "copy",
+      "bytes": "metadata",
+      "maximumBytes": 64,
+      "effect": "copy",
+      "accepted": false,
+      "sha256": "45447b7afbd5e544f7d0f1df0fccd26014d9850130abd3f020b89ff96b82079f"
+    },
+    {
+      "id": "proxy",
+      "bytes": "metadata",
+      "maximumBytes": 64,
+      "effect": "proxy",
+      "accepted": false,
+      "sha256": "45447b7afbd5e544f7d0f1df0fccd26014d9850130abd3f020b89ff96b82079f"
+    },
+    {
+      "id": "alias",
+      "bytes": "metadata",
+      "maximumBytes": 64,
+      "effect": "alias",
+      "accepted": false,
+      "sha256": "45447b7afbd5e544f7d0f1df0fccd26014d9850130abd3f020b89ff96b82079f"
+    },
+    {
+      "id": "directory",
+      "bytes": "",
+      "maximumBytes": 64,
+      "effect": "directory",
+      "accepted": false,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "wrong-name",
+      "bytes": "metadata",
+      "maximumBytes": 64,
+      "effect": "wrong-name",
+      "accepted": false,
+      "sha256": "45447b7afbd5e544f7d0f1df0fccd26014d9850130abd3f020b89ff96b82079f"
+    },
+    {
+      "id": "extra-arity",
+      "bytes": "metadata",
+      "maximumBytes": 64,
+      "effect": "extra-arity",
+      "accepted": false,
+      "sha256": "45447b7afbd5e544f7d0f1df0fccd26014d9850130abd3f020b89ff96b82079f"
+    }
+  ],
+  "stageNames": [
+    {
+      "target": "a",
+      "candidate": "f",
+      "accepted": true
+    },
+    {
+      "target": "a",
+      "candidate": "a",
+      "accepted": false
+    },
+    {
+      "target": "xy",
+      "candidate": ".a",
+      "accepted": true
+    },
+    {
+      "target": "xy",
+      "candidate": "ab",
+      "accepted": false
+    },
+    {
+      "target": "dependencies.json",
+      "candidate": ".123456789ab",
+      "accepted": true
+    },
+    {
+      "target": "dependencies.json",
+      "candidate": ".123456789abc",
+      "accepted": false
+    },
+    {
+      "target": "dependencies.json",
+      "candidate": ".123456789aG",
+      "accepted": false
+    },
+    {
+      "target": "meta.json",
+      "candidate": ".abcdef12",
+      "accepted": true
+    },
+    {
+      "target": "..",
+      "candidate": "a",
+      "accepted": false
+    },
+    {
+      "target": "bad/name",
+      "candidate": ".a",
+      "accepted": false
+    },
+    {
+      "target": "\ud800",
+      "candidate": "a",
+      "accepted": false
+    }
+  ],
+  "dataRefusals": [
+    "unknown-key",
+    "getter",
+    "proxy",
+    "identity-getter",
+    "identity-number",
+    "noncanonical-decimal",
+    "out-of-range",
+    "sparse-names",
+    "names-proxy",
+    "unknown-symbol",
+    "foreign-platform",
+    "unpaired-name",
+    "negative-zero"
+  ],
+  "appends": [
+    {
+      "id": "basic",
+      "before": "baseline\n",
+      "bytes": "prepared\n",
+      "repeat": 1,
+      "maximumBytes": 64,
+      "effect": "none",
+      "accepted": true,
+      "sha256": "763eeb33de2ed594b3866e5079b064ef8ad9d23b4072bcc6a0aab9165ba3c42b"
+    },
+    {
+      "id": "unicode",
+      "before": "{\"baseline\":\"\ud83c\udf0d\"}\n",
+      "bytes": "{\"prepared\":\"\ud83d\udc69\u200d\ud83d\udcbb\"}\n",
+      "repeat": 1,
+      "maximumBytes": 128,
+      "effect": "none",
+      "accepted": true,
+      "sha256": "a618bf77d3c4f9d6676b194b9174d984aff6c74d3b0b1d4360124cc9a1c0c211"
+    },
+    {
+      "id": "empty",
+      "before": "baseline",
+      "bytes": "",
+      "repeat": 1,
+      "maximumBytes": 64,
+      "effect": "none",
+      "accepted": true,
+      "sha256": "8ba8496a2525ae171ffd104d632dede6ef418d9b95962a9d88e2fcdbc8d48d24"
+    },
+    {
+      "id": "exact",
+      "before": "ab",
+      "bytes": "cd",
+      "repeat": 1,
+      "maximumBytes": 4,
+      "effect": "none",
+      "accepted": true,
+      "sha256": "88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589"
+    },
+    {
+      "id": "overflow",
+      "before": "ab",
+      "bytes": "cd",
+      "repeat": 1,
+      "maximumBytes": 3,
+      "effect": "none",
+      "accepted": false,
+      "sha256": "88d4266fd4e6338d13b845fcf289579d209c897823b9217da3e161936f031589"
+    },
+    {
+      "id": "copy",
+      "before": "baseline",
+      "bytes": "event",
+      "repeat": 1,
+      "maximumBytes": 64,
+      "effect": "copy",
+      "accepted": false,
+      "sha256": "66e03dc033859e34315d18d53715689e5890c269aa7d38281c99bcefdc7778d8"
+    },
+    {
+      "id": "proxy-entry",
+      "before": "baseline",
+      "bytes": "event",
+      "repeat": 1,
+      "maximumBytes": 64,
+      "effect": "proxy-entry",
+      "accepted": false,
+      "sha256": "66e03dc033859e34315d18d53715689e5890c269aa7d38281c99bcefdc7778d8"
+    },
+    {
+      "id": "proxy-bytes",
+      "before": "baseline",
+      "bytes": "event",
+      "repeat": 1,
+      "maximumBytes": 64,
+      "effect": "proxy-bytes",
+      "accepted": false,
+      "sha256": "66e03dc033859e34315d18d53715689e5890c269aa7d38281c99bcefdc7778d8"
+    },
+    {
+      "id": "bytes-getter",
+      "before": "baseline",
+      "bytes": "event",
+      "repeat": 1,
+      "maximumBytes": 64,
+      "effect": "bytes-getter",
+      "accepted": true,
+      "sha256": "66e03dc033859e34315d18d53715689e5890c269aa7d38281c99bcefdc7778d8"
+    },
+    {
+      "id": "mutate-bytes",
+      "before": "baseline",
+      "bytes": "event",
+      "repeat": 1,
+      "maximumBytes": 64,
+      "effect": "mutate-bytes",
+      "accepted": true,
+      "sha256": "66e03dc033859e34315d18d53715689e5890c269aa7d38281c99bcefdc7778d8"
+    },
+    {
+      "id": "alias",
+      "before": "baseline",
+      "bytes": "event",
+      "repeat": 1,
+      "maximumBytes": 64,
+      "effect": "alias",
+      "accepted": false,
+      "sha256": "66e03dc033859e34315d18d53715689e5890c269aa7d38281c99bcefdc7778d8"
+    },
+    {
+      "id": "entry-drift",
+      "before": "baseline",
+      "bytes": "event",
+      "repeat": 1,
+      "maximumBytes": 64,
+      "effect": "entry-drift",
+      "accepted": false,
+      "sha256": "66e03dc033859e34315d18d53715689e5890c269aa7d38281c99bcefdc7778d8"
+    },
+    {
+      "id": "roster-drift",
+      "before": "baseline",
+      "bytes": "event",
+      "repeat": 1,
+      "maximumBytes": 64,
+      "effect": "roster-drift",
+      "accepted": false,
+      "sha256": "66e03dc033859e34315d18d53715689e5890c269aa7d38281c99bcefdc7778d8"
+    },
+    {
+      "id": "extra-arity",
+      "before": "baseline",
+      "bytes": "event",
+      "repeat": 1,
+      "maximumBytes": 64,
+      "effect": "extra-arity",
+      "accepted": false,
+      "sha256": "66e03dc033859e34315d18d53715689e5890c269aa7d38281c99bcefdc7778d8"
+    },
+    {
+      "id": "partial",
+      "before": "baseline",
+      "bytes": "x",
+      "repeat": 131072,
+      "maximumBytes": 262144,
+      "effect": "cancel-after-write",
+      "accepted": false,
+      "sha256": "b4a3ed945548210c5e2acece6a64836ec51381e99563a8ea2b09c4f9f9fa7bf0"
+    }
+  ]
+}

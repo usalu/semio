@@ -1,0 +1,10 @@
+{
+  "exitCode": 1,
+  "expectedFailure": "exact completed contiguous quote",
+  "logBytes": 2142,
+  "logSha256": "c60a553909a36133696cfb3c524c03eab948cc5283e68e52bff48e53fbf387a5",
+  "inputsMatching": 13,
+  "drift": [],
+  "heldSourceReleased": true,
+  "directCPUProof": false
+}

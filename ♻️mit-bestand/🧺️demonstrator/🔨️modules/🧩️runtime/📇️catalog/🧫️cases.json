@@ -49,6 +49,8 @@
   ],
   "brandInputs": [
     "🪧️brand.ts",
+    "🔨️modules/🌐️locale/🔣️.json",
+    "🔨️modules/🌐️locale/🟦️.ts",
     "🔨️modules/🧩️runtime/🔣️.json",
     "🔨️modules/🧩️runtime/📇️catalog/🟦️.ts"
   ],

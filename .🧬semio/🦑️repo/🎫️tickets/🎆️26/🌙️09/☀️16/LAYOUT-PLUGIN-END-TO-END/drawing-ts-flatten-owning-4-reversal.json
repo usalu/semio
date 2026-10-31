@@ -1,0 +1,17 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/🎨️coverage/oracle.mjs",
+      "beforeSha256": "adaf18b90a72069bc5bfd7005ccee229832dc65fc113295ae8673abc1aaaccb7",
+      "sha256": "22cb3c45013f368b9b682b95c29439224afe56ce8921318d8403218e7bef4c3f",
+      "wholeInverse": true
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🟦️ts/🎨️coverage/oracle.d.mts",
+      "beforeSha256": "d345f7e79631d320eeee284a921b3f88a796d88d0d7e0f5642d3e42ca760e17d",
+      "sha256": "cbf71c20bf5789045d758c23ba96e22235edeae471307048456ada7c22ad3c51",
+      "delta": "Canonical first-party read sequence; no external API type."
+    }
+  ],
+  "scope": "Only test-tool adapter/interface; production, all cases/oracles/stock/threshold exact."
+}

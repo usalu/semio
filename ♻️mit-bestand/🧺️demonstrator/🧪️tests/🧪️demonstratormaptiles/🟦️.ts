@@ -3,8 +3,8 @@ import {geoMercator} from "d3-geo";
 import ts from "typescript";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
-import cancellationSchema from "./🧬️schema/🔣️.json";
-import cancellationFixture from "./🧫️cases.json";
+import cancellationSchema from "./🧬️schema/🔣️.json" with { type: "json" };
+import cancellationFixture from "./🧫️cases.json" with { type: "json" };
 
 type TestSource = { readonly directory: string; readonly url: string };
 

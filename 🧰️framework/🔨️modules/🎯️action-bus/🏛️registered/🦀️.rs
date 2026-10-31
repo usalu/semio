@@ -81,14 +81,14 @@ impl RetirementCursor for RegisteredSourceRetirement {
     }
     fn close_step(&mut self, g: RetainedCloneGrant) -> RetirementStep {
         if self.source.is_none() {
-            return RetirementStep::Complete;
+            return RetirementStep::Complete(0);
         }
         let d = self.next_demand(g.maximum_copy_bytes).expect("fixed registered source return quote");
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(g, d) {
             return RetirementStep::BudgetExhausted;
         }
         drop(self.source.take());
-        RetirementStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, ..Default::default() })
+        RetirementStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: d.copy_bytes, ..Default::default() }, 1)
     }
     fn terminal_is_empty(&self) -> bool {
         self.source.is_none()

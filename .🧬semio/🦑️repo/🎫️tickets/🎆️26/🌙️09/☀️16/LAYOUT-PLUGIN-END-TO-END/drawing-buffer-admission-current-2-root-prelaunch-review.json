@@ -1,0 +1,12 @@
+{
+  "state": "root-prelaunch-review-complete-no-result",
+  "commandSha256": "11e4fca70d6858f3e65473ccff11a99330b8286c0d9f558fe2b4eda7d587ff54",
+  "inputs": 54,
+  "literalEdges": 90,
+  "strictRoots": 16,
+  "reconstructedOldEntireLawFiles": 2,
+  "reconstructedOldEntireImporter": true,
+  "unchangedInputs": 51,
+  "scope": "same49 owning then strict16; exact54 held",
+  "actualOutcomes": null
+}

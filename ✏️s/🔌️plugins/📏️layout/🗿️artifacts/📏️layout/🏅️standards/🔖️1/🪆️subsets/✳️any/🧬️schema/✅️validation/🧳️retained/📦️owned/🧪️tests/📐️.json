@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "birthDenials",
+    "closeOrder",
+    "cases",
+    "maxObservedTurns"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "birthDenials": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "depth"
+      ]
+    },
+    "closeOrder": {
+      "const": [
+        "reader-begin",
+        "source-terminal",
+        "reader-drop"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "stop",
+          "duplicateStory",
+          "completed",
+          "valid"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "stop": {
+            "enum": [
+              "done",
+              "birth",
+              "index",
+              "program-birth",
+              "program-pending"
+            ]
+          },
+          "duplicateStory": {
+            "type": "boolean"
+          },
+          "completed": {
+            "type": "boolean"
+          },
+          "valid": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "maxObservedTurns": {
+      "const": 4096
+    }
+  }
+}

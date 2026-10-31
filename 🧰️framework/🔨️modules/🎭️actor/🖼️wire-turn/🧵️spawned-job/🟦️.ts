@@ -16,13 +16,14 @@ import { wireOptionValue, wireSpawnJob } from "../🟦️.ts";
 // #endregion 🔌️Imports
 
 //#region 🧵️SpawnedJob
-/** 🧵️ The two guest-job doors a host must own to honour a `spawn-job` effect — `jobs::start-job` and
- * `jobs::step-job` on the instance the job was placed on (`🔌️plugin/🧬️schema/📜️.wit`'s `interface
+/** 🧵️ The guest-job doors a host must own to honour a `spawn-job` effect — `jobs::start-job` and
+ * `jobs::step-job`, plus `jobs::cancel-job` for the job a drive leaves running, on the instance the job was placed on (`🔌️plugin/🧬️schema/📜️.wit`'s `interface
  * jobs`). Injected rather than imported so this module keeps no dependency on a particular transport:
  * the wgpu bridge hands over its `ShardClient` bound to one actor, and any other host its own. */
 export type SpawnedJobPort = {
   readonly startJob: (job: bigint, kind: string, input: Uint8Array) => Promise<void>;
   readonly stepJob: (job: bigint, budget: { readonly fuel: bigint; readonly deadlineMs: number }) => Promise<unknown>;
+  readonly cancelJob?: (job: bigint) => Promise<void>;
 };
 
 /** 💼️ One spawned job, as this side of the ABI states it. `stepCeiling` exists for a law that wants
@@ -71,12 +72,20 @@ export async function driveSpawnedJob(drive: SpawnedJobDrive): Promise<SpawnedJo
   const budget = { fuel: SPAWNED_JOB_FUEL, deadlineMs: SPAWNED_JOB_DEADLINE_MS } as const;
   await drive.port.startJob(drive.job, drive.kind, drive.input);
   const steps: SpawnedJobStep[] = [];
-  for (let index = 0; index < ceiling; index += 1) {
-    if (drive.signal?.aborted === true) break;
-    const step = wireJobStep(await drive.port.stepJob(drive.job, budget));
-    steps.push(step);
-    drive.onStep?.({ job: drive.job, index, status: step.status });
-    if (step.status !== "running") break;
+  let settled = false;
+  try {
+    for (let index = 0; index < ceiling; index += 1) {
+      if (drive.signal?.aborted === true) break;
+      const step = wireJobStep(await drive.port.stepJob(drive.job, budget));
+      steps.push(step);
+      drive.onStep?.({ job: drive.job, index, status: step.status });
+      if (step.status !== "running") {
+        settled = true;
+        break;
+      }
+    }
+  } finally {
+    if (!settled) await drive.port.cancelJob?.(drive.job).catch(() => {});
   }
   return spawnedJobCompletion(steps);
 }

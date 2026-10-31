@@ -36,7 +36,7 @@ impl Drop for LocalInteractionRootPatch {
 enum MapUpdate {Selection(UpdateCursor<DomainSelection>),Mode(UpdateCursor<SelectionMode>),Granularity(UpdateCursor<String>)}
 impl MapUpdate {
     fn is_complete(&self)->bool{match self{Self::Selection(cursor)=>cursor.is_complete(),Self::Mode(cursor)=>cursor.is_complete(),Self::Granularity(cursor)=>cursor.is_complete()}}
-    fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{match self{Self::Selection(cursor)=>cursor.advance(grant),Self::Mode(cursor)=>cursor.advance(grant),Self::Granularity(cursor)=>cursor.advance(grant)}}
+    fn advance(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{match self{Self::Selection(cursor)=>cursor.advance(grant).result,Self::Mode(cursor)=>cursor.advance(grant).result,Self::Granularity(cursor)=>cursor.advance(grant).result}}
     fn copy_demand(&self)->usize{match self{Self::Selection(cursor)=>cursor.next_copy_byte_demand(),Self::Mode(cursor)=>cursor.next_copy_byte_demand(),Self::Granularity(cursor)=>cursor.next_copy_byte_demand()}}
     fn capacity_demand(&self)->Result<usize,ValueError>{match self{Self::Selection(cursor)=>cursor.next_capacity_byte_demand(),Self::Mode(cursor)=>cursor.next_capacity_byte_demand(),Self::Granularity(cursor)=>cursor.next_capacity_byte_demand()}}
     fn depth_demand(&self)->usize{match self{Self::Selection(cursor)=>cursor.next_depth_demand(),Self::Mode(cursor)=>cursor.next_depth_demand(),Self::Granularity(cursor)=>cursor.next_depth_demand()}}

@@ -113,7 +113,7 @@ where
     store::os_store::document_store_owners::bounded_artifact_store_owners::<C, M>(grant)
 }
 
-/// 🎛️ Exact one-item PUBLICATION authority for an explicitly bounded app configuration store —
+/// 🛂️ Exact one-item PUBLICATION authority for an explicitly bounded app configuration store —
 /// the publication twin of [`bounded_config_store_owners`], which only supplies retirement.
 /// Without one, `ArtifactApp::build_config_store_one_item_preparation_factory` stays `None` and
 /// EVERY tool declaring the `config` publication lane fails closed with
@@ -135,7 +135,7 @@ pub fn bounded_config_store_one_item_preparation_factory_source_birth_demand<C: 
     semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_arc_birth_bytes::<BoundedConfigPreparationFactory<C, M>>() + semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::factory::SharedValueRetirementFactory<C>>() + semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::factory::OwnedValueRetirementFactory<M>>(), depth: 1 }
 }
 
-/// 🌱️ Prices the exact bounded preparation factory Arc, its two original issuer Arcs and every original retirement ticket.
+/// 🏷️ Prices the exact bounded preparation factory Arc, its two original issuer Arcs and every original retirement ticket.
 pub fn bounded_config_store_one_item_preparation_factory_birth_bytes<C: 'static, M: 'static>() -> usize {
     semio_framework_value::factory_constructor_birth_bytes::<BoundedConfigPreparationFactory<C, M>>(semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::factory::SharedValueRetirementFactory<C>>() + semio_framework_value::factory_arc_birth_bytes::<semio_framework_value::factory::OwnedValueRetirementFactory<M>>())
 }
@@ -307,7 +307,7 @@ where
     fn terminal_is_empty(&self)->bool{self.closing&&self.base.is_none()&&self.mutation.is_none()&&self.authority.is_none()&&self.prepared.is_none()&&self.active_retirement.is_none()&&self.returned_read.is_none()&&self.returned_factories.iter().all(Option::is_none)&&self.snapshot_factory.is_none()&&self.mutation_factory.is_none()&&self.closing_factories.iter().all(Option::is_none)}
 }
 
-/// 🧹️ Explicit close adapter paired with [`bounded_config_store_owners`].
+/// 🚪️ Explicit close adapter paired with [`bounded_config_store_owners`].
 pub fn bounded_config_store_disposer<C, M>() -> Box<dyn ArtifactOwnedDisposer<ConfigStore<C, M>>>
 where
     C: semio_framework_os_kernel::StoreState,
@@ -346,9 +346,9 @@ where
 #[path="../🌱️initialization/♻️retirement/🦀️.rs"]
 mod bounded_initializer;
 
-pub use bounded_initializer::bounded_document_store_initialization_job;
+pub use bounded_initializer::{DocumentStoreLivePublication, DocumentStorePublicationToken, bounded_document_store_initialization_job, cold_replay_document_store_owners, cold_replay_document_store_owners_source_demands};
 
-/// 🧹️ Explicit adapter from an app-owned document-store close catalog to the
+/// 🔌️ Explicit adapter from an app-owned document-store close catalog to the
 /// plugin close protocol. Apps must return this adapter themselves; the framework never installs
 /// one from type bounds or a permissive default.
 pub struct ArtifactDocumentStoreDisposer<P, Mutation>(std::marker::PhantomData<fn() -> (P, Mutation)>);
@@ -456,7 +456,7 @@ where
         self.authority.is_none() && !self.cancel_arc_live && self.terminal_handoff
     }
 
-    /// ♻️ One grant-shaped close turn of the retained authority, quoted by [`Self::retirement_demands`], for owners that already hold the surrounding original caller.
+    /// 🎁️ One grant-shaped close turn of the retained authority, quoted by [`Self::retirement_demands`], for owners that already hold the surrounding original caller.
     pub fn close_granted(&mut self, _grant: RetainedCloneGrant, demand: RetirementDemand) -> Result<semio_framework_value::RetainedCloneStep, ValueError> {
         if self.authority.is_some(){drop(self.authority.take());return Ok(semio_framework_value::RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))}
         unsafe{ManuallyDrop::drop(&mut self.cancel_requested)}self.cancel_arc_live=false;self.terminal_handoff=true;Ok(semio_framework_value::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))

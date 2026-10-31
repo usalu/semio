@@ -42,16 +42,16 @@ impl IndexedEditPlan{
   Ok(RetirementDemand{copy_bytes:Self::fixed(),capacity_bytes,depth:1,..Default::default()})
  }
  fn refuse(&mut self,p:RetainedCloneProgress)->IndexedEditStep{let fault=match self.kind{IndexedEditKind::Removed=>IndexedEditFault::Remove,IndexedEditKind::Modified=>IndexedEditFault::Modify,IndexedEditKind::Added=>IndexedEditFault::Add};self.fault=Some(fault);self.phase=Phase::Settled;IndexedEditStep::Refused(fault,p)}
- pub fn advance(&mut self,grant:RetainedCloneGrant,coordinate:impl FnOnce(IndexedEditKind,usize)->usize)->Result<IndexedEditStep,ValueError>{
+ pub fn advance(&mut self,grant:RetainedCloneGrant,coordinate:impl FnOnce(IndexedEditKind,usize)->crate::RetainedWorkOutcome<usize>)->crate::RetainedWorkOutcome<IndexedEditStep>{let mut work=0;let result=(||{
   let demand=self.demand()?;if !retained_clone_grant_admits(grant,demand){return Ok(IndexedEditStep::Progress(Default::default()));}
-  let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};let kind=self.kind.index();
+  work=1;let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};let kind=self.kind.index();
   match self.phase{
    Phase::Reserve=>{
     if self.kind==IndexedEditKind::Removed&&self.shape.removed>self.shape.base_len{return Ok(self.refuse(progress));}
     let mut order=Vec::new();order.try_reserve_exact(self.count()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"indexed coordinate directory reservation refused"))?;progress.retained_capacity_bytes=order.capacity()*size_of::<IndexedEditEntry>();self.orders[kind]=Some(order);self.phase=Phase::Fill;
    },
    Phase::Fill=>{
-    if self.cursor<self.count(){let entry=IndexedEditEntry{index:coordinate(self.kind,self.cursor),ordinal:self.cursor};self.orders[kind].as_mut().unwrap().push(entry);self.cursor+=1;}
+    if self.cursor<self.count(){let turn=coordinate(self.kind,self.cursor);work+=turn.work;let entry=IndexedEditEntry{index:turn.result?,ordinal:self.cursor};self.orders[kind].as_mut().unwrap().push(entry);self.cursor+=1;}
     else{self.sort=HeapSortCursor::new(self.count());self.phase=Phase::Sort;}
    },
    Phase::Sort=>{
@@ -77,16 +77,17 @@ impl IndexedEditPlan{
    Phase::Settled=>return Err(invalid()),
   }
   Ok(IndexedEditStep::Progress(progress))
- }
+ })();crate::RetainedWorkOutcome{result,work}}
  pub fn begin_close(&mut self){self.closing=true;}
  pub fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid());}self.retirement.next_owner_demands::<Vec<IndexedEditEntry>>(self.orders.iter().any(Option::is_some),&None,body)}
- pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
   if !self.closing{return Err(invalid());}if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}
   let demand=self.close_demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
-  if !self.retirement.is_empty(){return self.retirement.step_granted(grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
-  for order in self.orders.iter_mut(){if let Some(step)=self.retirement.begin_granted(order,grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}}
+  if !self.retirement.is_empty(){let turn=self.retirement.step_granted(grant);work+=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()));}
+  for order in self.orders.iter_mut(){let turn=self.retirement.begin_granted(order,grant);work+=turn.work;if let Some(step)=turn.result?{return Ok(RetainedCloneStep::Progress(step.progress()));}}
   Ok(RetainedCloneStep::Complete(Default::default()))
- }
+ })();crate::RetainedWorkOutcome{result,work}}
+
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.orders.iter().all(Option::is_none)&&self.retirement.is_empty()}
 }
 impl Drop for IndexedEditPlan{fn drop(&mut self){let empty=self.orders.iter().all(Option::is_none)&&self.retirement.is_empty();assert!(std::thread::panicking()||empty,"indexed edit directories require funded original closure");if empty{unsafe{ManuallyDrop::drop(&mut self.orders);}}}}
@@ -111,3 +112,7 @@ impl IndexedOutputCursor{
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path="🧪️tests/actual.rs"]
+mod actual_work_tests;

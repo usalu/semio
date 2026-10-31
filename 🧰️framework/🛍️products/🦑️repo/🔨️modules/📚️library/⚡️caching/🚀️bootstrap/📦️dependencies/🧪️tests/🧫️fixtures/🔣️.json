@@ -12,7 +12,7 @@
       "install",
       "--frozen-lockfile",
       "--ignore-scripts",
-      "--linker=isolated",
+      "--linker=hoisted",
       "--backend={backend}",
       "--cache-dir",
       "/cache"
@@ -24,7 +24,7 @@
       "install",
       "--lockfile-only",
       "--ignore-scripts",
-      "--linker=isolated",
+      "--linker=hoisted",
       "--backend={backend}",
       "--cache-dir",
       "/cache"

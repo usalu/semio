@@ -1,0 +1,81 @@
+{
+  "state": "source-ready-registered-unexecuted",
+  "package": "semio-framework-value-dynamic-clone-tests",
+  "manifest": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/📦️packages/🦀️rust/Cargo.toml",
+  "expectedCoreLaws": 26,
+  "expectedCompanionLaws": 2,
+  "changes": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🦀️.rs",
+      "sha256": "6c6a1d3f1b65867dbe5bd2ab2a01462796fd3ab7f39d569b428444931b92c3c4",
+      "bytes": 16409
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🦀️.rs",
+      "sha256": "110f12253e659eafe0b7c099f719a8cc70c3953d667d7a05d40fad87d485acac",
+      "bytes": 8234
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/protocol.rs",
+      "sha256": "03f0d36b27faa33211e5c65ec9846b3f3dfb95bda76080f40708df6a5c2b2759",
+      "bytes": 7947
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/private.rs",
+      "sha256": "61913f2f54ea2d4519a5528eca0beb299ba53e51f3fbfb38540441ded1b0b1ea",
+      "bytes": 1078
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/owner.rs",
+      "sha256": "67ef97c1cb09d5209f3f3e2d20aecb9422266c2a54bd4a68df6a35d326b20e12",
+      "bytes": 447
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "d65195581c314aad4fc5d923f5970e8f3b9a6def99a4589ab7e8f4479fc48381",
+      "bytes": 932
+    },
+    {
+      "path": "🧰️framework/Cargo.toml",
+      "sha256": "865173c2c46ce9b648bcba9b12b002f5a7482c191762c3d8aa0972b48d95aa55",
+      "bytes": 124904
+    },
+    {
+      "path": "📋️build-owners.json",
+      "sha256": "a1204d54c68e22dfb2adef479a4ce4a7b991b730f0b4dcffb599560ab886236e",
+      "bytes": 1672980,
+      "attribution": "Only the exact new Cargo owner row; existing and concurrent owners preserved."
+    }
+  ],
+  "unchangedFixtures": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "daa9f7d6d62d5d89aa5145d3c1345a5ce604b2c2b8a78e8611dac692745cd2da",
+      "bytes": 3334
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🧫️fixtures/selected.json",
+      "sha256": "846f31871999052bb2bd919268903a637ab0d64926b7971177f4ad22b99460fd",
+      "bytes": 227
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🧫️fixtures/selected.schema.json",
+      "sha256": "6a4d5797fc7c4ea8fdad1adb2f0459d379553934f7ade5c1b908592c47c7a7fd",
+      "bytes": 491
+    }
+  ],
+  "before": {
+    "dynamic": "b2a364ee84501a569826b63f8b09f087629f1f5cac13816599dd9b7b9cea73b9",
+    "tests": "a1ac02218ab7232c31d7ed63d1e8922c96aa866947bad64cb3358c221e4453ab",
+    "workspace": "715b33625bbb3e206d5f9f76cc73590bd58bbdfb0fcaa79cccdc05e5dbf712f4"
+  },
+  "unchangedSelectedTrait": {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs",
+    "sha256": "4865023358421de27a3dceeea40f7e2abcd1ea17cd2578c8fa6bde67a35f4e66"
+  },
+  "mandatoryGates": [
+    "semio-framework-value-retained-clone --lib",
+    "semio-framework-value-dynamic-clone-tests --lib"
+  ],
+  "actualOutcomes": null
+}

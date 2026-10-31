@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "phases": [
+    "admission",
+    "header",
+    "blocks",
+    "publication",
+    "complete"
+  ],
+  "output": "original-retained-bytes",
+  "cases": [
+    {
+      "name": "opaque",
+      "width": 1,
+      "height": 1,
+      "rgba": [
+        255,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "name": "alpha",
+      "width": 2,
+      "height": 1,
+      "rgba": [
+        0,
+        255,
+        0,
+        128,
+        0,
+        0,
+        255,
+        0
+      ]
+    }
+  ],
+  "rules": {
+    "constructorDoesNotAllocateOutput": true,
+    "zeroGrantLeavesFrontier": true,
+    "sameLedgerPerTurn": true,
+    "copyPaidBeforeBlock": true,
+    "outputBorrowRequiresCompletion": true,
+    "outputOwnerMovesOnce": true,
+    "cancelRetainsUnpublishedBytes": true,
+    "releaseDenialHasNoEffect": true,
+    "independentDecoderMatchesRgba": true,
+    "noHeaderByteEstimate": true,
+    "oneActualOperationPerCloseTurn": true,
+    "preparationSemanticZero": true,
+    "explicitActualCpu": true,
+    "sameFiniteStockThroughOutputClose": true,
+    "completedCustodySemanticZero": true,
+    "oneFundedByteMutationPerEmissionTurn": true,
+    "readOnlyActualSettlementPending": true
+  },
+  "stock": [
+    1024,
+    131072,
+    131072,
+    131072,
+    64
+  ],
+  "fuel": 1024,
+  "closePhases": [
+    "backing",
+    "header",
+    "complete"
+  ]
+}

@@ -1,0 +1,5 @@
+# Native Flatten Independent Reference Completion
+
+Root retained all original cases and added a real TinySkia output law before executing the new owner gate. The same funded Flatten job produces actual contours; TinySkia paints those contours and independently paints neutral rectangle geometry. Both RGBA outputs must equal each other and the language-neutral fixture's full expected buffer. The same finite wallet pays actual job/private/output retirement. No Pixels/Boolean/2d facade dependency or substitute harness is introduced.
+
+The test-only TinySkia dependency follows the existing Framework explicit0.11.4 version because Framework workspace declares no tiny-skia inheritance key. Root checked Pixels companion and confirmed it already uses that correct explicit version; no Pixel manifest edit was needed. Drawing's separate workspace declares its own tiny-skia key, so its model/geometry test declarations remain inherited. No runtime dependency/version policy or framework workspace key was added. Native compiler/Source/test outcomes are still pending.

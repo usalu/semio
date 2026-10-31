@@ -27,6 +27,9 @@ mod engagement_and_import;
 #[path = "⏪️history-and-convergence/🦀️.rs"]
 mod history_and_convergence;
 
+#[path = "🪧️pane-smoke/🦀️.rs"]
+mod pane_smoke;
+
 #[path = "🧩️contributions/🦀️.rs"]
 mod contributions;
 

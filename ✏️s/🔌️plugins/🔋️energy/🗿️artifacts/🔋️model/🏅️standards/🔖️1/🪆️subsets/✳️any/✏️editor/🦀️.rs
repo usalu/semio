@@ -39,6 +39,7 @@ extern crate semio_s_artifact_energy_model_editor_edit as editor_edit;
 extern crate semio_s_artifact_energy_model_editor_interaction as editor_interaction;
 extern crate semio_s_artifact_energy_model_editor_panels as editor_panels;
 extern crate semio_s_artifact_energy_model_editor_results as editor_results;
+extern crate semio_s_artifact_energy_model_editor_inspector as editor_inspector;
 extern crate semio_s_artifact_energy_model_examples as examples;
 extern crate semio_s_artifact_energy_model_mut_fenestration as fenestration_mutations;
 extern crate semio_s_artifact_energy_model_mut_fenestration_geometry as fenestration_geometry_mutations;
@@ -130,9 +131,7 @@ use semio_framework_2d_compute::EngineHandles;
 mod reduce_and_helpers;
 use reduce_and_helpers::*;
 
-#[path = "🔍️inspector-properties/🦀️.rs"]
-mod inspector_properties;
-use inspector_properties::*;
+use crate::editor_inspector::*;
 
 #[path = "🎛️retained-commands/🦀️.rs"]
 mod retained_commands;

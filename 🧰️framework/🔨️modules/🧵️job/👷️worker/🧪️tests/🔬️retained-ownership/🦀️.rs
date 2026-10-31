@@ -24,7 +24,7 @@ struct ShortGrantCloseJob {
 }
 
 impl InteractiveJob for ShortGrantCloseJob {
-    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure> {JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{InteractiveJobStep::from_callback(JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from))}
     fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{match descriptor.kind(){JobOutcomeKind::Yield=>descriptor.yielded(),JobOutcomeKind::Cancelled=>descriptor.cancelled(),_=>Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"fixture requires original yielded descriptor"))}}
     fn begin_close(&mut self) {
         self.closing = true;
@@ -53,8 +53,7 @@ fn mounted_close_on_a_short_byte_grant_walks_every_named_phase_to_terminal() {
     let grant = 4_096;
     assert!(grant < JOB_PAYLOAD_PAGE_BYTES, "this law is about a grant shorter than one physical page");
     let source=crate::component::TEST_RETAINED_POLICY;let mut issuer=OriginalJobFixtureCaller::admit(OperationId(90_030),Generation(23),WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);
-    let mut mounted = admit_original_fixture_owner!(issuer,MountedWorkerJobSession,ShortGrantCloseJob { backing: Some(Box::new(51)), closing: false }, params(OperationId(90_030), Generation(23), issuer.admit_alias(source)))
-        .unwrap_or_else(|_| panic!("short-grant close fixture admission"));
+    let mut mounted = admit_original_fixture_owner!(issuer,MountedWorkerJobSession,ShortGrantCloseJob { backing: Some(Box::new(51)), closing: false }, params(OperationId(90_030), Generation(23), issuer.admit_alias(source)));
     assert_eq!(mounted.close_phase(), WorkerJobClosePhase::Open);
     mounted.begin_close();
     let mut ladder = Vec::new();
@@ -183,8 +182,7 @@ fn worker_authority_keeps_one_heap_identity_through_mounted_submit_and_checkout(
     let mut mounted = admit_original_fixture_owner!(issuer,MountedWorkerJobSession,
         HostileJob { output:None, backing: Some(Box::new(73)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false },
         params(OperationId(90_011), Generation(17), issuer.admit_alias(source)),
-    )
-    .unwrap_or_else(|_| panic!("heap authority fixture admission"));
+    );
     assert_eq!(size_of::<OriginalWorkerJobAuthority<HostileJob>>(),size_of::<Vec<()>>());
     let admitted_identity = unsafe { (&*mounted.session.inner.authority.get()).as_ref().expect("idle session owns its authority").native_identity() };
     assert!(matches!(mounted_admitted(&mut mounted, &pool, Lane::Background), Ok(WorkerJobPoll::Submitted)), "a non-interactive lane submits to the pool");
@@ -240,7 +238,7 @@ fn worker_session_contention_rejection_take_resume_terminal_drop_and_close_are_e
     let steps = Arc::new(AtomicUsize::new(0));
     let source=crate::component::TEST_RETAINED_POLICY;let mut issuer=OriginalJobFixtureCaller::admit(operation,generation,WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);
     let mut session =
-        admit_original_fixture_owner!(issuer,WorkerJobSession,HostileJob { output:None, backing: Some(Box::new(91)), steps: Some(Arc::clone(&steps)), panic: false, closing: false }, params(operation, generation, issuer.admit_alias(source))).unwrap_or_else(|_| panic!("worker session slot"));
+        admit_original_fixture_owner!(issuer,WorkerJobSession,HostileJob { output:None, backing: Some(Box::new(91)), steps: Some(Arc::clone(&steps)), panic: false, closing: false }, params(operation, generation, issuer.admit_alias(source)));
     let first = admitted(&session, &pool, Lane::Interactive).expect("first opportunity submitted");
     assert!(matches!(session.try_submit_step(&pool, Lane::Interactive,crate::component::TEST_RETAINED_POLICY), Err(WorkerJobSubmitFault::Contention(WorkerJobContention::Submitted(_)))));
     wait_for(&session, WorkerJobPoll::Outcome);
@@ -277,8 +275,7 @@ fn worker_pool_rejection_returns_exact_job_before_resume() {
     let backing = Box::new(33u8);
     let backing_pointer = backing.as_ref() as *const u8;
     let source=crate::component::TEST_RETAINED_POLICY;let mut issuer=OriginalJobFixtureCaller::admit(OperationId(90_005),Generation(11),WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);
-    let mut session = admit_original_fixture_owner!(issuer,WorkerJobSession,HostileJob { output:None, backing: Some(backing), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_005), Generation(11), issuer.admit_alias(source)))
-        .unwrap_or_else(|_| panic!("worker session slot"));
+    let mut session = admit_original_fixture_owner!(issuer,WorkerJobSession,HostileJob { output:None, backing: Some(backing), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_005), Generation(11), issuer.admit_alias(source)));
     assert_eq!(session.try_submit_step(&pool, Lane::Interactive,crate::component::TEST_RETAINED_POLICY), Err(WorkerJobSubmitFault::Pool(semio_framework_async::WorkerSubmitErrorKind::Shutdown)));
     let rejected = session.take_rejected().expect("pool rejection retained exact owner");
     assert_eq!(rejected.job().backing.as_deref().expect("rejected hostile backing") as *const u8, backing_pointer);
@@ -299,8 +296,7 @@ fn worker_panic_and_quiet_wake_publish_one_durable_terminal_intent() {
     let _slots = super::worker_session_slots_shared();
     let pool = WorkerPool::new(WorkerPoolConfig::new(ProcessKind::HeadlessBatch, 1));
     let source=crate::component::TEST_RETAINED_POLICY;let mut issuer=OriginalJobFixtureCaller::admit(OperationId(90_006),Generation(12),WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);
-    let mut session = admit_original_fixture_owner!(issuer,WorkerJobSession,HostileJob { output:None, backing: Some(Box::new(1)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: true, closing: false }, params(OperationId(90_006), Generation(12), issuer.admit_alias(source)))
-        .unwrap_or_else(|_| panic!("worker session slot"));
+    let mut session = admit_original_fixture_owner!(issuer,WorkerJobSession,HostileJob { output:None, backing: Some(Box::new(1)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: true, closing: false }, params(OperationId(90_006), Generation(12), issuer.admit_alias(source)));
     let preadmitted_fault_pointer = unsafe {
         (&*session.inner.authority.get())
             .as_ref()
@@ -335,8 +331,7 @@ fn worker_panic_and_quiet_wake_publish_one_durable_terminal_intent() {
 fn worker_quiet_wake_sequence_exhaustion_is_permanent_and_typed() {
     let _slots = super::worker_session_slots_shared();
     let source=crate::component::TEST_RETAINED_POLICY;let mut issuer=OriginalJobFixtureCaller::admit(OperationId(90_009),Generation(15),WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);
-    let mut session = admit_original_fixture_owner!(issuer,WorkerJobSession,HostileJob { output:None, backing: Some(Box::new(2)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_009), Generation(15), issuer.admit_alias(source)))
-        .unwrap_or_else(|_| panic!("worker session slot"));
+    let mut session = admit_original_fixture_owner!(issuer,WorkerJobSession,HostileJob { output:None, backing: Some(Box::new(2)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_009), Generation(15), issuer.admit_alias(source)));
     session.inner.wake_sequence.store(u64::MAX, Ordering::Release);
     session.inner.wake_pending.store(false, Ordering::Release);
     session.inner.raise_wake();
@@ -355,8 +350,7 @@ fn worker_quiet_wake_sequence_exhaustion_is_permanent_and_typed() {
 fn batch_session_advances_exactly_one_external_opportunity() {
     let steps = Arc::new(AtomicUsize::new(0));
     let source=crate::component::TEST_RETAINED_POLICY;let mut issuer=OriginalJobFixtureCaller::admit(OperationId(90_007),Generation(13),WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);
-    let mut batch = admit_original_fixture_owner!(issuer,BatchJobSession,HostileJob { output:None, backing: Some(Box::new(7)), steps: Some(Arc::clone(&steps)), panic: false, closing: false }, params(OperationId(90_007), Generation(13), issuer.admit_alias(source)))
-        .unwrap_or_else(|_| panic!("batch fault page is pre-admitted"));
+    let mut batch = admit_original_fixture_owner!(issuer,BatchJobSession,HostileJob { output:None, backing: Some(Box::new(7)), steps: Some(Arc::clone(&steps)), panic: false, closing: false }, params(OperationId(90_007), Generation(13), issuer.admit_alias(source)));
     assert_eq!(batch.step(crate::component::TEST_RETAINED_POLICY), Ok(WorkerJobPoll::Outcome));
     assert_eq!(steps.load(AtomicOrdering::Acquire), 1);
     assert!(batch.checkout_outcome());
@@ -378,8 +372,7 @@ fn batch_session_advances_exactly_one_external_opportunity() {
 #[test]
 fn checked_out_and_worker_begin_close_transitions_report_exact_zero_release() {
     let source=crate::component::TEST_RETAINED_POLICY;let mut issuer=OriginalJobFixtureCaller::admit(OperationId(90_010),Generation(16),WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);
-    let mut batch = admit_original_fixture_owner!(issuer,BatchJobSession,HostileJob { output:None, backing: Some(Box::new(7)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_010), Generation(16), issuer.admit_alias(source)))
-        .unwrap_or_else(|_| panic!("batch session authority"));
+    let mut batch = admit_original_fixture_owner!(issuer,BatchJobSession,HostileJob { output:None, backing: Some(Box::new(7)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false }, params(OperationId(90_010), Generation(16), issuer.admit_alias(source)));
     assert_eq!(batch.step(crate::component::TEST_RETAINED_POLICY), Ok(WorkerJobPoll::Outcome));
     assert!(batch.checkout_outcome());
     assert_eq!(issuer.close_owner(caller_worker_close_policy(batch.close_phase()),&mut batch).unwrap(), WorkerJobCloseStep::Pending {progress:RetainedCloneProgress{copied_items:1,released_bytes:0,..RetainedCloneProgress::default()}});
@@ -413,7 +406,7 @@ fn worker_session_slots_max_plus_one_exact_rejection_and_drop_pump_are_owned() {
     let mut sessions = Vec::with_capacity(WORKER_JOB_SESSION_SLOTS);
     for index in 0..WORKER_JOB_SESSION_SLOTS {
         let job = HostileJob { output:None, backing: Some(Box::new(index as u8)), steps: Some(Arc::new(AtomicUsize::new(0))), panic: false, closing: false };
-        let mut caller=OriginalJobFixtureCaller::admit(OperationId(91_000+index as u64),Generation(index as u64+1),WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);let session=admit_original_fixture_owner!(caller,WorkerJobSession,job, params(OperationId(91_000 + index as u64), Generation(index as u64 + 1), caller.admit_alias(source))).unwrap_or_else(|_| panic!("each fixed session slot admits once"));sessions.push((session,caller));
+        let mut caller=OriginalJobFixtureCaller::admit(OperationId(91_000+index as u64),Generation(index as u64+1),WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);let session=admit_original_fixture_owner!(caller,WorkerJobSession,job, params(OperationId(91_000 + index as u64), Generation(index as u64 + 1), caller.admit_alias(source)));sessions.push((session,caller));
     }
     let rejected_backing = Box::new(211u8);
     let rejected_pointer = rejected_backing.as_ref() as *const u8;
@@ -480,7 +473,7 @@ fn hostile_retained_box_and_arc_require_complete_independent_physical_grants(){
 
 #[test]
 fn mounted_original_cancel_alias_returns_only_to_its_still_borrowed_matching_root(){
- let _slots=super::worker_session_slots_shared();let source=crate::component::TEST_RETAINED_POLICY;let mut issuer=OriginalJobFixtureCaller::admit(OperationId(90_031),Generation(23),WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);let mut mounted=admit_original_fixture_owner!(issuer,MountedWorkerJobSession,ShortGrantCloseJob{backing:Some(Box::new(51)),closing:false},params(OperationId(90_031),Generation(23),issuer.admit_alias(source))).unwrap_or_else(|_|panic!("original witnessed alias fixture admission"));mounted.begin_close();let mut handbacks=0;
- for _ in 0..64{let phase=mounted.close_phase();if phase==WorkerJobClosePhase::Empty{break;}let grant=caller_worker_close_policy(phase);if let Some(step)=issuer.turn(grant,|cx|{let step=mounted.return_original_cancel_alias_step(cx.original_cancel_token(),cx.retained_grant()).map_err(|error|match error{WorkerJobDemandError::Refused(error)=>OriginalTurnFailure::from(error),WorkerJobDemandError::Contention(_)=>OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original mounted witness remains checked out"))})?;if let Some(step)=step{cx.consume_retained(step.progress())?;cx.consume_fuel(1);}Ok(step)}).unwrap(){let observed=step.progress();assert!(observed.fits(grant));assert_eq!(observed,RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()});assert!(matches!(step,RetainedCloneStep::Complete(_)));handbacks+=1;}else{let step=issuer.turn(grant,|cx|mounted.close_step(cx)).unwrap();assert!(step.progress().fits(grant));assert!(!matches!(step,WorkerJobCloseStep::Blocked));}}
- assert!(mounted.terminal_is_empty());assert_eq!(handbacks,1);let released=issuer.retire(source);assert!(released>0);
+ let law:serde_json::Value=serde_json::from_str(include_str!("cancel-return.json")).unwrap();let schema:serde_json::Value=serde_json::from_str(include_str!("cancel-return.schema.json")).unwrap();for(k,v)in law.as_object().unwrap(){assert_eq!(&schema["properties"][k]["const"],v)}let _slots=super::worker_session_slots_shared();let source=crate::component::TEST_RETAINED_POLICY;let mut issuer=OriginalJobFixtureCaller::admit(OperationId(90_031),Generation(23),WORKER_TEST_STOCK,logical_now_us,u64::MAX,20000);let mut mounted=admit_original_fixture_owner!(issuer,MountedWorkerJobSession,ShortGrantCloseJob{backing:Some(Box::new(51)),closing:false},params(OperationId(90_031),Generation(23),issuer.admit_alias(source)));mounted.begin_close();let mut handbacks=0;
+ for _ in 0..64{let phase=mounted.close_phase();if phase==WorkerJobClosePhase::Empty{break;}let grant=caller_worker_close_policy(phase);if let Some(step)=issuer.turn(grant,|cx|{if mounted.has_original_cancel_alias_witness(cx.original_cancel_token()).unwrap(){let denied=RetainedCloneGrant{maximum_items:0,..cx.retained_grant()};let(turn,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||mounted.return_original_cancel_alias_step(cx.original_cancel_token(),denied));assert_eq!(turn.work,law["work"]["denied"].as_u64().unwrap());assert!(turn.result.unwrap().is_none_or(|step|step.progress()==Default::default()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(!heap.overflowed);}let turn=mounted.return_original_cancel_alias_step(cx.original_cancel_token(),cx.retained_grant());let step=turn.result.as_ref().ok().copied().flatten();let expected=if step.is_some_and(|step|step.progress()!=Default::default()){law["work"]["returned"].as_u64().unwrap()}else{law["work"]["ineligible"].as_u64().unwrap()};assert_eq!(turn.work,expected);let result=turn.result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default()))).map_err(|error|match error{WorkerJobDemandError::Refused(error)=>error,WorkerJobDemandError::Contention(_)=>ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original mounted witness remains checked out")});receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})?;Ok(step)}).unwrap(){let observed=step.progress();assert!(observed.fits(grant));assert_eq!(observed,RetainedCloneProgress{copied_items:1,copied_bytes:0,..Default::default()});assert!(matches!(step,RetainedCloneStep::Complete(_)));handbacks+=1;}else{let step=issuer.turn(grant,|cx|mounted.close_step(cx)).unwrap();assert!(step.progress().fits(grant));assert!(!matches!(step,WorkerJobCloseStep::Blocked));}}
+ assert!(mounted.terminal_is_empty());assert_eq!(handbacks,law["handbacks"].as_u64().unwrap());issuer.turn(source,|cx|{let turn=mounted.return_original_cancel_alias_step(cx.original_cancel_token(),cx.retained_grant());assert_eq!(turn.work,law["work"]["cached"].as_u64().unwrap());assert!(turn.result.unwrap().is_none());Ok(())}).unwrap();let released=issuer.retire(source);assert!(released>0);
 }

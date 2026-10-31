@@ -1,0 +1,5 @@
+# Original Font Current Erased Matcher Successor
+
+PREP ONLY after Root verified actual owning28 GREEN/strict one TS2769 and released held94. Exactly one erased expect<Uint8Array|undefined> generic widens the matcher type; the actual genuine page bytes and original[at] operands/runtime identity check remain identical. No cast, suppression, expected non-null, stock, source body, schema, geometry, tolerance, timeout or algorithm changes. Exact inverse reconstructs the entire preceding test source hash. Other92 source bodies remain byte-identical; the dedicated successor importer has identical registration bytes under its new identity.
+
+Expected28 complete registrations and strict18 remain, using fresh normal all-five artifact/temp paths and separate logs. Actual previous results and immutable logs/receipt remain preserved. No successor runtime has launched; exact94 inputs are held for Root review. Standalone Font12/seven SFNT sources remain distinct from mandatory Drawing14 glyph-scene rows.

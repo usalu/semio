@@ -29,4 +29,7 @@ semio-framework-2d-retire = { path = "../../../🧹️retire/📦️packages/�
 semio-framework-2d-path-flatten = { path = "../../../🛤️path/📏️flatten/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+tiny-skia = "0.11.4"
+semio-framework-trace = { path = "../../../../⏱️trace/📦️packages/🦀️rust" }
+semio-framework-value-testing-allocator = { path = "../../../../🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

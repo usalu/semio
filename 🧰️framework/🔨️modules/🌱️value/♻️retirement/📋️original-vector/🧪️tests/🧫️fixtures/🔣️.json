@@ -1,1 +1,34 @@
-{"copyCapacityLimit":4096,"values":["first α\u0000","second 😀","last ä"],"cancelAfter":[0,1,2,3],"deniedCurrencies":["items","copy","depth","release"]}
+{
+  "copyCapacityLimit": 4096,
+  "values": [
+    "first α\u0000",
+    "second 😀",
+    "last ä"
+  ],
+  "cancelAfter": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "deniedCurrencies": [
+    "items",
+    "copy",
+    "depth",
+    "release"
+  ],
+  "actualCloseWork": [
+    {
+      "label": "deniedRelease",
+      "work": 0
+    },
+    {
+      "label": "paidBackingRelease",
+      "work": 1
+    },
+    {
+      "label": "cachedComplete",
+      "work": 0
+    }
+  ]
+}

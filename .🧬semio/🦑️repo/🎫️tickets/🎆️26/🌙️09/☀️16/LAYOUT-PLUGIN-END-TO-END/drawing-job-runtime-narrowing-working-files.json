@@ -1,0 +1,173 @@
+{
+  "sourceOnly": true,
+  "runtimeAttempts": 0,
+  "notAdmissionCertificate": true,
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/⏸️park/🦀️.rs",
+      "sha256": "592f3b497180d9de06476a09e0d8918730448a6a8650e45f81f56d4c96778db0",
+      "bytes": 13851,
+      "explicitDerives": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🦀️.rs",
+      "sha256": "d22e2390b62057b433681cf6b5d619ff23b6c3671945c51d3504eddc45e5eae4",
+      "bytes": 21737,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "accc36d82124d91850d81e546c684a5d37644327de4258acc0ef52096a101e50",
+      "bytes": 2087
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/📸️capture/🦀️.rs",
+      "sha256": "270a48f8e5828995d231f30d1059c67b1fe94800af89987cf9db1551e57cfae5",
+      "bytes": 11300,
+      "explicitDerives": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⏱️context/🦀️.rs",
+      "sha256": "775567c8ef06cd28b3d1126fbbca7e442b3eb9858721bb5aa99846c2c4b7a359",
+      "bytes": 52349,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/♻️retirement/🎟️context/🦀️.rs",
+      "sha256": "af5c249bedfc7c2d730bcd7e67b05dbeda7d99222f600875e62fd6cb67acc182",
+      "bytes": 5662,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🦀️.rs",
+      "sha256": "754b3f5c5fc03d088775a30eb17c3dc635f033ff20e195b17020e26bbdc12cfc",
+      "bytes": 8930,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🦀️.rs",
+      "sha256": "04c636defd6287775ddc4b5349ca12e0c2741d5fb36c1522ba49d775422af720",
+      "bytes": 5075,
+      "explicitDerives": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🤝️closure/🦀️.rs",
+      "sha256": "2afb61dda7de55deff77e37ebedf5837ebee9eb446b3f146e069adc780f5553d",
+      "bytes": 1781,
+      "explicitDerives": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🦀️.rs",
+      "sha256": "5ea5db83debbb98d3ee04ef3f07f466fd1763f2d1920ba7f5367dd546a2e1c95",
+      "bytes": 16083,
+      "explicitDerives": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/🦀️.rs",
+      "sha256": "4d40279f83bc522871a4427f0ed0e75b5b5096e5661431295dfed84700ade12b",
+      "bytes": 5698,
+      "explicitDerives": 2
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/🫴️projection/🦀️.rs",
+      "sha256": "43b94b565b64fa56da2db34ea866bcac58e6b581bf842769a9d77f8f570d67f1",
+      "bytes": 10504,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🏃️work/🎟️grant/🦀️.rs",
+      "sha256": "7e61d515da0f8fb531f27b0e6ab9ac6404964bd2c457c7ab2877892acfd2a963",
+      "bytes": 2162,
+      "explicitDerives": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🏭️construction/🦀️.rs",
+      "sha256": "3153742392e082b637dc55e1b509fbf52b51ebdc1bcd436fd6808803c5f57c84",
+      "bytes": 5125,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📥️snapshot/🧬️schema/🦀️.rs",
+      "sha256": "5b0211b90a79b1c140a69fcdffce1bf8632defba66a0e52d772f2b90cd0d7951",
+      "bytes": 1375,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "60761dced9562c2f848b5f67ca7fc81ff32f14f4bc910711506dbf2ce6009c44",
+      "bytes": 4766
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️origin/🦀️.rs",
+      "sha256": "0fd42af16c0015f236fc6c7315c118ed73080fa6b882b0431f12d12280ac3fbf",
+      "bytes": 20171,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/🦀️.rs",
+      "sha256": "5852889758b26344498ea10b486759d747be3d888cb7263b26e466f6b9fe9a3e",
+      "bytes": 17413,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/📦️capsule/🦀️.rs",
+      "sha256": "154e8a3443b1b86e9564ac600467900e7a0953b58b74b92e3d9ece7f00f99bbb",
+      "bytes": 6269,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/📦️frame/🦀️.rs",
+      "sha256": "049aa12559b84fd7bfd008178e9f16d510bde466839bbf1bd400821913c5364d",
+      "bytes": 2397,
+      "explicitDerives": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/👷️worker/🦀️.rs",
+      "sha256": "a92514c3f6cb154467ebc482868dc00064fcef98d69bd7fcb93599e8750aa7dc",
+      "bytes": 7966,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/📦️bytes/🦀️.rs",
+      "sha256": "1ec59667fd0f58cf3002c5833f9a80411fa2fe53e283670a3814e75c258b75af",
+      "bytes": 14146,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/🦀️.rs",
+      "sha256": "cf5a0bc95a2f51df45e6aa389b41caff3b6be8a71fc0090352f1615202b9c3b0",
+      "bytes": 13008,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/📬️outcome/🤝️loan/🦀️.rs",
+      "sha256": "b968153ddb0f2a141bc35b7773cdd6b275e23a216ccd068e56250cc37ab99abc",
+      "bytes": 6201,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🚦️clock-stride-and-job-protocol/🦀️.rs",
+      "sha256": "708f77ae52d4dbc5afdb1049b7be9f5d23ae5828ea1b15fed3a64c4bae69c949",
+      "bytes": 10163,
+      "explicitDerives": 1
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🛬️receiving/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "713169f41cba851ad489dbeb29d98d44a5c373f47f6b4dabacc60aa0a86c07ca",
+      "bytes": 1059
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🛬️receiving/🦀️.rs",
+      "sha256": "c21c6773aea5683902840e5fc1a7859a903d2364e170eb42f005e28b51dd958e",
+      "bytes": 6732,
+      "explicitDerives": 0
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+      "sha256": "80b77228818601f31ccdb0fba3ec6fcae503802d725519037287c001c798f524",
+      "bytes": 1568,
+      "explicitDerives": 0
+    }
+  ],
+  "explicitDerives": 10
+}

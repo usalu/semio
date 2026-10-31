@@ -408,7 +408,7 @@ fn durable_boxed_terminal_retirement_requires_its_exact_release_grant(){
     use semio_framework_value::{ErasedSnapshotRetirement,ValueError,RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress}};
     struct Terminal(bool);
     impl ErasedSnapshotRetirement for Terminal{
-        fn close_step(&mut self,_:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Ok(RetainedCloneStep::Complete(Default::default()))}
+        fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {Ok(RetainedCloneStep::Complete(Default::default()))})(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
         fn terminal_is_empty(&self)->bool{self.0}
         fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
         fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}

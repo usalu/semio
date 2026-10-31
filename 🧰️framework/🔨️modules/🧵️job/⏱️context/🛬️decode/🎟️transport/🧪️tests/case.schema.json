@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "code": {
+      "const": 71
+    },
+    "receivingMismatch": {
+      "const": [
+        false,
+        true
+      ]
+    },
+    "bodyTransferWork": {
+      "const": 1
+    },
+    "bodyTransferItems": {
+      "const": 1
+    },
+    "sameOwnedPointer": {
+      "const": true
+    },
+    "transportHeap": {
+      "const": [
+        0,
+        0
+      ]
+    },
+    "releaseBytes": {
+      "const": 1
+    },
+    "scope": {
+      "const": "opaque-primary-receiver-transport-not-native-algorithm-birth"
+    }
+  },
+  "required": [
+    "version",
+    "code",
+    "receivingMismatch",
+    "bodyTransferWork",
+    "bodyTransferItems",
+    "sameOwnedPointer",
+    "transportHeap",
+    "releaseBytes",
+    "scope"
+  ],
+  "additionalProperties": false
+}

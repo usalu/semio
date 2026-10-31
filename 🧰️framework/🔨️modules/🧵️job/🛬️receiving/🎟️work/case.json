@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "quantum": 1,
+  "probe": [
+    255
+  ],
+  "valid": false,
+  "actualWork": 1,
+  "postScopeAdditionalWork": false,
+  "heap": [
+    0,
+    0
+  ],
+  "sameSource": true,
+  "scope": "base-context-real-current-loan-native-admission-not-host-birth"
+}

@@ -1,0 +1,15 @@
+# Job Context and Clock Source Extraction
+
+The real production SCC extraction is authored; it is not SourceReady and no runtime was launched.
+
+The original Job root implementation moved to context/🦀️.rs. Existing Job is now the machine/facade above the canonical context package. The context owner retains genuine StepContext, payer/source bank, SourceParent/Child, captured and parked caller custody, typed failure, descriptor, semantic admission and return continuation. OriginalSourceBinding moved out of construction execution into its context identity domain. The scalar clock/budget source now has its own genuine package and explicit lower dependencies.
+
+The higher Job machine owner mounts registry returns, worker preparation, construction execution, snapshot intake, reconciliation and driver execution. No source body was copied to the ticket or duplicated into another compilation owner. Driver access uses admission identity getters, a clock-observation method and actual claim prepare/finish operations; no context fields, budget totals, ledgers or recipients were made public. Worker Origin queries are readonly or validate actual source qualification.
+
+Obsolete StepContextOwner is not exposed through a context-minting public adapter. Its old physical source remains for the pending Root-owned law/caller migration. Removed Writer testkit pointer ports were deleted. Registry post-effect refusal laws now use a testkit-only genuine receipt-policy narrowing scope instead of private field access across owners. The worker law compares actual public receipt fields. All other existing defining cfg(test) mounts and original integration test targets remain selected at their actual physical files.
+
+A bounded literal walk after the first assembly reported context production 247,613 bytes/25 files, context+testkit 259,458/26, higher Job 49,391/9, and clock 8,103/1. Subsequent small typed-port/capture corrections change these estimates; they are never canonical fit proof. Context cfg(test) still exceeds the unchanged Source limit and needs genuine further domain test ownership, without dropping private laws.
+
+A concrete pre-existing context compiler mismatch was fixed: OriginalCallerCapture now invokes the defining real CancelToken alias outcome, places the actual alias into retained CancelTokenRetirement before posting, and forwards the exact direct work. It no longer calls the removed no-output alias helper or adds a second fuel unit. Original parked turn admission still uses the removed consuming Parent loan API and remains an explicit production blocker; it needs caller-owned retained output before any posting refusal.
+
+The exact working-files packet lists 17 current source/manifest inputs. New manifests are semio-framework-job-context and semio-framework-job-clock. Framework workspace members and dependency rows are present; Root owns owner-catalog registration. Existing owning tests, real Host fixture tests and full Layout acceptance remain mandatory after compilation.

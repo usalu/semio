@@ -1,0 +1,16 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/🦀️.rs",
+    "replacements": 2,
+    "beforeSha256": "a266340902afd46834c1253990e78a9aaf894807817d07229db6516cb2f74919",
+    "afterSha256": "559d899db145837e13d2df8e38b51c809d5ae27dfeffbd05708417a47e59b3b2",
+    "fullInverseExact": true
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📖️buffer/read.rs",
+    "replacements": 1,
+    "beforeSha256": "71388838b1090ecb36d11997e3f462b0eea7f68c8df48c6426c159d3ed40dfef",
+    "afterSha256": "db7c22b21e7b230a92f56033be6107f6140c0583f0034eb655276071a076ffd5",
+    "fullInverseExact": true
+  }
+]

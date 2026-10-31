@@ -1,0 +1,70 @@
+[
+  {
+    "mode": "valid",
+    "accepted": true
+  },
+  {
+    "mode": "historical-alias",
+    "accepted": false
+  },
+  {
+    "mode": "unknown-alias",
+    "accepted": false
+  },
+  {
+    "mode": "physical-alias",
+    "accepted": false
+  },
+  {
+    "mode": "unknown-graph",
+    "accepted": false
+  },
+  {
+    "mode": "referenced-obsolete",
+    "accepted": false
+  },
+  {
+    "mode": "selected-current",
+    "accepted": false
+  },
+  {
+    "mode": "missing-current",
+    "accepted": false
+  },
+  {
+    "mode": "duplicate-generation",
+    "accepted": false
+  },
+  {
+    "mode": "obsolete-artifact-reference",
+    "accepted": false
+  },
+  {
+    "mode": "inactive-absent",
+    "accepted": true
+  },
+  {
+    "mode": "current-absent",
+    "accepted": false
+  },
+  {
+    "mode": "duplicate-absent",
+    "accepted": false
+  },
+  {
+    "mode": "known-absent",
+    "accepted": false
+  },
+  {
+    "mode": "present-prefix-absent",
+    "accepted": false
+  },
+  {
+    "mode": "unused-absent",
+    "accepted": true
+  },
+  {
+    "mode": "absent-current",
+    "accepted": false
+  }
+]

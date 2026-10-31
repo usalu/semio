@@ -1777,8 +1777,13 @@
      }
     },
     {
+     "manager": {
+      "ecosystem": "javascript",
+      "role": "scope"
+     }
+    },
+    {
      "globs": [
-      "{workspaceRoot}/bunfig.toml",
       "{workspaceRoot}/tsconfig.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/⚙️runtime/🗣️language/**/*",
@@ -1816,8 +1821,13 @@
      }
     },
     {
+     "manager": {
+      "ecosystem": "javascript",
+      "role": "scope"
+     }
+    },
+    {
      "globs": [
-      "{workspaceRoot}/bunfig.toml",
       "{workspaceRoot}/tsconfig.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/⚙️runtime/🗣️language/**/*",
@@ -1860,8 +1870,13 @@
      }
     },
     {
+     "manager": {
+      "ecosystem": "javascript",
+      "role": "scope"
+     }
+    },
+    {
      "globs": [
-      "{workspaceRoot}/bunfig.toml",
       "{workspaceRoot}/tsconfig.json",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🏗️build/🗣️language/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/⚙️runtime/🗣️language/**/*",

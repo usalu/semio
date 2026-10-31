@@ -15,7 +15,7 @@ pub struct UiComponentCopyProgress {
 }
 
 pub fn error(reason: &'static str) -> PagedListAllocationError {
-    PagedListAllocationError { allocated_bytes: 0, kind: PagedListRefusalKind::InvariantViolated, reason }
+    PagedListAllocationError { work: 0, allocated_bytes: 0, kind: PagedListRefusalKind::InvariantViolated, reason }
 }
 pub fn done() -> UiComponentCopyProgress {
     UiComponentCopyProgress { complete: true, progressed: true, ..Default::default() }
@@ -171,7 +171,7 @@ pub fn reserve_byte_candidate(candidate: &mut Vec<u8>, grant: usize, allocate: i
     let allocated = allocate(candidate, UI_FIXED_BYTES);
     let actual = candidate.capacity();
     if allocated.is_err() || actual > grant || actual != UI_FIXED_BYTES {
-        return Err(PagedListAllocationError { allocated_bytes: actual, kind: if allocated.is_err() { PagedListRefusalKind::AllocationFailed } else { PagedListRefusalKind::InvariantViolated }, reason: "component byte candidate capacity differs from exact admission" });
+        return Err(PagedListAllocationError { work: 0, allocated_bytes: actual, kind: if allocated.is_err() { PagedListRefusalKind::AllocationFailed } else { PagedListRefusalKind::InvariantViolated }, reason: "component byte candidate capacity differs from exact admission" });
     }
     Ok(UiComponentCopyProgress { allocated_bytes: actual, ..progress(0) })
 }
@@ -325,7 +325,7 @@ impl<T: TypedCopy, const N: usize> TypedCopy for UiFixedList<T, N> {
                 return Ok(Default::default());
             }
             let mut empty = Some(source.empty_like());
-            let step = candidate.try_place_reserved(&mut empty, work).map_err(|refusal| PagedListAllocationError { allocated_bytes: 0, kind: refusal.kind, reason: refusal.reason })?;
+            let step = candidate.try_place_reserved(&mut empty, work).map_err(|refusal| PagedListAllocationError { work: 0, allocated_bytes: 0, kind: refusal.kind, reason: refusal.reason })?;
             if empty.is_some() {
                 return Err(error("typed copy reserved placement rejected its exact empty owner"));
             }

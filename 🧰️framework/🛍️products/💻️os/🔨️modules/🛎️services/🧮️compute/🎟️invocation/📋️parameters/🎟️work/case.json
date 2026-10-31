@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "deniedAliasWork": 0,
+  "actualAliasWork": 1,
+  "publicationWork": 1,
+  "cachedPublicationWork": 0,
+  "paidCloseControlWork": 1,
+  "copyOnOwnershipMove": 0,
+  "scope": "same-original-compute-parameter-port-not-new-source"
+}

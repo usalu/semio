@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "owner": "rust",
+  "state": "source-ready-normal-verification-passed-preview-running",
+  "files": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧬️schema/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧫️fixtures/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🧭️maintenance/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🧭️maintenance/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🧭️maintenance/🧬️schema/🔣️.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/compiler-preview-route.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/compiler-preview-route-working-files.json"
+  ],
+  "sourceSha256": {
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧬️schema/🔣️.json": "9bca0435863573fe190bacf93f29796844c8a609503e0929ce54d4d1142c1b90",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧫️fixtures/🔣️.json": "1c50e3bca12039838ad79b5f6b1ebd11c6b3542e88a47bf8acea5b2acdd7029e",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🧭️maintenance/🟦️.ts": "42f4c06ca8fed94048fece23520794343c6fdee0063a4365a712127420dfade1",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🧭️maintenance/🔣️.json": "b3b2a4009f942143b86b915d44bdd733ac08db156324f5d8a2d449534264c199",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🧭️maintenance/🧬️schema/🔣️.json": "9c4059bdb3c1e9d78240619603b7c924b0c4fb8e12682600c0a45df6e81f06e8"
+  },
+  "verification": {
+    "red": {
+      "session": 56041,
+      "exit": 1,
+      "passed": 0,
+      "failed": 2
+    },
+    "green": {
+      "session": 75345,
+      "exit": 0,
+      "passed": 2,
+      "failed": 0,
+      "assertions": 97,
+      "neutralCases": 20
+    },
+    "strict": {
+      "session": 37251,
+      "exit": 0,
+      "interface": "actual-typescript-cli"
+    },
+    "admission": "normal-managed"
+  },
+  "preview": {
+    "session": 65226,
+    "state": "live-exclusive-custody-queue",
+    "target": "repo-cache-retirement:cache-retire-inactive-preview",
+    "mode": "prototype",
+    "log": "🗑️generated/compiler-inactive-preview.log",
+    "retirement": false
+  }
+}

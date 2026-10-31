@@ -1,0 +1,36 @@
+{
+  "state": "source-migrated-no-runtime",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/👁️view/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "0f639257222df199445061e27b0498720a33f6e2fdd7e02e54f338dc589637f0",
+      "sha256": "e0608cf16be8b7147c1b20e6385faf1a18074bc5972b90ccde7e540957eca887",
+      "scope": "exact Vector numeric test turns and paid close; shared finite profile, original existing assertions preserved; all actual PreparedScene close loops migrated"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/📋️prepare/🎯️query/🧪️tests/🔬️unit/🦀️.rs",
+      "beforeSha256": "f0461b182f2fd966d575119ee2fd760c72c1fd67d95a9e7168601eaaf86bce42",
+      "sha256": "5657ed8a34e29299fa61887af7bd88bb41986a8978f426f0841b6fad0336e213",
+      "scope": "exact Vector numeric test turns and paid close; shared finite profile, original existing assertions preserved; all actual PreparedScene close loops migrated"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🎛️selection-laws/🦀️.rs",
+      "beforeSha256": "9bcc4c0f47e1472cd80b52f7c5569dd6072d93d896e27cc4f68f5b05680fd597",
+      "sha256": "449d50604de0ddc3d456544921c97767ff419fb50f2a74b0516dd86cd91dfa95",
+      "scope": "exact Vector numeric test turns and paid close; shared finite profile, original existing assertions preserved; all actual PreparedScene close loops migrated"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️canvas-tool/🦀️.rs",
+      "beforeSha256": "3657af94a880af05d0800db93dd0024bcf18ad915198dc644673fcc5705c6764",
+      "sha256": "c47f806bd60b7bf750883bc29357e4b433217c3f8a46518d2b207e4860a8873a",
+      "scope": "exact Vector numeric test turns and paid close; shared finite profile, original existing assertions preserved; all actual PreparedScene close loops migrated"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📋️prepare/🧰️testkit/🦀️.rs",
+      "beforeSha256": "a3e5742b3c76cdbb1ef1f23315089b9559b96cd4c72a410e0cb0eced72347b1c",
+      "sha256": "8d83bab168a6d300e30a137c195d7215d8d92ed10f797e2299f140807644ece7",
+      "scope": "testkit explicit-ledger stalled finite fixture guard only"
+    }
+  ],
+  "stalledGuardCalls": 12
+}

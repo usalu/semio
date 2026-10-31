@@ -1,0 +1,33 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs",
+    "before": "531388a674a014578509a7839ac935204fd3e97f5d7168d406777896705327b8",
+    "sha256": "4865023358421de27a3dceeea40f7e2abcd1ea17cd2578c8fa6bde67a35f4e66",
+    "bytes": 6096
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🦀️.rs",
+    "before": "24fcadd4c082581f41d2595804a4a8fb3052b1537ea0dfa835e94cbdd96813f3",
+    "sha256": "a1ac02218ab7232c31d7ed63d1e8922c96aa866947bad64cb3358c221e4453ab",
+    "bytes": 15204,
+    "beforeLawAndCallerMigration": "ac647691b5fcca72ab920fd1c428d06ff1263da538e0be78df511b970c8752c5"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🧪️tests/♻️close/🎯️dispatch/🦀️.rs",
+    "before": "a5f12e0f5548f06a0a5fcd2a95ce7c9d0b1eb059333fbcb43f98be170bdd635e",
+    "sha256": "4e539dc8fb6cb516bb0dae9d792da5c77b7be9264a7cd23e8368c1f0b17eb423",
+    "bytes": 4995
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🧫️fixtures/selected.json",
+    "before": null,
+    "sha256": "846f31871999052bb2bd919268903a637ab0d64926b7971177f4ad22b99460fd",
+    "bytes": 227
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🌱️dynamic/🧪️tests/🧫️fixtures/selected.schema.json",
+    "before": null,
+    "sha256": "6a4d5797fc7c4ea8fdad1adb2f0459d379553934f7ade5c1b908592c47c7a7fd",
+    "bytes": 491
+  }
+]

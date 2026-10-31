@@ -1,0 +1,351 @@
+{
+  "outerExit": 1,
+  "session": 98091,
+  "compilerErrors": 16,
+  "testsRun": 0,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🦀️.rs",
+      "sha256": "292935220822508379c0718b20842e41d37c7ea8fa9c9637c9333e754da13330",
+      "after": "292935220822508379c0718b20842e41d37c7ea8fa9c9637c9333e754da13330"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️child/🦀️.rs",
+      "sha256": "bf1f236d7e1a7d7c1bbe300d7a15d79f24d9d65d7f4bbe8ce3dbb3d33410b714",
+      "after": "bf1f236d7e1a7d7c1bbe300d7a15d79f24d9d65d7f4bbe8ce3dbb3d33410b714"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️child/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "b773ab77ea4ba13edcd40dca857053dfe4ffe0461e906abb4a5566d2c3a78a9c",
+      "after": "b773ab77ea4ba13edcd40dca857053dfe4ffe0461e906abb4a5566d2c3a78a9c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️child/🧬️schema/🔣️.json",
+      "sha256": "fd188dfc0af9e4056109b0f4ef517929723d65f149683211f3b38853dd548f28",
+      "after": "fd188dfc0af9e4056109b0f4ef517929723d65f149683211f3b38853dd548f28"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🔭️observer/🦀️.rs",
+      "sha256": "7d3e0e66ae603f6685e0d9d2f6965aa5ac287a43bf6060418657a52fcbcbd0c6",
+      "after": "7d3e0e66ae603f6685e0d9d2f6965aa5ac287a43bf6060418657a52fcbcbd0c6"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🦀️.rs",
+      "sha256": "ed04c016de9a9dfe4d92b55b3029ef787864a6c3c6269eb45d04770f32e6d2ac",
+      "after": "ed04c016de9a9dfe4d92b55b3029ef787864a6c3c6269eb45d04770f32e6d2ac"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🦀️.rs",
+      "sha256": "82706d8d67854f4ae27e8359a3ca06be16633a1560d886951abdea11e7fe68db",
+      "after": "82706d8d67854f4ae27e8359a3ca06be16633a1560d886951abdea11e7fe68db"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "6f5aa7647dd749b3d0d88a0c58433187d119928edc88856786aa1409bacbaefc",
+      "after": "6f5aa7647dd749b3d0d88a0c58433187d119928edc88856786aa1409bacbaefc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧪️tests/🧫️fixtures/🔤️receiving/🔣️.json",
+      "sha256": "df38dbac8ce055781716c1965b7d9037dc8a92975d21f9bcad179ebab64b339b",
+      "after": "df38dbac8ce055781716c1965b7d9037dc8a92975d21f9bcad179ebab64b339b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🛂️allocation/🧬️schema/🔣️.json",
+      "sha256": "5b071ad1a07310fbb003821d42b0f23029b9e812397b2f0cc5cd67330037d446",
+      "after": "5b071ad1a07310fbb003821d42b0f23029b9e812397b2f0cc5cd67330037d446"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📏️maximum/🦀️.rs",
+      "sha256": "b2e1da8f49c237fc38b2f78cc7161b4e7cab840e491a2bc22723d16fc1904cc5",
+      "after": "b2e1da8f49c237fc38b2f78cc7161b4e7cab840e491a2bc22723d16fc1904cc5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📏️maximum/🧪️tests/🦀️.rs",
+      "sha256": "a0d0a4b091734de53e505f43bb76ef9d5da2be9f0c75b79f4bb9b197c77a86cb",
+      "after": "a0d0a4b091734de53e505f43bb76ef9d5da2be9f0c75b79f4bb9b197c77a86cb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📏️maximum/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "08da7b00c97a60f171c3df79ce78898b6fc827a1bec83b7a49ed9b176210479b",
+      "after": "08da7b00c97a60f171c3df79ce78898b6fc827a1bec83b7a49ed9b176210479b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📏️maximum/🧬️schema/🔣️.json",
+      "sha256": "43d0ce00e315dee5569c786a0d19cd5cf789b7de185a3fb97cedeaa86198670d",
+      "after": "43d0ce00e315dee5569c786a0d19cd5cf789b7de185a3fb97cedeaa86198670d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🦀️.rs",
+      "sha256": "d943d73d272644ca0f5167395df56a6f4ef401b62a9679ba7dbdafe464fadf0a",
+      "after": "d943d73d272644ca0f5167395df56a6f4ef401b62a9679ba7dbdafe464fadf0a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🦀️.rs",
+      "sha256": "58604850c44edaed7eea623b80987ed14ab6537bb02a26d1700c04dd5db90410",
+      "after": "58604850c44edaed7eea623b80987ed14ab6537bb02a26d1700c04dd5db90410"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🛬️receiving/🦀️.rs",
+      "sha256": "8899a36c65a5007d47de243116d9bad37cd3a5eca0192f3934a897c66135fcef",
+      "after": "8899a36c65a5007d47de243116d9bad37cd3a5eca0192f3934a897c66135fcef"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "6c2ab0545ccf3776d9f35f240177b09d6a858aea91e5bf732f747f8474d864e7",
+      "after": "6c2ab0545ccf3776d9f35f240177b09d6a858aea91e5bf732f747f8474d864e7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧾️result/🧬️schema/🔣️.json",
+      "sha256": "2642cb14d4f803206d3d95654e664c90cd7ddd1d641565293cdffc7fea9d3aa8",
+      "after": "2642cb14d4f803206d3d95654e664c90cd7ddd1d641565293cdffc7fea9d3aa8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/📦️backing/🔣️.json",
+      "sha256": "64eb58c0663fe0dddbdcb5f69cc6972d6ce69760cad993ed3e7b650d7048ab7b",
+      "after": "64eb58c0663fe0dddbdcb5f69cc6972d6ce69760cad993ed3e7b650d7048ab7b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/📦️backing/📐️.json",
+      "sha256": "3d131d58d5469c5dc19b19c8456c16b997029f420bb6c21be62eaf8ce77ad655",
+      "after": "3d131d58d5469c5dc19b19c8456c16b997029f420bb6c21be62eaf8ce77ad655"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/📦️backing/🦀️.rs",
+      "sha256": "6078a58acef03886faa0b4e383067c0a7b354c880d8048948b09295750e8dffd",
+      "after": "6078a58acef03886faa0b4e383067c0a7b354c880d8048948b09295750e8dffd"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/📦️backing/🧪️tests/🦀️.rs",
+      "sha256": "03f2fa7e708c40278f6b2fa32472ef6ec51f8ba1b3da71ee1cb5b77830af6993",
+      "after": "03f2fa7e708c40278f6b2fa32472ef6ec51f8ba1b3da71ee1cb5b77830af6993"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧪️tests/🦀️.rs",
+      "sha256": "fb9ee8a2bd36c8908511396d982db0e00e6846f9eaf3012704590091bf1e9879",
+      "after": "fb9ee8a2bd36c8908511396d982db0e00e6846f9eaf3012704590091bf1e9879"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "4e34ea3927482b9c6ce776d73b93e02ca59bb3f3679cf3294403353070247c70",
+      "after": "4e34ea3927482b9c6ce776d73b93e02ca59bb3f3679cf3294403353070247c70"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🧬️schema/🔣️.json",
+      "sha256": "44e85c33883a0ae237a7752277db9467710e8b2c9cbbe483f6f2f24f6bba99a7",
+      "after": "44e85c33883a0ae237a7752277db9467710e8b2c9cbbe483f6f2f24f6bba99a7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🎟️work/🔣️.json",
+      "sha256": "7c9590543ffc6b8dff52807b2027114b4e8756427e22132ce29c02c0788b2443",
+      "after": "7c9590543ffc6b8dff52807b2027114b4e8756427e22132ce29c02c0788b2443"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🎟️work/📐️.json",
+      "sha256": "8c23f9d0fadaf7297c38c55e46197ddbb9a7331ff14b0fcaaa7f51f886aa21df",
+      "after": "8c23f9d0fadaf7297c38c55e46197ddbb9a7331ff14b0fcaaa7f51f886aa21df"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "1c4671b7ae336b7c4617e04335f898ae557d6eacb5a2baf8c10384011524076c",
+      "after": "1c4671b7ae336b7c4617e04335f898ae557d6eacb5a2baf8c10384011524076c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/⚠️refusal/🧪️tests/🦀️.rs",
+      "sha256": "9016a7c5d3d5e7cea68e5e0f5f8a11875d3c3eecccaa63a21f3694b00bec49d4",
+      "after": "9016a7c5d3d5e7cea68e5e0f5f8a11875d3c3eecccaa63a21f3694b00bec49d4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/⚠️refusal/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "18467394bb9f736dffe5abad520336a4e65b1c74f42926b0b6ea417d7194a4cf",
+      "after": "18467394bb9f736dffe5abad520336a4e65b1c74f42926b0b6ea417d7194a4cf"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/⚠️refusal/🧬️schema/🔣️.json",
+      "sha256": "8152a8893e8dffe10753ab304a42f43ac85441691888f8dba106792d9d7124e4",
+      "after": "8152a8893e8dffe10753ab304a42f43ac85441691888f8dba106792d9d7124e4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🦀️.rs",
+      "sha256": "8d9c02e6a1e28fd2b204919412c65c8fdec971dc4ef663de350cfb9f1291c630",
+      "after": "8d9c02e6a1e28fd2b204919412c65c8fdec971dc4ef663de350cfb9f1291c630"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/📝️paged/🦀️.rs",
+      "sha256": "1b98c185eebbc0c704eaea241f2afb38c5f99678f5f8390617eefb25277481e7",
+      "after": "1b98c185eebbc0c704eaea241f2afb38c5f99678f5f8390617eefb25277481e7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🪆️binding/🦀️.rs",
+      "sha256": "0dcfbe8d28fc007e08ae864b0cf46bb78efd9cf56786ef0171dbb4e8c324735c",
+      "after": "0dcfbe8d28fc007e08ae864b0cf46bb78efd9cf56786ef0171dbb4e8c324735c"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "60e249121990a49811f56e04a777368b158646e11029b5c18d5b9fdbcb2909f1",
+      "after": "60e249121990a49811f56e04a777368b158646e11029b5c18d5b9fdbcb2909f1"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧫️fixtures/📝️paged-text.json",
+      "sha256": "6b94593fdbd2bfb83c989a0d9dc6144296367054e4f4f9e3e92ef86067e947b7",
+      "after": "6b94593fdbd2bfb83c989a0d9dc6144296367054e4f4f9e3e92ef86067e947b7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧫️fixtures/🫴️recipient.json",
+      "sha256": "63b86d3ed0ee05cf983937d1ddce701caedb05830eff8111ff822fcf98e69f88",
+      "after": "63b86d3ed0ee05cf983937d1ddce701caedb05830eff8111ff822fcf98e69f88"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧫️fixtures/🔭️observer/🔣️.json",
+      "sha256": "f4fb6e5eaf336d5261dd6bdbf0106e625011d181566de8ca250595b1480e06ad",
+      "after": "f4fb6e5eaf336d5261dd6bdbf0106e625011d181566de8ca250595b1480e06ad"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧫️fixtures/🌊️text-stream/🔣️.json",
+      "sha256": "32ec60ffe8981c8acb7a63a34010c1f7d505365c82ff70f712289536e93e8d16",
+      "after": "32ec60ffe8981c8acb7a63a34010c1f7d505365c82ff70f712289536e93e8d16"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧫️fixtures/🔌️detached/🔣️.json",
+      "sha256": "cd9137c63f312de5bcd8d893f151b2f826bf3334fbd36ecdfec5d677bc6edb68",
+      "after": "cd9137c63f312de5bcd8d893f151b2f826bf3334fbd36ecdfec5d677bc6edb68"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧫️fixtures/📦️text-parent/🔣️.json",
+      "sha256": "3a2fa21bdf80e8f0d8cb3a6e8668efc175848c6ed6b53242ed9949cd57d33b64",
+      "after": "3a2fa21bdf80e8f0d8cb3a6e8668efc175848c6ed6b53242ed9949cd57d33b64"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧫️fixtures/🪆️stage/🔣️.json",
+      "sha256": "a697713097a46ab98814c41b14f0c52b8656fdf4002a0767b177fecf3ec93330",
+      "after": "a697713097a46ab98814c41b14f0c52b8656fdf4002a0767b177fecf3ec93330"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧫️fixtures/🪆️binding/🔣️.json",
+      "sha256": "41180186b36428e72dcd62555da21cd2a6df1fb1aad01f5cad7950f7a45b2aaa",
+      "after": "41180186b36428e72dcd62555da21cd2a6df1fb1aad01f5cad7950f7a45b2aaa"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧫️fixtures/🔗️child/🔣️.json",
+      "sha256": "a665c90245ccd2de29dbcff3c0c9efd25c5d9bc968497db5976f54c8e5041411",
+      "after": "a665c90245ccd2de29dbcff3c0c9efd25c5d9bc968497db5976f54c8e5041411"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧫️fixtures/🧩️ownership/🔣️.json",
+      "sha256": "67ec5c0f9fb2e58080110ddb9912e984c82c9af04be981688b9c486cfd35deb9",
+      "after": "67ec5c0f9fb2e58080110ddb9912e984c82c9af04be981688b9c486cfd35deb9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧫️fixtures/🧾️semantic-text-retirement/🔣️.json",
+      "sha256": "3b279998e29732545bca6f7e819a4e171c23a0f3032812be10b10fff94ec72a2",
+      "after": "3b279998e29732545bca6f7e819a4e171c23a0f3032812be10b10fff94ec72a2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧪️tests/🧫️fixtures/🤏️inline-text-stream/🔣️.json",
+      "sha256": "6835d57f3b2e5034a7978c585cf0ac6ac5b1e4d54633a12789ffa2cb9f23232b",
+      "after": "6835d57f3b2e5034a7978c585cf0ac6ac5b1e4d54633a12789ffa2cb9f23232b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🦀️.rs",
+      "sha256": "a25bee7b640f08476a9172eeb78bf5c65a2579ab92e6349c638963dfacf96c2b",
+      "after": "a25bee7b640f08476a9172eeb78bf5c65a2579ab92e6349c638963dfacf96c2b"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🦀️.rs",
+      "sha256": "69e6e75cfb3dca54d70f7773a1232eaa5437e4916605e01cc6f7ba6e17336ed2",
+      "after": "69e6e75cfb3dca54d70f7773a1232eaa5437e4916605e01cc6f7ba6e17336ed2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧪️tests/🦀️.rs",
+      "sha256": "9c52634d43fa7c07e6dc716fc58b2b9eca2c685af8decf0b0596ac959e7858b4",
+      "after": "9c52634d43fa7c07e6dc716fc58b2b9eca2c685af8decf0b0596ac959e7858b4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🔁️continuation/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "0d63493d8c42d5c0b299324c2483806ac223d07ff2d669fea389976659c3d2b9",
+      "after": "0d63493d8c42d5c0b299324c2483806ac223d07ff2d669fea389976659c3d2b9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "cff26442cf25136592e7c2cb84be2c537d8d8882d344955126d7ceb93bd6fad2",
+      "after": "cff26442cf25136592e7c2cb84be2c537d8d8882d344955126d7ceb93bd6fad2"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "ec8bfa370814ef7b4366cc98f92b6676f2c5955e6181264bd5c3c9b95d4f548d",
+      "after": "ec8bfa370814ef7b4366cc98f92b6676f2c5955e6181264bd5c3c9b95d4f548d"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "62eadf21ef7dd581b064da85730be09a42501d7a39855f71f1290bd7afaaacfc",
+      "after": "62eadf21ef7dd581b064da85730be09a42501d7a39855f71f1290bd7afaaacfc"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🫴️recipient/♻️retirement/🦀️.rs",
+      "sha256": "527ddfe391c8b76af00f59956955cb04c373e8ed1a5b908efe0cdb63c324b246",
+      "after": "527ddfe391c8b76af00f59956955cb04c373e8ed1a5b908efe0cdb63c324b246"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧬️schema/🔌️detached/🔣️.json",
+      "sha256": "868edb7603cf5739209b3ea4f7cae845836bc1c8b6200c508d963bb1cd78f2ea",
+      "after": "868edb7603cf5739209b3ea4f7cae845836bc1c8b6200c508d963bb1cd78f2ea"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "5cf2fe76cf7a3ad6672a6d5aa75df12c46caed9c84d6d256a40eea5fa07d68c9",
+      "after": "5cf2fe76cf7a3ad6672a6d5aa75df12c46caed9c84d6d256a40eea5fa07d68c9"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/📋️project.json",
+      "sha256": "48263de1f74c4f236e8b8fc17e302006c379f009e7545739c29ca4e580006865",
+      "after": "48263de1f74c4f236e8b8fc17e302006c379f009e7545739c29ca4e580006865"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/📦️packages/🦀️rust/🦀️.rs",
+      "sha256": "8aa12a8f72df42131c91a51e10ee9b6d35edd1d78d7c562f5696faedc5c27ae5",
+      "after": "8aa12a8f72df42131c91a51e10ee9b6d35edd1d78d7c562f5696faedc5c27ae5"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🦀️.rs",
+      "sha256": "864825dc133124f226ca0fcf459c75f200eee4d8d3b0dfaaf6daf048b803c547",
+      "after": "864825dc133124f226ca0fcf459c75f200eee4d8d3b0dfaaf6daf048b803c547"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🔒️close/🦀️.rs",
+      "sha256": "67b6c65a61547d64ba2edaf92f6adef497827f30cd89427bfa2e250947aa5d04",
+      "after": "67b6c65a61547d64ba2edaf92f6adef497827f30cd89427bfa2e250947aa5d04"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🦀️.rs",
+      "sha256": "31ffb6028a2360cfda4fb274170d7c4913bf5f04b3c51c20b5f61fd98d71e67a",
+      "after": "31ffb6028a2360cfda4fb274170d7c4913bf5f04b3c51c20b5f61fd98d71e67a"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "c572c6c3c541503638a7ac7dac977165f75e26c553149f604808fe404082435f",
+      "after": "c572c6c3c541503638a7ac7dac977165f75e26c553149f604808fe404082435f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🧬️schema/🔣️.json",
+      "sha256": "40a4fb5ed867689350765f8ff0af54af79b0ea6f093731ef9ccd4829fed3cf74",
+      "after": "40a4fb5ed867689350765f8ff0af54af79b0ea6f093731ef9ccd4829fed3cf74"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🔁️ledger/🧪️tests/🦀️.rs",
+      "sha256": "2629ad9f881fd1346152c72a37fffe62a49eab5abfb9d96987ba2cd28609c35f",
+      "after": "2629ad9f881fd1346152c72a37fffe62a49eab5abfb9d96987ba2cd28609c35f"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🔁️ledger/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "f9d896b970e12493c682941a782ffcb9da2c080d2017ba57ce004a33e7c90782",
+      "after": "f9d896b970e12493c682941a782ffcb9da2c080d2017ba57ce004a33e7c90782"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🔁️ledger/🧬️schema/🔣️.json",
+      "sha256": "52417ba6018c060713a906b2136a1fe1622e7801fa7b3878e2ed5dc14770e1cb",
+      "after": "52417ba6018c060713a906b2136a1fe1622e7801fa7b3878e2ed5dc14770e1cb"
+    }
+  ],
+  "postMismatches": [],
+  "logSha256": "cbae20921d392ceeafb39c9b3c4fabcbe435253386797a37143f5417f09e33b3",
+  "scope": "Lower NativeDecode/NativeEncoding production compiles; two old test continuation/retirement call sites still expect Result instead of full outcome."
+}

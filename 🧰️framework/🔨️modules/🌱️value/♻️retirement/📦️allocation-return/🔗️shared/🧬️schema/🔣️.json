@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "text",
+    "deniedWork",
+    "attemptWork",
+    "stock"
+  ],
+  "properties": {
+    "text": {
+      "const": "original shared input"
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "attemptWork": {
+      "const": 1
+    },
+    "stock": {
+      "const": 2
+    }
+  }
+}

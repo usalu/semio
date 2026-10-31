@@ -1,0 +1,30 @@
+{
+  "schema": "semio.shared-utf8-admission/v1",
+  "text": "shared original 源\u0000\r\n",
+  "stock": {
+    "items": 100000,
+    "fuel": 100000,
+    "copyBytes": 16777216,
+    "capacityBytes": 16777216,
+    "releaseBytes": 16777216,
+    "depth": 128
+  },
+  "turn": {
+    "items": 1,
+    "copyBytes": 4096,
+    "capacityBytes": 65536,
+    "releaseBytes": 65536,
+    "depth": 128
+  },
+  "expect": {
+    "deniedWork": 0,
+    "nullWork": 1,
+    "nullAttempts": 1,
+    "birthWork": 1,
+    "birthCopyBytes": 0,
+    "aliasWork": 1,
+    "sameStringPointer": true,
+    "sameText": true,
+    "paidClose": true
+  }
+}

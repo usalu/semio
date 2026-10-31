@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "contract",
+    "source",
+    "stock",
+    "fuel",
+    "turn",
+    "maximumTurns",
+    "phases",
+    "cases",
+    "newLedger",
+    "configurationSeedsLifetime",
+    "bodyEntriesBeforeReceiver",
+    "terminalDropBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "contract": {
+      "const": "framework.job.worker.authentic-admission"
+    },
+    "source": {
+      "const": {
+        "operation": 7544,
+        "generation": 4,
+        "clockBinding": 1,
+        "deadlineUs": 1000000
+      }
+    },
+    "stock": {
+      "const": [
+        4096,
+        1048576,
+        1048576,
+        1048576,
+        64
+      ]
+    },
+    "fuel": {
+      "const": 16384
+    },
+    "turn": {
+      "const": {
+        "items": 1,
+        "fuel": 1
+      }
+    },
+    "maximumTurns": {
+      "const": 512
+    },
+    "phases": {
+      "const": [
+        "genuine-source",
+        "fault-builder",
+        "native-backing",
+        "payload-handoff",
+        "source-handoff",
+        "receiver-handoff"
+      ]
+    },
+    "cases": {
+      "const": [
+        {
+          "name": "zero-items",
+          "deny": "items"
+        },
+        {
+          "name": "zero-depth",
+          "deny": "depth"
+        },
+        {
+          "name": "real-source",
+          "deny": null
+        },
+        {
+          "name": "foreign-source",
+          "deny": "foreign"
+        },
+        {
+          "name": "cancelled",
+          "deny": "cancel"
+        }
+      ]
+    },
+    "newLedger": {
+      "const": false
+    },
+    "configurationSeedsLifetime": {
+      "const": false
+    },
+    "bodyEntriesBeforeReceiver": {
+      "const": 0
+    },
+    "terminalDropBytes": {
+      "const": 0
+    }
+  }
+}

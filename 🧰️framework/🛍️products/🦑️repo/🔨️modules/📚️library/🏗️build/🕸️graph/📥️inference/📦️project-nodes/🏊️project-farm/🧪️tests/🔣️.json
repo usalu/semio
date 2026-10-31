@@ -1667,72 +1667,110 @@
   {
    "rssMegabytes": 100,
    "jobs": 1,
-   "megabytes": 2048
+   "megabytes": 2048,
+   "baselineMegabytes": 0
   },
   {
    "rssMegabytes": 1228,
    "jobs": 5,
-   "megabytes": 2048
+   "megabytes": 2048,
+   "baselineMegabytes": 0
   },
   {
    "rssMegabytes": 1229,
    "jobs": 5,
-   "megabytes": 2048
+   "megabytes": 2048,
+   "baselineMegabytes": 0
   },
   {
    "rssMegabytes": 1230,
    "jobs": 5,
-   "megabytes": 2048
+   "megabytes": 2048,
+   "baselineMegabytes": 0
   },
   {
    "rssMegabytes": 2500,
    "jobs": 1,
-   "megabytes": 2048
+   "megabytes": 2048,
+   "baselineMegabytes": 0
   },
   {
    "rssMegabytes": 300,
    "jobs": 95,
-   "megabytes": 2048
+   "megabytes": 2048,
+   "baselineMegabytes": 0
   },
   {
    "rssMegabytes": 300,
    "jobs": 96,
-   "megabytes": 2048
+   "megabytes": 2048,
+   "baselineMegabytes": 0
   },
   {
    "rssMegabytes": 300,
    "jobs": 500,
-   "megabytes": 2048
+   "megabytes": 2048,
+   "baselineMegabytes": 0
   },
   {
    "rssMegabytes": 1229.4,
    "jobs": 96,
-   "megabytes": 2048
+   "megabytes": 2048,
+   "baselineMegabytes": 0
   },
   {
    "rssMegabytes": 0,
    "jobs": 0,
-   "megabytes": 1
+   "megabytes": 1,
+   "baselineMegabytes": 0
   },
   {
    "rssMegabytes": 1,
    "jobs": 1,
-   "megabytes": 1
+   "megabytes": 1,
+   "baselineMegabytes": 0
   },
   {
    "rssMegabytes": 700,
    "jobs": 1,
-   "megabytes": 1000
+   "megabytes": 1000,
+   "baselineMegabytes": 0
   },
   {
    "rssMegabytes": 600,
    "jobs": 1,
-   "megabytes": 1000
+   "megabytes": 1000,
+   "baselineMegabytes": 0
   },
   {
    "rssMegabytes": 601,
    "jobs": 1,
-   "megabytes": 1000
+   "megabytes": 1000,
+   "baselineMegabytes": 0
+  },
+  {
+   "rssMegabytes": 1229,
+   "jobs": 1,
+   "baselineMegabytes": 1229,
+   "megabytes": 2048
+  },
+  {
+   "rssMegabytes": 1600,
+   "jobs": 3,
+   "baselineMegabytes": 800,
+   "megabytes": 2048
+  },
+  {
+   "rssMegabytes": 1229,
+   "jobs": 3,
+   "baselineMegabytes": 1100,
+   "megabytes": 2048
+  },
+  {
+   "rssMegabytes": 2049,
+   "jobs": 1,
+   "baselineMegabytes": 2049,
+   "megabytes": 2048
   }
  ]
 }

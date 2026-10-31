@@ -20,7 +20,7 @@ impl<E:ArtifactEditor> EditorApp<E>{
 impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     fn owned_mutation_batch_birth_bytes() -> Option<usize> { E::owned_mutation_batch_birth_bytes() }
     fn completion_retirement_birth_bytes(value:&ArtifactToolCompletionValue<Self>)->Option<usize>{E::completion_retirement_birth_bytes(value)}
-    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<Self>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{E::admit_completion_retirement(value,grant)}
+    fn admit_completion_retirement(value:&mut Option<ArtifactToolCompletionValue<Self>>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,RetainedCloneProgress)>>{E::admit_completion_retirement(value,grant)}
 
     fn admit_owned_mutation_batch(values: &mut Option<Vec<Self::Mutation>>, grant: RetainedCloneGrant) -> Result<Option<(store::MemberStoreOwnedBatch, RetainedCloneProgress)>, ValueError> { E::admit_owned_mutation_batch(values, grant) }
 
@@ -33,10 +33,9 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     }
     const APP_ID: &'static str = "surface";
     const ROLE: AppRole = E::ROLE;
-    const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = E::REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY;
     const DOCUMENT_SCHEMA: &'static str = E::DOCUMENT_SCHEMA;
 
-    /// 🪪️ Overrides the `APP_ID` placeholder default — every ownership check must see the real
+    /// 📱️ Overrides the `APP_ID` placeholder default — every ownership check must see the real
     /// derived surface id (`self.id`, see struct doc), matching what `ShellHost` addresses.
     async fn instance_id(&self) -> &str {
         self.surface_id().await
@@ -146,8 +145,8 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
         E::build_document_store_initialization_job(envelope, operation, generation, actor)
     }
-    fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        E::validate_document_store_publication(operation, generation, live_generation)
+    fn validate_document_store_publication(token: &DocumentStorePublicationToken, live: DocumentStoreLivePublication) -> Result<(), Fault> {
+        E::validate_document_store_publication(token, live)
     }
     fn build_document_store_disposer() -> ArtifactDisposal<ArtifactStore<Self::Snapshot, Self::Mutation>> {
         E::build_document_store_disposer()
@@ -205,8 +204,8 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
         E::initial_config()
     }
     fn original_host_configuration(action:&str)->Option<&'static semio_framework_plugin_decl_emission::OriginalHostConfigurationDeclaration<Self::ConfigMutation>>{E::original_host_configuration(action)}
-    fn typing_fold(net: &[Self::Mutation], next: &[Self::Mutation]) -> semio_framework_tool_machine::TypingFold<Self::Mutation> {
-        E::typing_fold(net, next)
+    fn original_typing_fold() -> semio_framework_plugin_decl_app::tool_contract::OriginalTypingFoldPolicy<Self::Mutation> {
+        E::original_typing_fold()
     }
     fn entity_label(snapshot: &Self::Snapshot, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
         E::entity_label(snapshot, kinds, id)

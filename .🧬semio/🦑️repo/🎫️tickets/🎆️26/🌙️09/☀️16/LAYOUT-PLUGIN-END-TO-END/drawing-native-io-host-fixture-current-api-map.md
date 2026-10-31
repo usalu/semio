@@ -1,0 +1,15 @@
+# NativeIO Original Host Fixture Current API Map
+
+The actual eleven-law fixture remains in services/tests/native-io-unit/rs. This lane has not modified it. Root's known disjoint edits are Bytes materialization, the same96KiB full-read stdfs oracle, and selected-path registry-return assertions; all must be preserved on fresh read.
+
+OriginalIoFixture::new still calls the genuine existing OriginalJobFixtureCaller::admit. That API was not removed. Its unbounded deadline argument must become the existing neutral maximumStepMicroseconds8000 with clockSome0; original total fuel1,048,576,16MiB axes/depth64,step fuel1024 remain. Callback outputs should remain Copy, with owned descriptors/continuations/session outputs retained in actual caller-owned slots before outer qualification. No replacement Source or cleanup bank.
+
+The direct old NativeIoJob.step(cx) calls must use the real InteractiveJob::step(cx,return_claim)->InteractiveJobStep return protocol. The fixture needs its actual OriginalJobReturnOrigin/receiver and owned result/continuation state, not a Result wrapper that drops the returned capsule. Startup admission is outside measured business startup so the original one-operation File::open assertion remains; metadata/seek are later real stages authored by Root.
+
+The actual run(request) proof is BatchJobSession, not a local job loop: preserve admission, stepping, checkout, exact issued/posted receipt, terminal owner, acknowledgement/removal, resume, cancellation witness and paid session close assertions. Current WorkerJobSessionAdmission<J,BatchJobSession<J>>::advance is the staged entry replacing try_admit_owned, and returned owned session must be stored before outer callback qualification. Its existing output-return/terminal admission control needs genuine paid custody review, not an unchecked consuming Option shortcut.
+
+BatchJobSession::acknowledge_outcome now takes the genuine StepContext and returns Result<bool,OriginalTurnFailure>. The fixture must not wrap it as a grant-only Result step or add unconditional fuel1. NativeIoValue.close_step now returns full RetainedWorkOutcome<InteractiveJobCloseStep>; map its result while preserving actual work, then use genuine close_original_retained_step. Worker cancel alias return wrappers remain Result-only in current code and visibly erase lower turn work; they need defining full-outcome migration before fixture removes its old consume_fuel1. No receipt-items or callback-entry CPU inference is acceptable.
+
+Original page/path supplier APIs now use caller-owned output slots; Root owns return credit/path integration and the selected-path law. Preserve the exact backing pointers, foreign-source refusal, denied turns, held capture/receive settlement and original source identities. The old pump/byte payload code was already consolidated to actual Builder, stable Box read buffer and retained pending payload by Root.
+
+Current lower progress: Source14+doc1, source fixture2 and Read8+docs0 are actual passed scopes. OriginalSlot8 and Core27 owning consumers precede this fixture migration. No NativeIO fixture or runtime semantic acceptance is claimed from this map.

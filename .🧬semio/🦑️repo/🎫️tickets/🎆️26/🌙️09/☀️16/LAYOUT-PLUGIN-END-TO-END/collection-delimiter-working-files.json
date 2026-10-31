@@ -1,0 +1,15 @@
+{
+  "state": "syntax-only-repair",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧳️retained/📦️collection/🦀️.rs",
+      "beforeSha256": "98b7882d302fbf2d7dca37623da95319f031906cd0a9ddb8a5bc400fa03dcd33",
+      "sha256": "79a2f26598d54a5a7487ed39f6ab499d2e8fb8f3c812cbbcd8c9aa38b6080429",
+      "kind": "updated"
+    }
+  ],
+  "changedLines": [
+    28
+  ],
+  "removedCharacters": 1
+}

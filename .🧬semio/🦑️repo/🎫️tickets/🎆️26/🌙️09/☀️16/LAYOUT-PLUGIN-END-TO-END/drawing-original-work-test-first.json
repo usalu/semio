@@ -1,0 +1,21 @@
+{
+  "files": [
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🧬️schema/🔣️.json",
+      "sha256": "6a257b7875b59c613ec472ebe462c76790d19cff45c454029476d080386ef97c",
+      "bytes": 2473
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🧪️tests/🧫️fixtures/🔣️.json",
+      "sha256": "6f01954f42661682190fc753b7623d72451007d650e5d6d0f7ff0098895c5990",
+      "bytes": 2085
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🧪️tests/🦀️.rs",
+      "sha256": "eaf0ce791e9e79c4064e31280ee1ce305e0859fddf234a7d24359df832e64d68",
+      "bytes": 10405
+    }
+  ],
+  "runtime": "unexecuted",
+  "mount": "Job defining unfiltered lib cfg(test), using existing root allocator"
+}

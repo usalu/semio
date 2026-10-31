@@ -1,0 +1,38 @@
+{
+  "stock": "existing PayloadCase finite bank; no new source",
+  "maximumTurns": 64,
+  "physicalTransferCopyBytes": 0,
+  "metadataWork": 1,
+  "cases": [
+    {
+      "name": "single",
+      "pages": [
+        {
+          "value": 1
+        }
+      ],
+      "transferTurns": 1,
+      "remainingPages": 0
+    },
+    {
+      "name": "shared-ledger",
+      "pages": [
+        {
+          "value": 1
+        },
+        {
+          "value": 2
+        }
+      ],
+      "transferTurns": 2,
+      "remainingPages": 1
+    }
+  ],
+  "deniedAxes": [
+    "items",
+    "depth"
+  ],
+  "paidHeapBytes": 0,
+  "cachedWork": 0,
+  "refusedPostingKeepsOutput": true
+}

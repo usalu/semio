@@ -10,7 +10,6 @@
 
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
-#![allow(long_running_const_eval)]
 
 #[cfg(test)]
 extern crate semio_s_plugin_energy_engine_model as model;
@@ -80,13 +79,16 @@ extern crate semio_s_artifact_energy_model_mut_zone_equipment as zone_equipment_
 extern crate semio_s_artifact_energy_model_mut_zone as zone_mutations;
 
 use crate::diff::EnergyModelDiff;
+
+#[path = "🌉️native-cold/🦀️.rs"]
+mod native_cold;
 use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 
 
 //#region 🔖️Aggregate
-/// 🧬️ Closed semantic mutation vocabulary for an energy model.
+/// 🚪️ Closed semantic mutation vocabulary for an energy model.
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_s_artifact_energy_model_native_derive::EnergyNativeTargets, semio_s_artifact_energy_model_native_derive::EnergyNativeActions)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]

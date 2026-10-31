@@ -37,7 +37,7 @@ impl BudgetedInputMerge {
         let progress=RetainedCloneProgress{copied_items:1,..empty};
         match self.phase {
             0=>{let overlay=self.owners.overlay.as_ref().unwrap();if self.rank==overlay.len(){self.phase=4;}else{let(key,value)=overlay.pairs().entry_shared_at_rank(self.rank).unwrap();self.owners.update=Some(self.owners.output.as_ref().unwrap().pairs().begin_set_shared(key,value));self.phase=1;}},
-            1=>{let update=self.owners.update.as_mut().unwrap();let step=update.advance(grant)?;if update.is_complete(){self.phase=2;}return Ok(RetainedCloneStep::Progress(step.progress()));},
+            1=>{let update=self.owners.update.as_mut().unwrap();let step=update.advance(grant).result?;if update.is_complete(){self.phase=2;}return Ok(RetainedCloneStep::Progress(step.progress()));},
             2=>{let result=self.owners.update.as_mut().unwrap().take_result().unwrap();let displaced=std::mem::replace(&mut self.owners.output.as_mut().unwrap().pairs,result);self.child=Some(ControlledRetirement::new(InputClose::Dictionary(Dictionary{pairs:displaced})).unwrap_or_else(|_|unreachable!("original dictionary fields declare retirement")));self.phase=3;},
             3=>{self.child=Some(ControlledRetirement::new(InputClose::Update(self.owners.update.take().unwrap())).unwrap_or_else(|_|unreachable!("original update declares retirement")));self.rank+=1;self.phase=0;},
             _=>unreachable!(),
@@ -64,7 +64,7 @@ impl Drop for BudgetedInputMerge{fn drop(&mut self){assert!(std::thread::panicki
 struct InputRetirement(BudgetedInputMerge);
 impl RetirementCursor for InputRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.next_close_demands(body) }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Ok(step) if step.progress()!=RetainedCloneProgress::default()=>RetirementStep::Progress(step.progress()),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete,Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error)}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Ok(step) if step.progress()!=RetainedCloneProgress::default()=>RetirementStep::Progress(step.progress(),1),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete(0),Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error,0)}}
     fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}
     fn allows_admitted_narrow_work(&self)->bool{true}
@@ -96,10 +96,10 @@ impl BudgetedOwnedEntry{
  /// ⏱️ Forwards the actual update or child receipt without cold header creation or discarded owners.
  pub fn step(&mut self,grant:RetainedCloneGrant)->Result<Option<Dictionary>,ValueError>{self.progress=Default::default();let result=self.advance(grant);result.map_err(|error|error.with_retained_progress(self.progress))}
  fn advance(&mut self,grant:RetainedCloneGrant)->Result<Option<Dictionary>,ValueError>{if self.closing{return Err(ValueError::literal(ValueRefusalKind::Canceled,"original owned entry is closing"))}if grant.maximum_items==0{return Ok(None)}let demand=self.next_demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original owned entry exceeds admitted depth"))}if self.phase!=5&&self.phase!=7&&(grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes){return Ok(None)}let fields=self.fields.as_mut().unwrap();self.progress.copied_items=1;match self.phase{
-  0=>match semio_framework_value_ordered::ordered::SharedOwner::admit(fields.key.take().unwrap(),grant){Ok((key,progress))=>{fields.shared_key=Some(key);self.progress=progress;self.phase=1;},Err((error,key))=>{fields.key=Some(key);self.progress=error.retained_progress();return Err(error)}},
-  1=>if fields.shared_value.is_some(){self.phase=2;}else{match semio_framework_value_ordered::ordered::SharedOwner::admit(fields.value.take().unwrap(),grant){Ok((value,progress))=>{fields.shared_value=Some(value);self.progress=progress;self.phase=2;},Err((error,value))=>{fields.value=Some(value);self.progress=error.retained_progress();return Err(error)}}},
+  0=>match semio_framework_value_ordered::ordered::SharedOwner::admit(fields.key.take().unwrap(),grant).result{Ok((key,progress))=>{fields.shared_key=Some(key);self.progress=progress;self.phase=1;},Err((error,key))=>{fields.key=Some(key);self.progress=error.retained_progress();return Err(error)}},
+  1=>if fields.shared_value.is_some(){self.phase=2;}else{match semio_framework_value_ordered::ordered::SharedOwner::admit(fields.value.take().unwrap(),grant).result{Ok((value,progress))=>{fields.shared_value=Some(value);self.progress=progress;self.phase=2;},Err((error,value))=>{fields.value=Some(value);self.progress=error.retained_progress();return Err(error)}}},
   2=>{fields.update=Some(fields.base.as_ref().unwrap().pairs().begin_set_shared(fields.shared_key.take().unwrap(),fields.shared_value.take().unwrap()));self.phase=3;},
-  3=>{let update=fields.update.as_mut().unwrap();let result=update.advance(grant);self.progress=result.as_ref().map_or_else(|error|error.retained_progress(),|step|step.progress());result?;if update.is_complete(){self.phase=4;}},
+  3=>{let update=fields.update.as_mut().unwrap();let result=update.advance(grant).result;self.progress=result.as_ref().map_or_else(|error|error.retained_progress(),|step|step.progress());result?;if update.is_complete(){self.phase=4;}},
   4=>{let result=fields.update.as_mut().unwrap().take_result().unwrap();let previous=std::mem::replace(&mut fields.base.as_mut().unwrap().pairs,result);fields.child=Some(ControlledRetirement::new(InputClose::Dictionary(Dictionary{pairs:previous})).unwrap_or_else(|_|unreachable!("original entry dictionary fields declare closure")));self.phase=5;},
   5|7=>{let child=fields.child.as_mut().unwrap();let result=child.step(grant);self.progress=child.step_progress();result?;if child.terminal_is_empty(){fields.child=None;self.phase+=1;}},
   6=>{fields.child=Some(ControlledRetirement::new(InputClose::Update(fields.update.take().unwrap())).unwrap_or_else(|_|unreachable!("original entry update fields declare closure")));self.phase=7;},
@@ -117,7 +117,7 @@ impl Drop for BudgetedOwnedEntry{fn drop(&mut self){assert!(std::thread::panicki
 struct OwnedEntryRetirement(BudgetedOwnedEntry);
 impl RetirementCursor for OwnedEntryRetirement{
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.next_close_demands(body) }
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Ok(step) if step.progress()!=RetainedCloneProgress::default()=>RetirementStep::Progress(step.progress()),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete,Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Ok(step) if step.progress()!=RetainedCloneProgress::default()=>RetirementStep::Progress(step.progress(),1),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete(0),Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error,0)}}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.next_close_demands(0)?.copy_bytes)}
  fn allows_admitted_narrow_work(&self)->bool{true}

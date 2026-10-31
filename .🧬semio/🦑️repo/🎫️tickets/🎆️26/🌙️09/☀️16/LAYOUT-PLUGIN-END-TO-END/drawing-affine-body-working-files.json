@@ -1,0 +1,15 @@
+{
+  "phase": "authored-unrun",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🟦️.ts",
+      "beforeSha256": "24f568a6facf0ed49af101e7ef58bca3a62a690179a5ab397eafca2c6e6f8789",
+      "sha256": "e467535c496441e8bd4c62cc148487aad14213911b8da52cf3a963dff3f6efea"
+    }
+  ],
+  "removedApis": [
+    "sampleAffineImage",
+    "AffineImageOptions"
+  ],
+  "open": "original full tests and genuine production callers not yet migrated"
+}

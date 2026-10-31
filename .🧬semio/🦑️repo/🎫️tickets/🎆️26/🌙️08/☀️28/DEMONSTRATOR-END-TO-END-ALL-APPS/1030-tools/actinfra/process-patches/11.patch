@@ -1,0 +1,15 @@
+--- a/🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧬️schema/🔣️.json
++++ b/🧰️framework/🔨️modules/🏃️process/🔒️leases/🧭️order/🧬️schema/🔣️.json
+@@ -359,6 +359,12 @@
+               "type": "integer",
+               "minimum": 1000,
+               "maximum": 3600000
++            },
++            "reentrantPassCeilingMilliseconds": {
++              "type": "integer",
++              "minimum": 60000,
++              "maximum": 86400000,
++              "description": "How long a waiting writer lets the tree of a shared holder pass it; after that the tree queues behind the writer."
+             },
+             "writerPreferenceByPrefix": {
+               "type": "array",

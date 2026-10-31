@@ -1,0 +1,11 @@
+{
+  "session": 69089,
+  "exitCode": 1,
+  "passed": 16,
+  "failed": 2,
+  "ignored": 0,
+  "filtered": 0,
+  "capturedInputs": 371,
+  "postDrift": [],
+  "logSha256": "17bbb7b23d9cbe20b7d689e9038a65461ab4c10d781d96b32e326d80f9e4670a"
+}

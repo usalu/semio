@@ -1,7 +1,6 @@
 //! 🗂️ Applied entropy measures: streaming estimators, machine-learning uncertainty, spatial and graph entropies and the feature registry.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 #[path = "."]
 pub mod schema {

@@ -1,0 +1,11 @@
+# Retained Actor Capture Closure
+
+The current stateless admit_actor_capture allocates a String and Arc in one grant and uses unreachable on a real Arc null. The first-party SharedUtf8 definer now returns actual work and preserves the String; a grant-only local temporary cannot retain that String through refusal. No signature-only Result conversion is sufficient.
+
+Use one canonical retained ActorCapture owner for source identity, pending String backing and phase. Its paid turns are identity/validation, actual fallible String backing admission, copied text, fallible SharedUtf8 birth, and terminal metadata. Every turn returns the actual full work outcome, with denied/cached zero and retained input/output before refusal. No capacity or CPU may be minted from the physical grant. The actual Source caller folds work; the owner itself only accepts a genuine quoted grant. Existing 256-byte policy, three actor vectors, all axes, pointer/cancellation/paid-close checks and 1000-turn upper guard remain unchanged. Correct the obsolete aggregate phantom header-copy expectation explicitly.
+
+The bounded real caller map is mounted-owner actor/tests, ToolRunPublicationIngress actor state and close, MountedTypedCommandFullOperation actor pending state/close plus typed-operation publication receiver, and the original existing Energy ticket native consumer. The latter is a consumer asset, not a copied production Source. Both real production receivers must consume actual work before Result; publication_ownership_progress currently stores only receipt and therefore also needs direct work custody. Reuse existing same-source context at typed publication; never manufacture a context or Source.
+
+Root owns framework Tool scrub/typing and causal Fold only. Cursor's shared receive_original requires an already-owned String and preserves output/input before native fold; it can serve the Arc phase where a genuine decoder is present. It cannot erase the preceding raw text copy or its retained state.
+
+Three existing retained caller hunks are authored: instance actor_text, Window initialized_window, and native Window window_id. They preserve input on null and born owner before posting. Neighboring legacy Result callbacks and grant-only receipt helpers remain explicit compile-facing blockers. Whole files are not SourceReady and have not been owning-tested.

@@ -132,14 +132,15 @@ impl ArtifactEditMessageLedgerRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRetirement {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
+        let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         let demand = self.demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "message directory requires admitted original depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        if self.active.is_some() { return retirement_owner_close(&mut self.active, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return retirement_owner_close(&mut self.active, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(entry) = self.original.pop() {
             self.active = Some(ArtifactStoreMessageLedgerRetirement::new(entry.edit_id, entry.messages));
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
@@ -158,6 +159,8 @@ impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRetirement {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty }));
         }
         Ok(RetainedCloneStep::Complete(empty))
+        })();
+        semio_framework_value::RetainedWorkOutcome { result, work: 1 }
     }
     fn terminal_is_empty(&self) -> bool { self.active.is_none() && self.original.len == 0 && self.original.backing_is_empty() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands(0)?.copy_bytes) }
@@ -557,7 +560,7 @@ impl ArtifactEditMessageLedgerRejected {
 }
 
 impl ErasedSnapshotRetirement for ArtifactEditMessageLedgerRejected {
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.inner.close_step(grant) }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = self.inner.close_step(grant); semio_framework_value::RetainedWorkOutcome { result, work: 1 } }
     fn terminal_is_empty(&self) -> bool { self.inner.terminal_is_empty() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.inner.next_copy_byte_demand() }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { self.inner.next_capacity_byte_demand(body) }

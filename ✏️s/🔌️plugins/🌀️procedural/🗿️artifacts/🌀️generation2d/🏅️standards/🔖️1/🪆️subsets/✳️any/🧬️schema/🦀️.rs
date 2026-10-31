@@ -1,6 +1,7 @@
 //! 🧬️ Generation2d artifact schema — every field of the artifact with its state class.
 #![allow(clippy::result_large_err)]
 extern crate semio_framework_os_kernel as protocol;
+extern crate self as semio_s_artifact_procedural_2d_model;
 
 use crate::snapshot::Generation2dSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationPlayRoot;
@@ -12,7 +13,7 @@ use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_info_map,
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Generation2dArtifact
-/// 🧬️ Generation2dArtifact facet type.
+/// 🙂️ Generation2dArtifact facet type.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, Default)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.procedural.generation2d")]
@@ -31,7 +32,7 @@ impl Generation2dArtifact {
         Generation2dSnapshot { host_snapshot: self.host_snapshot.clone(), generation: self.generation.clone() }
     }
 
-    /// 🧬️ Builds the document artifact from its snapshot.
+    /// 🏗️ Builds the document artifact from its snapshot.
     pub fn from_snapshot(snapshot: Generation2dSnapshot) -> Self {
         Self { host_snapshot: snapshot.host_snapshot, generation: snapshot.generation }
     }
@@ -59,7 +60,7 @@ pub use descriptor::generation2d_artifact_schema_descriptor;
 //#endregion 🧬️DerivedArtifactFacets
 
 //#region 🔖️DocumentHelpers
-/// 🧬️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
+/// 🗑️ Rehomed from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) —
 /// pure helpers over document types (`FlowHostSnapshot`/`DagHostSnapshot`/eval `Value`), not app-referencing.
 /// 🏠️ Runs `body` against a catalogue-seeded host built from `fixture`, then retires that host.
 ///
@@ -186,7 +187,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// id now, contract §2.1) reused wherever a window/panel needs a stable controller/action-factory id.
 pub const GENERATION2D_PLAY_APP_ID: &str = "procedural2d-play";
 
-/// 🪪️ The editor surface id every tool transaction's `tool` is scoped by (`<appId>#<verb>`, design §2).
+/// 📝️ The editor surface id every tool transaction's `tool` is scoped by (`<appId>#<verb>`, design §2).
 pub const GENERATION2D_EDITOR_APP_ID: &str = "s.procedural.generation2d@1/*#editor";
 
 /// 🕹️ The framework interaction domain every generation2d window is bound to: the node graph and
@@ -203,12 +204,12 @@ pub const GENERATION2D_GRAPH_EDGE_TARGET_PREFIX: &str = "generation2d-play-docum
 pub const GENERATION2D_GRAPH_HANDLE_TARGET_PREFIX: &str = "generation2d-play-document.handle.";
 
 //#region 🔖️Addressing
-/// 🌡️ Resolves a widget's stable id to its BASE-state index in the fixture's widget list.
+/// 🧱️ Resolves a widget's stable id to its BASE-state index in the fixture's widget list.
 pub fn widget_index(host_snapshot: &FlowHostSnapshot, id: &str) -> Option<usize> {
     host_snapshot.widgets.iter().position(|widget| widget_id(widget) == id)
 }
 
-/// 🌡️ Resolves a synapse's stable id to its BASE-state index in the fixture's synapse list.
+/// 📊️ Resolves a synapse's stable id to its BASE-state index in the fixture's synapse list.
 pub fn synapse_index(host_snapshot: &FlowHostSnapshot, id: &str) -> Option<usize> {
     host_snapshot.synapses.iter().position(|synapse| synapse.id == id)
 }
@@ -250,3 +251,18 @@ pub mod diff {
     mod component;
     pub use component::*;
 }
+
+#[path = "../🚪️io/📝️text/📸️snapshot/🪞️dsl-mirror/🦀️.rs"]
+pub mod dsl_mirror;
+
+#[path = "../🚪️io/📝️text/🔺️diff/🦀️.rs"]
+pub mod diff_text;
+
+#[path = "../🚪️io/💾️binary/📸️snapshot/🪞️pack-codec/🦀️.rs"]
+mod pack_codec;
+
+#[path = "../🚪️io/🪶️sqlite/📸️snapshot/🪞️sqlite-codec/🦀️.rs"]
+pub mod sqlite_codec;
+
+#[path = "../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
+pub mod diff_binary;

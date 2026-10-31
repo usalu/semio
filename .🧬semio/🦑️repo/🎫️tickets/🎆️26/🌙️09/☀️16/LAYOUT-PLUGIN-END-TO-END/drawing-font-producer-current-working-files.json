@@ -1,0 +1,79 @@
+{
+  "state": "partial-source-authored-not-SourceReady",
+  "runtimeExecutedForTheseFiles": false,
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🟦️.ts",
+      "bytes": 7368,
+      "sha256": "62bc63235f28357f95be84cd5c6fe1759a78049a1870e36437c759b88c03b78c",
+      "attribution": "producer/advance/type sections ours; Cursor's retirement body preserved, except separately coordinated scalar fixed-header clear and actual substitution output annotation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🟦️.ts",
+      "bytes": 6885,
+      "sha256": "f39c8dd265579993c0137659b97e469a172ba507e5cdd8ad4e0aef50c41e1e9b",
+      "attribution": "producer/advance/type sections ours; Cursor's retirement body preserved, except separately coordinated scalar fixed-header clear and actual substitution output annotation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🟦️.ts",
+      "bytes": 10306,
+      "sha256": "31596f229188f00fa4488ca4fe70f9fc5499ed95f6fd4f9334a485dab74927fa",
+      "attribution": "producer/advance/type sections ours; Cursor's retirement body preserved, except separately coordinated scalar fixed-header clear and actual substitution output annotation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🟦️.ts",
+      "bytes": 6010,
+      "sha256": "1dc7040ce71a165a02c41ccc495f50bad7302efb6f7a2aea16e7d33db1333f38",
+      "attribution": "producer/advance/type sections ours; Cursor's retirement body preserved, except separately coordinated scalar fixed-header clear and actual substitution output annotation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🟦️.ts",
+      "bytes": 5663,
+      "sha256": "50ffe4f80b8971853ce85d566018dacbd5064965e3fc7f1741b88d5bd436bdd1",
+      "attribution": "producer/advance/type sections ours; Cursor's retirement body preserved, except separately coordinated scalar fixed-header clear and actual substitution output annotation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🎟️work/📈️producer/🧪️tests/producer.test.ts",
+      "bytes": 15238,
+      "sha256": "160a6e90b015138ebc31e6a9f6c8d2bdc40425ca22e8bdffd8a98f6fb6dbb985",
+      "attribution": "producer/advance/type sections ours; Cursor's retirement body preserved, except separately coordinated scalar fixed-header clear and actual substitution output annotation"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🟦️.ts",
+      "attribution": "producer advance and fixed anchor scalar headers ours; retirement body Cursor preserved",
+      "bytes": 5872,
+      "sha256": "f064d6212b2fb264bc6134aa6d9e24999dc84f92d9b05d709fbd99e1bb205aa4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🟦️.ts",
+      "attribution": "producer/owned-result/nullable-custody sections ours; exact retirement output/header fixes Cursor",
+      "bytes": 11370,
+      "sha256": "d2b77ad5f384173eae6e86b8d05bc688a38285c381c9c50fa4ec953f0df3afbb"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🟦️.ts",
+      "attribution": "producer/owned-result/nullable-custody sections ours; exact retirement output/header fixes Cursor",
+      "bytes": 24889,
+      "sha256": "5a25329288d4ce7e66568e42a05c3b1d7605c4b00f6b02c138a546b9fe36e139"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🟦️.ts",
+      "attribution": "Kerning producer/counters/fixed pair headers ours; existing FontIndexCursor and Cursor retirement body preserved",
+      "bytes": 13533,
+      "sha256": "5a05448ef413e62f6a930046168fd0e8bfe9e67ab354f48a776cfe5258f2d6e7"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🟦️.ts",
+      "attribution": "ClusterLayout producer/owned-result/phase fields ours; coordinated Cursor retirement section pending",
+      "bytes": 14509,
+      "sha256": "db06a7272c06d98d53bcd0ebdac42b308b20f6d88e8040f422b0d1aec3f23582"
+    }
+  ],
+  "attribution": "Producer sections ours; Cursor retirement sections preserved, including separately recorded pendingLookup final close clear. No full peer-hunk ownership claim.",
+  "explicitBlockers": [
+    "ClusterLayout coordinated retirement body must match genuine GlyphSequence and nullable owned fields",
+    "remaining Run/Outline/Bidi producer/caller migration",
+    "actual full glyph/counter/cancel/third-party corpus verification",
+    "broader Drawing/2d/output-close/controller closure"
+  ]
+}

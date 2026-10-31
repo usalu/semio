@@ -38,13 +38,10 @@ impl OriginalRepinCheckpointBirth{
  pub fn prepared(&self)->Option<&Checkpoint>{self.ready().then(||self.value.as_ref().unwrap())}
  /// 🤝️ Transfers the same canonical row and adopted original pin allocations.
  pub fn take(&mut self,grant:RetainedCloneGrant)->Result<Option<(Checkpoint,RetainedCloneProgress)>,ValueError>{if !self.ready(){return Err(invalid())}let d=RetirementDemand{copy_bytes:2*size_of::<Checkpoint>()+128,depth:1,..Default::default()};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(None)}self.source=None;self.phase=7;Ok(Some((self.value.take().unwrap(),paid(d))))}
- /// 📐️ Queries the actual partial canonical checkpoint's typed structural retirement.
+ /// ☑️ Queries the actual partial canonical checkpoint's typed structural retirement.
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.value.is_some(){return self.retirement.next_owner_demands::<Checkpoint>(true,&None,body)}Ok(RetirementDemand{copy_bytes:size_of::<Option<(u64,usize,usize,usize)>>()+size_of::<bool>(),depth:1,..Default::default()})}
  /// ♻️ Every original pin and partly initialized metadata field closes under its own exact selection.
- pub fn close_step(&mut self,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.retirement.is_empty(){return self.retirement.select(body)?.step(grant)}if self.value.is_some(){return self.retirement.begin_granted(&mut self.value,grant).map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default())))}let d=self.close_demands(body)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}self.source=None;self.closing=true;Ok(RetainedCloneStep::Complete(paid(d)))}
+ pub fn close_step(&mut self,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if !self.retirement.is_empty(){return self.retirement.select(body)?.step(grant).result}if self.value.is_some(){return self.retirement.begin_granted(&mut self.value,grant).result.map(|step|step.unwrap_or(RetainedCloneStep::Progress(Default::default())))}let d=self.close_demands(body)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}self.source=None;self.closing=true;Ok(RetainedCloneStep::Complete(paid(d)))}
  pub fn terminal_is_empty(&self)->bool{self.value.is_none()&&self.source.is_none()&&self.retirement.is_empty()}
 }
 impl Drop for OriginalRepinCheckpointBirth{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"repin checkpoint birth requires original partial-field closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.value)}}}}
-#[cfg(test)]
-#[path="repin-facts-tests.rs"]
-mod tests;

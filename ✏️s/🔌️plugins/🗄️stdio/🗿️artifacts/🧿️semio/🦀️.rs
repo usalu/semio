@@ -3,7 +3,6 @@
 //! "Architecture > The semio artifact" section.
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -136,7 +135,7 @@ macro_rules! semio_subset_table {
     };
 }
 
-/// 🧸️ Every subset name this artifact can materialize a child as.
+/// 📛️ Every subset name this artifact can materialize a child as.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn composable_subsets() -> Vec<&'static str> {
     macro_rules! subset_names {

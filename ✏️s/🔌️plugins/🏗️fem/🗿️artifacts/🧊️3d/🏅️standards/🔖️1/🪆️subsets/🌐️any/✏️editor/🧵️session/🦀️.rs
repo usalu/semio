@@ -62,6 +62,9 @@ use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_jo
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::MAXIMUM_LOADS;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::MAXIMUM_FIELDS;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::STEP_CEILING_MS;
+use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::UNITS_PER_STEP;
+use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::PREFLIGHT_UNITS_PER_OPPORTUNITY;
+use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::Fem3dResultRequest;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::FAULT_BYTES;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::JOB_TAG;
 use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::JOB_COUNTER_MAXIMUM;

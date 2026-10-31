@@ -13,10 +13,12 @@ a second IMPLEMENTATION, written in another language from the format's own commi
   `document = artifact-mark "[" hex "," value "," "[" value-node* "]" "]"`,
   `value-node = hex ":" value ","?`, and the tag-prefixed `SemioValue` production
   `Z | B[bit] | I[hex] | F[hex] | S[hex] | Y[hex] | L[…] | M[hexkey:value,…] | R[hex]`;
-* the pack body is the committed protocol `…/📸️snapshot/💾️binary/📡️.protocol.semio`, which
-  for THIS subset declares no separate binary layout at all — the pack payload is the same DSL body
-  wrapped in the binary envelope. `pack_bytes` re-encodes the committed `🎒️.pack.semio` byte
-  for byte, which is what pins that reading;
+* the pack body is the derived record document of the shared record-document codec
+  (`🧿️semio/🚪️io/💾️binary/🎒️record-document/🐍️.py`), driven by this subset's committed record spec
+  `…/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json`: the SPK container, the fixed-Huffman deflate, the BLAKE3
+  content hash and the schema-hashed record body are specified by `🧰️framework/🔨️modules/🎒️pack` and
+  re-implemented there, not here. The committed `🎒️.pack.semio` files were written by the Rust record
+  pack, so `parse_pack`/`pack_bytes` reproducing them is a cross-language byte agreement;
 * the nine verbs, their `SemioValuePath` addressing (`{"kind":"key","key":…}` /
   `{"kind":"index","index":…}` segments) and their JSON wire form are the committed
   `(before, mutation, after)` specification vectors — this case's own `🧫️fixtures/` for eight of
@@ -47,7 +49,10 @@ can never silently drift away from the real data it claims to carry.
 from __future__ import annotations
 
 # region 🔖️Imports
+import importlib.util
 import json
+import os
+import sys
 
 from semio_repo_test import Adapter, Context, Outcome, digest
 
@@ -55,10 +60,8 @@ from semio_repo_test import Adapter, Context, Outcome, digest
 
 
 # region 🔖️Carrier
-BINARY_MAGIC = b"\x89SEM\x0d\x0a\x1a\x0a"
 ENVELOPE_ID = "stdio.semio.value"
 DSL_PREAMBLE = "semio %s.dsl v1" % ENVELOPE_ID
-PACK_TOKEN = "%s.pack v1" % ENVELOPE_ID
 
 VALUE_LETTER = {"null": "Z", "bool": "B", "int": "I", "float": "F", "str": "S", "bytes": "Y", "list": "L", "map": "M", "ref": "R"}
 LETTER_VALUE = {letter: kind for kind, letter in VALUE_LETTER.items()}
@@ -70,12 +73,12 @@ def hex_of(text: str) -> str:
 
 
 def text_of(hexed: str) -> str:
-    """🔡️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
+    """🪄️ The grammar's `hex` macro in the reading direction; the empty string is a legal value."""
     return bytes_of(hexed).decode("utf-8")
 
 
 def bytes_of(hexed: str) -> bytes:
-    """🔡️ The same macro read as raw octets — what a `Y[…]` value carries."""
+    """🌀️ The same macro read as raw octets — what a `Y[…]` value carries."""
     if len(hexed) % 2 != 0:
         raise AssertionError("hex run %r has an odd digit count" % hexed)
     return bytes.fromhex(hexed)
@@ -175,7 +178,7 @@ def read_value(reader: Reader) -> dict:
 
 
 def write_value(value: dict, out: list) -> None:
-    """🌳️ The writing direction of `read_value`, appending into a buffer so a deep document does not
+    """🔟️ The writing direction of `read_value`, appending into a buffer so a deep document does not
     build one string per node."""
     kind = value["kind"]
     if kind == "null":
@@ -268,24 +271,33 @@ def print_dsl(document: dict) -> str:
 
 
 # region 🔖️Pack
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _load_shared(alias, *parts):
+    """🧬️ Loads a shared module from the `stdio.semio` artifact root, six folders above this case, and registers it under an importable name."""
+    if alias in sys.modules:
+        return sys.modules[alias]
+    path = os.path.join(_HERE, *[os.pardir] * 6, *parts)
+    spec = importlib.util.spec_from_file_location(alias, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[alias] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+record_document = _load_shared("record_document", "🚪️io", "💾️binary", "🎒️record-document", "🐍️.py")
+RECORD_SPEC = record_document.load_record_spec(os.path.join(_HERE, os.pardir, os.pardir, "🧬️schema", "📸️snapshot", "🗺️record-spec", "🔣️.json"))
+
+
 def parse_pack(data: bytes) -> dict:
-    """📦️ The binary envelope, then the SAME DSL body text — this subset declares no separate binary
-    layout, and the committed `🎒️.pack.semio` carries the body verbatim after its token."""
-    if data[:8] != BINARY_MAGIC:
-        raise AssertionError("the pack file does not start with the semio binary magic")
-    if len(data) < 12:
-        raise AssertionError("the pack file is truncated inside its envelope")
-    token_len = int.from_bytes(data[8:12], "little")
-    token = data[12 : 12 + token_len].decode("utf-8")
-    if token != PACK_TOKEN:
-        raise AssertionError("expected the %r envelope token, got %r" % (PACK_TOKEN, token))
-    return parse_body(data[12 + token_len :].decode("utf-8"))
+    """📦️ A `.pack.semio` file as the JSON snapshot its record document carries."""
+    return record_document.decode_pack(RECORD_SPEC, data)
 
 
 def pack_bytes(document: dict) -> bytes:
-    """📦️ The writing direction of `parse_pack`, envelope included."""
-    token = PACK_TOKEN.encode("utf-8")
-    return BINARY_MAGIC + len(token).to_bytes(4, "little") + token + print_body(document).encode("utf-8")
+    """🔍️ The writing direction of `parse_pack`, envelope included."""
+    return record_document.encode_pack(RECORD_SPEC, document)
 
 
 # endregion 🔖️Pack
@@ -365,7 +377,7 @@ def node_index(document: dict, node_id: str):
 
 
 def apply_mutation(document: dict, mutation: dict) -> dict:
-    """🧬️ Applies one verb, returning a NEW document. An unaddressable path, key, index or node id is
+    """📱️ Applies one verb, returning a NEW document. An unaddressable path, key, index or node id is
     a refusal, never a silent no-op — a quietly skipped mutation would report as a pass.
 
     `set-map-entry` and `set-node` overwrite an existing member IN PLACE, keeping its position, and
@@ -477,7 +489,7 @@ class Lexeme:
 
 
 def value_of_json(node) -> dict:
-    """🌳️ One RFC 8259 value as a `SemioValue`. `Lexeme` carries the SOURCE spelling of every number
+    """🌁️ One RFC 8259 value as a `SemioValue`. `Lexeme` carries the SOURCE spelling of every number
     verbatim, which is the property `SemioValue` exists to preserve and a plain JSON DOM destroys."""
     if node is None:
         return {"kind": "null"}
@@ -539,7 +551,7 @@ FOREST_PACK = "shared://🔢️mutate-semio-value/🌲️hexagonal-cut-concrete-
 
 
 def doc_string(ctx: Context) -> str:
-    """📜️ The scenario's own committed parameters — the feature owns them, not the adapter."""
+    """🔌️ The scenario's own committed parameters — the feature owns them, not the adapter."""
     for step in ctx.scenario["steps"]:
         if step.get("docString"):
             return step["docString"]
@@ -547,7 +559,7 @@ def doc_string(ctx: Context) -> str:
 
 
 def forest(ctx: Context) -> dict:
-    """🌲️ The real building model, read through this implementation's own DSL parser."""
+    """🏗️ The real building model, read through this implementation's own DSL parser."""
     return parse_dsl(ctx.input_bytes(FOREST_DSL).decode("utf-8"))
 
 
@@ -560,14 +572,14 @@ def snapshot_json(ctx: Context, uri: str) -> dict:
 
 # region 🔖️Handlers
 def mutate(ctx: Context) -> Outcome:
-    """🎯️ One verb applied to the real building model by this implementation alone."""
+    """🧩️ One verb applied to the real building model by this implementation alone."""
     document = forest(ctx)
     result = apply_mutation(document, json.loads(doc_string(ctx)))
     return Outcome(result, raw=print_dsl(result).encode("utf-8"))
 
 
 def inverse(ctx: Context) -> Outcome:
-    """↩️ The same verb, then this implementation's own undo of it. The restored document must be the
+    """📄️ The same verb, then this implementation's own undo of it. The restored document must be the
     building model again — asserted here, and compared against the subject's restored document by
     the runner, so a wrong undo that happens to be self-consistent still shows up."""
     document = forest(ctx)
@@ -600,7 +612,7 @@ def spec_vector(ctx: Context) -> Outcome:
 
 
 def payload_fidelity(ctx: Context) -> Outcome:
-    """🌲️ The derived fixture against the real JSON it came from, re-read on every run by Python's own
+    """🪑️ The derived fixture against the real JSON it came from, re-read on every run by Python's own
     RFC 8259 parser with lexeme-preserving number hooks."""
     derived = derive_document_from_json(ctx.input_bytes(FOREST_JSON))
     committed = forest(ctx)
@@ -660,7 +672,7 @@ def identity_round_trip(ctx: Context) -> Outcome:
 
 # region 🔖️Registration
 def adapter() -> Adapter:
-    """🧭️ Registration entry point the host calls. Handlers are registered under the Scenario Outline base
+    """🏠️ Registration entry point the host calls. Handlers are registered under the Scenario Outline base
     ids, which the host resolves for every Examples row, and plain scenarios under their own ids."""
     return Adapter("python").oracle("mutate", mutate).oracle("inverse", inverse).oracle("spec-vector", spec_vector).oracle("payload-fidelity", payload_fidelity).oracle("identity-round-trip", identity_round_trip)
 

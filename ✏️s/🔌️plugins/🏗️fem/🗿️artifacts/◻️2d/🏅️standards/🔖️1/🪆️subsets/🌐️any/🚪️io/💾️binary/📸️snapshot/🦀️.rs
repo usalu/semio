@@ -9,7 +9,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-/// 📦️ Encodes a `Fem2dSnapshot` to its binary pack form.
+/// 🔐️ Encodes a `Fem2dSnapshot` to its binary pack form.
 pub fn encode(document: &Fem2dSnapshot) -> Vec<u8> {
     pack::snapshot::ArtifactPack::encode_pack(document)
 }
@@ -19,12 +19,6 @@ pub fn decode(bytes: &[u8]) -> Result<Fem2dSnapshot, PackError> {
     <Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)
 }
 
-// #region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-// #endregion 🧪️Tests
-
 #[cfg(test)]
 #[path = "🧪️tests/🔬️semio-protocol-conformance/🦀️.rs"]
 mod semio_protocol_conformance;
@@ -33,19 +27,13 @@ mod semio_protocol_conformance;
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::standards::v1::subsets::any::schema::structure::FemCombination;
-use crate::standards::v1::subsets::any::schema::structure::FemElement;
-use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
+use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoadCase, FemRegion, FemSection, FemSupport, FemAnalysisSettings};
 use semio_s_fem_material::planar::FemMaterialValue;
 use semio_s_fem_node::planar::FemNodeValue;
-use crate::standards::v1::subsets::any::schema::structure::FemRegion;
-use crate::standards::v1::subsets::any::schema::structure::FemSection;
-use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 
 impl pack::snapshot::ArtifactPack for Fem2dSnapshot {
     
@@ -81,7 +69,7 @@ impl store::ArtifactNativeSnapshot for Fem2dSnapshot {
 }
 
 impl store::ArtifactPackReceiving for Fem2dSnapshot{
- /// 🫴️ The original pack parser, field graph, authoring rows and persistent output share the caller's receiving and retirement frames.
+ /// 🎁️ The original pack parser, field graph, authoring rows and persistent output share the caller's receiving and retirement frames.
  fn receive_pack(bytes:&[u8],owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,semio_framework_value::ValueError>{
   use semio_framework_value::{ValueError,ValueRefusalKind};
   use semio_framework_dsl_record::{BorrowedDslRecord,RecordValue};

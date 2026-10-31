@@ -1,0 +1,5 @@
+# Preparation helper bound evidence
+
+The newly authored preparation helper introduced a 100,000 turn guard by reusing the separate small native two-stop work fixture. The original paint test performed all preparation in the constructor and had no preparation-loop guard. Its unchanged retirement loop was bounded by each original row.work.prepared.typescript (including4096+4 for the repeated row). These original structural fixture bounds remain asserted separately through actual copied row counts; new paid paged/scratch close has its real finite bank.
+
+Read-only Git HEAD Source hash de9a607b1e8448f6c4a4adfb17af717e477c345841b2a3c9472b6f1889b24c57. Original observed Source hash in the before packet de9a607b1e8448f6c4a4adfb17af717e477c345841b2a3c9472b6f1889b24c57. Exact match: True. HEAD contains100000: False. The defining Bank CPU stock remains1,048,576; the successor helper uses its actual initial remaining CPU as a loop bound, never renews stock and never changes a fixture, grant, production cap or per-turn quantum. The small native-fixture and newly closed small-case maxTurns100000 remain unchanged.

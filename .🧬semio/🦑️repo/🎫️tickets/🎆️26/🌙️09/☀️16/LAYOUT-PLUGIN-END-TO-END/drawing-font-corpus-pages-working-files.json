@@ -1,0 +1,16 @@
+{
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧪️tests/🟦️.ts",
+      "before": "5b80df505283988942152f20a3bc27cf4c8e794f3940aed49e6a579c3fe90ffa",
+      "sha256": "046e28c53eef525447db6ee8730e98c51da58b665ffd1fac67a41a97035a5988",
+      "scope": "Read actual current owned Run/Outline pages through direct firstparty sequence; test-only Array.from for independent assertions/serialization. All laws, assertions, fixtures, oracles, thresholds, stock and fuel unchanged."
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🟦️.ts",
+      "before": "3573a5977b3243e956b383fa921a70b90969d45a4707f7eab7abcc5a3839f499",
+      "sha256": "bfa150b084f898e8b8134baacb434780c3e9a58d010fa3c98ce39ad4369276cf",
+      "scope": "Read actual current owned Run/Outline pages through direct firstparty sequence; test-only Array.from for independent assertions/serialization. All laws, assertions, fixtures, oracles, thresholds, stock and fuel unchanged."
+    }
+  ]
+}

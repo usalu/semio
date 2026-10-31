@@ -1,0 +1,11 @@
+# Native11 Root Release
+
+Root releases exactly ONE canonical full nineteen-owner request from layout-native-11-command.json SHA fe190d22ed1daeee0eb3e58797840a60cb1ff9ceddae935630c43c20543aae0a. Rust alone executes and observes its actual owning handle. Native10 is authoritatively terminal before selected Source/compilation because Cargo test rejected --keep-going. This corrected request removes ONLY that unsupported option; --no-fail-fast remains before the final runtime separator and all19 package names/order and other settings remain unchanged.
+
+Root checked actual Cargo's diagnostic and official [cargo-test documentation](https://doc.rust-lang.org/cargo/commands/cargo-test.html#test-options) for --no-fail-fast. It continues other test executables after an executable fails; it does not change test ownership or make a nonzero result acceptable. Actual unit planner acceptance is still required. The earlier Source-forwarding review was not Cargo test support proof; the mistake and actual RED remain recorded in native10-flag-correction.md. No unsupported wrapper or compatibility layer is added.
+
+Root freshly checked sixty captured Source digests, all seven owned files, both exact syntax repairs, router, workspace and root catalog. Rust must repeat that seal immediately before launch and stop on drift. All five artifact/temp paths are dedicated to Native11 and within256 character/UTF16 bounds. Finish metadata authoritatively before actual Cargo; do not report a metadata handle as the native request. Report the real direct Cargo handle and actual admission phase distinctly.
+
+No profile/quota/deadline change, duplicate Cargo, setup/graph-backed JavaScript runtime, Source edit, manual cache/lease/peer action or all-peers-stopped prerequisite. Genuine canonical machine/image/headroom owners decide actual resources; previous physical snapshots are not grants. Preserve the SAME actual request through observation failures.
+
+Root also reviewed exact checker packet 80aba8faa11fb06b7ec523527167d2f00c14699a244711f5602aa4b48c62ded3. Dep alone has three separately conditional sequential one-attempt commands under layout-native-11-oracle-authority.md; no condition is met now. Full native tests/actual-log parity, publication, all other native/JavaScript gates and complete browser acceptance remain mandatory and unproved.

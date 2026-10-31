@@ -5,6 +5,9 @@ pub use original_action_command::{ArtifactOriginalCommandProducer,ArtifactOrigin
 #[path="🎮️command/🧬️op-binary/🦀️.rs"]
 pub mod original_op_binary_command;
 pub use original_op_binary_command::{admit_op_binary_producer,declared_action_command_bridge,OriginalActionCommandBridge,OriginalCommandBirth,RUNTIME_COMMAND_WIRE_MAXIMUM};
+#[path="⌨️typing/🔗️fold/🦀️.rs"]
+pub mod original_typing_fold;
+pub use original_typing_fold::{OriginalTypingFoldPolicy,ArtifactOriginalTypingFoldFactory,ArtifactOriginalTypingFoldProducer};
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_framework_diagnostic::FaultFrom;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -79,6 +82,5 @@ pub use reserved_tool_job::*;
 mod reserved_outcome_witnesses;
 pub use reserved_outcome_witnesses::*;
 
-include!("🎟️birth/🦀️.rs");
-#[cfg(any(test,feature="reserved-producer-testing"))]
-pub mod original_reserved_producer_laws{include!("🎟️birth/🧪️tests/🦀️.rs");}
+#[cfg(feature="reserved-producer-testing")]
+pub use semio_framework_plugin_original_job_ownership::original_reserved_producer_laws;

@@ -70,7 +70,7 @@ pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<
                 result_page_presented: false,
                 result_sequence: 0,
                 publication_progress: 0,
-                publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,
+                publication_checkpoint: None, publication_ownership_progress: None, original_retirement_receipt: None, actor_capture: None,actor_capture_pending:semio_framework_plugin_mounted_owner::actor_capture::ActorCapture::new(),
                 publication_attempt: 0,
                 ui_pending: true,
                 progress: None,

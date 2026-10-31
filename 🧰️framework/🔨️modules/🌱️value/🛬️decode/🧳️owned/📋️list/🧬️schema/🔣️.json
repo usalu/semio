@@ -13,7 +13,8 @@
     "interactionQuantum",
     "ownedWrapperCuts",
     "bodyReservations",
-    "childCustody"
+    "childCustody",
+    "controlBatch"
   ],
   "properties": {
     "version": {
@@ -184,6 +185,52 @@
               }
             }
           }
+        }
+      }
+    },
+    "controlBatch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumChildPosts",
+        "ownershipCopyBytes",
+        "independentWork",
+        "matcherProbeBatch",
+        "recordControlBatch",
+        "sharedControlBatch",
+        "compositionLaw",
+        "custodyBatch"
+      ],
+      "properties": {
+        "maximumChildPosts": {
+          "const": 1
+        },
+        "ownershipCopyBytes": {
+          "const": 0
+        },
+        "independentWork": {
+          "const": true
+        },
+        "matcherProbeBatch": {
+          "const": true
+        },
+        "recordControlBatch": {
+          "const": true
+        },
+        "sharedControlBatch": {
+          "const": true
+        },
+        "compositionLaw": {
+          "const": {
+            "items": 2,
+            "value": 7,
+            "copiedItems": 1,
+            "copyBytes": 0,
+            "workBeforeFailure": 1
+          }
+        },
+        "custodyBatch": {
+          "const": true
         }
       }
     }

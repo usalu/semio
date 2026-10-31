@@ -1,0 +1,112 @@
+{
+  "authority": false,
+  "command": [
+    "repo",
+    "--service=off",
+    "tools",
+    "setup",
+    "all"
+  ],
+  "cwd": "/Users/ueli/Documents/semio",
+  "environment": {
+    "SEMIO_BUILD_MODE": "prototype",
+    "SEMIO_TEST_ARTIFACT_DIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-7",
+    "TMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-7/tmp",
+    "TMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-7/tmp",
+    "TEMP": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-7/tmp",
+    "TEMPDIR": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-7/tmp"
+  },
+  "authorizedAttempts": 1,
+  "conditionalAdmission": "Root explicitly released one direct canonical setup after own Native7 terminal storage failure and current eight-input verification; obtain fresh genuine Dependencies custody. Full current nineteen-owner Native/test/record proof remains mandatory later, not a setup prerequisite.",
+  "log": "🗑️generated/setup-live-7.log",
+  "providerSourceEditsAllowed": false,
+  "state": "terminal-exit1-funding-parent-busy",
+  "launchAuthorized": false,
+  "priorAdmissionPoint": null,
+  "session": 74299,
+  "expectedSource": [
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+      "sha256": "f2d84d917bc30e81b4f60f006a7932aff354a5973cf53f8d4ee2d38840fc0360",
+      "bytes": 279417
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/🟦️.ts",
+      "sha256": "de2ea6bce6aabf5781e6d85c26e644c4456936e92c1162ee9929268c463023c0",
+      "bytes": 9643
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/pressure.test.ts",
+      "sha256": "a3f0b8465c54c2a0b659bbe4b80bc4457fbe7547866f4e01a375282955e2ac2e",
+      "bytes": 9384
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/📥️read-context/🟦️.ts",
+      "sha256": "90a3ecd2f18b40d742d98529e0b107ddd055f6370e7e7accd1f0cbd4bd7ba505",
+      "bytes": 10366
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧬️schema/📥️install.json",
+      "sha256": "b26a7ccd0e65b84c12b7a551f4b90cc297161bcb27bfa0c064841d3d142219a1",
+      "bytes": 153533
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/🔣️.json",
+      "sha256": "329a2ef2054f03a62883c57b55a57f5f7fb2a0fa52c5681e6e869b8d1b1732ab",
+      "bytes": 2285
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/pressure.json",
+      "sha256": "2087100513dcb6dede2f819247a3b559d7f6b10d17732af35efbe8704cf8b534",
+      "bytes": 1276
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🔭️providers/pressure.schema.json",
+      "sha256": "1dc60e638c14783e49c5067885f7873fd001ca98be74d17687785ae10a254b01",
+      "bytes": 1462
+    }
+  ],
+  "posixInvocation": "SEMIO_BUILD_MODE=prototype SEMIO_TEST_ARTIFACT_DIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-7' TMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-7/tmp' TMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-7/tmp' TEMP='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-7/tmp' TEMPDIR='/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-7/tmp' repo --service=off tools setup all > '/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/setup-live-7.log' 2>&1",
+  "partialStateAuthority": false,
+  "historicalRetentions": 18,
+  "lastAttemptRetentions": 6,
+  "providerVerification": {
+    "scope": "Eight captured provider source, schema and fixture inputs only; not installed readiness",
+    "receipt": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-drift-refresh/final-verification.json",
+    "receiptSha256": "77b0171e8bfcf7b4909d3d532bd2c6263ab32c20b40119b20fe9d8d19a3e6630",
+    "suite": {
+      "session": 69771,
+      "exitCode": 0,
+      "counts": {
+        "pass": 5,
+        "fail": 0,
+        "assertions": 274
+      },
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-drift-refresh/suite.log",
+      "bytes": 72388,
+      "sha256": "6484c623e10f9c2c355274aa3cd5d0e77934b961dc945e1725ad8bd096f3e46b"
+    },
+    "strict": {
+      "session": 26304,
+      "execution": "fresh provider-drift-refresh Original, not historical reused numericID",
+      "exitCode": 0,
+      "rootCount": 3,
+      "log": "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/🗑️generated/provider-drift-refresh/strict.log",
+      "bytes": 89542,
+      "sha256": "3700cce8d7e13fc0670a4f0b47c1c281621de7a3af6d201a194249ce3391f0a9"
+    },
+    "rootAndLowReviewed": true,
+    "actualRematerialized": false
+  },
+  "nativePrerequisite": {
+    "status": "Scheduling condition superseded by Root after actual storage failure; no Native success is claimed",
+    "native7TerminalExit": 1,
+    "requiredPackages": 19,
+    "nativeTestsAndActualRecordsRemainMandatory": true
+  },
+  "orderingDecision": "setup-after-native7-storage.md",
+  "sourceEditsAllowedDuringSetup": false,
+  "attemptsExecuted": 1,
+  "exitCode": 1,
+  "retryAuthorized": false
+}

@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "owner": "rust",
+  "state": "source-ready-normal-verification-passed",
+  "files": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/opaque-metadata-working-files.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/opaque-metadata.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/unready-generation-final.test.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/📄️metadata/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/📄️metadata/🧪️tests/🔣️.json",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/📄️metadata/🧪️tests/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/📄️metadata/🧬️schema/🔣️.json"
+  ],
+  "sourceSha256": {
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/📄️metadata/🟦️.ts": "4540ce5f574bc6d88becf229144ddf270ab317f5245ba1274e8eeaa953d984a0",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/📄️metadata/🧪️tests/🔣️.json": "673a0f9afddcdbb6d3cfbf31ac8b2be0cf86e4142da072d4e947ed5cff1c18cf",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/📄️metadata/🧪️tests/🟦️.ts": "a3f4034426c0a8235ed379b71d1bfecae5759ba28d9dad776f5931f617f095a3",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/📄️metadata/🧬️schema/🔣️.json": "d84399206e6d643bb41d8b722137553c23260d4fd296347e136bd8a808352ff6"
+  },
+  "verification": {
+    "admission": "normal-managed",
+    "session": 49475,
+    "exit": 0,
+    "tests": 2,
+    "failed": 0,
+    "assertions": 133,
+    "neutralCases": 15,
+    "strict": "passed-owner-and-harness",
+    "log": "🗑️generated/opaque-metadata-green.log",
+    "windowsKernel": "pending"
+  },
+  "rootOwnedPrerequisites": [
+    {
+      "file": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/📤️publication/🟦️.ts",
+      "owner": "root",
+      "scope": "Current capture/reference wiring imports actual opaque metadata observer and retains canonical text plus actual-byte digest fence"
+    }
+  ],
+  "integrationVerification": {
+    "state": "behavior-passed-peer-strict-failed",
+    "session": 37597,
+    "exit": 1,
+    "passed": 13,
+    "failed": 1,
+    "assertions": 1495,
+    "log": "🗑️generated/unready-generation-final.log",
+    "diagnostics": "Peer Native envelope closed-role arguments; driver test extracted functions optional under noUncheckedIndexedAccess"
+  },
+  "canonicalSemanticVerification": {
+    "state": "passed",
+    "session": 60686,
+    "exit": 0,
+    "admission": "normal-managed",
+    "interface": "actual-typescript-cli",
+    "log": "🗑️generated/unready-canonical-tsc-2.log",
+    "scope": "13 actual current roots incl genuine anchor, Native owner, initial helper and tests"
+  },
+  "canonicalSemanticFinal": {
+    "state": "passed",
+    "session": 41640,
+    "exit": 0,
+    "admission": "normal-managed",
+    "interface": "actual-typescript-cli",
+    "roots": 14,
+    "log": "🗑️generated/unready-canonical-tsc-final.log",
+    "flags": [
+      "noEmit",
+      "strict",
+      "noUncheckedIndexedAccess",
+      "skipLibCheck",
+      "target ESNext",
+      "module preserve",
+      "moduleResolution bundler",
+      "resolveJsonModule",
+      "allowImportingTsExtensions",
+      "types bun"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../.."
+name = "semio-framework-job-clock"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Job clock, immutable identity and scalar step budget."
+
+[package.metadata.semio]
+role = "framework"
+id = "job-clock"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+name = "semio_framework_job_clock"
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-async = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-value-retained-clone = { path = "../../../../🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust" }

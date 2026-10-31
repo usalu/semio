@@ -1,0 +1,40 @@
+{
+  "state": "moved-private-law-authored-not-run",
+  "law": "fn prepared_regions_stroke_cancel_actual_union_sources_frontiers_and_partial_output_in_every_phase()",
+  "originalLawSha256": "5648bd6e9aaa48c847b11f349fd19e7975c18dab3992886675303c2ec8a955cc",
+  "package": "semio-s-artifact-draw-drawing-scene",
+  "requiredArgs": [
+    "-p",
+    "semio-s-artifact-draw-drawing-scene",
+    "--lib",
+    "--features=testkit"
+  ],
+  "fixtureRowsUnchanged": true,
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🦀️.rs",
+      "sha256": "5f1a59a695687f25f20533274f90e4e61bc4d909b38c0c452c9c4d065c35a848",
+      "bytes": 32199
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "1206ae76916865687a8da74db566769682e7854d7bd3a26017c3c6d1a6a1406b",
+      "bytes": 19854
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🧫️fixtures/🦀️.rs",
+      "sha256": "63dc906844fb63cdd51f8b5467617d09e334b95a1a4318edfaa52bca3cfe7164",
+      "bytes": 804
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/🎨️paint/🧪️tests/🖊️stroke/🦀️.rs",
+      "sha256": "e13a43eb1b6c566a59e7bc4c773c433ad7c812ae4d7400662a084c3d0f68d8b2",
+      "bytes": 2996
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "a3116ca059ef4a2e7ccbbf38738690ad2147df517fd014005834b4c2d1868ffc",
+      "bytes": 2909
+    }
+  ]
+}

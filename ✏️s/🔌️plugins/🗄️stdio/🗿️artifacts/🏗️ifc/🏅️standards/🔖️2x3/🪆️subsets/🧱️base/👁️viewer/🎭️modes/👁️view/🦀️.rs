@@ -17,6 +17,6 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ Geometry and the read-only selected-instance inspector.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn layout() -> WindowLayout {
-    crate::standards::v2x3::subsets::base::io::inspector::layout(main::WINDOW_KIND_ID,false)
+    semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::inspector::layout(main::WINDOW_KIND_ID,false)
 }
 //#endregion 🔖️Definition

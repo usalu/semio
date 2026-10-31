@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "font",
+    "texts",
+    "size",
+    "origin",
+    "lineHeight",
+    "quanta",
+    "cancelPhases",
+    "rules",
+    "paint",
+    "script",
+    "language",
+    "catalogFaces"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "font": {
+      "const": "🚀️anta/🏛️latin/📖️regular"
+    },
+    "texts": {
+      "const": [
+        "AV",
+        "A\nV"
+      ]
+    },
+    "size": {
+      "const": 24
+    },
+    "origin": {
+      "const": [
+        3,
+        5
+      ]
+    },
+    "lineHeight": {
+      "const": 1.2
+    },
+    "quanta": {
+      "const": [
+        1,
+        7
+      ]
+    },
+    "cancelPhases": {
+      "const": [
+        "normalization",
+        "bidi",
+        "grapheme",
+        "clusterFont",
+        "clusterLayout",
+        "outline",
+        "glyphRecord",
+        "segments",
+        "childArchive",
+        "outlineArchive",
+        "normalizationTake",
+        "clusterFontTake",
+        "clusterLayoutTake",
+        "outlineTake",
+        "incomingArchive",
+        "mappingArchive"
+      ]
+    },
+    "rules": {
+      "const": {
+        "sameOriginalCatalogBank": true,
+        "cpuBeforeReceiptFailure": true,
+        "childSemanticOnce": true,
+        "rowPublicationSemanticZero": true,
+        "seenMaskPaidWrite": true,
+        "soleGlyphSequenceTransfer": true,
+        "allResidentChildrenClosed": true,
+        "cachedZero": true,
+        "originalSourcesRemainBorrowed": true,
+        "reference": "opentype-glyph-metrics-kerning-and-sql-conservation",
+        "stagedChildClosesBeforeArchive": true,
+        "ownedOutlineClosedBeforeViewClear": true
+      }
+    },
+    "paint": {
+      "const": {
+        "text": "AV",
+        "width": 128,
+        "height": 96,
+        "maximumChannelDelta": 1
+      }
+    },
+    "script": {
+      "const": "latn"
+    },
+    "language": {
+      "const": "dflt"
+    },
+    "catalogFaces": {
+      "const": {
+        "family": "Anta",
+        "text": "AV",
+        "input": "genuine-owned-catalog-pages",
+        "borrowedUntilRunClose": true,
+        "sameOriginalBank": true
+      }
+    }
+  }
+}

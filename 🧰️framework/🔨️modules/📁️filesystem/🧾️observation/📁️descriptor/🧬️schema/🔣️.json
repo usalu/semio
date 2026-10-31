@@ -3175,7 +3175,9 @@
           "deviceMajor": 136,
           "deviceMinor": 140,
           "timestampNanoseconds": 8
-        }
+        },
+        "append": "same-current-entry-exact-original-size-offset-bounded-total-no-truncate",
+        "appendFailure": "retain-partial-prefix-for-explicit-domain-current-metadata-recovery"
       }
     },
     "RelativeFilePublicationCase": {
@@ -4428,6 +4430,762 @@
           "accepted": false
         }
       ]
+    },
+    "RelativePreparedFilePublication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "platform",
+        "parent",
+        "name",
+        "stage",
+        "prior",
+        "retainedName",
+        "names",
+        "authority",
+        "windows"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "platform": {
+          "enum": [
+            "posix",
+            "windows"
+          ]
+        },
+        "parent": {
+          "$ref": "#/definitions/RelativeFilePublicationIdentityData"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "stage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "identity",
+            "sha256"
+          ],
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[^/\\\\\\u0000]+$"
+            },
+            "identity": {
+              "$ref": "#/definitions/RelativeFilePublicationIdentityData"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        },
+        "prior": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "identity",
+                "sha256"
+              ],
+              "properties": {
+                "identity": {
+                  "$ref": "#/definitions/RelativeFilePublicationIdentityData"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            }
+          ]
+        },
+        "retainedName": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[^/\\\\\\u0000]+$"
+            }
+          ]
+        },
+        "names": {
+          "type": "array",
+          "maxItems": 65536,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": "^[^/\\\\\\u0000]+$"
+          }
+        },
+        "authority": {
+          "const": false
+        },
+        "windows": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "parent",
+                "stage",
+                "prior"
+              ],
+              "properties": {
+                "parent": {
+                  "$ref": "#/definitions/RelativeWindowsPublicationFacts"
+                },
+                "stage": {
+                  "$ref": "#/definitions/RelativeWindowsPublicationFacts"
+                },
+                "prior": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/definitions/RelativeWindowsPublicationFacts"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "platform": {
+                "const": "posix"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "windows": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "windows": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "parent",
+                  "stage",
+                  "prior"
+                ],
+                "properties": {
+                  "parent": {
+                    "$ref": "#/definitions/RelativeWindowsPublicationFacts"
+                  },
+                  "stage": {
+                    "$ref": "#/definitions/RelativeWindowsPublicationFacts"
+                  },
+                  "prior": {
+                    "anyOf": [
+                      {
+                        "type": "null"
+                      },
+                      {
+                        "$ref": "#/definitions/RelativeWindowsPublicationFacts"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RelativeFilePublicationLifecycleCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "before",
+        "prior",
+        "bytes",
+        "effect",
+        "accepted",
+        "hookCalls"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "before": {
+          "enum": [
+            "missing",
+            "file"
+          ]
+        },
+        "prior": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bytes": {
+          "type": "string"
+        },
+        "effect": {
+          "enum": [
+            "none",
+            "hook-refusal",
+            "stage-changed",
+            "prior-changed",
+            "roster-changed",
+            "cancelled",
+            "options-proxy",
+            "options-getter",
+            "options-extra",
+            "options-inherited",
+            "callback-proxy",
+            "thenable-result",
+            "extra-arity",
+            "undefined-hook"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "hookCalls": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "RelativeFilePublicationLifecycleFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases",
+        "attestations",
+        "stageNames",
+        "dataRefusals",
+        "appends"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/RelativeFilePublicationLifecycleCase"
+          }
+        },
+        "attestations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/RelativeFilePublicationAttestationCase"
+          }
+        },
+        "stageNames": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "target",
+              "candidate",
+              "accepted"
+            ],
+            "properties": {
+              "target": {
+                "type": "string"
+              },
+              "candidate": {
+                "type": "string"
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "dataRefusals": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "unknown-key",
+              "getter",
+              "proxy",
+              "identity-getter",
+              "identity-number",
+              "noncanonical-decimal",
+              "out-of-range",
+              "sparse-names",
+              "names-proxy",
+              "unknown-symbol",
+              "foreign-platform",
+              "unpaired-name",
+              "negative-zero"
+            ]
+          }
+        },
+        "appends": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/RelativeFileAppendCase"
+          }
+        }
+      }
+    },
+    "RelativeFilePublicationRecoveryProtocol": {
+      "const": {
+        "version": 1,
+        "states": [
+          "prepared",
+          "old-displaced",
+          "published-with-retained",
+          "completed"
+        ],
+        "capture": "fresh-actual-root-roster-inode-hash-private-same-frame-token",
+        "data": "closed-canonical-decimal-preconditions-never-authority",
+        "prior": "unchanged-or-original-rename-six-fields-and-monotonic-ctime",
+        "effect": "prepare-or-resume-canonical-publication-no-retained-unlink",
+        "unprepared": "retain-and-refuse-unknown-or-partial-stage"
+      }
+    },
+    "RelativeFilePublicationRecoveryCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "platform",
+        "prior",
+        "events",
+        "patches",
+        "expected"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "enum": [
+            "posix",
+            "windows"
+          ]
+        },
+        "prior": {
+          "type": "boolean"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "DISPLACE",
+              "PUBLISH",
+              "RETIRE",
+              "FAULT"
+            ]
+          }
+        },
+        "patches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "op",
+              "path"
+            ],
+            "properties": {
+              "op": {
+                "enum": [
+                  "add",
+                  "replace",
+                  "remove"
+                ]
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {}
+            }
+          }
+        },
+        "expected": {
+          "enum": [
+            "prepared",
+            "old-displaced",
+            "published-with-retained",
+            "completed",
+            null
+          ]
+        }
+      }
+    },
+    "RelativeFilePublicationRecoveryFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "cases"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/RelativeFilePublicationRecoveryCase"
+          }
+        }
+      }
+    },
+    "RelativeWindowsPublicationFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volumeSerial",
+        "fileId",
+        "attributes",
+        "security",
+        "streams"
+      ],
+      "properties": {
+        "volumeSerial": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20,
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "fileId": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{32}$"
+        },
+        "attributes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "security": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "streams": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "RelativeFilePublicationIdentityData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dev",
+        "ino",
+        "mode",
+        "size",
+        "nlink",
+        "mtimeNs",
+        "ctimeNs"
+      ],
+      "properties": {
+        "dev": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "ino": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "mode": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "size": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "nlink": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "mtimeNs": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^(0|-?[1-9][0-9]*)$"
+        },
+        "ctimeNs": {
+          "type": "string",
+          "maxLength": 40,
+          "pattern": "^(0|-?[1-9][0-9]*)$"
+        }
+      }
+    },
+    "RelativeFilePublicationPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "stageName",
+        "retainedName",
+        "windows"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "stageName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "retainedName": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[^/\\\\\\u0000]+$"
+            }
+          ]
+        },
+        "windows": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "parent",
+                "prior"
+              ],
+              "properties": {
+                "parent": {
+                  "$ref": "#/definitions/RelativeWindowsPublicationFacts"
+                },
+                "prior": {
+                  "anyOf": [
+                    {
+                      "type": "null"
+                    },
+                    {
+                      "$ref": "#/definitions/RelativeWindowsPublicationFacts"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "RelativeFilePublicationAttestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "parent",
+        "identity",
+        "sha256",
+        "windows",
+        "authority"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "parent": {
+          "$ref": "#/definitions/RelativeFilePublicationIdentityData"
+        },
+        "identity": {
+          "$ref": "#/definitions/RelativeFilePublicationIdentityData"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "authority": {
+          "const": false
+        },
+        "windows": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "parent",
+                "entry"
+              ],
+              "properties": {
+                "parent": {
+                  "$ref": "#/definitions/RelativeWindowsPublicationFacts"
+                },
+                "entry": {
+                  "$ref": "#/definitions/RelativeWindowsPublicationFacts"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "RelativeFilePublicationAttestationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "bytes",
+        "maximumBytes",
+        "effect",
+        "accepted",
+        "sha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "type": "string"
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8388608
+        },
+        "effect": {
+          "enum": [
+            "none",
+            "copy",
+            "proxy",
+            "alias",
+            "directory",
+            "wrong-name",
+            "extra-arity"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    },
+    "RelativeFileAppendCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "before",
+        "bytes",
+        "repeat",
+        "maximumBytes",
+        "effect",
+        "accepted",
+        "sha256"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "before": {
+          "type": "string"
+        },
+        "bytes": {
+          "type": "string"
+        },
+        "repeat": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 131072
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8388608
+        },
+        "effect": {
+          "enum": [
+            "none",
+            "copy",
+            "proxy-entry",
+            "proxy-bytes",
+            "bytes-getter",
+            "mutate-bytes",
+            "alias",
+            "entry-drift",
+            "roster-drift",
+            "extra-arity",
+            "cancel-after-write"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
     }
   },
   "$ref": "#/definitions/Protocol"

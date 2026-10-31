@@ -1,0 +1,31 @@
+{
+  "state": "source-authored-awaiting-defining-bidi-retirement-and-gates",
+  "changes": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts",
+      "sha256": "387f43febdaa383328a697f52731a1749d2835da98ac15958fa50775f5858b07",
+      "bytes": 32656
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🎟️work/📐️.json",
+      "sha256": "8d8af17768510710584b73fee16bed9441936f6271220b7376e359b8ecdc23b2",
+      "bytes": 1053
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🎟️work/🔣️.json",
+      "sha256": "a4c4c23e67830e3878ff445b30675e4a5615f104ba368ae3f3d756a2a3a00c66",
+      "bytes": 1716
+    },
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🧪️tests/🎟️work/run.test.ts",
+      "sha256": "f3cb73abebb3879bb010934d8ac957e4381a478684186ea366f2562bcb9e9e2d",
+      "bytes": 7982
+    }
+  ],
+  "expectedNewOwningLaws": 3,
+  "actualOutcomes": null,
+  "remaining": [
+    "UnicodeBidi defining body is authored; precise pending nullable scalar headers retirement migration remains",
+    "Whole affected Bidi/Run owning+strict gates and original Font corpus14 still mandatory"
+  ]
+}

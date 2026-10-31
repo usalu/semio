@@ -1,0 +1,27 @@
+[
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\u23f1\ufe0fcontext/\ud83d\udeec\ufe0fdecode/\ud83e\udd80\ufe0f.rs",
+    "sha256": "17149f2ca627aa6f3076c726a9abd5f1374e6616c9b145c3874b24b5da338cc5",
+    "bytes": 12984
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\u23f1\ufe0fcontext/\ud83d\udeec\ufe0fdecode/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust/Cargo.toml",
+    "sha256": "94c193c18cbec2a373e92a4c9081749958c06b86eda55cdd9c50156fdf562200",
+    "bytes": 896
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\u23f1\ufe0fcontext/\ud83d\udeec\ufe0fdecode/\ud83c\udf9f\ufe0ftransport/\ud83e\uddea\ufe0ftests/\ud83e\udd80\ufe0f.rs",
+    "sha256": "fcd72b626a30372e83c85feb5daf0a8e8e370a163454a44523f83d96bd79e8c0",
+    "bytes": 4718
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\u23f1\ufe0fcontext/\ud83d\udeec\ufe0fdecode/\ud83c\udf9f\ufe0ftransport/\ud83e\uddea\ufe0ftests/case.json",
+    "sha256": "fee637a90e2e4861a44d94ea22a6b865fa333d45514f0929534760c9ef160838",
+    "bytes": 297
+  },
+  {
+    "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83e\uddf5\ufe0fjob/\u23f1\ufe0fcontext/\ud83d\udeec\ufe0fdecode/\ud83c\udf9f\ufe0ftransport/\ud83e\uddea\ufe0ftests/case.schema.json",
+    "sha256": "fb8cddf2c1c457c2acd3d1d476a9b75b258d73fb19ed9c10e2ce59972462dfb6",
+    "bytes": 881
+  }
+]

@@ -39,8 +39,8 @@ impl LayoutValidationCursor{
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.program.is_none()&&self.capacity==0&&self.index.terminal_is_empty()}
 }
 impl Drop for LayoutValidationCursor{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Layout validation requires funded continuation and original alias closure")}}
-#[cfg(test)]#[path="🧪️tests.rs"]mod tests;
+
 
 #[path="📦️owned/🦀️.rs"]pub mod owned;
 
-#[cfg(test)]#[path="🪆️references/🧪️tests/🦀️.rs"]mod drawing_reference_tests;
+

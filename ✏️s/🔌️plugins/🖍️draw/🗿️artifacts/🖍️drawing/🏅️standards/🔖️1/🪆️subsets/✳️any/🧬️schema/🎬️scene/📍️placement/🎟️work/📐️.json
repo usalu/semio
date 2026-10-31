@@ -1,0 +1,11 @@
+{
+  "stock": {
+    "items": 4194304,
+    "copy": 268435456,
+    "capacity": 33554432,
+    "release": 67108864,
+    "depth": 256
+  },
+  "maxTurns": 262144,
+  "completedCustodySemanticWork": 0
+}

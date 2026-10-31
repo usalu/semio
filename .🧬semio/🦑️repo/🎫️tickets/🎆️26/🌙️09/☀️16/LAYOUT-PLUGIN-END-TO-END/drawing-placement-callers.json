@@ -1,0 +1,49 @@
+[
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🦀️.rs",
+    "lines": [
+      {
+        "line": 25,
+        "text": "pub struct DrawingScenePlacementJob{"
+      },
+      {
+        "line": 31,
+        "text": "impl DrawingScenePlacementJob{"
+      },
+      {
+        "line": 75,
+        "text": "semio_framework_2d::physical_work_retirement!(DrawingScenePlacementRetirement,DrawingScenePlacementJob);"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🎬️scene/📍️placement/🧪️tests/🔬️unit/🦀️.rs",
+    "lines": [
+      {
+        "line": 28,
+        "text": "fn shared_placement_computes_real_area_length_bounds_and_empty_centroids(){for row in rows(){let mut previous=None;for grant in [1,7,4096]{let source=source(&row);let before=serde_json::to_value(&source.roots).unwrap();let mut job=DrawingScenePlacementJob::new(&source,limits(),algorithms(),0.001).unwrap();assert!(job.result().is_err());let(mut work,mut done)=(0,false);for _ in 0..2_000_000{let progress=job.advance(&source,grant).unwrap();assert!(progress.work>work&&progress.work-work<=grant as u64);work=progress.work;if progress.done{done=true;break;}}assert!(done,\"{}\",row[\"name\"]);let output=job.result().unwrap();let expected:DrawingScenePlacement=serde_json::from_value(row[\"expected\"].clone()).unwrap();assert_eq!(output.basis,expected.basis);assert_eq!(output.bounds,expected.bounds);assert!((output.area-expected.area).abs()<1e-8);for axis in 0..2{assert!((output.centroid[axis]-expected.centroid[axis]).abs()<1e-8);}if let Some(previous)=previous{assert_eq!(output,previous);}previous=Some(output);assert_eq!(serde_json::to_value(&source.roots).unwrap(),before);let(mut close,moved)=job.into_retirement();assert_eq!(moved,Some(output));drain(&mut close);assert!(close.terminal_is_empty());}}}"
+      },
+      {
+        "line": 30,
+        "text": "fn placement_cancel_preserves_actual_packet_and_closes_private_children(){for row in rows(){for turns in [0,1,10,100]{let source=source(&row);let before=serde_json::to_value(&source.roots).unwrap();let mut job=DrawingScenePlacementJob::new(&source,limits(),algorithms(),0.001).unwrap();for _ in 0..turns{if job.advance(&source,1).unwrap().done{break;}}job.cancel();assert!(job.result().is_err());assert_eq!(serde_json::to_value(&source.roots).unwrap(),before);let(mut close,output)=job.into_retirement();assert!(output.is_none());drain(&mut close);assert!(close.terminal_is_empty());}}}"
+      },
+      {
+        "line": 37,
+        "text": " let mut work=RetainedWorkLedger::new(original);let mut job=DrawingScenePlacementJob::new(&source,limits(),algorithms(),0.001).unwrap();let mut denied=[false;4];let mut complete=false;"
+      }
+    ]
+  },
+  {
+    "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📋️clipboard/🧵️job/🦀️.rs",
+    "lines": [
+      {
+        "line": 69,
+        "text": "struct Workspace{source:Option<RetainedCloneSource<DrawingSnapshot,store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>>,unsealed:Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>,completion:Option<semio_framework_plugin::ArtifactToolCompletion<App>>,args:Option<DslValue>,interaction:protocol::InteractionState,hover:semio_framework_plugin::app::InteractionHoverState,wire:Vec<u8>,packet:Option<DrawingClipboard>,encoder:Option<semio_framework_pack_json::JsonWriteCursor<encode::ClipboardJsonSource>>,parser:Option<semio_framework_pack_json::JsonGrammarCursor<DslValue>>,hydration:Option<decode::ClipboardHydration>,placement:Option<semio_s_artifact_draw_drawing_scene::placement::DrawingScenePlacementJob>,text:String,buffer_admitted:usize,roots:Vec<String>,retired_ids:Vec<String>,selected:Vec<String>,assets:Vec<String>,mutations:Vec<DrawingMutation>,effects:Vec<Effect>,interaction_writes:Vec<semio_framework_plugin::InteractionWrite>,interaction_targets:Vec<protocol::InteractionTarget>,fragment:Option<ClipboardFragment>,pending_asset:Option<(String,DrawingImageAsset)>,rejected_completion:Option<crate::completion::RejectedCompletion>,parent:Option<String>,addresses:metadata::Table<DrawingLayerAddress>,visited:metadata::Table<()>,removed:metadata::Table<()>,identities:metadata::Table<String>,asset_identities:metadata::Table<String>,cycle_active:metadata::Table<()>,cycle_done:metadata::Table<()>,cycle_stack:Vec<(DrawingLayerAddress,usize)>,pending_native:NativeText,rejected_native:Option<NativeText>,retired_native:NativeRetired,target:NativeText}"
+      },
+      {
+        "line": 272,
+        "text": "                    if workspace.placement.is_none(){workspace.placement=Some(semio_s_artifact_draw_drawing_scene::placement::DrawingScenePlacementJob::new(&source,semio_s_artifact_draw_drawing_editor_interaction::geometry_session::limits(),semio_s_artifact_draw_drawing_editor_interaction::geometry_session::algorithms(),0.05).map_err(fault)?);return Ok(false);}"
+      }
+    ]
+  }
+]

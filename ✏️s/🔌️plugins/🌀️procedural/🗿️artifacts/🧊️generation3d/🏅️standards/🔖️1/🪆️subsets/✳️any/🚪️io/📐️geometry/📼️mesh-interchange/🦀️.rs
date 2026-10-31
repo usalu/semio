@@ -19,6 +19,7 @@ use semio_s_artifact_procedural_3d_mesh_support::Machine;
 use semio_s_artifact_procedural_3d_mesh_support::Parse;
 use semio_s_artifact_procedural_3d_mesh_support::BATCH;
 use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
+use semio_s_artifact_procedural_3d_geometry_compute::{fuel_budget, StepContext};
 use semio_s_artifact_procedural_3d_geometry_compute::WidgetJob;
 use semio_s_artifact_procedural_3d_geometry_inputs::WidgetInputs;
 use semio_s_artifact_procedural_3d_geometry_value::outputs;
@@ -47,7 +48,8 @@ struct ExportObj {
 }
 
 impl Machine for ExportObj {
-    fn advance(&mut self, fuel: usize) -> Result<Flow, WidgetFault> {
+    fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
+        let fuel = fuel_budget(cx);
         match self.export.step(&self.mesh, fuel).kernel()? {
             Some(text) => Ok(Flow::Done(text_output("text", text))),
             None => {
@@ -70,7 +72,7 @@ struct ExportJson {
 }
 
 impl Machine for ExportJson {
-    fn advance(&mut self, _fuel: usize) -> Result<Flow, WidgetFault> {
+    fn advance(&mut self, _cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
         match self.source.take() {
             None => {
                 self.source = Some(self.mesh.polygon_source().kernel()?);
@@ -106,7 +108,8 @@ struct ExportBinary {
 }
 
 impl Machine for ExportBinary {
-    fn advance(&mut self, fuel: usize) -> Result<Flow, WidgetFault> {
+    fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
+        let fuel = fuel_budget(cx);
         if let Some(job) = self.tessellation.as_mut() {
             return match tessellation_slice(job, fuel.saturating_mul(BATCH)).kernel()? {
                 MeshTessellationStep::Working(progress) => Ok(Flow::Working(0.4 * ratio(progress))),
@@ -176,7 +179,8 @@ struct ImportBinary {
 }
 
 impl Machine for ImportBinary {
-    fn advance(&mut self, fuel: usize) -> Result<Flow, WidgetFault> {
+    fn advance(&mut self, cx: &mut StepContext<'_>) -> Result<Flow, WidgetFault> {
+        let fuel = fuel_budget(cx);
         if self.job.is_none() {
             if self.cursor < self.encoded.len() {
                 let end = (self.cursor + DECODE_CHUNK.saturating_mul(fuel)).min(self.encoded.len());

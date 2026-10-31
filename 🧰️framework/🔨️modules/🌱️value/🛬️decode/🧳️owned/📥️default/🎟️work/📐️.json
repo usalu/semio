@@ -1,0 +1,38 @@
+{
+  "stock": {
+    "items": 100000,
+    "fuel": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "maximumTurns": 100000
+  },
+  "smallArray": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "largeZeroSizedCount": 4097,
+  "minimumLargeWork": 4097,
+  "emptyArrayRefuses": true,
+  "cancelCuts": [
+    0,
+    1,
+    2,
+    7,
+    19,
+    71
+  ],
+  "tuple": [
+    "",
+    false
+  ],
+  "freshPayloadCopyBytes": {
+    "bool": 1,
+    "u64": 8,
+    "f64": 8,
+    "string": 0,
+    "unit": 0
+  }
+}

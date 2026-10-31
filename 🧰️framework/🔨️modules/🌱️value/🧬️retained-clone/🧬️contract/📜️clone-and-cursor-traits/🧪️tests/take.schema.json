@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "stock",
+    "maximumTurns",
+    "body",
+    "handoffWork",
+    "deniedWork",
+    "cachedWork",
+    "ownershipCopyBytes",
+    "deniedAxes",
+    "cases",
+    "oneBank",
+    "closeAllSourcesAndOutputs"
+  ],
+  "properties": {
+    "stock": {
+      "const": {
+        "items": 4096,
+        "copy": 16777216,
+        "capacity": 16777216,
+        "release": 16777216,
+        "depth": 128
+      }
+    },
+    "maximumTurns": {
+      "const": 4096
+    },
+    "body": {
+      "const": 256
+    },
+    "handoffWork": {
+      "const": 1
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "ownershipCopyBytes": {
+      "const": 0
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "depth"
+      ]
+    },
+    "cases": {
+      "const": {
+        "scalar": 41,
+        "text": "Grüße 🌳",
+        "optional": "original",
+        "vector": [
+          "one",
+          "zwei",
+          "三"
+        ],
+        "array": [
+          "left",
+          "right"
+        ],
+        "tuple": [
+          "alpha",
+          "beta"
+        ],
+        "boxed": "boxed",
+        "enumEmpty": true,
+        "enumRecord": {
+          "label": "enum original α",
+          "values": [
+            0,
+            41,
+            99
+          ]
+        },
+        "enumTuple": [
+          "variant",
+          42
+        ]
+      }
+    },
+    "oneBank": {
+      "const": true
+    },
+    "closeAllSourcesAndOutputs": {
+      "const": true
+    }
+  }
+}

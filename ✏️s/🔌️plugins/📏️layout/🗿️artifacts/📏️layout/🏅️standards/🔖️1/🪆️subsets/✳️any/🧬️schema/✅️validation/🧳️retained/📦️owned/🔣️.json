@@ -1,13 +1,13 @@
 {
   "title": "Owned Original Borrowed Graph Validation",
-  "birth": "Actual original grants move an already original-bound immutable reader into its exact fixed Box; no source registration is minted",
+  "birth": "Actual original grants move a genuine immutable reader into its exact Box and a private shared stable owner containing that reader and its key index; every backing byte is quoted before allocation",
   "reader": "The concrete owner retains genuine source aliases and paid indexed field descriptors; its graph is immutable until continuation and key index close",
   "close": [
     "Borrowing future",
     "Key index slots and backing",
     "Reader descriptor and numeric storage",
     "Original source aliases",
-    "Fixed reader Box"
+    "Reader Box and final shared stable-owner backing"
   ],
   "laws": [
     "No stack or movable-field pointer survives a turn",
@@ -15,5 +15,6 @@
     "Every child demand adds own overhead and subtracts actual original remaining grant",
     "Semantic success and refusal both require fully closed reader before preflight publication",
     "Cancellation uses the identical funded close frontier"
-  ]
+  ],
+  "continuation": "The pinned asynchronous continuation owns a private strong alias and obtains graph and key-slot borrows inside its body; no erased static reference is manufactured"
 }

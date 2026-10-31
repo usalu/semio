@@ -12,12 +12,12 @@ export type UiI18nTree = { readonly [key: string]: UiI18nTree | string | number 
 /** 📞️ What one translate call may carry: reserved names steer the lookup (a group always resolves to a copy of its tree), every other entry is an interpolation variable. */
 export type UiI18nCallOptions = Readonly<{ lng?: string; defaultValue?: unknown; returnObjects?: boolean; replace?: Readonly<Record<string, unknown>> } & Record<string, unknown>>;
 
-/** ⚙️ Static choices of one instance: the language it stands at, the one it falls back to, and the languages it may negotiate to. */
-export type UiI18nInstanceOptions = Readonly<{ language: string; fallbackLanguage: string; supportedLanguages: readonly string[] }>;
+/** ⚙️ Static choices of one instance: the languages it may negotiate to, the language it stands at and the one it falls back to. Both are optional on purpose: an instance without a `language` is undecided and answers every key with itself, one without a `fallbackLanguage` never answers in a language nobody chose. */
+export type UiI18nInstanceOptions = Readonly<{ language?: string; fallbackLanguage?: string; supportedLanguages: readonly string[] }>;
 
 /** 🌐️ A live translation instance; `version` moves on every language or bundle change so views can subscribe by snapshot. */
 export interface UiI18nInstance {
-  readonly language: string;
+  readonly language: string | undefined;
   readonly resolvedLanguage: string | undefined;
   readonly version: number;
   t(key: string, options?: UiI18nCallOptions): unknown;
@@ -74,19 +74,20 @@ export function createUiI18nInstance(options: UiI18nInstanceOptions): UiI18nInst
   let language = options.language;
   let version = 0;
   const supported = (code: string): boolean => options.supportedLanguages.includes(code) || options.supportedLanguages.includes(code.split("-")[0]!);
-  const hierarchy = (code: string): readonly string[] => [...new Set([code, code.split("-")[0]!, options.fallbackLanguage])].filter((candidate) => supported(candidate));
+  const hierarchy = (code: string | undefined): readonly string[] =>
+    code === undefined ? [] : [...new Set([code, code.split("-")[0]!, ...(options.fallbackLanguage === undefined ? [] : [options.fallbackLanguage])])].filter((candidate) => supported(candidate));
   const notify = (): void => {
     version += 1;
     for (const listener of [...listeners]) listener();
   };
-  const find = (key: string, code: string): unknown => {
+  const find = (key: string, code: string | undefined): unknown => {
     for (const candidate of hierarchy(code)) {
       const found = lookup(bundles.get(candidate), key);
       if (found !== undefined) return found;
     }
     return undefined;
   };
-  const translate = (key: string, code: string, call: UiI18nCallOptions = {}): unknown => {
+  const translate = (key: string, code: string | undefined, call: UiI18nCallOptions = {}): unknown => {
     const stand = call.lng ?? code;
     const found = find(key, stand);
     const variables = { ...call.replace, ...Object.fromEntries(Object.entries(call).filter(([name]) => !RESERVED.has(name))) };

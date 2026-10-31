@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "operation": 751,
+  "generation": 7,
+  "deadlineUs": 1000000,
+  "fuel": 1048576,
+  "stock": {
+    "maximumItems": 1048576,
+    "maximumCopyBytes": 4194304,
+    "maximumCapacityBytes": 4194304,
+    "maximumReleaseBytes": 8388608,
+    "maximumDepth": 128
+  },
+  "maximumObservedTurns": 4096,
+  "quantum": 1,
+  "handoff": {
+    "items": 1,
+    "copy": 0,
+    "capacity": 0,
+    "release": 0,
+    "depth": 1,
+    "cpu": 1
+  },
+  "reserve": {
+    "items": 1,
+    "fuel": 1,
+    "source": "lifetimeRemaining",
+    "preserveCurrentQuantum": true
+  },
+  "deniedPreparationAxes": [
+    "items",
+    "capacity",
+    "depth"
+  ],
+  "deniedPublicationAxes": [
+    "items",
+    "depth"
+  ],
+  "deniedCloseAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "cases": [
+    {
+      "name": "body",
+      "message": "Original reserved 源 \"payload\"\n",
+      "callbackRefusal": false,
+      "foreignPublication": false,
+      "cancel": false
+    },
+    {
+      "name": "callback",
+      "message": "Original reserved 源 \"payload\"\n",
+      "callbackRefusal": true,
+      "foreignPublication": false,
+      "cancel": false
+    },
+    {
+      "name": "foreign",
+      "message": "Original reserved 源 \"payload\"\n",
+      "callbackRefusal": false,
+      "foreignPublication": true,
+      "cancel": false
+    },
+    {
+      "name": "both",
+      "message": "Original reserved 源 \"payload\"\n",
+      "callbackRefusal": true,
+      "foreignPublication": true,
+      "cancel": false
+    },
+    {
+      "name": "cancelBody",
+      "message": "Original reserved 源 \"payload\"\n",
+      "callbackRefusal": false,
+      "foreignPublication": false,
+      "cancel": true
+    },
+    {
+      "name": "cancelBoth",
+      "message": "Original reserved 源 \"payload\"\n",
+      "callbackRefusal": true,
+      "foreignPublication": true,
+      "cancel": true
+    }
+  ],
+  "deniedBodyAxes": [
+    "items",
+    "depth"
+  ],
+  "closingControl": {
+    "items": 1,
+    "depth": 1,
+    "cpu": 1
+  },
+  "foreignRecord": {
+    "items": 1,
+    "depth": 1,
+    "cpu": 1,
+    "repeatCpu": 0
+  },
+  "parentOwnedClose": true
+}

@@ -16,7 +16,7 @@ unsafe impl WorkerJobInitializer<OriginalJob> for OriginalInitializer{
  fn partial_terminal_is_empty(&self)->bool{true}
 }
 impl InteractiveJob for OriginalJob{
- fn step<'a>(&'a mut self,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{assert_eq!(self as*const _ as usize,self.target);JobOutcomeBorrow::admit_complete(cx,None,None).map_err(OriginalTurnFailure::from)}
+ fn step<'a>(&'a mut self,cx:&mut StepContext<'_>,_:&mut OriginalJobReturnClaim<'_>)->InteractiveJobStep<'a>{assert_eq!(self as*const _ as usize,self.target);InteractiveJobStep::from_callback(JobOutcomeBorrow::admit_complete(cx,None,None).map_err(OriginalTurnFailure::from))}
  fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{assert_eq!(self as*const _ as usize,self.target);descriptor.complete(None,None)}
  fn begin_close(&mut self){assert_eq!(self as*const _ as usize,self.target);self.closing=true;}
  fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{assert_eq!(self as*const _ as usize,self.target);Ok(if cx.should_yield(){InteractiveJobCloseStep::Pending{progress:Default::default()}}else{InteractiveJobCloseStep::Complete{progress:Default::default()}})}

@@ -1,0 +1,1 @@
+Actual outer1 Source32 refusal before compiler at WorkLedger fixture JSON; remainingBytes55159. No tests executed. Observed356input postcheck differences: []. Extract real WorkLedger owner; same physical source/all laws/same caps. Work and Persistent separately required.

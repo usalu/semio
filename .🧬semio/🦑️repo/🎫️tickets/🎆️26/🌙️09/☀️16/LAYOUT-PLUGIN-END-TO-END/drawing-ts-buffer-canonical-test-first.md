@@ -1,0 +1,7 @@
+# Genuine Buffer Canonical Test-First Preparation
+
+Following actual existing-API behavioral RED33754, the new canonical fixed-page neutral fixture/schema are authored under work/pages. They retain Root-approved16 cells and8 logical bytes per new directory-reference row, no V8/GC claim, same finite stock/fuel and all five denial axes. Data covers exact identities,17/257 growth and four actual storage/publication cuts, with independent SQLite ordered-values and body lifetime conservation planned.
+
+No generic body, old ten captured inputs, existing primitive/corpus assertion or runtime was changed. Full owning laws are next; root review of actual baseline remains the body prerequisite.
+
+Six actual future-owner laws and a finite shared-wallet fixture are now authored after canonical schema/data and before body. They require get/backingFor/lastStorageEffect observations, actual original element identity and directory-reference identity,17/257 ordered SQLite parity, independent birth/release SQL joins, all5 positive-axis denials, each partial-publication cut, stale-view refusal, cached0 effects, raw intrinsic/Reflect refusal, and genuine nested held-parent absolute quote. No separate validator substitutes for actual owning functions. Primary and funded cleanup failures remain independently preserved. The current old implementation does not provide the new observation/read surface; no missing-method result is being claimed as the baseline.

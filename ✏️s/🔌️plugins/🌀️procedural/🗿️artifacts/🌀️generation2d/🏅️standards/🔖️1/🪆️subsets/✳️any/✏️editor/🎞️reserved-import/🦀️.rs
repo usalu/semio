@@ -172,25 +172,25 @@ impl Generation2dImportJob {
             return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| step.progress());
         }
         if self.pending_completion_rejection.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_completion_rejection, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_completion_rejection, &mut self.active, grant).result.map(|step| step.progress());
         }
         if self.mutations.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutations, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutations, &mut self.active, grant).result.map(|step| step.progress());
         }
         if self.media_intrinsic.is_some() {
             self.media_position = 0;
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media_intrinsic, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media_intrinsic, &mut self.active, grant).result.map(|step| step.progress());
         }
         if self.media_json.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media_json, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media_json, &mut self.active, grant).result.map(|step| step.progress());
         }
         if self.port.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.port, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.port, &mut self.active, grant).result.map(|step| step.progress());
         }
         if self.snapshot.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, grant).result.map(|step| step.progress());
         }
-        store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion, &mut self.active, grant).map(|step| step.progress())
+        store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion, &mut self.active, grant).result.map(|step| step.progress())
     }
 }
 

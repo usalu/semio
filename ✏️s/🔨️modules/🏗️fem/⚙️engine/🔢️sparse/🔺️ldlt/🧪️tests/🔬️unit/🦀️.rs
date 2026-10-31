@@ -511,7 +511,7 @@ fn empty_paged_backing<T>(count: usize) -> PagedList<T, SPARSE_INDEX_SPACE> {
     owner
 }
 
-fn step_job(original:&mut OriginalNumericalFixture,job:&mut impl InteractiveJob,fuel:u64,deadline:u64)->Seen{original.turn(TEST_GRANT,fuel,deadline,|cx|Ok(seen_of(job.step(cx)))).expect("same original LDLT job step")}
+fn step_job(original:&mut OriginalNumericalFixture,job:&mut impl NumericalStep,fuel:u64,deadline:u64)->Seen{original.turn(TEST_GRANT,fuel,deadline,|cx|Ok(seen_of(job.step_plain(cx)))).expect("same original LDLT job step")}
 fn step_restore(original:&mut OriginalNumericalFixture,cursor:&mut LdltRestoreCursor,fuel:u64,deadline:u64)->Result<Option<LdltJob>,NumericalCheckpointFault>{original.turn(RetainedCloneGrant{maximum_items:1,..TEST_GRANT},fuel,deadline,|cx|Ok(cursor.step(cx))).expect("same original LDLT restore turn")}
 fn close_restore(original:&mut OriginalNumericalFixture,cursor:&mut LdltRestoreCursor,grant:RetainedCloneGrant)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{original.turn(grant,1,u64::MAX,|cx|cx.with_original_retirement(|cx|cursor.close_step(cx)))}
 fn restore_pages(original:&mut OriginalNumericalFixture,operation:Operation,pages:&[Vec<u8>])->Result<LdltJob,NumericalCheckpointFault>{let payload=original.payload_from_pages(JobPayloadStream::CheckpointState,pages);restore_ldlt(original,operation,payload)}

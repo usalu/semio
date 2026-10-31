@@ -62,11 +62,11 @@ async function openPrivateRepositoryWorkspaceV1(profile:PrivateRepositoryProfile
   close:async()=>{if(owned){delete process.env.SEMIO_PRIVATE_REPOSITORY;await retirePrivateRootV1(root);}}});
 }
 let privateWorkspaceV1:Promise<PrivateRepositoryWorkspaceV1>|undefined,privateProfileV1:PrivateRepositoryProfileV1|undefined,testRunnerV1=true;
-/** 🧫️ The one private repository of this test process, created on first use for its profile and retired after its last test; a later request for a deeper profile than the one it was created for is refused; a spawned child (test or script) adopts its parent's through `SEMIO_PRIVATE_REPOSITORY`. */
+/** 🧪️ The one private repository of this test process, created on first use for its profile and retired after its last test; a later request for a deeper profile than the one it was created for is refused; a spawned child (test or script) adopts its parent's through `SEMIO_PRIVATE_REPOSITORY`. */
 export function privateRepositoryWorkspaceV1(profile:PrivateRepositoryProfileV1="store"):Promise<PrivateRepositoryWorkspaceV1>{
  if(privateWorkspaceV1===undefined){privateProfileV1=profile;privateWorkspaceV1=openPrivateRepositoryWorkspaceV1(profile);}
  else if(profile==="graph"&&privateProfileV1==="store")return privateWorkspaceV1.then(workspace=>{if(privateRepositoryDeepestV1(workspace.root,"graph")>256)throw Error("private-repository-store-profile-too-deep:"+workspace.root);return workspace;});
  return privateWorkspaceV1;
 }
-/** 🪦️ Retires the owned private repository after the last test; a child script outside the test runner only adopts its parent's. */
+/** 👶️ Retires the owned private repository after the last test; a child script outside the test runner only adopts its parent's. */
 try{afterAll(async()=>{if(privateWorkspaceV1!==undefined){const workspace=await privateWorkspaceV1.catch(()=>undefined);await workspace?.close();}},170000);}catch{testRunnerV1=false;}

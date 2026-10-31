@@ -1,0 +1,32 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🦀️.rs",
+    "bytes": 5698,
+    "sha256": "4d40279f83bc522871a4427f0ed0e75b5b5096e5661431295dfed84700ade12b"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🦀️.rs",
+    "bytes": 16083,
+    "sha256": "5ea5db83debbb98d3ee04ef3f07f466fd1763f2d1920ba7f5367dd546a2e1c95"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🎟️work/🦀️.rs",
+    "bytes": 5075,
+    "sha256": "04c636defd6287775ddc4b5349ca12e0c2741d5fb36c1522ba49d775422af720"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🫴️projection/🦀️.rs",
+    "bytes": 10504,
+    "sha256": "43b94b565b64fa56da2db34ea866bcac58e6b581bf842769a9d77f8f570d67f1"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🤝️closure/🦀️.rs",
+    "bytes": 1781,
+    "sha256": "2afb61dda7de55deff77e37ebedf5837ebee9eb446b3f146e069adc780f5553d"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🧵️job/⚠️failure/🛬️receiving/🦀️.rs",
+    "bytes": 176,
+    "sha256": "30cf3210d2386728478d6693e06b69db5ad2a92b3248f9f0cc4b3444bfe08669"
+  }
+]

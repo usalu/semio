@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "stock",
+    "maximumTurns",
+    "quantum",
+    "phases",
+    "allocationPhases",
+    "deniedAxes",
+    "cancelCuts",
+    "nullWork",
+    "deniedWork",
+    "cachedWork",
+    "moveCopyBytes",
+    "texts",
+    "sharedQuote"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "stock": {
+      "const": {
+        "items": 4096,
+        "copyBytes": 16777216,
+        "capacityBytes": 16777216,
+        "releaseBytes": 16777216,
+        "depth": 128,
+        "fuel": 16384
+      }
+    },
+    "maximumTurns": {
+      "const": 4096
+    },
+    "quantum": {
+      "const": 1
+    },
+    "phases": {
+      "const": [
+        "owner",
+        "alias",
+        "payload",
+        "lease",
+        "publication"
+      ]
+    },
+    "allocationPhases": {
+      "const": [
+        "owner",
+        "payload",
+        "lease"
+      ]
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "capacity",
+        "depth"
+      ]
+    },
+    "cancelCuts": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "nullWork": {
+      "const": 1
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "moveCopyBytes": {
+      "const": 0
+    },
+    "texts": {
+      "const": [
+        "",
+        "owned λ",
+        "🌿 source"
+      ]
+    },
+    "sharedQuote": {
+      "const": {
+        "threads": 2,
+        "iterations": 16,
+        "states": [
+          "admitting",
+          "returning"
+        ],
+        "childCallbacks": 0,
+        "heapBytes": 0
+      }
+    }
+  }
+}

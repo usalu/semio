@@ -1,0 +1,55 @@
+//! 🎟️ Original source admission retains every partial allocation until publication or paid return.
+use super::*;
+use crate::{RetainedWorkOutcome,RetirementDemand};
+use crate::shared_issuance::SealedSharedBirth;
+use std::alloc::{alloc,Layout};
+/// 🧳️ One original admission advances under the caller's unchanged lifetime bank.
+pub struct RetainedCloneSourceAdmission<T:Sync+'static,A:RetireOwned+Sync,B:RetireOwned=()>{
+ input:ManuallyDrop<Option<A>>,extra:ManuallyDrop<Option<B>>,owner:ManuallyDrop<Option<SealedShared<A>>>,alias:ManuallyDrop<Option<SealedShared<A>>>,payload:ManuallyDrop<Option<Box<SourcePayload<A,B>>>>,lease:ManuallyDrop<Option<SealedSharedBirth<RetainedCloneLeaseOwner>>>,output:ManuallyDrop<Option<RetainedCloneSource<T,A>>>,project:for<'a>fn(&'a A)->&'a T,closing:bool,
+}
+impl<T:Sync+'static,A:RetireOwned+Sync,B:RetireOwned> RetainedCloneSourceAdmission<T,A,B>{
+ pub fn new(input:A,extra:B,project:for<'a>fn(&'a A)->&'a T)->Self{Self{input:ManuallyDrop::new(Some(input)),extra:ManuallyDrop::new(Some(extra)),owner:ManuallyDrop::new(None),alias:ManuallyDrop::new(None),payload:ManuallyDrop::new(None),lease:ManuallyDrop::new(None),output:ManuallyDrop::new(None),project,closing:false}}
+ pub fn original_authority(&self)->Option<&A>{self.input.as_ref().or_else(||self.owner.as_ref().map(SealedShared::get)).or_else(||self.output.as_ref().and_then(RetainedCloneSource::original_authority))}
+ pub fn next_return_demand(&self)->Result<RetirementDemand,ValueError>{self.return_demand()}
+ pub fn phase(&self)->&'static str{if self.closing{"returning"}else if self.output.is_some(){"ready"}else if self.input.is_some(){"owner"}else if self.owner.is_none(){"empty"}else if self.payload.is_none(){if self.alias.is_none(){"alias"}else{"payload"}}else if self.lease.is_none(){"lease"}else{"publication"}}
+ pub fn next_demand(&self)->Result<RetirementDemand,ValueError>{if self.closing{return self.return_demand()}Ok(match self.phase(){"owner"=>RetirementDemand{capacity_bytes:SealedShared::<A>::birth_bytes(),depth:1,..Default::default()},"payload"=>RetirementDemand{capacity_bytes:size_of::<SourcePayload<A,B>>(),depth:1,..Default::default()},"lease"=>RetirementDemand{capacity_bytes:SealedShared::<RetainedCloneLeaseOwner>::birth_bytes(),depth:1,..Default::default()},"empty"=>Default::default(),_=>RetirementDemand{depth:1,..Default::default()}})}
+ pub fn advance(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+  if self.closing{return failure(ValueError::literal(ValueRefusalKind::InvalidValue,"original source admission is returning its inputs"),0)}
+  if matches!(self.phase(),"ready"|"empty"){return complete(0,Default::default())}
+  let demand=match self.next_demand(){Ok(d)=>d,Err(e)=>return failure(e,0)};if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return progress(0,Default::default())}
+  match self.phase(){
+   "owner"=>{if !A::controlled_retirement_supported()||!B::controlled_retirement_supported(){return failure(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"source or authority has no controlled typed retirement"),0)}let input=self.input.take().expect("original input retained");let mut issuer=SharedIssuer::owned();issuer.transfer_copy_bytes=|_|0;let turn=SealedShared::admit(input,issuer,grant);match turn.result{Ok((owner,p))=>{*self.owner=Some(owner);progress(turn.work,p)},Err((e,input))=>{*self.input=Some(input);failure(e,turn.work)}}},
+   "alias"=>{let turn=self.owner.as_ref().unwrap().try_duplicate(grant);match turn.result{Ok((alias,p))=>{*self.alias=Some(alias);progress(turn.work,p)},Err(e)=>failure(e,turn.work)}},
+   "payload"=>{let layout=Layout::new::<SourcePayload<A,B>>();let pointer=unsafe{alloc(layout)}.cast::<SourcePayload<A,B>>();if pointer.is_null(){return failure(ValueError::literal(ValueRefusalKind::AllocationFailed,"original source payload allocation failed"),1)}let payload=SourcePayload{source:ControlledRetirement::retain(self.alias.take().unwrap()),authority:ControlledRetirement::retain(self.extra.take().unwrap())};unsafe{pointer.write(payload);*self.payload=Some(Box::from_raw(pointer));}progress(1,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:layout.size(),..Default::default()})},
+   "lease"=>{let turn=SealedShared::prepare_birth(grant);match turn.result{Ok((lease,p))=>{*self.lease=Some(lease);progress(turn.work,p)},Err(e)=>failure(e,turn.work)}},
+   "publication"=>{let id=match RETAINED_CLONE_SOURCE_IDS.try_update(Ordering::Relaxed,Ordering::Relaxed,|n|n.checked_add(1)){Ok(id)=>id,Err(_)=>return failure(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original source identity space exhausted"),1)};let value=NonNull::from((self.project)(self.owner.as_ref().unwrap().get()));let publication=match self.lease.as_mut().unwrap().publication(grant){Ok(Some(p))=>p,Ok(None)=>return progress(0,Default::default()),Err(e)=>return failure(e,0)};let payload=self.payload.take().unwrap();let turn=publication.commit(RetainedCloneLeaseOwner{id,payload:ManuallyDrop::new(Some(payload))},SharedIssuer::owned());let(lease,p)=match turn.result{Ok(value)=>value,Err(_)=>unreachable!("funded unique publication cannot refuse")};self.lease.take();let address=value.as_ptr()as*const()as usize;*self.output=Some(RetainedCloneSource{owner:ManuallyDrop::new(self.owner.take()),value,lease:Some(RetainedCloneBinding::new(lease,RetainedCloneProjection{parent:address,address,discriminator:0})),owner_close:ManuallyDrop::new(None)});complete(turn.work,p)},
+   _=>unreachable!("original source admission phase"),
+  }
+ }
+ pub fn take_output(&mut self,output:&mut Option<RetainedCloneSource<T,A>>,grant:RetainedCloneGrant)->RetainedWorkOutcome{if output.is_some(){return failure(ValueError::literal(ValueRefusalKind::InvalidValue,"original source output place is occupied"),0)}if self.output.is_none(){return progress(0,Default::default())}if grant.maximum_items==0||grant.maximum_depth==0{return progress(0,Default::default())}*output=self.output.take();complete(1,RetainedCloneProgress{copied_items:1,..Default::default()})}
+ fn return_demand(&self)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}if let Some(lease)=self.lease.as_ref(){return Ok(lease.next_close_demand())}if let Some(payload)=self.payload.as_ref(){if payload.source.original().is_some()||payload.authority.original().is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}return Ok(RetirementDemand{release_bytes:size_of::<SourcePayload<A,B>>(),depth:1,..Default::default()})}if self.alias.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}if let Some(owner)=self.owner.as_ref(){return owner.original_transfer_demand()}if self.input.is_some()||self.extra.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}Ok(Default::default())}
+ pub fn return_inputs(&mut self,output:&mut Option<(A,B)>,grant:RetainedCloneGrant)->RetainedWorkOutcome{
+  if output.is_some(){return if self.terminal_is_empty(){complete(0,Default::default())}else{failure(ValueError::literal(ValueRefusalKind::InvalidValue,"original source input return place is occupied"),0)}}if self.output.is_some(){return failure(ValueError::literal(ValueRefusalKind::InvalidValue,"published original must return through its source"),0)}if self.terminal_is_empty(){return complete(0,Default::default())}
+  let d=match self.return_demand(){Ok(d)=>d,Err(e)=>return failure(e,0)};if !crate::retained_clone::retained_clone_grant_admits(grant,d){return progress(0,Default::default())}
+  if !self.closing{self.closing=true;return progress(1,RetainedCloneProgress{copied_items:1,..Default::default()})}
+  if let Some(lease)=self.lease.as_mut(){let turn=lease.close_step(grant);if lease.terminal_is_empty(){self.lease.take();}return turn}
+  if let Some(payload)=self.payload.as_mut(){
+   if let Some(alias)=payload.source.original_mut(){if !alias.terminal_is_empty(){let turn=alias.return_borrowed_alias(self.owner.as_ref().unwrap(),grant);return RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}}payload.source.take_original();return progress(1,RetainedCloneProgress{copied_items:1,..Default::default()})}
+   if payload.authority.original().is_some(){*self.extra=payload.authority.take_original();return progress(1,RetainedCloneProgress{copied_items:1,..Default::default()})}
+   drop(self.payload.take());return progress(1,RetainedCloneProgress{copied_items:1,released_bytes:size_of::<SourcePayload<A,B>>(),..Default::default()})
+  }
+  if let Some(alias)=self.alias.as_mut(){let turn=alias.return_borrowed_alias(self.owner.as_ref().unwrap(),grant);if alias.terminal_is_empty(){self.alias.take();}return RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}}
+  if let Some(owner)=self.owner.take(){let turn=owner.try_unwrap(grant);return match turn.result{Ok((input,p))=>{*self.input=Some(input);progress(turn.work,p)},Err((error,owner))=>{*self.owner=Some(owner);failure(error,turn.work)}}}
+  let Some(input)=self.input.take()else{return failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"original source admission lost its input"),0)};let Some(extra)=self.extra.take()else{*self.input=Some(input);return failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"original source admission lost its authority"),0)};*output=Some((input,extra));complete(1,RetainedCloneProgress{copied_items:1,..Default::default()})
+ }
+ pub fn terminal_is_empty(&self)->bool{self.input.is_none()&&self.extra.is_none()&&self.owner.is_none()&&self.alias.is_none()&&self.payload.is_none()&&self.lease.is_none()&&self.output.is_none()}
+}
+fn progress(work:u64,p:RetainedCloneProgress)->RetainedWorkOutcome{RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(p)),work}}
+fn complete(work:u64,p:RetainedCloneProgress)->RetainedWorkOutcome{RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(p)),work}}
+fn failure(error:ValueError,work:u64)->RetainedWorkOutcome{RetainedWorkOutcome{result:Err(error),work}}
+impl<T:Sync+'static,A:RetireOwned+Sync,B:RetireOwned> Drop for RetainedCloneSourceAdmission<T,A,B>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original source admission retains unpaid custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.input);ManuallyDrop::drop(&mut self.extra);ManuallyDrop::drop(&mut self.owner);ManuallyDrop::drop(&mut self.alias);ManuallyDrop::drop(&mut self.payload);ManuallyDrop::drop(&mut self.lease);ManuallyDrop::drop(&mut self.output);}}}}
+/// 🧷️ Shared references only read quotes and phases; every cursor advance and return needs exclusive custody.
+unsafe impl<T:Sync+'static,A:RetireOwned+Sync,B:RetireOwned> Sync for RetainedCloneSourceAdmission<T,A,B>{}
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

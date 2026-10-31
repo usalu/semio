@@ -1,6 +1,6 @@
 import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
-import fixture from "./🔣️.json";
+import fixture from "./🔣️.json" with {type:'json'};
 test("original selected history order agrees with SQL insertion and exclusion", () => {
   const db = new Database(":memory:");
   db.run("CREATE TABLE edits(position INTEGER PRIMARY KEY, id INTEGER)");

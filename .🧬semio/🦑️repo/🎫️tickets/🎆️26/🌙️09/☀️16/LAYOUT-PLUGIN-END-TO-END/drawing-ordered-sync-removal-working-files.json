@@ -1,0 +1,32 @@
+{
+  "before": {
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🌐️wire/🦀️.rs": "9a3e6c5fcc4a10ce185306d5023794975ac2588d0f07aa91991d74c61253881d",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🌐️wire/🦀️.rs": "d15a4ee00051c487d7a0bdc96546000f3ab1e10738c67bb1164606af6ff57685",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🚦️native/🦀️.rs": "a5bae46c816d685fa79e33696f54b07afab2cffd37713c70dd720ebb7dc8c556",
+    "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🚦️native/🦀️.rs": "2162d2361bedfb9aec89cc6fba9e3200986ea3329059e93cae224fc9f3d54e50",
+    "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🦀️.rs": "90e2a62bf618fa52d3ac2605b5724db6d74df2e6ec7ca5072d8fe09d6e17a90d"
+  },
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🌐️wire/🦀️.rs",
+      "sha256": "39febf0b0c0ef8b927a2952cdb2a7a35d386e85fd72219d6da43b5f471466ff4"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🌐️wire/🦀️.rs",
+      "sha256": "0242160ae87c55e3317c40bc53b3af40530014edab7ddbfe24818a563de134e8"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🚦️native/🦀️.rs",
+      "sha256": "06f55be5efb7ca2c333dfc019ffac09120bc9dbb6bfc38fa3332b2c48bf16547"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🗂️ordered/🧺️set/🚦️native/🦀️.rs",
+      "sha256": "a9657aeac03be5ae21c99199a73432caa321035e2faf9b0189222f2cdb364b44"
+    },
+    {
+      "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧺️set/🦀️.rs",
+      "sha256": "04d936ca29aaeb98be12e2119f3e1fc458a8a0d27670f54bfff90f6d11cee31f"
+    }
+  ],
+  "status": "Source only; no runtime"
+}

@@ -45,6 +45,22 @@ test("The decision equals a recursive SQLite oracle on every hand case and on a 
  for(const reason of ["fits","reduced","override","memory","queue-order","pressure-critical","pressure-warn","files","attaches","load","swap","swap-activity"])expect(verdicts.has(reason as never),`corpus reaches ${reason}`).toBe(true);
 });
 
+/** 🛌️ A ramp slot is for a grant that is still growing: one that held it for `rampIdleAfterMilliseconds` and uses almost nothing of its reservation is idle at an inner gate and frees the slot (its unrealized reservation still counts as committed memory), so two idle grants cannot hold the whole door closed for their full ramp time. */
+test("Idle-at-gate ramp rule: an idle ramping grant frees its ramp slot, a growing one keeps it, and the decision equals the SQLite oracle on a seeded corpus",()=>{
+ const idle=readHostCapacityPolicyV1({...fixture.policy,memory:{...fixture.policy.memory,rampIdleAfterMilliseconds:30000,rampIdleObservedBasisPoints:2500}} as never),max=idle.memory.maximumRamping;
+ const base=fixture.rampCases.find(item=>item.expect.decisions.some(row=>row.reason==="ramp"))!;
+ const stuck=(observed:number)=>({...base,ledger:base.ledger.map(grant=>({...grant,rampSlot:true,rampMilliseconds:300000,admittedAtMs:base.nowMs-40000,resumedAtMs:undefined,lentSinceMs:undefined,observedMegabytes:observed,reservedMegabytes:Math.max(grant.reservedMegabytes,1000)})),queue:base.queue.map(waiter=>({...waiter,request:{...waiter.request,rampSlot:true}}))});
+ const full=base.ledger.length>=max;expect(full,"the hand case has enough grants").toBe(true);
+ const closed=evaluateHostCapacityV1(idle,stuck(900).host as never,stuck(900).ledger as never,stuck(900).queue as never,base.nowMs);
+ expect(closed.decisions[0]!.reason,"growing grants keep the slots").toBe("ramp");
+ const open=evaluateHostCapacityV1(idle,stuck(0).host as never,stuck(0).ledger as never,stuck(0).queue as never,base.nowMs);
+ expect(open.decisions[0]!.verdict,"idle grants free the slots").toBe("admit");
+ const unseen=evaluateHostCapacityV1(idle,stuck(undefined as never).host as never,stuck(undefined as never).ledger as never,stuck(undefined as never).queue as never,base.nowMs);expect(unseen.decisions[0]!.reason,"a grant that has not been observed yet is not idle").toBe("ramp");
+ const old=evaluateHostCapacityV1(policy,stuck(0).host as never,stuck(0).ledger as never,stuck(0).queue as never,base.nowMs);expect(old.decisions[0]!.reason,"without the rule the slots stay taken").toBe("ramp");
+ const random=seededRandomV1(77);
+ for(let index=0;index<150;index++){const item=randomRampCaseV1(random,index);expect(JSON.parse(JSON.stringify(evaluateHostCapacityV1(idle,item.host,item.ledger as never,item.queue as never,item.nowMs))),`idle corpus ${index}`).toEqual(sqliteHostOracleV1(idle,item as never) as never);}
+});
+
 test("Ramp rules: a grant counts its reservation for its own time to peak and what it holds when that is more, and only maximumRamping shrunk reservations may ramp at once; the hand cases, the seeded corpus and the SQLite oracle agree",()=>{
  for(const item of fixture.rampCases){
   expect(run(item as never),item.name).toEqual(item.expect as never);
@@ -99,6 +115,12 @@ test("Free memory cannot fall below the floor: admitting every request the decis
 test("Waiters are served interactive first, then by arrival, then by id",()=>{
  const waiters:HostWaiterV1[]=[{request:{...(fixture.cases[0]!.queue[0]!.request),id:"bbbbbbbb1"} as never,arrivedAtMs:5,pid:1},{request:{...(fixture.cases[0]!.queue[0]!.request),id:"aaaaaaaa1"} as never,arrivedAtMs:5,pid:1},{request:{...(fixture.cases[0]!.queue[0]!.request),id:"cccccccc1",priority:"interactive"} as never,arrivedAtMs:9,pid:1},{request:{...(fixture.cases[0]!.queue[0]!.request),id:"dddddddd1"} as never,arrivedAtMs:1,pid:1}];
  expect(orderHostWaitersV1(waiters).map(row=>row.request.id)).toEqual(["cccccccc1","dddddddd1","aaaaaaaa1","bbbbbbbb1"]);
+});
+
+test("Elastic waiters stay behind every other request but are served interactive first, then by arrival, among themselves",()=>{
+ const base=fixture.cases[0]!.queue[0]!.request,make=(id:string,arrivedAtMs:number,extra:object):HostWaiterV1=>({request:{...base,id,...extra} as never,arrivedAtMs,pid:1});
+ const waiters=[make("eeeeeeee1",1,{elastic:true}),make("ffffffff1",9,{elastic:true,priority:"interactive"}),make("gggggggg1",2,{elastic:true}),make("hhhhhhhh1",8,{elastic:false,priority:"batch"})];
+ expect(orderHostWaitersV1(waiters).map(row=>row.request.id)).toEqual(["hhhhhhhh1","ffffffff1","eeeeeeee1","gggggggg1"]);
 });
 
 test("The floor follows the host between the authored bounds",()=>{

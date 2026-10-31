@@ -5,7 +5,7 @@ import{cargoTimingPolicyV1,cargoTimingEventV1,cargoResourceWaitEventV1,cargoTimi
 import{withCompilerWorkspaceSharedWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {acquirePooledLaneV1,planPoolAcquireV1,poolBoundsV1,readPoolV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts";
 import {crateKeyV1,measureLaneBytesV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts";
-import {admitImageHeadroomV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🟦️.ts";
+import {admitImageHeadroomV1,readHeadroomLedgerV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🟦️.ts";
 import {compilerLaneQuotaBytesV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🟦️.ts";
 import {agentSessionAddressV1,currentAgentSessionV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 import {gcOutOfSpaceV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts";
@@ -15,9 +15,10 @@ import {foreignDigestMemoV1} from "../../../⚡️caching/🦀️cargo/🗃️un
 import{requireIssuedResourceControlInvocationV1,createRequestedIssuedResourceControlV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptInvocationEnvironment,scriptResourceProcessEnvironmentV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {bindHostCapacityWaitMarkerV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🌡️host-capacity/🟦️.ts";
 import {randomBytes} from "node:crypto";
 import {withNativeRecheckWindowV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🍎️image/📡️roster/🟦️.ts";
-import {copyFileSync,mkdirSync,readdirSync,rmSync} from "node:fs";
+import {copyFileSync,mkdirSync,readdirSync,rmSync,statfsSync} from "node:fs";
 import {availableParallelism,constants} from "node:os";
 import {dirname,join,resolve} from "node:path";
 import {checkResourceLeaseControl,acquireResourceLease,retireResourceLeaseV1,type ResourceLease,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -91,20 +92,31 @@ export async function withRepositoryCargoIsolatedStoreV1<T>(options:Readonly<{st
 export type RepositoryCargoAgentLaneV1=Readonly<{target:string;build:string;lane:Readonly<{id:string;root:string}>}>;
 type AgentLaneOptionsV1=Readonly<{storage:NativeStorageReservationV1;cacheRoot:string;workspace:string;capacityBytes:number;crates:readonly string[];classes?:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl}>;
 
+/** 💽️ The free bytes of the image that holds a cache root; `null` when it cannot be measured. */
+function imageFreeBytesV1(root:string):number|null{try{const row=statfsSync(root);return row.bavail*row.bsize;}catch{return null;}}
+/** 👥️ How many other commands the headroom ledger of the image lists (waiting or running). */
+const otherCommandsV1=(cacheRoot:string,id:string):number=>{try{return readHeadroomLedgerV1(cacheRoot).filter(row=>row.id!==id).length;}catch{return 1;}};
+/** 🧮️ What a Cargo command wrote to the image (learned only from a command that completed: one that failed early wrote little and would teach the estimate that a build is nearly free): the larger of its lane's growth and, only while no other command was admitted or waiting at the start and the end (`exclusive`), the fall of the image's free space around it (with concurrent builds, GC or unrelated writers that fall belongs to nobody in particular and would inflate every reservation), and a failed command teaches only a growth that exceeds its reservation (an out-of-space kill needs a bigger one; an early failure must not teach that a build is free), so shared unit-cache objects and component outputs outside the lane are learned too (writes of concurrent commands only make the estimate larger), never negative. */
+export function commandWriteBytesV1(laneGrownBytes:number,freeBeforeBytes:number|null,freeAfterBytes:number|null,exclusive:boolean=true):number{return Math.max(0,laneGrownBytes,!exclusive||freeBeforeBytes===null||freeAfterBytes===null?0:freeBeforeBytes-freeAfterBytes);}
+
+/** 🛌️ Publishes this process's waits to the memory grant it runs under, once: the holder of the grant then sees that its tree only waits at an inner gate (image headroom, lease queue) and lends the reservation instead of idling on it while other runs queue at the door. */
+let waitMarkerBound=false;
+function bindWaitMarkerOnceV1():void{if(waitMarkerBound)return;waitMarkerBound=true;bindHostCapacityWaitMarkerV1();}
+
 async function withAgentLaneV1<T>(options:AgentLaneOptionsV1,body:(lane:RepositoryCargoAgentLaneV1)=>Promise<T>):Promise<T>{
- requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();
+ requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();bindWaitMarkerOnceV1();
  const root=options.storage.backing.root;requireNativeStoragePathV1(root,options.cacheRoot);mkdirSync(options.cacheRoot,{recursive:true});
  const session=currentAgentSessionV1({environment:options.environment}),language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,quotaBytes=await compilerLaneQuotaBytesV1(options.workspace,options.environment,options.capacityBytes),classes=options.classes??["lane"];
  const warm=planPoolAcquireV1(readPoolV1(options.cacheRoot,Date.now()),{crateKey:crateKeyV1(options.crates)},poolBoundsV1(quotaBytes)).kind==="warm";
  const headroom=await admitImageHeadroomV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,classes,temperature:warm?"warm":"cold",label:classes[classes.length-1]!,language,report:line=>{process.stderr.write(line+"\n");},signal:options.control.signal});
  try{
   const lane=await acquirePooledLaneV1(options.cacheRoot,{crates:options.crates,quotaBytes,owner:{session:agentSessionAddressV1(session),agent:session.agent.id}},{signal:options.control.signal,report:(kind,parameters)=>{process.stderr.write(laneMessageV1(kind,parameters,language)+"\n");}});
-  let grown:(()=>number)|undefined;
+  let grown:(()=>number)|undefined,completed=false;
   try{
    for(const path of[lane.paths.target,lane.paths.build])requireNativeStoragePathV1(root,path);
-   const before=measureLaneBytesV1(options.cacheRoot,lane.paths.id);grown=()=>measureLaneBytesV1(options.cacheRoot,lane.paths.id)-before;
-   return await body(Object.freeze({target:lane.paths.target,build:lane.paths.build,lane:Object.freeze({id:lane.paths.id,root:lane.paths.base})}));
-  }finally{await headroom.release(grown);lane.release();}
+   const before=measureLaneBytesV1(options.cacheRoot,lane.paths.id),freeBefore=imageFreeBytesV1(options.cacheRoot),aloneAtStart=otherCommandsV1(options.cacheRoot,headroom.id)===0;grown=()=>commandWriteBytesV1(measureLaneBytesV1(options.cacheRoot,lane.paths.id)-before,freeBefore,imageFreeBytesV1(options.cacheRoot),aloneAtStart&&otherCommandsV1(options.cacheRoot,headroom.id)===0);
+   const result=await body(Object.freeze({target:lane.paths.target,build:lane.paths.build,lane:Object.freeze({id:lane.paths.id,root:lane.paths.base})}));completed=true;return result;
+  }finally{const failedGrowth=!completed&&grown?grown():0;await headroom.release(completed?grown:failedGrowth>headroom.reservedBytes?()=>failedGrowth:undefined,lane.choice==="warm"?"warm":"cold");lane.release();}
  }finally{await headroom.release();}
 }
 
@@ -122,8 +134,8 @@ export async function withRepositoryCargoLaneV1<T>(options:Readonly<{storage:Nat
 
 /** 🧱️ Runs one component build driver in a private lane of the pool inside the issued compiler store, the same lane discipline as `repo cargo`: two drivers never wait for each other's build directory, and a fresh lane fills from the unit cache.
  * @see ../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts */
-export function withRepositoryComponentLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;root:string;workspace:string;crates?:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl}>,body:(lane:RepositoryCargoAgentLaneV1)=>Promise<T>):Promise<T>{
- return withAgentLaneV1({storage:options.storage,cacheRoot:unitCacheRootV1(options.root),workspace:options.workspace,capacityBytes:unitCacheCapacityBytesV1(readNativeStorageReservationPolicyV1(options.storage,options.control)),crates:options.crates??[],environment:options.environment,control:options.control},body);
+export function withRepositoryComponentLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;root:string;workspace:string;crates?:readonly string[];classes?:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl;policyControl?:ResourceLeaseControl}>,body:(lane:RepositoryCargoAgentLaneV1)=>Promise<T>):Promise<T>{
+ return withAgentLaneV1({storage:options.storage,cacheRoot:unitCacheRootV1(options.root),workspace:options.workspace,capacityBytes:unitCacheCapacityBytesV1(readNativeStorageReservationPolicyV1(options.storage,options.policyControl??options.control)),crates:options.crates??[],classes:options.classes??componentHeadroomClassesV1(options.crates??[]),environment:options.environment,control:options.control},body);
 }
 
 /** 📍️ Selects the manifest Cargo itself would read: `--manifest-path` or the working directory's `Cargo.toml`. */
@@ -131,6 +143,9 @@ function cargoManifestV1(args:readonly string[],cwd:string):string{
  const delimiter=args.indexOf("--"),head=delimiter<0?args:args.slice(0,delimiter),index=head.indexOf("--manifest-path"),inline=head.find(argument=>argument.startsWith("--manifest-path=")),manifest=index>=0?head[index+1]:inline?.slice("--manifest-path=".length)??"Cargo.toml";
  if(!manifest)throw Error("Original compiler manifest selection required");return resolve(cwd,manifest);
 }
+
+/** 🖼️ The classes the image bytes of a component build are learned under: all component builds, then its crate set (the `component` prefix selects the component prior of the headroom policy). */
+export function componentHeadroomClassesV1(crates:readonly string[]):readonly string[]{return Object.freeze(["component",`component/${crateKeyV1(crates)}`]);}
 
 /** 🏷️ The classes the image bytes of a Cargo command are learned under, general to specific: its subcommand, then the compilation target, then the crate set it selects (see `admitImageHeadroomV1`). */
 export function cargoHeadroomClassesV1(args:readonly string[]):readonly string[]{

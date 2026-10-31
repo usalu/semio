@@ -1,0 +1,17 @@
+{
+  "value": "Ordered owner🧱",
+  "deniedWork": 0,
+  "nullWork": 1,
+  "admitWork": 1,
+  "releaseWork": 1,
+  "cachedWork": 0,
+  "stock": {
+    "items": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "fuel": 100000,
+    "maximumTurns": 100000
+  }
+}

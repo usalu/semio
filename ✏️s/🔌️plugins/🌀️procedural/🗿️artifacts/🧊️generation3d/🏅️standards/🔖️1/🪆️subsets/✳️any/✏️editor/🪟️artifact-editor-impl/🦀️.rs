@@ -37,7 +37,13 @@ impl ArtifactEditor for Generation3dPlayApp {
 
     type Command = Generation3dCommand;
 
-    const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
+    fn document_store_owners_source_demands() -> Result<semio_framework_plugin::__value::RetirementDemand, semio_framework_plugin::__value::ValueError> {
+        semio_framework_plugin::cold_replay_document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>()
+    }
+
+    fn build_document_store_owners(grant: semio_framework_plugin::__value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_plugin::__value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(semio_framework_plugin::cold_replay_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
+    }
 
     fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(semio_s_artifact_procedural_3d_envelope::generation3d_envelope_decode_owner_bundle())
@@ -54,18 +60,6 @@ impl ArtifactEditor for Generation3dPlayApp {
 
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
         Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
-    }
-
-    /// 🎟️ Admits the lease that [`Self::validate_document_store_publication`] consumes when the framework-default initializer's replacement commits.
-    fn admit_document_store_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) {
-        let _ = semio_s_artifact_procedural_3d_host::generation3d_admit_app_publication_authority(operation, generation);
-    }
-
-    fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
-        semio_s_artifact_procedural_3d_host::generation3d_validate_atomic_publication_authority(operation, generation, live_generation)
-            .map_err(|code| Fault::new(FaultOrigin::App, FaultCode::new(code), "Generation3d atomic publication authority is absent or stale"))?;
-        semio_s_artifact_procedural_3d_host::generation3d_release_app_publication_authority(operation);
-        Ok(())
     }
 
     fn build_draft_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
@@ -256,7 +250,7 @@ impl ArtifactEditor for Generation3dPlayApp {
         command.command_id()
     }
 
-    /// 🎯️ Maps host action id + JSON args onto `Generation3dCommand` — preserved verbatim from the
+    /// 🗺️ Maps host action id + JSON args onto `Generation3dCommand` — preserved verbatim from the
     /// pre-migration hand-rolled dispatch so React/wgpu callers that still speak the stringly
     /// `{action,args}` wire (rather than `OpBinary` bytes) keep working unchanged.
     fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_framework::Fault>) -> Result<Self::Command, Fault> {
@@ -538,7 +532,7 @@ impl ArtifactEditor for Generation3dPlayApp {
         })
     }
 
-    /// 🕹️ `graph`'s `HierarchyProvider::Topology` — every widget's visible ports become `handle`
+    /// 🕸️ `graph`'s `HierarchyProvider::Topology` — every widget's visible ports become `handle`
     /// targets (`{nodeId}@{portId}`, byte-identical to the node-graph's own pick ids) parented to
     /// their widget, which is what makes `HoverSpec { transitive: true }` light up every channel's
     /// preview geometry from a single node hover, and resolve a preview-instance hover back to its
@@ -607,7 +601,7 @@ impl ArtifactEditor for Generation3dPlayApp {
             .unwrap_or_default()
     }
 
-    /// ⏯️ The `previewEval` run job over the run's base document: the preview widgets it observes are
+    /// 🏃️ The `previewEval` run job over the run's base document: the preview widgets it observes are
     /// the document's own, and its hops read the retained session this instance's commands fold into.
     fn build_tool_run_job(request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
         if request.tool_id != semio_s_artifact_procedural_3d_preview_eval::PREVIEW_EVAL_TOOL_ID || request.purpose != ToolRunJobPurpose::Run {
@@ -617,13 +611,13 @@ impl ArtifactEditor for Generation3dPlayApp {
         Ok(Some(Box::new(semio_s_artifact_procedural_3d_preview_eval::PreviewEvalRunJob::<Generation3dInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity, preview_widget_ids)?)))
     }
 
-    /// 🕹️ The marks-free entry point the framework still offers (no owner, no transient, no
+    /// 🆓️ The marks-free entry point the framework still offers (no owner, no transient, no
     /// interaction) — every live window goes through `render_with_request_context` instead.
     fn render(body_key: &str, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         with_scratch_session(|session| generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, None, view_state, &PreviewInteractionMarks::default(), session, doc.tool_run()))
     }
 
-    /// 🕹️ Resolves the live `graph` hover/selection once per render and threads it into every
+    /// 💚️ Resolves the live `graph` hover/selection once per render and threads it into every
     /// window body — the node graph paints the hovered node/port, the world previews paint the
     /// hovered/selected instances, and the inspection panel finally sees a real selection.
     fn render_with_request_context(
@@ -686,7 +680,7 @@ impl ArtifactEditor for Generation3dPlayApp {
         Self::context_menu_body(request, doc, cfg, view_state, &PreviewInteractionMarks::default(), registry)
     }
 
-    /// 🕹️ `context_menu`'s interaction-aware twin — the one the runtime actually calls
+    /// 🍔️ `context_menu`'s interaction-aware twin — the one the runtime actually calls
     /// (`VcsArtifactApp::context_menu`). `ContextMenuRequest.surface.selection` only ever carries what
     /// the clicked surface itself painted, so a world-preview instance selected from the node graph
     /// (or vice versa) never reaches a menu row through it; `interaction` is the authoritative

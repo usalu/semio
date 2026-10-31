@@ -1,0 +1,11 @@
+{
+  "repeatedDenials": 3,
+  "heldElementBytes": 8,
+  "expectedEffectsOnDenied": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "absoluteUnits": true
+}

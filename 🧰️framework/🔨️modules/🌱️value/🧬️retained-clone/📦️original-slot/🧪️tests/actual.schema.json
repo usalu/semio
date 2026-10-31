@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "text",
+    "deniedWork",
+    "nullWork",
+    "birthWork",
+    "cpuStock",
+    "copyStock",
+    "capacityStock",
+    "releaseStock",
+    "maximumDepth",
+    "maximumTurns",
+    "originalPointer",
+    "serdeOracle",
+    "itemStock",
+    "sourceAdmissionBaseControls",
+    "sourceAdmissionCuts",
+    "returnStart"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "text": {
+      "const": "Original α 🌱"
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "nullWork": {
+      "const": 1
+    },
+    "birthWork": {
+      "const": 1
+    },
+    "cpuStock": {
+      "const": 4096
+    },
+    "copyStock": {
+      "const": 16777216
+    },
+    "capacityStock": {
+      "const": 16777216
+    },
+    "releaseStock": {
+      "const": 16777216
+    },
+    "maximumDepth": {
+      "const": 128
+    },
+    "maximumTurns": {
+      "const": 10000
+    },
+    "originalPointer": {
+      "const": true
+    },
+    "serdeOracle": {
+      "const": true
+    },
+    "itemStock": {
+      "const": 4096
+    },
+    "sourceAdmissionBaseControls": {
+      "const": 2
+    },
+    "sourceAdmissionCuts": {
+      "const": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "returnStart": {
+      "const": {
+        "work": 1,
+        "copyBytes": 0,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "depth": 1
+      }
+    }
+  }
+}

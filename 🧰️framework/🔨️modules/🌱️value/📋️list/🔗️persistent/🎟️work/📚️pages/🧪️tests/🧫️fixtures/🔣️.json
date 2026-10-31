@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "unit": "declared-logical-element-and-owner-reference-rows",
+  "pageElements": 16,
+  "directoryReferenceLogicalBytes": 8,
+  "v8AllocationClaim": false,
+  "stock": [
+    8192,
+    262144,
+    262144,
+    262144,
+    64
+  ],
+  "fuel": 8192,
+  "turn": [
+    1,
+    8192,
+    8192,
+    8192,
+    64
+  ],
+  "elementLogicalBytes": 8,
+  "cases": [
+    {
+      "name": "empty-no-storage",
+      "values": []
+    },
+    {
+      "name": "one-page-identities",
+      "values": [
+        11,
+        22,
+        33
+      ]
+    },
+    {
+      "name": "first-directory-growth",
+      "range": {
+        "start": 0,
+        "count": 17
+      }
+    },
+    {
+      "name": "next-directory-level",
+      "range": {
+        "start": 0,
+        "count": 257
+      }
+    }
+  ],
+  "denied": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ],
+  "cuts": [
+    "element-body-birth",
+    "directory-body-birth",
+    "owner-reference-publication",
+    "element-publication"
+  ],
+  "rules": {
+    "actualElementStorage": true,
+    "noParallelArray": true,
+    "noTokenBackingFacade": true,
+    "sameFiniteStockThroughClose": true,
+    "existingHeaderCopyZero": true,
+    "newReferenceRowLogicalBytes": 8,
+    "bodyOnlyPhysicalEpoch": true,
+    "cachedQueriesNoEffect": true,
+    "privatePartialBodiesRetained": true,
+    "rawIntrinsicMutationRefused": true,
+    "inputElementIdentityPreserved": true,
+    "readViewDoesNotRetainRetiredArray": true,
+    "staleBackingReadRefused": true,
+    "logicalNotV8OrGc": true,
+    "publishedUndefinedDistinctFromVacancy": true
+  },
+  "oracle": "independent-sqlite-ordered-values-and-observed-body-birth-release",
+  "mutations": {
+    "input": [
+      11,
+      22,
+      33
+    ],
+    "write": {
+      "index": 1,
+      "value": 44
+    },
+    "pop": true,
+    "deniedUnchanged": true,
+    "perStoreLogicalCopy": 8
+  }
+}

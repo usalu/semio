@@ -1,0 +1,33 @@
+{
+  "lengths": [
+    0,
+    1,
+    7,
+    4097
+  ],
+  "copyBodies": [
+    1,
+    3,
+    4096
+  ],
+  "itemOffers": [
+    1,
+    2,
+    31
+  ],
+  "byte": 120,
+  "stock": {
+    "work": 65536,
+    "copy": 16777216,
+    "capacity": 16777216,
+    "release": 16777216,
+    "depth": 64
+  },
+  "maximumTurns": 16384,
+  "deniedWork": 0,
+  "cachedWork": 0,
+  "naturalFirstPayloadWork": 2,
+  "oneBank": true,
+  "sameBackingOnDenial": true,
+  "forwardNaturalWork": true
+}

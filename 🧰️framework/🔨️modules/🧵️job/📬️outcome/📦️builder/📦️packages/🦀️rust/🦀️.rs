@@ -1,11 +1,11 @@
 //! 📬️ Job payload custody glue — wiring only. Domain lives at the owner `🦀️.rs` files.
 
-use std::mem::{ManuallyDrop, MaybeUninit, size_of_val};
+use std::mem::{ManuallyDrop, MaybeUninit, size_of, size_of_val};
 use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU8, AtomicU32, AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
 use semio_framework_trace::{Generation, OperationId};
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+pub use semio_framework_value_control_contract::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedWorkOutcome,RetirementDemand,ValueError,ValueRefusalKind};
+use semio_framework_value_retained_clone::retained_clone;
 
 /// 🧭️ The funded step a payload custody call runs inside: its cancellation, yield, retained stock and ledger.
 pub trait JobPayloadStep {
@@ -22,9 +22,13 @@ pub trait JobPayloadStep {
 pub mod payload_pages_and_ledger;
 pub use payload_pages_and_ledger::{JOB_PAYLOAD_OPERATION_BYTES, JOB_PAYLOAD_OPERATION_PAGES, JOB_PAYLOAD_PAGE_BYTES, JOB_PAYLOAD_PROCESS_BYTES, JOB_PAYLOAD_PROCESS_OWNED_BYTES, JobPayloadAdmissionFault, JobPayloadOperationLedger, JobPayloadPage, JobPayloadPageSource, JobPayloadRejectedPage, JobPayloadStream, RetainedJobPayload, RetainedJobPayloadReader};
 
-#[path = "../../../../✍️payload-writer-and-grant/🦀️.rs"]
-pub mod payload_writer_and_grant;
-pub use payload_writer_and_grant::{JobPayloadPageGrant, JobPayloadStagedSource, RetainedJobPayloadWriter};
+#[path = "../../../📖️source/✍️bytes/🦀️.rs"]
+pub mod staged_source;
+pub use staged_source::{JobPayloadStagedSource,JobPayloadWriteProgress,JobPayloadWriteFailure};
+
+#[path="../../../📖️source/📦️page-transfer/🦀️.rs"]
+mod original_page_transfer;
+pub use original_page_transfer::RetainedJobPageTransfer;
 
 #[path = "../../../📖️source/🦀️.rs"]
 mod original_payload_source;

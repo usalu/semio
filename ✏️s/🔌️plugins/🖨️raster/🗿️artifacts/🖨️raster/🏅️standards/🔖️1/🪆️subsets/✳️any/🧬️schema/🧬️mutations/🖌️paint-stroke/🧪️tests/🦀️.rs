@@ -93,7 +93,7 @@ fn fixture_root() -> std::path::PathBuf {
     std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations/🖌️paint-stroke")
 }
 
-/// 🧫️ Regenerates the committed quintets from this leaf. Ignored by default: it WRITES into the source tree, which is
+/// 🍃️ Regenerates the committed quintets from this leaf. Ignored by default: it WRITES into the source tree, which is
 /// the point — the committed files are a print of this table and never hand-edited.
 #[test]
 #[ignore]
@@ -244,7 +244,7 @@ fn a_payload_outside_its_bounds_is_an_invariant_breach() {
 async fn the_store_folds_a_stroke_like_the_leaf() {
     let stroke = paint_stroke("paint", "pixels", "brush", brush(2.0, 0.5, 0.8, [0.1, 0.9, 0.3, 1.0]), points(&[(1.0, 1.0), (4.5, 2.5)]));
     let mut store = semio_s_artifact_raster_raster_mutations::RasterStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "paint-stroke", base(false), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-    store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
+    store.install_document_store_owners_exact(semio_s_artifact_raster_raster_host::raster_document_store_owners().expect("the Raster owner catalog funds")).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
     store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![stroke.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the stroke applies");
     let before = base(false);
     let expected = apply_raster_mutation(&before, &stroke).expect("the leaf applies");

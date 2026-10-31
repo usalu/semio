@@ -1,5 +1,5 @@
 /** 🎟️ Actual original input owners qualify live actions, producers and wires before their receiving stages. */
-import schema from "./📐️.json";
+import schema from "./📐️.json"with{type:"json"};
 import {toolJobProductionSource,toolJobRustBlock} from "../../📋️inventory/🟦️.ts";
 const compact=(text:string)=>text.replace(/\s+/g,"");
 const body=(source:string,name:string):string=>{
@@ -14,8 +14,9 @@ const ordered=(source:string,parts:readonly string[]):boolean=>{
 };
 const owner=(source:string):string=>{
  const matches=[...source.matchAll(/\bimpl\s*<[^\n]*>\s*OriginalTypedCommandSource\s*</g)];
- if(matches.length!==1)return "";
- return toolJobRustBlock(source,source.indexOf("{",matches[0]!.index!))?.body??"";
+ if(matches.length===0)return "";
+ const blocks=matches.map(match=>toolJobRustBlock(source,source.indexOf("{",match.index!))?.body);
+ return blocks.every(block=>block!==undefined)?blocks.join("\n"):"";
 };
 /** 🔍️ Facts use the current compiler-owned action, typed source and actual direct intent bodies. */
 export function toolJobOriginalInputEvidence(raw:string):Record<string,boolean>{

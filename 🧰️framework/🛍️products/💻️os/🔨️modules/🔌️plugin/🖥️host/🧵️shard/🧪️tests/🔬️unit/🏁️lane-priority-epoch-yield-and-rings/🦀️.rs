@@ -106,6 +106,31 @@ async fn a_turn_that_hits_its_epoch_deadline_yields_more_work_not_a_fault_and_st
     assert!(shard.is_registered(actor).await, "the actor's instance must stay registered — an epoch interrupt does not lose state");
 }
 
+/// 💀️ A deterministic guest trap on an Event retires the instance, reaches the shell as one fault frame, frees the retry slot and hands the undelivered Event back through the terminal ring.
+#[semio_framework_async_macros::async_test]
+async fn a_trapped_guest_turn_emits_one_fault_frame_frees_the_retry_slot_and_returns_the_event() {
+    let mock = Arc::new(MockGuestRuntime::new().await);
+    let actor = ActorId(92);
+    let package = PackageRef { package: PackageId("trap-fault".to_string()), hash: PackageHash([92u8; 32]) };
+    let compiled = mock.compile(&package, &[]).await.expect("mock compile");
+    let instance = mock.instantiate(&compiled, actor, &[], &Budget::original(semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }, 1_000, semio_framework_job::default_now_us().unwrap_or(0), 2, 8, 4096, 1)).await.expect("mock instantiate");
+    mock.script_fault(actor, "scripted deterministic trap").await;
+
+    let (transport, probe) = LoopbackTransport::paired().await;
+    let mut shard = ShardLoop::new(Arc::new(GuestRuntimes::Mock(mock.clone())), ShardTransports::Loopback(transport), semio_framework_plugin_host_shard::test_identity_issuer()).await;
+    shard.register(actor, instance);
+    probe.push_inbound(encode_payload_envelope(actor, 1, Payload::Event { bytes: serde_json::to_vec(&fixture_instance_close_event()).expect("encode") }).await).await;
+
+    assert_eq!(pump(&mut shard).await.expect("a trapped turn is answered, not propagated"), 1);
+    let outbound = probe.take_outbound().await;
+    assert_eq!(outbound.len(), 1);
+    assert!(matches!(decode_outcome(&outbound[0]).await, ShardOutcome::Fault { actor: reported, message } if reported == 92 && message.contains("scripted deterministic trap")));
+    assert!(!shard.is_registered(actor).await, "a trapped instance is retired");
+    assert!(!shard.has_lifecycle_retry(), "the retry slot is freed");
+    assert!(!shard.has_pending_work(), "nothing re-enters the poisoned guest");
+    assert!(matches!(shard.take_terminal_completion(), Some((92, _))), "the undelivered Event returns through the terminal ring");
+}
+
 #[test]
 fn fixed_owner_ring_hands_back_items_and_bytes_at_the_exact_boundary() {
     let mut items = FixedOwnerRing::<u64, 2>::new(16);

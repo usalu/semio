@@ -43,7 +43,7 @@ impl ImageExportWork {
             return Ok(None);
         }
         if let Some(job)=self.compositing.as_mut() {
-            if job.advance(4096).map_err(|error|error.to_string())?.done {let result=self.compositing.take().unwrap().into_result().map_err(|error|error.to_string())?;if result.empty{return Err("raster.export-no-visible-pixels".into());}self.encoding=Some(PngEncodeJob::new(result.image).map_err(|error|error.to_string())?);}
+            if semio_s_artifact_raster_raster_io::advance_stack(job,4096)?.done {let result=self.compositing.take().ok_or_else(||String::from("Raster export lost its compositing job"))?.into_result().map_err(|error|error.to_string())?;if result.empty{return Err("raster.export-no-visible-pixels".into());}self.encoding=Some(PngEncodeJob::new(result.image).map_err(|error|error.to_string())?);}
             return Ok(None);
         }
         if let Some(job)=self.preparing.as_mut() {

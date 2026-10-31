@@ -1,0 +1,9 @@
+# Genuine Source Fixture Owning 1
+
+Actual outer18273 TERMINAL EXIT1/Cargo101. Both production and tests compiled; canonical selected Source admission completed. Original selected-close law passed. New same-bank fixture law failed its final cumulative release assertion: actual18645 versus expected364. Conservative150/151 inputs remain exact after terminal. SourceAdmission gained exactly one224-byte readonly Sync declaration; removing only those two lines in memory reconstructs the captured9c9d1d4e hash exactly. No on-disk reversion occurred; attribution is not established at this report time.
+
+The new test snapshots capacity births before drain, then compares final release including actual funded close cursor/page births. The expected side must account for those additional actual births, which are already debited and matched against heap inside every close turn. This is a new-law balance accounting error, not evidence that those births were uncharged. Proposed correction retains the initial admitted birth observation and compares final release against cumulative admitted capacity after drain plus the original input capacity; no stock, loop, production effect or heap invariant changes. No correction/retry has been launched.
+
+Log 197596 bytes SHA 67105d05884220e3f8f9056ccbd1dd63b60c3c219f2b5c8b45ceb8c984291b3f. Exact receipts in generated/drawing-clone-fixture-owning-1/terminal.json. The prior74-byte working-helper delta remains unrecovered and separately documented.
+
+The approved balance correction is now authored: retain/check initial admitted backing, then obtain cumulative born capacity AFTER paid drain and compare release against that total plus the original input capacity. The original heap equality, CPU-before-Result, Work guards, all stocks, pointer and cached/drop assertions remain. A fresh successor capture is required before any repeat.

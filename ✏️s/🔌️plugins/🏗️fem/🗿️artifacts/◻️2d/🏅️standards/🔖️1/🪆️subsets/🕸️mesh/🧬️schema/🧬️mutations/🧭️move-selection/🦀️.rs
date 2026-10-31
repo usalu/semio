@@ -148,9 +148,9 @@ pub mod laws {
     use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
     use semio_s_artifact_fem_2d_mutations::central_apply::apply_fem2d_mutation;
 
-    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 
-    fn snapshot(text: &str) -> Fem2dSnapshot {
+    fn snapshot(text: &str) -> Fem2dSnapshotValue {
         semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("snapshot decodes")
     }
 
@@ -162,7 +162,7 @@ pub mod laws {
         semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed JSON parses")
     }
 
-    fn applied(base: &Fem2dSnapshot, operation: &Fem2dMutation) -> Fem2dSnapshot {
+    fn applied(base: &Fem2dSnapshotValue, operation: &Fem2dMutation) -> Fem2dSnapshotValue {
         let mut snapshot = base.clone();
         apply_fem2d_mutation(&mut snapshot, operation).expect("the leaf applies");
         snapshot
@@ -175,11 +175,11 @@ pub mod laws {
         assert_eq!(produced, snapshot(after), "the applied state is the committed after-snapshot");
         assert_ne!(produced, base, "a forward vector moves the model");
         assert_eq!(semio_framework_value::ToValue::to_value(protocol::ColdMutation::diff(&operation, &base).diff()), value(diff), "the produced delta is the committed one");
-        assert_eq!(<Fem2dMutation as protocol::SemanticMutation<Fem2dSnapshot>>::semantics(&operation).kind, "move-selection");
+        assert_eq!(<Fem2dMutation as protocol::SemanticMutation<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot>>::semantics(&operation).kind, "move-selection");
     }
 
     /// 🔣️ The committed snapshot, decoded.
-    pub fn decoded_snapshot(text: &str) -> Fem2dSnapshot {
+    pub fn decoded_snapshot(text: &str) -> Fem2dSnapshotValue {
         snapshot(text)
     }
 

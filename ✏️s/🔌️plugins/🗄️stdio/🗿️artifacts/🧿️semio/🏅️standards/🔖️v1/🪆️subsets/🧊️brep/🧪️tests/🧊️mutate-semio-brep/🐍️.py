@@ -23,15 +23,12 @@ IMPLEMENTATION, written in another language from the format's own committed spec
 * the thirteen verbs and their argument lists are the committed grammar
   `…/🧬️schema/🧬️mutations/📝️text/📖️.grammar.semio`, and their JSON wire form is the
   committed per-kind specification vectors under `…/🧬️mutations/<kind>/🧪️tests/<fixture>/`;
-* the pack body's `format u8` + varint-length-prefixed `schema` is the committed protocol
-  `…/📸️snapshot/💾️binary/📡️.protocol.semio`, whose prose then names — but declines to
-  frame — "vertices/edges/loops/faces/shells/solids … varint counts, per-field length-prefixes,
-  real `f64` LE coordinates, a real per-variant tag byte for `curve`/`surface`". That
-  named-but-unframed layout was written out here from the protocol's own sentence, with the field
-  order and the tag ordinals read off the grammar's own `L|C|E|N` and `P|C|O|S|T|N` orders, and is
-  PINNED by `pack_bytes` re-encoding the committed `🎒️.pack.semio` byte for byte — a file
-  that carries a line, a circle, a NURBS curve and a NURBS surface, so four of the ten tagged arms
-  are pinned directly and the remaining six are the same field lists the grammar spells out.
+* the pack body is the derived record document of the shared record-document codec
+  (`🧿️semio/🚪️io/💾️binary/🎒️record-document/🐍️.py`), driven by this subset's committed record spec
+  `…/🧬️schema/📸️snapshot/🗺️record-spec/🔣️.json`: the SPK container, the fixed-Huffman deflate, the BLAKE3
+  content hash and the schema-hashed record body are specified by `🧰️framework/🔨️modules/🎒️pack` and
+  re-implemented there, not here. The committed `🎒️.pack.semio` files were written by the Rust record
+  pack, so `parse_pack`/`pack_bytes` reproducing them is a cross-language byte agreement.
 
 Nothing here imports, links, wraps or transliterates the Rust subject. Every function was written
 against the documents above; where the two disagree the disagreement is a finding, not something to
@@ -60,13 +57,44 @@ def _load(alias, folder):
 
 
 _load("mutate_semio_brep_text", "📝️text-carrier")
-_load("mutate_semio_brep_pack", "📦️pack-carrier")
 _load("mutate_semio_brep_verbs", "🧬️mutation-verbs")
 
 from mutate_semio_brep_text import FOREST_DSL, FOREST_PACK, SOLID_DSL, SOLID_PACK, parse_dsl, print_dsl
-from mutate_semio_brep_pack import parse_pack, pack_bytes
 from mutate_semio_brep_verbs import apply_mutation, inverse_mutation, apply_all
 # endregion 🔖️Imports
+
+
+# region 🔖️Pack
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _load_shared(alias, *parts):
+    """🧬️ Loads a shared module from the `stdio.semio` artifact root, six folders above this case, and registers it under an importable name."""
+    if alias in sys.modules:
+        return sys.modules[alias]
+    path = os.path.join(_HERE, *[os.pardir] * 6, *parts)
+    spec = importlib.util.spec_from_file_location(alias, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[alias] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+record_document = _load_shared("record_document", "🚪️io", "💾️binary", "🎒️record-document", "🐍️.py")
+RECORD_SPEC = record_document.load_record_spec(os.path.join(_HERE, os.pardir, os.pardir, "🧬️schema", "📸️snapshot", "🗺️record-spec", "🔣️.json"))
+
+
+def parse_pack(data: bytes) -> dict:
+    """📦️ A `.pack.semio` file as the JSON snapshot its record document carries."""
+    return record_document.decode_pack(RECORD_SPEC, data)
+
+
+def pack_bytes(document: dict) -> bytes:
+    """🔍️ The writing direction of `parse_pack`, envelope included."""
+    return record_document.encode_pack(RECORD_SPEC, document)
+
+
+# endregion 🔖️Pack
 
 
 # region 🔖️Scenario input
@@ -115,7 +143,7 @@ def inverse(ctx: Context) -> Outcome:
 
 
 def spec_vector(ctx: Context) -> Outcome:
-    """🧫️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
+    """➡️ The same verb on its committed handcrafted `(before, mutation, after)` vector. The vector
     is a THIRD statement of what the verb means, independent of both implementations."""
     before_uri, mutation_uri, after_uri = ctx.step_input_uris()[:3]
     before = snapshot_json(ctx, before_uri)
@@ -151,7 +179,7 @@ def carrier_pair(ctx: Context, dsl_uri: str, pack_uri: str, what: str) -> dict:
 
 
 def identity_round_trip(ctx: Context) -> Outcome:
-    """🔁️ Both documents, in both encodings — four files, all four reproduced byte for byte.
+    """📄️ Both documents, in both encodings — four files, all four reproduced byte for byte.
 
     The committed `✉️base` solid's two files were written by the RUST codec, so this implementation
     reproducing them is a cross-language byte agreement, not a codec agreeing with itself. The

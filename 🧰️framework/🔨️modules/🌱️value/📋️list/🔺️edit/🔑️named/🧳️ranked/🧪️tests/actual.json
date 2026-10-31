@@ -1,0 +1,26 @@
+{
+  "schema": "value.named.ranked.actual/v1",
+  "stock": {
+    "items": 4096,
+    "copy": 16777216,
+    "capacity": 16777216,
+    "release": 16777216,
+    "depth": 128
+  },
+  "keys": [
+    "alpha",
+    "Größe",
+    "🧩 original"
+  ],
+  "deniedWork": 0,
+  "vectorObservationWork": 1,
+  "cachedWork": 0,
+  "maximumTurns": 10000,
+  "laws": {
+    "originalPointers": true,
+    "sameBankThroughClose": true,
+    "serdeOracle": true,
+    "exactHeap": true
+  },
+  "borrowedCopyBytes": 0
+}

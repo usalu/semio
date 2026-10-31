@@ -1,0 +1,37 @@
+{
+  "changedCommon": [
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🎟️work/🧪️tests/owned.test.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧵️write/🧪️tests/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🟦️.ts",
+    "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/📷️png/✍️encode/🟦️.ts"
+  ],
+  "unchangedCommon": 176,
+  "noLongerInActualClosure": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-svg-product.test.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🟦️.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🖼️image/🟦️.ts",
+    "🧰️framework/📦️packages/🟦️typescript/🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts",
+    "🧰️framework/📦️packages/🟦️typescript/🔲️pixels/🖼️image/📥️decode/🟦️.ts",
+    "🧰️framework/📦️packages/🟦️typescript/🚪️io/🔢️binary/📥️source/🟦️.ts",
+    "🧰️framework/📦️packages/🟦️typescript/🚪️io/🔤️base64/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/🧬️retained-clone/🧬️contract/🟦️.ts",
+    "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/🖼️image/📥️decode/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📷️png/📥️decode/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/📸️jpeg/📥️decode/🟦️.ts",
+    "🧰️framework/🔨️modules/🔲️pixels/🖼️image/📥️decode/🟦️.ts",
+    "🧰️framework/🔨️modules/🗜️deflate/📥️decode/🟦️.ts",
+    "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🟦️typescript/📥️decode/🟦️.ts",
+    "🧰️framework/🔨️modules/🚪️io/🔢️binary/📥️source/🟦️.ts",
+    "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🟦️typescript/package.json",
+    "🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🟦️typescript/🟦️.ts",
+    "🧰️framework/🔨️modules/🚪️io/🔤️base64/🟦️.ts"
+  ],
+  "newInputs": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/drawing-svg-product-2.test.ts",
+    "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🎨️svg/🔖️1.1/✳️any/🧬️schema/🟦️.ts"
+  ]
+}

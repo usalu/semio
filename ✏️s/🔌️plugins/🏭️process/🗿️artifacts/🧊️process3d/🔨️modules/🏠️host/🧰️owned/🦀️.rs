@@ -9,9 +9,6 @@ use semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::i
 use store::{os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority as _, os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority as _};
 use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::WorkshopMachine};
 
-use semio_s_artifact_process_process3d_host_publication_authority as publication_authority;
-pub use publication_authority::*;
-
 use semio_s_artifact_process_process3d_host_retained_cursors as retained_cursors;
 use retained_cursors::*;
 

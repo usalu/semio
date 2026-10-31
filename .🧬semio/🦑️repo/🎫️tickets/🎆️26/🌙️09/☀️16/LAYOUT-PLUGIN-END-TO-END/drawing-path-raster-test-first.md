@@ -1,0 +1,9 @@
+# Path Raster Test First
+
+Before changing defining PathRaster production, Root authored a closed neutral finite-stock rectangle contract and two actual owner laws. They require owned heap-free construction, actual source pointer preservation, five independent denied axes, one monotonically debited lifetime wallet across lower children/cleanup/output, exact allocator receipts, TinySkia RGBA equivalence, inline publication identity, invalid-input custody and cached zero-effect failure. Trace/TinySkia are existing qualified test-only dependencies.
+
+All existing mask, interruption, child identity/cleanup and phase laws remain pending hand migration. Any old numeric retirement work counts must be reconciled with genuine physical receipts and preserved owner/phase invariants, never treated as evidence before an actual run. No production change, Source-fit, compiler or runtime occurred at this packet. No broader Drawing or Layout/browser readiness is claimed.
+
+Before production, a third actual law was appended for owned physical-retirement failure custody: retain original UTF8 String pointer, denied shared birth has zero CPU/heap, paid shared publication preserves the exact message/category, cached publication clones with zero heap, and the same wallet pays final close. It does not invent an allocating error-string fallback.
+
+Before the unique-contour move optimization, the neutral contract gained fill/stroke/both ownership modes and an actual pointer/capacity law. It requires the genuine existing flattened backing to move unchanged into the first consumer with only a paid new container slot, zero new backing/release, and zero input payload clone. Both-consumer preparation may copy only the second actual destination. Same-wallet final close remains mandatory. This fourth new law is Source-authored, not run.

@@ -31,7 +31,7 @@ semio-framework-os-store-envelope = { path = "../../../✉️envelope/📦️pac
 semio-framework-os-store-projection = { path = "../../../🎞️projection/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-io-sqlite-snapshot = { path = "../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust" }
@@ -45,6 +45,7 @@ semio-framework-schema-state = { path = "../../../../../../../🔨️modules/�
 semio-framework-os-dsl = { path = "../../../../🗣️dsl/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-command = { path = "../../../../📡️spr/🎮️command/📦️packages/🦀️rust", features = ["mutation-testing"] }
 semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust", features = ["protocol-laws"] }

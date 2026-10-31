@@ -1,0 +1,15 @@
+{
+  "files": [
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83c\udf33\ufe0fvalue/\ud83e\udd80\ufe0f.rs",
+      "before": "9c51d899179ae5973938efbf2b2bba62bde54d0fd85746016fc878e70993802c",
+      "after": "d24fb46db7ea2541d928d940f738fdd17bbecc660764cc1fab10c83e7b395f72"
+    },
+    {
+      "path": "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udf31\ufe0fvalue/\ud83d\udeec\ufe0fdecode/\ud83e\uddf3\ufe0fowned/\ud83e\udd80\ufe0f.rs",
+      "before": "ce524f9c4ac4ea3e49a6f69784f6fe3270a5e458573c53a847c36a7578e20adc",
+      "after": "ba6f76bf214e1845d296d61497f5614f40110270d5bc0073493c313929a60796"
+    }
+  ],
+  "status": "Partial canonical contract and scalar body authored; other concrete receivers and derive intentionally still require migration; no compile claim."
+}

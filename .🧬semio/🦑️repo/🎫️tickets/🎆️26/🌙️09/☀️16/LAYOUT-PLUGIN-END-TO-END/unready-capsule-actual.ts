@@ -1,0 +1,12 @@
+import {readFileSync,lstatSync} from "node:fs";
+import {resolve,join} from "node:path";
+const workspace=process.cwd(),ticket=resolve(workspace,".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END");
+const {readJavascriptDependencyRetainedUnreadyCapsuleDataV1:read}=await import(resolve(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🗃️unready/🟦️.ts"));
+const {readNativeImageRetirementFileV1:file}=await import(resolve(workspace,"🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📄️retirement-file/🟦️.ts"));
+const censusPath=join(ticket,"🗑️generated","dependency-reference-census.json"),wire=readFileSync(censusPath);if(wire.length>1048576)throw Error("Bounded existing diagnostic census required");
+const census=JSON.parse(wire.toString()),root=resolve(workspace,".cache/b/d/m"),names=census.errors.filter((row:{reason:string})=>row.reason==="unknown-generation-role").map((row:{prefix:string})=>row.prefix);
+if(census.authority!==false||census.root!==root||names.length>128||new Set(names).size!==names.length)throw Error("Exact bounded diagnostic candidate DATA required");
+const rows:unknown[]=[],stamp=(row:ReturnType<typeof lstatSync>)=>JSON.stringify([row.dev,row.ino,row.mode,row.nlink,row.size,row.mtimeMs,row.ctimeMs]);
+for(const name of names){if(!/^\.p[0-9a-f]{8}$/u.test(name))throw Error("Known capsule name DATA required");try{const base=join(root,"j",name),before=lstatSync(base);if(!before.isDirectory()||before.isSymbolicLink())throw Error("Ordinary capsule root required");const intent=file(join(base,"i"),4096),receipt=file(join(base,"r"),4096),data=read(workspace,root,name,new TextDecoder("utf-8",{fatal:true}).decode(intent.bytes),new TextDecoder("utf-8",{fatal:true}).decode(receipt.bytes));if(stamp(lstatSync(base))!==stamp(before)||file(join(base,"i"),4096).stamp!==intent.stamp||file(join(base,"r"),4096).stamp!==receipt.stamp)throw Error("Diagnostic metadata changed");rows.push({name,recognized:true,data});}catch(error){rows.push({name,recognized:false,reason:error instanceof Error?error.message.slice(0,256):"Non-error refusal"});}}
+const recognized=rows.filter((row:any)=>row.recognized).length;
+console.log(JSON.stringify({authority:false,currentReady:false,inactivityProved:false,payloadWalked:false,effects:0,source:"existing-census-candidates",candidates:names.length,recognized,refused:rows.length-recognized,rows}));

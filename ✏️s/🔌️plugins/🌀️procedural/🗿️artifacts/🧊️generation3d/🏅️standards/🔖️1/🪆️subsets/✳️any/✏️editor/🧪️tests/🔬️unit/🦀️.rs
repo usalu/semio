@@ -411,38 +411,9 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation3dSnapshot, [u8;
     (wire, expected, expected_digest)
 }
 
-/// 🔐️ Owns the publication lease `admit_production_envelope` took and releases it even when the law
-/// panics before its explicit release. The lease table is a PROCESS-GLOBAL 4-slot
-/// `FixedOperationRegistry` (`🚪️io/💾️binary/🧬️mutations/🦀️.rs:211`), so one leaked slot turns every
-/// later law in the same binary into `generation3d-publication.saturated` — an order-dependent red
-/// that has nothing to do with what those laws assert
-/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-struct Generation3dProductionLease {
-    handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle,
-    released: bool,
-}
-
-impl Generation3dProductionLease {
-    fn release(&mut self) -> bool {
-        if self.released {
-            return false;
-        }
-        self.released = true;
-        semio_s_artifact_procedural_3d_host::generation3d_release_publication_authority(self.handle.operation, self.handle.generation)
-    }
-}
-
-impl Drop for Generation3dProductionLease {
-    fn drop(&mut self) {
-        self.release();
-    }
-}
-
-fn admit_production_envelope(app: &mut context::Generation3dAppFixture, wire: &[u8]) -> Generation3dProductionLease {
+fn admit_production_envelope(app: &mut context::Generation3dAppFixture, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P3 production ingress credits");
-    semio_s_artifact_procedural_3d_host::generation3d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, semio_s_artifact_procedural_3d_host::Generation3dPublicationCredits { maximum_items: 8_192, maximum_output_pages: semio_s_artifact_procedural_3d_host::GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: semio_s_artifact_procedural_3d_host::GENERATION3D_MOUNTED_CONTROL_CREDITS })
-    .expect("P3 production publication authority");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
         let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..chunk.len()].copy_from_slice(chunk);
@@ -450,7 +421,7 @@ fn admit_production_envelope(app: &mut context::Generation3dAppFixture, wire: &[
         app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("P3 production envelope page admission failed: {fault:?}"));
     }
     assert!(app.0.seal_artifact_envelope_ingress(handle, app.1.cx()).expect("P3 production envelope seal"));
-    Generation3dProductionLease { handle, released: false }
+    handle
 }
 
 /// 🚿️ Drives ONE production envelope load to its terminal poll.
@@ -465,8 +436,6 @@ fn admit_production_envelope(app: &mut context::Generation3dAppFixture, wire: &[
 /// `📓️remaining-suite-reds-2026-09-13.md` §3.3).
 fn drive_production_envelope(app: &mut context::Generation3dAppFixture, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..300_000 {
-        semio_s_artifact_procedural_3d_host::generation3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
-            .expect("P3 authority refresh immediately before production maintenance");
         PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one P3 production maintenance turn");
         let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("P3 production load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
@@ -478,15 +447,14 @@ fn drive_production_envelope(app: &mut context::Generation3dAppFixture, handle: 
 }
 
 /// 🔐️ LAW: non-empty P3D3 canonical ingress reaches the real VCS maintenance replacement,
-/// and accepted, stale, ABA, and displaced stores remain owned until explicit terminal ACK/close.
+/// and the accepted and displaced stores remain owned until explicit terminal ACK/close.
 #[semio_framework_async_macros::async_test]
-async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_and_fail_closed() {
-    let _serial = semio_s_artifact_procedural_3d_testkit::publication_authority::lock();
+async fn vcs_artifact_app_non_empty_retained_maintenance_swap_publishes_through_the_token() {
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
     let mut accepted = app_with_registry().await;
     let base_generation = accepted.artifact_generation_now();
     let (wire, expected, expected_digest) = production_envelope_wire("accepted-production-swap");
-    let mut lease = admit_production_envelope(&mut accepted, &wire);
-    let handle = lease.handle;
+    let handle = admit_production_envelope(&mut accepted, &wire);
     assert_eq!(drive_production_envelope(&mut accepted, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert_eq!(accepted.artifact_generation_now().0, base_generation.0 + 1);
     let snapshot = context::snapshot(&accepted);
@@ -495,42 +463,34 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
     assert!(snapshot.host_snapshot.layout.contains_key("move-target"));
     assert!(!snapshot.host_snapshot.layout.contains_key("clear-target"), "3D-only delete-widget-position must survive retained replay");
     assert!(accepted.acknowledge_artifact_store_replacement(handle).expect("accepted P3 terminal ACK"));
-    assert!(lease.release());
     drop(snapshot);
     expected.retire_cold();
+}
 
-    use semio_s_artifact_procedural_3d_host::Generation3dPublicationHostile::Missing;
-    use semio_s_artifact_procedural_3d_host::Generation3dPublicationHostile::WrongBase;
-    use semio_s_artifact_procedural_3d_host::Generation3dPublicationHostile::WrongGeneration;
-    use semio_s_artifact_procedural_3d_host::Generation3dPublicationHostile::WrongOperation;
-    use semio_s_artifact_procedural_3d_host::Generation3dPublicationHostile::WrongParent;
-    for (hostile, expected_code) in [
-        (Missing, "generation3d-publication.authority-missing"),
-        (WrongOperation, "generation3d-publication.wrong-operation"),
-        (WrongGeneration, "generation3d-publication.wrong-generation"),
-        (WrongBase, "generation3d-publication.wrong-base"),
-        (WrongParent, "generation3d-publication.wrong-parent"),
-    ] {
-        let mut app = app_with_registry().await;
-        let last_valid = context::snapshot(&app);
-        let last_valid_digest = production_semantic_digest(&last_valid);
-        let base_generation = app.artifact_generation_now();
-        let (wire, candidate, _) = production_envelope_wire("rejected-production-candidate");
-        candidate.retire_cold();
-        let mut lease = admit_production_envelope(&mut app, &wire);
-        let handle = lease.handle;
-        semio_s_artifact_procedural_3d_host::generation3d_arm_publication_hostile(handle.operation, hostile);
-        assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
-        assert_eq!(semio_s_artifact_procedural_3d_host::generation3d_take_publication_hostile_observed(handle.operation), Some(expected_code));
-        assert_eq!(app.artifact_generation_now(), base_generation);
-        let retained = context::snapshot(&app);
-        assert_eq!(production_semantic_digest(&retained), last_valid_digest);
-        assert_eq!(retained, last_valid);
-        assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected P3 terminal ACK after candidate retirement"));
-        assert!(lease.release());
-        drop(retained);
-        drop(last_valid);
-    }
+/// 🔐️ LAW: two replacements admitted on the same live generation cannot both publish through the real VCS maintenance swap; the loser faults, the published store and generation stay the winner's, and its candidate is retired by terminal ACK.
+#[semio_framework_async_macros::async_test]
+async fn vcs_artifact_app_maintenance_swap_rejects_the_stale_replacement_and_keeps_the_published_store() {
+    let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
+    let mut app = app_with_registry().await;
+    let base_generation = app.artifact_generation_now();
+    let (first_wire, first_candidate, first_digest) = production_envelope_wire("stale-race-first");
+    let (second_wire, second_candidate, second_digest) = production_envelope_wire("stale-race-second");
+    first_candidate.retire_cold();
+    second_candidate.retire_cold();
+    let first = admit_production_envelope(&mut app, &first_wire);
+    let second = admit_production_envelope(&mut app, &second_wire);
+    let polls = [drive_production_envelope(&mut app, first), drive_production_envelope(&mut app, second)];
+    let ready = semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready;
+    let fault = semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault;
+    assert_eq!(polls.iter().filter(|poll| **poll == ready).count(), 1, "exactly one racing replacement publishes: {polls:?}");
+    assert_eq!(polls.iter().filter(|poll| **poll == fault).count(), 1, "the stale replacement faults: {polls:?}");
+    assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1, "the rejected replacement does not advance the live generation");
+    let winner_digest = if polls[0] == ready { first_digest } else { second_digest };
+    let published = context::snapshot(&app);
+    assert_eq!(production_semantic_digest(&published), winner_digest, "the live store is the winner's, never the rejected candidate");
+    assert!(app.acknowledge_artifact_store_replacement(first).expect("first P3 terminal ACK"));
+    assert!(app.acknowledge_artifact_store_replacement(second).expect("second P3 terminal ACK after candidate retirement"));
+    drop(published);
 }
 
 #[test]

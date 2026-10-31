@@ -1,4 +1,9 @@
 use super::*;
+#[path = "../../../🧪️tests/🧰️persisted/🦀️.rs"]
+mod persisted;
+use persisted::{drain, with};
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemDof;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoad;
@@ -10,8 +15,8 @@ use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structur
 
 /// 🟩️ A 4x2m rectangular region (steel, 0.02m thick, 1m mesh) whose 4 corners are pre-placed as
 /// document nodes.
-fn rectangle_region_doc() -> Fem2dSnapshot {
-    Fem2dSnapshot {
+fn rectangle_region_doc() -> Fem2dSnapshotValue {
+    Fem2dSnapshotValue {
         nodes: vec![FemNodeValue { id: "c0".into(), x: 0.0, y: 0.0 }, FemNodeValue { id: "c1".into(), x: 4.0, y: 0.0 }, FemNodeValue { id: "c2".into(), x: 4.0, y: 2.0 }, FemNodeValue { id: "c3".into(), x: 0.0, y: 2.0 }],
         elements: vec![],
         regions: vec![FemRegion { id: "r1".into(), name: "slab".into(), outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.02, material_id: "steel".into(), mesh_size: 1.0 }],
@@ -27,7 +32,7 @@ fn rectangle_region_doc() -> Fem2dSnapshot {
 #[test]
 fn fem2d_mesh_preview_returns_region_triangles() {
     let doc = rectangle_region_doc();
-    let meshes = fem2d_mesh_preview(&doc).expect("mesh preview succeeds");
+    let meshes = with(&doc, |d| fem2d_mesh_preview(d)).expect("mesh preview succeeds");
     assert_eq!(meshes.len(), 1);
     assert_eq!(meshes[0].region_id, "r1");
     assert!(!meshes[0].tris.is_empty(), "expected at least one triangle");
@@ -46,8 +51,8 @@ fn fem2d_mesh_preview_returns_region_triangles() {
 fn fem2d_nodal_von_mises_returns_one_value_per_mesh_node() {
     let mut doc = rectangle_region_doc();
     doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "pressure".into(), loads: vec![FemLoad::Area { id: "a1".into(), region_id: "r1".into(), pressure: 5000.0 }], self_weight: false }];
-    let averaged = fem2d_nodal_von_mises(&doc, "pressure").expect("nodal von mises solves");
-    let meshes = fem2d_mesh_preview(&doc).expect("mesh preview succeeds");
+    let averaged = with(&doc, |d| fem2d_nodal_von_mises(d, "pressure")).expect("nodal von mises solves");
+    let meshes = with(&doc, |d| fem2d_mesh_preview(d)).expect("mesh preview succeeds");
     for node_id in &meshes[0].node_ids {
         let v = *averaged.get(node_id).unwrap_or_else(|| panic!("missing averaged value for node {node_id}"));
         assert!(v.is_finite() && v >= 0.0, "node {node_id}: von mises {v} should be finite and non-negative");

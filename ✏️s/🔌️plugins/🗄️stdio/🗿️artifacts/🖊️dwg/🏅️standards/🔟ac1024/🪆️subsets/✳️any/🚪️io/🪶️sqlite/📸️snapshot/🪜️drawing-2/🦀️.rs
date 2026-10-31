@@ -1,7 +1,6 @@
 //! 🪜️ `stdio.dwg` SQLite projection of the drawing graph: header, drawing, associativity, actions, styles, layouts and constraints (part 2).
 
 #![allow(async_fn_in_trait)]
-#![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

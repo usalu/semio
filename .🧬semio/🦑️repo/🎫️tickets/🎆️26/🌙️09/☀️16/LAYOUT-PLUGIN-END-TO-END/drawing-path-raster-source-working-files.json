@@ -1,0 +1,20 @@
+{
+  "state": "source-authored-old-count-oracles-and-reached-callers-pending-no-runtime",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🦀️.rs",
+      "sha256": "7b1158e3d2fa41c5f00bb4fad219b0da5c2cd3fde2cc35e402aec9360e54f245",
+      "bytes": 23856
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📷️raster/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "8aa6afdc9ce8f25501c3f9af917e0d09e29e3c80604dcc960cc3222473b85e17",
+      "bytes": 21370
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust/Cargo.toml",
+      "sha256": "c1a964678484d27b6eb303a2d834656e703c70e90256b9209175c98ebfd281d6",
+      "bytes": 1713
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.job.original-domain-reservation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "operation",
+    "generation",
+    "deadlineUs",
+    "fuel",
+    "stock",
+    "maximumObservedTurns",
+    "quantum",
+    "handoff",
+    "reserve",
+    "deniedPreparationAxes",
+    "deniedPublicationAxes",
+    "deniedCloseAxes",
+    "cases",
+    "deniedBodyAxes",
+    "closingControl",
+    "foreignRecord",
+    "parentOwnedClose"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "operation": {
+      "const": 751
+    },
+    "generation": {
+      "const": 7
+    },
+    "deadlineUs": {
+      "const": 1000000
+    },
+    "fuel": {
+      "const": 1048576
+    },
+    "stock": {
+      "const": {
+        "maximumItems": 1048576,
+        "maximumCopyBytes": 4194304,
+        "maximumCapacityBytes": 4194304,
+        "maximumReleaseBytes": 8388608,
+        "maximumDepth": 128
+      }
+    },
+    "maximumObservedTurns": {
+      "const": 4096
+    },
+    "quantum": {
+      "const": 1
+    },
+    "handoff": {
+      "const": {
+        "items": 1,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 1,
+        "cpu": 1
+      }
+    },
+    "reserve": {
+      "const": {
+        "items": 1,
+        "fuel": 1,
+        "source": "lifetimeRemaining",
+        "preserveCurrentQuantum": true
+      }
+    },
+    "deniedPreparationAxes": {
+      "const": [
+        "items",
+        "capacity",
+        "depth"
+      ]
+    },
+    "deniedPublicationAxes": {
+      "const": [
+        "items",
+        "depth"
+      ]
+    },
+    "deniedCloseAxes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "message",
+          "callbackRefusal",
+          "foreignPublication",
+          "cancel"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "callbackRefusal": {
+            "type": "boolean"
+          },
+          "foreignPublication": {
+            "type": "boolean"
+          },
+          "cancel": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "deniedBodyAxes": {
+      "const": [
+        "items",
+        "depth"
+      ]
+    },
+    "closingControl": {
+      "const": {
+        "items": 1,
+        "depth": 1,
+        "cpu": 1
+      }
+    },
+    "foreignRecord": {
+      "const": {
+        "items": 1,
+        "depth": 1,
+        "cpu": 1,
+        "repeatCpu": 0
+      }
+    },
+    "parentOwnedClose": {
+      "const": true
+    }
+  }
+}

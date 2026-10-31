@@ -5,9 +5,9 @@
 
 
 extern crate semio_framework_os_kernel;
-extern crate semio_framework_pack as pack;
+extern crate pack;
 
-/// 🫧️ One CAD world window's engagement state — see the module doc and `🧬️schema/🔣️.json`.
+/// 📐️ One CAD world window's engagement state — see the module doc and `🧬️schema/🔣️.json`.
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct CadWorldWindowTransient {
@@ -38,6 +38,8 @@ semio_framework_plugin::transient_root! {
     extension: "cadworldwindowtransient",
     fields: { engagement_input: String, engagement_step: String, engagement_pane: Option<String>, engagement_session_json: Option<String>, last_finalized_interaction_id: Option<String> },
 }
+
+semio_framework_plugin::window_transient_transfer! { state: CadWorldWindowTransient, mutation: CadWorldWindowTransientMutation }
 
 
 #[cfg(test)]

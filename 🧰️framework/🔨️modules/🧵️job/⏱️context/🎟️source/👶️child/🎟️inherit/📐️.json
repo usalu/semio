@@ -1,0 +1,18 @@
+{
+  "operation": 449,
+  "generation": 11,
+  "childOperation": 450,
+  "childGeneration": 12,
+  "ownRouteRefused": true,
+  "borrowedRoute": true,
+  "unusedChildBankBound": false,
+  "stock": {
+    "items": 100000,
+    "copyBytes": 33554432,
+    "capacityBytes": 33554432,
+    "releaseBytes": 33554432,
+    "depth": 64,
+    "fuel": 100000,
+    "maximumTurns": 100000
+  }
+}

@@ -1,0 +1,7 @@
+# PDF Product Contract Before Body
+
+The closed contract pins every existing pixel row, original quanta and cancellation phase. Representation charges describe actual logical retained rows: eight bytes per scalar/reference, 40 bytes for the five-field COS body header (pages, used, length, dictionary owner, stream flag), 48 bytes for the six-field resource record, and 32 bytes for each four-scalar gradient span. UTF-16 dictionary/fragment payload uses two bytes per actual code unit in genuine retained storage. These are explicit logical representations, not claims about V8 objects, allocator bytes or GC. The original finite bank and physical/semantic limits remain unchanged.
+
+Owning laws must preserve all four existing registrations, independent Poppler/PDF.js/Sharp results and original exact tolerances, every original shared phase cancellation, all real underfilled five-axis denials, actual byte/page conservation, caller scene/pixel identity and funded failed/returned output close. Actual observer trace/xref offsets must refer to the produced bytes. No header-only proof or fixture echo is sufficient. The original fourteen glyph product PDF rows also remain required.
+
+Only neutral inputs were authored while SVG183 was held. PDF production remains unchanged and no runtime was launched. Defining original public API migration follows these laws, with no numeric bridge or raw owned-array facade.

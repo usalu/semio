@@ -1,0 +1,16 @@
+{
+  "status": "Scoped owned PDF producer/callers ready for actual owning and strict review; public root activated; no semantic execution",
+  "files": [
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🎟️work/🟦️.ts",
+      "status": "added",
+      "sha256": "5c10c158ceb8117cf3333bf3f071efb686ad0948f03b0c1bf5219e48ef09ef83"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🧵️write/🧬️schema/🟦️.ts",
+      "status": "added",
+      "sha256": "b71d623921504b8223caf3f875b487e83abcaad87ba99d10816ddca55e096fa5"
+    }
+  ],
+  "oldPublicWriterSha256": "6609b703e8ce9359346323630bdc4813cc8123de6a09d2d14f3fe8873d125b15"
+}

@@ -3,7 +3,7 @@ use semio_framework_test_fixtures::fixture_text;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep as Step, RetainedCloneGrant, RetainedCloneProgress};
 use super::physical_allocator::measured;
 
-fn close_turn(caller: &mut semio_framework_job::SelfFundedCloseCaller, grant: RetainedCloneGrant, job: &mut ClipboardIoJob) -> (Step, usize, usize) {
+fn close_turn(caller: &mut semio_framework_job::OriginalJobFixtureCaller, grant: RetainedCloneGrant, job: &mut ClipboardIoJob) -> (Step, usize, usize) {
     let mut witnessed = (0, 0);
     let step = caller.turn(grant, |cx| { let (result, births, frees) = measured(|| job.close_step(cx)); witnessed = (births, frees); result }).expect("original fixture close turn");
     (step, witnessed.0, witnessed.1)
@@ -15,7 +15,7 @@ fn grant(copy: usize, release: usize) -> RetainedCloneGrant {
 
 #[test]
 fn original_clipboard_backing_refusal_cancel_and_terminal_receipts_are_physical() {
-    let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
+    let mut close_caller=close_source::caller(1,1);
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../../../🧪️tests/♻️physical-job-close/🧫️fixtures/🔣️.json")).unwrap();
     for (index, content) in fixture["texts"].as_array().unwrap().iter().enumerate() {
         let text = content.as_str().unwrap();
@@ -31,7 +31,7 @@ fn original_clipboard_backing_refusal_cancel_and_terminal_receipts_are_physical(
                 assert_eq!((births, frees), (0, 0));
                 let copy = copy.as_u64().unwrap() as usize;
                 for _ in 0..cancel.as_u64().unwrap() {
-                    let (result, births, frees) = close_turn(&mut self_funded, grant(copy, capacity), &mut job);
+                    let (result, births, frees) = close_turn(&mut close_caller, grant(copy, capacity), &mut job);
                     assert!(matches!(result, Step::Blocked));
                     assert_eq!((births, frees), (0, 0));
                 }
@@ -39,18 +39,18 @@ fn original_clipboard_backing_refusal_cancel_and_terminal_receipts_are_physical(
                 assert_eq!(job.next_close_copy_byte_demand().unwrap(), 0);
                 assert_eq!(job.next_close_capacity_byte_demand(copy).unwrap(), 0);
                 assert_eq!(job.next_close_release_byte_demand().unwrap(), capacity);
-                let (refused, births, frees) = close_turn(&mut self_funded, grant(copy, capacity - 1), &mut job);
+                let (refused, births, frees) = close_turn(&mut close_caller, grant(copy, capacity - 1), &mut job);
                 assert!(matches!(refused, Step::Pending { progress } if progress == RetainedCloneProgress::default()));
                 assert_eq!((births, frees), (0, 0));
                 match job.operation.as_ref().unwrap() {
                     ClipboardIoOperation::Write(retained) => { assert_eq!(retained.as_ptr(), pointer); assert_eq!(retained, &oracle); },
                     ClipboardIoOperation::Read => panic!("write ownership changed"),
                 }
-                let (terminal, births, frees) = close_turn(&mut self_funded, grant(copy, capacity), &mut job);
+                let (terminal, births, frees) = close_turn(&mut close_caller, grant(copy, capacity), &mut job);
                 assert!(matches!(terminal, Step::Complete { progress } if progress.copied_items == 1 && progress.copied_bytes == 0 && progress.retained_capacity_bytes == births && progress.released_bytes == frees));
                 assert_eq!((births, frees), (0, capacity));
                 assert!(job.terminal_is_empty());
-                let (repeat, births, frees) = close_turn(&mut self_funded, grant(0, 0), &mut job);
+                let (repeat, births, frees) = close_turn(&mut close_caller, grant(0, 0), &mut job);
                 assert!(matches!(repeat, Step::Complete { progress } if progress == RetainedCloneProgress::default()));
                 assert_eq!((births, frees), (0, 0));
                 let (_, births, frees) = measured(|| drop(job));
@@ -58,6 +58,8 @@ fn original_clipboard_backing_refusal_cancel_and_terminal_receipts_are_physical(
             }
         }
     }
+
+    close_caller.retire(close_source::STOCK);
 }
 
 #[test]
@@ -104,13 +106,15 @@ fn cancelled_clipboard_outcome_preserves_original_input_until_descriptor_ack_and
     assert_eq!(descriptor.acknowledge(supplied).progress().copied_items, law["acknowledgementItems"].as_u64().unwrap() as usize);
     drop(descriptor);
     job.begin_close();
-    let mut self_funded = semio_framework_job::SelfFundedCloseCaller::new();
-    let (closed, born, freed) = close_turn(&mut self_funded, grant(0, capacity), &mut job);
+    let mut close_caller=close_source::caller(1,1);
+    let (closed, born, freed) = close_turn(&mut close_caller, grant(0, capacity), &mut job);
     assert!(matches!(closed, Step::Complete { .. }));
     assert_eq!((born, freed), (0, capacity));
     assert_eq!(closed.progress(), RetainedCloneProgress { copied_items: 1, released_bytes: capacity, ..Default::default() });
     assert!(job.terminal_is_empty());
     while !owner.terminal_is_empty() { assert!(owner.close_step(supplied).progress().fits(supplied)); }
+
+    close_caller.retire(close_source::STOCK);
 }
 
 #[test]
@@ -130,8 +134,10 @@ fn cancelled_clipboard_driver_binds_the_original_producer_witness(){
     assert_eq!(cx.retained_progress(),RetainedCloneProgress{copied_items:1,..Default::default()});drop(cx);
     let(view,born,freed)=measured(||job.borrow_outcome(&descriptor).unwrap());assert!(matches!(view,JobOutcomeView::Cancelled{..}));assert_eq!((born,freed),(0,0));
     assert_eq!(descriptor.acknowledge(grant).progress().copied_items,1);drop(descriptor);
-    job.begin_close();let closed=semio_framework_job::close_with_self_funded_context(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:capacity,maximum_depth:1}, |cx| job.close_step(cx)).expect("original fixture close turn");assert_eq!(closed.progress(),RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()});assert!(job.terminal_is_empty());
+    job.begin_close();let mut close_caller=close_source::caller(1,1);let closed=close_caller.turn(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:capacity,maximum_depth:1}, |cx| job.close_step(cx)).expect("original fixture close turn");assert_eq!(closed.progress(),RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()});assert!(job.terminal_is_empty());
     while !owner.terminal_is_empty(){assert!(owner.close_step(grant).progress().fits(grant))}
+
+    close_caller.retire(close_source::STOCK);
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -196,3 +202,6 @@ use semio_framework_test_fixtures::fixture_text;
     let mut cancelled_job=cancelled_job.take().unwrap();cancelled_job.begin_close();assert_eq!(self_funded.turn(supplied,|cx|cancelled_job.close_step(cx)).expect("original fixture close turn").progress(),RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()});assert!(cancelled_job.terminal_is_empty());
     while !owner.terminal_is_empty(){assert!(owner.close_step(supplied).progress().fits(supplied))}
 }
+
+#[path="../../../🧵️job/🧪️testing/♻️close/🦀️.rs"]
+pub(crate) mod close_source;

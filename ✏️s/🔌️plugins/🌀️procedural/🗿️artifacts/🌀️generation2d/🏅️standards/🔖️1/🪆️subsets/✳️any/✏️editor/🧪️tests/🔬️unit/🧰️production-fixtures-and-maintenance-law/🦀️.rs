@@ -105,23 +105,9 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Generation2dSnapshot, [u8;
     (wire, expected, expected_digest)
 }
 
-/// 🔐️ Releases the process-global publication lease on UNWIND too. The lease table is a fixed
-/// 4-slot registry (`GENERATION2D_PUBLICATION_SLOTS`), so a law that panics mid-drive strands a slot
-/// and every later `generation2d_admit_publication_authority` anywhere in the binary then fails
-/// `generation2d-publication.saturated` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-struct ProductionLease(semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle);
-
-impl Drop for ProductionLease {
-    fn drop(&mut self) {
-        semio_s_artifact_procedural_2d_host::generation2d_release_publication_authority(self.0.operation, self.0.generation);
-    }
-}
-
 fn admit_production_envelope(app: &mut Generation2dApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
     let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("P2 production ingress credits");
-    semio_s_artifact_procedural_2d_host::generation2d_admit_publication_authority(handle.operation, handle.generation, handle.generation.0, handle.generation.0, handle.generation.0, semio_s_artifact_procedural_2d_host::Generation2dPublicationCredits { maximum_items: 8_192, maximum_output_pages: semio_s_artifact_procedural_2d_host::GENERATION2D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: semio_s_artifact_procedural_2d_host::GENERATION2D_MOUNTED_CONTROL_CREDITS })
-    .expect("P2 production publication authority");
     for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
         let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..chunk.len()].copy_from_slice(chunk);
@@ -134,8 +120,6 @@ fn admit_production_envelope(app: &mut Generation2dApp, wire: &[u8]) -> semio_fr
 
 fn drive_production_envelope(app: &mut Generation2dApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..300_000 {
-        semio_s_artifact_procedural_2d_host::generation2d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0)
-            .expect("P2 authority refresh immediately before production maintenance");
         PluginApp::maintenance_step(&mut app.0, app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).expect("one P2 production maintenance turn");
         let poll = app.0.advance_artifact_envelope_load(handle, app.1.cx()).expect("P2 production load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
@@ -147,15 +131,13 @@ fn drive_production_envelope(app: &mut Generation2dApp, handle: semio_framework_
 }
 
 /// 🔐️ LAW: non-empty P2D2 canonical ingress reaches the real VCS maintenance replacement,
-/// and accepted, stale, ABA, and displaced stores remain owned until explicit terminal ACK/close.
+/// and the accepted and displaced stores remain owned until explicit terminal ACK/close.
 #[semio_framework_async_macros::async_test]
-async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_and_fail_closed() {
-    let _serial = semio_s_artifact_procedural_2d_testkit::publication_authority::lock();
+async fn vcs_artifact_app_non_empty_retained_maintenance_swap_publishes_through_the_token() {
     let mut accepted = app_with_registry().await;
     let base_generation = accepted.artifact_generation_now();
     let (wire, expected, expected_digest) = production_envelope_wire("accepted-production-swap");
     let handle = admit_production_envelope(&mut accepted, &wire);
-    let lease = ProductionLease(handle);
     assert_eq!(drive_production_envelope(&mut accepted, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert_eq!(accepted.artifact_generation_now().0, base_generation.0 + 1);
     let snapshot = production_read(accepted.snapshot().expect("accepted P2 production snapshot"));
@@ -165,40 +147,30 @@ async fn vcs_artifact_app_non_empty_retained_maintenance_swap_is_authoritative_a
     assert!(snapshot.host_snapshot.layout.contains_key("move-target"));
     assert!(!snapshot.host_snapshot.layout.contains_key("clear-target"), "2D-only clear-widget-layout must survive retained replay");
     assert!(accepted.acknowledge_artifact_store_replacement(handle).expect("accepted P2 terminal ACK"));
-    assert!(semio_s_artifact_procedural_2d_host::generation2d_release_publication_authority(handle.operation, handle.generation));
-    drop(lease);
     close(accepted);
+}
 
-    use semio_s_artifact_procedural_2d_host::Generation2dPublicationHostile::Missing;
-    use semio_s_artifact_procedural_2d_host::Generation2dPublicationHostile::WrongBase;
-    use semio_s_artifact_procedural_2d_host::Generation2dPublicationHostile::WrongGeneration;
-    use semio_s_artifact_procedural_2d_host::Generation2dPublicationHostile::WrongOperation;
-    use semio_s_artifact_procedural_2d_host::Generation2dPublicationHostile::WrongParent;
-    for (hostile, expected_code) in [
-        (Missing, "generation2d-publication.authority-missing"),
-        (WrongOperation, "generation2d-publication.wrong-operation"),
-        (WrongGeneration, "generation2d-publication.wrong-generation"),
-        (WrongBase, "generation2d-publication.wrong-base"),
-        (WrongParent, "generation2d-publication.wrong-parent"),
-    ] {
-        let mut app = app_with_registry().await;
-        let last_valid = production_read(app.snapshot().expect("last-valid P2 snapshot"));
-        let last_valid_digest = production_semantic_digest(&last_valid);
-        let base_generation = app.artifact_generation_now();
-        let (wire, candidate, _) = production_envelope_wire("rejected-production-candidate");
-        candidate.retire_cold();
-        let handle = admit_production_envelope(&mut app, &wire);
-        let lease = ProductionLease(handle);
-        semio_s_artifact_procedural_2d_host::generation2d_arm_publication_hostile(handle.operation, hostile);
-        assert_eq!(drive_production_envelope(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
-        assert_eq!(semio_s_artifact_procedural_2d_host::generation2d_take_publication_hostile_observed(handle.operation), Some(expected_code));
-        assert_eq!(app.artifact_generation_now(), base_generation);
-        let retained = production_read(app.snapshot().expect("last-valid P2 snapshot after rejected candidate"));
-        assert_eq!(production_semantic_digest(&retained), last_valid_digest);
-        assert_eq!(&*retained, &*last_valid);
-        assert!(app.acknowledge_artifact_store_replacement(handle).expect("rejected P2 terminal ACK after candidate retirement"));
-        assert!(semio_s_artifact_procedural_2d_host::generation2d_release_publication_authority(handle.operation, handle.generation));
-        drop(lease);
-        close(app);
-    }
+/// 🔐️ LAW: two replacements admitted on the same live generation cannot both publish through the real VCS maintenance swap; the loser faults, the published store and generation stay the winner's, and its candidate is retired by terminal ACK.
+#[semio_framework_async_macros::async_test]
+async fn vcs_artifact_app_maintenance_swap_rejects_the_stale_replacement_and_keeps_the_published_store() {
+    let mut app = app_with_registry().await;
+    let base_generation = app.artifact_generation_now();
+    let (first_wire, first_candidate, first_digest) = production_envelope_wire("stale-race-first");
+    let (second_wire, second_candidate, second_digest) = production_envelope_wire("stale-race-second");
+    first_candidate.retire_cold();
+    second_candidate.retire_cold();
+    let first = admit_production_envelope(&mut app, &first_wire);
+    let second = admit_production_envelope(&mut app, &second_wire);
+    let polls = [drive_production_envelope(&mut app, first), drive_production_envelope(&mut app, second)];
+    let ready = semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready;
+    let fault = semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault;
+    assert_eq!(polls.iter().filter(|poll| **poll == ready).count(), 1, "exactly one racing replacement publishes: {polls:?}");
+    assert_eq!(polls.iter().filter(|poll| **poll == fault).count(), 1, "the stale replacement faults: {polls:?}");
+    assert_eq!(app.artifact_generation_now().0, base_generation.0 + 1, "the rejected replacement does not advance the live generation");
+    let winner_digest = if polls[0] == ready { first_digest } else { second_digest };
+    let published = production_read(app.snapshot().expect("published P2 snapshot after the rejected race"));
+    assert_eq!(production_semantic_digest(&published), winner_digest, "the live store is the winner's, never the rejected candidate");
+    assert!(app.acknowledge_artifact_store_replacement(first).expect("first P2 terminal ACK"));
+    assert!(app.acknowledge_artifact_store_replacement(second).expect("second P2 terminal ACK after candidate retirement"));
+    close(app);
 }

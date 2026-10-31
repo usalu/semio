@@ -47,3 +47,12 @@ fn the_default_gis_map_owns_exactly_the_fixed_three_commit_members() {
     assert_eq!(value, semio_s_artifact_gis_gismap::gis_map_value_from_descriptor_json(&semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json(&parent)));
     assert_eq!(GisMapInferenceBindingV1.composed_children(&[0xff]), Err(MapBindingRefusalV1::Undecodable));
 }
+
+#[test]
+fn the_gis_map_inference_runs_on_its_work_budget_and_cancels_through_its_checkpoint() {
+    let pack = semio_s_artifact_gis_gismap::schema::default_document().encode_pack();
+    let budget = WireArtifactInferenceBudget { allocation_bytes: 1 << 20, work_units: 1 << 12, recursion_depth: 64 };
+    assert!(deterministic_map_inference(&pack, "job-bounded", &budget).is_ok(), "an ample budget completes");
+    let cancelled = run_controlled(&pack, "job-cancelled", &budget, &mut |_| Err(ArtifactInferenceExecutionError::new("gis.gismap.inference.cancelled", "cancelled by the hub job")));
+    assert_eq!(cancelled.err(), Some(MapBindingRefusalV1::Execution), "a refusing checkpoint cancels the run before any result");
+}

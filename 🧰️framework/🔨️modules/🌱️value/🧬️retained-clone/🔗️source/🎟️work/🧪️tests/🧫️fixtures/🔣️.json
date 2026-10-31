@@ -1,0 +1,18 @@
+{
+  "text": "Original source 🧱",
+  "maximumTurns": 1048576,
+  "maximumCpuWork": 1048576,
+  "stock": {
+    "maximumItems": 1048576,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 33554432,
+    "maximumDepth": 256
+  },
+  "expected": {
+    "deniedCpu": 0,
+    "birthCpu": 6,
+    "cachedCloseCpu": 0,
+    "liveCloseMinimumDepth": 1
+  }
+}

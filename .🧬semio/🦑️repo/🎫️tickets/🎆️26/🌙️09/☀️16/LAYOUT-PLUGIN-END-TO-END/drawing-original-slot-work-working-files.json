@@ -1,0 +1,30 @@
+[
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🦀️.rs",
+    "sha256": "fc240ab8ac92d4087fe840e76f3fd8c6dac1ffa4c898bfa10259058b13101af7"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🦀️.rs",
+    "sha256": "edec495632f6049f375c0166a318e748fe1af425da5444e30c12ef72a385165c"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/♻️retirement/🦀️.rs",
+    "sha256": "787f63bea572e168a1afb43f0ba4fb32a5e75804342c08a37adc3a6c8c844205"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust/🦀️.rs",
+    "sha256": "b16d64fb8fc316ef051bb926e9975f53bfcc46be6726617a7e10a66de1a8e77b"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/actual.json",
+    "sha256": "e54f04fc728952893c5a4f797e1d0adfe54a22c2079b7ae81cef04007c4746a3"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/actual.schema.json",
+    "sha256": "81b9d23145b72439100ee09c8118090a559e36de4a9885dc37d2a54f9bccbb80"
+  },
+  {
+    "path": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🧪️tests/🦀️.rs",
+    "sha256": "2cc4a333a88bffb2d75e5d864b55ec2c4fa3d1b688a208f38101017c10d6529a"
+  }
+]

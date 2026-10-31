@@ -34,14 +34,6 @@ use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationContr
 use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactToolRegistration;
 use crate::lifted_full_operation_job::TypedCommandFullOperationJobFactory;
-#[cfg(test)]
-use semio_framework_plugin_ownership::bounded_ownership::ARTIFACT_LIVE_OUTPUT_SLOTS;
-#[cfg(test)]
-use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedRegistry;
-#[cfg(test)]
-use semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant;
-#[cfg(test)]
-use semio_framework_plugin_document_media::ActiveArtifactEnvelopeIngress;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FrameworkReservedStage {
@@ -715,8 +707,6 @@ pub struct FrameworkReservedCommitPermit {
 }
 
 
-#[cfg(test)]
-include!("../../🧪️tests/🔬️app-artifact-fixed-registry/🦀️.rs");
 
 
 impl FrameworkReservedCommitPermit {
@@ -842,7 +832,7 @@ pub fn reserved_pump_fault_detail(fault: &semio_framework_job_worker::MountedWor
     }
 }
 
-/// 🧾️ Compares a retained fixed-page payload without materializing a whole-buffer adapter.
+/// 📃️ Compares a retained fixed-page payload without materializing a whole-buffer adapter.
 #[doc(hidden)]
 pub fn retained_payload_eq_slice(payload: &semio_framework_job_payload::RetainedJobPayload, expected: &[u8]) -> bool {
     if payload.len() != expected.len() {
@@ -892,7 +882,7 @@ pub fn tool_job_registration<A: ArtifactApp>(
     validate_tool_job_rows::<A>(registry, runtime_controller_id, artifact_schema, generated_ids, bus, registrations, A::bounded_first_step_tool_proofs())
 }
 
-/// 🧾️ Admits each proof row only when owner, controller, schema, factory and generated migration join exactly.
+/// 🚪️ Admits each proof row only when owner, controller, schema, factory and generated migration join exactly.
 pub(crate) fn validate_tool_job_rows<A: ArtifactApp>(
     registry: &AppActionRegistry,
     runtime_controller_id: &str,

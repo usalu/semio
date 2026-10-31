@@ -1,0 +1,14 @@
+{
+  "path": "🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs",
+  "before": "3d5cd4de1d3509f77efb15f1deb9d513b73a7a3f63adb9162b08fc7787f4e860",
+  "after": "465b4422d05b3d4dc5deb6dd9142325d9699aee8c176f6e98520a8728476329b",
+  "removedMount": "#[cfg(test)]#[path=\"📖️source/🧪️tests/🦀️.rs\"]mod source_tests;\n",
+  "inverseInsertionByteOffset": 39019,
+  "exactWholeByteInverseVerified": true,
+  "samePhysicalLawFile": "🌳️value/📖️source/🧪️tests/🦀️.rs",
+  "newTarget": "native_sequence",
+  "lawCount": 4,
+  "privateStateAccess": false,
+  "stockCaseCutChanges": false,
+  "allTargetsAndDocsRequired": true
+}

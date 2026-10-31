@@ -1,0 +1,66 @@
+{
+  "before": {
+    "filesystemBytes": 33554432,
+    "maximumPhysicalBytes": 34603008
+  },
+  "after": {
+    "filesystemBytes": 100663296,
+    "maximumPhysicalBytes": 101711872
+  },
+  "payload": "funded application payload\\n",
+  "cases": [
+    {
+      "id": "complete",
+      "cut": null,
+      "pending": false
+    },
+    {
+      "id": "before-intent",
+      "cut": "observed",
+      "pending": false
+    },
+    {
+      "id": "prepared-before-detach",
+      "cut": "witnessed",
+      "pending": true
+    },
+    {
+      "id": "before-receipt",
+      "cut": "staged",
+      "pending": true
+    },
+    {
+      "id": "receipt",
+      "cut": "published",
+      "pending": true
+    },
+    {
+      "id": "attached",
+      "cut": "attached",
+      "pending": true
+    },
+    {
+      "id": "qualified",
+      "cut": "verified",
+      "pending": true
+    }
+  ],
+  "witnessCases": [
+    {
+      "mode": "actual",
+      "accepted": true
+    },
+    {
+      "mode": "copied",
+      "accepted": false
+    },
+    {
+      "mode": "foreign-control",
+      "accepted": false
+    },
+    {
+      "mode": "foreign-root",
+      "accepted": false
+    }
+  ]
+}

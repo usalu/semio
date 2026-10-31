@@ -103,11 +103,11 @@ use semio_framework_ui_layout::layout::WindowMeasure;
 /// SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W6 — `MediaWireFormat::
 /// Binary` now carries a plain format kind id string.
 use semio_framework::MediaWireFormat;
-/// 🎞️ The `Media`/`MediaPayload`/`MediaFingerprint`/`MediaError` value vocabulary backing
+/// 🌀️ The `Media`/`MediaPayload`/`MediaFingerprint`/`MediaError` value vocabulary backing
 /// `ArtifactApp::{media_ports, export_media, import_media, media_fingerprint}` — re-exported so
 /// implementers never need a direct `semio-framework-core` dependency just to satisfy this trait.
 use semio_framework::{Media, MediaError, MediaFingerprint, MediaPayload};
-/// 🧬️ `MediaClass`/`MediaType` also live in `semio-framework-core` — re-exported so callers can build
+/// 💚️ `MediaClass`/`MediaType` also live in `semio-framework-core` — re-exported so callers can build
 /// `ArtifactKindSpec.media_type` and `AppBuilder::media_input(...)`/`media_output(...)` port specs
 /// without a direct `semio-framework-core` dependency.
 use semio_framework::{MediaClass, MediaType};
@@ -133,6 +133,7 @@ use crate::tool_contract::ArtifactReservedToolJob;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactInitializationAdmission;
+use semio_framework_plugin_ownership::store_lifecycle::{DocumentStoreLivePublication, DocumentStorePublicationToken};
 use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;

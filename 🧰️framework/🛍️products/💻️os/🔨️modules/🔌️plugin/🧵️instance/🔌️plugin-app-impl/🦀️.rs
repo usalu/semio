@@ -97,7 +97,7 @@ pub async fn settle_framework_reserved_admission<A: ArtifactApp, M: ReferenceSpa
 /// edit, well above anything a fixture composes.
 pub const FRAMEWORK_RESERVED_COMMIT_SETTLE_UNITS: usize = 4_096;
 
-/// 🪜️ Hands a finished reserved spawn-job to `app`'s commit queue and drives the commit one unit
+/// 🔖️ Hands a finished reserved spawn-job to `app`'s commit queue and drives the commit one unit
 /// per call — the same units the reactor's typed-operation continuation runs across turns — to its
 /// outcome.
 pub async fn settle_framework_reserved_commit<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, job: u64, output: Result<Vec<u8>, Fault>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult,semio_framework_job::OriginalTurnFailure> {
@@ -113,7 +113,7 @@ pub async fn settle_framework_reserved_commit<A: ArtifactApp, M: ReferenceSpaceM
     Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-commit-stall"), format!("framework reserved commit did not finish within {FRAMEWORK_RESERVED_COMMIT_SETTLE_UNITS} units")).into())
 }
 
-/// 🧪 Browser `driveSpawnedJob` contract: the isolated reserved dummy job is admitted from its original request and driven
+/// 💼️ Browser `driveSpawnedJob` contract: the isolated reserved dummy job is admitted from its original request and driven
 /// by funded `step_job` turns to its terminal output, which is then settled through the reserved commit; the turn count is returned.
 #[cfg(any(test, feature = "artifact-app-testing"))]
 pub async fn drive_framework_reserved_spawn_like_host<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, admitted: InvocationResult,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(InvocationResult,u32),semio_framework_job::OriginalTurnFailure> {
@@ -171,7 +171,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
     }
 
     fn maintenance_source_close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-        if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_tool_follow.is_some(){return self.render_ref().tool_overlay_retirement_demand(body,true)}
+        if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some()||self.tools.original_tool_follow.is_some(){return self.render_ref().tool_overlay_retirement_demand(body,true)}
         if self.original_typed_tag.is_some()||!self.original_typed_tag_close.is_empty(){return self.original_typed_tag_close_demands(body)}
         if self.original_typed_command.pending(){return self.original_typed_command.close_demands()}
         if self.original_typing.pending(){return self.original_typing.close_demands()}
@@ -183,12 +183,12 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         let demand=self.maintenance_source_close_demands(loan.maximum_copy_bytes)?;
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,loan,demand,|same,actual|{
             if self.maintenance_source_terminal_is_empty(){return Ok((PluginLifecycleStep::Complete(Default::default()),true))}
-            let step=if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_tool_follow.is_some(){self.render_ctx().tool_overlay_retirement_step(same,actual,true)?}else if self.original_typed_tag.is_some()||!self.original_typed_tag_close.is_empty(){self.close_original_typed_tag(same)?}else{let before=same.retained_progress();if self.original_typed_command.pending(){self.original_typed_command.close_step(same)?;}else if self.original_typing.pending(){self.original_typing.close_step(same)?;}else{self.original_emission.close_step(same)?;}semio_framework_job::RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,same.retained_progress())?)};
+            let step=if self.tools.original_tool_tag_capture.is_some()||self.tools.original_tool_tag_retirement.is_some()||self.tools.original_scrub_dispatch.is_some()||self.tools.original_press_settlement.is_some()||self.tools.original_typing_settlement.is_some()||self.tools.original_tool_follow.is_some(){self.render_ctx().tool_overlay_retirement_step(same,actual,true)?}else if self.original_typed_tag.is_some()||!self.original_typed_tag_close.is_empty(){self.close_original_typed_tag(same)?}else{let before=same.retained_progress();if self.original_typed_command.pending(){self.original_typed_command.close_step(same)?;}else if self.original_typing.pending(){self.original_typing.close_step(same)?;}else{self.original_emission.close_step(same)?;}semio_framework_job::RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,same.retained_progress())?)};
             let terminal=self.maintenance_source_terminal_is_empty();Ok((if terminal{PluginLifecycleStep::Complete(step.progress())}else{PluginLifecycleStep::Progress(step.progress())},terminal))
         })
     }
 
-    fn maintenance_source_terminal_is_empty(&self)->bool{self.tools.original_tool_tag_capture.is_none()&&self.tools.original_tool_tag_retirement.is_none()&&self.tools.original_scrub_dispatch.is_none()&&self.tools.original_press_settlement.is_none()&&self.tools.original_tool_follow.is_none()&&self.original_typed_tag.is_none()&&self.original_typed_tag_close.is_empty()&&!self.original_typed_command.pending()&&self.original_typing.terminal_is_empty()&&!self.original_emission.pending()}
+    fn maintenance_source_terminal_is_empty(&self)->bool{self.tools.original_tool_tag_capture.is_none()&&self.tools.original_tool_tag_retirement.is_none()&&self.tools.original_scrub_dispatch.is_none()&&self.tools.original_press_settlement.is_none()&&self.tools.original_typing_settlement.is_none()&&self.tools.original_tool_follow.is_none()&&self.original_typed_tag.is_none()&&self.original_typed_tag_close.is_empty()&&!self.original_typed_command.pending()&&self.original_typing.terminal_is_empty()&&!self.original_emission.pending()}
 
     async fn bind_instance_id(&mut self, instance_id: u32) {
         self.tools.live_runtime_instance_id = Some(instance_id);

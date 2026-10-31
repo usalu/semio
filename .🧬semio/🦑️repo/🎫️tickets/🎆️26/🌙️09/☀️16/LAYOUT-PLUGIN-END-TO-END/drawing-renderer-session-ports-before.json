@@ -1,0 +1,17 @@
+[
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🔁️asset-decode-jobs/🦀️.rs",
+    "sha256": "8b8290f090c3099f76f40a4434844f822c5bc2ccc03b0cdacfccf8dc21a151ca",
+    "bytes": 23015
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📐️surface-lane/🦀️.rs",
+    "sha256": "bafbb8e53e04a94fcd98a8d9b1370ee8bc96e927f85115f9b6b93e98297cf6b5",
+    "bytes": 19628
+  },
+  {
+    "path": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-async-boundary/👷️decoder-worker-session-recovery-and-asset-transfer/🦀️.rs",
+    "sha256": "36086844ea0f371218d6358565c7aa3607d837e45e28e43ce55463c3d4477475",
+    "bytes": 15335
+  }
+]

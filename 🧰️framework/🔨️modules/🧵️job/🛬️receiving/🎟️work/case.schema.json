@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "quantum",
+    "probe",
+    "valid",
+    "actualWork",
+    "postScopeAdditionalWork",
+    "heap",
+    "sameSource",
+    "scope"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "quantum": {
+      "const": 1
+    },
+    "probe": {
+      "const": [
+        255
+      ]
+    },
+    "valid": {
+      "const": false
+    },
+    "actualWork": {
+      "const": 1
+    },
+    "postScopeAdditionalWork": {
+      "const": false
+    },
+    "heap": {
+      "const": [
+        0,
+        0
+      ]
+    },
+    "sameSource": {
+      "const": true
+    },
+    "scope": {
+      "const": "base-context-real-current-loan-native-admission-not-host-birth"
+    }
+  }
+}

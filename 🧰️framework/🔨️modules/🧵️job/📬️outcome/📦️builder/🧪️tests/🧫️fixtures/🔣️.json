@@ -31,15 +31,12 @@
   "ledgerLeaseWords": 2,
   "metadataCopyBytes": 0,
   "initialization": {
-    "bindingCount": 256,
-    "bindingsPerTurn": 1,
-    "bindingTurns": 256,
+    "maximumPages": 256,
+    "livePages": 0,
     "headerTurns": 1,
-    "turns": 257,
-    "slotFields": [
-      "binding",
-      "initialized"
-    ],
+    "turns": 1,
+    "maximumTurns": 257,
+    "storage": "dense-live-prefix",
     "headerFields": [
       "stream",
       "pageCount",

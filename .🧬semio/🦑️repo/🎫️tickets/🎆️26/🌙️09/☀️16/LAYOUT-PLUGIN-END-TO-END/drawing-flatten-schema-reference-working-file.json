@@ -1,0 +1,19 @@
+{
+  "authority": "Root explicit reference-only const pin; Rust Core4 closure excludes this file",
+  "files": [
+    {
+      "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/📐️.json",
+      "beforeBytes": 5616,
+      "beforeSha256": "5c80ce222ed49774fe2bbb3089a1fa28bd2861329cbfebb54c4dba6a1c20246d",
+      "bytes": 9240,
+      "sha256": "ae71101ad40608c4d44aff62ac4cb3c1e88a503e55299de136d36191c0f3a922",
+      "wholeInverseReconstructed": true
+    }
+  ],
+  "data": {
+    "path": "🧰️framework/🔨️modules/◻️2d/🛤️path/📏️flatten/🧪️tests/🎟️work/🔣️.json",
+    "sha256": "d8951ea13181d8b9c88fff4e4d334f65dab3f0b17f6ce41f61b18586d0ab60b3",
+    "unchanged": true
+  },
+  "change": "Add ONLY the exact already-existing reference to the top const. Required/properties/all stock/pixels/cases unchanged. Actual Ajv2020 validation pending normal managed run."
+}

@@ -1,11 +1,15 @@
 //! 🎵️ Subspace-iteration eigensolver for the generalized problem `Kφ=λBφ` (modal and buckling), with the modal
 //! input construction that feeds it and the dense cyclic-Jacobi oracle of its tests.
 
-use semio_s_fem_sparse::{NUMERICAL_CHECKPOINT_HEADER_BYTES, NumericalMatrixRestore, SPARSE_INDEX_SPACE, SparseColumns, advance_paged_pair_owner, close_paged_owner_step, numerical_grant_covers, numerical_restore_admit, numerical_restore_control, paged_owner_retirement_demand, restore_paged_pair_entry, restore_paged_usize_entry};
+use semio_s_fem_sparse::{NUMERICAL_CHECKPOINT_HEADER_BYTES, NumericalMatrixRestore, SPARSE_INDEX_SPACE, SparseColumns, advance_paged_pair_owner, close_paged_owner_step, numerical_restore_admit, numerical_restore_control, paged_owner_retirement_demand, restore_paged_pair_entry, restore_paged_usize_entry};
+use semio_s_fem_payload_turns::{numerical_grant_covers};
 use semio_framework_job::OriginalTurnFailure;
 use semio_framework_value::ValueRefusalKind;
 use semio_framework_value_persistent::list::PagedList;
 use semio_framework_job::InteractiveJob;
+use semio_framework_job::InteractiveJobStep;
+use semio_s_fem_payload_turns::NumericalStep;
+use semio_framework_job::OriginalJobReturnClaim;
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_job::JobOutcomeBorrow;
 use semio_framework_job::JobOutcomeDescriptor;
@@ -15,11 +19,18 @@ use semio_framework_job::Operation;
 use semio_framework_job::RetainedCloneGrant;
 use semio_framework_job::RetainedCloneProgress;
 use semio_framework_job_payload::RetainedJobPayload;
-use semio_framework_job_payload::RetainedJobPayloadWriter;
+use semio_framework_job_payload::RetainedPayloadBuilder;
 use semio_framework_job::StepContext;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
 use semio_s_fem_sparse::numerical_close_original;
+use semio_s_fem_sparse::write_numerical_entry;
+use semio_s_fem_payload_turns::NumericalPayloadSlot;
+use semio_s_fem_payload_turns::numerical_open_writer;
+use semio_s_fem_payload_turns::numerical_finish_writer;
+use semio_s_fem_payload_turns::numerical_begin_page;
+use semio_s_fem_payload_turns::numerical_commit_page;
+use semio_s_fem_payload_turns::numerical_post;
 use semio_s_fem_sparse::CscSym;
 use semio_s_fem_sparse::Csr;
 use semio_s_fem_sparse::MountedScalarSlots;
@@ -49,8 +60,8 @@ use semio_s_fem_sparse::numerical_restore_close_due;
 use semio_s_fem_sparse::numerical_restore_frontier;
 use semio_s_fem_sparse::numerical_restore_payload_close;
 use semio_s_fem_sparse::numerical_rung_demand;
-use semio_s_fem_sparse::numerical_writer_close;
-use semio_s_fem_sparse::numerical_writer_demand;
+use semio_s_fem_payload_turns::numerical_writer_close;
+use semio_s_fem_payload_turns::numerical_writer_demand;
 use semio_s_fem_sparse::parse_numerical_page;
 use semio_s_fem_sparse::read_checkpoint_u64;
 use semio_s_fem_sparse::read_checkpoint_usize;

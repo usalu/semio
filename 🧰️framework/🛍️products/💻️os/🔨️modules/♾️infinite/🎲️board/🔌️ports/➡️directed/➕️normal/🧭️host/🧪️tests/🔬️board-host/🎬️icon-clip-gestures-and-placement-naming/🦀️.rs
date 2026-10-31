@@ -285,14 +285,16 @@ fn installed_naming_owns_brush_ids_and_fill_labels() {
     let mut ingress = BoardFillSnapshotIngress::new(0.0, &PROBE_NAMING);
     let snapshot = ingress.take_snapshot().expect("empty probe snapshot");
     assert!(std::ptr::eq(snapshot.naming, &PROBE_NAMING), "the ingress hands its naming to the snapshot");
+    let mut close_caller=close_source::caller(1,1);
     let mut job = BoardFillJob::with_operation(snapshot, 0, semio_framework_job::Operation::new(semio_framework_job::OperationId(1), semio_framework_job::RevisionId(1), semio_framework_job::Generation(1), 1));
     assert!(std::ptr::eq(job.naming, &PROBE_NAMING), "the job keeps the snapshot's naming");
     assert_eq!((job.naming.fill_stage_label)(job.stage()), "probe-complete");
-    close_probe_fill_job(&mut job);
+    close_probe_fill_job(&mut job,&mut close_caller);
+    close_caller.retire(close_source::STOCK);
 }
 
 #[cfg(test)]
-fn close_probe_fill_job(job: &mut BoardFillJob) {
+fn close_probe_fill_job(job: &mut BoardFillJob,caller:&mut semio_framework_job::OriginalJobFixtureCaller) {
     use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep};
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     for turn in 0.. {
@@ -305,7 +307,7 @@ fn close_probe_fill_job(job: &mut BoardFillJob) {
             maximum_release_bytes: job.next_close_release_byte_demand().expect("job release demand"),
             maximum_depth: job.next_close_depth_demand().expect("job depth demand"),
         };
-        match semio_framework_job::close_with_self_funded_context(exact, |cx| job.close_step(cx)).expect("original fixture close turn") {
+        match caller.turn(exact, |cx| job.close_step(cx)).expect("original fixture close turn") {
             InteractiveJobCloseStep::Pending { .. } => {}
             InteractiveJobCloseStep::Complete { .. } => break,
             other => panic!("probe job close ended in {other:?}"),
@@ -375,3 +377,7 @@ fn scene_wire_placement_naming_overrides_brush_prefixes() {
     host.style.set_naming(&NEUTRAL_BOARD_NAMING);
     assert_eq!(host.style.brush_placement_naming(), NEUTRAL_BOARD_NAMING.placement_naming(), "a static naming replaces an earlier wire override");
 }
+
+#[cfg(test)]
+#[path="../../../../../../../../../../../../🔨️modules/🧵️job/🧪️testing/♻️close/🦀️.rs"]
+mod close_source;

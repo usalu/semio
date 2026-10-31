@@ -25,6 +25,7 @@
         "maximumAttempts": 2,
         "loopsPerWorker": 2,
         "recycleMemoryRatio": 0.6,
+        "recycleGrowthRatio": 0.25,
         "recycleAfterProjects": 96,
         "initTimeoutMilliseconds": 180000,
         "jobTimeoutMilliseconds": 1800000,

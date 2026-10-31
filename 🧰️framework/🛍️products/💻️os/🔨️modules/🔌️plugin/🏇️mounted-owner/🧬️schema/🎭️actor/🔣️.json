@@ -10,7 +10,7 @@
     "undergrantHeapBytes",
     "cases",
     "nativeGrant",
-    "sqlVector"
+    "copyPolicy"
   ],
   "additionalProperties": false,
   "properties": {
@@ -22,8 +22,11 @@
     },
     "phases": {
       "const": [
-        "borrowed-original",
-        "paid-capture",
+        "source",
+        "backing",
+        "text",
+        "shared",
+        "settlement",
         "publication-transfer",
         "original-cancellation"
       ]
@@ -58,8 +61,8 @@
         64
       ]
     },
-    "sqlVector": {
-      "type": "object"
+    "copyPolicy": {
+      "const": "actual-utf8-payload-only"
     }
   }
 }

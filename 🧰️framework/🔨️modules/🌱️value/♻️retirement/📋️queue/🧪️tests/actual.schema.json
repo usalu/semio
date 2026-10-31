@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "text",
+    "deniedWork",
+    "reserveNullWork",
+    "transferWork",
+    "cachedWork",
+    "maximumTurns",
+    "stock",
+    "serdeOracle",
+    "sameTurnWorkThroughWrapper"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "text": {
+      "const": "Original queue α 🌱"
+    },
+    "deniedWork": {
+      "const": 0
+    },
+    "reserveNullWork": {
+      "const": 1
+    },
+    "transferWork": {
+      "const": 1
+    },
+    "cachedWork": {
+      "const": 0
+    },
+    "maximumTurns": {
+      "const": 10000
+    },
+    "stock": {
+      "const": {
+        "items": 4096,
+        "copy": 16777216,
+        "capacity": 16777216,
+        "release": 16777216,
+        "depth": 128
+      }
+    },
+    "serdeOracle": {
+      "const": true
+    },
+    "sameTurnWorkThroughWrapper": {
+      "const": true
+    }
+  }
+}
