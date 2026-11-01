@@ -17,7 +17,8 @@
     "{projectRoot}/🧪️tests/🧪️demonstratorpanebootvariants/🟦️.ts",
     "{projectRoot}/🧪️tests/🧪️demonstratorexamples/🟦️.ts",
     "{projectRoot}/🧪️tests/🧪️demonstratorunionreceipt/🟦️.ts",
-    "{projectRoot}/🧪️tests/🧪️demonstratorlocale/🟦️.ts"
+    "{projectRoot}/🧪️tests/🧪️demonstratorlocale/🟦️.ts",
+    "{projectRoot}/🔨️modules/🌐️locale/🟦️.ts"
   ],
   "cases": [
     {

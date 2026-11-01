@@ -1,4 +1,4 @@
-/** 🔍️ Loads the demonstrator landing page once (desktop viewport), skips the intro, and reports when each of the
+/** 🔍️ Loads the demonstrator landing page once (desktop viewport, browser language from PROBE_LOCALE, English by default, no language lock), skips the intro, and reports when each of the
  * eight panes' first window mounts and whether the two new panes (energie/statik) paint content. Read-only. */
 import { chromium } from "playwright";
 
@@ -10,14 +10,15 @@ const WINDOW_BY_PANE: Record<string, string> = {
   verfolgen: "framework.window.gis", statik: "framework.window.fem3dModel",
 };
 const browser = await chromium.launch({ args: ["--use-angle=metal"] });
-const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+const LOCALE = process.env.PROBE_LOCALE ?? "en-US";
+const page = await browser.newPage({ viewport: { width: 1600, height: 1000 }, locale: LOCALE });
 const errors: string[] = [];
 page.on("pageerror", (e) => errors.push("PAGEERROR " + String(e).slice(0, 300)));
 page.on("console", (m) => { const t = m.text(); if (m.type() === "error" && !t.startsWith("[DEBUG]")) errors.push(t.slice(0, 300)); });
 const t0 = Date.now();
 await page.goto(BASE, { waitUntil: "domcontentloaded", timeout: 60_000 });
 await page.waitForTimeout(8_000);
-const skip = page.getByText("Überspringen", { exact: true });
+const skip = page.locator('[id="ui.introduction.skip"]');
 if (await skip.count()) await skip.first().click({ force: true }).catch(() => {});
 const cards = await page.$$eval("[data-demonstrator-pane-card]", (els) => els.map((e) => e.getAttribute("data-pane-id")));
 console.log("cards:", cards.join(", "));
@@ -32,8 +33,8 @@ const content = await page.evaluate(() => ({
   zoneRows: document.querySelectorAll("[data-row-id]").length,
   canvases: document.querySelectorAll("canvas").length,
   world3dHosts: document.querySelectorAll(".semio-world-3d-host").length,
-  energyIntro: !!document.body.innerText.match(/Energiemodell|Energie/),
-  statikIntro: !!document.body.innerText.match(/Tragwerksmodell|Statik/),
+  energyIntro: !!document.body.innerText.match(/Energy|Energie/),
+  statikIntro: !!document.body.innerText.match(/Statics|Statik/),
   unknownWindows: [...new Set([...document.querySelectorAll('[id^="framework.window."]')].map((e) => e.id.split(".").slice(0, 3).join(".")))],
 }));
 console.log("final:", JSON.stringify(Object.fromEntries(seen)));

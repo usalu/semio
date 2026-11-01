@@ -76,7 +76,7 @@ impl MeshJob {
                 MeshRun::Yield
             }
             MeshJobStage::ReservePreparation | MeshJobStage::ReservePreparationIndex | MeshJobStage::ReservePreparationConstraints => {
-                let preparation = self.preparation.as_mut().expect("input preparation initialized");
+                let Some(preparation) = self.preparation.as_mut() else { return Self::fail(b"mesh-preparation-absent".to_vec()) };
                 let (admitted, next) = match self.stage {
                     MeshJobStage::ReservePreparation => (self.maximum_points == usize::MAX || MeshInputPreparation::reserve_owner(&mut preparation.points, self.maximum_points).is_ok(), MeshJobStage::ReservePreparationIndex),
                     MeshJobStage::ReservePreparationIndex => (self.maximum_points == usize::MAX || MeshInputPreparation::reserve_owner(&mut preparation.point_indices, self.maximum_points).is_ok(), MeshJobStage::ReservePreparationConstraints),
@@ -91,7 +91,8 @@ impl MeshJob {
             }
             MeshJobStage::PreparationFailed => Self::fail(b"mesh-fixed-preparation-backing".as_slice()),
             MeshJobStage::PrepareInput => {
-                let complete = match self.preparation.as_mut().expect("input preparation initialized").advance(&self.domain, &self.options) {
+                let Some(preparation) = self.preparation.as_mut() else { return Self::fail(b"mesh-preparation-absent".to_vec()) };
+                let complete = match preparation.advance(&self.domain, &self.options) {
                     Ok(complete) => complete,
                     Err(error) => {
                         self.stage = MeshJobStage::PreparationFailed;
@@ -99,7 +100,7 @@ impl MeshJob {
                     }
                 };
                 if complete {
-                    let preparation = self.preparation.as_mut().expect("input preparation complete");
+                    let Some(preparation) = self.preparation.as_mut() else { return Self::fail(b"mesh-preparation-absent".to_vec()) };
                     self.prepared_input = Some((std::mem::take(&mut preparation.points), std::mem::take(&mut preparation.constraints)));
                     self.input_count = self.domain.outer().len();
                     self.input_count_hole = 0;
@@ -121,7 +122,7 @@ impl MeshJob {
             }
             MeshJobStage::Initialize => {
                 if self.triangulation.is_none() {
-                    let (prepared_points, input_constraints) = self.prepared_input.take().expect("prepared input");
+                    let Some((prepared_points, input_constraints)) = self.prepared_input.take() else { return Self::fail(b"mesh-prepared-input-absent".to_vec()) };
                     if prepared_points.len() > self.maximum_points {
                         self.prepared_input = Some((prepared_points, input_constraints));
                         return Self::fail(b"mesh-fixed-point-capacity".to_vec());
@@ -146,7 +147,8 @@ impl MeshJob {
                     self.triangulation = Some(triangulation);
                     return MeshRun::Yield;
                 }
-                let initialized = match self.triangulation.as_mut().expect("mounted triangulation shell retained").advance_mounted_initialization() {
+                let Some(shell) = self.triangulation.as_mut() else { return Self::fail(b"mesh-triangulation-absent".to_vec()) };
+                let initialized = match shell.advance_mounted_initialization() {
                     Ok(initialized) => initialized,
                     Err(error) => return Self::fail(error.to_string().into_bytes()),
                 };
@@ -169,7 +171,7 @@ impl MeshJob {
                 MeshRun::Yield
             }
             MeshJobStage::InsertBoundary => {
-                let triangulation = self.triangulation.as_mut().expect("validated triangulation");
+                let Some(triangulation) = self.triangulation.as_mut() else { return Self::fail(b"mesh-triangulation-absent".to_vec()) };
                 if triangulation.insert_cursor < triangulation.input_len {
                     triangulation.insert_next();
                 } else if triangulation.advance_finish_insertion() {
@@ -251,7 +253,8 @@ impl MeshJob {
                 MeshRun::Yield
             }
             MeshJobStage::Classify => {
-                let face_count = self.triangulation.as_ref().expect("constrained triangulation").triangles.len();
+                let Some(triangulation) = self.triangulation.as_ref() else { return Self::fail(b"mesh-triangulation-absent".to_vec()) };
+                let face_count = triangulation.triangles.len();
                 if self.face_cursor >= face_count {
                     self.stage = MeshJobStage::PublishPreview;
                     return MeshRun::Yield;
@@ -298,7 +301,7 @@ impl MeshJob {
 impl MeshJob {
     /// 🤝️ Pays back the delivered payload turn by turn from the next call's own wallet before the search resumes.
     fn retire_delivered<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
-        let lent = self.lent.as_mut().expect("a delivered mesh publication is staged");
+        let lent = self.lent.as_mut().ok_or_else(|| ValueError::invariant("a delivered mesh publication is staged"))?;
         let demand = lent.payload.retirement_demands()?;
         let grant = cx.retained_grant();
         if mesh_covers(grant, demand) {
@@ -380,8 +383,8 @@ impl NumericalStep for MeshJob {
             MeshRun::Yield => return Ok(None),
             MeshRun::Cancelled => JobOutcomeBorrow::admit_cancelled(cx)?,
             MeshRun::Fault => JobOutcomeBorrow::admit_fault(cx, &self.markers.fault)?,
-            MeshRun::Preview => JobOutcomeBorrow::admit_preview(cx, &self.lent.as_ref().expect("a staged mesh preview").payload)?,
-            MeshRun::Checkpoint(applied_progress) => JobOutcomeBorrow::admit_checkpoint(cx, &self.lent.as_ref().expect("a staged mesh checkpoint").payload, applied_progress)?,
+            MeshRun::Preview => JobOutcomeBorrow::admit_preview(cx, &self.lent.as_ref().ok_or_else(||ValueError::invariant("a staged mesh preview"))?.payload)?,
+            MeshRun::Checkpoint(applied_progress) => JobOutcomeBorrow::admit_checkpoint(cx, &self.lent.as_ref().ok_or_else(||ValueError::invariant("a staged mesh checkpoint"))?.payload, applied_progress)?,
             MeshRun::Complete => JobOutcomeBorrow::admit_complete(cx, Some(&self.markers.state), self.lent.as_ref().map(|lent| &lent.payload))?,
             MeshRun::Published => JobOutcomeBorrow::admit_complete(cx, Some(&self.markers.state), Some(&self.markers.output))?,
         };

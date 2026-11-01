@@ -103,7 +103,7 @@ enum Generation3dMountedStringTarget {
     Wire(usize, u8),
 }
 
-struct Generation3dMountedStringOwner {
+pub(super) struct Generation3dMountedStringOwner {
     pub(super) target: Generation3dMountedStringTarget,
     pub(super) value: String,
     pub(super) remaining: Option<u64>,

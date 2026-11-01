@@ -19,7 +19,7 @@ if (typeof window !== "undefined") {
 }
 
 /** 🟡 Builds paneStyles, insetTop, insetBottom, insets of LayeredOverview. */
-export function usePaneStylesState({ previousOpened, opened, openedRef, interactive, routing, deepLink, latest, revealedRef, setRevealedId, sourceRef, setRevealSource, finishGhost, focusView, container, rootRef, cardElements, props, revealedId, touch, repaint, mode, pan, reduced, stop, targetRef, paint, follow, cellList, ids, aim, driveRef, cells, requestOpen, panning, swiping, resting, live, lifecycle, warm, panes, paneAt, moveTo, grid, windowBox, booted, posters, labels, registerContainer, markDirty, revealSource, reveal, conceal, cardCallback, renderCard }: Pick<ReturnType<typeof usePanesState>, "previousOpened" | "opened" | "openedRef" | "interactive" | "routing" | "deepLink" | "latest" | "revealedRef" | "setRevealedId" | "sourceRef" | "setRevealSource" | "finishGhost" | "container" | "rootRef" | "cardElements" | "revealedId" | "touch" | "repaint" | "mode" | "pan" | "reduced" | "stop" | "targetRef" | "paint" | "cellList" | "ids" | "aim" | "driveRef" | "cells" | "panning" | "swiping" | "resting" | "live" | "lifecycle" | "warm" | "panes" | "paneAt" | "grid" | "windowBox" | "booted" | "posters" | "labels" | "registerContainer" | "markDirty" | "revealSource" | "renderCard"> & Pick<ReturnType<typeof useMoveState>, "focusView" | "follow" | "requestOpen" | "moveTo" | "reveal" | "conceal" | "cardCallback"> & { readonly props: LayeredOverviewProps }) {
+export function usePaneStylesState({ previousOpened, opened, openedRef, interactive, routing, deepLink, latest, revealedRef, setRevealedId, sourceRef, setRevealSource, finishGhost, focusView, container, rootRef, cardElements, props, revealedId, touch, repaint, mode, pan, reduced, stop, targetRef, paint, follow, cellList, ids, aim, driveRef, cells, requestOpen, panning, swiping, resting, live, lifecycle, warm, panes, paneAt, moveTo, grid, windowBox, booted, posters, labels, registerContainer, markDirty, revealSource, reveal, conceal, press, release, clearedId, cardCallback, renderCard }: Pick<ReturnType<typeof usePanesState>, "previousOpened" | "opened" | "openedRef" | "interactive" | "routing" | "deepLink" | "latest" | "revealedRef" | "setRevealedId" | "sourceRef" | "setRevealSource" | "finishGhost" | "container" | "rootRef" | "cardElements" | "revealedId" | "touch" | "repaint" | "mode" | "pan" | "reduced" | "stop" | "targetRef" | "paint" | "cellList" | "ids" | "aim" | "driveRef" | "cells" | "panning" | "swiping" | "resting" | "live" | "lifecycle" | "warm" | "panes" | "paneAt" | "grid" | "windowBox" | "booted" | "posters" | "labels" | "registerContainer" | "markDirty" | "revealSource" | "clearedId" | "renderCard"> & Pick<ReturnType<typeof useMoveState>, "focusView" | "follow" | "requestOpen" | "moveTo" | "reveal" | "conceal" | "press" | "release" | "cardCallback"> & { readonly props: LayeredOverviewProps }) {
   React.useLayoutEffect(() => {
     const previous = previousOpened.current;
     previousOpened.current = opened;
@@ -161,7 +161,7 @@ export function usePaneStylesState({ previousOpened, opened, openedRef, interact
       pane={pane}
       style={paneStyles.get(pane.id)}
       opened={opened === pane.id}
-      revealed={revealedId === pane.id}
+      revealed={clearedId === pane.id}
       live={live.has(pane.id)}
       shown={inWindow(cellList[index]!, windowBox) || (swiping && nearby.has(pane.id))}
       busy={booted.has(pane.id)}
@@ -202,8 +202,8 @@ export function usePaneStylesState({ previousOpened, opened, openedRef, interact
     return () => window.removeEventListener("pointermove", onMove);
   }, [interactive, reveal]);
   const cardHost = (pane: LayeredPane, placement: React.ComponentProps<typeof LayeredCardHost>["placement"]) => (
-    <LayeredCardHost key={pane.id} pane={pane} mode={mode} revealed={revealedId === pane.id} source={revealedId === pane.id ? revealSource : null} zoomHold={zoomHold} onOpen={requestOpen} onReveal={reveal} onConceal={conceal} onElement={cardCallback} renderCard={renderCard} placement={placement} />
+    <LayeredCardHost key={pane.id} pane={pane} mode={mode} revealed={revealedId === pane.id} cleared={clearedId === pane.id} source={revealedId === pane.id ? revealSource : null} zoomHold={zoomHold} onOpen={requestOpen} onReveal={reveal} onConceal={conceal} onPress={press} onRelease={release} onElement={cardCallback} renderCard={renderCard} placement={placement} />
   );
-  const chrome = props.renderChrome?.({ revealed: revealedId !== null, opened: opened !== null });
+  const chrome = props.renderChrome?.({ revealed: clearedId !== null, opened: opened !== null });
   return { restedOn, stripStyle, paneView, cellStyles, cardHost, neighbours, insets, goTo, chrome };
 }

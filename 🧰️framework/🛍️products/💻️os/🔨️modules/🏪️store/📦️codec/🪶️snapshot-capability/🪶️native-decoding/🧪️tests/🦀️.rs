@@ -29,7 +29,7 @@ fn close_original_recipient(native:&mut NativeDecodeControl<'_>){
     let fixture:serde_json::Value=crate::fixture_json(file!(), "🧫️fixtures/🔣️.json");
     for _ in 0..fixture["maximumCloseTurns"].as_u64().unwrap(){
         if !native.has_retirement_owner(){return}
-        let step=native.close_retirement_recipient(caller_grant()).unwrap();
+        let step=native.close_retirement_recipient(caller_grant()).result.unwrap();
         assert!(step.progress()!=Default::default()||!native.has_retirement_owner(),"original authored close turn must advance actual custody");
     }
     assert!(!native.has_retirement_owner(),"original bounded close supervisor did not finish");

@@ -27,7 +27,7 @@ fn native_owner_query_preserves_unique_declaration_with_absent_value(){
 }
 #[test]
 fn native_owner_query_lends_actual_static_declaration_and_expression_addresses(){
- let snapshot=source(&fixture()["cases"][0]);let declaration=crate::validation::metadata::entity("IFCRECTANGLEPROFILEDEF").unwrap();let mut observe=|_|true;let mut recipient=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(1024*1024,&mut observe);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=NativeSnapshotDecodeOwner::new(&mut native,grant());
+ let snapshot=source(&fixture()["cases"][0]);let declaration=semio_s_artifact_stdio_ifc4x3_express::metadata::entity("IFCRECTANGLEPROFILEDEF").unwrap();let mut observe=|_|true;let mut recipient=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(1024*1024,&mut observe);native.install_retirement_recipient(&mut recipient).unwrap();let mut owner=NativeSnapshotDecodeOwner::new(&mut native,grant());
  with_ifc4x3_native_attribute(&snapshot,7,"XDim",Some("IFCRECTANGLEPROFILEDEF"),31,&mut owner,|found,_|{let entry=found.matches[0].as_ref().unwrap();assert!(std::ptr::eq(entry.declaration,&declaration.all_attributes[3]));assert!(std::ptr::eq(entry.type_expr,&declaration.all_attributes[3].type_expr));Ok(())}).unwrap();drop(owner);assert!(!native.has_retirement_owner());
 }
 #[test]

@@ -71,15 +71,15 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.phase = Phase::Rejected;
         self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled);
-        if self.active.is_some() { return semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant); }
-        if self.fold_job.is_some() { return semio_framework_os_store_read::retirement_owner_close(&mut self.fold_job, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).result; }
+        if self.fold_job.is_some() { return semio_framework_os_store_read::retirement_owner_close(&mut self.fold_job, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         macro_rules! original {
-            ($field:ident) => { if self.$field.is_some() { return semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, grant); } };
+            ($field:ident) => { if self.$field.is_some() { return semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, grant).result; } };
         }
         original!(normalized_conflicts);
         original!(normalized_transitions);
         original!(transition_ledger);
-        if self.target_decoder.is_some() { return semio_framework_os_store_read::retirement_owner_close(&mut self.target_decoder, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.target_decoder.is_some() { return semio_framework_os_store_read::retirement_owner_close(&mut self.target_decoder, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         original!(pending_target);
         original!(target_address);
         original!(target_source);
@@ -152,7 +152,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
         original!(owner);
         if self.actor.0.has_owner() {
             let original = std::mem::take(&mut self.actor.0);
-            match semio_framework_value::retirement::admit_owned_retirement(original, child) {
+            match semio_framework_value::retirement::admit_owned_retirement(original, child) .result {
                 Ok((owner, progress)) => { *self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "hydration original actor birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "hydration actor birth differs from its original quote")); } return Ok(RetainedCloneStep::Progress(progress)); }
                 Err((error, original)) => { self.actor.0 = original; return Err(error); }
             }

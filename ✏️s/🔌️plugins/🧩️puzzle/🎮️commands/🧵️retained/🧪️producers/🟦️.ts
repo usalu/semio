@@ -15,5 +15,4 @@ test("Puzzle producers retain exact original routing and use same-source direct 
   expect(body.includes("ToolOperationSpec")).toBe(false);
   expect(body.includes("context.tool_run().cloned()")).toBe(false);
  }
- console.log("[DEBUG] Three Puzzle producers preserve exact owner policy, direct original admission and borrowed tool-run identity");
 });

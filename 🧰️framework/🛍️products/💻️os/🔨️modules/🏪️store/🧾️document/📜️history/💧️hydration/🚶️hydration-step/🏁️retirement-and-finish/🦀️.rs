@@ -10,7 +10,7 @@ where
     /// 🧹 Retires the history runtime.
     pub(super) fn step_retire_history(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
         macro_rules! retire {
-            ($field:ident) => { if self.$field.is_some() { let step = semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant }); return self.admitted_step(step, cx); } };
+            ($field:ident) => { if self.$field.is_some() { let step = semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.$field, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant }); return self.admitted_step(step.result, cx); } };
         }
         retire!(history);
         retire!(mutation_lookup);
@@ -26,7 +26,7 @@ where
     pub(super) fn step_retire_pack(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
         if self.pack.is_some() {
             let step = semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.pack, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant });
-            return self.admitted_step(step, cx);
+            return self.admitted_step(step.result, cx);
         }
         self.phase = if self.target == PersistedDocumentHydrationTarget::Envelope { Phase::CloseEnvelopeRuntime } else { Phase::Finish };
         cx.consume_fuel(1);

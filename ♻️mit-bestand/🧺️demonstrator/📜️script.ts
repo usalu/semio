@@ -29,9 +29,10 @@ if (import.meta.vitest) {
   const { demonstratorRuntimeBuildVariants } = await import("./🔨️modules/🧩️runtime/🟦️.ts");
   const { registerTests1 } = await import("./🧪️tests/🧪️demonstratorruntimebuildvariants/🟦️.ts");
   await registerTests1(import.meta.vitest, { demonstratorRuntimeBuildVariants, join }, { directory: import.meta.dir, url: import.meta.url });
-  const { DEMONSTRATOR_PANES, demonstratorPaneDescriptionParagraphs } = await import("./🪧️brand.ts");
+  const { demonstratorPaneViews, demonstratorPaneDescriptionParagraphs } = await import("./🪧️brand.ts");
+  const { DEMONSTRATOR_LOCALES } = await import("./🔨️modules/🌐️locale/🟦️.ts");
   const { registerTests1: registerDescriptionTests } = await import("./🧪️tests/🧪️demonstratorpanedescription/🟦️.ts");
-  await registerDescriptionTests(import.meta.vitest, { demonstratorPaneDescriptionParagraphs, DEMONSTRATOR_PANES }, { directory: import.meta.dir, url: import.meta.url });
+  await registerDescriptionTests(import.meta.vitest, { demonstratorPaneDescriptionParagraphs, demonstratorPaneViews, DEMONSTRATOR_LOCALES }, { directory: import.meta.dir, url: import.meta.url });
   const { demonstratorGisMapTileServeMode, DEMONSTRATOR_STATIC_MAP_TILE_Z_MAX_RASTER, DEMONSTRATOR_STATIC_MAP_TILE_Z_MAX_VECTOR } = await import("./🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts");
   const { registerTests1: registerMapTileTests } = await import("./🧪️tests/🧪️demonstratormaptiles/🟦️.ts");
   await registerMapTileTests(import.meta.vitest, { demonstratorGisMapTileServeMode, DEMONSTRATOR_STATIC_MAP_TILE_Z_MAX_RASTER, DEMONSTRATOR_STATIC_MAP_TILE_Z_MAX_VECTOR });

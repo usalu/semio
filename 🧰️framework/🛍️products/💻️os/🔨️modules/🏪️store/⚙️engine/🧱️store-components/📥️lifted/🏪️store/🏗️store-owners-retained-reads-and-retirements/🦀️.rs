@@ -71,7 +71,7 @@ where
     pub fn retire_owned_mutation(&self,owner:&mut Option<Mutation>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>{
         if owner.is_none(){return Ok(None);}
         let factory=self.owned_mutation_retirement_factory()?;
-        semio_framework_value::FactoryOwnedRetirement::<Mutation>::admit_original(owner,factory,grant).map(|admitted|admitted.map(|(frame,progress)|(frame as Box<dyn ErasedSnapshotRetirement>,progress)))
+        semio_framework_value::FactoryOwnedRetirement::<Mutation>::admit_original(owner,factory,grant).result.map(|admitted|admitted.map(|(frame,progress)|(frame as Box<dyn ErasedSnapshotRetirement>,progress)))
     }
 
     /// 🔐️ Installs the one domain-supplied owner catalog before a store can enter

@@ -89,14 +89,12 @@ function testFemDocumentAdmission(): void {
   scopedCollision.nodes[0]!.id = scopedCollision.materials[0]!.id;
   scopedCollision.loadCases.push({ ...structuredClone(scopedCollision.loadCases[0]!), id: "another-case" });
   assert.deepEqual(parse(scopedCollision), scopedCollision);
-  console.log("[DEBUG] FEM3d native TypeScript root refused four invalid owners and admitted cross-kind/cross-case collisions");
   assert.throws(() => parse(row.document));
   for (const field of row.foreignFields) {
     const candidate = { ...structuredClone(row.document), [field.key]: field.value };
     assert(!validate(candidate), field.key);
     assert.throws(() => parse({ ...structuredClone(native), [field.key]: field.value }), field.key);
   }
-  console.log(`[DEBUG] FEM3d document admission verified ${row.nativeWords.length} native words and ${row.nativeCounts.length} native counts`);
 }
 
 if (import.meta.main) testFem3dWindowConfigContract();

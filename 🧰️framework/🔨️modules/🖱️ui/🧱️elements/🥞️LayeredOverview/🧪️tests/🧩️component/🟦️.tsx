@@ -36,6 +36,14 @@ function hoverZoom(card: HTMLElement, init: { readonly pointerType?: string } = 
   fireEvent.pointerOver(zoomControl(card), { pointerType: "mouse", ...init });
 }
 
+function pressZoom(card: HTMLElement): void {
+  fireEvent.pointerDown(zoomControl(card), { pointerType: "mouse", button: 0 });
+}
+
+function releaseZoom(card: HTMLElement): void {
+  fireEvent.pointerUp(zoomControl(card), { pointerType: "mouse", button: 0 });
+}
+
 function leaveZoom(card: HTMLElement, init: { readonly pointerType?: string } = {}): void {
   fireEvent.pointerOut(zoomControl(card), { pointerType: "mouse", relatedTarget: document.body, ...init });
 }
@@ -274,18 +282,28 @@ describe("LayeredOverview", () => {
     expect(board().closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(true);
   });
 
-  it("reveals a page when the pointer is over its explore control (glass hidden, card lifted, chrome told) and restores the glass on leave", () => {
+  it("only centers the level while the pointer hovers the explore control, and clears the page (glass hidden, chrome told) while it is pressed", () => {
     const chrome = vi.fn(() => null);
     const revealed = vi.fn();
     const { strip, veil, cardOf } = renderHome({ reducedMotion: "always", renderChrome: chrome, onRevealedIdChange: revealed });
     hoverZoom(cardOf("board"), { pointerType: "mouse" });
     expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+    expect(veil()!.dataset.veil).toBe("whole");
+    expect(veil()!.style.visibility).toBe("visible");
+    expect(cardOf("board").closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(true);
+    expect(cardOf("board").closest("[data-layered-card]")!.hasAttribute("data-cleared")).toBe(false);
+    expect(within(cardOf("board")).getByText("revealed")).toBeTruthy();
+    expect(chrome).toHaveBeenLastCalledWith({ revealed: false, opened: false });
+    expect(revealed).toHaveBeenLastCalledWith("board", "pointer");
+    pressZoom(cardOf("board"));
     expect(veil()!.dataset.veil).toBe("clear");
     expect(veil()!.style.visibility).toBe("hidden");
-    expect(cardOf("board").closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(true);
-    expect(within(cardOf("board")).getByText("revealed")).toBeTruthy();
+    expect(cardOf("board").closest("[data-layered-card]")!.hasAttribute("data-cleared")).toBe(true);
     expect(chrome).toHaveBeenLastCalledWith({ revealed: true, opened: false });
-    expect(revealed).toHaveBeenLastCalledWith("board", "pointer");
+    releaseZoom(cardOf("board"));
+    expect(veil()!.dataset.veil).toBe("whole");
+    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+    pressZoom(cardOf("board"));
     leaveZoom(cardOf("board"), { pointerType: "mouse" });
     expect(veil()!.dataset.veil).toBe("whole");
     expect(veil()!.style.visibility).toBe("visible");
@@ -312,10 +330,23 @@ describe("LayeredOverview", () => {
     expect(veil()!.dataset.veil).toBe("whole");
   });
 
-  it("hides every other card while the pointer hovers one and restores them on leave", () => {
+  it("keeps every card visible while the pointer hovers one", () => {
     const { cardOf } = renderHome({ reducedMotion: "always" });
     const host = (id: string) => cardOf(id).closest<HTMLElement>("[data-layered-card]")!;
     hoverZoom(cardOf("board"), { pointerType: "mouse" });
+    expect(host("board").hasAttribute("data-revealed")).toBe(true);
+    for (const id of HOME) {
+      expect(host(id).querySelector<HTMLElement>(":scope > *")?.style.opacity ?? "", id).toBe("");
+      expect(host(id).hasAttribute("data-concealed"), id).toBe(false);
+      expect(host(id).hasAttribute("data-tinted"), id).toBe(false);
+    }
+  });
+
+  it("hides every other card while the pointer presses the explore control and restores them on release", () => {
+    const { cardOf } = renderHome({ reducedMotion: "always" });
+    const host = (id: string) => cardOf(id).closest<HTMLElement>("[data-layered-card]")!;
+    hoverZoom(cardOf("board"), { pointerType: "mouse" });
+    pressZoom(cardOf("board"));
     const opacity = (id: string) => host(id).querySelector<HTMLElement>(":scope > *")?.style.opacity ?? "";
     expect(host("board").dataset.reveal).toBe("pointer");
     expect(opacity("board")).toBe("");
@@ -328,7 +359,7 @@ describe("LayeredOverview", () => {
       expect(host(id).hasAttribute("data-tinted"), id).toBe(false);
       expect(host(id).hasAttribute("aria-hidden"), id).toBe(false);
     }
-    leaveZoom(cardOf("board"), { pointerType: "mouse" });
+    releaseZoom(cardOf("board"));
     for (const id of HOME) {
       expect(opacity(id), id).toBe("");
       expect(host(id).hasAttribute("data-concealed"), id).toBe(false);
@@ -348,10 +379,11 @@ describe("LayeredOverview", () => {
     }
   });
 
-  it("hides the other cards of a swipe grid while the pointer hovers one", () => {
+  it("hides the other cards of a swipe grid while the pointer presses one", () => {
     const { cardOf } = renderHome({ mode: "swipe", reducedMotion: "always" });
     const host = (id: string) => cardOf(id).closest<HTMLElement>("[data-layered-card]")!;
     hoverZoom(cardOf("cooling"), { pointerType: "mouse" });
+    pressZoom(cardOf("cooling"));
     expect(host("cooling").dataset.reveal).toBe("pointer");
     expect(host("cooling").hasAttribute("data-tinted")).toBe(true);
     expect(host("learner").hasAttribute("data-tinted")).toBe(false);
@@ -370,6 +402,7 @@ describe("LayeredOverview", () => {
     expect(middle.x).toBeGreaterThan(1.5);
     expect(middle.x).toBeLessThan(2);
     expect(middle.y).toBeCloseTo(middle.x / 2, 3);
+    pressZoom(cardOf("cooling"));
     const expected = veilClip({ column: 2, row: 1 }, middle);
     expect(expected.kind).toBe("hole");
     expect(veil()!.dataset.veil).toBe("hole");
@@ -470,11 +503,18 @@ describe("LayeredOverview", () => {
     const { veil, cardOf } = renderHome({ reducedMotion: "always" });
     const link = within(cardOf("badges")).getByRole("link", { name: "Badges" });
     act(() => link.focus());
-    expect(veil()!.dataset.veil).toBe("clear");
-    act(() => within(cardOf("badges")).getByRole("button").focus());
-    expect(veil()!.dataset.veil).toBe("clear");
-    act(() => within(cardOf("badges")).getByRole("button").blur());
     expect(veil()!.dataset.veil).toBe("whole");
+    expect(cardOf("badges").closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(true);
+    const button = within(cardOf("badges")).getByRole("button");
+    act(() => button.focus());
+    expect(veil()!.dataset.veil).toBe("whole");
+    fireEvent.keyDown(button, { key: "Enter" });
+    expect(veil()!.dataset.veil).toBe("clear");
+    fireEvent.keyUp(button, { key: "Enter" });
+    expect(veil()!.dataset.veil).toBe("whole");
+    act(() => button.blur());
+    expect(veil()!.dataset.veil).toBe("whole");
+    expect(cardOf("badges").closest("[data-layered-card]")!.hasAttribute("data-revealed")).toBe(false);
   });
 
   it("opens a card as a focused, labelled region and returns focus to the card on Escape", () => {
@@ -685,7 +725,7 @@ describe("LayeredOverview", () => {
     hoverZoom(cardOf("board"), { pointerType: "mouse" });
     frames(600);
     expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
-    expect(veil()!.dataset.veil).toBe("clear");
+    expect(veil()!.dataset.veil).toBe("whole");
     moveMouse(900, 900);
     frames(600);
     expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");

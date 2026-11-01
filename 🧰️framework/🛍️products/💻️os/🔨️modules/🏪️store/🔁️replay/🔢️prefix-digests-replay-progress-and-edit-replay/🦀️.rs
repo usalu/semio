@@ -193,7 +193,7 @@ impl<P, Mutation: super::Mutation<P>> std::ops::DerefMut for EditReplay<P, Mutat
 
 impl<P,Mutation:super::Mutation<P>+OpBinary> EditReplay<P,Mutation>{
         /// 🎟️ Executes one replay operation frontier under the caller's unchanged original resource allowance.
-    pub fn step_granted(&mut self,edits:&impl ReplayEdits<Mutation>,grant:RetainedCloneGrant,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,deadline:&mut dyn FnMut()->bool)->Result<ReplayStep,VcsError>{if self.retiring{return Err(VcsError::HistoryReplaying);}if deadline()||grant.maximum_items==0{return Ok(ReplayStep::Pending(self.progress));}{self.native_receipt=Default::default();self.original.advance_with_operation_cap(edits,1,Some(grant),Some(control),None,&mut||true)}}
+    pub fn step_granted(&mut self,edits:&impl ReplayEdits<Mutation>,grant:RetainedCloneGrant,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,deadline:&mut dyn FnMut()->bool)->Result<ReplayStep,VcsError>{if self.retiring{return Err(VcsError::HistoryReplaying);}if deadline()||grant.maximum_items==0{return Ok(ReplayStep::Pending(self.progress));}{self.native_receipt=Default::default();self.original.advance_with_operation_cap(edits,1,Some(grant),Some(control),None,None,&mut||true)}}
 }
 
 impl<P,Mutation:super::Mutation<P>> EditReplay<P,Mutation>{

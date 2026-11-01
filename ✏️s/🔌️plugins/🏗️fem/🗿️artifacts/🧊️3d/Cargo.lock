@@ -679,6 +679,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-native-storage",
  "semio-framework-value-ordered",
  "semio-framework-value-paged-text",
  "semio-framework-value-persistent",
@@ -860,6 +861,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-job-clock",
+ "semio-framework-job-failure",
  "semio-framework-job-payload",
  "semio-framework-job-receiving",
  "semio-framework-trace",
@@ -867,6 +869,17 @@ dependencies = [
  "semio-framework-value-native-owned",
  "semio-framework-value-retained-clone",
  "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-job-failure"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-retained-clone",
 ]
 
 [[package]]
@@ -1855,6 +1868,7 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-native-storage",
 ]
 
 [[package]]
@@ -4709,6 +4723,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-plugin-abi",
  "semio-framework-plugin-reactor-lifecycle",
+ "semio-framework-plugin-testing-caller",
  "semio-framework-trace",
  "semio-framework-ui-contract",
  "semio-framework-ui-runtime",
@@ -6841,6 +6856,7 @@ dependencies = [
  "semio-s-fem-mesh",
  "semio-s-fem-model",
  "semio-s-fem-node",
+ "semio-s-fem-payload-turns",
  "semio-s-fem-sparse",
  "semio-s-fem-sparse-pcg",
  "semio-s-fem-static",
@@ -7441,6 +7457,7 @@ dependencies = [
  "semio-s-fem-elements3d",
  "semio-s-fem-mesh",
  "semio-s-fem-model",
+ "semio-s-fem-payload-turns",
  "semio-s-fem-sparse",
  "semio-s-fem-sparse-ldlt",
  "semio-s-fem-sparse-pcg",
@@ -11521,7 +11538,10 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-diff",
  "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-lift",
+ "semio-s-artifact-stdio-pdf-lower",
  "semio-s-artifact-stdio-pdf-mut-base-2",
+ "semio-s-artifact-stdio-pdf-mut-family-11",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-s-artifact-stdio-pdf-tests-2",
@@ -14321,6 +14341,7 @@ dependencies = [
  "semio-s-fem-analyses-assembly",
  "semio-s-fem-analyses-model",
  "semio-s-fem-model",
+ "semio-s-fem-payload-turns",
  "semio-s-fem-sparse",
  "semio-s-fem-sparse-ldlt",
  "semio-s-fem-sparse-subspace",
@@ -14340,6 +14361,7 @@ dependencies = [
  "semio-s-fem-algebra",
  "semio-s-fem-analyses-model",
  "semio-s-fem-model",
+ "semio-s-fem-payload-turns",
  "semio-s-fem-sparse",
  "semio-s-fem-sparse-ldlt",
  "semio-s-fem-static",
@@ -14423,6 +14445,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-job-payload",
  "semio-framework-value",
+ "semio-s-fem-payload-turns",
  "semio-s-fem-sparse",
 ]
 
@@ -14456,6 +14479,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-fem-payload-turns"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-job-payload",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-s-fem-sparse"
 version = "0.1.0"
 dependencies = [
@@ -14467,6 +14499,7 @@ dependencies = [
  "semio-framework-value-edit",
  "semio-framework-value-persistent",
  "semio-s-fem-algebra",
+ "semio-s-fem-payload-turns",
 ]
 
 [[package]]
@@ -14479,6 +14512,7 @@ dependencies = [
  "semio-framework-value-edit",
  "semio-framework-value-persistent",
  "semio-s-fem-algebra",
+ "semio-s-fem-payload-turns",
  "semio-s-fem-sparse",
 ]
 
@@ -14493,6 +14527,7 @@ dependencies = [
  "semio-framework-value-derive",
  "semio-framework-value-persistent",
  "semio-s-fem-algebra",
+ "semio-s-fem-payload-turns",
  "semio-s-fem-sparse",
 ]
 
@@ -14505,6 +14540,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-persistent",
  "semio-s-fem-algebra",
+ "semio-s-fem-payload-turns",
  "semio-s-fem-sparse",
  "semio-s-fem-sparse-ldlt",
 ]
@@ -14537,6 +14573,7 @@ dependencies = [
  "semio-framework-job-payload",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-s-fem-payload-turns",
 ]
 
 [[package]]

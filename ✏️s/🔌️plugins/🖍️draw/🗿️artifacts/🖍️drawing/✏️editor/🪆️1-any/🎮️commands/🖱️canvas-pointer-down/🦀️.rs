@@ -39,7 +39,7 @@ use crate::modes::edit::windows::canvas::transient::DrawingCanvasWindowTransient
 use semio_s_artifact_draw_drawing_transform::rotate_layers::mutation::rotate_layers;
 use semio_s_artifact_draw_drawing_transform::scale_layers::mutation::scale_layers;
 use semio_s_artifact_draw_drawing_geometry::handles::{handle_motion, HandleMotion};
-use semio_s_artifact_draw_drawing_scene::paint::scene::query::{PreparedScenePickJob, PreparedScenePick, PreparedSceneIdentity};
+use semio_s_artifact_draw_drawing_scene_paint::scene::query::{PreparedScenePickJob, PreparedScenePick, PreparedSceneIdentity};
 use semio_s_artifact_draw_drawing_editor_interaction::geometry_session::MountedSceneQuery;
 use semio_s_artifact_draw_drawing_model::{create_drawing_trace_layer, layer_id};
 use semio_s_artifact_draw_drawing_model::create_drawing_path_layer;

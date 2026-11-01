@@ -42,13 +42,13 @@ fn retained_cad_presence_close_preserves_shared_roots_and_exact_grants() {
         let root = Arc::new(value);
         let reader = root.clone();
         let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: CadPresenceRetirementFactory.retirement_birth_bytes(&root), maximum_release_bytes: 0, maximum_depth: 1 };
-        let (mut first, receipt) = CadPresenceRetirementFactory.retire(root, birth).unwrap_or_else(|(error, _)| panic!("CAD presence birth refused: {error}"));
+        let (mut first, receipt) = CadPresenceRetirementFactory.retire(root, birth).result.unwrap_or_else(|(error, _)| panic!("CAD presence birth refused: {error}"));
         assert!(receipt.fits(birth));
         drive(&mut first, 4096);
         assert_eq!(reader.as_ref(), &oracle);
         let weak = Arc::downgrade(&reader);
         let birth = RetainedCloneGrant { maximum_capacity_bytes: CadPresenceRetirementFactory.retirement_birth_bytes(&reader), ..birth };
-        let (mut last, _) = CadPresenceRetirementFactory.retire(reader, birth).unwrap_or_else(|(error, _)| panic!("CAD presence birth refused: {error}"));
+        let (mut last, _) = CadPresenceRetirementFactory.retire(reader, birth).result.unwrap_or_else(|(error, _)| panic!("CAD presence birth refused: {error}"));
         let total = drive(&mut last, 4096);
         assert!(total.released_bytes >= expected);
         assert!(weak.upgrade().is_none());

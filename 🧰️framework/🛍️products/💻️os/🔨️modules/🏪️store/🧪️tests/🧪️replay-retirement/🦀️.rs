@@ -80,11 +80,11 @@ impl semio_framework_value::retirement::RetirementCursor for FailClosedOpRetirem
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {copy_bytes:self.next_work_byte_demand()?,depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
     fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep;
-        if self.0.is_none(){return RetirementStep::Complete;}
+        if self.0.is_none(){return RetirementStep::Complete(0);}
         if grant.maximum_items==0||grant.maximum_copy_bytes<std::mem::size_of::<FailClosedOp>(){return RetirementStep::BudgetExhausted;}
-        if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original fixture operation requires its supplied depth"));}
+        if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original fixture operation requires its supplied depth"),0);}
         self.0.take().expect("original admitted operation").retire_cold();
-        RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<FailClosedOp>(),..Default::default()})
+        RetirementStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<FailClosedOp>(),..Default::default()},1)
     }
     fn terminal_is_empty(&self)->bool{self.0.is_none()}
     fn next_close_byte_demand(&self)->Option<usize>{Some(0)}

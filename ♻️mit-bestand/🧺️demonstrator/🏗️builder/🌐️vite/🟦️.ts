@@ -90,7 +90,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
     ...semioHostHtmlVitePlugin(repoRoot, {
       title: "Entwerfen mit Bestand · Demonstrator",
       entry: "./🟦️.tsx",
-      bodyClass: "h-screen w-screen overflow-hidden bg-background text-foreground",
+      bodyClass: "h-screen w-screen overflow-auto bg-background text-foreground",
       cnameHost: DEMONSTRATOR_HOST,
     }),
     semioEmojiIndexHtmlVitePlugin(playDir),

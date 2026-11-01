@@ -199,7 +199,7 @@ impl Lexer {
                                 if self.bump(source, port)? != Some(b'\\') {
                                     return Err(invalid("missing STEP Unicode delimiter"));
                                 }
-                                let (mut high, mut count) = (None, 0usize);
+                                let (mut high, mut count): (Option<u32>, usize) = (None, 0);
                                 loop {
                                     self.prints(source, port)?;
                                     if self.consume(source, b"\\X0\\", port)? {

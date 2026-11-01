@@ -35,6 +35,7 @@ semio-s-artifact-draw-drawing-geometry = { workspace = true, features = ["testki
 semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-mutations = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-scene-paint = { workspace = true, features = ["testkit"] }
 serde_json = { workspace = true }
 tiny-skia = { workspace = true }
 ttf-parser = { workspace = true }

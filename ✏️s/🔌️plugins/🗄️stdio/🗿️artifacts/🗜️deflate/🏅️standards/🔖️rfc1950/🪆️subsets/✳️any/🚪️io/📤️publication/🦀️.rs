@@ -1,9 +1,9 @@
 //! 📤️ Resumable publication of bounded DEFLATE checkpoint state and committed output bytes.
 
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
-use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
+use semio_framework_job::{receive_original_retained_work, OriginalTurnFailure, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, StepContext};
 use semio_framework_job_payload::{JobPayloadStream, RetainedPayloadBuilder};
-use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
 
 #[derive(Clone, Copy)]
 pub enum Kind {
@@ -12,8 +12,9 @@ pub enum Kind {
 }
 
 /// 🧯️ Maps one child close turn onto the parent job's close vocabulary; a child never completes its parent.
-pub fn close_result(result: Result<RetainedCloneStep, ValueError>) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
-    Ok(match result {
+pub fn close_result(work: &mut u64, turn: RetainedWorkOutcome) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
+    *work += turn.work;
+    Ok(match turn.result {
         Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
         Err(error) => return Err(error),
     })
@@ -67,7 +68,7 @@ impl Publication {
     }
 
     /// ✍️ Advances one paid unit toward the lent outcome and reports it once the payload can be borrowed.
-    pub fn poll<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    pub fn poll<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         let kind = match self.kind {
             Kind::Checkpoint(applied_progress) => JobPublicationKind::Checkpoint { applied_progress },
             Kind::Commit => return self.poll_commit(cx),
@@ -79,29 +80,29 @@ impl Publication {
         Ok(result)
     }
 
-    fn poll_commit<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    fn poll_commit<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
         if !self.state.is_initialized() {
-            self.state.advance_initialization(cx)?;
+            { let turn = self.state.advance_initialization(cx); receive_original_retained_work(cx, turn)?; }
             return Ok(None);
         }
         if self.state_cursor < self.primary.len() {
-            self.state.append_original(cx, &self.primary, &mut self.state_cursor)?;
+            { let turn = self.state.append_original(cx, &self.primary, &mut self.state_cursor); receive_original_retained_work(cx, turn)?; }
             return Ok(None);
         }
         if self.state.published().is_none() {
-            self.state.seal(cx)?;
+            { let turn = self.state.seal(cx); receive_original_retained_work(cx, turn)?; }
             return Ok(None);
         }
         if !self.output.is_initialized() {
-            self.output.advance_initialization(cx)?;
+            { let turn = self.output.advance_initialization(cx); receive_original_retained_work(cx, turn)?; }
             return Ok(None);
         }
         if self.output_cursor < self.secondary.len() {
-            self.output.append_original(cx, &self.secondary, &mut self.output_cursor)?;
+            { let turn = self.output.append_original(cx, &self.secondary, &mut self.output_cursor); receive_original_retained_work(cx, turn)?; }
             return Ok(None);
         }
         if self.output.published().is_none() {
-            self.output.seal(cx)?;
+            { let turn = self.output.seal(cx); receive_original_retained_work(cx, turn)?; }
             return Ok(None);
         }
         let result = JobOutcomeBorrow::admit_complete(cx, self.state.published(), self.output.published())?;
@@ -140,7 +141,13 @@ impl Publication {
         Ok(RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome<InteractiveJobCloseStep> {
+        let mut work = 0;
+        let result = self.close_turn(grant, &mut work);
+        RetainedWorkOutcome { result, work }
+    }
+
+    fn close_turn(&mut self, grant: RetainedCloneGrant, work: &mut u64) -> Result<InteractiveJobCloseStep, ValueError> {
         let demand = match self.retirement_demands() {
             Ok(demand) => demand,
             Err(error) => return Err(error),
@@ -149,13 +156,13 @@ impl Publication {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
         if !self.single.terminal_is_empty() {
-            return close_result(self.single.close_step(grant));
+            return close_result(work, self.single.close_step(grant));
         }
         if !self.state.terminal_is_empty() {
-            return close_result(self.state.close_step_granted(grant));
+            return close_result(work, self.state.close_step_granted(grant));
         }
         if !self.output.terminal_is_empty() {
-            return close_result(self.output.close_step_granted(grant));
+            return close_result(work, self.output.close_step_granted(grant));
         }
         if self.primary.capacity() != 0 {
             let released_bytes = self.primary.capacity();

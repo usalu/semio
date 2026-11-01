@@ -13,7 +13,7 @@ import {ifc4x3Catalog} from '../📚️catalog/🟦️.ts';
 test('TYPEOF SELECT closure vectors have a closed schema',()=>expect(new Ajv({strict:true,allErrors:true}).compile(schema)(cases)).toBe(true));
 test('immutable native SELECT parent index retains every released direct edge',async()=>{
  const expected=new Map<string,string[]>();for(const type of Object.values(ifc4x3Catalog.types))if(type.kind==='select')for(const member of type.members){const parents=expected.get(member)??[];parents.push(type.name.toUpperCase());expected.set(member,parents);}
- const rows=[...expected].map(([name,parents])=>[name,parents.sort()]).sort(([a],[b])=>String(a)<String(b)?-1:String(a)>String(b)?1:0),source=await readFile(new URL('select-parents.rs',import.meta.url),'utf8');
+ const rows=[...expected].map(([name,parents])=>[name,parents.sort()]).sort(([a],[b])=>String(a)<String(b)?-1:String(a)>String(b)?1:0),source=await readFile(new URL('🌳️express/select-parents.rs',import.meta.url),'utf8');
  const actual=[...source.matchAll(/^\s*\("([^"]+)", &\[(.*)\]\),$/gm)].map(match=>[match[1],JSON.parse('['+match[2]+']')]);expect(actual).toEqual(rows);
 });
 for(const row of cases.expressions)test('TYPEOF SELECT '+row.id,async()=>{

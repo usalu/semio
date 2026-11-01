@@ -10,7 +10,7 @@ fn close(owner:&mut DurableStorePreparedOwnerV1<bool,bool>,grant:RetainedCloneGr
 fn original_candidate_cancellation_retains_exact_issuers_and_refuses_unfunded_birth(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("./🔣️.json")).unwrap();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:fixture["maximumBodyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:fixture["maximumBodyBytes"].as_u64().unwrap()as usize,maximum_release_bytes:fixture["maximumBodyBytes"].as_u64().unwrap()as usize,maximum_depth:fixture["maximumDepth"].as_u64().unwrap()as usize};
-    let actor=semio_framework_value::SharedUtf8::admit(fixture["actor"].as_str().unwrap().to_owned(),grant).unwrap_or_else(|_|panic!("funded fixture identity")).0;
+    let actor=semio_framework_value::SharedUtf8::admit(fixture["actor"].as_str().unwrap().to_owned(),grant).result.unwrap_or_else(|_|panic!("funded fixture identity")).0;
     let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(fixture["operation"].as_u64().unwrap()),semio_framework_job::Generation(fixture["generation"].as_u64().unwrap()),[fixture["revisionByte"].as_u64().unwrap()as u8;32],0,1,HybridLogicalTimestamp{actor:1,physical_ms:1,logical:0},actor,None,None,None));
     let edit=authority.next_edit(fixture["forward"].as_bool().unwrap(),vec![fixture["inverse"].as_bool().unwrap()]);
     let prepared=authority.prepare_one_item(edit,Arc::new(fixture["post"].as_bool().unwrap())).unwrap_or_else(|_|panic!("actual sealed fixture candidate"));

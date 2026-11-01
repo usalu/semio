@@ -23,23 +23,25 @@ export interface LayeredPane {
   readonly capturePoster?: (container: HTMLElement) => string | null;
 }
 
-/** 📄️ What a mounted page knows: `opened` (full size and interactive, otherwise inert backdrop), `revealed` (its card is hovered or focused, so it
- * shows clear) and `dirty` (the page reports user work, so it is never released). */
+/** 📄️ What a mounted page knows: `opened` (full size and interactive, otherwise inert backdrop), `revealed` (its card's explore control is pressed, so it
+ * shows clear; merely hovering or focusing the control only centers the level on it) and `dirty` (the page reports user work, so it is never released). */
 export interface LayeredPaneState {
   readonly opened: boolean;
   readonly revealed: boolean;
   readonly dirty: () => void;
 }
 
-/** 🃏️ What a card knows: the mode, whether its page is revealed (highlight the card) or opened, and `open` (hash route plus glide). */
+/** 🃏️ What a card knows: the mode, whether the level is centered on it (`revealed`, highlight the card), whether its page shows clear because its
+ * explore control is pressed (`cleared`), whether its page is opened, and `open` (hash route plus glide). */
 export interface LayeredCardState {
   readonly mode: LayeredMode;
   readonly revealed: boolean;
+  readonly cleared: boolean;
   readonly opened: boolean;
   readonly open: () => void;
 }
 
-/** 🧢️ What the app's chrome above the element knows, so it can hide while a page is revealed or opened. */
+/** 🧢️ What the app's chrome above the element knows, so it can hide while a page is cleared or opened. */
 export interface LayeredChromeState {
   readonly revealed: boolean;
   readonly opened: boolean;
@@ -71,8 +73,12 @@ export interface LayeredInsets {
 export interface LayeredOverviewProps {
   /** 🎛️ Whether this overview handles input; inactive ancestor and preview grids still render their controlled panes. */
   readonly interactive?: boolean;
-  /** 👀️ A controlled revealed page, including an inactive observed overview. */
+  /** 👀️ A controlled revealed page — the one the level is centered on, not yet clear — including an inactive observed overview. */
   readonly revealedId?: string | null;
+  /** 🫧️ A controlled press of the revealed page's explore control, which alone turns that page clear. */
+  readonly pressed?: boolean;
+  /** 🫧️ Reports a press or release of the revealed page's explore control while `pressed` is controlled. */
+  readonly onPressedChange?: (pressed: boolean) => void;
   /** ⌨️ The source of a controlled reveal, so keyboard reveals keep neighbouring cards visible. */
   readonly revealedBy?: LayeredRevealSource;
   /** 📷️ The normalized pointer position controlling the overview camera. */

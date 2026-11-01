@@ -1,7 +1,8 @@
 //! 🫴️ Scoped ADD2 queries reuse the shared finite kernel inside the original native receiving owner.
 use super::{Ifc4x3AttributeMetadata,IfcAttributeQueryResult,IfcAttributeQueryWork,IfcSnapshot,IfcValue,metadata};
 use semio_framework_os_kernel::NativeSnapshotDecodeOwner;
-use semio_framework_value::{RetireOwned,RetirementDemand,RetainedCloneProgress,ValueError,ValueRefusalKind};
+use semio_framework_value::retirement::RetireOwned;
+use semio_framework_value::{RetirementDemand,RetainedCloneProgress,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::retained_clone_grant_admits;
 fn admit(owner:&mut NativeSnapshotDecodeOwner<'_,'_>,demand:RetirementDemand)->Result<(),ValueError>{
  owner.native().checkpoint()?;

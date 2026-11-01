@@ -15,6 +15,5 @@ export function verifyCombinationStressOracle(): void {
     const values = eigs([[stress[0]!, 0, 0], [0, stress[1]!, 0], [0, 0, stress[2]!]]).values as number[];
     const equivalent = Math.hypot(values[0]! - values[1]!, values[1]! - values[2]!, values[2]! - values[0]!) / Math.SQRT2;
     assert(Math.abs(equivalent - vector.expectedVonMises) < 1e-12 * Math.max(1, equivalent), vector.id);
-    console.log(`[DEBUG] ${vector.id}: mathjs principal-stress oracle = ${equivalent}`);
   }
 }

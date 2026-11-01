@@ -1,0 +1,6 @@
+semio-framework-os-store-tests-05
+semio-framework-os-store-tests-07
+semio-framework-os-store-tests-08
+semio-framework-os-store-tests-10
+semio-framework-os-store-text-io
+semio-framework-os-store-sync-tests-2

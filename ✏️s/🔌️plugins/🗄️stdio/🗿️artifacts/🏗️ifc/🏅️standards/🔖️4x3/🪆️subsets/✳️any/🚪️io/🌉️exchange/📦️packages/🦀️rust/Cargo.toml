@@ -1,0 +1,40 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-ifc4x3-exchange"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Native IFC4x3 and glTF artifact composition with bounded atomic geometry projection."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../../native_exchange.rs"
+
+[dependencies]
+semio-s-artifact-stdio-ifc4x3-step = { workspace = true }
+semio-s-artifact-stdio-ifc4x3-express = { workspace = true }
+semio-s-artifact-stdio-ifc-4-model = { workspace = true }
+pack = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-schema = { path = "../../../../../../../../../../../🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-snapshot = { path = "../../../../../../../../../../../🏙️bim/🗿️artifacts/🏢️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-model = { workspace = true }
+
+[dev-dependencies]
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-txt = { workspace = true }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-async-macros = { workspace = true }
+serde_json = { workspace = true }

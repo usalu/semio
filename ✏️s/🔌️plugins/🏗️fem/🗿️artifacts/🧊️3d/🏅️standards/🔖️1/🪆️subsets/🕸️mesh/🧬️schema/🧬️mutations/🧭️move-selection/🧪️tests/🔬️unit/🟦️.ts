@@ -37,5 +37,4 @@ export function testFem3dTransformIntentOracle(): void {
     const reference = new Vector3(node.x, node.y, node.z).multiply(new Vector3(motion.sx, 1, 1)).applyAxisAngle(new Vector3(motion.axisX, 0, motion.axisZ).normalize(), motion.angle).toArray();
     reference.forEach((coordinate, index) => assert.ok(Math.abs(coordinate - motion.position[index]) < 1e-12, `${motion.name} coordinate ${index}`));
   }
-  console.log("[DEBUG] FEM3d transform intent vector agrees with Three.js and JSON Patch");
 }

@@ -254,6 +254,7 @@ pub(crate) fn contract_checked(kind: &Kind, evaluation: WidgetEvaluation) -> Wid
 //#endregion 🔖️Start
 
 //#region 🔖️Field
+const COLD_FUEL: u64 = 1 << 20;
 const COLD_GRANT: semio_framework_value::RetainedCloneGrant = semio_framework_value::RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 };
 
 /// 🚫️ A turn the funded context refused is a typed inference fault that carries the refusal.
@@ -315,10 +316,11 @@ impl<'a> InferredField<GeometryInput<'a>> for Generation3dGeometry {
 
     fn compute(snapshot: &GeometryInput<'_>, key: &Self::Key, parents: &[Self::Value]) -> Self::Value {
         let mut pending = None;
-        let mut caller = semio_framework_job::SelfFundedCloseCaller::new();
         loop {
-            let turn = caller.turn(COLD_GRANT, |cx| Ok(Self::compute_cold_step(snapshot, key, parents, &mut pending, cx)));
-            match turn.map_err(turn_fault).and_then(|step| step) {
+            let (mut sequence, mut receipt) = (0, semio_framework_value::RetainedCloneProgress::default());
+            let budget = semio_framework_job::StepBudget::new(COLD_FUEL, u64::MAX, COLD_GRANT);
+            let mut cx = semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(1), budget, semio_framework_job::root_cancel_token(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
+            match Self::compute_cold_step(snapshot, key, parents, &mut pending, &mut cx) {
                 Ok(ComputeStep::Done { value, .. }) => return value,
                 Ok(ComputeStep::Working { .. }) => continue,
                 Err(fault) => return Arc::new(WidgetEvaluation::faulted(WidgetFault::new(fault.code, fault.message.clone(), fault.message), Quality::ExactAnalytic)),

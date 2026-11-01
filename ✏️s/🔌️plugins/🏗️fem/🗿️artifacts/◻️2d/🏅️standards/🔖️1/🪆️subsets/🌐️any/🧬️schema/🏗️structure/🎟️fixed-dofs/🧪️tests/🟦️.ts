@@ -27,7 +27,6 @@ test("FEM fixed restraints admit all64 canonical sets and refuse malformed bound
    }
   }
  }finally{db.close();}
- console.log(`[DEBUG] Actual FEM2D/FEM3D restraint parsers agree with SQLite for ${fixture.cases.length} shared boundaries including all64canonical subsets`);
 });
 
 /** 🧭️ Guards helpers at actual defining children and rejects dissolved crate-root paths. */

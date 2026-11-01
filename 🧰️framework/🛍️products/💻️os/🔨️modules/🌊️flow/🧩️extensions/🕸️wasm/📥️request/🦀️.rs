@@ -37,20 +37,21 @@ pub struct EvaluationInvokeCursor {
     operation:u64,generation:u64,pointer:usize,length:usize,
     parser:Option<JsonGrammarCursor<Value>>,continuation:Option<NativeDecodeContinuation>,
     root:Option<Value>,request:Option<EvaluateRequest>,reply_pending:Option<neural_engine::PendingExtensionEval>,active:Option<Box<dyn ErasedSnapshotRetirement>>,
-    field:usize,result_field:usize,result_required:u8,required:u8,decoded:bool,normal_context_posted:bool,normal_progress:RetainedCloneProgress,
+    field:usize,result_field:usize,result_required:u8,required:u8,decoded:bool,normal_context_posted:bool,normal_progress:RetainedCloneProgress,work:u64,
     pub slot:Option<usize>,lookup:Option<EvaluationSlotLookup>,insertion:Option<EvaluationOriginalInsertion>,insertion_registry:Option<neural_engine::SharedRegistry>,round_units:u64,
-    suppressed_wire:Option<EvaluationWire>,ready_wire:Option<EvaluationWire>,ready_complete:bool,ready_faulted:bool,ready_external:bool,wait_terminal:bool,fault:Option<EvaluationFailure>,close_failure:Option<original_failure::EvaluationCloseFailure>,response:Option<EvaluationOutput>,response_failed:bool,context:Option<EvaluationRequestContext>,context_prepared:bool,closing:bool,
+    suppressed_wire:Option<EvaluationWire>,ready_wire:Option<EvaluationWire>,ready_complete:bool,ready_faulted:bool,ready_external:bool,wait_terminal:bool,fault:Option<EvaluationFailure>,close_failure:Option<original_failure::EvaluationCloseFailure>,fault_place:Option<semio_framework_job::OriginalDomainReservation<EvaluationFailure>>,close_failure_place:Option<semio_framework_job::OriginalDomainReservation<original_failure::EvaluationCloseFailure>>,response:Option<EvaluationOutput>,response_failed:bool,context:Option<EvaluationRequestContext>,context_prepared:bool,closing:bool,
 }
 impl EvaluationInvokeCursor {
     pub fn new(operation:u64,generation:u64,request:&[u8])->Self {
-        Self {operation,generation,pointer:request.as_ptr()as usize,length:request.len(),parser:None,continuation:None,root:None,request:None,reply_pending:None,active:None,field:0,result_field:0,result_required:0,required:0,decoded:false,normal_context_posted:false,normal_progress:Default::default(),slot:None,lookup:None,insertion:None,insertion_registry:None,round_units:0,suppressed_wire:None,ready_wire:None,ready_complete:false,ready_faulted:false,ready_external:false,wait_terminal:false,fault:None,close_failure:None,response:None,response_failed:false,context:None,context_prepared:false,closing:false}
+        Self {operation,generation,pointer:request.as_ptr()as usize,length:request.len(),parser:None,continuation:None,root:None,request:None,reply_pending:None,active:None,field:0,result_field:0,result_required:0,required:0,decoded:false,normal_context_posted:false,normal_progress:Default::default(),work:0,slot:None,lookup:None,insertion:None,insertion_registry:None,round_units:0,suppressed_wire:None,ready_wire:None,ready_complete:false,ready_faulted:false,ready_external:false,wait_terminal:false,fault:None,close_failure:None,fault_place:None,close_failure_place:None,response:None,response_failed:false,context:None,context_prepared:false,closing:false}
     }
     /// 🧾️ Reports whether this exact last step already posted its original context receipt.
     pub fn normal_context_posted(&self)->bool{self.normal_context_posted}
+    pub fn take_work(&mut self)->u64{std::mem::take(&mut self.work)+self.context.as_mut().map_or(0,EvaluationRequestContext::take_work)+self.response.as_mut().map_or(0,EvaluationOutput::take_work)}
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_progress}
     pub fn matches(&self,operation:u64,generation:u64,request:&[u8])->bool{self.operation==operation&&self.generation==generation&&self.pointer==request.as_ptr()as usize&&self.length==request.len()}
     pub fn begin_close(&mut self){self.closing=true;}
-    pub fn terminal_is_empty(&self)->bool{self.ready_wire.is_none()&&self.suppressed_wire.is_none()&&self.context.is_none()&&self.parser.is_none()&&self.continuation.is_none()&&self.root.is_none()&&self.request.is_none()&&self.reply_pending.is_none()&&self.active.is_none()&&self.fault.is_none()&&self.close_failure.is_none()&&self.response.is_none()&&self.slot.is_none()&&self.lookup.is_none()&&self.insertion.is_none()&&self.insertion_registry.is_none()}
+    pub fn terminal_is_empty(&self)->bool{self.ready_wire.is_none()&&self.suppressed_wire.is_none()&&self.context.is_none()&&self.parser.is_none()&&self.continuation.is_none()&&self.root.is_none()&&self.request.is_none()&&self.reply_pending.is_none()&&self.active.is_none()&&self.fault.is_none()&&self.close_failure.is_none()&&self.fault_place.is_none()&&self.close_failure_place.is_none()&&self.response.is_none()&&self.slot.is_none()&&self.lookup.is_none()&&self.insertion.is_none()&&self.insertion_registry.is_none()}
     pub fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if let Some(context)=&self.context{return context.retirement_demands(copy);}
         if self.active.is_some(){return evaluation_child_demands(&self.active,copy);}
@@ -61,6 +62,7 @@ impl EvaluationInvokeCursor {
         if self.insertion_registry.is_some(){return Ok(evaluation_owned_birth::<neural_engine::SharedRegistry>());}
         if self.request.is_some(){return Ok(evaluation_owned_birth::<EvaluateRequest>());}
         if self.reply_pending.is_some(){return Ok(evaluation_owned_birth::<neural_engine::PendingExtensionEval>());}
+        if let Some(place)=&self.close_failure_place{return place.retirement_demands(copy);}if let Some(place)=&self.fault_place{return place.retirement_demands(copy);}
         if self.close_failure.is_some(){return Ok(evaluation_owned_birth::<original_failure::EvaluationCloseFailure>());}if self.fault.is_some(){return Ok(evaluation_owned_birth::<EvaluationFailure>());}
         if let Some(response)=&self.response{return response.retirement_demands(copy);}
         Ok(RetirementDemand{depth:usize::from(self.continuation.is_some()||self.slot.is_some()||self.lookup.is_some()),..Default::default()})
@@ -77,16 +79,18 @@ impl EvaluationInvokeCursor {
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,EvaluationFailure>{
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if let Some(context)=&mut self.context{let step=context.close_step(grant)?;if context.terminal_is_empty(){self.context=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
-        if self.active.is_some(){return evaluation_child_close(&mut self.active,grant).map_err(Into::into);}
-        if self.parser.is_some(){return evaluation_admit_original(&mut self.parser,&mut self.active,grant).map_err(Into::into);}
-        if self.root.is_some(){return evaluation_admit_original(&mut self.root,&mut self.active,grant).map_err(Into::into);}
-        if self.ready_wire.is_some(){return evaluation_admit_original(&mut self.ready_wire,&mut self.active,grant).map_err(Into::into);}
-        if self.suppressed_wire.is_some(){return evaluation_admit_original(&mut self.suppressed_wire,&mut self.active,grant).map_err(Into::into);}
-        if self.insertion.is_some(){return evaluation_admit_original(&mut self.insertion,&mut self.active,grant).map_err(Into::into);}
-        if self.insertion_registry.is_some(){return evaluation_admit_original(&mut self.insertion_registry,&mut self.active,grant).map_err(Into::into);}
-        if self.request.is_some(){return evaluation_admit_original(&mut self.request,&mut self.active,grant).map_err(Into::into);}
-        if self.reply_pending.is_some(){return evaluation_admit_original(&mut self.reply_pending,&mut self.active,grant).map_err(Into::into);}
-        if self.close_failure.is_some(){return evaluation_admit_original(&mut self.close_failure,&mut self.active,grant).map_err(Into::into);}if self.fault.is_some(){return evaluation_admit_original(&mut self.fault,&mut self.active,grant).map_err(Into::into);}
+        if self.active.is_some(){return evaluation_child_close(&mut self.active,grant,&mut self.work).map_err(Into::into);}
+        if self.parser.is_some(){return evaluation_admit_original(&mut self.parser,&mut self.active,grant,&mut self.work).map_err(Into::into);}
+        if self.root.is_some(){return evaluation_admit_original(&mut self.root,&mut self.active,grant,&mut self.work).map_err(Into::into);}
+        if self.ready_wire.is_some(){return evaluation_admit_original(&mut self.ready_wire,&mut self.active,grant,&mut self.work).map_err(Into::into);}
+        if self.suppressed_wire.is_some(){return evaluation_admit_original(&mut self.suppressed_wire,&mut self.active,grant,&mut self.work).map_err(Into::into);}
+        if self.insertion.is_some(){return evaluation_admit_original(&mut self.insertion,&mut self.active,grant,&mut self.work).map_err(Into::into);}
+        if self.insertion_registry.is_some(){return evaluation_admit_original(&mut self.insertion_registry,&mut self.active,grant,&mut self.work).map_err(Into::into);}
+        if self.request.is_some(){return evaluation_admit_original(&mut self.request,&mut self.active,grant,&mut self.work).map_err(Into::into);}
+        if self.reply_pending.is_some(){return evaluation_admit_original(&mut self.reply_pending,&mut self.active,grant,&mut self.work).map_err(Into::into);}
+        if let Some(place)=self.close_failure_place.as_mut(){let step=place.close_step(grant).result?;if place.terminal_is_empty(){self.close_failure_place=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if let Some(place)=self.fault_place.as_mut(){let step=place.close_step(grant).result?;if place.terminal_is_empty(){self.fault_place=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if self.close_failure.is_some(){return evaluation_admit_original(&mut self.close_failure,&mut self.active,grant,&mut self.work).map_err(Into::into);}if self.fault.is_some(){return evaluation_admit_original(&mut self.fault,&mut self.active,grant,&mut self.work).map_err(Into::into);}
         if let Some(response)=&mut self.response{let step=response.close_step(grant)?;if response.terminal_is_empty(){self.response=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
         if self.continuation.is_some()||self.slot.is_some()||self.lookup.is_some(){
             if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original invocation metadata requires admitted depth").into());}
@@ -166,14 +170,14 @@ impl EvaluationInvokeCursor {
         if (self.operation,self.generation)!=(cx.operation().0,cx.generation().0){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original evaluation cursor belongs to another caller").into())}
         if cx.should_yield(){return Ok((None,empty))}
         if self.pointer!=request.as_ptr()as usize||self.length!=request.len(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original invocation source changed while pending").into());}
-        if self.close_failure.is_some(){let before=cx.retained_progress();self.normal_context_posted=true;let admitted=match semio_framework_job::admit_original_domain_failure(&mut self.close_failure,cx){Ok(value)=>value,Err(original)=>Some(original)};let after=cx.retained_progress();let progress=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};return Ok((admitted.map(|original|EvaluationReply{retirement_posted:true,external_pending:false,pending_source:None,wire:None,complete:false,faulted:true,retirement_progress:progress,returned_request:None,refusal:Some(EvaluationFailure::Original(original))}),progress))}
+        if self.close_failure.is_some()||self.close_failure_place.is_some(){let before=cx.retained_progress();self.normal_context_posted=true;let admitted=match original_failure::admit_evaluation_failure(&mut self.close_failure,&mut self.close_failure_place,cx){Ok(value)=>value,Err(original)=>Some(original)};let after=cx.retained_progress();let progress=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};return Ok((admitted.map(|original|EvaluationReply{retirement_posted:true,external_pending:false,pending_source:None,wire:None,complete:false,faulted:true,retirement_progress:progress,returned_request:None,refusal:Some(EvaluationFailure::Original(original))}),progress))}
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok((None,empty));}
         if let Some(input)=context_input.as_ref(){self.wait_terminal=input.wait_terminal;}
         if self.ready_wire.is_some()&&!cancelled&&!self.closing{
-            if self.active.is_some()||self.request.is_some()||self.reply_pending.is_some(){let step=if self.active.is_some(){evaluation_child_close(&mut self.active,grant)}else if self.request.is_some(){evaluation_admit_original(&mut self.request,&mut self.active,grant)}else{evaluation_admit_original(&mut self.reply_pending,&mut self.active,grant)}?;return Ok((None,step.progress()));}
+            if self.active.is_some()||self.request.is_some()||self.reply_pending.is_some(){let step=if self.active.is_some(){evaluation_child_close(&mut self.active,grant,&mut self.work)}else if self.request.is_some(){evaluation_admit_original(&mut self.request,&mut self.active,grant,&mut self.work)}else{evaluation_admit_original(&mut self.reply_pending,&mut self.active,grant,&mut self.work)}?;return Ok((None,step.progress()));}
             self.slot=None;return Ok((Some(EvaluationReply{retirement_posted:false,external_pending:self.ready_external,pending_source:None,wire:self.ready_wire.take(),complete:self.ready_complete,faulted:self.ready_faulted,retirement_progress:Default::default(),returned_request:None,refusal:None}),RetainedCloneProgress{copied_items:1,..empty}));
         }
-        if self.suppressed_wire.is_some()||(!self.closing&&self.active.is_some()){let step=if self.active.is_some(){evaluation_child_close(&mut self.active,grant)}else{evaluation_admit_original(&mut self.suppressed_wire,&mut self.active,grant)}?;return Ok((None,step.progress()));}
+        if self.suppressed_wire.is_some()||(!self.closing&&self.active.is_some()){let step=if self.active.is_some(){evaluation_child_close(&mut self.active,grant,&mut self.work)}else{evaluation_admit_original(&mut self.suppressed_wire,&mut self.active,grant,&mut self.work)}?;return Ok((None,step.progress()));}
         if cancelled&&!self.closing{if let Some(slot)=self.slot{let mut jobs=evaluation_jobs().lock().unwrap_or_else(std::sync::PoisonError::into_inner);if let Some((_,owner))=jobs.jobs.slot_entry_mut(slot){owner.cancel();}}self.fail(EvaluationFailure::Literal("original invocation cancelled"));}
         if let Some(response)=&mut self.response{
             if self.response_failed{let step=response.close_step(grant)?;if response.terminal_is_empty(){self.response=None;self.response_failed=false;}return Ok((None,step.progress()));}
@@ -184,16 +188,16 @@ impl EvaluationInvokeCursor {
             if self.fault.is_some(){if let Some(slot)=self.slot{let mut jobs=evaluation_jobs().lock().unwrap_or_else(std::sync::PoisonError::into_inner);if let Some((_,owner))=jobs.jobs.slot_entry_mut(slot){owner.cancel();let step=owner.close_step(grant,false,false)?;if owner.close_fields_terminal(false,false){self.slot=None;}return Ok((None,step.progress()));}self.slot=None;return Ok((None,RetainedCloneProgress{copied_items:1,..empty}));}}
             if self.fault.is_some()&&self.context.is_some(){let context=self.context.as_mut().unwrap();let step=context.close_step(grant)?;if context.terminal_is_empty(){self.context=None;}return Ok((None,step.progress()));}
             if self.active.is_some()||self.parser.is_some()||self.root.is_some()||self.continuation.is_some()||self.lookup.is_some(){
-                let step=if self.active.is_some(){evaluation_child_close(&mut self.active,grant)}else if self.parser.is_some(){evaluation_admit_original(&mut self.parser,&mut self.active,grant)}else if self.root.is_some(){evaluation_admit_original(&mut self.root,&mut self.active,grant)}else{if self.continuation.is_some(){self.continuation=None;}else{self.lookup=None;}Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))};
+                let step=if self.active.is_some(){evaluation_child_close(&mut self.active,grant,&mut self.work)}else if self.parser.is_some(){evaluation_admit_original(&mut self.parser,&mut self.active,grant,&mut self.work)}else if self.root.is_some(){evaluation_admit_original(&mut self.root,&mut self.active,grant,&mut self.work)}else{if self.continuation.is_some(){self.continuation=None;}else{self.lookup=None;}Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}))};
                 return step.map(|step|(None,step.progress())).map_err(Into::into);
             }
-            if self.fault.is_some(){
-                if self.ready_wire.is_some(){return evaluation_admit_original(&mut self.ready_wire,&mut self.active,grant).map(|step|(None,step.progress())).map_err(Into::into);}
-                if self.request.is_some(){return evaluation_admit_original(&mut self.request,&mut self.active,grant).map(|step|(None,step.progress())).map_err(Into::into);}
-                if self.insertion.is_some(){return evaluation_admit_original(&mut self.insertion,&mut self.active,grant).map(|step|(None,step.progress())).map_err(Into::into);}
-                if self.insertion_registry.is_some(){return evaluation_admit_original(&mut self.insertion_registry,&mut self.active,grant).map(|step|(None,step.progress())).map_err(Into::into);}
-                if self.reply_pending.is_some(){return evaluation_admit_original(&mut self.reply_pending,&mut self.active,grant).map(|step|(None,step.progress())).map_err(Into::into);}
-                let before=cx.retained_progress();let admitted=match semio_framework_job::admit_original_domain_failure(&mut self.fault,cx){Ok(failure)=>failure,Err(failure)=>Some(failure)};
+            if self.fault.is_some()||self.fault_place.is_some(){
+                if self.ready_wire.is_some(){return evaluation_admit_original(&mut self.ready_wire,&mut self.active,grant,&mut self.work).map(|step|(None,step.progress())).map_err(Into::into);}
+                if self.request.is_some(){return evaluation_admit_original(&mut self.request,&mut self.active,grant,&mut self.work).map(|step|(None,step.progress())).map_err(Into::into);}
+                if self.insertion.is_some(){return evaluation_admit_original(&mut self.insertion,&mut self.active,grant,&mut self.work).map(|step|(None,step.progress())).map_err(Into::into);}
+                if self.insertion_registry.is_some(){return evaluation_admit_original(&mut self.insertion_registry,&mut self.active,grant,&mut self.work).map(|step|(None,step.progress())).map_err(Into::into);}
+                if self.reply_pending.is_some(){return evaluation_admit_original(&mut self.reply_pending,&mut self.active,grant,&mut self.work).map(|step|(None,step.progress())).map_err(Into::into);}
+                let before=cx.retained_progress();let admitted=match original_failure::admit_evaluation_failure(&mut self.fault,&mut self.fault_place,cx){Ok(failure)=>failure,Err(failure)=>Some(failure)};
                 self.normal_context_posted=true;let after=cx.retained_progress();let receipt=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};
                 return Ok((admitted.map(|original|EvaluationReply{retirement_posted:true,external_pending:false,pending_source:None,wire:None,complete:false,faulted:true,retirement_progress:receipt,returned_request:None,refusal:Some(EvaluationFailure::Original(original))}),receipt));
             }
@@ -357,7 +361,7 @@ pub fn evaluate_invoke_json(owner:&mut ExtensionEvaluationResources,request:&[u8
     let pending=owner.invoke.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner);
     let cursor=pending.as_mut().unwrap();let before_fuel=cx.fuel_remaining();let result=cursor.step(owner.registry.as_ref().expect("admitted original registry"),request,cx);
     let (reply,receipt,refusal)=match result{Ok((reply,receipt))=>{let refusal=if cursor.normal_context_posted{None}else{cx.consume_retained(receipt).err().map(Into::into)};(reply,receipt,refusal)},Err(closure)=>{let receipt=cursor.normal_step_progress();let receipt_refusal=if cursor.normal_context_posted{None}else{cx.consume_retained(receipt).err()};assert!(cursor.close_failure.is_none());cursor.close_failure=Some(original_failure::EvaluationCloseFailure{initial:cursor.fault.take(),closure,receipt_refusal});cursor.begin_close();(None,receipt,None)}};
-    if cx.fuel_remaining()==before_fuel{cx.consume_fuel(receipt.copied_items as u64)}let mut reply=reply;let refusal=match reply.as_mut().and_then(|reply|reply.refusal.take()){Some(EvaluationFailure::Original(original))=>Some(original),Some(original)=>{cursor.fail(original);refusal},None=>refusal};let payload=reply.and_then(|reply|reply.wire).map(|wire|wire.to_vec_owner());
+    let work=cursor.take_work();if cx.fuel_remaining()==before_fuel{cx.consume_fuel(work.max(receipt.copied_items as u64))}else{cx.consume_fuel(work)}let mut reply=reply;let refusal=match reply.as_mut().and_then(|reply|reply.refusal.take()){Some(EvaluationFailure::Original(original))=>Some(original),Some(original)=>{cursor.fail(original);refusal},None=>refusal};let payload=reply.and_then(|reply|reply.wire).map(|wire|wire.to_vec_owner());
     if payload.is_some(){assert!(cursor.terminal_is_empty());*pending=None;}else if refusal.is_some()&&cursor.terminal_is_empty(){*pending=None;}
     Ok(semio_framework_plugin::ExtensionInvokeStep{payload,retained_progress:receipt,refusal})
 }

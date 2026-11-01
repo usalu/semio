@@ -99,14 +99,14 @@ where
 {
     fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { size_of::<BoundedPresenceRootRetirement<P>>() }
 
-    fn retire(&self, snapshot: Arc<P>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<P>)> {
+    fn retire(&self, snapshot: Arc<P>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<P>)> { let result = (|| -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<P>)> {
         let progress = match (RetainedCloneBirthDemand { capacity_bytes: size_of::<BoundedPresenceRootRetirement<P>>(), depth: 1 }).admit(grant) {
             Ok(progress) => progress,
             Err(error) => return Err((error, snapshot)),
         };
         let retained_bytes = pack::snapshot::ArtifactDsl::print_dsl(snapshot.as_ref()).len();
         Ok((Box::new(BoundedPresenceRootRetirement { root: Some(snapshot), retained_bytes }), progress))
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 struct BoundedPresenceRootRetirement<P> {
@@ -127,7 +127,7 @@ impl<P> BoundedPresenceRootRetirement<P> {
 impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedPresenceRootRetirement<P> {
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(self.demand())}
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, ValueError> { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
         }
@@ -143,7 +143,7 @@ impl<P: Send + Sync + 'static> store::ErasedSnapshotRetirement for BoundedPresen
         }
         drop(self.root.take());
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 
     fn terminal_is_empty(&self) -> bool {
         BoundedPresenceRootRetirement::terminal_is_empty(self)
@@ -163,7 +163,7 @@ impl store::SnapshotRetirementFactory<crate::NoPresence> for NoPresenceRetiremen
         semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<crate::NoPresence>()
     }
 
-    fn retire(&self, source: Arc<crate::NoPresence>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<crate::NoPresence>)> {
+    fn retire(&self, source: Arc<crate::NoPresence>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<crate::NoPresence>)> {
         semio_framework_value::retirement::arc_custody::admit_shared_retirement(source, grant, true)
     }
 }

@@ -125,7 +125,7 @@ impl<P: Send + Sync + 'static> PresencePeersPublication<P> {
             return Ok(moved);
         }
         if let Some(factory) = self.factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
-        if let Some(factory) = self.factory_close.as_mut() { let step = factory.step(child)?; let step = admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original peer publication factory")?; if factory.terminal_is_empty() { self.factory_close = None; } return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }); }
+        if let Some(factory) = self.factory_close.as_mut() { let step = factory.step(child).result?; let step = admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original peer publication factory")?; if factory.terminal_is_empty() { self.factory_close = None; } return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) }); }
         Ok(RetainedCloneStep::Complete(empty))
     }
 

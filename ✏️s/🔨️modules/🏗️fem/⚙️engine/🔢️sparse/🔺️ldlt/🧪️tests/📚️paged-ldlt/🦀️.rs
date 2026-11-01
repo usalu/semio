@@ -59,6 +59,5 @@ fn paged_ldlt_crosses_original_owner_and_checkpoint_boundaries() {
         }
         assert!(closed && factor.terminal_is_empty());
         original.finish();
-        println!("[DEBUG] paged LDLT order{n} matches independent sparse LU and keeps original equation/column correspondence");
     }
 }

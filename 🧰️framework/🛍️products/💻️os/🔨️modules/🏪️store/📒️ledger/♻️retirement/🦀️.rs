@@ -92,7 +92,7 @@ impl<Mu: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreOperationRows
         if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, grant).result; }
         if let Some(row) = self.pending.take().or_else(|| self.rows.pop()) {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match self.factory.as_ref().expect("operation payload retains its factory").retire_owned(row, child).result {
+            return match match self.factory.as_ref(){Some(v)=>v,None=>{*self.pending=Some(row);return Err(ValueError::invariant("operation payload retains its factory"))}}.retire_owned(row, child).result {
                 Ok((owner, progress)) => { *self.active = Some(owner); admit_retained_clone_progress(child, progress, "operation row retirement birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "operation row original factory changed admitted constructor receipt")); } Ok(RetainedCloneStep::Progress(progress)) }
                 Err((error, row)) => { *self.pending = Some(row); Err(error) }
             };
@@ -213,7 +213,7 @@ impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecoded
         let edit = self.edit.as_mut().expect("decoded edit retains its original owner");
         if let Some(mutation) = self.pending_mutation.take().or_else(|| edit.inverse.pop().or_else(|| edit.forwards.pop())) {
             let child = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - demand.copy_bytes, maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match self.mutation_factory.as_ref().unwrap().retire_owned(mutation, child).result {
+            return match match self.mutation_factory.as_ref(){Some(v)=>v,None=>{*self.pending_mutation=Some(mutation);return Err(ValueError::invariant("mutation_factory absent"))}}.retire_owned(mutation, child).result {
                 Ok((owner, mut progress)) => {
                     *self.active = Some(owner);
                     let valid = progress.fits(child) && progress.retained_capacity_bytes == demand.capacity_bytes;

@@ -73,7 +73,7 @@ impl<P, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
     where
         P: Send + Sync + 'static,
     {
-        match self.reads.as_ref() { Some(reads) => advance_returned_snapshot_read(reads, &mut self.active_returned_read, factory, grant), None => Ok(RetainedCloneStep::Complete(Default::default())) }
+        match self.reads.as_ref() { Some(reads) => advance_returned_snapshot_read(reads, &mut self.active_returned_read, factory, grant).result, None => Ok(RetainedCloneStep::Complete(Default::default())) }
     }
 
     /// 🧹️ Advances one returned read through a root-only retirement authority, for stores that own no owned-value factory.
@@ -81,7 +81,7 @@ impl<P, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
     where
         P: Send + Sync + 'static,
     {
-        match self.reads.as_ref() { Some(reads) => advance_returned_snapshot_read_root(reads, &mut self.active_returned_read, factory, grant), None => Ok(RetainedCloneStep::Complete(Default::default())) }
+        match self.reads.as_ref() { Some(reads) => advance_returned_snapshot_read_root(reads, &mut self.active_returned_read, factory, grant).result, None => Ok(RetainedCloneStep::Complete(Default::default())) }
     }
 
     /// 📏️ Quotes the next returned read's birth or physical retirement under a root-only retirement authority.
@@ -427,14 +427,14 @@ impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "transient retirement exceeds admitted depth")); }
         if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if let Some(reads) = self.reads.as_ref() { if self.active_returned.is_some() || reads.has_returned() { return advance_returned_snapshot_read(reads, &mut self.active_returned, self.factory.as_ref().expect("retained transient factory"), child).map(|step| RetainedCloneStep::Progress(step.progress())); } }
-        if self.active_root.is_some() { return artifact_retirement_box_close_step(&mut self.active_root, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if let Some(reads) = self.reads.as_ref() { if self.active_returned.is_some() || reads.has_returned() { return advance_returned_snapshot_read(reads, &mut self.active_returned, self.factory.as_ref().expect("retained transient factory"), child).result.map(|step| RetainedCloneStep::Progress(step.progress())); } }
+        if self.active_root.is_some() { return artifact_retirement_box_close_step(&mut self.active_root, child).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(root) = self.root.take() {
             return match ReturnedSnapshotReadRetirement::admit(root, self.factory.as_ref().expect("retained transient factory").clone(), child) { Ok((owner, receipt)) => { *self.active_root = Some(owner); if !receipt.fits(child) || receipt.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "transient constructor changed admitted receipt")); } Ok(RetainedCloneStep::Progress(receipt)) }, Err((error, root, alias)) => { *self.root = Some(root); drop(alias); Err(error) } };
         }
         if let Some(reads) = self.reads.as_ref() { if !SnapshotReadLeaseRegistry::terminal_is_empty(reads) { return Ok(RetainedCloneStep::Progress(Default::default())); } return snapshot_registry_alias_close_step(&mut self.reads, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(factory) = self.factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
-        let factory = self.factory_close.as_mut().expect("retained transient factory ticket"); let step = factory.step(child)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "transient factory")?; if factory.terminal_is_empty() { self.factory_close = None; } Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
+        let factory = self.factory_close.as_mut().expect("retained transient factory ticket"); let step = factory.step(child).result?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "transient factory")?; if factory.terminal_is_empty() { self.factory_close = None; } Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
 }
 

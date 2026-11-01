@@ -135,7 +135,7 @@ function rustCfgOwnedEnd(tokens: readonly RustToken[], pairs: ReadonlyMap<number
  * its attributes (`#[cfg($scope)]`) are selected where the macro expands, not where it is defined.
  * @see https://doc.rust-lang.org/reference/macros-by-example.html */
 export function selectRustSourceV1(source: string, cfg: readonly string[]): string {
-  const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), edits: { start: number; end: number; text: string }[] = [];
+  const tokens = rustTokens(source), pairs = rustTokenPairs(tokens), edits: { start: number; end: number; text: string }[] = [], known = new Set(cfg);
   const enclosure=new Map<number,number>(),stack:number[]=[];for(let index=0;index<tokens.length;index++){if(stack.length)enclosure.set(index,stack.at(-1)!);if(tokens[index]?.text==="{")stack.push(index);else if(tokens[index]?.text==="}")stack.pop();}
   if (tokens.some((token, index) => ["(", ")", "[", "]", "{", "}"].includes(token.text) && !pairs.has(index))) throw Error("Unbalanced Rust source delimiter");
   const limits = new Int32Array(tokens.length), groups: number[] = [];
@@ -147,6 +147,7 @@ export function selectRustSourceV1(source: string, cfg: readonly string[]): stri
   }
   const attribute = (start: number, end: number): string | null => {
     const head = tokens[start]?.text;
+    if ((head === "test" || head === "bench") && end === start + 1) return known.has("test") ? source.slice(tokens[start]!.start, tokens[end - 1]!.end) : null;
     if (head !== "cfg" && head !== "cfg_attr") return source.slice(tokens[start]!.start, tokens[end - 1]!.end);
     if (tokens[start + 1]?.text !== "(" || pairs.get(start + 1) !== end - 1) throw Error("Invalid Rust conditional attribute");
     const ranges = rustTokenSegments(tokens, pairs, start + 2, end - 1, ",");
@@ -171,7 +172,7 @@ export function selectRustSourceV1(source: string, cfg: readonly string[]): stri
     }
     if (tokens[index]?.text !== "#" || tokens[index + 1]?.text !== "[") continue;
     const attrs = rustAttributes(tokens, pairs, index, tokens.length);
-    if (!attrs.ranges.some(([a]) => ["cfg", "cfg_attr"].includes(tokens[a]?.text ?? ""))) { index = attrs.next - 1; continue; }
+    if (!attrs.ranges.some(([a, b]) => ["cfg", "cfg_attr"].includes(tokens[a]?.text ?? "") || ["test", "bench"].includes(tokens[a]?.text ?? "") && b === a + 1)) { index = attrs.next - 1; continue; }
     const selected = attrs.ranges.map(([a, b]) => attribute(a, b));
     if (selected.includes(null)) {
       const last = rustCfgOwnedEnd(tokens, pairs, attrs.next, limits[index]!);

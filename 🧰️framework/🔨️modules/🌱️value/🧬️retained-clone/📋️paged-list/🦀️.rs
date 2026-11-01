@@ -123,7 +123,7 @@ impl<T: RetainedClone, const N: usize> RetainedCloneCursor<PagedList<T, N>> for 
                 return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested,progress,"paged list child take")?));
             }
             let nested = super::nested_retained_clone_grant(grant)?;
-            let step = {let turn=child.advance(source.project(index + 1, |values| values.get(index).expect("validated paged list source ordinal")),body, nested);work+=turn.work;turn.result}?;
+            let step = {let turn=child.advance(source.try_project(index + 1, |values| values.get(index).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"paged list source ordinal is absent")))?,body, nested);work+=turn.work;turn.result}?;
             return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(nested, step.progress(), "paged list child")?));
         }
         if index == length {

@@ -1,5 +1,5 @@
 //! 🪢️ Painted boundaries and internal lasso exclusions advance over borrowed geometry.
-use crate::paint::scene::PreparedPaint;
+use crate::scene::PreparedPaint;
 struct SegmentPartitionCursor{from:[f64;2],to:[f64;2],cuts:Vec<f64>,at:usize}
 impl SegmentPartitionCursor{
  fn new(from:[f64;2],to:[f64;2])->Self{Self{from,to,cuts:vec![0.0,1.0],at:0}}

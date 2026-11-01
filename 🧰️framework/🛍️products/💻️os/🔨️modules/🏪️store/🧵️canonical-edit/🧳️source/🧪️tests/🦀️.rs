@@ -38,13 +38,13 @@ fn canonical_store_original_native_source_preserves_semantic_paged_identity_hash
 struct BoolFactory;
 impl semio_framework_value::ArtifactOwnedValueRetirementFactory<bool> for BoolFactory{
  fn retirement_birth_bytes(&self,_:&bool)->usize{semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<bool>()}
- fn retire_owned(&self,original:bool,g:RetainedCloneGrant)-> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,bool)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,bool)> {semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(original,g).map(|(owner,receipt)|(owner as Box<dyn ErasedSnapshotRetirement>,receipt))})(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
+ fn retire_owned(&self,original:bool,g:RetainedCloneGrant)-> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,bool)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,bool)> {semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(original,g).result.map(|(owner,receipt)|(owner as Box<dyn ErasedSnapshotRetirement>,receipt))})(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct RootFactory;
 impl semio_framework_value::SnapshotRetirementFactory<u64> for RootFactory{
  fn retirement_birth_bytes(&self,_:&Arc<u64>)->usize{semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<u64>()}
- fn retire(&self,original:Arc<u64>,g:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<u64>)>{semio_framework_value::retirement::arc_custody::admit_shared_retirement(original,g,true)}
+ fn retire(&self,original:Arc<u64>,g:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<u64>)>{semio_framework_value::retirement::arc_custody::admit_shared_retirement(original,g,true)}
 }
 
 #[test]

@@ -805,7 +805,7 @@ pub fn artifact_retirement_admit_owned<T: semio_framework_value::retirement::Ret
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "typed child birth exceeds admitted parent depth")); }
         if grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let original = pending.take().expect("typed birth retains its observed original owner");
+        let original = pending.take().ok_or_else(||ValueError::invariant("typed birth retains its observed original owner"))?;
         let turn = semio_framework_value::retirement::admit_owned_retirement(original, child);
         work += turn.work;
         match turn.result {
@@ -838,7 +838,7 @@ pub fn artifact_retirement_admit_shared_lease<T: semio_framework_value::retireme
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "lease birth exceeds admitted parent depth")); }
         if grant.maximum_capacity_bytes < demand.capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let turn = semio_framework_value::retirement::arc_custody::admit_shared_retirement(pending.take().expect("lease birth retains its observed original"), child, true);
+        let turn = semio_framework_value::retirement::arc_custody::admit_shared_retirement(pending.take().ok_or_else(||ValueError::invariant("lease birth retains its observed original"))?, child, true);
         work += turn.work;
         match turn.result {
             Ok((owner, progress)) => { *active = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }

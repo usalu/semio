@@ -18,7 +18,6 @@ export function testFem3dResultsWindowConfigContract(): void {
     if (row.admitted) assert.equal(parseFem3dResultsWindowConfig(candidate).resultSourceId, row.identity);
     else assert.throws(() => parseFem3dResultsWindowConfig(candidate), row.identity);
   }
-  console.log("[DEBUG] FEM3d result sources preserve case/combination namespaces, reject raw/malformed IDs and require load cases for buckling");
 
   for (const candidate of fixture.valid) {
     assert(validate(candidate), JSON.stringify(validate.errors));

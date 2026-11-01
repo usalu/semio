@@ -25,8 +25,8 @@ pub struct PaintedPathHitJob{
 }
 impl PaintedPathHitJob{
  /// 🎬️ Uses the resolved leaf's actual geometry transform and renderer stroke semantics.
- pub fn from_prepared(node:&crate::preparation::DocumentSceneNode,point:Point,tolerance:f64,flatness:f64)->Result<Self,String>{
-  let crate::preparation::DocumentSceneContent::Path{fill,fill_rule,stroke,..}=&node.content else{return Err("Painted query requires a resolved path leaf".into());};
+ pub fn from_prepared(node:&semio_s_artifact_draw_drawing_scene::preparation::DocumentSceneNode,point:Point,tolerance:f64,flatness:f64)->Result<Self,String>{
+  let semio_s_artifact_draw_drawing_scene::preparation::DocumentSceneContent::Path{fill,fill_rule,stroke,..}=&node.content else{return Err("Painted query requires a resolved path leaf".into());};
   Self::new(PaintedPathQuery{point,transform:node.transform,tolerance,flatness,fill:fill.is_some(),fill_rule:fill_rule.clone(),stroke:stroke.as_ref().map(|s|PaintedPathStroke{width:s.width,cap:s.cap.clone(),join:s.join.clone(),dash:s.dash.as_ref().map(|dash|dash.iter().copied().collect()).unwrap_or_default()})})
  }
  pub fn new(query:PaintedPathQuery)->Result<Self,String>{

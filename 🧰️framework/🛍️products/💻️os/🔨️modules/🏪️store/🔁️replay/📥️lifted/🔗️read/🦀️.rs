@@ -69,7 +69,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreStringVectorRetirement {
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
             }
             let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = active.close_step(child_grant)?;
+            let step = active.close_step(child_grant).result?;
             admit_retained_clone_close(child_grant, step, active.terminal_is_empty(), "Store string history child")?;
             return Ok(match step { RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress) => RetainedCloneStep::Progress(progress) });
         }

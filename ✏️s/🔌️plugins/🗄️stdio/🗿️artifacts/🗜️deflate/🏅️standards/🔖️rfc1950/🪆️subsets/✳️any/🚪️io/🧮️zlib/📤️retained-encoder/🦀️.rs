@@ -182,13 +182,15 @@ impl RetainedZlibEncoder {
             return semio_framework_job::InteractiveJob::close_step(&mut self.job, cx);
         }
         semio_framework_job::close_original_granted_step(cx, |grant| {
-            if !deflate_close_admits(grant, self.next_close_release_bytes(), false) {
-                return Ok(deflate_close_idle());
-            }
-            Ok(match release_next_backing(&mut [&mut self.raw, &mut self.frame, &mut self.literal_codes, &mut self.distance_codes]) {
-                Some(released_bytes) => deflate_close_receipt(1, released_bytes),
-                None => deflate_close_idle(),
-            })
+            let (step, work) = if !deflate_close_admits(grant, self.next_close_release_bytes(), false) {
+                (deflate_close_idle(), 0)
+            } else {
+                match release_next_backing(&mut [&mut self.raw, &mut self.frame, &mut self.literal_codes, &mut self.distance_codes]) {
+                    Some(released_bytes) => (deflate_close_receipt(1, released_bytes), 1),
+                    None => (deflate_close_idle(), 0),
+                }
+            };
+            semio_framework_value::RetainedWorkOutcome { result: Ok(step), work }
         })
     }
 

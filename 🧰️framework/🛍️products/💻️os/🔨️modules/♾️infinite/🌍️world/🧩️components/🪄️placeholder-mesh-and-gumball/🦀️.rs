@@ -329,7 +329,7 @@ impl WorldPlaceholderMeshCursor {
                 }else{return Err(ui_scene::math::Mesh3dFault::Schema)}
             }
             let job=self.texture_job.as_mut().unwrap();
-            let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:job.next_copy_byte_demand().map_err(|_|ui_scene::math::Mesh3dFault::Schema)?.max(32)*4096,maximum_capacity_bytes:job.next_capacity_byte_demand().map_err(|_|ui_scene::math::Mesh3dFault::Schema)?,maximum_release_bytes:0,maximum_depth:1};
+            let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:4096,maximum_copy_bytes:job.next_copy_byte_demand().map_err(|_|ui_scene::math::Mesh3dFault::Schema)?.max(32)*4096,maximum_capacity_bytes:job.next_capacity_byte_demand().map_err(|_|ui_scene::math::Mesh3dFault::Schema)?,maximum_release_bytes:0,maximum_depth:job.next_depth_demand().map_err(|_|ui_scene::math::Mesh3dFault::Schema)?};
             let (progress,receipt)=job.advance(grant).map_err(|_|ui_scene::math::Mesh3dFault::Schema)?;
             if !receipt.fits(grant){return Err(ui_scene::math::Mesh3dFault::Schema)}
             if progress.done {

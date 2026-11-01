@@ -9,7 +9,7 @@ impl GuestRelayMountedRegistry {
         if !self.collect_original_wake_receipt(&mut session.wake){return Ok(GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered})}
         let result=self.wake_authority.receiver.dispatch_cleanup_step(index,session.generation,|cx|{
             let grant=cx.retained_grant();let bytes=if session.checked_out.is_some(){size_of::<Option<semio_framework_job_worker::WorkerJobOutcome<GuestColdRelayJob>>>()}else if session.lifecycle_probe_checked_out.is_some(){size_of::<Option<semio_framework_job_worker::WorkerJobOutcome<GuestRelayLifecycleProbeJob>>>()}else{size_of::<GuestRelayMountedOwner>()};
-            let terminal=match &session.owner{GuestRelayMountedOwner::Session(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::LifecycleProbe(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::Rejected(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::Empty=>true};
+            let terminal=match &session.owner{GuestRelayMountedOwner::Session(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::LifecycleProbe(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::Admitting(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::AdmittingProbe(owner)=>owner.terminal_is_empty(),GuestRelayMountedOwner::Empty=>true};
             if session.checked_out.is_some()||session.lifecycle_probe_checked_out.is_some()||terminal{
                 if cx.fuel_remaining()==0||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(GuestRelayMountedClose::Pending)}
                 cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);
@@ -18,9 +18,10 @@ impl GuestRelayMountedRegistry {
                 session.owner=GuestRelayMountedOwner::Empty;return Ok(GuestRelayMountedClose::Complete)
             }
             let step=match &mut session.owner{
-                GuestRelayMountedOwner::Session(owner)=>owner.close_step(cx)?,
-                GuestRelayMountedOwner::LifecycleProbe(owner)=>owner.close_step(cx)?,
-                GuestRelayMountedOwner::Rejected(owner)=>match owner.close_step(cx)?{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>semio_framework_job_worker_authority::WorkerJobCloseStep::Pending{progress},semio_framework_job::InteractiveJobCloseStep::Blocked=>semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked},
+                GuestRelayMountedOwner::Session(owner)=>close_relay_session(owner,cx)?,
+                GuestRelayMountedOwner::LifecycleProbe(owner)=>close_relay_session(owner,cx)?,
+                GuestRelayMountedOwner::Admitting(owner)=>owner.close_step(cx)?,
+                GuestRelayMountedOwner::AdmittingProbe(owner)=>owner.close_step(cx)?,
                 GuestRelayMountedOwner::Empty=>return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original mounted close lost its live owner").into()),
             };
             Ok(match step{semio_framework_job_worker_authority::WorkerJobCloseStep::Pending{..}|semio_framework_job_worker_authority::WorkerJobCloseStep::Complete{..}=>GuestRelayMountedClose::Pending,semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked=>GuestRelayMountedClose::Blocked{wake_registered:session.wake.registered}})
@@ -39,7 +40,7 @@ impl GuestRelayMountedRegistry {
             return std::task::Poll::Ready(Err(PluginHostError::Plugin("plugin cold relay generation is stale".into())));
         }
         if matches!(session.lifecycle,GuestRelayMountedLifecycle::Running){
-            let admitted=match &session.owner{GuestRelayMountedOwner::Session(owner)=>self.admit_original_session_wake(owner,&mut session.wake,index,generation,waker),GuestRelayMountedOwner::LifecycleProbe(owner)=>self.admit_original_session_wake(owner,&mut session.wake,index,generation,waker),GuestRelayMountedOwner::Rejected(_)|GuestRelayMountedOwner::Empty=>true};
+            let admitted=match &session.owner{GuestRelayMountedOwner::Session(owner)=>self.admit_original_session_wake(owner,&mut session.wake,index,generation,waker),GuestRelayMountedOwner::LifecycleProbe(owner)=>self.admit_original_session_wake(owner,&mut session.wake,index,generation,waker),GuestRelayMountedOwner::Admitting(_)|GuestRelayMountedOwner::AdmittingProbe(_)|GuestRelayMountedOwner::Empty=>true};
             if !admitted{return std::task::Poll::Pending}
         }else if !self.collect_original_wake_receipt(&mut session.wake){return std::task::Poll::Pending}
         if matches!(session.lifecycle, GuestRelayMountedLifecycle::DetachedForReap) {
@@ -66,57 +67,124 @@ impl GuestRelayMountedRegistry {
             }
             return std::task::Poll::Pending;
         }
+        if matches!(session.owner, GuestRelayMountedOwner::Admitting(_) | GuestRelayMountedOwner::AdmittingProbe(_)) {
+            return self.pump_admission(session, index, waker);
+        }
         if session.checked_out.is_some() || session.lifecycle_probe_checked_out.is_some() {
             return self.pump_outcome(session, index, generation, waker);
         }
-        let Some(context) = self.checkout_original_wake(&mut session.wake, index, generation) else {
-            return std::task::Poll::Pending;
-        };
-        let (grant, epoch) = (context.grant, context.epoch);
-        let stepped = match &session.owner {
-            GuestRelayMountedOwner::LifecycleProbe(owner) => match step_guest_relay_owner(owner, grant) {
-                GuestRelayStep::Checked(checked, receipt) => {
-                    session.lifecycle_probe_checked_out = Some(checked);
-                    receipt
+        match &session.owner {
+            GuestRelayMountedOwner::LifecycleProbe(owner) => match self.step_owner(owner, index, generation) {
+                Ok(Some(GuestRelayStep::Checked(checked))) => session.lifecycle_probe_checked_out = Some(checked),
+                Ok(Some(GuestRelayStep::Idle)) => return std::task::Poll::Pending,
+                Ok(Some(GuestRelayStep::Unavailable(detail))) => return std::task::Poll::Ready(Err(PluginHostError::Plugin(detail.into()))),
+                Ok(None) => {
+                    waker.wake_by_ref();
+                    return std::task::Poll::Pending;
                 }
-                GuestRelayStep::Idle(receipt) => receipt,
-                GuestRelayStep::Unavailable(detail) => return std::task::Poll::Ready(Err(PluginHostError::Plugin(detail.into()))),
+                Err(failure) => return std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(failure))),
             },
-            GuestRelayMountedOwner::Session(owner) => match step_guest_relay_owner(owner, grant) {
-                GuestRelayStep::Checked(checked, receipt) => {
-                    session.checked_out = Some(checked);
-                    receipt
+            GuestRelayMountedOwner::Session(owner) => match self.step_owner(owner, index, generation) {
+                Ok(Some(GuestRelayStep::Checked(checked))) => session.checked_out = Some(checked),
+                Ok(Some(GuestRelayStep::Idle)) => return std::task::Poll::Pending,
+                Ok(Some(GuestRelayStep::Unavailable(detail))) => return std::task::Poll::Ready(Err(PluginHostError::Plugin(detail.into()))),
+                Ok(None) => {
+                    waker.wake_by_ref();
+                    return std::task::Poll::Pending;
                 }
-                GuestRelayStep::Idle(receipt) => receipt,
-                GuestRelayStep::Unavailable(detail) => return std::task::Poll::Ready(Err(PluginHostError::Plugin(detail.into()))),
+                Err(failure) => return std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(failure))),
             },
-            GuestRelayMountedOwner::Rejected(_) | GuestRelayMountedOwner::Empty => {
-                session.wake.receipt = Some(GuestRelayWakeReceipt { epoch, slot: index, generation, grant, progress: Default::default() });
-                self.collect_original_wake_receipt(&mut session.wake);
-                if matches!(session.owner, GuestRelayMountedOwner::Rejected(_)) {
-                    let _ = self.pump_close(session, index, Some(waker));
-                }
-                return std::task::Poll::Pending;
+            GuestRelayMountedOwner::Admitting(_) | GuestRelayMountedOwner::AdmittingProbe(_) | GuestRelayMountedOwner::Empty => return std::task::Poll::Pending,
+        }
+        session.outcome_stage = GuestRelayOutcomeStage::Reading;
+        session.outcome_kind = GuestRelayOutcomeKind::Continues;
+        session.outcome_page = 0;
+        waker.wake_by_ref();
+        std::task::Poll::Pending
+    }
+
+    /// 🔄️ Runs one caller turn on the original driver and returns its receipt before the next opportunity; `None` while the driver is occupied.
+    fn dispatch_returning<T>(&self, index: usize, generation: u64, produce: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> Result<T, semio_framework_job::OriginalTurnFailure>) -> Result<Option<T>, semio_framework_job::OriginalTurnFailure> {
+        let result = self.wake_authority.receiver.dispatch_step(index, generation, produce);
+        if result.as_ref().is_ok_and(Option::is_none) {
+            return Ok(None);
+        }
+        let returned = self.wake_authority.receiver.finish_turn(index, generation);
+        match (result, returned) {
+            (Ok(value), Ok(_)) => Ok(value),
+            (Err(mut failure), Err(receipt)) => {
+                failure.context_refusal = Some(receipt);
+                Err(failure)
             }
+            (Err(failure), Ok(_)) => Err(failure),
+            (Ok(_), Err(receipt)) => Err(receipt.into()),
+        }
+    }
+
+    /// 🏃️ One paid original-caller step of a mounted relay owner; a checked-out outcome moves into the session.
+    fn step_owner<J: semio_framework_job::InteractiveJob + 'static>(&self, owner: &semio_framework_job_worker::WorkerJobSession<J>, index: usize, generation: u64) -> Result<Option<GuestRelayStep<J>>, semio_framework_job::OriginalTurnFailure> {
+        self.dispatch_returning(index, generation, |cx| step_guest_relay_owner(owner, cx))
+    }
+
+    /// 🌱️ One paid admission opportunity: the born session replaces the admitting owner; a refusal detaches the slot for its paid reap.
+    fn pump_admission(self: &Arc<Self>, session: &mut GuestRelayMountedSession, index: usize, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
+        let generation = session.generation;
+        let advanced = match &mut session.owner {
+            GuestRelayMountedOwner::Admitting(owner) => self.dispatch_returning(index, generation, |cx| owner.advance(cx)),
+            GuestRelayMountedOwner::AdmittingProbe(owner) => self.dispatch_returning(index, generation, |cx| owner.advance(cx)),
+            _ => return std::task::Poll::Pending,
         };
-        let progress = stepped.map_or(Default::default(), |(_, progress)| progress);
-        if !progress.fits(grant) {
-            session.wake.refusal = Some(semio_framework_value::ValueRefusalKind::InvariantViolated);
+        match advanced {
+            Ok(Some(true)) => {
+                session.owner = match std::mem::replace(&mut session.owner, GuestRelayMountedOwner::Empty) {
+                    GuestRelayMountedOwner::Admitting(mut owner) => match owner.take_born() {
+                        Some(born) => GuestRelayMountedOwner::Session(born),
+                        None => GuestRelayMountedOwner::Admitting(owner),
+                    },
+                    GuestRelayMountedOwner::AdmittingProbe(mut owner) => match owner.take_born() {
+                        Some(born) => GuestRelayMountedOwner::LifecycleProbe(born),
+                        None => GuestRelayMountedOwner::AdmittingProbe(owner),
+                    },
+                    other => other,
+                };
+                waker.wake_by_ref();
+                std::task::Poll::Pending
+            }
+            Ok(Some(false)) | Ok(None) => {
+                waker.wake_by_ref();
+                std::task::Poll::Pending
+            }
+            Err(failure) => {
+                session.lifecycle = GuestRelayMountedLifecycle::DetachedForReap;
+                self.reaper_epoch.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                self.ensure_reaper();
+                std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(failure)))
+            }
         }
-        session.wake.receipt = Some(GuestRelayWakeReceipt { epoch, slot: index, generation, grant, progress });
-        self.collect_original_wake_receipt(&mut session.wake);
-        if session.checked_out.is_some() || session.lifecycle_probe_checked_out.is_some() {
-            session.outcome_stage = GuestRelayOutcomeStage::Reading;
-            session.outcome_kind = GuestRelayOutcomeKind::Continues;
-            session.outcome_page = 0;
-            waker.wake_by_ref();
+    }
+
+    /// ✅️ One paid acknowledgement turn of the checked-out outcome descriptor.
+    fn acknowledge_outcome(&self, session: &mut GuestRelayMountedSession, index: usize, generation: u64, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
+        let acknowledged = match (session.checked_out.as_mut(), session.lifecycle_probe_checked_out.as_mut()) {
+            (Some(checked), _) => self.dispatch_returning(index, generation, |cx| checked.acknowledge_outcome(cx)),
+            (None, Some(checked)) => self.dispatch_returning(index, generation, |cx| checked.acknowledge_outcome(cx)),
+            (None, None) => Ok(Some(true)),
+        };
+        match acknowledged {
+            Ok(Some(true)) => self.finish_guest_relay_outcome(session),
+            Ok(Some(false)) | Ok(None) => {}
+            Err(failure) => return std::task::Poll::Ready(Err(PluginHostError::OriginalTurn(failure))),
         }
+        waker.wake_by_ref();
         std::task::Poll::Pending
     }
 
     /// 📖️ One paid turn of the checked-out outcome: read its pages once, acknowledge the descriptor, then resume or drain the terminal.
     fn pump_outcome(&self, session: &mut GuestRelayMountedSession, index: usize, generation: u64, waker: &std::task::Waker) -> std::task::Poll<Result<Vec<u8>, PluginHostError>> {
-        use semio_framework_value::{RetainedCloneProgress, RetainedCloneStep};
+        use semio_framework_value::RetainedCloneProgress;
+        if session.outcome_stage == GuestRelayOutcomeStage::Acknowledging {
+            return self.acknowledge_outcome(session, index, generation, waker);
+        }
         let Some(context) = self.checkout_original_wake(&mut session.wake, index, generation) else {
             return std::task::Poll::Pending;
         };
@@ -153,17 +221,7 @@ impl GuestRelayMountedRegistry {
                     }
                 }
             }
-            GuestRelayOutcomeStage::Acknowledging => {
-                let step = match (session.checked_out.as_mut(), session.lifecycle_probe_checked_out.as_mut()) {
-                    (Some(checked), _) => checked.acknowledge_outcome(grant),
-                    (None, Some(checked)) => checked.acknowledge_outcome(grant),
-                    (None, None) => RetainedCloneStep::Progress(Default::default()),
-                };
-                progress = step.progress();
-                if matches!(step, RetainedCloneStep::Complete(_)) {
-                    self.finish_guest_relay_outcome(session);
-                }
-            }
+            GuestRelayOutcomeStage::Acknowledging => {}
         }
         if !progress.fits(grant) {
             session.wake.refusal = Some(semio_framework_value::ValueRefusalKind::InvariantViolated);
@@ -211,28 +269,28 @@ impl GuestRelayMountedRegistry {
     }
 }
 
-/// 🪜️ One caller-driven worker step of a mounted relay owner, with its physical receipt taken exactly once.
+/// 🪜️ One caller-driven worker step of a mounted relay owner, its physical receipt already posted to the original caller.
 pub(super) enum GuestRelayStep<J> {
-    Checked(semio_framework_job_worker::WorkerJobOutcome<J>, Option<(semio_framework_value::RetainedCloneGrant, semio_framework_value::RetainedCloneProgress)>),
-    Idle(Option<(semio_framework_value::RetainedCloneGrant, semio_framework_value::RetainedCloneProgress)>),
+    Checked(semio_framework_job_worker::WorkerJobOutcome<J>),
+    Idle,
     Unavailable(&'static str),
 }
 
-pub(super) fn step_guest_relay_owner<J: semio_framework_job::InteractiveJob + 'static>(owner: &semio_framework_job_worker::WorkerJobSession<J>, grant: semio_framework_value::RetainedCloneGrant) -> GuestRelayStep<J> {
-    let checked = match owner.try_step_on_caller(grant) {
-        Ok((ticket, semio_framework_job_worker::WorkerJobPoll::Outcome)) => match owner.take_outcome(ticket) {
+pub(super) fn step_guest_relay_owner<J: semio_framework_job::InteractiveJob + 'static>(owner: &semio_framework_job_worker::WorkerJobSession<J>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<GuestRelayStep<J>, semio_framework_job::OriginalTurnFailure> {
+    let checked = match owner.try_step_on_original_caller(cx)? {
+        Some((ticket, semio_framework_job_worker::WorkerJobPoll::Outcome)) => match owner.take_outcome(ticket) {
             Ok(checked) => checked,
-            Err(_) => return GuestRelayStep::Unavailable("plugin cold relay outcome unavailable"),
+            Err(_) => return Ok(GuestRelayStep::Unavailable("plugin cold relay outcome unavailable")),
         },
-        Ok((_, semio_framework_job_worker::WorkerJobPoll::Terminal)) => match owner.take_terminal() {
+        Some((_, semio_framework_job_worker::WorkerJobPoll::Terminal)) => match owner.take_terminal() {
             Ok(checked) => checked,
-            Err(_) => return GuestRelayStep::Unavailable("plugin cold relay terminal unavailable"),
+            Err(_) => return Ok(GuestRelayStep::Unavailable("plugin cold relay terminal unavailable")),
         },
-        Ok(_) | Err(_) => return GuestRelayStep::Idle(owner.take_retained_step_receipt().ok().flatten()),
+        Some(_) | None => return Ok(GuestRelayStep::Idle),
     };
     let mut checked = checked;
-    let receipt = checked.take_retained_step_receipt();
-    GuestRelayStep::Checked(checked, receipt)
+    let _ = checked.take_retained_step_receipt();
+    Ok(GuestRelayStep::Checked(checked))
 }
 
 /// 📄️ Borrows one page of the checked-out outcome's payload and classifies the outcome.

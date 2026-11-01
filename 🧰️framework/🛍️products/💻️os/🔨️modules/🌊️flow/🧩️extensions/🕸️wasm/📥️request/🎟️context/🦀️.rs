@@ -27,10 +27,10 @@ fn structural()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..De
 pub(super) struct EvaluationRequestContext{
  stage:u8,position:usize,header:Option<Vec<u8>>,original_cancellation:Option<String>,original_dependency:Option<String>,replacement:Option<String>,
  parser:Option<JsonGrammarCursor<Value>>,value:Option<Value>,decoding:Option<NativeDecodeContinuation>,writer:Option<JsonBorrowedWriteCursor>,encoding:Option<NativeEncodeContinuation>,
- active:Option<Box<dyn ErasedSnapshotRetirement>>,normal_progress:RetainedCloneProgress,
+ active:Option<Box<dyn ErasedSnapshotRetirement>>,normal_progress:RetainedCloneProgress,work:u64,
 }
 impl EvaluationRequestContext{
- pub fn new()->Self{Self{stage:0,position:0,header:None,original_cancellation:None,original_dependency:None,replacement:None,parser:None,value:None,decoding:None,writer:None,encoding:None,active:None,normal_progress:Default::default()}}
+ pub fn new()->Self{Self{stage:0,position:0,header:None,original_cancellation:None,original_dependency:None,replacement:None,parser:None,value:None,decoding:None,writer:None,encoding:None,active:None,normal_progress:Default::default(),work:0}}
  pub fn terminal_is_empty(&self)->bool{self.header.is_none()&&self.original_cancellation.is_none()&&self.original_dependency.is_none()&&self.replacement.is_none()&&self.parser.is_none()&&self.value.is_none()&&self.decoding.is_none()&&self.writer.is_none()&&self.encoding.is_none()&&self.active.is_none()}
  pub fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if self.active.is_some(){return evaluation_child_demands(&self.active,copy)}
@@ -38,11 +38,12 @@ impl EvaluationRequestContext{
   if self.original_cancellation.is_some()||self.original_dependency.is_some()||self.replacement.is_some(){return Ok(evaluation_owned_birth::<String>())}if self.header.is_some(){return Ok(evaluation_owned_birth::<Vec<u8>>())}Ok(RetirementDemand{depth:usize::from(self.decoding.is_some()||self.encoding.is_some()),..Default::default()})
  }
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if self.active.is_some(){return evaluation_child_close(&mut self.active,grant)}
-  if self.writer.is_some(){return evaluation_admit_original(&mut self.writer,&mut self.active,grant)}if self.parser.is_some(){return evaluation_admit_original(&mut self.parser,&mut self.active,grant)}if self.value.is_some(){return evaluation_admit_original(&mut self.value,&mut self.active,grant)}
-  if self.original_cancellation.is_some(){return evaluation_admit_original(&mut self.original_cancellation,&mut self.active,grant)}if self.original_dependency.is_some(){return evaluation_admit_original(&mut self.original_dependency,&mut self.active,grant)}if self.replacement.is_some(){return evaluation_admit_original(&mut self.replacement,&mut self.active,grant)}if self.header.is_some(){return evaluation_admit_original(&mut self.header,&mut self.active,grant)}
+  if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if self.active.is_some(){return evaluation_child_close(&mut self.active,grant,&mut self.work)}
+  if self.writer.is_some(){return evaluation_admit_original(&mut self.writer,&mut self.active,grant,&mut self.work)}if self.parser.is_some(){return evaluation_admit_original(&mut self.parser,&mut self.active,grant,&mut self.work)}if self.value.is_some(){return evaluation_admit_original(&mut self.value,&mut self.active,grant,&mut self.work)}
+  if self.original_cancellation.is_some(){return evaluation_admit_original(&mut self.original_cancellation,&mut self.active,grant,&mut self.work)}if self.original_dependency.is_some(){return evaluation_admit_original(&mut self.original_dependency,&mut self.active,grant,&mut self.work)}if self.replacement.is_some(){return evaluation_admit_original(&mut self.replacement,&mut self.active,grant,&mut self.work)}if self.header.is_some(){return evaluation_admit_original(&mut self.header,&mut self.active,grant,&mut self.work)}
   if self.decoding.is_some()||self.encoding.is_some(){if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"original geometry continuation requires admitted depth"))}if self.decoding.is_some(){self.decoding=None}else{self.encoding=None}return Ok(RetainedCloneStep::Progress(structural()))}Ok(RetainedCloneStep::Complete(Default::default()))
  }
+ pub fn take_work(&mut self)->u64{std::mem::take(&mut self.work)}
  pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_progress}
  pub fn step(&mut self,payload:&mut EvaluateRequest,input:EvaluationRequestContextInput<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,EvaluationFailure>{
   self.normal_progress=Default::default();let result=self.advance(payload,input,cx);if let Err(EvaluationFailure::Native(error))=&result{if self.normal_progress==Default::default(){self.normal_progress=error.retained_progress();}}result.map_err(|error|match error{EvaluationFailure::Native(error)=>EvaluationFailure::Native(error.with_retained_progress(self.normal_progress)),error=>error})

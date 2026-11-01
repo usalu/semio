@@ -829,7 +829,7 @@ impl FillBuilder {
                 self.close_started = true;
                 self.collection_over_capacity = false;
                 self.preparation_capacity_refusal = None;
-                Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
+                semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
             })?;
             return Ok(step);
         }

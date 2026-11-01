@@ -22,7 +22,7 @@ pub fn observe_ownership<T>(operation:impl FnOnce()->T)->(T,usize,usize) {
 pub struct ObservedSystem;
 unsafe impl std::alloc::GlobalAlloc for ObservedSystem {
     unsafe fn alloc(&self,layout:std::alloc::Layout)->*mut u8 {
-        let pointer=unsafe {std::alloc::GlobalAlloc::alloc(&std::alloc::System,layout)};
+        let pointer=unsafe {std::alloc::GlobalAlloc::alloc(&semio_framework_trace::HeapWitness,layout)};
         if !pointer.is_null(){let _=SHELL_OBSERVATION.try_with(|state|{let mut observed=state.get();if observed.recording&&observed.count<observed.addresses.len(){let index=observed.count;observed.addresses[index]=pointer as usize;observed.sizes[index]=layout.size();observed.count+=1;state.set(observed);}});}
         if !pointer.is_null(){let _=OWNERSHIP_OBSERVATION.try_with(|state|{if let Some((allocated,released))=state.get(){state.set(Some((allocated+layout.size(),released)));}});}
         pointer
@@ -30,6 +30,6 @@ unsafe impl std::alloc::GlobalAlloc for ObservedSystem {
     unsafe fn dealloc(&self,pointer:*mut u8,layout:std::alloc::Layout) {
         let _=OWNERSHIP_OBSERVATION.try_with(|state|{if let Some((allocated,released))=state.get(){state.set(Some((allocated,released+layout.size())));}});
         let _=SHELL_OBSERVATION.try_with(|state|{let mut observed=state.get();if let Some(index)=observed.addresses.iter().position(|address|*address==pointer as usize){observed.addresses[index]=0;observed.released+=layout.size();state.set(observed);}});
-        unsafe {std::alloc::GlobalAlloc::dealloc(&std::alloc::System,pointer,layout)};
+        unsafe {std::alloc::GlobalAlloc::dealloc(&semio_framework_trace::HeapWitness,pointer,layout)};
     }
 }

@@ -6086,6 +6086,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-test-fixtures",
+ "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
@@ -7261,8 +7262,10 @@ dependencies = [
  "semio-framework-deflate",
  "semio-framework-io-base64",
  "semio-framework-io-binary-source",
+ "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-persistent",
+ "serde_json",
 ]
 
 [[package]]

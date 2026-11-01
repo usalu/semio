@@ -20,5 +20,4 @@ export function verifyPagedLdltOracle(): void {
       assert(Math.abs(residual) <= fixture.tolerance, `${row.id} sparse LU residual ${i}`);
     }
   }
-  console.log("[DEBUG] independent mathjs sparse LU verifies orders1/41/513 and every original equation residual");
 }

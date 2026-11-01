@@ -93,7 +93,7 @@ fn drawing_canvas_initial_framing_uses_world_bounds_and_respects_restored_naviga
     while !semio_s_artifact_draw_drawing_scene::draw_scene_funded_turn!(producer,4096,scene_wallet).done{}
     let plan=producer.result().unwrap();
     let(mut vector_close,unused)=producer.into_retirement();assert!(unused.is_none());semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(vector_close,scene_wallet,1);
-    let mut paint=semio_s_artifact_draw_drawing_scene::paint::scene::ScenePaintJob::new(plan,0.001,geometry_session::paint_limits());
+    let mut paint=semio_s_artifact_draw_drawing_scene_paint::scene::ScenePaintJob::new(plan,0.001,geometry_session::paint_limits());
     while !semio_s_artifact_draw_drawing_scene::draw_scene_funded_turn!(paint,4096,scene_wallet).done{}
     let(mut close,prepared)=paint.into_retirement();
     semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(close,scene_wallet,4096);
@@ -108,7 +108,7 @@ fn drawing_canvas_initial_framing_uses_world_bounds_and_respects_restored_naviga
     let scene = canvas_scene_of_tree(semio_framework_plugin::built_to_component_tree(canvas_window::render(Some(&plan),1,&document,&config,&preview,DRAWING_DEFAULT_UTILITY,&[],&[]).unwrap()));
     assert!(scene.framing.is_none());
     assert_eq!((scene.camera_x,scene.camera_y,scene.zoom),(777.0,-333.0,2.0));
-    let mut close=semio_s_artifact_draw_drawing_scene::paint::scene::PreparedSceneCloseJob::new(plan);
+    let mut close=semio_s_artifact_draw_drawing_scene_paint::scene::PreparedSceneCloseJob::new(plan);
     semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(close,scene_wallet,4096);
 }
 
@@ -178,10 +178,10 @@ async fn transform_handles_render_and_commit_once_through_the_registered_editor(
             assert_eq!(records.iter().filter(|row|row["id"].as_str().is_some_and(|id|id.starts_with("overlay:transform-handle:"))).count(),9);
             let mut producer=semio_s_artifact_draw_drawing_scene::preparation::DocumentVectorJob::new(&before,semio_s_artifact_draw_drawing_editor_interaction::geometry_session::limits(),semio_s_artifact_draw_drawing_editor_interaction::geometry_session::algorithms()).unwrap();let mut scene_wallet=scene_test_work();
             while !semio_s_artifact_draw_drawing_scene::draw_scene_funded_turn!(producer,4096,scene_wallet).done{}let(mut cleanup,plan)=producer.into_retirement();semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(cleanup,scene_wallet,4096);
-            let mut producer=semio_s_artifact_draw_drawing_scene::paint::scene::ScenePaintJob::new(plan.unwrap(),0.001,semio_s_artifact_draw_drawing_scene::paint::scene::PaintedSceneLimits{max_nodes:1024,max_segments:65536,max_points:262144,max_contours:65536,max_work:1000000000});
+            let mut producer=semio_s_artifact_draw_drawing_scene_paint::scene::ScenePaintJob::new(plan.unwrap(),0.001,semio_s_artifact_draw_drawing_scene_paint::scene::PaintedSceneLimits{max_nodes:1024,max_segments:65536,max_points:262144,max_contours:65536,max_work:1000000000});
             while !semio_s_artifact_draw_drawing_scene::draw_scene_funded_turn!(producer,4096,scene_wallet).done{}let(mut cleanup,prepared)=producer.into_retirement();semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(cleanup,scene_wallet,4096);let prepared=prepared.unwrap();
-            let [x,y,r,b]=semio_s_artifact_draw_drawing_scene::paint::scene::query::prepared_selection_bounds(&prepared,&["child".into()]).unwrap().unwrap();let bounds=[x,y,r-x,b-y];
-            let mut cleanup=semio_s_artifact_draw_drawing_scene::paint::scene::PreparedSceneCloseJob::new(prepared);semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(cleanup,scene_wallet,4096);
+            let [x,y,r,b]=semio_s_artifact_draw_drawing_scene_paint::scene::query::prepared_selection_bounds(&prepared,&["child".into()]).unwrap().unwrap();let bounds=[x,y,r-x,b-y];
+            let mut cleanup=semio_s_artifact_draw_drawing_scene_paint::scene::PreparedSceneCloseJob::new(prepared);semio_s_artifact_draw_drawing_scene::draw_scene_funded_close!(cleanup,scene_wallet,4096);
             let start=semio_s_artifact_draw_drawing_geometry::handles::handle_points(bounds,1.0)[handle];
             let center=[bounds[0]+bounds[2]*0.5,bounds[1]+bounds[3]*0.5];
             let end=if handle==8 {[center[0]-(start[1]-center[1]),center[1]+start[0]-center[0]]} else {[start[0]+30.0,start[1]+20.0]};

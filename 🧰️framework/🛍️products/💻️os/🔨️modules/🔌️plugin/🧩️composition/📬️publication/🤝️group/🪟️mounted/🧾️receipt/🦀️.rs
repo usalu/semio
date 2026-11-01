@@ -353,7 +353,7 @@ impl MountedKernelMutationReceipt {
             let demand = SharedUtf8::admission_demand();
             if grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_depth < demand.depth { return Ok(RetainedCloneStep::Progress(Default::default())); }
             let bytes = self.strings[5].take(grant).ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "mounted receipt author text is not settled"))?;
-            let (author, progress) = SharedUtf8::admit(unsafe { String::from_utf8_unchecked(bytes) }, grant).map_err(|(error, _)| error)?;
+            let (author, progress) = SharedUtf8::admit(unsafe { String::from_utf8_unchecked(bytes) }, grant).result.map_err(|(error, _)| error)?;
             *self.author = Some(author); self.phase = MountedKernelReceiptPhase::Forward; self.offset=0;
             return Ok(RetainedCloneStep::Progress(progress));
         }

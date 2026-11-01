@@ -253,3 +253,16 @@ async fn results_cache_solves_one_revision_once_and_evicts_the_previous() {
     reset_results_cache();
 }
 //#endregion 🔖️Animation
+
+/// 🌐️ LAW: the fault caption of an empty document is worded by the requested locale's label set, never a literal.
+#[semio_framework_async_macros::async_test]
+async fn no_load_case_fault_follows_the_requested_locale_2d() {
+    use semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels;
+    let empty = Doc::new(semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
+    for labels in [&Fem2dLabels::NATIVE_EN, &Fem2dLabels::NATIVE_DE] {
+        let node = render(&empty, &ResultDisplay { source_id: None, mode: DisplayMode::Static }, &Viewport2d::default(), &config::Fem2dResultsWindowConfig::default(), &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot::default(), None, None, None, FEM2D_UTILITY_SELECT_DIRECT, labels).expect("fixture surface admission");
+        let json = semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("fixture projection");
+        assert!(json.contains(labels.no_load_case.as_str()), "fault names the missing case in the requested locale: {json}");
+    }
+    assert_ne!(Fem2dLabels::NATIVE_EN.no_load_case.as_str(), Fem2dLabels::NATIVE_DE.no_load_case.as_str());
+}

@@ -1,0 +1,6 @@
+{
+  "ceilingBytes": 4096,
+  "zeroCapacityTurns": 8,
+  "fundedTurnBytes": 4096,
+  "refusedBytes": 1
+}

@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-draw-drawing-scene-paint"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Drawing scene painting: painted region preparation, prepared scene queries, picking and placement of the drawing scene"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["dep:serde", "semio-s-artifact-draw-drawing-scene/testkit"]
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-2d = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
+semio-s-artifact-draw-drawing-geometry = { workspace = true }
+semio-s-artifact-draw-drawing-model = { workspace = true }
+semio-s-artifact-draw-drawing-scene = { workspace = true }
+serde = { workspace = true, optional = true }
+
+[dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true }
+semio-s-artifact-draw-drawing-geometry = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }
+serde = { workspace = true }
+serde_json = { workspace = true }

@@ -5,7 +5,7 @@ pub use shared::*;
 #[path="query-native.rs"]
 mod native;
 pub use native::with_ifc4x3_native_attribute;
-use crate::validation::metadata;
+use semio_s_artifact_stdio_ifc4x3_express::metadata;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcSnapshot,IfcValue};
 pub struct Ifc4x3AttributeMetadata;
 impl IfcAttributeQueryMetadata for Ifc4x3AttributeMetadata{

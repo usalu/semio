@@ -326,7 +326,7 @@ fn detach_and_close(registry: &Arc<ArtifactEnvelopeFieldDecoderRegistry<(), ()>>
             }
             note(failures, "detach is not close completion", registry.ticket_reclaimed(ticket) && !returned.terminal_is_empty(), returned.terminal_is_empty());
             for _ in 0..returned_owner_close_bound() {
-                let result = returned.close_step(Grant::generous(1).retained());
+                let result = returned.close_step(Grant::generous(1).retained()).result;
                 if matches!(result, Ok(RetainedCloneStep::Complete(_))) && returned.terminal_is_empty() {
                     break;
                 }
@@ -353,7 +353,7 @@ impl Subject {
                 let close_bound = unadmitted_close_bound(record.decode_pages().page_count());
                 let mut rejected = ArtifactEnvelopeUnadmittedDecodeRejected::new(record, fields);
                 for _ in 0..close_bound {
-                    let result = rejected.close_step(Grant::generous(1).retained());
+                    let result = rejected.close_step(Grant::generous(1).retained()).result;
                     if matches!(result, Ok(RetainedCloneStep::Complete(_))) && rejected.terminal_is_empty() {
                         break;
                     }
@@ -403,8 +403,8 @@ impl Subject {
 
     fn close_step(&mut self, grant: Grant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
         match self {
-            Self::Registered { rejected, .. } => rejected.close_step(grant.retained()),
-            Self::Unadmitted(rejected) => rejected.close_step(grant.retained()),
+            Self::Registered { rejected, .. } => rejected.close_step(grant.retained()).result,
+            Self::Unadmitted(rejected) => rejected.close_step(grant.retained()).result,
         }
     }
 
@@ -429,7 +429,7 @@ impl Subject {
         note(failures, "actual field shell close", field_close == Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: shell_bytes, ..Default::default() })), &field_close);
         if let Self::Registered { rejected, registry, ticket } = self {
             note(failures, "registry retained until detach", !registry.ticket_reclaimed(*ticket) && !registry.terminal_is_empty(), registry.ticket_reclaimed(*ticket));
-            let waiting = rejected.close_step(Grant::generous(1).retained());
+            let waiting = rejected.close_step(Grant::generous(1).retained()).result;
             note(failures, "pages wait for exact reclamation", waiting == Ok(RetainedCloneStep::Progress(Default::default())), &waiting);
             detach_and_close(registry, Some(*ticket), Some(field_identity), failures);
             note(failures, "exact ticket reclaimed", registry.ticket_reclaimed(*ticket), registry.ticket_reclaimed(*ticket));

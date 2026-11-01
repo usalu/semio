@@ -29,7 +29,7 @@ impl SnapshotRetirementFactory<DemoSnapshot> for DemoSnapshotRetirementFactory {
     fn retirement_birth_bytes(&self, snapshot: &Arc<DemoSnapshot>) -> usize {
         semio_framework_value::factory::SharedValueRetirementFactory::<DemoSnapshot>::default().retirement_birth_bytes(snapshot)
     }
-    fn retire(&self, snapshot: Arc<DemoSnapshot>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<DemoSnapshot>)> {
+    fn retire(&self, snapshot: Arc<DemoSnapshot>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<DemoSnapshot>)> {
         semio_framework_value::factory::SharedValueRetirementFactory::<DemoSnapshot>::default().retire(snapshot, grant)
     }
 }
@@ -71,12 +71,12 @@ impl ErasedSnapshotRetirement for ExactDemoSnapshotRetirement {
         }
         let child_grant=RetainedCloneGrant { maximum_items: 1,maximum_depth: grant.maximum_depth-1,..grant };
         if let Some(value)=self.value.take() {
-            match DemoInitialSnapshotRetirementFactory.retire_owned(value,child_grant) {
+            match DemoInitialSnapshotRetirementFactory.retire_owned(value,child_grant).result {
                 Ok((owner,progress))=>{*self.child=Some(owner);return Ok(RetainedCloneStep::Progress(progress));},
                 Err((error,original))=>{*self.value=Some(original);return Err(error);}
             }
         }
-        if self.child.is_some() { return artifact_retirement_box_close_step(&mut self.child,child_grant).map(|step|RetainedCloneStep::Progress(step.progress())); }
+        if self.child.is_some() { return artifact_retirement_box_close_step(&mut self.child,child_grant).result.map(|step|RetainedCloneStep::Progress(step.progress())); }
         if !self.completion_recorded { self.completed.as_ref().unwrap().fetch_add(1,std::sync::atomic::Ordering::SeqCst);self.completion_recorded=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1,..empty })); }
         let counter=self.completed.as_ref().unwrap();
         if Arc::weak_count(counter)!=0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -102,8 +102,9 @@ pub struct ExactDemoSnapshotRetirementFactory(#[factory_child] pub Arc<std::sync
 
 impl SnapshotRetirementFactory<DemoSnapshot> for ExactDemoSnapshotRetirementFactory {
     fn retirement_birth_bytes(&self, _: &Arc<DemoSnapshot>) -> usize { std::mem::size_of::<ExactDemoSnapshotRetirement>() }
-    fn retire(&self, snapshot: Arc<DemoSnapshot>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<DemoSnapshot>)> {
-        admit_artifact_retirement(snapshot,grant,|original|ExactDemoSnapshotRetirement { owner: std::mem::ManuallyDrop::new(Some(original)),value: std::mem::ManuallyDrop::new(None),child: std::mem::ManuallyDrop::new(None),completed: std::mem::ManuallyDrop::new(Some(Arc::clone(&self.0))),completion_recorded: false })
+    fn retire(&self, snapshot: Arc<DemoSnapshot>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<DemoSnapshot>)> {
+        let result = admit_artifact_retirement(snapshot,grant,|original|ExactDemoSnapshotRetirement { owner: std::mem::ManuallyDrop::new(Some(original)),value: std::mem::ManuallyDrop::new(None),child: std::mem::ManuallyDrop::new(None),completed: std::mem::ManuallyDrop::new(Some(Arc::clone(&self.0))),completion_recorded: false });
+        semio_framework_value::RetainedWorkOutcome { result, work: 1 }
     }
 }
 
@@ -115,9 +116,9 @@ impl ArtifactOwnedValueRetirementFactory<DemoSnapshot> for DemoInitialSnapshotRe
     fn retirement_birth_bytes(&self, value: &DemoSnapshot) -> usize {
         semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default().retirement_birth_bytes(value)
     }
-    fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, DemoSnapshot)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, DemoSnapshot)> {
+    fn retire_owned(&self, value: DemoSnapshot, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, DemoSnapshot)> {
         semio_framework_value::factory::OwnedValueRetirementFactory::<DemoSnapshot>::default().retire_owned(value, grant)
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
+    }
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
@@ -127,9 +128,9 @@ impl<Mutation: semio_framework_value::retirement::RetireOwned> ArtifactOwnedValu
     fn retirement_birth_bytes(&self, value: &Mutation) -> usize {
         semio_framework_value::factory::OwnedValueRetirementFactory::<Mutation>::default().retirement_birth_bytes(value)
     }
-    fn retire_owned(&self, value: Mutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Mutation)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Mutation)> {
+    fn retire_owned(&self, value: Mutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, Mutation)> {
         semio_framework_value::factory::OwnedValueRetirementFactory::<Mutation>::default().retire_owned(value, grant)
-    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
+    }
 }
 
 /// 🧹️ Retires a detached demo envelope a test compared against, through the store's own envelope retirement.
@@ -152,7 +153,7 @@ pub fn drive_retirement_terminal(retirement: Box<dyn ErasedSnapshotRetirement>) 
         let Some(owner) = original.as_ref() else { return; };
         let demand = artifact_retirement_box_demands(owner, grant.maximum_copy_bytes).expect("current original boxed owner frontier");
         let turn = RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes.max(grant.maximum_copy_bytes), maximum_capacity_bytes: demand.capacity_bytes.max(grant.maximum_capacity_bytes), maximum_release_bytes: demand.release_bytes.max(grant.maximum_release_bytes), maximum_depth: demand.depth.max(grant.maximum_depth), ..grant };
-        let step = artifact_retirement_box_close_step(&mut original, turn).expect("original owner and Box close in distinct granted turns");
+        let step = artifact_retirement_box_close_step(&mut original, turn).result.expect("original owner and Box close in distinct granted turns");
         assert!(step.progress().fits(turn));
     }
     panic!("retained original owner must reach terminal empty across interruptions");
@@ -211,7 +212,7 @@ impl semio_framework_value::FactoryPayloadRetirement for DemoPublishedRootWitnes
     fn close_state_constructor_depth(&self)->usize { 0 }
     fn close_state_constructor_copy_bytes(&self)->usize { 0 }
     fn close_state_preparation_demands(&self,_:&Self::CloseState,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError> { Ok(Default::default()) }
-    fn prepare_close_state_step(&self,_:&mut Self::CloseState,_:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+    fn prepare_close_state_step(&self,_:&mut Self::CloseState,_:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome { semio_framework_value::RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 } }
     fn close_state_preparation_is_complete(_:&Self::CloseState)->bool { true }
     fn prepare_close_state(&self)->Self::CloseState { DemoPublishedRootClose { weak:None,root:None } }
     fn transfer_payload(value:Self,state:&mut Self::CloseState) { state.weak=value.value.into_inner(); }
@@ -219,7 +220,17 @@ impl semio_framework_value::FactoryPayloadRetirement for DemoPublishedRootWitnes
         let release_bytes=if let Some(root)=state.root.as_ref() { if Arc::strong_count(root)==1 { demo_snapshot_frame_bytes() } else { 0 } } else if state.weak.as_ref().is_some_and(|weak|weak.strong_count()==0) { demo_snapshot_frame_bytes() } else { 0 };
         Ok(semio_framework_value::RetirementDemand { release_bytes,depth:usize::from(state.weak.is_some()||state.root.is_some()),..Default::default() })
     }
-    fn close_state_step(state:&mut Self::CloseState,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+    fn close_state_step(state:&mut Self::CloseState,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome {
+        let result=Self::close_state_result(state,grant);
+        let work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=Default::default()));
+        semio_framework_value::RetainedWorkOutcome { result, work }
+    }
+    fn close_state_terminal_is_empty(state:&Self::CloseState)->bool { state.weak.is_none()&&state.root.is_none() }
+}
+
+impl DemoPublishedRootWitness {
+    fn close_state_result(state:&mut DemoPublishedRootClose,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+        use semio_framework_value::FactoryPayloadRetirement as _;
         let empty=RetainedCloneProgress::default();
         if Self::close_state_terminal_is_empty(state) { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items==0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -238,7 +249,6 @@ impl semio_framework_value::FactoryPayloadRetirement for DemoPublishedRootWitnes
         }
         Ok(RetainedCloneStep::Complete(empty))
     }
-    fn close_state_terminal_is_empty(state:&Self::CloseState)->bool { state.weak.is_none()&&state.root.is_none() }
 }
 
 pub fn close(owner: &mut dyn ErasedSnapshotRetirement) -> usize {
@@ -261,11 +271,11 @@ pub fn close(owner: &mut dyn ErasedSnapshotRetirement) -> usize {
                 4 if demands.depth > 0 => below.maximum_depth -= 1,
                 _ => continue,
             }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(below).unwrap());
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(below).result.unwrap());
             assert_eq!(step.progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant).unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant).result.unwrap());
         assert!(step.progress().fits(grant));
         assert_eq!(heap.requested_bytes, step.progress().retained_capacity_bytes);
         assert_eq!(heap.released_bytes, step.progress().released_bytes);

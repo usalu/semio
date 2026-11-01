@@ -1,6 +1,6 @@
 //! 🧪️ Shared neutral declaration domains execute under each version's own catalog type.
 use super::*;
-use super::super::DetailsTestProfile;
+use super::DetailsTestProfile;
 fn fixture()->DslValue{semio_framework_pack_json::to_dsl_value(&semio_framework_pack_json::parse(include_str!("../📚️catalog/⚖️domain/🧪️tests/🔣️.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap())}
 fn text<'a>(value:&'a DslValue,key:&str)->&'a str{value.get(key).unwrap().as_str().unwrap()}
 fn expression(value:&DslValue)->IfcTypeExpression{IfcTypeExpression{kind:text(value,"kind").into(),name:value.get("name").and_then(DslValue::as_str).map(str::to_owned),width:value.get("width").and_then(DslValue::as_i64),fixed:value.get("fixed").and_then(DslValue::as_bool).unwrap_or(false),aggregate:value.get("aggregate").and_then(DslValue::as_str).map(str::to_owned),lower:value.get("lower").and_then(DslValue::as_i64),upper:value.get("upper").and_then(DslValue::as_i64),unique:value.get("unique").and_then(DslValue::as_bool).unwrap_or(false),optional:value.get("optional").and_then(DslValue::as_bool).unwrap_or(false),item:value.get("item").map(expression).map(Box::new),..Default::default()}}

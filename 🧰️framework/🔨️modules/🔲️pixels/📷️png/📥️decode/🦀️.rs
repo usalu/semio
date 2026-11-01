@@ -104,7 +104,7 @@ impl PngDecodeJob{
   let c=self.chunk.as_mut().unwrap();
   if c.at<c.end{c.crc=crc32_update(c.crc,&source[c.at..c.at+1]);c.at+=1;self.bytes=c.at;return Ok(0);}
   if c.crc^0xffffffff!=be(source,c.end){return Err(invalid("PNG CRC mismatch"));}
-  if c.kind==*b"IDAT"&&!self.ranges.has_reserved_slot(){return self.ranges.reserve_one_funded(grant).map(|step|step.retained_capacity_bytes).map_err(|_|invalid("PNG range allocation refused"));}
+  if c.kind==*b"IDAT"&&!self.ranges.has_reserved_slot(){let step=self.ranges.reserve_one_funded(grant).map_err(|_|invalid("PNG range allocation refused"))?;if step.copied_items==0&&!self.ranges.has_reserved_slot(){return Err(invalid("PNG range allocation refused"));}return Ok(step.retained_capacity_bytes);}
   self.at=c.end+4;self.bytes=self.at;let c=self.chunk.take().unwrap();self.parse_chunk(c)?;Ok(0)
  }
  fn next_pass(&mut self){
@@ -172,6 +172,12 @@ impl PngDecodeJob{
   if self.phase=="chunks"{return Ok(32+self.chunk.as_ref().filter(|chunk|chunk.at==chunk.end&&matches!(&chunk.kind,b"PLTE"|b"tRNS")).map_or(0,|chunk|(chunk.end-chunk.start).min(768)));}
   if self.phase=="inflating"{if self.output.pixels.len()<self.total_pixels*4{return Ok(32+(self.total_pixels*4-self.output.pixels.len()).min(4096));}if self.current.len()<self.stride{return Ok(32+(self.stride-self.current.len()).min(4096));}if self.previous.len()<self.stride{return Ok(32+(self.stride-self.previous.len()).min(4096));}return Ok(size_of::<PngInflater>().max(32));}Ok(32)
  }
+ /// 🪜️ Quotes the nesting depth of the next transition, which a range reservation raises to its page path.
+ pub fn next_depth_demand(&self)->Result<usize,PngDecodeError>{
+  if matches!(self.phase,"complete"|"transferred"){return Ok(0);}
+  if self.pending_range_allocation(){return self.ranges.next_reserve_depth_demand().map_err(|_|invalid("PNG range depth demand refused"));}
+  Ok(1)
+ }
  pub fn next_capacity_byte_demand(&self)->Result<usize,PngDecodeError>{
   if self.pending_range_allocation(){return self.ranges.next_allocation_bytes().map_err(|_|invalid("PNG range capacity demand refused"));}
   if self.phase=="allocation"{return Ok(match self.allocation_at{0=>self.total_pixels*4,1|2=>self.stride,_=>0});}
@@ -181,7 +187,7 @@ impl PngDecodeJob{
  pub fn source(&self)->&[u8]{&self.source}
  pub fn advance(&mut self,grant:RetainedCloneGrant)->Result<(PngDecodeProgress,RetainedCloneProgress),PngDecodeError>{
   self.check()?;let mut receipt=RetainedCloneProgress::default();
-  for _ in 0..grant.maximum_items{if self.phase=="complete"{break;}let copy=self.next_copy_byte_demand()?;let capacity=self.next_capacity_byte_demand()?;if grant.maximum_depth==0||copy>grant.maximum_copy_bytes.saturating_sub(receipt.copied_bytes)||capacity>grant.maximum_capacity_bytes.saturating_sub(receipt.retained_capacity_bytes){break;}
+  for _ in 0..grant.maximum_items{if self.phase=="complete"{break;}let copy=self.next_copy_byte_demand()?;let capacity=self.next_capacity_byte_demand()?;if self.next_depth_demand()?>grant.maximum_depth||copy>grant.maximum_copy_bytes.saturating_sub(receipt.copied_bytes)||capacity>grant.maximum_capacity_bytes.saturating_sub(receipt.retained_capacity_bytes){break;}
    let result=match self.phase{"chunks"=>self.chunk_step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:grant.maximum_capacity_bytes-receipt.retained_capacity_bytes,maximum_release_bytes:0,maximum_depth:grant.maximum_depth}),"allocation"=>self.allocation_step(),"pixels"=>self.pixel_step().map(|_|0),_=>self.inflate_step(grant.maximum_capacity_bytes-receipt.retained_capacity_bytes)};let allocated=match result{Ok(value)=>value,Err(error)=>{self.failed=Some(error.clone());return Err(error);}};self.work+=1;receipt.copied_items+=1;receipt.copied_bytes+=copy;receipt.retained_capacity_bytes+=allocated;
   }
   Ok((self.progress(),receipt))

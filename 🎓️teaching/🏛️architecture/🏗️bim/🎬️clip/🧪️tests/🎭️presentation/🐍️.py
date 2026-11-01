@@ -40,7 +40,6 @@ class BimPresentationContract(unittest.TestCase):
         current = cls.source_hashes()
         if cls.inputs != current:
             changed = sorted(path for path in cls.inputs.keys() | current.keys() if cls.inputs.get(path) != current.get(path))
-            print("[DEBUG] Changed BIM inputs", changed, flush=True)
             raise AssertionError("BIM authored inputs changed during this focused run; rerun against current files")
 
     def test_dispatch_contract(self):
@@ -83,7 +82,6 @@ class BimPresentationContract(unittest.TestCase):
                                 "pixel_width": 480, "pixel_height": 270, "frame_rate": 4,
                                 "renderer": "cairo", "dry_run": True, "disable_caching": True}):
                     module = "🎓️teaching." + chapter["script"].removesuffix(".py").replace("/", ".")
-                    print(f"[DEBUG] BIM lifecycle {chapter['topic']} {language}", flush=True)
                     base = getattr(importlib.import_module(module), chapter["scene"])
                     seen, played = [], set()
 

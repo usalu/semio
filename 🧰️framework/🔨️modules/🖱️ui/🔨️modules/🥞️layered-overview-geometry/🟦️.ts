@@ -457,16 +457,21 @@ export function scheduleIdle(callback: () => void, delayMs: number, scheduler: L
 /** 🫥 How a card became the revealed one. */
 export type LayeredRevealSource = "pointer" | "focus";
 
-/** 🎴️ A card is concealed exactly when a pointer hover reveals a different card. Keyboard focus conceals nothing, so every card stays reachable.
- * The concealed card keeps its grid slot.
+/** 🎴️ A card is concealed exactly when a pointer press clears the page of a different card; merely hovering the explore control only centers the level.
+ * Keyboard focus conceals nothing, so every card stays reachable. The concealed card keeps its grid slot.
  * @see ../../🧱️elements/🥞️LayeredOverview/🟦️.tsx — paints this onto each card host */
-export function layeredCardConcealed(id: string, revealedId: string | null, source: LayeredRevealSource | null): boolean {
-  return source === "pointer" && revealedId !== null && id !== revealedId;
+export function layeredCardConcealed(id: string, revealedId: string | null, source: LayeredRevealSource | null, pressed: boolean): boolean {
+  return pressed && source === "pointer" && revealedId !== null && id !== revealedId;
 }
 
-/** 🌫 The card under the pointer wears the veil's tint, so the page behind it is the only crisp surface. Keyboard focus tints nothing. */
-export function layeredCardTinted(id: string, revealedId: string | null, source: LayeredRevealSource | null): boolean {
-  return source === "pointer" && revealedId === id;
+/** 🌫 The card whose explore control is pressed wears the veil's tint, so the cleared page behind it is the only crisp surface. Hovering or keyboard focus tints nothing. */
+export function layeredCardTinted(id: string, revealedId: string | null, source: LayeredRevealSource | null, pressed: boolean): boolean {
+  return pressed && source === "pointer" && revealedId === id;
+}
+
+/** 🫧 The page of the revealed card shows clear exactly while its explore control is pressed; until then the level is only centered on it. */
+export function layeredClearedId(revealedId: string | null, pressed: boolean): string | null {
+  return pressed ? revealedId : null;
 }
 // #endregion 🫥LayeredCardConcealment
 

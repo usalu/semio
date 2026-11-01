@@ -196,7 +196,7 @@ fn stored_genesis_capture_is_bounded_and_cancellable() {
             assert!(capture.step(&cursor, &mut cancelled).is_err());
             assert_eq!(capture.bytes.len(), before);
             let grant=physical_test_close_grant();
-            let(retirement,receipt)=semio_framework_value::factory::OwnedValueRetirementFactory::<Vec<u8>>::default().retire_owned(capture.bytes,grant).unwrap_or_else(|(error,_)|panic!("original captured bytes admission refused: {error}"));
+            let(retirement,receipt)=semio_framework_value::factory::OwnedValueRetirementFactory::<Vec<u8>>::default().retire_owned(capture.bytes,grant).result.unwrap_or_else(|(error,_)|panic!("original captured bytes admission refused: {error}"));
             assert!(receipt.fits(grant));drive_retirement_terminal(retirement);
             let grant=schema_test_close_grant();
             for _ in 0..8 { if cursor.terminal_is_empty() { break; }let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||cursor.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes)); }
@@ -229,7 +229,7 @@ async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
                 let mut hydration = RetainedConfigStoreHydration::<DemoSnapshot, DemoMutation>::from_snapshots(live.envelope().vcs.genesis.clone(), initial.clone(), initial.clone(), history, live.envelope().id.clone(), "demo/v1".into(), complete_test_catalog(semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new().member_store_owners(physical_test_close_grant())), 0, 65536, actor);
                 for _ in 0..1_000_000 { match hydration.advance(physical_test_close_grant()) { ConfigStoreHydrationStep::Pending(_) => {}, ConfigStoreHydrationStep::Rejected(diagnostic) => {  rejected = true; break; }, ConfigStoreHydrationStep::Ready(mut store) => { close_test_store(&mut store); break; } } }
                 let mut closed = false;
-                for _ in 0..100000 { if hydration.terminal_is_empty() { closed = true; break; } let step=hydration.close_step(physical_test_close_grant()).unwrap();assert!(step.progress().fits(physical_test_close_grant())); }
+                for _ in 0..100000 { if hydration.terminal_is_empty() { closed = true; break; } let step=hydration.close_step(physical_test_close_grant()).result.unwrap();assert!(step.progress().fits(physical_test_close_grant())); }
                 assert!(closed, "retained hydration closes exactly");
             } else {
                 let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: live.envelope().id.clone(), dialect: live.envelope().dialect.clone().unwrap() };
@@ -242,7 +242,7 @@ async fn retained_hydrators_refuse_actorless_history_from_the_neutral_law() {
                     match hydration.step(&mut cx, physical_test_close_grant()) { PersistedDocumentHydrationStep::Pending(_) => {}, PersistedDocumentHydrationStep::Rejected(diagnostic) => {  rejected = true; break; }, PersistedDocumentHydrationStep::Ready(PersistedDocumentHydrationOutput::Store(mut store)) => { close_test_store(&mut store); break; }, _ => panic!("requested store output") }
                 }
                 let mut closed = false;
-                for _ in 0..100000 { if hydration.terminal_is_empty() { closed = true; break; } let step=hydration.close_step(physical_test_close_grant()).unwrap();assert!(step.progress().fits(physical_test_close_grant())); }
+                for _ in 0..100000 { if hydration.terminal_is_empty() { closed = true; break; } let step=hydration.close_step(physical_test_close_grant()).result.unwrap();assert!(step.progress().fits(physical_test_close_grant())); }
                 assert!(closed, "retained hydration closes exactly");
             }
             assert_eq!(!rejected, row["accepted"].as_bool().unwrap(), "config={config}, authors={row}");

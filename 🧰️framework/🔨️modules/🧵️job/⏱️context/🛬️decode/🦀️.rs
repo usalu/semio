@@ -54,7 +54,7 @@ impl OriginalNativeDecodeSource{
   let original_recipient=self.original_recipient.as_mut().ok_or_else(||refusal("original native decoder has no admitted recipient"))?;
   let mut control=if let Some(original)=self.receipt.take(){match NativeForwardedDecodeControl::rebind(original,&mut progress,&mut allocate,original_recipient){Ok(control)=>control,Err((error,original))=>{self.receipt=Some(original);return Err(error.into())}}}else{let mut control=NativeDecodeControl::new_forwarded(self.policy.maximum_owned_bytes,&mut progress,&mut allocate);control.install_retirement_recipient(original_recipient)?;control};
   let before_work=control.actual_work();let mut work=ActualWork{turn:&borrowed,closing};let answer=control.with_work_recipient(&mut work,|control|Ok::<_,ValueError>(run(control)));
-  let observed=control.actual_work().saturating_sub(before_work);self.receipt=Some(control.detach().unwrap_or_else(|_|panic!("original native decode supplier violated the canonical consuming receipt")));
+  let observed=control.actual_work().saturating_sub(before_work);self.receipt=Some(control.detach().map_err(|_|ValueError::invariant("original native decode supplier violated the canonical consuming receipt"))?);
   answer.map(|value|(value,observed)).map_err(OriginalTurnFailure::from)
  }
  /// 🧮️ Reservations never debit birth; the concrete bounded producer's actual receipt returns to this exact caller.

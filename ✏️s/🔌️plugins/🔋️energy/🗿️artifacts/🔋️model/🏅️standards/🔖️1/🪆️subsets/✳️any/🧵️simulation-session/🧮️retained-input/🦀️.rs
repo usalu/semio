@@ -771,7 +771,7 @@ impl ModelCapture {
         }
         Ok(demand)
     }
-    pub(super) fn step_original(&mut self,source:&EnergyModelView<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{let d=self.demand(source)?;let mut ready=None;semio_framework_job::admit_original_construction(cx,&mut ready,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:d.depth},|_|{let complete=self.step_one(source).map_err(|message|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,message))?;Ok((complete,semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))})?;Ok(ready)}
+    pub(super) fn step_original(&mut self,source:&EnergyModelView<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{let d=self.demand(source)?;let mut ready=None;semio_framework_job::admit_original_construction(cx,&mut ready,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:d.depth},|_|crate::sim_retirement::energy_construct((||{let complete=self.step_one(source).map_err(|message|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,message))?;Ok((complete,semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))})()))?;Ok(ready)}
 
     pub(super) fn finish(self) -> Model {
         self.model

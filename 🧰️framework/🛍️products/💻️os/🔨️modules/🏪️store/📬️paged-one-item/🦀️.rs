@@ -66,7 +66,7 @@ mod returned_custody {
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         if let Some(owner)=close.as_mut(){
             if owner.terminal_is_empty(){*close=None;return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}
-            let step=owner.close_step(grant)?;
+            let step=owner.close_step(grant).result?;
             let receipt=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"returned structural edit exact issuer")?.progress();
             return Ok(Some(RetainedCloneStep::Progress(receipt)));
         }
@@ -90,7 +90,7 @@ mod returned_custody {
         let issuer=factory.as_ref().ok_or_else(||fault("structural","returned-post-issuer"))?;
         let post=original.take().ok_or_else(||fault("structural","returned-post"))?;
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-demand.copy_bytes,..grant};
-        match issuer.retire(post,child){
+        match issuer.retire(post,child).result {
             Ok((owner,mut receipt))=>{
                 *active=Some(owner);
                 receipt.copied_bytes=receipt.copied_bytes.checked_add(demand.copy_bytes).ok_or_else(||fault("structural","returned-post-copy"))?;
@@ -195,6 +195,7 @@ where
             Box::new(PagedOneItemPreparation::<S, M, E> {
                 base: ManuallyDrop::new(Some(base)),
                 source_admission: None,
+                mutation_admission: None,
                 source: ManuallyDrop::new(None),
                 cursor: ManuallyDrop::new(None),
                 projection_output:ManuallyDrop::new(None),
@@ -252,6 +253,7 @@ enum Phase {
 struct PagedOneItemPreparation<S: SnapshotProjection<Output = S>, M: Send + Sync + 'static, E: PagedOneItemEdit<S, M>> {
     pub base: ManuallyDrop<Option<SnapshotRead<S>>>,
     source_admission: Option<RetainedCloneSourceAdmission<S, SnapshotRead<S>>>,
+    mutation_admission: Option<RetainedCloneSourceAdmission<M, FactoryOwnedSourceAuthority<M>>>,
     pub source: ManuallyDrop<Option<RetainedCloneSource<S, SnapshotRead<S>>>>,
     pub cursor: ManuallyDrop<Option<S::Projection>>,
     projection_output:ManuallyDrop<Option<S::Output>>,
@@ -298,7 +300,7 @@ impl<S:SnapshotProjection<Output=S>,M:semio_framework_value::retirement::RetireO
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-movement,maximum_depth:grant.maximum_depth-1,..grant};
         let output=self.projected.take().ok_or_else(||fault(E::PREFIX,"projection-placement-source"))?;
         let mut target=std::mem::MaybeUninit::<S>::uninit();
-        let mut progress=match output.place(&mut target,child){Ok(progress)=>progress,Err((error,output))=>{*self.projected=Some(output);return Err(error);}};
+        let mut progress=match output.place(&mut target,child).result {Ok(progress)=>progress,Err((error,output))=>{*self.projected=Some(output);return Err(error);}};
         *self.post=Some(unsafe{target.assume_init()});
         progress.copied_items=progress.copied_items.max(1);progress.copied_bytes+=movement;
         semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"structural original projection placement")
@@ -440,18 +442,18 @@ where
                 if self.mutation.is_none() || self.mutation_retirement.is_none(){return Err(fault(prefix,"original-mutation-pair"));}
                 let original=self.mutation.take().ok_or_else(||fault(prefix,"mutation"))?;
                 let factory=self.mutation_retirement.take().ok_or_else(||fault(prefix,"mutation-issuer"))?;
-                *self.mutation_authority=Some(FactoryOwnedSourceAuthority::new(original,factory));
+                self.mutation_admission=Some(RetainedCloneSource::admission_borrowed(FactoryOwnedSourceAuthority::new(original,factory),FactoryOwnedSourceAuthority::get));
                 self.phase=Phase::MutationSource;
                 Ok(self.record(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))
             }
             Phase::MutationSource => {
-                let demand=RetainedCloneSource::<M>::borrowed_constructor_demand::<FactoryOwnedSourceAuthority<M>>();
-                if demand.admit(clone_grant).is_err() || clone_grant.maximum_copy_bytes<RetainedCloneSource::<M>::borrowed_constructor_copy_bytes::<FactoryOwnedSourceAuthority<M>>(){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
-                let authority=self.mutation_authority.take().ok_or_else(||fault(prefix,"mutation-authority"))?;
-                match RetainedCloneSource::<M,FactoryOwnedSourceAuthority<M>>::admit_borrowed(authority,FactoryOwnedSourceAuthority::get,clone_grant){
-                    Ok((source,progress))=>{*self.mutation_source=Some(source);self.phase=Phase::Source;Ok(self.record(progress))}
-                    Err((error,authority))=>{*self.mutation_authority=Some(authority);Err(error)}
-                }
+                let admission=self.mutation_admission.as_mut().ok_or_else(||fault(prefix,"mutation-admission"))?;
+                let progress=if admission.phase()=="ready"{
+                    let progress=admission.take_output(&mut self.mutation_source,clone_grant).result?.progress();
+                    if self.mutation_source.is_some(){self.mutation_admission=None;self.phase=Phase::Source;}
+                    progress
+                }else{admission.advance(clone_grant).result?.progress()};
+                Ok(self.record(progress))
             }
             Phase::Source => {
                 let demand = RetainedCloneSource::<S>::borrowed_constructor_demand::<SnapshotRead<S>>();
@@ -478,7 +480,7 @@ where
                 demand.depth=demand.depth.checked_add(1).ok_or_else(||fault(prefix,"projection-birth-depth"))?;
                 if !semio_framework_value::retained_clone::retained_clone_grant_admits(clone_grant,demand){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let child=RetainedCloneGrant{maximum_depth:clone_grant.maximum_depth-1,..clone_grant};
-                let(cursor,progress)=S::begin_projection(child)?;
+                let(cursor,progress)=S::begin_projection(child).result?;
                 *self.cursor=Some(cursor);
                 let progress=semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"structural immutable projection birth")?;
                 self.phase=Phase::Project;
@@ -492,7 +494,7 @@ where
                 demand.depth=demand.depth.checked_add(1).ok_or_else(||fault(prefix,"projection-depth"))?;
                 if !semio_framework_value::retained_clone::retained_clone_grant_admits(clone_grant,demand){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let child=RetainedCloneGrant{maximum_depth:clone_grant.maximum_depth-1,..clone_grant};
-                let step=cursor.advance(original,body,child)?;
+                let step=cursor.advance(original,body,child).result?;
                 let progress=semio_framework_value::retained_clone::admit_retained_clone_progress(child,step.progress(),"structural immutable snapshot projection")?;
                 if matches!(step,RetainedCloneStep::Complete(_)){
                     if !cursor.ready(){return Err(fault(prefix,"projection-ready"));}
@@ -506,7 +508,7 @@ where
                 demand.depth=demand.depth.checked_add(1).ok_or_else(||fault(prefix,"projection-transfer-depth"))?;
                 if !semio_framework_value::retained_clone::retained_clone_grant_admits(clone_grant,demand){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let child=RetainedCloneGrant{maximum_depth:clone_grant.maximum_depth-1,..clone_grant};
-                let Some((post,progress))=cursor.take(child)?else{return Err(fault(prefix,"projection-result"));};
+                let Some((post,progress))=cursor.take(child).result?else{return Err(fault(prefix,"projection-result"));};
                 *self.projection_output=Some(post);
                 let progress=semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"structural immutable projection output")?;
                 cursor.begin_close();
@@ -522,7 +524,7 @@ where
                 let demand=<S::Output as ProjectionOutput<S>>::placement_demand();
                 if !semio_framework_value::retained_clone::retained_clone_grant_admits(clone_grant,demand){return Ok(ArtifactStoreOneItemPreparationStep::Blocked)}
                 let output=self.projection_output.take().ok_or_else(||fault(prefix,"projection-output"))?;let mut post=std::mem::MaybeUninit::uninit();
-                let progress=match output.place(&mut post,clone_grant){Ok(progress)=>progress,Err((error,output))=>{*self.projection_output=Some(output);return Err(error)}};
+                let progress=match output.place(&mut post,clone_grant).result {Ok(progress)=>progress,Err((error,output))=>{*self.projection_output=Some(output);return Err(error)}};
                 *self.post=Some(unsafe{post.assume_init()});self.phase=Phase::CloseProjection;Ok(self.record(progress))
             }
             Phase::CloseProjection => {
@@ -538,13 +540,13 @@ where
                 demand.depth=demand.depth.checked_add(1).ok_or_else(||fault(prefix,"projection-close-depth"))?;
                 if !semio_framework_value::retained_clone::retained_clone_grant_admits(clone_grant,demand){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let child=RetainedCloneGrant{maximum_depth:clone_grant.maximum_depth-1,..clone_grant};
-                let step=cursor.close_step(child)?;
+                let step=cursor.close_step(child).result?;
                 let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,cursor.terminal_is_empty(),"structural immutable projection close")?;
                 Ok(self.record(step.progress()))
             }
             Phase::Edit => {
                 let mode=self.edit.post_mode();
-                if let Some(progress)=self.post_read.prepare(&mut self.post,mode,body,clone_grant)?{return Ok(self.record(progress));}
+                if let Some(progress)=self.post_read.prepare(&mut self.post,mode,body,clone_grant).result?{return Ok(self.record(progress));}
                 let post=self.post_read.access(&mut self.post,mode)?;
                 let before=self.source.as_ref().ok_or_else(||fault(prefix,"before-source"))?.try_borrow()?;
                 let mutation=self.mutation_source.as_ref().ok_or_else(||fault(prefix,"mutation-source"))?.try_borrow()?;
@@ -568,7 +570,7 @@ where
                 }
             }
             Phase::CloseEdit => {
-                if self.edit.terminal_is_empty(){if !self.post_read.terminal_is_empty(){let progress=self.post_read.prepare(&mut self.post,PagedOneItemPostMode::Mutable,body,clone_grant)?.ok_or_else(||fault(prefix,"completed-post-return"))?;return Ok(self.record(progress));}self.phase=Phase::TakeMutationSource;return Ok(self.record(RetainedCloneProgress{copied_items:1,..Default::default()}));}
+                if self.edit.terminal_is_empty(){if !self.post_read.terminal_is_empty(){let progress=self.post_read.prepare(&mut self.post,PagedOneItemPostMode::Mutable,body,clone_grant).result?.ok_or_else(||fault(prefix,"completed-post-return"))?;return Ok(self.record(progress));}self.phase=Phase::TakeMutationSource;return Ok(self.record(RetainedCloneProgress{copied_items:1,..Default::default()}));}
                 let factory=original_mutation_factory(&self.mutation_retirement,&self.mutation_authority,&self.mutation_source)?;
                 let mut demand=self.edit.close_demands(factory,clone_grant.maximum_copy_bytes)?;
                 demand.depth=demand.depth.checked_add(1).ok_or_else(||fault(prefix,"edit-close-depth"))?;
@@ -667,14 +669,14 @@ where
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.external_retirement.is_some() {
-            return artifact_retirement_box_close_step(&mut self.external_retirement, child).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return artifact_retirement_box_close_step(&mut self.external_retirement, child).result.map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if !self.edit.terminal_is_empty() {
             let factory=original_mutation_factory(&self.mutation_retirement,&self.mutation_authority,&self.mutation_source)?;
             return self.edit.close_step(factory,child).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.projected.is_some(){return self.place_projected(child).map(RetainedCloneStep::Progress);}
-        if !self.post_read.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(self.post_read.prepare(&mut self.post,PagedOneItemPostMode::Mutable,child.maximum_copy_bytes,child)?.ok_or_else(||fault(E::PREFIX,"post-source-return"))?));}
+        if !self.post_read.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(self.post_read.prepare(&mut self.post,PagedOneItemPostMode::Mutable,child.maximum_copy_bytes,child).result?.ok_or_else(||fault(E::PREFIX,"post-source-return"))?));}
         if let Some(sealer) = self.sealer.as_mut() {
             if !sealer.terminal_is_empty() {
                 return sealer.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress()));
@@ -684,7 +686,7 @@ where
         }
         if let Some(cursor) = self.cursor.as_mut() {
             if !cursor.terminal_is_empty() {
-                return cursor.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress()));
+                return cursor.close_step(child).result.map(|step| RetainedCloneStep::Progress(step.progress()));
             }
             *self.cursor = None;
             return Ok(unit(size_of::<S::Projection>()));
@@ -700,7 +702,7 @@ where
         if let Some(inverse) = self.inverse_retirement.as_mut() {
             if inverse.terminal_is_empty(){*self.inverse_retirement=None;return Ok(unit(demand.copy_bytes));}
             let factory=original_mutation_factory(&self.mutation_retirement,&self.mutation_authority,&self.mutation_source)?;
-            let step = inverse.close_step(factory, child)?;
+            let step = inverse.close_step(factory, child).result?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(original) = self.pending_inverse.take() {
@@ -723,21 +725,33 @@ where
             if admission.terminal_is_empty() { self.source_admission = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
+        if let Some(admission)=self.mutation_admission.as_mut(){
+            if admission.phase()=="ready"{
+                let step=admission.take_output(&mut self.mutation_source,child).result?;
+                if admission.terminal_is_empty(){self.mutation_admission=None;}
+                return Ok(RetainedCloneStep::Progress(step.progress()));
+            }
+            let mut inputs=None;
+            let step=admission.return_inputs(&mut inputs,child).result?;
+            if let Some((authority,()))=inputs{*self.mutation_authority=Some(authority);}
+            if admission.terminal_is_empty(){self.mutation_admission=None;}
+            return Ok(RetainedCloneStep::Progress(step.progress()));
+        }
         if let Some(source)=self.mutation_source.as_mut(){
-            if !source.terminal_is_empty(){return source.close_step(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
+            if !source.terminal_is_empty(){return source.close_step(child).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
             *self.mutation_source=None;return Ok(unit(size_of::<RetainedCloneSource<M,FactoryOwnedSourceAuthority<M>>>()));
         }
         if let Some(step)=self.retirement.begin_granted(&mut self.mutation_authority,child).result?{return Ok(step);}
         if let Some(source) = self.source.as_mut() {
             if !source.terminal_is_empty() {
-                return source.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress()));
+                return source.close_step(child).result.map(|step| RetainedCloneStep::Progress(step.progress()));
             }
             *self.source = None;
             return Ok(unit(size_of::<RetainedCloneSource<S,SnapshotRead<S>>>()));
         }
         if let Some(original) = self.mutation.take() {
             let moved=2*size_of::<M>();let provider=RetainedCloneGrant{maximum_copy_bytes:child.maximum_copy_bytes-moved,..child};
-            return match self.mutation_retirement.as_ref().ok_or_else(|| fault(E::PREFIX, "mutation-issuer"))?.retire_owned(original, provider) {
+            return match self.mutation_retirement.as_ref().ok_or_else(|| fault(E::PREFIX, "mutation-issuer"))?.retire_owned(original, provider) .result {
                 Ok((owner,mut receipt)) => {
                     *self.external_retirement=Some(owner);
                     let valid=receipt.fits(provider)&&receipt.retained_capacity_bytes==demand.capacity_bytes;
@@ -778,7 +792,7 @@ where
         if let Some(slot) = self.factory_close.iter_mut().find(|slot| slot.is_some()) {
             let owner = slot.as_mut().ok_or_else(|| fault(E::PREFIX, "factory"))?;
             if !owner.terminal_is_empty() {
-                return owner.step(child).map(|step| RetainedCloneStep::Progress(step.progress()));
+                return owner.step(child).result.map(|step| RetainedCloneStep::Progress(step.progress()));
             }
             *slot = None;
             return Ok(unit(0));
@@ -831,6 +845,7 @@ where
             && self.mutation.is_none()
             && self.mutation_source.is_none()
             && self.mutation_authority.is_none()
+            && self.mutation_admission.is_none()
             && self.returned_edit.is_none()
             && self.returned_edit_retirement.is_none()
             && self.returned_post.is_none()
@@ -887,6 +902,9 @@ where
         if self.pending_inverse.is_some() { return child(semio_framework_value_factory::vector::FactoryVectorRetirement::<M>::constructor_demand()); }
         if self.returned_edit.is_some()||self.returned_edit_retirement.is_some(){return child(returned_edit_demands(&self.returned_edit,&self.returned_edit_retirement,body)?);}
         if self.returned_post.is_some(){return child(returned_post_demands(&self.returned_post,&self.snapshot_retirement)?);}
+        if let Some(admission)=self.mutation_admission.as_ref(){
+            return if admission.phase()=="ready"{Ok(RetirementDemand{depth:1,..Default::default()})}else{child(admission.next_return_demand()?)};
+        }
         if let Some(owner)=self.mutation_source.as_ref(){
             return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<RetainedCloneSource<M,FactoryOwnedSourceAuthority<M>>>(),depth:1,..Default::default()})}else{child(RetirementDemand{copy_bytes:owner.next_close_copy_byte_demand()?,capacity_bytes:owner.next_close_capacity_byte_demand(body)?,release_bytes:owner.next_close_release_byte_demand()?,depth:owner.next_close_depth_demand()?})};
         }
@@ -940,6 +958,7 @@ impl<S: SnapshotProjection<Output = S>, M: Send + Sync + 'static, E: PagedOneIte
                     && self.mutation.is_none()
                     && self.mutation_source.is_none()
                     && self.mutation_authority.is_none()
+                    && self.mutation_admission.is_none()
                     && self.returned_edit.is_none()
                     && self.returned_edit_retirement.is_none()
                     && self.returned_post.is_none()

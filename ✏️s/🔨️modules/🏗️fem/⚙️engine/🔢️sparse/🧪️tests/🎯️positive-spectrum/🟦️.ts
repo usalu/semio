@@ -17,5 +17,4 @@ export function verifyPositiveSpectrumOracle(): void {
     assert.equal(values.length, row.positiveCount, row.name);
     row.values.forEach((expected, i) => assert(Math.abs(values[i]! - expected) <= Math.abs(expected) * 1e-10, row.name));
   }
-  console.log("[DEBUG] positive generalized spectrum fixture matches independent mathjs eigenvalues and NumPy Cholesky congruence");
 }

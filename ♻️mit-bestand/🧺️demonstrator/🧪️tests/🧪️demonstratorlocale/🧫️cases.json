@@ -6,7 +6,34 @@
   "componentSources": [
     "♻️mit-bestand/🧺️demonstrator/🟦️.tsx",
     "♻️mit-bestand/🧺️demonstrator/⚛️demonstrator-card.tsx",
-    "♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx"
+    "♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx",
+    "♻️mit-bestand/🧺️demonstrator/⚛️locale-picker.tsx"
+  ],
+  "lockFreeSources": {
+    "paths": [
+      "♻️mit-bestand/🧺️demonstrator/🪧️brand.ts",
+      "♻️mit-bestand/🧺️demonstrator/🟦️.tsx",
+      "♻️mit-bestand/🧺️demonstrator/⚛️footer.tsx",
+      "♻️mit-bestand/🧺️demonstrator/⚛️locale-picker.tsx",
+      "♻️mit-bestand/🧺️demonstrator/🔨️modules/🌐️locale/🟦️.ts",
+      "♻️mit-bestand/🧺️demonstrator/🔨️modules/🌐️locale/⚛️.ts"
+    ],
+    "forbidden": [
+      { "id": "locked-locale", "pattern": "LOCKED_LOCALE|lockedLocale|DEMONSTRATOR_LOCALE\\b" },
+      { "id": "brand-locale-lock", "pattern": "locks:\\s*\\{[^}]*\\blocale\\b" },
+      { "id": "literal-window-title", "pattern": "\\b(windowTitle|shortWindowTitle):\\s*\"" },
+      { "id": "default-language", "pattern": "\\blocale\\b[^,)=\\n]*=\\s*[\"'](de|en)[\"']" }
+    ],
+    "html": { "forbidden": "<html[^>]*\\blang=", "required": "<title>Entwerfen mit Bestand</title>" }
+  },
+  "localeResolution": [
+    { "id": "stored-german", "candidates": ["de", "en-US"], "expected": "de" },
+    { "id": "browser-english-region", "candidates": [null, "en-GB"], "expected": "en" },
+    { "id": "browser-german-region", "candidates": ["de-AT", "en"], "expected": "de" },
+    { "id": "unsupported-first-supported-second", "candidates": ["fr-FR", "de-DE"], "expected": "de" },
+    { "id": "case-insensitive", "candidates": ["EN-us"], "expected": "en" },
+    { "id": "no-language-asks-the-viewer", "candidates": [], "expected": null },
+    { "id": "only-unsupported-asks-the-viewer", "candidates": ["fr-FR", "", null, "english"], "expected": null }
   ],
   "forbiddenSourcePatterns": [
     {
@@ -82,7 +109,11 @@
     "minKeys": 90,
     "identicalAllowed": [
       "demonstrator.brand.pane.generator.label",
-      "demonstrator.brand.pane.aggregator.label"
+      "demonstrator.brand.pane.aggregator.label",
+      "demonstrator.brand.pane.generator.windowTitle",
+      "demonstrator.brand.pane.aggregator.windowTitle",
+      "demonstrator.brand.pane.generator.shortWindowTitle",
+      "demonstrator.brand.pane.aggregator.shortWindowTitle"
     ]
   },
   "frameworkSources": [

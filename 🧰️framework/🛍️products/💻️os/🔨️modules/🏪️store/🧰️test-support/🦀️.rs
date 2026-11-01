@@ -571,8 +571,10 @@ where
 impl<P: Send + Sync + 'static> SnapshotRetirementFactory<P> for RoundTripValueRetirementFactory {
     fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { size_of::<RoundTripValueRetirement<Arc<P>>>() }
 
-    fn retire(&self, snapshot: Arc<P>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<P>)> {
-        admit_artifact_retirement(snapshot, grant, |snapshot| RoundTripValueRetirement(Some(snapshot)))
+    fn retire(&self, snapshot: Arc<P>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<P>)> {
+        let result = admit_artifact_retirement(snapshot, grant, |snapshot| RoundTripValueRetirement(Some(snapshot)));
+        let work = u64::from(result.is_ok());
+        semio_framework_value::RetainedWorkOutcome { result, work }
     }
 }
 
@@ -614,7 +616,7 @@ pub fn drive_retirement(owner: &mut dyn ErasedSnapshotRetirement) -> Result<(), 
         if owner.terminal_is_empty() { return Ok(()); }
         let copy = owner.next_copy_byte_demand()?.max(ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy)?, maximum_release_bytes: owner.next_release_byte_demand()?, maximum_depth: owner.next_depth_demand()?.max(1) };
-        let step = owner.close_step(grant)?;
+        let step = owner.close_step(grant).result?;
         admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "driven test retirement")?;
         if matches!(step, RetainedCloneStep::Complete(_)) { return Ok(()); }
     }

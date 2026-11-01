@@ -46,27 +46,16 @@ impl PluginInstanceHandle {
         }
         let job = self.next_job_id.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let pool = plugin_host_worker_pool();
-        let operation = semio_framework_job::OperationId(self.actor.0);
-        let generation = semio_framework_job::Generation(job);
-        let params = semio_framework_job_worker_authority::BatchJobParams {
-            operation,
-            generation,
-            cancel: semio_framework_job::root_cancel_token(),
-            config: semio_framework_job_worker_authority::BatchDriveConfig {
-                retained:self.relay_registry.wake_authority.drive_policy,
-                site: "plugin-host.cold-relay",
-                stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
-                fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
-                step_budget_us: semio_framework_job::USER_VISIBLE_LANE_WALL_US,
-            },
-            now_us: semio_framework_job::default_now_us,
+        let config = semio_framework_job_worker_authority::BatchDriveConfig {
+            retained: self.relay_registry.wake_authority.drive_policy,
+            site: "plugin-host.cold-relay",
+            stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
+            fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
+            step_budget_us: semio_framework_job::USER_VISIBLE_LANE_WALL_US,
         };
         let relay = GuestColdRelayJob::new(Arc::clone(&self.runtime), Arc::clone(&self.instance), Arc::clone(&self.instance_gate), pool.clone(), cancel, job, (kind.to_string(), input));
         let (index, mounted_generation) = self.relay_registry.reserve().ok_or_else(|| PluginHostError::Plugin(format!("{kind} mounted relay registry is full")))?;
-        let owner = match admit_guest_relay_session(relay, params, self.relay_registry.wake_authority.drive_policy) {
-            Ok(session) => GuestRelayMountedOwner::Session(session),
-            Err(rejected) => GuestRelayMountedOwner::Rejected(rejected),
-        };
+        let owner = GuestRelayMountedOwner::Admitting(GuestRelayAdmission::new(relay, config));
         self.relay_registry.mount(index, mounted_generation, owner);
         GuestRelayMountedFuture { registry: Arc::clone(&self.relay_registry), index, generation: mounted_generation, complete: false }.await
     }

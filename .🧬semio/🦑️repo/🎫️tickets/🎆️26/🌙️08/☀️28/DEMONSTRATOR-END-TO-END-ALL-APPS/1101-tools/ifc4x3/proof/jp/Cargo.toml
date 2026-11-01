@@ -1,0 +1,8 @@
+[package]
+name = "semio-s-artifact-stdio-ifc-json-pack"
+version = "0.0.0"
+edition = "2021"
+[lib]
+path = "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📚️catalog/🧾️json-pack/🦀️.rs"
+[dependencies]
+semio-framework-deflate = { path = "../deflate-shim" }

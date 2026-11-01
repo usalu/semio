@@ -196,8 +196,8 @@ impl RetirementCursor for OriginalPackWriting {
     }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
         match self.close(grant) {
-            Ok(step) => RetirementStep::Progress(step.progress()),
-            Err(e) => RetirementStep::Failure(e),
+            Ok(step) => RetirementStep::Progress(step.progress(), 1),
+            Err(e) => RetirementStep::Failure(e, 0),
         }
     }
     fn terminal_is_empty(&self) -> bool {

@@ -62,6 +62,22 @@ const test = browserTest.extend<{ browserHealth: void }>({
   }, { auto: true }],
 });
 
+//#region 🌐️Languages
+/** 🌐️ The two shipped languages, English first. The browser locale is always stated explicitly (the page assumes no language), and every expected wording is read from the page's own catalog so the spec pins both languages without a literal. */
+const LANGUAGE_CASES = [
+  { language: "en", browserLocale: "en-US", next: /Next/i },
+  { language: "de", browserLocale: "de-DE", next: /Weiter/i },
+] as const;
+type Language = (typeof LANGUAGE_CASES)[number]["language"];
+const demonstratorCatalog = JSON.parse(readFileSync(join(import.meta.dirname, "..", "..", "🔨️modules", "🌐️locale", "🔣️.json"), "utf8")) as { readonly texts: Readonly<Record<string, Readonly<Record<Language, string>>>> };
+const catalogText = (key: string, language: Language): string => {
+  const cells = demonstratorCatalog.texts[key];
+  if (cells === undefined) throw new Error(`unknown demonstrator text ${key}`);
+  return cells[language];
+};
+test.use({ locale: LANGUAGE_CASES[0].browserLocale });
+//#endregion 🌐️Languages
+
 /** 📸️ Retains a short PNG and attaches its bytes without an extra copied attachment path. */
 async function capturePaneArtifact(page: Page, paneId: string, name = "p.png"): Promise<void> {
   if (!/^[a-z][a-z0-9-]{0,15}\.png$/.test(name)) throw new Error("Use a short semantic PNG artifact name");
@@ -246,7 +262,7 @@ const PANE_CASES: readonly PaneCase[] = [
         kindId: "energy.simulation",
         surface: "tree",
         expectContent: true,
-        note: "Energy simulation. Also a framework `Tree` body (run transport, live region, editable run settings, keybinding list) rather than a surface host: 15 `role=\"treeitem\"` rows on a fresh document, headed `Kein Energiesimulationslauf` under this brand's locked German locale. This grades that the simulation window's projection rendered at all — it deliberately does NOT require a completed run, which is a user-started tool run (`toolRun*` on `energySimulation`), not part of boot.",
+        note: "Energy simulation. Also a framework `Tree` body (run transport, live region, editable run settings, keybinding list) rather than a surface host: 15 `role=\"treeitem\"` rows on a fresh document, headed `No energy simulation run` or `Kein Energiesimulationslauf` by the chosen language. This grades that the simulation window's projection rendered at all — it deliberately does NOT require a completed run, which is a user-started tool run (`toolRun*` on `energySimulation`), not part of boot.",
       },
     ],
   },
@@ -454,12 +470,16 @@ test("pane roster", () => {
 //#endregion 🧪️PaneConsistency
 
 //#region 🃏️OverviewCards
-/** 🃏️ Landing overview cards use window silhouettes (icon title chips, no drag handles). */
-test("overview chrome", async ({ page }) => {
+/** 🃏️ Landing overview cards use window silhouettes (icon title chips, no drag handles), worded in the browser's language. */
+for (const { language, browserLocale } of LANGUAGE_CASES) test.describe(`overview ${language}`, () => {
+test.use({ locale: browserLocale });
+test(`overview chrome ${language}`, async ({ page }) => {
   test.setTimeout(TEST_TIMEOUT_MS);
 
   await page.goto("/", { waitUntil: "domcontentloaded" });
 
+  await expect(page.locator("html")).toHaveAttribute("lang", language);
+  await expect(page).toHaveTitle(catalogText("demonstrator.landing.title", language));
   await dismissIntroduction(page, page.locator('[id="ui.introduction.skip"]'));
 
   const cards = page.locator("[data-layered-card]");
@@ -474,12 +494,52 @@ test("overview chrome", async ({ page }) => {
     await expect(card.locator('[data-slot="window-chrome-body-surface"]')).toHaveClass(/ui-glass/);
     await expect(card.locator('[data-slot="window-chrome-body"]')).not.toHaveClass(/ui-surface/);
     await expect(card.locator('[data-slot="demonstrator-pane-card-title-chip"] svg')).toHaveCount(1);
-    await expect(card.locator('[data-slot="demonstrator-pane-card-tagline"]')).toHaveText(/.+/);
+    await expect(card.locator('[data-slot="demonstrator-pane-card-tagline"]')).toHaveText(catalogText(`demonstrator.brand.pane.${paneId}.tagline`, language));
     await expect(card.locator('[data-slot="introduction-body-paragraph"]')).toHaveCount(2);
-    await expect(card.locator('[data-slot="demonstrator-pane-card-open-chip"]')).toContainText("Demonstrator öffnen");
+    await expect(card.locator('[data-slot="demonstrator-pane-card-open-chip"]')).toContainText(catalogText("demonstrator.card.open.label.normal", language));
     await expect(card.locator('[data-slot*="drag"], [data-drag-handle]')).toHaveCount(0);
   }
 
+});
+});
+
+/** 🧭️ No stored choice and no supported browser language: the viewer is asked, nothing is preselected, and the choice is applied, declared and kept across a reload. */
+test.describe("language choice", () => {
+  test.use({ locale: "fr-FR" });
+  test("language picker", async ({ page }) => {
+    test.setTimeout(TEST_TIMEOUT_MS);
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    const picker = page.locator('[data-slot="demonstrator-locale-picker"]');
+    await expect(picker).toBeVisible();
+    await expect(picker.locator("button")).toHaveCount(LANGUAGE_CASES.length);
+    await expect(picker.locator("[aria-pressed], [aria-checked]")).toHaveCount(0);
+    await expect(page.locator("[data-layered-card]")).toHaveCount(0);
+    for (const { language } of LANGUAGE_CASES) await expect(picker.locator(`button[lang="${language}"]`)).toBeVisible();
+    await picker.locator('button[data-locale="de"]').click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "de");
+    await expect(page).toHaveTitle(catalogText("demonstrator.landing.title", "de"));
+    await expect(page.locator("[data-layered-card]")).toHaveCount(brandPaneIds().length, { timeout: SHELL_READY_TIMEOUT_MS });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect(page.locator('[data-slot="demonstrator-locale-picker"]')).toHaveCount(0);
+    await expect(page.locator("html")).toHaveAttribute("lang", "de");
+  });
+});
+
+/** 🔤️ The switcher in the navbar moves every card, the document language and the title to the other language and back. */
+test("language switch", async ({ page }) => {
+  test.setTimeout(TEST_TIMEOUT_MS);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await dismissIntroduction(page, page.locator('[id="ui.introduction.skip"]'));
+  const switcher = page.locator('[data-slot="demonstrator-locale-switcher"]');
+  const first = brandPaneIds()[0]!;
+  const tagline = page.locator(`[data-layered-card="${first}"] [data-slot="demonstrator-pane-card-tagline"]`);
+  for (const { language } of [LANGUAGE_CASES[1], LANGUAGE_CASES[0]]) {
+    await switcher.locator(`button[data-locale="${language}"]`).click();
+    await expect(switcher.locator(`button[data-locale="${language}"]`)).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator("html")).toHaveAttribute("lang", language);
+    await expect(page).toHaveTitle(catalogText("demonstrator.landing.title", language));
+    await expect(tagline).toHaveText(catalogText(`demonstrator.brand.pane.${first}.tagline`, language), { timeout: SHELL_READY_TIMEOUT_MS });
+  }
 });
 //#endregion 🃏️OverviewCards
 
@@ -751,7 +811,7 @@ test('statik undo-redo', async ({ page }) => {
   expect(await waitForPaneShellOutcome(page, scenario.paneId)).toBe("ready");
   await dismissIntroductionIfPresent(page, scenario.paneId);
   const results = page.locator(paneElementSelector(scenario.paneId, windowElementId("fem3d-results")));
-  const caption = results.getByText(scenario.caption, { exact: true });
+  const caption = results.getByText(new RegExp(scenario.caption));
   await expect(caption, "initial automatic solve must settle without a pending/fault suffix").toBeVisible({ timeout: SURFACE_CONTENT_TIMEOUT_MS });
   await caption.click();
   await openPaneTab(page, scenario.paneId, scenario.panelCategoryId, scenario.panelTabId);
@@ -1018,15 +1078,17 @@ test("verfolgen undo-redo", async ({ page }) => {
   await capturePaneArtifact(page, "verfolgen");
 });
 
-test("funding logos", async ({ page }) => {
+for (const { language, browserLocale, next: nextPattern } of LANGUAGE_CASES) test.describe(`funding ${language}`, () => {
+test.use({ locale: browserLocale });
+test(`funding logos ${language}`, async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto("/", { waitUntil: "networkidle" });
-  const next = page.locator('[data-slot="introduction-info-box"] button').filter({ hasText: /Weiter/i });
+  const next = page.locator('[data-slot="introduction-info-box"] button').filter({ hasText: nextPattern });
   for (let step = 0; step < 2; step += 1) {
     await next.click({ timeout: 15_000 });
     await page.waitForTimeout(400);
   }
-  await expect(page.locator('[data-slot="introduction-info-box-title"]')).toHaveText("Förderhinweis");
+  await expect(page.locator('[data-slot="introduction-info-box-title"]')).toHaveText(catalogText("demonstrator.brand.shared.fundingNotice", language));
   const visibleLogoSizes = await page.locator('[data-slot="introduction-info-box"] img').evaluateAll((imgs) =>
     imgs
       .filter((img) => getComputedStyle(img).display !== "none")
@@ -1038,4 +1100,5 @@ test("funding logos", async ({ page }) => {
     expect(logo.height, "introduction funding logo should layout with height").toBeGreaterThan(0);
     expect(logo.naturalWidth, "introduction funding logo should decode as an image").toBeGreaterThan(0);
   }
+});
 });

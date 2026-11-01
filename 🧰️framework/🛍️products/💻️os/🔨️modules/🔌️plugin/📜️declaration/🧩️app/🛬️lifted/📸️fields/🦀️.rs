@@ -48,26 +48,26 @@ impl<A:ArtifactApp> RetirementCursor for Cursor<A>{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
 
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
-  if self.terminal_is_empty(){return RetirementStep::Complete;}
-  if grant.maximum_items==0{return RetirementStep::Progress(Default::default());}
-  if !self.metadata.terminal_is_empty(){return match self.metadata.step(grant){Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)};}
-  if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"original context leases require admitted depth"));}
+  if self.terminal_is_empty(){return RetirementStep::Complete(0);}
+  if grant.maximum_items==0{return RetirementStep::Progress(Default::default(),1);}
+  if !self.metadata.terminal_is_empty(){return match self.metadata.step(grant){Ok(step)=>RetirementStep::Progress(step.progress(),1),Err(error)=>RetirementStep::Failure(error,0)};}
+  if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"original context leases require admitted depth"),0);}
   if let Some(residual)=self.residual.take(){
    let ContextOriginalResidual{children,peers,peer_factory,tool_run}=residual;
    let(entities,payload)=match tool_run{Some(ContextToolRunSources{entities,payload})=>(Some(SharedControlledRetirement::lease(entities)),payload.map(SharedControlledRetirement::lease)),None=>(None,None)};
    self.peers=peers.map(|root|store::os_store::presence::PresencePeersRetirement::of_alias(root,peer_factory));
-   return match ControlledRetirement::new(ContextResidualLeases{children:SharedControlledRetirement::lease(children),entities,payload}){Ok(owner)=>{self.leases=Some(owner);RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}Err((error,_))=>RetirementStep::Failure(error)};
+   return match ControlledRetirement::new(ContextResidualLeases{children:SharedControlledRetirement::lease(children),entities,payload}){Ok(owner)=>{self.leases=Some(owner);RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1)}Err((error,_))=>RetirementStep::Failure(error,0)};
   }
   if let Some(leases)=self.leases.as_mut(){
    let step=leases.step(grant);
    if leases.terminal_is_empty(){self.leases=None;}
-   return match step{Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)};
+   return match step{Ok(step)=>RetirementStep::Progress(step.progress(),1),Err(error)=>RetirementStep::Failure(error,0)};
   }
-  let Some(peers)=self.peers.as_mut()else{return RetirementStep::Complete};
+  let Some(peers)=self.peers.as_mut()else{return RetirementStep::Complete(0)};
   let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
   let step=peers.close_step(child);
   if peers.terminal_is_empty(){self.peers=None;}
-  match step{Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)}
+  match step{Ok(step)=>RetirementStep::Progress(step.progress(),1),Err(error)=>RetirementStep::Failure(error,0)}
  }
  fn terminal_is_empty(&self)->bool{self.metadata.terminal_is_empty()&&self.residual.is_none()&&self.leases.is_none()&&self.peers.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}

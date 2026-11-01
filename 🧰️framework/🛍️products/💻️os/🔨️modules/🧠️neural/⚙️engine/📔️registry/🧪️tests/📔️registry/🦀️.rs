@@ -21,6 +21,7 @@ fn nested_original_system_observations_preserve_child_and_aggregate_receipts() {
 static OBSERVED_SYSTEM:ObservedSystem=ObservedSystem;
 
 fn registry_grant(owner:&RegistryRetirement,copy:usize)->Result<RetainedCloneGrant,ValueError> {
+    let copy=copy.max(owner.next_copy_byte_demand()?);
     Ok(RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy)?,maximum_release_bytes:owner.next_release_byte_demand()?,maximum_depth:owner.next_depth_demand()?})
 }
 fn drain_registry(owner:&mut RegistryRetirement,copy:usize,maximum_turns:usize)->usize {

@@ -92,8 +92,8 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplay<P, M> {
         if self.requires_original_control()&&control.is_none(){return Err(unsupported("raw semantic retirement requires its original decoding custody"));}
         if let (Some(task),Some(control))=(self.original.operation_preparation.as_ref(),control.as_ref()){task.validate_retirement_control(&**control)?;}
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-        if self.raw_retirement.is_some() { let step = match control{Some(control)=>semio_framework_value::close_factory_ticket_controlled(&mut self.raw_retirement,child,control)?,None=>artifact_retirement_box_close_step(&mut self.raw_retirement, child)?}; return Ok(RetainedCloneStep::Progress(step.progress())); }
-        if let Some(owner) = self.raw_factory.as_mut() { let step = owner.step(child)?; semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "raw replay original factory")?; if owner.terminal_is_empty() { self.raw_factory.take(); } return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if self.raw_retirement.is_some() { let step = match control{Some(control)=>semio_framework_value::close_factory_ticket_controlled(&mut self.raw_retirement,child,control).result?,None=>artifact_retirement_box_close_step(&mut self.raw_retirement, child).result?}; return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if let Some(owner) = self.raw_factory.as_mut() { let step = owner.step(child).result?; semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "raw replay original factory")?; if owner.terminal_is_empty() { self.raw_factory.take(); } return Ok(RetainedCloneStep::Progress(step.progress())); }
         let s = &mut *self.original;
         macro_rules! close_child { ($slot:expr, $call:expr) => {{ let step = $call?; let terminal = $slot.as_ref().is_some_and(|owner| owner.terminal_is_empty()); semio_framework_value::retained_clone::admit_retained_clone_close(child, step, terminal, "raw replay retained child")?; if terminal { $slot = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }}; }
         if let Some(owner) = s.replay_retirement.as_mut() { close_child!(s.replay_retirement, owner.close_step(child)); }
@@ -165,7 +165,7 @@ impl<P: Send + Sync + 'static, M: Mutation<P> + Send + 'static> ErasedSnapshotRe
     fn requires_original_control(&self)->bool{EditReplay::requires_original_control(self)}
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> { self.close_original_step(grant) })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
-    fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{self.close_original_step_controlled(grant,control)}
+    fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::RetainedWorkOutcome{let result=self.close_original_step_controlled(grant,control);let work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=Default::default()));semio_framework_value::RetainedWorkOutcome{result,work}}
     fn terminal_is_empty(&self) -> bool { self.originals_empty() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(copy)?.capacity_bytes) }
@@ -235,7 +235,7 @@ impl<P: Send + Sync + 'static, M: Mutation<P> + Send + 'static> ErasedSnapshotRe
     fn requires_original_control(&self)->bool{EditReplayResult::requires_original_control(self)}
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> { self.close_original_step(grant) })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
-    fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{self.close_original_step_controlled(grant,control)}
+    fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->semio_framework_value::RetainedWorkOutcome{let result=self.close_original_step_controlled(grant,control);let work=u64::from(result.as_ref().is_ok_and(|step|step.progress()!=Default::default()));semio_framework_value::RetainedWorkOutcome{result,work}}
     fn terminal_is_empty(&self) -> bool { EditReplayResult::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(copy)?.capacity_bytes) }

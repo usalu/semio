@@ -9,6 +9,15 @@ pub mod standards {
             #[path = "."]
             pub mod base {
                 #[path = "."]
+                pub mod modules {
+                    pub use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::modules::lexer;
+                    pub use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::modules::fonts;
+                    pub use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::modules::content;
+                    pub use semio_s_artifact_stdio_pdf_lift::standards::v1_7::subsets::base::modules::lift;
+                    pub use semio_s_artifact_stdio_pdf_lower::standards::v1_7::subsets::base::modules::lower;
+                    pub use semio_s_artifact_stdio_pdf_conformance_support::standards::v1_7::subsets::base::modules::writer;
+                }
+                #[path = "."]
                 pub mod schema {
                     #[path = "../../../🦀️.rs"]
                     mod component;
@@ -71,9 +80,43 @@ pub mod standards {
                 #[path = "."]
                 pub mod io {
                     pub use semio_s_artifact_stdio_pdf_inferences::standards::v1_7::subsets::base::io::foreign_artifacts;
+                    pub use semio_s_artifact_stdio_pdf_mut_family_8::standards::v1_7::subsets::base::io::error;
+                    pub use semio_s_artifact_stdio_pdf_mut_family_11::standards::v1_7::subsets::base::io::import;
                     #[path = "."]
                     pub mod export {
-                        pub use semio_s_artifact_stdio_pdf_testkit::standards::v1_7::subsets::base::io::export::*;
+                        #[path = "../../../../🚪️io/📤️export/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
+                        #[path = "."]
+                        pub mod serializers {
+                            #[path = "."]
+                            pub mod artifacts {
+                                #[path = "."]
+                                pub mod binary {
+                                    #[path = "."]
+                                    pub mod v_raw {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "../../../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/💾️binary/🔖️raw/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                                #[path = "."]
+                                pub mod deflate {
+                                    #[path = "."]
+                                    pub mod v_rfc1950 {
+                                        #[path = "."]
+                                        pub mod any {
+                                            #[path = "../../../../🚪️io/📤️export/🧵️serializers/🗿️artifacts/🗜️deflate/🔖️rfc1950/✳️any/🦀️.rs"]
+                                            mod component;
+                                            pub use component::*;
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -114,10 +157,11 @@ pub mod editor {
                 pub use component::*;
                 #[path = "."]
                 pub mod windows {
-                    pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17::modes::edit::windows::*;
                     #[path = "."]
                     pub mod main {
-                        pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17::modes::edit::windows::main::*;
+                        #[path = "../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
                         #[cfg(test)]
                         #[path = "../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
                         pub mod tests;
@@ -137,10 +181,11 @@ pub mod editor {
                 pub use component::*;
                 #[path = "."]
                 pub mod windows {
-                    pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17e::modes::edit::windows::*;
                     #[path = "."]
                     pub mod main {
-                        pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17e::modes::edit::windows::main::*;
+                        #[path = "../../../../../📐️e/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
                         #[cfg(test)]
                         #[path = "../../../../../📐️e/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
                         pub mod tests;
@@ -160,10 +205,11 @@ pub mod editor {
                 pub use component::*;
                 #[path = "."]
                 pub mod windows {
-                    pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17h::modes::edit::windows::*;
                     #[path = "."]
                     pub mod main {
-                        pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17h::modes::edit::windows::main::*;
+                        #[path = "../../../../../⚕️h/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
                         #[cfg(test)]
                         #[path = "../../../../../⚕️h/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
                         pub mod tests;
@@ -183,10 +229,11 @@ pub mod editor {
                 pub use component::*;
                 #[path = "."]
                 pub mod windows {
-                    pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17ua::modes::edit::windows::*;
                     #[path = "."]
                     pub mod main {
-                        pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17ua::modes::edit::windows::main::*;
+                        #[path = "../../../../../♿️ua/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
                         #[cfg(test)]
                         #[path = "../../../../../♿️ua/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
                         pub mod tests;
@@ -206,10 +253,11 @@ pub mod editor {
                 pub use component::*;
                 #[path = "."]
                 pub mod windows {
-                    pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17vt::modes::edit::windows::*;
                     #[path = "."]
                     pub mod main {
-                        pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17vt::modes::edit::windows::main::*;
+                        #[path = "../../../../../🧾️vt/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
                         #[cfg(test)]
                         #[path = "../../../../../🧾️vt/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
                         pub mod tests;
@@ -229,10 +277,11 @@ pub mod editor {
                 pub use component::*;
                 #[path = "."]
                 pub mod windows {
-                    pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17x::modes::edit::windows::*;
                     #[path = "."]
                     pub mod main {
-                        pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17x::modes::edit::windows::main::*;
+                        #[path = "../../../../../🖨️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
                         #[cfg(test)]
                         #[path = "../../../../../🖨️x/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
                         pub mod tests;

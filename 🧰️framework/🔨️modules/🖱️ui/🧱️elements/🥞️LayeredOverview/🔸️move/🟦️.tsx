@@ -7,7 +7,7 @@ import { type LayeredSwipeDrive, useSwipe } from "../👆️swipe/🟦️.ts";
 import type { usePanesState } from "../🔶️panes/🟦️.tsx";
 
 /** 🔹 Builds moveTo, glideTo, follow, focusView of LayeredOverview. */
-export function useMoveState({ layoutRef, logicalRestingRef, targetRef, offsetRef, latest, stop, driveRef, paint, settleGhost, run, runningRef, aim, finishGhost, rootRef, interactive, swiping, opened, stripRef, repaint, veilRef, cardStripRef, cardElements, openedRef, revealedRef, cellList, sourceRef, setRevealSource, setRevealedId, touch, props, revealedId, setOwnOpened, deepLink }: Pick<ReturnType<typeof usePanesState>, "layoutRef" | "logicalRestingRef" | "targetRef" | "offsetRef" | "latest" | "stop" | "driveRef" | "paint" | "settleGhost" | "run" | "runningRef" | "aim" | "finishGhost" | "rootRef" | "interactive" | "swiping" | "opened" | "stripRef" | "repaint" | "veilRef" | "cardStripRef" | "cardElements" | "openedRef" | "revealedRef" | "cellList" | "sourceRef" | "setRevealSource" | "setRevealedId" | "touch" | "revealedId" | "setOwnOpened" | "deepLink"> & { readonly props: LayeredOverviewProps }) {
+export function useMoveState({ layoutRef, logicalRestingRef, targetRef, offsetRef, latest, stop, driveRef, paint, settleGhost, run, runningRef, aim, finishGhost, rootRef, interactive, swiping, opened, stripRef, repaint, veilRef, cardStripRef, cardElements, openedRef, revealedRef, pressedRef, setPressed, pressed, cellList, sourceRef, setRevealSource, setRevealedId, touch, props, revealedId, setOwnOpened, deepLink }: Pick<ReturnType<typeof usePanesState>, "layoutRef" | "logicalRestingRef" | "targetRef" | "offsetRef" | "latest" | "stop" | "driveRef" | "paint" | "settleGhost" | "run" | "runningRef" | "aim" | "finishGhost" | "rootRef" | "interactive" | "swiping" | "opened" | "stripRef" | "repaint" | "veilRef" | "cardStripRef" | "cardElements" | "openedRef" | "revealedRef" | "pressedRef" | "setPressed" | "pressed" | "cellList" | "sourceRef" | "setRevealSource" | "setRevealedId" | "touch" | "revealedId" | "setOwnOpened" | "deepLink"> & { readonly props: LayeredOverviewProps }) {
   const moveTo = React.useCallback(
     (to: LayeredOffset, kind: "glide" | "settle") => {
       targetRef.current = to;
@@ -120,13 +120,15 @@ export function useMoveState({ layoutRef, logicalRestingRef, targetRef, offsetRe
       setRevealSource(source);
       latest.current.props.onRevealedIdChange?.(id, source);
       if (same) return;
+      pressedRef.current = false;
+      setPressed(false);
       setRevealedId(id);
       touch(id);
       finishGhost();
       focusView(id);
       repaint();
     },
-    [finishGhost, focusView, repaint, touch],
+    [finishGhost, focusView, repaint, touch, pressedRef, setPressed],
   );
 
   const conceal = React.useCallback(
@@ -138,13 +140,47 @@ export function useMoveState({ layoutRef, logicalRestingRef, targetRef, offsetRe
       if (revealedRef.current !== id) return;
       revealedRef.current = null;
       sourceRef.current = null;
+      pressedRef.current = false;
+      setPressed(false);
       setRevealedId(null);
       setRevealSource(null);
       latest.current.props.onRevealedIdChange?.(null);
       repaint();
     },
-    [repaint],
+    [repaint, pressedRef, setPressed],
   );
+
+  const press = React.useCallback(
+    (id: string, source: LayeredRevealSource) => {
+      if (latest.current.props.interactive === false || openedRef.current !== null) return;
+      if (latest.current.props.revealedId === undefined && revealedRef.current !== id) reveal(id, source);
+      if (latest.current.props.pressed !== undefined) {
+        latest.current.props.onPressedChange?.(true);
+        return;
+      }
+      if (pressedRef.current) return;
+      pressedRef.current = true;
+      setPressed(true);
+      repaint();
+    },
+    [reveal, repaint, pressedRef, setPressed],
+  );
+
+  const release = React.useCallback(() => {
+    if (latest.current.props.pressed !== undefined) {
+      if (latest.current.props.interactive !== false) latest.current.props.onPressedChange?.(false);
+      return;
+    }
+    if (!pressedRef.current) return;
+    pressedRef.current = false;
+    setPressed(false);
+    repaint();
+  }, [repaint, pressedRef, setPressed]);
+
+  React.useLayoutEffect(() => {
+    pressedRef.current = pressed;
+    repaint();
+  }, [pressed, pressedRef, repaint]);
 
   React.useLayoutEffect(() => {
     if (!interactive && props.revealedId === undefined && revealedRef.current !== null) conceal(revealedRef.current);
@@ -153,8 +189,8 @@ export function useMoveState({ layoutRef, logicalRestingRef, targetRef, offsetRe
   React.useLayoutEffect(() => {
     for (const [id, element] of cardElements.current) {
       const source = props.revealedId === undefined ? sourceRef.current : props.revealedBy ?? "pointer";
-      const hidden = layeredCardConcealed(id, revealedId, source);
-      const tinted = layeredCardTinted(id, revealedId, source);
+      const hidden = layeredCardConcealed(id, revealedId, source, pressed);
+      const tinted = layeredCardTinted(id, revealedId, source, pressed);
       if (hidden) element.dataset.concealed = "";
       else delete element.dataset.concealed;
       if (tinted) element.dataset.tinted = "";
@@ -173,5 +209,5 @@ export function useMoveState({ layoutRef, logicalRestingRef, targetRef, offsetRe
   React.useEffect(() => {
     if (interactive && deepLink !== null && (!latest.current.controlled || deepLink !== openedRef.current)) latest.current.props.onOpenedIdChange?.(deepLink);
   }, [deepLink, interactive]);
-  return { focusView, follow, requestOpen, moveTo, reveal, conceal, cardCallback, close, stripCallback, veilCallback, cardStripCallback };
+  return { focusView, follow, requestOpen, moveTo, reveal, conceal, press, release, cardCallback, close, stripCallback, veilCallback, cardStripCallback };
 }

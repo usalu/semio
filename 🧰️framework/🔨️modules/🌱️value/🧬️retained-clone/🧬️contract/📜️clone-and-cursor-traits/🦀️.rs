@@ -81,5 +81,5 @@ pub fn retained_clone_take_demand()->RetirementDemand{RetirementDemand{depth:1,.
 /// 🧳️ Moves the actual ready output slot once and reports its defining work.
 pub fn take_retained_clone_output<T>(output:&mut Option<T>,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>{
  if output.is_none()||!retained_clone_grant_admits(grant,retained_clone_take_demand()){return RetainedWorkOutcome{result:Ok(None),work:0}}
- let value=output.take().unwrap();RetainedWorkOutcome{result:Ok(Some((value,RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1}
+ let value=match output.take(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("output absent").into()),work:0}};RetainedWorkOutcome{result:Ok(Some((value,RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1}
 }

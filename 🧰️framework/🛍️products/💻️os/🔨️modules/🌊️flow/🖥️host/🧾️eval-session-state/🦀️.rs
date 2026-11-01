@@ -505,7 +505,7 @@ impl SessionRetirement {
         Ok(())
     }
     pub fn admit(&mut self,value:SessionCollectionOwner,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,SessionCollectionOwner)>{
-        if self.root.is_some(){return self.owners.admit_owned(value,grant)}
+        if self.root.is_some(){return self.owners.admit_owned(value,grant).result}
         if grant.maximum_items==0{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"session handoff requires an admitted item"),value))}
         if grant.maximum_depth==0{return Err((ValueError::literal(ValueRefusalKind::DepthLimit,"session handoff requires admitted depth"),value))}
         match ControlledRetirement::new(value){Ok(owner)=>{self.root=Some(owner);Ok(RetainedCloneProgress{copied_items:1,..Default::default()})},Err(error)=>Err(error)}
@@ -517,7 +517,7 @@ impl SessionRetirement {
     pub(super) fn step_progress(&self)->RetainedCloneProgress{self.progress}
     pub(super) fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         self.progress=Default::default();
-        let Some(owner)=self.root.as_mut()else{let result=self.owners.step(grant);self.progress=self.owners.step_progress();return result};
+        let Some(owner)=self.root.as_mut()else{let result=self.owners.step(grant).result;self.progress=self.owners.step_progress();return result};
         let result=owner.step(grant);self.progress=owner.step_progress();let step=result?;
         let progress=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,owner.terminal_is_empty(),"Flow session original root")?.progress();
         if owner.terminal_is_empty(){self.root=None;}

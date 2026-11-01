@@ -28,7 +28,7 @@ pub(super) fn work(owner: &mut Owner<'_, '_>, bytes: usize) -> Result<(), ValueE
     owner.record_progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })?;
     owner.native().step()
 }
-pub(super) fn vector<T: RetireOwned>(count: usize, owner: &mut Owner<'_, '_>) -> Result<Vec<T>, ValueError> {
+pub(super) fn vector<T: semio_framework_value::retirement::RetireOwned>(count: usize, owner: &mut Owner<'_, '_>) -> Result<Vec<T>, ValueError> {
     owner.receive::<Vec<T>, Vec<T>>(|slot, native, body| {
         *slot = Some(Vec::new());
         body.allocate_vec_into(native, count, slot.as_mut().unwrap(), 1)?;

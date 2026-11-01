@@ -17,7 +17,7 @@ where A:OriginalArtifactAppBirth<Presence=NoPresence,PresenceMutation=NoPresence
   let config_factory=lanes.config.parts_ref().owners.one_item_preparation_factory.as_ref();
   let draft_factory=lanes.draft.parts_ref().owners.one_item_preparation_factory.as_ref();
   let d=Self::take_demands()?;let grant=cx.retained_grant();
-  admit_original_construction(cx,output,construction(d),|_|{
+  admit_original_construction(cx,output,construction(d),|_|{let result=(||{
    let(registry,declared,bus,owner)=self.tools.take().unwrap().into_parts();
    let(tools,_)=ToolOperations::<A>::build_original(OriginalToolOperationsSources{registry,declared,bus,owner},grant).unwrap_or_else(|_|panic!("original ToolOperations donation was fully preflighted"));
    let(presence,transient,presence_disposer,transient_disposer,presence_retirement,transient_retirement)=self.ephemeral.take().unwrap().into_parts();
@@ -25,6 +25,6 @@ where A:OriginalArtifactAppBirth<Presence=NoPresence,PresenceMutation=NoPresence
    let services=OriginalInstanceServices::from_original(OriginalInstanceServiceSources{policy:self.policy,peer_presence:self.peer.take().unwrap(),peer_scope:self.scope.take().unwrap(),field_decoders:self.fields.take().unwrap(),completed_records:self.records.take().unwrap(),tools,close,dispatch_report:store::DispatchReport{policy:store::MergePolicy::default(),worst:None,messages:Vec::new()}});
    let live=OriginalInstanceLiveStores{retired_window_transient:ArtifactFixedRegistry::new(),presence,transient,window_config:self.window.take().unwrap(),window_transient:WindowTransientOwnerRegistry::for_document_generation(lanes.document.generation()),artifact_factory:artifact_factory.map(Arc::clone),config_factory:config_factory.map(Arc::clone),draft_factory:draft_factory.map(Arc::clone),presence_factory:None,transient_factory:None,presence_retirement:Some(presence_retirement),transient_retirement:Some(transient_retirement),unsupported:BTreeMap::new()};
    self.closing=true;Ok((OriginalInstanceRegistrationParts{live,services},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))
-  })?;Ok(output.is_some())
+  })();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;Ok(output.is_some())
  }
 }

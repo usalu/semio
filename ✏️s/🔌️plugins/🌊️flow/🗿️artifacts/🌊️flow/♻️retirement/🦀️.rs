@@ -23,9 +23,9 @@ impl RetireOwned for FlowMutation{
 pub struct MutationRetirementFactory;
 impl store::SnapshotRetirementFactory<FlowMutation> for MutationRetirementFactory{
  fn retirement_birth_bytes(&self,_source:&Arc<FlowMutation>)->usize{semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<FlowMutation>()}
- fn retire(&self,source:Arc<FlowMutation>,grant:RetainedCloneGrant)->Result<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<FlowMutation>)>{semio_framework_value::retirement::arc_custody::admit_shared_retirement(source,grant,true)}
+ fn retire(&self,source:Arc<FlowMutation>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<FlowMutation>)>{semio_framework_value::retirement::arc_custody::admit_shared_retirement(source,grant,true)}
 }
 impl store::ArtifactOwnedValueRetirementFactory<FlowMutation> for MutationRetirementFactory{
  fn retirement_birth_bytes(&self,_source:&FlowMutation)->usize{semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<FlowMutation>()}
- fn retire_owned(&self,source:FlowMutation,grant:RetainedCloneGrant)->Result<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,FlowMutation)>{semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(source,grant).map(|(owner,p)|(owner as Box<dyn store::ErasedSnapshotRetirement>,p))}
+ fn retire_owned(&self,source:FlowMutation,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,FlowMutation)>{let turn=semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(source,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|(owner,p)|(owner as Box<dyn store::ErasedSnapshotRetirement>,p)),work:turn.work}}
 }

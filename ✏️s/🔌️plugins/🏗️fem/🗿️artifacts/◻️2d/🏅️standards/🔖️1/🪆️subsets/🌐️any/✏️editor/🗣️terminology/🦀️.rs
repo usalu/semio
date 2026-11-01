@@ -109,6 +109,14 @@ semio_framework_ui_locale::app_labels! {
         focus: native_en "Focus", native_de "Fokussieren", reuse_en "Focus", reuse_de "Fokussieren";
         actions: native_en "Actions", native_de "Aktionen", reuse_en "Actions", reuse_de "Aktionen";
         focus_results_hint: native_en "Focus the Results window for live playback readouts", native_de "Ergebnisfenster fokussieren, um die Wiedergabe live zu sehen", reuse_en "Focus the Results window for live playback readouts", reuse_de "Ergebnisfenster fokussieren, um die Wiedergabe live zu sehen";
+        mode_shape: native_en "Mode", native_de "Eigenform", reuse_en "Mode", reuse_de "Eigenform";
+        buckling_mode: native_en "Buckling mode", native_de "Knickform", reuse_en "Buckling mode", reuse_de "Knickform";
+        no_load_case: native_en "No load case defined", native_de "Kein Lastfall definiert", reuse_en "No load case defined", reuse_de "Kein Lastfall definiert";
+        result_missing: native_en "Result not found", native_de "Ergebnis nicht gefunden", reuse_en "Result not found", reuse_de "Ergebnis nicht gefunden";
+        analysis_error: native_en "Analysis error", native_de "Analysefehler", reuse_en "Analysis error", reuse_de "Analysefehler";
+        modal_error: native_en "Modal analysis error", native_de "Fehler der Eigenformanalyse", reuse_en "Modal analysis error", reuse_de "Fehler der Eigenformanalyse";
+        buckling_error: native_en "Buckling analysis error", native_de "Fehler der Knickanalyse", reuse_en "Buckling analysis error", reuse_de "Fehler der Knickanalyse";
+
         delete: native_en "Delete", native_de "Löschen", reuse_en "Delete", reuse_de "Löschen";
 
         move_flag: native_en "Move", native_de "Verschieben", reuse_en "Move", reuse_de "Verschieben";

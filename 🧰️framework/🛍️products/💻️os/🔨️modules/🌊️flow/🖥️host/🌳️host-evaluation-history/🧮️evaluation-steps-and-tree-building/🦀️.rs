@@ -14,7 +14,7 @@ impl FlowHost {
         let generation=self.operator_registry_generation();
         if let Some(work)=self.pending_evaluation.as_mut(){
             if !work.source_matches(self.evaluation_revision,generation){work.begin_close()}
-            if work.is_closing(){let completed=work.output_was_transferred()&&work.source_matches(self.evaluation_revision,generation);let result=semio_framework_job::close_original_retained_step(cx,demand,|grant|work.close_step(grant));self.evaluation_progress=work.step_progress();result?;if work.terminal_is_empty(){self.pending_evaluation=None;return Ok(if completed{FlowEvaluationStep::Complete}else{FlowEvaluationStep::Working})}return Ok(FlowEvaluationStep::Working)}
+            if work.is_closing(){let completed=work.output_was_transferred()&&work.source_matches(self.evaluation_revision,generation);let result=semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:work.close_step(grant),work:1});self.evaluation_progress=work.step_progress();result?;if work.terminal_is_empty(){self.pending_evaluation=None;return Ok(if completed{FlowEvaluationStep::Complete}else{FlowEvaluationStep::Working})}return Ok(FlowEvaluationStep::Working)}
             let result=work.step(&self.host_snapshot,cx);self.evaluation_progress=work.step_progress();
             if let Some(output)=result?{match self.begin_work_publication(output){Ok(())=>self.pending_evaluation.as_mut().unwrap().begin_close(),Err((error,output))=>{self.pending_evaluation.as_mut().unwrap().restore_completion(output);return Err(error.into())}}}
             return Ok(FlowEvaluationStep::Working)

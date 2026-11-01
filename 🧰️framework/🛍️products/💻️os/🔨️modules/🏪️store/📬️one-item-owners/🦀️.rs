@@ -216,7 +216,7 @@ impl<P: RetireOwned + Send + Sync + 'static, M: RetireOwned + Send + 'static> On
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if self.active.is_some() {
-            return artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return artifact_retirement_box_close_step(&mut self.active, child).result.map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.prepared.is_some() {
             if self.mutation_retirement.is_none() || self.snapshot_retirement.is_none() {
@@ -243,25 +243,25 @@ impl<P: RetireOwned + Send + Sync + 'static, M: RetireOwned + Send + 'static> On
             };
         }
         if self.mutation.is_some() {
-            return artifact_retirement_admit_owned(&mut self.mutation, &mut self.active, child);
+            return artifact_retirement_admit_owned(&mut self.mutation, &mut self.active, child).result;
         }
         if self.inverse.is_some() {
-            return artifact_retirement_admit_owned(&mut self.inverse, &mut self.active, child);
+            return artifact_retirement_admit_owned(&mut self.inverse, &mut self.active, child).result;
         }
         if self.candidate.is_some() {
-            return artifact_retirement_admit_owned(&mut self.candidate, &mut self.active, child);
+            return artifact_retirement_admit_owned(&mut self.candidate, &mut self.active, child).result;
         }
         if self.sealed.is_some() {
-            return artifact_retirement_admit_owned(&mut self.sealed, &mut self.active, child);
+            return artifact_retirement_admit_owned(&mut self.sealed, &mut self.active, child).result;
         }
         if self.refused.is_some() {
-            return artifact_retirement_admit_owned(&mut self.refused, &mut self.active, child);
+            return artifact_retirement_admit_owned(&mut self.refused, &mut self.active, child).result;
         }
         if self.failure.is_some() {
-            return artifact_retirement_admit_owned(&mut self.failure, &mut self.active, child);
+            return artifact_retirement_admit_owned(&mut self.failure, &mut self.active, child).result;
         }
         if self.base.is_some() {
-            return artifact_retirement_admit_owned(&mut self.base, &mut self.active, child);
+            return artifact_retirement_admit_owned(&mut self.base, &mut self.active, child).result;
         }
         if let Some(authority) = self.authority.take() {
             return match authority.retire(child) {
@@ -291,7 +291,7 @@ impl<P: RetireOwned + Send + Sync + 'static, M: RetireOwned + Send + 'static> On
         }
         let slot = self.factories.iter_mut().find(|slot| slot.is_some()).expect("original preparation factory alias");
         let factory = slot.as_mut().expect("original preparation factory alias");
-        let step = factory.step(child)?;
+        let step = factory.step(child).result?;
         let step = admit_retained_clone_close(child, step, factory.terminal_is_empty(), "original preparation factory close")?;
         if factory.terminal_is_empty() {
             *slot = None;

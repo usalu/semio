@@ -22,7 +22,9 @@ pub mod standards {
         pub mod subsets {
             #[path = "."]
             pub mod base {
-                pub use semio_s_artifact_stdio_pdf_testkit::standards::v1_7::subsets::base::*;
+                #[path = "../../../../../🧱️base/🦀️.rs"]
+                mod component;
+                pub use component::*;
                 #[path = "."]
                 pub mod schema {
                     pub use semio_s_artifact_stdio_pdf_schema_4::standards::v1_7::subsets::base::schema::*;
@@ -45,7 +47,7 @@ pub mod standards {
                     }
                     #[path = "."]
                     pub mod export {
-                        pub use semio_s_artifact_stdio_pdf_testkit::standards::v1_7::subsets::base::io::export::*;
+                        pub use semio_s_artifact_stdio_pdf_schema_4::standards::v1_7::subsets::base::io::export::*;
                     }
                 }
             }
@@ -127,7 +129,9 @@ pub mod editor {
         pub mod modes {
             #[path = "."]
             pub mod edit {
-                pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17a::modes::edit::*;
+                #[path = "../../../../../🗄️a/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
+                mod component;
+                pub use component::*;
                 pub use semio_s_artifact_stdio_pdf_tests_2::editor::pdf17a::modes::edit::windows;
             }
         }
@@ -142,7 +146,7 @@ pub mod editor {
             #[path = "."]
             pub mod edit {
                 pub use semio_s_artifact_stdio_pdf_schema_4::editor::pdf17::modes::edit::*;
-                pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17::modes::edit::windows;
+                pub use semio_s_artifact_stdio_pdf_schema_4::editor::pdf17::modes::edit::windows;
             }
         }
     }
@@ -156,7 +160,7 @@ pub mod editor {
             #[path = "."]
             pub mod edit {
                 pub use semio_s_artifact_stdio_pdf_schema_4::editor::pdf17e::modes::edit::*;
-                pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17e::modes::edit::windows;
+                pub use semio_s_artifact_stdio_pdf_schema_4::editor::pdf17e::modes::edit::windows;
             }
         }
     }
@@ -170,7 +174,7 @@ pub mod editor {
             #[path = "."]
             pub mod edit {
                 pub use semio_s_artifact_stdio_pdf_schema_4::editor::pdf17h::modes::edit::*;
-                pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17h::modes::edit::windows;
+                pub use semio_s_artifact_stdio_pdf_schema_4::editor::pdf17h::modes::edit::windows;
             }
         }
     }
@@ -184,7 +188,7 @@ pub mod editor {
             #[path = "."]
             pub mod edit {
                 pub use semio_s_artifact_stdio_pdf_schema_4::editor::pdf17ua::modes::edit::*;
-                pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17ua::modes::edit::windows;
+                pub use semio_s_artifact_stdio_pdf_schema_4::editor::pdf17ua::modes::edit::windows;
             }
         }
     }
@@ -198,7 +202,7 @@ pub mod editor {
             #[path = "."]
             pub mod edit {
                 pub use semio_s_artifact_stdio_pdf_schema_4::editor::pdf17x::modes::edit::*;
-                pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17x::modes::edit::windows;
+                pub use semio_s_artifact_stdio_pdf_schema_4::editor::pdf17x::modes::edit::windows;
             }
         }
     }

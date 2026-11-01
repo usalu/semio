@@ -334,7 +334,6 @@ fn mounted_tetrahedral_stress_matches_numpy_energy_without_scratch_owners() {
     let energy = (0..6).map(|axis| strain.get(axis) * actual[axis]).sum::<f64>() * Tet4::volume(&context);
     let mut reference = 0.0;
     for row in 0..12 { for column in 0..12 { reference += displacement[row] * case["matrix"][row * 12 + column].as_f64().unwrap() * displacement[column]; } }
-    eprintln!("[DEBUG] fixed Tet4 vonMises={} energy={energy} NumPy={reference}", stress.von_mises);
     assert!((energy - reference).abs() < 1e-9 * reference.abs().max(1.0));
     assert!((energy - case["strainEnergy"].as_f64().unwrap()).abs() < 1e-9 * energy.abs());
     assert!(tetrahedron.mounted_recover_stress(&[[0.0; 3]; 4], &displacement).is_none());

@@ -1,0 +1,6 @@
+[package]
+name = "semio-framework-deflate"
+version = "0.0.0"
+edition = "2021"
+[dependencies]
+miniz_oxide = "0.8"

@@ -184,14 +184,14 @@ fn with_original_import<T>(database:SqliteDatabase,operation:impl FnOnce(&mut Op
 }
 
 /// 🧹️ Drains the recipient of a control that already stands at its ceiling: a refused encode parks its frame, and retiring that frame needs capacity the exact ceiling no longer has, so the caller reports whether the cleanup fit and otherwise leaks the frame together with its recipient.
-fn settle_encode_history_recipient(native:&mut semio_framework_value::NativeEncodeControl<'_>)->bool{for _ in 0..100_000{if !native.has_retirement_owner(){return true}match native.close_retirement_recipient(caller_grant()){Ok(step)=>if step.progress()==Default::default()&&native.has_retirement_owner(){return false},Err(_)=>return false}}false}
-fn close_encode_history_recipient(native:&mut semio_framework_value::NativeEncodeControl<'_>){for _ in 0..100_000{if !native.has_retirement_owner(){return}let step=native.close_retirement_recipient(caller_grant()).unwrap();assert!(step.progress()!=Default::default()||!native.has_retirement_owner(),"original encoder close must advance actual custody");}assert!(!native.has_retirement_owner(),"original encoder return supervisor did not finish");}
+fn settle_encode_history_recipient(native:&mut semio_framework_value::NativeEncodeControl<'_>)->bool{for _ in 0..100_000{if !native.has_retirement_owner(){return true}match native.close_retirement_recipient(caller_grant()).result{Ok(step)=>if step.progress()==Default::default()&&native.has_retirement_owner(){return false},Err(_)=>return false}}false}
+fn close_encode_history_recipient(native:&mut semio_framework_value::NativeEncodeControl<'_>){for _ in 0..100_000{if !native.has_retirement_owner(){return}let step=native.close_retirement_recipient(caller_grant()).result.unwrap();assert!(step.progress()!=Default::default()||!native.has_retirement_owner(),"original encoder close must advance actual custody");}assert!(!native.has_retirement_owner(),"original encoder return supervisor did not finish");}
 
 /// ♻️ Returns only original pending snapshot custody under the unchanged independent test policy.
 fn close_native_history_recipient(native:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>){
     for _ in 0..100_000 {
         if !native.has_retirement_owner(){return}
-        let step=native.close_retirement_recipient(caller_grant()).unwrap();
+        let step=native.close_retirement_recipient(caller_grant()).result.unwrap();
         assert!(step.progress()!=Default::default()||!native.has_retirement_owner(),"original returned snapshot close must advance actual ownership");
     }
     assert!(!native.has_retirement_owner(),"original bounded snapshot return supervisor did not finish");

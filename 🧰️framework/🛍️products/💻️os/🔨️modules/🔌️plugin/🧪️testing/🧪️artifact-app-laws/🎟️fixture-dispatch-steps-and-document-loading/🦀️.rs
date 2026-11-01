@@ -16,6 +16,7 @@ pub async fn dispatch_fixture_action<P:PluginApp>(app:&mut P,action:&str,args:Op
     let mut original_args=args;let mut original_meta=Some(meta.clone());
     let mut result=Ok(None);
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        semio_framework_job::testkit::renew_payload_page_grant(cx);
         result=app.handle_action(action,&mut original_args,&mut original_meta,identity,cx).await;
         if !matches!(result,Ok(None)){break}
         if let Err(failure)=app.maintenance_step(cx,close_loan){result=Err(failure.into());break}
@@ -29,6 +30,7 @@ pub async fn dispatch_fixture_command<P:PluginApp>(app:&mut P,address:&semio_fra
     let mut original_args=args;let mut original_fault=None;let mut original_meta=Some(meta.clone());
     let mut result=Ok(None);
     for _ in 0..OriginalFixtureCaller::maximum_turns(){
+        semio_framework_job::testkit::renew_payload_page_grant(cx);
         result=app.handle_command(address,&mut original_args,&mut original_fault,active_mode,&mut original_meta,identity,cx).await;
         if !matches!(result,Ok(None)){break}
         if let Err(failure)=app.maintenance_step(cx,close_loan){result=Err(failure.into());break}
@@ -199,17 +201,21 @@ pub fn fixture_payload_bytes(payload: &semio_framework_job_payload::RetainedJobP
 }
 
 /// ▶️ Drives one job turn and summarises the lent outcome so the borrow ends before the test touches the job again.
-pub fn fixture_step<J: semio_framework_job::InteractiveJob + ?Sized>(job: &mut J, cx: &mut semio_framework_job::StepContext<'_>) -> FixtureStepOutcome {
+pub fn fixture_step<J: semio_framework_job::InteractiveJob + ?Sized>(job: &mut J, cx: &mut semio_framework_job::StepContext<'_>, origin: &mut semio_framework_job::OriginalJobReturnReceiver) -> FixtureStepOutcome {
     use semio_framework_job::JobOutcomeBorrow as B;
-    match job.step(cx).expect("fixture job step") {
+    let mut verdict = None;
+    let semio_framework_job::OriginalJobReturn::Outcome(reply) = semio_framework_job::drive_step(job, cx, origin, "fixture_step", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("fixture job step") else { return FixtureStepOutcome::Idle };
+    let summary = match reply.original() {
         None => FixtureStepOutcome::Idle,
         Some(B::Yield { .. }) => FixtureStepOutcome::Yield,
         Some(B::PreviewReady { payload, .. }) => FixtureStepOutcome::Preview(fixture_payload_bytes(payload)),
-        Some(B::CheckpointReady { state, applied_progress, .. }) => FixtureStepOutcome::Checkpoint { applied_progress, state: fixture_payload_bytes(state) },
+        Some(B::CheckpointReady { state, applied_progress, .. }) => FixtureStepOutcome::Checkpoint { applied_progress: *applied_progress, state: fixture_payload_bytes(state) },
         Some(B::Complete { state, output, .. }) => FixtureStepOutcome::Complete { state: state.map(fixture_payload_bytes).unwrap_or_default(), output: output.map(fixture_payload_bytes).unwrap_or_default() },
         Some(B::Cancelled { .. }) => FixtureStepOutcome::Cancelled,
         Some(B::Fault { detail, .. }) => FixtureStepOutcome::Fault(fixture_payload_bytes(detail)),
-    }
+    };
+    drop(reply.into_descriptor());
+    summary
 }
 
 /// 🪪️ One local native authoring identity for a fixture call: `&mut fixture_identity()` lives for the whole statement, awaits included.
@@ -518,13 +524,13 @@ pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_su
 
         pub fn new(turn: semio_framework::kernel::RetainedTurnInput) -> Self {
 
-            let ((cancel,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::CancelToken::admit_root(turn.grant).expect("fixture original cancellation admission").expect("fixture original input funds cancellation"));
+            let ((cancel,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job::CancelToken::admit_root(turn.grant).result.expect("fixture original cancellation admission").expect("fixture original input funds cancellation"));
 
             assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
 
             assert!(progress.fits(turn.grant));
 
-            let ((payload,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job_payload::JobPayloadAuthority::admit(semio_framework_job::OperationId(turn.operation),semio_framework_job::Generation(turn.generation),turn.grant).expect("fixture original payload admission").expect("fixture original input funds payload"));
+            let ((payload,progress),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_job_payload::JobPayloadAuthority::admit(semio_framework_job::OperationId(turn.operation),semio_framework_job::Generation(turn.generation),turn.grant).result.expect("fixture original payload admission").expect("fixture original input funds payload"));
 
             assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
 
@@ -566,7 +572,7 @@ pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_su
 
                 if self.decoder.terminal_is_empty() { break; }
 
-                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.decoder.close_step(self.turn.grant).expect("fixture original decoder paid closure"));
+                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.decoder.close_step(self.turn.grant).result.expect("fixture original decoder paid closure"));
 
                 let progress = match step { semio_framework_value::RetainedCloneStep::Progress(progress) | semio_framework_value::RetainedCloneStep::Complete(progress) => progress };
 
@@ -584,7 +590,7 @@ pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_su
 
                 if self.payload.terminal_is_empty() { break; }
 
-                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.payload.close_step(self.turn.grant).expect("fixture original payload paid closure"));let progress=step.progress();
+                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||self.payload.close_step(self.turn.grant).result.expect("fixture original payload paid closure"));let progress=step.progress();
 
                 assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
 
@@ -604,7 +610,7 @@ pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_su
 
                     if owner.terminal_is_empty() { break; }
 
-                    let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(self.turn.grant).expect("fixture original cancellation paid closure"));let progress=step.progress();
+                    let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(self.turn.grant).result.expect("fixture original cancellation paid closure"));let progress=step.progress();
 
                     assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
 

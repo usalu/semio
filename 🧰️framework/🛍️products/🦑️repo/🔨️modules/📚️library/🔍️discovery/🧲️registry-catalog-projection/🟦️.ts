@@ -168,7 +168,8 @@ export function registryCatalogInputPaths(repoRoot: string, taxonomy: Taxonomy =
       const binding = authority.workspaceImports[specifier];
       if (!binding) { const chain = [path]; for (let at = importers.get(path); at !== undefined && chain.length < 32; at = importers.get(at)) chain.push(at); throw new Error(`Registry implementation import is not schema-owned: ${specifier} in ${path} (imported through ${chain.reverse().join(" -> ")})`); }
       const manifest = JSON.parse(view.readText(binding.manifestPath)) as { name?: string; exports?: Record<string, unknown> };
-      if (manifest.name !== specifier || manifest.exports?.["."] !== "./" + relative(dirname(binding.manifestPath), binding.entryPath).replaceAll("\\", "/")) throw new Error(`Registry workspace import binding drifted: ${specifier}`);
+      const [scope = "", name = "", ...subpath] = specifier.split("/");
+      if (manifest.name !== scope + "/" + name || manifest.exports?.[subpath.length ? "./" + subpath.join("/") : "."] !== "./" + relative(dirname(binding.manifestPath), binding.entryPath).replaceAll("\\", "/")) throw new Error(`Registry workspace import binding drifted: ${specifier}`);
       inputs.add(binding.manifestPath);
       visit(binding.entryPath, "implementation-entry", path);
     }

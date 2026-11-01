@@ -355,6 +355,9 @@ path = "../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/
 [workspace.dependencies.semio-s-artifact-energy-model-snapshot]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-energy-model-snapshot-bridge]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧬️original/🌉️bridge/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-energy-model-snapshot-sqlite-admission]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/📏️cells/📦️packages/🦀️rust"
 

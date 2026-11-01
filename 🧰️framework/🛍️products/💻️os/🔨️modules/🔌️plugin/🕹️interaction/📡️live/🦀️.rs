@@ -183,8 +183,8 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
             return Ok(RetainedCloneStep::Progress(idle));
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = if self.owned.error_close.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.owned.error_close,child)?}
-        else if self.owned.error.is_some(){let owned=&mut *self.owned;store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut owned.error,&mut owned.error_close,child)?}
+        let step = if self.owned.error_close.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.owned.error_close,child).result?}
+        else if self.owned.error.is_some(){let owned=&mut *self.owned;store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut owned.error,&mut owned.error_close,child).result?}
         else if let Some(query) = self.owned.query.as_mut().filter(|query| !query.terminal_is_empty()) {
             semio_framework_value::retained_clone::admit_retained_clone_close(child, query.close_step(child)?, query.terminal_is_empty(), "live local interaction query")?
         } else {

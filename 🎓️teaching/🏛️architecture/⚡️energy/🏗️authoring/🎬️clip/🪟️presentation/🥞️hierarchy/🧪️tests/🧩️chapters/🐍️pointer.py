@@ -46,6 +46,8 @@ class ChapterPointerContract(unittest.TestCase):
         (work / "pointer.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
         self.assertEqual(result["metadata"][0]["hierarchy"]["opened_path"], branch[:-1])
         self.assertEqual(result["metadata"][0]["hierarchy"]["revealed_path"], branch)
+        self.assertFalse(result["metadata"][0]["hierarchy"]["pressed"])
+        self.assertTrue(result["metadata"][1]["hierarchy"]["pressed"])
         self.assertEqual(result["metadata"][2]["hierarchy"]["opened_path"], branch)
         events = [event for frame in result["metadata"] for event in frame["pointer_events"]]
         self.assertEqual([event["type"] for event in events], ["pointerdown", "pointerup", "click"])
@@ -58,7 +60,6 @@ class ChapterPointerContract(unittest.TestCase):
             self.assertLessEqual(point[0], rect["x"] + rect["width"])
             self.assertGreaterEqual(point[1], rect["y"])
             self.assertLessEqual(point[1], rect["y"] + rect["height"])
-        print("[DEBUG] Actual chapter pointer evidence", work, flush=True)
 
 
 if __name__ == "__main__":

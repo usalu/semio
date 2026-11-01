@@ -217,14 +217,14 @@ fn select_queue_cancellation_preserves_each_traversal_stage_for_original_control
 
 #[test]
 fn native_typeof_static_parent_slices_match_exact_released_members_without_heap_birth() {
-    for entity in metadata::ENTITIES {
-        let expected: Vec<_> = metadata::TYPES.iter().filter(|declaration| declaration.kind == "select" && declaration.members.contains(&entity.key)).map(|declaration| declaration.key).collect();
+    for entity in metadata::entities() {
+        let expected: Vec<_> = metadata::types().iter().filter(|declaration| declaration.kind == "select" && declaration.members.contains(&entity.key)).map(|declaration| declaration.key).collect();
         let (actual, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| metadata::select_parents(entity.key));
         assert_eq!(actual, expected.as_slice(), "{}", entity.key);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     }
-    for declaration in metadata::TYPES {
-        let expected: Vec<_> = metadata::TYPES.iter().filter(|parent| parent.kind == "select" && parent.members.contains(&declaration.key)).map(|parent| parent.key).collect();
+    for declaration in metadata::types() {
+        let expected: Vec<_> = metadata::types().iter().filter(|parent| parent.kind == "select" && parent.members.contains(&declaration.key)).map(|parent| parent.key).collect();
         let (actual, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| metadata::select_parents(declaration.key));
         assert_eq!(actual, expected.as_slice(), "{}", declaration.key);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));

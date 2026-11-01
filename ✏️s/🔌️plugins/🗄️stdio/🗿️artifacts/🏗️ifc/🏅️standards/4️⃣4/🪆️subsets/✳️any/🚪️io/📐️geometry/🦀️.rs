@@ -1,6 +1,7 @@
 //! 🖼️ Shared IFC4 surface projection and explicit representation diagnostics.
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::{geometry, snapshot::IfcSnapshot};
-use semio_framework_plugin::{world3d_camera_json, world3d_selection_json_with_granularity, BuiltNode, MeshWindowKit, SurfaceKind, WindowKit};
+use semio_framework_plugin::{world3d_camera_json, world3d_selection_json_with_granularity, BuiltNode, MeshWindowKit, WindowKit};
+use semio_framework_plugin::app::SurfaceKind;
 
 pub fn render_with(document: &IfcSnapshot, limits: geometry::GeometryLimits, progress: &mut dyn FnMut(geometry::GeometryProgress) -> bool) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let scene = geometry::project_with(document, limits, progress);

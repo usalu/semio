@@ -760,7 +760,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoMemberW
                 Err(original) => { self.base = Some(original); Ok(RetainedCloneStep::Progress(empty)) }
             };
         }
-        if self.active.is_some() { let step = artifact_retirement_box_close_step(&mut self.active,child)?; return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { let step = artifact_retirement_box_close_step(&mut self.active,child).result?; return Ok(RetainedCloneStep::Progress(step.progress())); }
         if let Some(original) = self.authority.take() {
             return match original.retire(child) {
                 Ok((owner,progress)) => { self.active = Some(owner); Ok(RetainedCloneStep::Progress(progress)) },
@@ -768,7 +768,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoMemberW
             };
         }
         if let Some(factory) = self.factory.as_mut() {
-            let step = factory.step(child)?;
+            let step = factory.step(child).result?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,factory.terminal_is_empty(),"captured wire issuer")?;
             if factory.terminal_is_empty() { self.factory = None; }
             return Ok(RetainedCloneStep::Progress(step.progress()));

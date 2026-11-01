@@ -38,17 +38,17 @@ impl<T:Send+'static> ErasedSnapshotRetirement for FactoryOwnedRetirement<T> {
         let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
         if self.original.is_some(){
             let value=self.original.take().unwrap();
-            let turn=self.factory.as_ref().unwrap().retire_owned(value,child);work=turn.work;match turn.result{
+            let turn=self.factory.as_ref().ok_or_else(||ValueError::invariant("factory absent"))?.retire_owned(value,child);work=turn.work;match turn.result{
                 Ok((owner,progress))=>{*self.unique=Some(owner);if !progress.fits(child)||progress.retained_capacity_bytes!=demand.capacity_bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned factory payload constructor changed its admitted receipt").with_retained_progress(progress));}return Ok(RetainedCloneStep::Progress(progress));},
                 Err((error,value))=>{*self.original=Some(value);return Err(error);},
             }
         }
         if self.unique.is_some(){let turn=crate::close_factory_ticket(&mut self.unique,child);work=turn.work;return turn.result.map(|step|RetainedCloneStep::Progress(step.progress()));}
         if self.factory.is_some(){
-            let factory:Arc<dyn FactoryRetirement>=self.factory.take().unwrap();*self.closing_factory=Some(FactoryAuthority::new(factory));work=1;
+            let factory:Arc<dyn FactoryRetirement>=self.factory.take().ok_or_else(||ValueError::invariant("factory absent"))?;*self.closing_factory=Some(FactoryAuthority::new(factory));work=1;
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));
         }
-        if self.closing_factory.as_ref().unwrap().terminal_is_empty(){self.closing_factory.take();work=1;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty}))}let factory=self.closing_factory.as_mut().unwrap();let turn=factory.step(child);work=turn.work;let step=turn.result?;let step=admit_retained_clone_close(child,step,factory.terminal_is_empty(),"original owned mutation factory capability")?;
+        if self.closing_factory.as_ref().ok_or_else(||ValueError::invariant("closing_factory absent"))?.terminal_is_empty(){self.closing_factory.take();work=1;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..empty}))}let factory=self.closing_factory.as_mut().ok_or_else(||ValueError::invariant("closing_factory absent"))?;let turn=factory.step(child);work=turn.work;let step=turn.result?;let step=admit_retained_clone_close(child,step,factory.terminal_is_empty(),"original owned mutation factory capability")?;
         
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     })();crate::RetainedWorkOutcome{result,work}}

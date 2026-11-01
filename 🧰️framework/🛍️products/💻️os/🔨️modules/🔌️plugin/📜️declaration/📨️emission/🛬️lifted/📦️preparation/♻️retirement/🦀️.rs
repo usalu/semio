@@ -6,10 +6,10 @@ impl RetirementCursor for OwnedChildEmitRetirement{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.original.as_ref().map_or(Ok(Default::default()),|source|if source.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{source.retirement_demands(maximum_body_bytes)})}
 
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
-  let Some(source)=self.original.as_mut()else{return RetirementStep::Complete};
+  let Some(source)=self.original.as_mut()else{return RetirementStep::Complete(0)};
   if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
-  if source.terminal_is_empty(){drop(self.original.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}
-  match source.close_granted(grant){Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)}
+  if source.terminal_is_empty(){drop(self.original.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1)}
+  match source.close_granted(grant){Ok(step)=>RetirementStep::Progress(step.progress(),1),Err(error)=>RetirementStep::Failure(error,0)}
  }
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.original.as_ref().map_or(Ok(0),|source|source.retirement_demands(0).map(|d|d.copy_bytes))}
@@ -38,14 +38,14 @@ impl RetirementCursor for ChildEmitPreparationRetirement{
 
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
   if grant.maximum_items==0{return RetirementStep::BudgetExhausted}
-  if let Some(fault)=self.fault.as_mut(){return match fault.step(grant){Ok(step)=>{if fault.terminal_is_empty(){drop(self.fault.take());}RetirementStep::Progress(step.progress())},Err(error)=>RetirementStep::Failure(error)}}
-  let Some(source)=self.original.as_mut()else{return RetirementStep::Complete};
-  if source.terminal_is_empty(){let bytes=source.owner_cell_bytes();if grant.maximum_depth==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted}drop(self.original.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()})}
+  if let Some(fault)=self.fault.as_mut(){return match fault.step(grant){Ok(step)=>{if fault.terminal_is_empty(){drop(self.fault.take());}RetirementStep::Progress(step.progress(),1)},Err(error)=>RetirementStep::Failure(error,0)}}
+  let Some(source)=self.original.as_mut()else{return RetirementStep::Complete(0)};
+  if source.terminal_is_empty(){let bytes=source.owner_cell_bytes();if grant.maximum_depth==0||grant.maximum_release_bytes<bytes{return RetirementStep::BudgetExhausted}drop(self.original.take());return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()},1)}
   source.begin_close();
   match source.close_step(grant){
-   Ok(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=>RetirementStep::Progress(progress),
+   Ok(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=>RetirementStep::Progress(progress,1),
    Ok(PluginLifecycleStep::AwaitingInput{..}|PluginLifecycleStep::Blocked{..})=>RetirementStep::BudgetExhausted,
-   Err(original)=>{self.fault=Some(ControlledRetirement::new(original).expect("full original diagnostic close authority"));RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"original child preparation refusal remains retained"))}
+   Err(original)=>{self.fault=Some(ControlledRetirement::new(original).expect("full original diagnostic close authority"));RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated,"original child preparation refusal remains retained"),0)}
   }
  }
  fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.fault.is_none()}

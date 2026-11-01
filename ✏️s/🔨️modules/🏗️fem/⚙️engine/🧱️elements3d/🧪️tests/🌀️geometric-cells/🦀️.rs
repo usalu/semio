@@ -37,5 +37,4 @@ fn mounted_geometric_cells_match_independent_quadrature_and_tensor_contraction()
         invalid[0] = f64::NAN;
         assert_eq!(element.mounted_geometric_stiffness_cell(&context, &invalid, 0, 0), None);
     }
-    println!("[DEBUG] mounted geometric stiffness {cells} cells match independent quadrature and tensor contraction without scratch owners");
 }

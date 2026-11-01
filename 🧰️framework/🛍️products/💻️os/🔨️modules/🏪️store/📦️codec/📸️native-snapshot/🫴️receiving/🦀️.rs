@@ -32,6 +32,7 @@ pub struct OriginalSnapshotRecordReceiving<T:DslOwnedReceivingRecord+BorrowedDsl
  record:Option<RetainedRecordReceiving>,generic:OwnedSlot<FieldValue>,binding:<T as DslOwnedReceivingField>::Cursor,output:OwnedSlot<T>,closing:bool,closed:bool,
 }
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
+fn flat(error:semio_framework_value_native_owned::native_decoding::OriginalReceivingPrimary)->ValueError{let progress=error.progress;error.primary.or(error.quote_refusal).or(error.allocation_refusal).unwrap_or_else(||invalid("original native construction refused")).with_retained_progress(progress)}
 fn metadata<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
 fn child(grant:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_depth:grant.maximum_depth.saturating_sub(1),..grant}}
 fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||invalid("original snapshot receiving depth overflow"))?;Ok(demand)}
@@ -42,7 +43,7 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceivin
  pub fn admit(source:&[u8],envelope:&'static str,limits:PackLimits,native:&NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
   let demand=metadata::<Self>();if !funds(grant,demand){return Ok(None)}let prefix=semio_framework_os_semio::declared_envelope_prefix_len(envelope,semio_framework_os_semio::Component::Pack,1)?;
   if source.len()<prefix||source.len()as u64>limits.max_file_len{return Err(invalid("original snapshot Pack is outside its declared source extent"))}
-  Ok(Some((Self{source:(source.as_ptr()as usize,source.len()),control:(native.ledger_identity(),native.retirement_recipient_identity()),envelope,prefix,position:0,phase:0,limits,record:None,generic:Default::default(),binding:Default::default(),output:Default::default(),closing:false,closed:false},receipt(demand))))
+  Ok(Some((Self{source:(source.as_ptr()as usize,source.len()),control:(native.ledger_identity(),native.retirement_recipient_identity()),envelope,prefix,position:0,phase:0,limits,record:None,generic:Default::default(),binding:T::receiving_cursor(),output:Default::default(),closing:false,closed:false},receipt(demand))))
  }
  fn validate(&self,source:&[u8])->Result<(),ValueError>{if self.source!=(source.as_ptr()as usize,source.len()){return Err(invalid("original snapshot Pack source identity changed"))}Ok(())}
  fn validate_control(&self,native:&dyn NativeDecodeCloseControl)->Result<(),ValueError>{if self.control!=(native.ledger_identity(),native.retirement_recipient_identity()){return Err(invalid("original snapshot receiving changed its actual receiving owner"))}Ok(())}
@@ -60,9 +61,9 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceivin
   self.validate_control(native)?;let demand=self.demands(source,body)?;if self.phase>=4||self.closing||self.closed||!funds(grant,demand){return Ok(Default::default())}native.checkpoint()?;
   match self.phase{
    0=>{let expected=semio_framework_os_semio::declared_binary_prefix_byte(self.envelope,semio_framework_os_semio::Component::Pack,1,self.position)?;if source.get(self.position).copied()!=expected{return Err(invalid("original snapshot Pack envelope differs from its authored identity"))}self.position+=1;if self.position==self.prefix{self.phase=1;}},
-   1=>{let Some((record,progress))=RetainedRecordReceiving::admit_document(source,(self.prefix,source.len()),T::RECORD,self.limits.clone(),child(grant))?else{return Ok(Default::default())};self.record=Some(record);self.phase=2;return Ok(progress)},
-   2=>{let record=self.record.as_mut().unwrap();if !record.is_ready(){return record.step(source,native,child(grant))}let mut original=None;let progress=record.take_into(&mut original,child(grant))?;if let Some(record)=original{*self.generic.value=Some(FieldValue::Record(record));self.phase=3;}return Ok(progress)},
-   3=>{if !self.binding.is_ready(){return self.binding.step(&mut self.generic.value,native,body,child(grant))}let progress=self.binding.take_into(&mut self.output.value,child(grant))?;if self.output.value.is_some(){self.phase=4;}return Ok(progress)},
+   1=>{let Some((record,progress))=RetainedRecordReceiving::admit_document(source,(self.prefix,source.len()),T::RECORD,self.limits.clone(),child(grant)).result?else{return Ok(Default::default())};self.record=Some(record);self.phase=2;return Ok(progress)},
+   2=>{let record=self.record.as_mut().unwrap();if !record.is_ready(){return record.step(source,native,child(grant)).result.map_err(flat)}let mut original=None;let progress=record.take_into(&mut original,child(grant)).result?;if let Some(record)=original{*self.generic.value=Some(FieldValue::Record(record));self.phase=3;}return Ok(progress)},
+   3=>{if !self.binding.is_ready(){return self.binding.step(&mut self.generic.value,native,body,child(grant)).result.map_err(flat)}let progress=self.binding.take_into(&mut self.output.value,child(grant)).result?;if self.output.value.is_some(){self.phase=4;}return Ok(progress)},
    _=>unreachable!(),
   }Ok(receipt(demand))
  }
@@ -88,7 +89,7 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceivin
  }
  fn retire_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if self.closed{return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.close_demands(grant.maximum_copy_bytes)?;if !funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}self.closing=true;
-  if !self.output.terminal_is_empty(){return self.output.close_step(child(grant)).map(RetainedCloneStep::Progress)}if !self.binding.terminal_is_empty(){return self.binding.close_step(child(grant)).map(RetainedCloneStep::Progress)}if !self.generic.terminal_is_empty(){return self.generic.close_step(child(grant)).map(RetainedCloneStep::Progress)}if let Some(record)=&mut self.record{if !record.terminal_is_empty(){return record.close_step(child(grant))}self.record=None;return Ok(RetainedCloneStep::Progress(receipt(demand)))}self.closed=true;Ok(RetainedCloneStep::Complete(receipt(demand)))
+  if !self.output.terminal_is_empty(){return self.output.close_step(child(grant)).result.map(RetainedCloneStep::Progress)}if !self.binding.terminal_is_empty(){return self.binding.close_step(child(grant)).result.map(RetainedCloneStep::Progress)}if !self.generic.terminal_is_empty(){return self.generic.close_step(child(grant)).result.map(RetainedCloneStep::Progress)}if let Some(record)=&mut self.record{if !record.terminal_is_empty(){return record.close_step(child(grant)).result}self.record=None;return Ok(RetainedCloneStep::Progress(receipt(demand)))}self.closed=true;Ok(RetainedCloneStep::Complete(receipt(demand)))
  }
  /// 🕳️ Terminal means no typed, generic or Pack backing can be released by implicit destruction.
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.record.is_none()&&self.generic.terminal_is_empty()&&self.binding.terminal_is_empty()&&self.output.terminal_is_empty()}
@@ -102,7 +103,7 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> semio_framework_value::retirem
 }
 impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> semio_framework_value::retirement::RetirementCursor for OriginalSnapshotRecordReceiving<T>{
  fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}
- fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{match self.retire_step(grant){Ok(step)=>semio_framework_value::retirement::RetirementStep::Progress(step.progress()),Err(error)=>semio_framework_value::retirement::RetirementStep::Failure(error)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{match self.retire_step(grant){Ok(step)=>semio_framework_value::retirement::RetirementStep::Progress(step.progress(),1),Err(error)=>semio_framework_value::retirement::RetirementStep::Failure(error,0)}}
  fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
  fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
 }

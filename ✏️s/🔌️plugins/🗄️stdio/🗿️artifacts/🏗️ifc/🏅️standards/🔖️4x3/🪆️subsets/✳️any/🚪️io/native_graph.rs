@@ -3,20 +3,20 @@ use super::*;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity,IfcTypedValue};
 use std::collections::{BTreeMap,HashMap,HashSet};
 
-pub(super) fn a(values:Vec<IfcValue>)->IfcValue {IfcValue::Aggregate(values)}
-pub(super) fn s(value:impl Into<String>)->IfcValue {IfcValue::String(value.into())}
-pub(super) fn e(value:&str)->IfcValue {IfcValue::Enum(value.into())}
-pub(super) fn r(value:f64)->IfcValue {IfcValue::Real(value)}
-pub(super) fn typed(name:&str,value:IfcValue)->IfcValue {IfcValue::TypedValue(IfcTypedValue {name:name.into(),items:vec![value]})}
-pub(super) fn id(value:&IfcValue)->Result<u64,ExchangeError> {value.as_reference().ok_or_else(||error("exchange.reference","Explicit entity reference required"))}
-pub(super) fn list(value:Option<&IfcValue>)->Result<&[IfcValue],ExchangeError> {value.and_then(IfcValue::as_aggregate).ok_or_else(||error("exchange.aggregate","Explicit aggregate required"))}
-pub(super) fn number(value:Option<&IfcValue>)->Result<f64,ExchangeError> {
+pub fn a(values:Vec<IfcValue>)->IfcValue {IfcValue::Aggregate(values)}
+pub fn s(value:impl Into<String>)->IfcValue {IfcValue::String(value.into())}
+pub fn e(value:&str)->IfcValue {IfcValue::Enum(value.into())}
+pub fn r(value:f64)->IfcValue {IfcValue::Real(value)}
+pub fn typed(name:&str,value:IfcValue)->IfcValue {IfcValue::TypedValue(IfcTypedValue {name:name.into(),items:vec![value]})}
+pub fn id(value:&IfcValue)->Result<u64,ExchangeError> {value.as_reference().ok_or_else(||error("exchange.reference","Explicit entity reference required"))}
+pub fn list(value:Option<&IfcValue>)->Result<&[IfcValue],ExchangeError> {value.and_then(IfcValue::as_aggregate).ok_or_else(||error("exchange.aggregate","Explicit aggregate required"))}
+pub fn number(value:Option<&IfcValue>)->Result<f64,ExchangeError> {
     let n=match value {Some(IfcValue::Integer(n))=>*n as f64,Some(IfcValue::Real(n))=>*n,_=>return Err(error("exchange.number","Explicit numeric value required"))};
     if n.is_finite() {Ok(n)} else {Err(error("exchange.number","Finite value required"))}
 }
-pub(super) fn text(value:Option<&IfcValue>)->String {value.and_then(IfcValue::as_str).unwrap_or("").into()}
+pub fn text(value:Option<&IfcValue>)->String {value.and_then(IfcValue::as_str).unwrap_or("").into()}
 
-pub(super) struct Builder {pub snapshot:IfcSnapshot,pub context:IfcValue,guid:u64}
+pub struct Builder {pub snapshot:IfcSnapshot,pub context:IfcValue,guid:u64}
 impl Builder {
     pub fn new(name:&str)->Self {
         let (mut snapshot,context)=super::projection::graph();
@@ -49,8 +49,8 @@ impl Builder {
 }
 
 #[derive(Clone,Copy)]
-pub(super) struct Frame {pub parent:Option<u64>,pub position:[f64;3],pub angle:f64}
-pub(super) struct Reader<'a> {pub entities:HashMap<u64,&'a IfcEntity>,pub scale:f64,pub definitions:HashMap<u64,Vec<&'a IfcEntity>>,pub materials:HashMap<u64,Vec<&'a IfcEntity>>,pub connections:HashMap<u64,Vec<&'a IfcEntity>>,pub material_properties:HashMap<u64,Vec<&'a IfcEntity>>}
+pub struct Frame {pub parent:Option<u64>,pub position:[f64;3],pub angle:f64}
+pub struct Reader<'a> {pub entities:HashMap<u64,&'a IfcEntity>,pub scale:f64,pub definitions:HashMap<u64,Vec<&'a IfcEntity>>,pub materials:HashMap<u64,Vec<&'a IfcEntity>>,pub connections:HashMap<u64,Vec<&'a IfcEntity>>,pub material_properties:HashMap<u64,Vec<&'a IfcEntity>>}
 impl<'a> Reader<'a> {
     pub fn unit(&self,entity:&IfcEntity,control:&mut dyn FnMut(ExchangeProgress)->bool)->Result<([i32;7],f64),ExchangeError> {
         self.unit_inner(entity,&mut HashSet::new(),&mut 0,control)

@@ -53,6 +53,7 @@ semio-s-artifact-draw-drawing-io = { workspace = true }
 semio-s-artifact-draw-drawing-model = { workspace = true }
 semio-s-artifact-draw-drawing-mutations = { workspace = true }
 semio-s-artifact-draw-drawing-scene = { workspace = true }
+semio-s-artifact-draw-drawing-scene-paint = { workspace = true }
 semio-s-artifact-draw-drawing-structure = { workspace = true }
 semio-s-artifact-draw-drawing-transform = { workspace = true }
 semio-s-artifact-draw-drawing-write = { workspace = true }

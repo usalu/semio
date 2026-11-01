@@ -6,10 +6,10 @@
 import { drawingTextLines, DRAWING_TEXT_LINE_HEIGHT } from "./📝️text/🟦️.ts";
 export { drawingTextLines, drawingTextFallbackExtent, DRAWING_TEXT_LINE_HEIGHT } from "./📝️text/🟦️.ts";
 export { PathFlattenJob, type PathFlattenInput, type FlatContour, type FlatContours, type PathFlattenProgress, type PathFlattenRetirement } from "./🛤️path/📏️flatten/🟦️.ts";
-export { StrokeOutlineJob, prepareStroke, type StrokeGeometryStyle, type StrokeOutlineInput, type StrokeOutlineProgress, type StrokeOutlineOptions } from "./🛤️path/🖊️stroke/🟦️.ts";
+export { StrokeOutlineJob, type StrokeGeometryStyle, type StrokeOutlineInput, type StrokeOutlineProgress, type StrokeContours } from "./🛤️path/🖊️stroke/🟦️.ts";
 export { BitmapTraceJob, traceBitmap, type BitmapTraceInput, type BitmapTraceProgress, type BitmapTraceOptions, type BitmapTraceRetirement, type BitmapTraceRetirementProgress } from "./🔍️trace/🟦️.ts";
 export { BooleanJob, booleanRegions, type BooleanOperand, type BooleanInput, type BooleanProgress, type BooleanOptions, type BooleanRetirement, type BooleanRetirementProgress } from "./🔀️booleans/🟦️.ts";
-export { PathBooleanJob, booleanPaths, type PathBooleanOperand, type PathBooleanInput, type PathBooleanProgress, type PathBooleanOptions, type PathBooleanRetirement, type PathBooleanRetirementProgress } from "./🔀️booleans/🛤️paths/🟦️.ts";
+export { PathBooleanJob, type PathBooleanOperand, type PathBooleanInput, type PathBooleanProgress, type PathBooleanRetirement, type PathBooleanRetirementProgress } from "./🔀️booleans/🛤️paths/🟦️.ts";
 
 
 // #region 📐️Contracts

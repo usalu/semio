@@ -55,7 +55,6 @@ fn wide_selection_resolves_each_geometry_once_in_document_order() {
     let interaction = Fem3dInteractionSnapshot::selecting(selection);
     let record: serde_json::Value = serde_json::from_str(&fem3d_selection_json(&doc, &interaction, true, &Fem3dGumballConfig::default())).unwrap();
     assert_eq!(record["gumballTarget"], vector["pivot"]);
-    println!("[DEBUG] FEM3d wide selection projected {} unique nodes from {} targets", resolved.node_ids.len(), interaction.selected_ids.len());
 }
 
 /// 🎯️ A tick is the relative `move-selection` leaf over the selection's literal geometry, pivoted on its centroid,

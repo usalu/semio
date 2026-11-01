@@ -1,6 +1,6 @@
 /** 🔶️ The panes phase of LayeredOverview. */
 import * as React from "react";
-import { cellOffset, followStep, glideOffset, resolveLifecycle, restingCell, settleOffset, stripGrid, stripTransform, veilClip, windowAround, type LayeredGrid, type LayeredLanding, type LayeredRevealSource, type LayeredOffset, type LayeredWindow } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
+import { cellOffset, followStep, glideOffset, layeredClearedId, resolveLifecycle, restingCell, settleOffset, stripGrid, stripTransform, veilClip, windowAround, type LayeredGrid, type LayeredLanding, type LayeredRevealSource, type LayeredOffset, type LayeredWindow } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import type { LayeredOverviewProps } from "../📋️types/🟦️.ts";
 import { FOLLOW, type LayeredDrive, applyVeil, hashPaneId, requireCell, sameWindow, useReducedMotion, useStableByKey } from "../🧰️pane-helpers/🟦️.ts";
 import { usePaneLifecycle } from "../🧵️pane/🟦️.tsx";
@@ -27,6 +27,9 @@ export function usePanesState({ props }: { readonly props: LayeredOverviewProps 
   const wantedReveal = props.revealedId === undefined ? ownRevealed : props.revealedId;
   const revealedId = opened === null && wantedReveal !== null && ids.includes(wantedReveal) ? wantedReveal : null;
   const [revealSource, setRevealSource] = React.useState<LayeredRevealSource | null>(null);
+  const [ownPressed, setPressed] = React.useState(false);
+  const pressed = revealedId !== null && (props.pressed === undefined ? ownPressed : props.pressed);
+  const clearedId = layeredClearedId(revealedId, pressed);
   const { booted, live, posters, touch, warm, markDirty, registerContainer, container } = usePaneLifecycle(panes, ids, opened, revealedId, lifecycle, mode === "strip");
 
   const swiping = mode === "swipe";
@@ -44,6 +47,7 @@ export function usePanesState({ props }: { readonly props: LayeredOverviewProps 
   const epochRef = React.useRef(0);
   const runningRef = React.useRef(false);
   const revealedRef = React.useRef<string | null>(null);
+  const pressedRef = React.useRef(false);
   const sourceRef = React.useRef<LayeredRevealSource | null>(null);
   const openedRef = React.useRef(opened);
   const previousOpened = React.useRef(opened);
@@ -66,7 +70,7 @@ export function usePanesState({ props }: { readonly props: LayeredOverviewProps 
     const transform = stripTransform(offset, strip);
     if (stripRef.current) stripRef.current.style.transform = transform;
     if (cardStripRef.current) cardStripRef.current.style.transform = transform;
-    if (veilRef.current) applyVeil(veilRef.current, veilClip(revealedRef.current === null ? null : (placed[revealedRef.current] ?? null), offset));
+    if (veilRef.current) applyVeil(veilRef.current, veilClip(placed[layeredClearedId(revealedRef.current, pressedRef.current) ?? ""] ?? null, offset));
     const next = windowAround(offset, reach);
     if (!sameWindow(next, windowRef.current)) {
       windowRef.current = next;
@@ -168,5 +172,5 @@ export function usePanesState({ props }: { readonly props: LayeredOverviewProps 
     };
     frameRef.current = requestAnimationFrame(tick);
   }, [paint, settleGhost, stop]);
-  return { layoutRef, logicalRestingRef, targetRef, offsetRef, latest, stop, driveRef, paint, settleGhost, run, runningRef, aim, finishGhost, rootRef, interactive, swiping, opened, stripRef, repaint, veilRef, cardStripRef, cardElements, openedRef, revealedRef, cellList, sourceRef, setRevealSource, setRevealedId, touch, revealedId, setOwnOpened, deepLink, previousOpened, routing, container, mode, pan, reduced, ids, cells, panning, resting, live, lifecycle, warm, panes, paneAt, grid, windowBox, booted, posters, labels, registerContainer, markDirty, revealSource, renderCard, cellRefs };
+  return { layoutRef, logicalRestingRef, targetRef, offsetRef, latest, stop, driveRef, paint, settleGhost, run, runningRef, aim, finishGhost, rootRef, interactive, swiping, opened, stripRef, repaint, veilRef, cardStripRef, cardElements, openedRef, revealedRef, pressedRef, setPressed, pressed, clearedId, cellList, sourceRef, setRevealSource, setRevealedId, touch, revealedId, setOwnOpened, deepLink, previousOpened, routing, container, mode, pan, reduced, ids, cells, panning, resting, live, lifecycle, warm, panes, paneAt, grid, windowBox, booted, posters, labels, registerContainer, markDirty, revealSource, renderCard, cellRefs };
 }

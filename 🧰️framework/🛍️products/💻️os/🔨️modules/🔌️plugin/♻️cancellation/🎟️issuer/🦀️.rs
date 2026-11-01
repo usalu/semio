@@ -42,7 +42,7 @@ impl ToolCancellationIssuer{
   if let Some(source)=self.admission.source.as_ref(){source.validate_context(cx)?}
   if self.ready(){return Ok(true)}
   if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
-  if self.admission.source.is_none(){self.admission.source=parent.admit_loan(cx)?;return Ok(false)}
+  if self.admission.source.is_none(){parent.admit_loan(&mut self.admission.source,cx)?;return Ok(false)}
   let grant=cx.retained_grant();let next=self.admission_demands();
   if grant.maximum_items==0||grant.maximum_copy_bytes<next.copy_bytes||grant.maximum_capacity_bytes<next.capacity_bytes||grant.maximum_depth<next.depth{return Ok(false)}
   let original=&mut*self.admission;
@@ -213,7 +213,7 @@ impl ToolCancellationIssuer{
   else if let Some(registry)=source.documents.as_ref(){if registry.occupied!=0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}source.documents.take();}
   else if let Some(cancel)=source.cancel.take(){source.cancel_close=Some(semio_framework_async::CancelTokenRetirement::from_token(cancel));}
   else if let Some(cancel)=source.cancel_close.as_mut(){
-   if cancel.terminal_is_empty(){source.cancel_close.take();}else{let step=if cancel.is_original_alias_witness(parent.cancellation()?){cancel.return_alias_step(parent.cancellation()?,grant)}else{cancel.close_step(grant)};progress=match step{Ok(step)=>step.progress(),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()}),Err(semio_framework_async::CancelTokenRetirementError::Refused(failure))=>return Err(failure.into())};}
+   if cancel.terminal_is_empty(){source.cancel_close.take();}else{let step=if cancel.is_original_alias_witness(parent.cancellation()?){cancel.return_alias_step(parent.cancellation()?,grant)}else{cancel.close_step(grant)};progress=match step.result {Ok(step)=>step.progress(),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()}),Err(semio_framework_async::CancelTokenRetirementError::Refused(failure))=>return Err(failure.into())};}
   }else if let Some(claim)=source.claim.take(){match ControlledRetirement::new(claim){Ok(owner)=>{source.claim_close=Some(owner)},Err((failure,claim))=>{source.claim=Some(claim);return Err(failure.into())}}}
   else if let Some(claim)=source.claim_close.as_mut(){if claim.terminal_is_empty(){source.claim_close.take();}else{progress=claim.step(grant)?.progress()}}
   else if let Some(generation)=source.generation.as_ref(){if Arc::strong_count(generation)!=1||Arc::weak_count(generation)!=0{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}source.generation.take();}

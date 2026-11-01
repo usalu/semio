@@ -55,3 +55,13 @@ impl OriginalDomainProjection for EvaluationCloseFailure{
   let slot=path[0];let rest=&path[1..];if let Some(initial)=&self.initial{if slot==0{return initial.projection_key(rest,index)}}let closure=usize::from(self.initial.is_some());if slot==closure{return self.closure.projection_key(rest,index)}if slot==closure+1{if let Some(refusal)=&self.receipt_refusal{return semio_framework_job::key_original_value_error(refusal,rest,index)}}Err(absent())
  }
 }
+
+/// 🎟️ Stages one resident evaluation failure into its prepaid reservation before admitting it as the turn failure.
+pub fn admit_evaluation_failure<T:OriginalDomainFailure,C:semio_framework_job::OriginalFailureContext>(source:&mut Option<T>,place:&mut Option<semio_framework_job::OriginalDomainReservation<T>>,cx:&mut C)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{
+ if !place.as_ref().is_some_and(semio_framework_job::OriginalDomainReservation::ready){place.get_or_insert_with(Default::default).prepare(cx)?;return Ok(None)}
+ let Some(reservation)=place.as_mut()else{return Ok(None)};
+ if !reservation.pending(){reservation.with_body(cx,|_,slot|{*slot=source.take();Ok(())})?;}
+ let admitted=semio_framework_job::admit_original_domain_failure(reservation,cx)?;
+ if place.as_ref().is_some_and(semio_framework_job::OriginalDomainReservation::terminal_is_empty){*place=None;}
+ Ok(admitted)
+}

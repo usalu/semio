@@ -70,7 +70,7 @@ impl<const N:usize> ErasedSnapshotRetirement for PagedText<N>{
             let count=grant.maximum_copy_bytes.min(grant.maximum_items).min(self.bytes.len()).min(4096);
             if count==0{return Ok(RetainedCloneStep::Progress(empty));}
             self.closing=true;
-            for _ in 0..count{work+=1;self.bytes.pop().unwrap();}
+            for _ in 0..count{work+=1;self.bytes.pop().ok_or_else(||ValueError::invariant("pop target absent"))?;}
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:count,..empty}));
         }
         let step=self.bytes.release_empty_page(grant.maximum_release_bytes).map_err(error)?;work+=step.work;

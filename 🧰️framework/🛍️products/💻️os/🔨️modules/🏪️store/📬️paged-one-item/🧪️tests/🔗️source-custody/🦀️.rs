@@ -29,7 +29,7 @@ impl ArtifactOwnedValueRetirementFactory<DocumentMutation> for ExactMutationIssu
         let DocumentMutation::SetText{text,..}=&value else{panic!("original mutation changed")};
         assert_eq!(text.as_ptr() as usize,PAYLOAD.get());
         if REFUSE_ISSUER.replace(false){return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"exact original issuer refuses once"),value));}
-        OwnedValueRetirementFactory::<DocumentMutation>::default().retire_owned(value,grant)
+        OwnedValueRetirementFactory::<DocumentMutation>::default().retire_owned(value,grant).result
     })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
@@ -37,7 +37,7 @@ impl ArtifactOwnedValueRetirementFactory<DocumentMutation> for ExactMutationIssu
 struct ExactSnapshotIssuer;
 impl SnapshotRetirementFactory<Document> for ExactSnapshotIssuer{
     fn retirement_birth_bytes(&self,value:&Arc<Document>)->usize{SharedValueRetirementFactory::<Document>::default().retirement_birth_bytes(value)}
-    fn retire(&self,value:Arc<Document>,grant:RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<Document>)>{
+    fn retire(&self,value:Arc<Document>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<Document>)>{
         SNAPSHOT_CALLS.set(SNAPSHOT_CALLS.get()+1);
         assert_eq!(std::ptr::from_ref(self) as usize,SNAPSHOT_ISSUER.get());
         let identity=Arc::as_ptr(&value) as usize;if POST.get()==0{POST.set(identity);}else{assert_eq!(identity,POST.get());}
@@ -63,9 +63,9 @@ impl PagedOneItemEdit<Document,DocumentMutation> for SourceProbeEdit{
         assert_eq!(before.get() as *const Document as usize,BEFORE.get());
         let DocumentMutation::SetText{text,..}=mutation.get() else{panic!("genuine original mutation variant changed")};
         assert_eq!(text.as_ptr() as usize,PAYLOAD.get());
-        if let Some(progress)=before.bind(&mut self.before,grant)?{return Ok(PagedOneItemEditStep::Progress(progress));}
-        if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(PagedOneItemEditStep::Progress(progress));}
-        if let Some(progress)=post.bind(&mut self.post,grant)?{return Ok(PagedOneItemEditStep::Progress(progress));}
+        if let Some(progress)=before.bind(&mut self.before,grant).result?{return Ok(PagedOneItemEditStep::Progress(progress));}
+        if let Some(progress)=mutation.bind(&mut self.mutation,grant).result?{return Ok(PagedOneItemEditStep::Progress(progress));}
+        if let Some(progress)=post.bind(&mut self.post,grant).result?{return Ok(PagedOneItemEditStep::Progress(progress));}
         Ok(if REFUSE_EDIT.get(){PagedOneItemEditStep::RefusedOutcome(RetainedCloneProgress{copied_items:1,..Default::default()},Vec::new())}else{PagedOneItemEditStep::CompleteRows(RetainedCloneProgress{copied_items:1,..Default::default()},Vec::new())})
     }
     fn begin_close(&mut self){self.closing=true;}
@@ -76,7 +76,7 @@ impl PagedOneItemEdit<Document,DocumentMutation> for SourceProbeEdit{
     }
     fn close_step(&mut self,factory:&dyn ArtifactOwnedValueRetirementFactory<DocumentMutation>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         assert!(self.closing);self.close_demands(factory,grant.maximum_copy_bytes)?;
-        let step=semio_framework_value::retained_clone::close_retained_binding(if self.before.is_some(){&mut self.before}else if self.mutation.is_some(){&mut self.mutation}else{&mut self.post},grant)?;
+        let step=semio_framework_value::retained_clone::close_retained_binding(if self.before.is_some(){&mut self.before}else if self.mutation.is_some(){&mut self.mutation}else{&mut self.post},grant).result?;
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
     fn terminal_is_empty(&self)->bool{self.closing&&self.before.is_none()&&self.mutation.is_none()&&self.post.is_none()}
@@ -135,7 +135,7 @@ fn paged_original_mutation_sources_keep_genuine_refs_and_exact_issuer_through_al
         if let Some(prepared)=prepared{
             POST.set(Arc::as_ptr(prepared.post_snapshot()) as usize);assert_eq!(serde_json::to_value(prepared.post_snapshot().as_ref()).unwrap(),law["base"]);
             let(mut ticket,receipt)=prepared.admit_retirement(Arc::clone(&mutations),Arc::clone(&snapshots),policy(&law).retained_grant()).unwrap_or_else(|_|panic!("exact source candidate retirement"));assert!(receipt.fits(policy(&law).retained_grant()));
-            for _ in 0..maximum{if ticket.terminal_is_empty(){break;}let copy=ticket.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:ticket.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:ticket.next_release_byte_demand().unwrap(),maximum_depth:ticket.next_depth_demand().unwrap()};assert!(ticket.close_step(grant).unwrap().progress().fits(grant));}assert!(ticket.terminal_is_empty());
+            for _ in 0..maximum{if ticket.terminal_is_empty(){break;}let copy=ticket.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:ticket.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:ticket.next_release_byte_demand().unwrap(),maximum_depth:ticket.next_depth_demand().unwrap()};assert!(ticket.close_step(grant).result.unwrap().progress().fits(grant));}assert!(ticket.terminal_is_empty());
         }
         close_exact(&mut owner,maximum);assert_eq!(CALLS.get(),row["expectedMutationCalls"].as_u64().unwrap() as usize);assert_eq!(SNAPSHOT_CALLS.get(),row["expectedSnapshotCalls"].as_u64().unwrap() as usize);assert_eq!(observe(||drop(owner)).1.requested_bytes,0);receiver.finish();
         drain_fixture(root);drain_fixture(semio_framework_value::FactoryAuthority::new(mutations));drain_fixture(semio_framework_value::FactoryAuthority::new(snapshots));
@@ -199,14 +199,14 @@ fn paged_failed_seal_keeps_actual_returned_edit_post_and_exact_issuer_pair_until
         let Some(ticket)=post_close.as_ref()else{break;};
         let demand=semio_framework_value_snapshot_read::artifact_retirement_box_demands(ticket,4096).unwrap();
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-        assert!(semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut post_close,grant).unwrap().progress().fits(grant));
+        assert!(semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut post_close,grant).result.unwrap().progress().fits(grant));
     }
     assert!(post_close.is_none()&&retained_post.is_none());assert_eq!(CALLS.get(),law["expected"]["failedSealMutationCalls"].as_u64().unwrap() as usize);assert_eq!(SNAPSHOT_CALLS.get(),law["expected"]["failedSealSnapshotCalls"].as_u64().unwrap() as usize);
     let mut factory_close=Some(semio_framework_value::FactoryAuthority::new(retained_snapshots.take().unwrap()));
     for _ in 0..maximum{
         let Some(owner)=factory_close.as_mut()else{break;};
         let demand=owner.demands(0).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
-        assert!(owner.step(grant).unwrap().progress().fits(grant));if owner.terminal_is_empty(){factory_close=None;}
+        assert!(owner.step(grant).result.unwrap().progress().fits(grant));if owner.terminal_is_empty(){factory_close=None;}
     }
     assert!(factory_close.is_none());
     let authority=retained_authority.take().unwrap();
@@ -214,7 +214,7 @@ fn paged_failed_seal_keeps_actual_returned_edit_post_and_exact_issuer_pair_until
     for _ in 0..maximum{
         if authority_close.terminal_is_empty(){break;}
         let copy=authority_close.next_copy_byte_demand().unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:authority_close.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:authority_close.next_release_byte_demand().unwrap(),maximum_depth:authority_close.next_depth_demand().unwrap()};
-        assert!(authority_close.close_step(grant).unwrap().progress().fits(grant));
+        assert!(authority_close.close_step(grant).result.unwrap().progress().fits(grant));
     }
     assert!(authority_close.terminal_is_empty());assert_eq!(observe(||drop((edit_close,post_close,authority_close,factory_close))).1.released_bytes,0);
 }

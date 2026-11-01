@@ -56,6 +56,7 @@ tokio = { version = "1", default-features = false, features = ["net", "rt", "tim
 tokio-tungstenite = { version = "0.26", features = ["rustls-tls-webpki-roots"] }
 
 [dev-dependencies]
+semio-framework-os-store-sync = { path = "../../../📦️packages/🦀️rust", features = ["testing"] }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-plugin-component-receipt = { path = "../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust" }

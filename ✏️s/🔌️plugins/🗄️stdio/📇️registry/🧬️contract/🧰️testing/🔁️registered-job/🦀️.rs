@@ -4,7 +4,7 @@
 
 use super::original_grant;
 use semio_framework_action_bus::{admit_original_tool_construction, ActionBus, ErasedToolJob, RetainedToolWireInput, ToolFactoryKey, ToolJobAdmissionDemand, ToolOperationSpec, ToolWirePage, TOOL_WIRE_PAGE_BYTES};
-use semio_framework_job::{InteractiveJob, JobOutcomeBorrow, JobOutcomeView, Operation, OriginalJobDecodeOwner, OriginalJobFixtureCaller, RetainedCloneProgress};
+use semio_framework_job::{drive_step, InteractiveJob, InteractiveStage, JobOutcomeView, Operation, OriginalJobDecodeOwner, OriginalJobFixtureCaller, OriginalJobReturn, OriginalJobReturnOrigin, RetainedCloneProgress};
 use semio_framework_value_snapshot_read::{snapshot_registry_alias_close_step, SnapshotRead, SnapshotReadRegistryAliasRetirement, SnapshotReadRegistryHandle};
 use std::sync::Arc;
 
@@ -12,11 +12,12 @@ use std::sync::Arc;
 pub struct Session {
     pub caller: OriginalJobFixtureCaller,
     pub decoder: OriginalJobDecodeOwner,
+    pub origin: OriginalJobReturnOrigin,
 }
 
 impl Session {
     pub fn new(operation: Operation) -> Self {
-        Self { caller: OriginalJobFixtureCaller::admit(operation.operation, operation.generation, original_grant(), || Some(0), u64::MAX, 1_000_000), decoder: OriginalJobDecodeOwner::empty() }
+        Self { caller: OriginalJobFixtureCaller::admit(operation.operation, operation.generation, original_grant(), || Some(0), u64::MAX, 1_000_000), decoder: OriginalJobDecodeOwner::empty(), origin: OriginalJobReturnOrigin::empty() }
     }
 
     /// 🏁️ Retires the decode owner through funded turns, then the caller.
@@ -25,13 +26,22 @@ impl Session {
             let decoder = &mut self.decoder;
             self.caller
                 .turn(original_grant(), |cx| {
-                    let step = decoder.close_step(cx.retained_grant())?;
+                    let turn = decoder.close_step(cx.retained_grant());
+                    let step = turn.result?;
                     cx.consume_retained(step.progress())?;
-                    cx.consume_fuel(step.progress().copied_items as u64);
+                    cx.consume_fuel(turn.work);
                     Ok(())
                 })
                 .expect("fixture decode owner closes");
         }
+        for _ in 0..4096 {
+            if self.origin.terminal_is_empty() {
+                break;
+            }
+            let origin = &mut self.origin;
+            self.caller.turn(original_grant(), |cx| origin.close_step(cx).map(|_| ())).expect("fixture return origin closes");
+        }
+        assert!(self.origin.terminal_is_empty(), "fixture return origin kept custody after 4096 close steps");
         self.caller.retire(original_grant());
     }
 }
@@ -124,30 +134,78 @@ pub enum Seen {
     Fault,
 }
 
+const STEP_SITE: &str = "stdio-contract-testing registered job";
+
+/// 🚚️ Drives `job` until its outcome is received by the session origin and answers the stage the driving turn reached.
+fn drive(job: &mut ErasedToolJob, session: &mut Session) -> String {
+    let Session { caller, decoder, origin } = session;
+    let mut returned = None;
+    let mut continuation: Option<semio_framework_job::OriginalJobContinuation> = None;
+    let mut stage = String::new();
+    for _ in 0..4096 {
+        let received = caller
+            .turn_with_decoder(original_grant(), decoder, |cx| {
+                cx.with_original_work_loan(1, cx.original_absolute_deadline_us(), |cx| {
+                    if returned.is_none() && continuation.is_none() {
+                        if !origin.body_ready() {
+                            origin.admit(cx)?;
+                            return Ok(false);
+                        }
+                        let (_, receiver) = origin.context_parts()?;
+                        let driven = drive_step(&mut *job, cx, receiver, STEP_SITE, InteractiveStage::InteractiveStep, &mut None)?;
+                        stage = cx.stage().to_string();
+                        match driven {
+                            OriginalJobReturn::Preparing | OriginalJobReturn::Pending => return Ok(false),
+                            OriginalJobReturn::Outcome(reply) => returned = Some(reply.into_descriptor()),
+                            OriginalJobReturn::Continuation(_) => panic!("job step returned an original continuation"),
+                        }
+                    }
+                    if returned.is_some() { origin.receive_outcome(cx, &mut returned) } else { origin.receive_continuation(cx, &mut continuation) }
+                })
+            })
+            .expect("job step");
+        if received {
+            return stage;
+        }
+    }
+    panic!("job step never reached its receiving origin");
+}
+
+/// 🔔️ Acknowledges the outcome the origin holds so the next step rearms the same source.
+fn acknowledge(session: &mut Session) {
+    let Session { caller, decoder, origin } = session;
+    for _ in 0..4096 {
+        if origin.outcome().is_none() {
+            return;
+        }
+        caller
+            .turn_with_decoder(original_grant(), decoder, |cx| cx.with_original_work_loan(1, cx.original_absolute_deadline_us(), |cx| origin.acknowledge_outcome(cx)))
+            .expect("job outcome acknowledged");
+    }
+    panic!("job outcome never acknowledged");
+}
+
 /// 👣️ One funded step of `job`.
 pub fn step(job: &mut ErasedToolJob, session: &mut Session) -> Seen {
-    let descriptor = session.caller.turn_with_decoder(original_grant(), &mut session.decoder, |cx| Ok(job.step(cx)?.map(JobOutcomeBorrow::into_descriptor))).expect("job step");
-    let Some(descriptor) = descriptor else { return Seen::Idle };
-    match job.borrow_outcome(&descriptor).expect("job outcome") {
+    drive(job, session);
+    let Some(descriptor) = session.origin.outcome() else { return Seen::Idle };
+    let seen = match job.borrow_outcome(descriptor).expect("job outcome") {
         JobOutcomeView::Yield { .. } => Seen::Yield,
         JobOutcomeView::PreviewReady { .. } => Seen::Preview,
         JobOutcomeView::CheckpointReady { state, .. } => Seen::Checkpoint(state.single_page().map(<[u8]>::to_vec)),
         JobOutcomeView::Complete { .. } => Seen::Complete,
         JobOutcomeView::Cancelled { .. } => Seen::Cancelled,
         JobOutcomeView::Fault { .. } => Seen::Fault,
-    }
+    };
+    acknowledge(session);
+    seen
 }
 
 /// 🪜️ One funded step of `job`, dropping its outcome and answering the stage the step context reached.
 pub fn step_stage(job: &mut ErasedToolJob, session: &mut Session) -> String {
-    session
-        .caller
-        .turn_with_decoder(original_grant(), &mut session.decoder, |cx| {
-            let outcome = job.step(cx)?;
-            drop(outcome);
-            Ok(cx.stage().to_string())
-        })
-        .expect("job step")
+    let stage = drive(job, session);
+    acknowledge(session);
+    stage
 }
 
 /// 🧯️ Closes `job` through funded turns until nothing is left in its custody.

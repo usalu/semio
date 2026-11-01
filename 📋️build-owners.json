@@ -19774,6 +19774,54 @@
       "packages": []
     },
     {
+      "name": "semio-s-artifact-stdio-ifc-domain",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📚️catalog/⚖️domain/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📚️catalog/⚖️domain/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-ifc-details",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-ifc-details-profile",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧭️profile/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧭️profile/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-ifc-details-wire",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/📨️wire/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/📨️wire/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-ifc-details-type",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🔤️type/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🔤️type/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-ifc-details-edit",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/✏️edit/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/✏️edit/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-ifc-details-provider",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/👁️provider/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/👁️provider/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
+      "name": "semio-s-artifact-stdio-ifc-details-guidance",
+      "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧶️guidance/📦️packages/🦀️rust",
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧶️guidance/📦️packages/🦀️rust/Cargo.toml",
+      "packages": []
+    },
+    {
       "name": "semio-s-artifact-stdio-ifc-test-oracle",
       "root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔮️oracles/📦️packages/🦀️rust",
       "manifest": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔮️oracles/📦️packages/🦀️rust/Cargo.toml",

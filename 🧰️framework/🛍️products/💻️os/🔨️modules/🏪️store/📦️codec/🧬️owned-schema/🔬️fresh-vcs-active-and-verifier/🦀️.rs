@@ -135,7 +135,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeVcsFiel
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty }));
         }
         if self.retirement.is_some() {
-            return artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (fault("artifact-envelope.fresh-vcs-retirement-fault")).with_native(error));
+            return artifact_retirement_box_close_step(&mut self.retirement, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (fault("artifact-envelope.fresh-vcs-retirement-fault")).with_native(error));
         }
         if let Some(active) = self.active.as_mut() {
             if active.terminal_is_empty() {
@@ -188,10 +188,10 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeVcsFiel
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
         }
         if self.genesis_bytes.is_some() {
-            return artifact_retirement_admit_owned(&mut self.genesis_bytes, &mut self.retirement, grant).map_err(|error| (fault("artifact-envelope.genesis-pack-retirement")).with_native(error));
+            return artifact_retirement_admit_owned(&mut self.genesis_bytes, &mut self.retirement, grant).result.map_err(|error| (fault("artifact-envelope.genesis-pack-retirement")).with_native(error));
         }
         if let Some(snapshot) = self.snapshot_target.value.take() {
-            return match self.initial_snapshot_factory.retire_owned(snapshot, child) {
+            return match self.initial_snapshot_factory.retire_owned(snapshot, child).result {
                 Ok((owner, progress)) => {
                     self.retirement = Some(owner);
                     if !progress.fits(child) { return Err(fault("artifact-envelope.fresh-vcs-retirement-receipt")); }

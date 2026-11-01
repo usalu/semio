@@ -49,7 +49,6 @@ export function verifyNumericalExecutionOracle(): void {
       independent.forEach((row, i) => assert(Math.abs(actual.x[i]! - row[0]!) < 1e-10, sample.name));
     }
   }
-  console.log(`[DEBUG] ${corpus.cases.length} neutral PCG cases retain convergence, iteration-limit, curvature and scaling semantics; converged outputs match mathjs LU`);
 }
 
 function source(relative: string): string { return readModuleTreeSource(new URL(relative, import.meta.url)); }

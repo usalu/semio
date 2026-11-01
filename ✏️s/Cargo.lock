@@ -3062,6 +3062,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-native-storage",
  "semio-framework-value-ordered",
  "semio-framework-value-paged-text",
  "semio-framework-value-persistent",
@@ -5182,6 +5183,7 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-native-storage",
 ]
 
 [[package]]
@@ -10267,6 +10269,7 @@ dependencies = [
  "semio-s-fem-elements2d",
  "semio-s-fem-elements3d",
  "semio-s-fem-model",
+ "semio-s-fem-payload-turns",
  "semio-s-fem-sparse",
  "semio-s-fem-sparse-ldlt",
  "semio-s-fem-sparse-subspace",

@@ -18,7 +18,7 @@ pub fn with_decoding<T>(operation: impl FnOnce(&mut NativeSnapshotDecodeOwner<'_
     let result = operation(&mut owner);
     drop(owner);
     while native.has_retirement_owner() {
-        native.close_retirement_recipient(grant).expect("original decode recipient closes");
+        native.close_retirement_recipient(grant).result.expect("original decode recipient closes");
     }
     result
 }
@@ -34,7 +34,7 @@ pub fn with_encoding<T>(operation: impl FnOnce(&mut NativeSnapshotEncodeOwner<'_
     let result = operation(&mut owner);
     drop(owner);
     while native.has_retirement_owner() {
-        native.close_retirement_recipient(grant).expect("original encode recipient closes");
+        native.close_retirement_recipient(grant).result.expect("original encode recipient closes");
     }
     result
 }
@@ -50,7 +50,7 @@ pub async fn with_encoding_async<T>(operation: impl AsyncFnOnce(&mut NativeSnaps
     let result = operation(&mut owner).await;
     drop(owner);
     while native.has_retirement_owner() {
-        native.close_retirement_recipient(grant).expect("original encode recipient closes");
+        native.close_retirement_recipient(grant).result.expect("original encode recipient closes");
     }
     result
 }

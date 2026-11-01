@@ -13,5 +13,4 @@ export function testNumericalRestoreFundingWire(): void {
   fixture.columns.forEach((column: number, index: number) => {
     if (bytes.readUInt32LE(index * fixture.scalarWidth) !== column || bytes.readBigUInt64LE(index * fixture.scalarWidth + 4) !== (index === 0 ? 0xffffffffffffffffn : BigInt(fixture.next[index]))) throw new Error("row contributor wire reconstruction differs");
   });
-  console.log(`[DEBUG] Numerical restore Buffer oracle: ${fixture.count} contributors, ${bytes.length} wire bytes`);
 }

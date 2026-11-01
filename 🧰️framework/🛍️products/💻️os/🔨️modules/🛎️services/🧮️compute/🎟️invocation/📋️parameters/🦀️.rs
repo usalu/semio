@@ -16,13 +16,13 @@ impl ComputeJobParamsPreparation{
  pub fn advance(&mut self,params:&mut Option<BatchJobParams>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;if self.closing{return Ok(false)}if self.published{return Ok(params.is_some())}if params.is_some(){return Err(refusal("original compute parameters already have an owned destination").into())}if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
   if self.cancel.is_none(){cx.admit_original_cancel_alias(&mut self.cancel)?;return Ok(false)}
-  let grant=cx.retained_grant();let copied=0;if grant.maximum_items==0||grant.maximum_copy_bytes<copied||grant.maximum_depth==0{return Ok(false)}*params=Some(BatchJobParams{operation:self.operation,generation:self.generation,cancel:self.cancel.take().unwrap(),config:self.config,now_us:self.clock});self.published=true;post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(true)
+  let grant=cx.retained_grant();let copied=0;if grant.maximum_items==0||grant.maximum_copy_bytes<copied||grant.maximum_depth==0{return Ok(false)}*params=Some(BatchJobParams{operation:self.operation,generation:self.generation,cancel:self.cancel.take().ok_or_else(||ValueError::invariant("cancel absent"))?,config:self.config,now_us:self.clock});self.published=true;post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(true)
  }
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;if self.terminal_is_empty(){return Ok(true)}let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
   if !self.closing{self.closing=true;post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(false)}
-  if self.retirement.is_none(){*self.retirement=Some(CancelTokenRetirement::from_token(self.cancel.take().unwrap()));post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(false)}
-  let owner=self.retirement.as_mut().unwrap();if owner.terminal_is_empty(){drop(self.retirement.take());post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(self.terminal_is_empty())}
+  if self.retirement.is_none(){*self.retirement=Some(CancelTokenRetirement::from_token(self.cancel.take().ok_or_else(||ValueError::invariant("cancel absent"))?));post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(false)}
+  let owner=self.retirement.as_mut().ok_or_else(||ValueError::invariant("retirement absent"))?;if owner.terminal_is_empty(){drop(self.retirement.take());post(cx,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(self.terminal_is_empty())}
   let turn=owner.return_alias_step(cx.original_cancel_token(),grant);let result=match turn.result{Ok(step)=>Ok(step),Err(CancelTokenRetirementError::Refused(error))=>Err(error),Err(CancelTokenRetirementError::Blocked(_))=>Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default()))};semio_framework_job::receive_original_retained_work(cx,semio_framework_value::RetainedWorkOutcome{result,work:turn.work})?;Ok(false)
  }
 

@@ -38,7 +38,7 @@ impl CancellationLeaseParts {
   let witness=self.tokens.iter().flatten().chain(std::iter::once(&canonical.app_scope)).chain(original_parent).find(|token|owner.is_original_alias_witness(token));
   let step=if let Some(witness)=witness{owner.return_alias_step(witness,grant)}else if let Some(id)=self.document_id{match canonical.state.try_lock(){Ok(state)=>match state.keyed_documents.get(id).filter(|scope|owner.is_original_alias_witness(&scope.token)){Some(scope)=>owner.return_alias_step(&scope.token,grant),None=>owner.close_step(grant)},Err(_)=>return Ok(RetainedCloneStep::Progress(empty))}}else{owner.close_step(grant)};
   let terminal=owner.terminal_is_empty();
-  match step{
+  match step.result {
    Ok(step)=>{if terminal{self.token_retirements[index]=None;}Ok(RetainedCloneStep::Progress(step.progress()))}
    Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(RetainedCloneStep::Progress(empty)),
    Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error),

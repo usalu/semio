@@ -132,7 +132,7 @@ impl InteractionRetirement {
 impl ErasedSnapshotRetirement for InteractionRetirement {
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(self.demands())}
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, ValueError> { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let idle = RetainedCloneProgress::default();
         let Some(movement) = self.next_move() else {
             return Ok(RetainedCloneStep::Complete(idle));
@@ -184,7 +184,7 @@ impl ErasedSnapshotRetirement for InteractionRetirement {
         }
         let progress = RetainedCloneProgress { copied_items: 1, copied_bytes, released_bytes: demand.release_bytes, ..idle };
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 
     fn terminal_is_empty(&self) -> bool {
         self.owned.shared.is_none() && self.owned.state.is_none() && self.owned.selection.is_none() && self.owned.hover.is_none() && self.owned.text.is_none() && self.owned.bytes.is_empty() && self.owned.bytes.capacity() == 0
@@ -233,29 +233,29 @@ fn admit_birth(grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, Value
 impl SnapshotRetirementFactory<InteractionState> for InteractionRetirementFactory {
     fn retirement_birth_bytes(&self, _snapshot: &Arc<InteractionState>) -> usize { size_of::<InteractionRetirement>() }
 
-    fn retire(&self, root: Arc<InteractionState>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<InteractionState>)> {
+    fn retire(&self, root: Arc<InteractionState>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<InteractionState>)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<InteractionState>)> {
         match admit_birth(grant) {
             Ok(progress) => Ok((Box::new(InteractionRetirement::shared(root)), progress)),
             Err(error) => Err((error, root)),
         }
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 impl ArtifactOwnedValueRetirementFactory<InteractionState> for InteractionRetirementFactory {
     fn retirement_birth_bytes(&self, _root: &InteractionState) -> usize { size_of::<InteractionRetirement>() }
 
-    fn retire_owned(&self, root: InteractionState, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, InteractionState)> {
+    fn retire_owned(&self, root: InteractionState, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, InteractionState)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, InteractionState)> {
         match admit_birth(grant) {
             Ok(progress) => Ok((Box::new(InteractionRetirement::owned(root)), progress)),
             Err(error) => Err((error, root)),
         }
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 impl ArtifactOwnedValueRetirementFactory<InteractionConfigMutation> for InteractionRetirementFactory {
     fn retirement_birth_bytes(&self, _mutation: &InteractionConfigMutation) -> usize { size_of::<InteractionRetirement>() }
 
-    fn retire_owned(&self, mutation: InteractionConfigMutation, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, InteractionConfigMutation)> {
+    fn retire_owned(&self, mutation: InteractionConfigMutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, InteractionConfigMutation)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, InteractionConfigMutation)> {
         match admit_birth(grant) {
             Ok(progress) => {
                 let InteractionConfigMutation::SetInteractionState(state) = mutation;
@@ -263,7 +263,7 @@ impl ArtifactOwnedValueRetirementFactory<InteractionConfigMutation> for Interact
             }
             Err(error) => Err((error, mutation)),
         }
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 #[doc(hidden)]

@@ -149,6 +149,8 @@ pub fn generation_tree(
             ("empty", _) => "(no generations)",
             ("actions", Locale::De) => "Aktionen",
             ("actions", _) => "Actions",
+            ("values", Locale::De) => "Werte",
+            ("values", _) => "values",
             _ => key,
         }
         .to_string()
@@ -156,7 +158,7 @@ pub fn generation_tree(
     let factory = ActionFactory::new(controller_id);
     let generation_row = |entry: &semio_framework_os_playbook_contract::FormGeneration| -> UiAssemblyResult<BuiltNode> {
         let args = ui_value_map([("id", ui_value_text(&entry.id)?)])?;
-        let mut item = tree_item_with_action(format!("{surface_prefix}.generation.{}", entry.id), entry.name.clone(), Some(format!("{} values", entry.values.len())), factory.action("selectGeneration", Some(args))?)?;
+        let mut item = tree_item_with_action(format!("{surface_prefix}.generation.{}", entry.id), entry.name.clone(), Some(format!("{} {}", entry.values.len(), label("values"))), factory.action("selectGeneration", Some(args))?)?;
         if let Component::TreeItem(props) = &mut item.component {
             props.icon = Some(ui_text("layers")?);
             let mut row_actions = UiFixedList::default();
@@ -202,12 +204,20 @@ fn generation_control_args(generation_id: &str, question_id: &str, field_index: 
 }
 
 /// 📝 Renders generation questions as semantic controls with typed change bindings.
+/// 🏷️ The three user-visible words of the generated input form, resolved by the calling app.
+pub struct GenerationFormLabels<'a> {
+    pub no_inputs: &'a str,
+    pub field: &'a str,
+    pub no_image: &'a str,
+}
+
 pub fn generation_form(
     spec: &semio_framework_os_playbook_contract::PlaybookSpec,
     values: &semio_framework_os_playbook_contract::PlaybookValues,
     controller_id: &'static str,
     action: &str,
     generation_id: &str,
+    words: &GenerationFormLabels<'_>,
 ) -> UiAssemblyResult<BuiltNode> {
     let mut root = ui_id(column(), "generate.form")?;
     let mut has_children = false;
@@ -253,20 +263,20 @@ pub fn generation_form(
                     let numbers = value.as_array().map_or_else(|| question.fields.as_deref().unwrap_or_default().iter().map(|field| DslValue::float(field.value.unwrap_or(0.0))).collect(), <[DslValue]>::to_vec);
                     let labels: Vec<String> = question
                         .fields
-                        .as_deref().map_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("Field {}", index + 1)).collect(), |fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect());
+                        .as_deref().map_or_else(|| numbers.iter().enumerate().map(|(index, _)| format!("{} {}", words.field, index + 1)).collect(), |fields| fields.iter().map(|field| field.label.clone().unwrap_or_else(|| field.key.clone())).collect());
                     let mut vector = ui_id(column(), format!("{field_id}.vector"))?;
                     for (index, number) in numbers.iter().enumerate() {
                         let input = input(InputKind::Number).value(ui_text(number.as_f64().map(|entry| entry.to_string()).unwrap_or_default())?);
                         let input = ui_id(input, format!("{field_id}.vector.{index}.input"))?;
                         let input = ui_build(generation_control_action(input, controller_id, action, generation_control_args(generation_id, &question.id, Some(index))?)?)?;
-                        let label = labels.get(index).cloned().unwrap_or_else(|| format!("Field {}", index + 1));
+                        let label = labels.get(index).cloned().unwrap_or_else(|| format!("{} {}", words.field, index + 1));
                         let field = ui_id(field(ui_label(label)?), format!("{field_id}.vector.{index}"))?;
                         vector = ui_child(vector, ui_build(ui_child(field, input)?)?)?;
                     }
                     ui_build(vector)?
                 }
                 "note" => ui_build(ui_id(text(ui_label(question.text.clone().unwrap_or_default())?), format!("{field_id}.note"))?)?,
-                "image" => ui_build(ui_id(text(ui_label(question.src.clone().unwrap_or_else(|| "(no image)".into()))?), format!("{field_id}.image"))?)?,
+                "image" => ui_build(ui_id(text(ui_label(question.src.clone().unwrap_or_else(|| words.no_image.into()))?), format!("{field_id}.image"))?)?,
                 _ => {
                     let input = input(InputKind::Text).value(ui_text(Value::from(&value).to_string())?).commit(ui_text("blur")?);
                     ui_build(generation_text_action(ui_id(input, format!("{field_id}.input"))?, controller_id, action, args()?)?)?
@@ -278,7 +288,7 @@ pub fn generation_form(
         }
     }
     if !has_children {
-        return ui_build(text(ui_label("No input widgets to generate from.")?));
+        return ui_build(text(ui_label(words.no_inputs)?));
     }
     ui_build(root)
 }

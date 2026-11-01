@@ -56,8 +56,8 @@ impl GuestColdRelayJob {
 
 }
 
-impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
-    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+impl GuestColdRelayJob {
+    fn step_callback<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_job::JobOutcomeBorrow;
         if self.publication.as_ref().is_some_and(|publication| publication.delivered) {
             if self.publication.as_ref().is_some_and(GuestRelayPublication::is_terminal) {
@@ -148,6 +148,12 @@ impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
             self.publication = Some(GuestRelayPublication::new(GuestRelayPublicationKind::Fault, b"plugin guest relay lost its start state".to_vec()));
         }
         JobOutcomeBorrow::admit_yield(context).map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
+}
+
+impl semio_framework_job::InteractiveJob for GuestColdRelayJob {
+    fn step<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>, _return_claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_callback(context))
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {

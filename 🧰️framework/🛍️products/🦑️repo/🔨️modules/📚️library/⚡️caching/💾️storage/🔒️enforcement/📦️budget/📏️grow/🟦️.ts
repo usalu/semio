@@ -108,7 +108,7 @@ export type GrowPortsV1=Readonly<{
 /** 📓️ What a run did. */
 export type GrowOutcomeV1=Readonly<{partition:string;fromBytes:number;toBytes:number;resumed:boolean;oldDevice:number|null;newDevice:number|null;forcedUnmount?:readonly string[]}>;
 /** 🧭️ The request: the partition directory (receipt, backing file and mount directory), its id and the target. */
-export type GrowRequestV1=Readonly<{partition:string;directory:string;targetBytes:number;language?:GrowLanguageV1;stopCollectors?:boolean}>;
+export type GrowRequestV1=Readonly<{partition:string;directory:string;targetBytes:number;language:GrowLanguageV1;stopCollectors?:boolean}>;
 export type GrowJournalV1=Readonly<{version:1;phase:typeof protocol.phases[number];partition:string;fromBytes:number;toBytes:number;oldDevice:number|null;newDevice:number|null;forcedUnmount?:readonly string[]}>;
 
 function writeAtomic(path:string,text:string):void{
@@ -128,7 +128,7 @@ const phaseIndex=(phase:string)=>protocol.phases.indexOf(phase as never);
 
 /** 🌱️ Grows the image of one partition offline and returns what it did. The run holds the exclusive image lease for its whole length, so new commands queue behind it and running ones finish first. Every phase is journalled beside the receipt before and after its effect and every effect checks the real state first, so a run killed anywhere is resumed by calling this function again: the journal fixes the target. */
 export async function growPartitionV1(request:GrowRequestV1,ports:GrowPortsV1):Promise<GrowOutcomeV1>{
- const language=request.language??"en",{directory,partition}=request,receiptPath=join(directory,protocol.receiptFile),image=join(directory,protocol.imageFile),mount=join(directory,protocol.mountDirectory),eventsPath=join(mount,protocol.eventsFile),journalPath=join(directory,protocol.journalFile);
+ const {language,directory,partition}=request,receiptPath=join(directory,protocol.receiptFile),image=join(directory,protocol.imageFile),mount=join(directory,protocol.mountDirectory),eventsPath=join(mount,protocol.eventsFile),journalPath=join(directory,protocol.journalFile);
  const say=(key:string,variables:Readonly<Record<string,string|number>>={})=>ports.report?.(growTextV1(language,key,{partition,...variables})),at=(name:string)=>{ports.signal?.throwIfAborted();ports.checkpoint?.(name);};
  if(!existsSync(receiptPath)||!existsSync(image))throw new GrowRefusalV1("absent",{partition,directory});
  say("step.waiting");at("lease:before");

@@ -72,7 +72,6 @@ fn inverse_restores_before() {
     }
     assert_eq!(snapshot, expected_after());
     assert_eq!(snapshot, base);
-    println!("[DEBUG] FEM2d unchanged fixture retains its snapshot with an empty aggregate inverse");
 }
 
 /// 🎯️ The declared outcome — `no-op`, with exactly one `warn`-level `mutation.no-op` — is what this

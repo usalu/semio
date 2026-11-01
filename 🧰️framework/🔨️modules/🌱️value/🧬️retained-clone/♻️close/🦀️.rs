@@ -55,7 +55,7 @@ impl RetainedCloneClose {
     pub fn begin_granted<T:RetireOwned>(&mut self,value:&mut Option<T>,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<RetainedCloneStep>>{
         if !self.is_empty()||value.is_none(){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}
         let bytes=crate::owned_retirement_birth_bytes::<T>();if grant.maximum_items==0||grant.maximum_depth==0||bytes>grant.maximum_capacity_bytes{return crate::RetainedWorkOutcome{result:Ok(Some(RetainedCloneStep::Progress(Default::default()))),work:0}}
-        let turn=crate::admit_owned_retirement(value.take().unwrap(),grant);let result=match turn.result{Ok((owner,progress))=>{*self.retirement=Some(owner);Ok(Some(RetainedCloneStep::Progress(progress)))},Err((error,owner))=>{*value=Some(owner);Err(error)}};crate::RetainedWorkOutcome{result,work:turn.work}
+        let turn=crate::admit_owned_retirement(match value.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("value absent").into()),work:0}},grant);let result=match turn.result{Ok((owner,progress))=>{*self.retirement=Some(owner);Ok(Some(RetainedCloneStep::Progress(progress)))},Err((error,owner))=>{*value=Some(owner);Err(error)}};crate::RetainedWorkOutcome{result,work:turn.work}
     }
     pub fn begin_empty_granted<T:RetainedEmptyOwner>(&mut self,value:&mut T,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<Option<RetainedCloneStep>>{
         if !self.is_empty()||empty_owner::Sealed::already_empty(value){return crate::RetainedWorkOutcome{result:Ok(None),work:0}}

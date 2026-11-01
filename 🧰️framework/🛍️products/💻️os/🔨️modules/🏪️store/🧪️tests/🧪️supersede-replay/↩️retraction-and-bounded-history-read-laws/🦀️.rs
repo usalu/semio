@@ -32,7 +32,7 @@ async fn a_refused_local_transition_retracts_and_the_author_converges_with_the_h
     fixture_author(&mut author, ArtifactCommand::CreateAlternativeWithSupersede { name: "edited".into(), inputs: vec![input(&ids[1], None)] }).await.expect("finalize as a new alternative");
     let trunk = author.trunk_alternative_id();
     fixture_author(&mut author, ArtifactCommand::SwitchAlternative { alternative_id: trunk }).await.expect("back to the trunk");
-    let authored: Vec<String> = author.envelope().transitions[known..].iter().map(|transition| transition.mutation_id.0.clone()).collect();
+    let authored: Vec<String> = author.envelope().transitions.iter().skip(known).map(|transition| transition.mutation_id.0.clone()).collect();
     assert_eq!(authored.len(), 4, "supersede, commit, branch, scoped supersede; switching moves this viewer's head only");
     let refused = vec![authored[0].clone(), authored[1].clone(), authored[3].clone()];
     let refused_log = print_document_pack(author.envelope()).await.expect("pair prints");
@@ -137,7 +137,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
         let grant = fixture_retirement_policy(close_items, release_bytes);
         assert!(physical_demand <= grant.maximum_release_bytes, "explicit physical release grant admits the exact original owner extent: demand {physical_demand} against {grant:?}");
         if let Some(head) = held_head.as_ref() { assert_eq!(Arc::as_ptr(head.snapshot_owner()), head_identity); assert_eq!(head.snapshot().n, head_value); }
-        match retirement.close_step(grant).unwrap() {
+        match retirement.close_step(grant).result.unwrap() {
             semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(retirement.terminal_is_empty()); break; }
             semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => { physical_releases.insert(progress.released_bytes); assert!(progress.fits(grant)); }
         }
@@ -163,7 +163,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
             turns += 1;
             assert!(turns < 100_000);
             let grant = fixture_retirement_policy(close_items, release_bytes);
-            match retirement.close_step(grant).unwrap() {
+            match retirement.close_step(grant).result.unwrap() {
                 semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(retirement.terminal_is_empty()); break; }
                 semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => panic!("unpublished preview owns no outstanding reads; stalled at turn {turns} under {grant:?} quoting copy {:?} capacity {:?} release {:?} depth {:?}", retirement.next_copy_byte_demand(), retirement.next_capacity_byte_demand(0), retirement.next_release_byte_demand(), retirement.next_depth_demand()),
                 semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
@@ -184,7 +184,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
             turns += 1;
             assert!(turns < 100_000);
             let grant = fixture_retirement_policy(close_items, release_bytes);
-            match retirement.close_step(grant).unwrap() {
+            match retirement.close_step(grant).result.unwrap() {
                 semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(retirement.terminal_is_empty()); break; }
                 semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => panic!("unpublished replay owns no outstanding reads"),
                 semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),

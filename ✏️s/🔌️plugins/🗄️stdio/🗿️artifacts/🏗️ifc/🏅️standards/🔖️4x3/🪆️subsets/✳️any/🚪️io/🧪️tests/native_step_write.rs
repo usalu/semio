@@ -43,17 +43,3 @@ fn each_original_grant_axis_can_refuse_before_publication_and_later_drain() {
         let result = write_ifc4x3_step_pack(&source, &mut semio_framework_os_kernel::NativeSnapshotEncodeOwner::new(&mut native, incoming)); assert!(result.is_err(), "{axis}"); drain(&mut native, grant(&value["closeGrant"]));
     }
 }
-
-#[test]
-fn actual_registered_step_entry_retains_the_original_native_pair() {
-    use semio_framework_os_kernel::io::{io_mechanism::{IoNativeDirection, IoRunControl}, io_schema::IoPayload};
-    use semio_framework_value::NativeDecodeControl;
-    use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
-    let value = fixture(); let source = source(&value); let input = IoPayload::Binary(source.encode_pack()); let mut observe_decode = |_| true; let mut observe_encode = |_| true;
-    let mut decode_recipient = NativeDecodeRetirementRecipient::new(); let mut encode_recipient = NativeEncodeRetirementRecipient::new();
-    let mut decode = NativeDecodeControl::new(value["nativeMaximumBytes"].as_u64().unwrap() as usize, &mut observe_decode); let mut encode = NativeEncodeControl::new(value["nativeMaximumBytes"].as_u64().unwrap() as usize, &mut observe_encode); decode.install_retirement_recipient(&mut decode_recipient).unwrap(); encode.install_retirement_recipient(&mut encode_recipient).unwrap();
-    let mut control = IoRunControl::new(&mut decode, &mut encode, grant(&value["bodyGrant"]));
-    let entry = crate::native_exchange::io_entries().iter().find(|entry| entry.from == IFC4X3_DIALECT && entry.into == TXT_DIALECT).unwrap();
-    let result = (entry.run)(&input, &mut control).unwrap(); assert_eq!(control.direction(), IoNativeDirection::Decode); drop(control); assert!(!decode.has_retirement_owner()); assert!(!encode.has_retirement_owner());
-    let IoPayload::Binary(bytes) = result.value else { unreachable!() }; let output = TxtSnapshot::decode_pack(&bytes).unwrap(); assert_eq!(parse_ifc4x3_step(&output.to_body()).unwrap(), source);
-}

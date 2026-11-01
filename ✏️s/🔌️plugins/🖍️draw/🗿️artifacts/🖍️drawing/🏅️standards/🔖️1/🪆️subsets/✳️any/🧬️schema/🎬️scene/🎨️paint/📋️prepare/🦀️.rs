@@ -1,6 +1,6 @@
 //! 🎬️ Owned vector plans and indexed painted caches publish as one completed scene.
 use super::{PaintedPathPrepareJob,PaintedPathPreparation,PaintedPathRegions,PaintedRegionLimits,PaintedPreparationRetirement};
-use crate::preparation::{DocumentScenePlan,DocumentSceneContent,DocumentSceneError};
+use semio_s_artifact_draw_drawing_scene::preparation::{DocumentScenePlan,DocumentSceneContent,DocumentSceneError};
 use crate::picking::PaintedPathStroke;
 use semio_framework_value_persistent::work::RetainedWorkLedger;
 use semio_framework_value::RetirementDemand;

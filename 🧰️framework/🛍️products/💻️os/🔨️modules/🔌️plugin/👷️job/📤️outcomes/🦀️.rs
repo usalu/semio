@@ -5,6 +5,7 @@ use semio_framework_plugin_decl_app::tool_contract::BoundedFaultText;
 use semio_framework_job::{InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, StepContext, OriginalTurnFailure};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError};
+use crate::{retired};
 
 /// 🚦️ What one cleanup turn decided, before its outcome is lent from the pages the job owns.
 #[doc(hidden)]
@@ -39,7 +40,7 @@ impl CleanupOutcomes {
 
     pub fn retire(&mut self, cx: &mut StepContext<'_>) -> Result<(), OriginalTurnFailure> {
         if !self.publication.terminal_is_empty() {
-            let step=self.publication.close_step(cx.retained_grant()).map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;
+            let step=self.publication.close_step(cx.retained_grant()).result.map_err(|error|OriginalTurnFailure::debit_original(error,cx))?;
             cx.consume_retained(step.progress())?;
         }
         if self.publication.terminal_is_empty() {
@@ -78,7 +79,7 @@ impl CleanupOutcomes {
 
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.publication.terminal_is_empty() {
-            return self.publication.close_step(grant);
+            return self.publication.close_step(grant).result;
         }
         self.delivered = false;
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
@@ -133,7 +134,7 @@ impl CleanupPublication {
 
     pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
         let demand=if self.pending.is_some(){RetirementDemand{depth:1,..Default::default()}}else{self.outcomes.close_demands()?};
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|if self.pending.take().is_some(){Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}else{self.outcomes.close_step(grant)})?;
+        let step=retired(cx,demand,|grant|if self.pending.take().is_some() {Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}else{self.outcomes.close_step(grant)})?;
         Ok(match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress}}else{InteractiveJobCloseStep::Pending{progress}},InteractiveJobCloseStep::Blocked=>InteractiveJobCloseStep::Blocked})
     }
 }

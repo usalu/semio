@@ -34,6 +34,5 @@ export function runWeatherChecks(): number {
     assert.doesNotMatch(source, /Epw|EPW|epw|semio_s_artifact_/u);
     checks++;
   }
-  console.log(`[DEBUG] Energy EPW weather neutral ${fixture.cases.length} vectors Ajv/mathjs cm-to-mm oracle passed`);
   return checks;
 }

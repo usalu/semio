@@ -3,10 +3,11 @@ use super::*;
 
 pub struct EvaluationExternalCompletion {
  pub original:Option<EvaluationExternalResult>,
- pub binding:Option<neural_engine::retirement::RetainedDictionaryInput>,dictionary:Option<Dictionary>,active:Option<Box<dyn ErasedSnapshotRetirement>>,stage:u8,normal_progress:RetainedCloneProgress,
+ pub binding:Option<neural_engine::retirement::RetainedDictionaryInput>,dictionary:Option<Dictionary>,active:Option<Box<dyn ErasedSnapshotRetirement>>,stage:u8,normal_progress:RetainedCloneProgress,work:u64,
 }
 impl EvaluationExternalCompletion {
- pub(super) fn new(original:EvaluationExternalResult)->Self{Self{original:Some(original),binding:None,dictionary:None,active:None,stage:0,normal_progress:Default::default()}}
+ pub(super) fn new(original:EvaluationExternalResult)->Self{Self{original:Some(original),binding:None,dictionary:None,active:None,stage:0,normal_progress:Default::default(),work:0}}
+ pub fn take_work(&mut self)->u64{std::mem::take(&mut self.work)}
  pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_progress}
  pub(super) fn step(&mut self,grant:RetainedCloneGrant)->Result<Option<Dictionary>,EvaluationFailure>{
   self.normal_progress=Default::default();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None);}
@@ -21,8 +22,8 @@ impl EvaluationExternalCompletion {
   self.stage=3;self.normal_progress=RetainedCloneProgress{copied_items:1,..Default::default()};Ok(self.dictionary.take())
  }
  fn close_sources(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if self.active.is_some(){return evaluation_child_close(&mut self.active,grant);}
-  if self.original.is_some(){return evaluation_admit_original(&mut self.original,&mut self.active,grant);}
+  if self.active.is_some(){return evaluation_child_close(&mut self.active,grant,&mut self.work);}
+  if self.original.is_some(){return evaluation_admit_original(&mut self.original,&mut self.active,grant,&mut self.work);}
   Ok(RetainedCloneStep::Complete(Default::default()))
  }
  pub fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
@@ -36,7 +37,7 @@ impl EvaluationExternalCompletion {
   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
   if let Some(binding)=&mut self.binding{binding.cancel();let step=binding.close_step(grant)?;if binding.terminal_is_empty(){self.binding=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
   if self.active.is_some()||self.original.is_some(){return self.close_sources(grant);}
-  if self.dictionary.is_some(){return evaluation_admit_original(&mut self.dictionary,&mut self.active,grant);}
+  if self.dictionary.is_some(){return evaluation_admit_original(&mut self.dictionary,&mut self.active,grant,&mut self.work);}
   Ok(RetainedCloneStep::Complete(Default::default()))
  }
  pub(super) fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.binding.is_none()&&self.dictionary.is_none()&&self.active.is_none()}

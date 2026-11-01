@@ -247,7 +247,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             self.state = Generation3dPackSnapshotState::Closing;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.snapshot-retirement-fault", error))?;
+        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).result.map_err(|error| diagnostic("generation3d-envelope.snapshot-retirement-fault", error))?;
         if self.retirement.is_none() {
             self.state = Generation3dPackSnapshotState::Complete;
             return Ok(RetainedCloneStep::Complete(step.progress()));

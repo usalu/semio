@@ -1,6 +1,7 @@
 //! 🔢️ Known scalar creation and existing-owner moves report their different truthful payload effects.
 use super::*;
-mod scalar_sealed{pub trait Sealed{}}
+#[doc(hidden)]
+pub mod scalar_sealed{pub trait Sealed{}}
 /// ✅️ These first-party leaves cannot hide arbitrary Default or conversion callbacks inside one work unit.
 pub trait OwnedScalar:scalar_sealed::Sealed+RetireOwned+Sized{fn creation_bytes()->usize;fn take_source(source:&mut Option<FieldValue>)->Result<Self,ValueError>;}
 /// 📬️ A scalar output stays resident through paid handoff or its actual close frontier.

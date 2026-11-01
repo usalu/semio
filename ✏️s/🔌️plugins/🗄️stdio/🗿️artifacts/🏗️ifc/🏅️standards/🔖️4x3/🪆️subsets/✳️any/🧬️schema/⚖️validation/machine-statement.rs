@@ -1,6 +1,6 @@
 /// 🔁 Functions and statements retain their actual scopes, return flows and per-iteration cursor state.
 impl RetainedMachine {
-    fn statement(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn statement(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         match frame.kind {
             Kind::CallArgs => {
                 if frame.stage == 100 {
@@ -172,7 +172,7 @@ impl RetainedMachine {
             _ => Err(refusal("express.runtime-statement")),
         }
     }
-    fn coerce(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn coerce(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let Raw::Aggregate { lower, .. } = self.raw(frame.a, env)? else {
             self.store_mut().results.push(frame.a);
             return Ok(());
@@ -214,7 +214,7 @@ impl RetainedMachine {
         self.result(Value::Tagged { base: frame.a, domain: None, aggregate: Some((kind, frame.i)) });
         Ok(())
     }
-    fn declare(&mut self, mut frame: Frame, _env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn declare(&mut self, mut frame: Frame, _env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let Some(declaration) = frame.declarations.get(frame.position) else { return Ok(()) };
         match frame.stage {
             0 => {
@@ -256,7 +256,7 @@ impl RetainedMachine {
         }
         Ok(())
     }
-    fn function(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn function(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let function = frame.function.ok_or_else(|| refusal("express.runtime-function"))?;
         match frame.stage {
             0 => {
@@ -310,7 +310,7 @@ impl RetainedMachine {
         }
         Ok(())
     }
-    fn repeat(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn repeat(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let statement = frame.statement.ok_or_else(|| refusal("express.ast"))?;
         if frame.stage < 4 {
             if statement.name.is_none() {
@@ -403,7 +403,7 @@ impl RetainedMachine {
         frame.stage = 4;
         self.push(frame)
     }
-    fn assign(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn assign(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let target = frame.expression.ok_or_else(|| refusal("express.ast"))?;
         if target.kind == ExpressExpressionKind::Identifier {
             if frame.stage == 11 {

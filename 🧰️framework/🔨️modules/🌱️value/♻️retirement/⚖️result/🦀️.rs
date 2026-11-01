@@ -36,9 +36,9 @@ impl<T:RetireOwned,E:RetireOwned> RetirementCursor for OriginalResult<T,E>{
   let(step,work)=if let Some(original)=self.original.take(){
    let active=match original{Ok(v)=>match ControlledRetirement::new(v){Ok(v)=>ActiveResult::Ok(v),Err((e,v))=>{*self.original=Some(Ok(v));return RetirementStep::Failure(e,1);}},Err(v)=>match ControlledRetirement::new(v){Ok(v)=>ActiveResult::Err(v),Err((e,v))=>{*self.original=Some(Err(v));return RetirementStep::Failure(e,1);}}};
    *self.active=Some(active);(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}),1)
-  }else if self.active.as_ref().unwrap().terminal_is_empty(){
+  }else if self.active.as_ref().is_some_and(|active|active.terminal_is_empty()){
    *self.active=None;(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}),1)
-  }else{let child=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};let active=self.active.as_mut().unwrap();let result=active.step(child);let work=active.last_turn_work();match result{Ok(step)=>(RetainedCloneStep::Progress(step.progress()),work),Err(e)=>return RetirementStep::Failure(e,work)}};
+  }else{let child=RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g};let Some(active)=self.active.as_mut()else{return RetirementStep::Failure(ValueError::invariant("original Result retirement lost its active cursor"),0)};let result=active.step(child);let work=active.last_turn_work();match result{Ok(step)=>(RetainedCloneStep::Progress(step.progress()),work),Err(e)=>return RetirementStep::Failure(e,work)}};
   match admit_retained_clone_close(g,step,self.terminal_is_empty(),"original Result retirement"){Ok(step)=>RetirementStep::Progress(step.progress(),work),Err(e)=>RetirementStep::Failure(e,work)}
  }
  fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.active.is_none()}

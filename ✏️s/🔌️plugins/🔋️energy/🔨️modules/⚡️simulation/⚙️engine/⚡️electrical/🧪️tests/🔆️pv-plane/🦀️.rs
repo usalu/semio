@@ -19,5 +19,4 @@ fn pv_kernel_preserves_independent_plane_components_weather_and_authored_efficie
         work.step_pv(&model,&mut state);assert!((work.pv_generation_w-expected[4]).abs()<=fixture["tolerance"].as_f64().unwrap(),"{} original PV power {} != {}",row["id"],work.pv_generation_w,expected[4]);
         work.step_pv(&model,&mut state);assert_eq!(state.delivered_total.pv_generation_w,work.pv_generation_w);
     }
-    println!("[DEBUG] thirteen original PV kernel planes preserve direct/diffuse/ground irradiation, wind cooling, nighttime, DC clipping and authored inverter efficiency");
 }

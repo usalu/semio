@@ -1,6 +1,6 @@
 //! 📍️ Actual borrowed scene owners yield finite bounds and geometric moments.
-use crate::preparation::{DrawingSceneSource, DocumentVectorPreparationJob, DocumentSceneLimits, DocumentAlgorithmLimits, DocumentSceneContent,DocumentSceneError};
-use crate::paint::scene::{ScenePaintJob, PaintedSceneLimits, PreparedPaint};
+use semio_s_artifact_draw_drawing_scene::preparation::{DrawingSceneSource, DocumentVectorPreparationJob, DocumentSceneLimits, DocumentAlgorithmLimits, DocumentSceneContent,DocumentSceneError};
+use crate::scene::{ScenePaintJob, PaintedSceneLimits, PreparedPaint};
 use semio_framework_2d::{booleans::{BooleanJob,BooleanInput,BooleanOperand,BooleanOperation,BooleanFillRule},flatten::{PathFlattenJob,PathFlattenInput},PathSegment};
 use semio_framework_value::{work::RetainedWorkLedger,RetirementDemand};
 fn slot<T>(values:&mut Vec<T>,work:&mut RetainedWorkLedger)->Result<bool,DocumentSceneError>{if values.len()==values.capacity(){let target=values.capacity().checked_mul(2).ok_or_else(||DocumentSceneError::literal("Placement capacity overflow"))?.max(16);if !work.reserve_vec(values,target).map_err(DocumentSceneError::literal)?{return Ok(false);}}work.vec_slot(values).map_err(DocumentSceneError::literal)}

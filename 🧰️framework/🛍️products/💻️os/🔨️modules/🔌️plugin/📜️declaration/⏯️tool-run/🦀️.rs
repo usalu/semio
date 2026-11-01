@@ -196,8 +196,8 @@ impl semio_framework_value::retirement::RetirementCursor for OriginalToolRunJobP
     fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
         use semio_framework_value::retirement::RetirementStep;
         match OriginalToolRunJobPortRetirement::close_step(self,grant){
-            Ok(step)=>{let progress=step.progress();if progress!=RetainedCloneProgress::default(){RetirementStep::Progress(progress)}else if self.terminal_is_empty(){RetirementStep::Complete}else{RetirementStep::BudgetExhausted}}
-            Err(error)=>RetirementStep::Failure(error),
+            Ok(step)=>{let progress=step.progress();if progress!=RetainedCloneProgress::default(){RetirementStep::Progress(progress,1)}else if self.terminal_is_empty(){RetirementStep::Complete(0)}else{RetirementStep::BudgetExhausted}}
+            Err(error)=>RetirementStep::Failure(error,0),
         }
     }
     fn terminal_is_empty(&self)->bool{OriginalToolRunJobPortRetirement::terminal_is_empty(self)}

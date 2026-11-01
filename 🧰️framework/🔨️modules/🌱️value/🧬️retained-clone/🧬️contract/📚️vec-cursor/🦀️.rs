@@ -95,7 +95,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Vec<T>> for VecCursor<T> {
          self.child=None;self.child_closing=false;let value=self.child_value.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained vector child owner is missing"))?;self.values.push(value);self.index+=1;work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<T>(),..Default::default()}))
         }
         if self.child.is_none(){self.child=Some(T::retained_clone_cursor());work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
-        let child=self.child.as_mut().unwrap();
+        let child=self.child.as_mut().ok_or_else(||ValueError::invariant("child absent"))?;
         if child.output_ready(){let turn=child.take(grant);work+=turn.work;let Some((value,p))=turn.result?else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.child_value=Some(value);child.begin_close();self.child_closing=true;return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant,p,"vector child output handoff")?))}
         let turn=child.advance(source.project(self.index+1,|values|&values[self.index]),body,grant);work+=turn.work;Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant,turn.result?.progress(),"retained vector child")?))
     })();crate::RetainedWorkOutcome{result,work}}

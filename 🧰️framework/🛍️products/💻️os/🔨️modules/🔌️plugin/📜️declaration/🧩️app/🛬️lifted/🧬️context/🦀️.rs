@@ -16,13 +16,13 @@ pub struct ArtifactOwnedContextHandle<A:ArtifactApp>{source:ManuallyDrop<Option<
 impl<A:ArtifactApp> ArtifactOwnedContextHandle<A>{
  pub fn admit(original:ArtifactOwnedToolJobContext<A>,grant:RetainedCloneGrant)->(Self,RetainedCloneProgress){
   let issuer=SharedIssuer::owned();
-  let(source,progress)=match SealedShared::admit(original,issuer,grant){Ok((source,progress))=>(Source::Admitted(source),progress),Err((fault,original))=>(Source::Refused{original,fault},Default::default())};
+  let(source,progress)=match SealedShared::admit(original,issuer,grant).result {Ok((source,progress))=>(Source::Admitted(source),progress),Err((fault,original))=>(Source::Refused{original,fault},Default::default())};
   (Self{source:ManuallyDrop::new(Some(source))},progress)
  }
  pub fn get(&self)->&ArtifactOwnedToolJobContext<A>{match self.source.as_ref().expect("original context already transferred"){Source::Admitted(source)=>source.get(),Source::Refused{original,..}=>original}}
  pub fn admission_fault(&self)->Option<&ValueError>{match self.source.as_ref()?{Source::Admitted(_)=>None,Source::Refused{fault,..}=>Some(fault)}}
  pub fn source_issuers_ready(&self)->bool{self.admission_fault().is_none()&&self.get().source_issuers_ready()}
- pub fn try_duplicate(&self,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{match self.source.as_ref(){Some(Source::Admitted(source))=>source.try_duplicate(grant).map(|(source,progress)|(Self{source:ManuallyDrop::new(Some(Source::Admitted(source)))},progress)),_=>Err(unadmitted())}}
+ pub fn try_duplicate(&self,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{match self.source.as_ref(){Some(Source::Admitted(source))=>source.try_duplicate(grant).result.map(|(source,progress)|(Self{source:ManuallyDrop::new(Some(Source::Admitted(source)))},progress)),_=>Err(unadmitted())}}
 }
 impl<A:ArtifactApp> std::ops::Deref for ArtifactOwnedContextHandle<A>{type Target=ArtifactOwnedToolJobContext<A>;fn deref(&self)->&Self::Target{self.get()}}
 impl<A:ArtifactApp> AsRef<ArtifactOwnedToolJobContext<A>> for ArtifactOwnedContextHandle<A>{fn as_ref(&self)->&ArtifactOwnedToolJobContext<A>{self.get()}}
@@ -36,10 +36,10 @@ impl<A:ArtifactApp> RetirementCursor for Cursor<A>{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
 
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
-  if self.terminal_is_empty(){return RetirementStep::Complete;}
-  if grant.maximum_items==0{return RetirementStep::Progress(Default::default());}
-  match self.source.source.as_ref(){Some(Source::Refused{..})=>return RetirementStep::Failure(unadmitted()),Some(Source::Admitted(_))=>{if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"original context handback requires admitted depth"));}let Some(Source::Admitted(source))=self.source.source.take()else{unreachable!()};self.owner=Some(ControlledRetirement::new(source).unwrap_or_else(|_|panic!("sealed original context retirement refused")));return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()});},None=>{}}
-  let owner=self.owner.as_mut().unwrap();match owner.step(grant){Ok(step)=>{let progress=step.progress();if owner.terminal_is_empty(){self.owner.take();}RetirementStep::Progress(progress)},Err(error)=>RetirementStep::Failure(error)}
+  if self.terminal_is_empty(){return RetirementStep::Complete(0);}
+  if grant.maximum_items==0{return RetirementStep::Progress(Default::default(),1);}
+  match self.source.source.as_ref(){Some(Source::Refused{..})=>return RetirementStep::Failure(unadmitted(),0),Some(Source::Admitted(_))=>{if grant.maximum_depth==0{return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::DepthLimit,"original context handback requires admitted depth"),0);}let Some(Source::Admitted(source))=self.source.source.take()else{unreachable!()};self.owner=Some(ControlledRetirement::new(source).unwrap_or_else(|_|panic!("sealed original context retirement refused")));return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1);},None=>{}}
+  let owner=self.owner.as_mut().unwrap();match owner.step(grant){Ok(step)=>{let progress=step.progress();if owner.terminal_is_empty(){self.owner.take();}RetirementStep::Progress(progress,1)},Err(error)=>RetirementStep::Failure(error,0)}
  }
  fn terminal_is_empty(&self)->bool{self.source.source.is_none()&&self.owner.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}

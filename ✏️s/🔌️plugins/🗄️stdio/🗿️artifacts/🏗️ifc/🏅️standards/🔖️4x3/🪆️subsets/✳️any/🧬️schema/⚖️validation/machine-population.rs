@@ -1,6 +1,6 @@
 /// 📖 Calls, constructors and contextual attributes retain the same semantic arena and immutable source authority.
 impl RetainedMachine {
-    fn call(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn call(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let Raw::Aggregate { cursor, length, .. } = self.raw(frame.a, env)? else { return Err(refusal("express.runtime-arguments")) };
         if frame.name.len() > 1024 {
             return Err(refusal("express.ast-budget"));
@@ -120,7 +120,7 @@ impl RetainedMachine {
         }
         Ok(())
     }
-    fn entity_record(&self, entity: Entity) -> Result<&Constructed, ValueError> {
+    pub fn entity_record(&self, entity: Entity) -> Result<&Constructed, ValueError> {
         match entity {
             Entity::Constructed(index) => self.store().entities.get(index),
             Entity::Original(index) => self.store().originals.get(index),
@@ -128,10 +128,10 @@ impl RetainedMachine {
         }
         .ok_or_else(|| refusal("express.population-not-initialized"))
     }
-    fn entity_declaration(&self, entity: Entity) -> Result<&'static metadata::StaticEntity, ValueError> {
+    pub fn entity_declaration(&self, entity: Entity) -> Result<&'static metadata::StaticEntity, ValueError> {
         Ok(self.entity_record(entity)?.declaration)
     }
-    fn entity_concat(&mut self, left: Handle, right: Handle, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn entity_concat(&mut self, left: Handle, right: Handle, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let (Raw::Entity(a), Raw::Entity(b)) = (self.raw(left, env)?, self.raw(right, env)?) else { return Err(refusal("express.entity-operand")) };
         let a = *self.entity_record(a)?;
         let b = *self.entity_record(b)?;
@@ -159,7 +159,7 @@ impl RetainedMachine {
         self.result(Value::Entity(Entity::Constructed(index)));
         Ok(())
     }
-    fn entity_equal_next(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn entity_equal_next(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let (Raw::Entity(a), Raw::Entity(b)) = (self.raw(frame.a, env)?, self.raw(frame.b, env)?) else { return Err(refusal("express.entity-operand")) };
         let a = self.entity_record(a)?;
         let b = self.entity_record(b)?;
@@ -180,7 +180,7 @@ impl RetainedMachine {
         self.push(frame)?;
         self.push(Frame { a: value, b: other, ..Frame::new(Kind::Equal, frame.scope, frame.depth + 1) })
     }
-    fn first_domain(&self, mut value: Handle, env: &MachineEnvironment<'_>) -> Result<Option<&'static str>, ValueError> {
+    pub fn first_domain(&self, mut value: Handle, env: &MachineEnvironment<'_>) -> Result<Option<&'static str>, ValueError> {
         for _ in 0..MAXIMUM_DEPTH {
             match self.store().values[value] {
                 Value::Tagged { domain: Some(domain), .. } => return Ok(Some(domain)),
@@ -193,7 +193,7 @@ impl RetainedMachine {
         }
         Err(refusal("express.depth"))
     }
-    fn qualifier(&self, mut value: Handle) -> Result<Option<&'static str>, ValueError> {
+    pub fn qualifier(&self, mut value: Handle) -> Result<Option<&'static str>, ValueError> {
         for _ in 0..MAXIMUM_DEPTH {
             match self.store().values[value] {
                 Value::Qualified { owner, .. } => return Ok(Some(owner)),
@@ -203,10 +203,10 @@ impl RetainedMachine {
         }
         Err(refusal("express.depth"))
     }
-    fn retag(&mut self, source: Handle, result: Handle, env: &MachineEnvironment<'_>) -> Result<Handle, ValueError> {
+    pub fn retag(&mut self, source: Handle, result: Handle, env: &MachineEnvironment<'_>) -> Result<Handle, ValueError> {
         Ok(if let Some(domain) = self.first_domain(source, env)? { self.make(Value::Tagged { base: result, domain: Some(domain), aggregate: None }) } else { result })
     }
-    fn primitive_names(&self, value: Handle, env: &MachineEnvironment<'_>) -> Result<&'static [&'static str], ValueError> {
+    pub fn primitive_names(&self, value: Handle, env: &MachineEnvironment<'_>) -> Result<&'static [&'static str], ValueError> {
         Ok(match self.raw(value, env)? {
             Raw::Missing | Raw::Entity(_) => &[],
             Raw::Integer(_) => &["INTEGER", "REAL", "NUMBER"],
@@ -224,7 +224,7 @@ impl RetainedMachine {
             },
         })
     }
-    fn population_operation(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn population_operation(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         if matches!(frame.kind, Kind::TypeOf) {
             if frame.stage == 0 {
                 frame.b = self.make(Value::Aggregate(Aggregate::empty(AggregateKind::Set)));
@@ -508,7 +508,7 @@ impl RetainedMachine {
         }
         Err(refusal("express.runtime-attribute"))
     }
-    fn owner_at(&self, value: Handle, mut position: usize, env: &MachineEnvironment<'_>) -> Result<Option<&'static str>, ValueError> {
+    pub fn owner_at(&self, value: Handle, mut position: usize, env: &MachineEnvironment<'_>) -> Result<Option<&'static str>, ValueError> {
         let qualifier = self.qualifier(value)?;
         if let Some(qualifier) = qualifier {
             if position == 0 {
@@ -530,7 +530,7 @@ impl RetainedMachine {
         }
         Err(refusal("express.type-cycle"))
     }
-    fn used_in(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn used_in(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let inverse = matches!(frame.name, "inverse" | "inverse-count").then(|| &self.program.inverse[frame.b]);
         if frame.stage == 0 {
             frame.c = self.make(Value::Aggregate(Aggregate::empty(if inverse.is_some() { AggregateKind::Set } else { AggregateKind::Bag })));
@@ -611,7 +611,7 @@ impl RetainedMachine {
     }
 }
 
-fn aggregate_kind(kind: Option<&str>) -> AggregateKind {
+pub fn aggregate_kind(kind: Option<&str>) -> AggregateKind {
     match kind {
         Some("ARRAY") => AggregateKind::Array,
         Some("SET") => AggregateKind::Set,

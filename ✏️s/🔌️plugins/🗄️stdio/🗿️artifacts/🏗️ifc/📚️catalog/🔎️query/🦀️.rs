@@ -20,7 +20,7 @@ pub struct IfcAttributeQueryResult<'a,V,A:'static,E:'static>{pub status:IfcAttri
 struct Input{source:usize,source_type:std::any::TypeId,epoch:u64,row:usize,name:(usize,usize),owner:Option<(usize,usize)>,profile:std::any::TypeId}
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 struct Slot{address:IfcAttributeAddress,key:&'static str,direct:bool}
-#[derive(Debug,PartialEq,Eq)]
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub struct IfcAttributeQueryWork{input:Option<Input>,original:Option<OriginalSourceBinding>,expected:[u8;256],qualified:[u8;256],expected_len:usize,qualified_len:usize,word:usize,part:usize,attribute:usize,key:Option<&'static str>,slots:[Option<Slot>;2],count:usize,phase:u8,unknown:bool,done:bool,closed:bool}
 impl Default for IfcAttributeQueryWork{fn default()->Self{Self{input:None,original:None,expected:[0;256],qualified:[0;256],expected_len:0,qualified_len:0,word:0,part:0,attribute:0,key:None,slots:[None;2],count:0,phase:0,unknown:false,done:false,closed:false}}}
 semio_framework_value::artifact_retire_leaf!(IfcAttributeQueryWork);
@@ -55,6 +55,6 @@ impl IfcAttributeQueryWork{
         self.check_core::<C,S>(source,row,name,owner,epoch)?;if self.input.is_none()||!self.done{return Ok(None);}let mut matches=std::array::from_fn(|_|None);for(index,slot)in self.slots.iter().enumerate(){if let Some(slot)=slot{let declaration=C::attributes(slot.key,slot.direct).ok_or_else(invalid)?;let attribute=declaration.attributes.get(slot.address.index).ok_or_else(invalid)?;let part=source.query_part(row,slot.address.part).ok_or_else(invalid)?;matches[index]=Some(IfcAttributeMatch{value:part.args.get(slot.address.index),declaration:attribute,type_expr:C::type_expr(attribute),address:slot.address});}}Ok(Some(IfcAttributeQueryResult{status:if self.unknown{IfcAttributeQueryStatus::Unknown}else if self.count==2{IfcAttributeQueryStatus::Ambiguous}else if self.count==1{IfcAttributeQueryStatus::Unique}else{IfcAttributeQueryStatus::Missing},matches}))
     }
     pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
-        if self.original.is_some_and(|original|!original.matches(cx)){return Err(invalid().into());}if self.terminal_is_empty(){return Ok(());}let demand=self.demands();semio_framework_job::close_original_retained_step(cx,demand,|_|{*self=Self{closed:true,..Default::default()};Ok(semio_framework_value::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))})?;Ok(())
+        if self.original.is_some_and(|original|!original.matches(cx)){return Err(invalid().into());}if self.terminal_is_empty(){return Ok(());}let demand=self.demands();semio_framework_job::close_original_retained_step(cx,demand,|_|{*self=Self{closed:true,..Default::default()};semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})),work:1}})?;Ok(())
     }
 }

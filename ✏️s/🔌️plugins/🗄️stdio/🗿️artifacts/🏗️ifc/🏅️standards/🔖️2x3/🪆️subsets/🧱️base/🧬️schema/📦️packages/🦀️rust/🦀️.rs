@@ -27,7 +27,8 @@ pub mod standards {
                     pub use component::*;
                     #[path = "../../📐️geometry/🦀️.rs"]
                     pub mod geometry;
-                    pub use semio_s_artifact_stdio_ifc_2x3_base_catalog as catalog;
+                    #[path = "../../📚️catalog/🦀️.rs"]
+                    pub mod catalog;
                     #[path = "."]
                     pub mod snapshot {
                         #[path = "../../📸️snapshot/🦀️.rs"]

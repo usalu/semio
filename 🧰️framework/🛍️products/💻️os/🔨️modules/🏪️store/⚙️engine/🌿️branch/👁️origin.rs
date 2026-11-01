@@ -28,6 +28,6 @@ impl OriginalTransitionOrigin{
  pub fn ready(&self)->bool{self.phase==5}
  pub fn found(&self)->Option<ArtifactHistoryKey>{self.ready().then_some(self.found).flatten()}
  /// 🛑️ Returning fixed probe coordinates never releases or invents custody of a Store row.
- pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.binding.is_none(){return Ok(true)}if !self.binding.is_some_and(|binding|binding.matches(cx)){return Err(invalid("transition origin closure changed its original caller").into())}close_original_retained_step(cx,fixed(128),|_|{self.binding=None;self.key=None;self.found=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:128,..Default::default()}))})?;Ok(self.binding.is_none())}
+ pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{if self.binding.is_none(){return Ok(true)}if !self.binding.is_some_and(|binding|binding.matches(cx)){return Err(invalid("transition origin closure changed its original caller").into())}retired(cx,fixed(128),|_|{self.binding=None;self.key=None;self.found=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:128,..Default::default()}))})?;Ok(self.binding.is_none())}
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()}
 }

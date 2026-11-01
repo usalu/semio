@@ -42,7 +42,7 @@ impl<M> TypingLedger<M>{
  pub fn close_original_window(&mut self,state:&mut Option<TypingState<M>>,key:&mut Option<SharedUtf8>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<RetainedCloneProgress>{let mut work=0;let result=(||{
   if state.is_some()||key.is_some(){return Err(invalid())}let d=self.original_close_window_demands()?;if !admits(grant,d){return Ok(Default::default())}
   if let Some(row)=self.windows.last_mut(){if row.state.has_read(){return Ok(Default::default())}if !row.state.is_empty(){let revision=self.source_revision.checked_add(1).ok_or_else(invalid)?;let overhead=size_of::<u64>()+size_of::<usize>();work=1;let Some(mut p)=row.state.take_original(row.state.key(),state,RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-overhead,..grant})?else{return Ok(Default::default())};self.live_windows-=1;self.source_revision=revision;p.copied_bytes+=overhead;return Ok(p)}
-   work=1;let row=self.windows.pop().unwrap();*key=Some(row.key);return Ok(progress(d))
+   work=1;let row=self.windows.pop().ok_or_else(||ValueError::invariant("pop target absent"))?;*key=Some(row.key);return Ok(progress(d))
   }if self.windows.capacity()!=0{work=1;drop(std::mem::take(&mut self.windows));return Ok(progress(d))}Ok(Default::default())
  })();semio_framework_value::RetainedWorkOutcome{result,work}}
  pub fn original_windows_terminal_is_empty(&self)->bool{self.windows.is_empty()&&self.windows.capacity()==0&&!self.writing}

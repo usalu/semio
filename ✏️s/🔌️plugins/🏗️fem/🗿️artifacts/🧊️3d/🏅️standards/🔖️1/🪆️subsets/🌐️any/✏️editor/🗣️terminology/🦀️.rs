@@ -109,6 +109,25 @@ semio_framework_ui_locale::app_labels! {
         focus: native_en "Focus", native_de "Fokussieren", reuse_en "Focus", reuse_de "Fokussieren";
         actions: native_en "Actions", native_de "Aktionen", reuse_en "Actions", reuse_de "Aktionen";
         focus_results_hint: native_en "Focus the Results window for live playback readouts", native_de "Ergebnisfenster fokussieren, um die Wiedergabe live zu sehen", reuse_en "Focus the Results window for live playback readouts", reuse_de "Ergebnisfenster fokussieren, um die Wiedergabe live zu sehen";
+        case_caption: native_en "Case", native_de "Lastfall", reuse_en "Case", reuse_de "Lastfall";
+        mode_shape: native_en "Mode", native_de "Eigenform", reuse_en "Mode", reuse_de "Eigenform";
+        buckling_mode: native_en "Buckling mode", native_de "Knickform", reuse_en "Buckling mode", reuse_de "Knickform";
+        no_load_case: native_en "No load case defined", native_de "Kein Lastfall definiert", reuse_en "No load case defined", reuse_de "Kein Lastfall definiert";
+        result_missing: native_en "Result not found", native_de "Ergebnis nicht gefunden", reuse_en "Result not found", reuse_de "Ergebnis nicht gefunden";
+        analysis_error: native_en "Analysis error", native_de "Analysefehler", reuse_en "Analysis error", reuse_de "Analysefehler";
+        modal_error: native_en "Modal analysis error", native_de "Fehler der Eigenformanalyse", reuse_en "Modal analysis error", reuse_de "Fehler der Eigenformanalyse";
+        buckling_error: native_en "Buckling analysis error", native_de "Fehler der Knickanalyse", reuse_en "Buckling analysis error", reuse_de "Fehler der Knickanalyse";
+        stage_meshing: native_en "Generating mesh", native_de "Netz wird erzeugt", reuse_en "Generating mesh", reuse_de "Netz wird erzeugt";
+        stage_assembly: native_en "Assembling analysis", native_de "Berechnung wird aufgebaut", reuse_en "Assembling analysis", reuse_de "Berechnung wird aufgebaut";
+        stage_statics: native_en "Solving loads", native_de "Lasten werden berechnet", reuse_en "Solving loads", reuse_de "Lasten werden berechnet";
+        stage_modes: native_en "Computing modes", native_de "Eigenformen werden berechnet", reuse_en "Computing modes", reuse_de "Eigenformen werden berechnet";
+        stage_validation: native_en "Validating results", native_de "Ergebnisse werden geprüft", reuse_en "Validating results", reuse_de "Ergebnisse werden geprüft";
+        stage_visual: native_en "Preparing result view", native_de "Ergebnisansicht wird vorbereitet", reuse_en "Preparing result view", reuse_de "Ergebnisansicht wird vorbereitet";
+        stage_cancelled: native_en "Analysis cancelled", native_de "Berechnung abgebrochen", reuse_en "Analysis cancelled", reuse_de "Berechnung abgebrochen";
+        stage_failed: native_en "Analysis failed", native_de "Berechnung fehlgeschlagen", reuse_en "Analysis failed", reuse_de "Berechnung fehlgeschlagen";
+        stage_preparing: native_en "Preparing analysis", native_de "Berechnung wird vorbereitet", reuse_en "Preparing analysis", reuse_de "Berechnung wird vorbereitet";
+        stage_queued: native_en "Analysis queued", native_de "Berechnung vorgemerkt", reuse_en "Analysis queued", reuse_de "Berechnung vorgemerkt";
+
         delete: native_en "Delete", native_de "Löschen", reuse_en "Delete", reuse_de "Löschen";
 
         move_flag: native_en "Move", native_de "Verschieben", reuse_en "Move", reuse_de "Verschieben";

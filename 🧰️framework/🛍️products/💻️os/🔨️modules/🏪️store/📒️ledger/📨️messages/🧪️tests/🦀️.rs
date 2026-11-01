@@ -21,11 +21,11 @@ fn current_message_ledger_retirement_pays_original_pages_and_arrays() {
         let demand = owner.demands(0).unwrap();
         assert!(demand.release_bytes > 0 && demand.release_bytes <= paid.maximum_release_bytes);
         for denied in [RetainedCloneGrant { maximum_items: 0, ..paid }, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..paid }, RetainedCloneGrant { maximum_depth: 0, ..paid }] {
-            let (result, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denied));
+            let (result, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denied).result);
             if let Ok(step) = result { assert_eq!(step.progress(), Default::default()); }
             assert_eq!((allocated, released), (0, 0)); assert_eq!(pointers(&owner), original);
         }
-        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(paid).unwrap());
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(paid).result.unwrap());
         assert!(step.progress().fits(paid));
         assert_eq!(allocated, 0); assert_eq!(released, demand.release_bytes);
         assert_eq!(step.progress().released_bytes, released);
@@ -55,7 +55,7 @@ fn measured_diagnostics_replace_the_original_slot_and_return_displaced_owner() {
     drop(ledger.remove(ticket).unwrap());
     let mut owner = ArtifactEditMessageLedgerRetirement::new(ledger);
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 65536, maximum_release_bytes: usize::MAX, maximum_depth: 16 };
-    while !owner.terminal_is_empty() { owner.close_step(grant).unwrap(); }
+    while !owner.terminal_is_empty() { owner.close_step(grant).result.unwrap(); }
 }
 
 #[test]
@@ -83,7 +83,7 @@ fn original_message_retirement_birth_keeps_ledger_until_exact_funded_placement()
         if output.is_none() { break; }
         let quoted = semio_framework_value::factory_ticket_demands(output.as_ref().unwrap(), 4096).unwrap();
         assert!(quoted.copy_bytes <= paid.maximum_copy_bytes && quoted.capacity_bytes <= paid.maximum_capacity_bytes);
-        let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| semio_framework_value::close_factory_ticket(&mut output, paid).unwrap());
+        let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| semio_framework_value::close_factory_ticket(&mut output, paid).result.unwrap());
         assert_eq!((born, freed), (step.progress().retained_capacity_bytes, step.progress().released_bytes)); all_born += born; all_freed += freed;
     }
     assert!(output.is_none()); assert_eq!(all_born, all_freed);

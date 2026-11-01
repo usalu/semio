@@ -97,7 +97,7 @@ impl RetireOwned for StagedPayloadCursor{
 }
 impl RetirementCursor for StagedPayloadCursor{
     fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{self.close_demand()}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}match self.close(grant){Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0);}match self.close(grant){Ok(step)=>RetirementStep::Progress(step.progress(),1),Err(error)=>RetirementStep::Failure(error,1)}}
     fn terminal_is_empty(&self)->bool{StagedPayloadCursor::terminal_is_empty(self)}
     fn next_close_byte_demand(&self)->Option<usize>{Some(0)}fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demand()?.copy_bytes)}

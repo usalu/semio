@@ -77,7 +77,7 @@ fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<
     }
     if pump.outcome_pending{
         let Some(session)=pump.session.as_mut()else{return Ok(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::MissingSession))};
-        let acknowledgement=session.acknowledge_outcome(grant);cx.consume_retained(acknowledgement.progress())?;if !matches!(acknowledgement,RetainedCloneStep::Complete(_)){return Ok(RuntimeMaintenanceStatus::Ready);}
+        if !session.acknowledge_outcome(cx)?{return Ok(RuntimeMaintenanceStatus::Ready);}
         pump.outcome_pending=false;
         let Some(job) = session.checked_out_job_mut() else { return Ok(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::CheckedOutJob)) };
         pump.pending_status = runtime_live_cleanup_nonterminal_status(job.contended, job.progress, &cell.maintenance_stalled_steps);
@@ -267,7 +267,7 @@ pub fn runtime_close_cleanup_pump_one<PA: PluginApp + 'static>(state: &std::sync
     }
     if pump.outcome_pending{
         let Some(session)=pump.session.as_mut()else{return Ok(runtime_close_fault(state,RuntimeCleanupFault::MissingSession));};
-        let acknowledgement=session.acknowledge_outcome(grant);cx.consume_retained(acknowledgement.progress())?;if !matches!(acknowledgement,RetainedCloneStep::Complete(_)){return Ok(RuntimeCloseStatus::Ready);}
+        if !session.acknowledge_outcome(cx)?{return Ok(RuntimeCloseStatus::Ready);}
         pump.outcome_pending=false;
         let Some(job) = session.checked_out_job_mut() else { return Ok(runtime_close_fault(state, RuntimeCleanupFault::CheckedOutJob)) };
         pump.complete = matches!(job.progress,Some(PluginLifecycleStep::Complete(_)));

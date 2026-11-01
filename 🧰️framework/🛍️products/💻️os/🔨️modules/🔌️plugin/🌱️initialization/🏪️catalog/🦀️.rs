@@ -36,8 +36,8 @@ Mu: 'static + protocol::StoreMutationFor<P> {
  fn close_refusal(&mut self,grant:RetainedCloneGrant)->Option<Result<RetainedCloneProgress,ValueError>>{
   let demand=match self.refusal_demands(grant.maximum_copy_bytes)?{Ok(demand)=>demand,Err(error)=>return Some(Err(error))};
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Some(Ok(Default::default()))}
-  if self.refusal_close.is_some(){return Some(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.refusal_close,grant).map(|step|step.progress()))}
-  if self.refusal.as_ref().is_some_and(|error|matches!(error.message,std::borrow::Cow::Owned(_))){return Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.refusal,&mut self.refusal_close,grant).map(|step|step.progress()))}
+  if self.refusal_close.is_some(){return Some(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.refusal_close,grant).result.map(|step|step.progress()))}
+  if self.refusal.as_ref().is_some_and(|error|matches!(error.message,std::borrow::Cow::Owned(_))){return Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.refusal,&mut self.refusal_close,grant).result.map(|step|step.progress()))}
   let Some(Err(original))=self.original.as_mut()else{unreachable!()};
   *self.refusal=Some(std::mem::replace(&mut original.error,ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original constructor refusal is retiring")));
   Some(Ok(RetainedCloneProgress{copied_items:1,..Default::default()}))

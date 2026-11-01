@@ -20,5 +20,4 @@ export function verifyShiftOperatorOracle(): void {
     close(rhs, row.rhs, "rhs");
     close(multiply(k, matrix(solved)).valueOf() as Dense, row.rhs, "K y");
   }
-  console.log(`[DEBUG] ${corpus.cases.length} shift-operator states match independent mathjs and NumPy operator images`);
 }

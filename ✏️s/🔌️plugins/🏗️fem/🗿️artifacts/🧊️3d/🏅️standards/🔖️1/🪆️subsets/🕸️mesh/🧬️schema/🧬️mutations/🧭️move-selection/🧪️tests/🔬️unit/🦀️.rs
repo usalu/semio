@@ -43,7 +43,6 @@ fn transform_authors_only_changed_geometry_and_preserves_peer_fields() {
     assert_eq!(undone, peer, "inverse restores only authored geometry");
     assert_eq!(apply(&undone, &motion), combined, "redo retains peer fields");
     assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(forward.diff(), &base), &combined).unwrap(), peer);
-    eprintln!("[DEBUG] FEM3d sparse transform diff, inverse, concurrent inspector replay and redo match the shared vector");
 }
 
 #[test]
@@ -60,7 +59,6 @@ fn finite_transform_overflow_is_refused_atomically_without_an_inverse() {
     assert!(outcome.messages()[0].level >= semio_framework_diagnostic::Severity::Error);
     assert_eq!(apply(&base, &motion), base);
     assert!(motion.inverse(&base).unwrap().is_empty());
-    eprintln!("[DEBUG] FEM3d finite transform overflow refuses publication atomically");
 }
 
 #[test]
@@ -87,5 +85,4 @@ fn rotation_and_scaling_inverse_leave_unmoved_peer_coordinates_intact() {
         let restored = operation.inverse(&base).unwrap().iter().rev().fold(combined, |state, event| apply(&state, event));
         assert_eq!(restored, apply(&base, &peer));
     }
-    eprintln!("[DEBUG] FEM3d rotation and scale preserve unowned peer coordinates through exact undo");
 }

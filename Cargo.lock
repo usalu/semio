@@ -8532,6 +8532,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-pack-json",
  "semio-framework-replication",
+ "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-ordered",

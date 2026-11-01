@@ -1,6 +1,4 @@
 //! 🏷️ Immutable released IFC property and quantity metadata.
-#[path = "✍️apply/🦀️.rs"]
-pub mod application;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum IfcTemplateEntryKind {
@@ -96,25 +94,26 @@ pub enum IfcTemplateLocale {
     En,
     De,
 }
-include!("data.rs");
+mod pack;
+pub use pack::{decode_templates, embedded_templates};
 
 /// 📖️ Borrow the full immutable release without runtime parsing or allocation.
 pub fn ifc4x3_template_catalog() -> &'static IfcTemplateCatalog {
-    &CATALOG
+    embedded_templates()
 }
 /// 🔎️ Resolve a named template through the case-independent sorted release index.
 pub fn ifc4x3_template(name: &str) -> Option<&'static IfcTemplate> {
-    CATALOG.templates.binary_search_by(|template| template.name.bytes().map(|byte| byte.to_ascii_uppercase()).cmp(name.bytes().map(|byte| byte.to_ascii_uppercase()))).ok().map(|index| &CATALOG.templates[index])
+    embedded_templates().templates.binary_search_by(|template| template.name.bytes().map(|byte| byte.to_ascii_uppercase()).cmp(name.bytes().map(|byte| byte.to_ascii_uppercase()))).ok().map(|index| &embedded_templates().templates[index])
 }
 /// 🎯️ Preserve entity inheritance and explicit predefined-type applicability.
 pub fn ifc4x3_template_applicability(template: &IfcTemplate, entity: &str, predefined_type: Option<&str>) -> IfcTemplateApplicability {
-    if crate::validation::metadata::entity(entity).is_none() {
+    if semio_s_artifact_stdio_ifc4x3_express::metadata::entity(entity).is_none() {
         return IfcTemplateApplicability::UnknownEntity;
     }
     let mut pending = false;
     for selector in template.classes {
         let (target, predefined) = selector.split_once('/').map_or((*selector, None), |(entity, predefined)| (entity, Some(predefined)));
-        if !crate::validation::metadata::is_subtype(entity, target) {
+        if !semio_s_artifact_stdio_ifc4x3_express::metadata::is_subtype(entity, target) {
             continue;
         }
         match (predefined, predefined_type) {
@@ -150,13 +149,31 @@ pub fn ifc4x3_template_kind_label(kind: IfcTemplateEntryKind, locale: IfcTemplat
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn hostile_template_resources_are_refused() {
+        let resource = include_bytes!("templates.ifcj");
+        assert!(decode_templates(resource).is_ok());
+        assert!(decode_templates(&resource[..resource.len() / 2]).is_err());
+        assert!(decode_templates(&[]).is_err());
+        let foreign = include_bytes!("../../../../../../📚️catalog/🧾️json-pack/🧪️tests/🧫️fixtures/minimal.ifcj");
+        assert!(matches!(decode_templates(foreign), Err(semio_s_artifact_stdio_ifc_json_pack::JsonPackError::Shape(_))));
+        assert!(IfcTemplateEntryKind::from_source_key("P_UNKNOWN").is_none());
+    }
+
+    #[test]
+    fn every_entry_kind_round_trips_its_source_key() {
+        for kind in [IfcTemplateEntryKind::SingleValue, IfcTemplateEntryKind::ReferenceValue, IfcTemplateEntryKind::EnumeratedValue, IfcTemplateEntryKind::ListValue, IfcTemplateEntryKind::BoundedValue, IfcTemplateEntryKind::TableValue, IfcTemplateEntryKind::Weight, IfcTemplateEntryKind::Length, IfcTemplateEntryKind::Area, IfcTemplateEntryKind::Volume, IfcTemplateEntryKind::Count, IfcTemplateEntryKind::Time] {
+            assert_eq!(IfcTemplateEntryKind::from_source_key(kind.source_key()), Some(kind));
+        }
+    }
     #[test]
     fn native_release_matches_every_canonical_field_and_neutral_case() {
         let canonical: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).unwrap();
         let cases: serde_json::Value = serde_json::from_str(include_str!("cases.json")).unwrap();
-        assert_eq!(CATALOG.templates.len(), 760);
-        assert_eq!(CATALOG.templates.iter().map(|template| template.entries.len()).sum::<usize>(), 3988);
-        for (actual, expected) in CATALOG.templates.iter().zip(canonical["templates"].as_array().unwrap()) {
+        assert_eq!(embedded_templates().templates.len(), 760);
+        assert_eq!(embedded_templates().templates.iter().map(|template| template.entries.len()).sum::<usize>(), 3988);
+        for (actual, expected) in embedded_templates().templates.iter().zip(canonical["templates"].as_array().unwrap()) {
             assert_eq!(actual.name, expected["name"].as_str().unwrap());
             assert_eq!(actual.definition, expected["definition"].as_str().unwrap());
             assert_eq!(actual.kind, expected["kind"].as_str().unwrap());

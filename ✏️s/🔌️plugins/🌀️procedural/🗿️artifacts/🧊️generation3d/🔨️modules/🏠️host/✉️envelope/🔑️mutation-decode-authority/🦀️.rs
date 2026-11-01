@@ -260,7 +260,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
             self.state = Generation3dMutationDecodeState::Closing;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.mutation-retirement-fault", error))?;
+        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).result.map_err(|error| diagnostic("generation3d-envelope.mutation-retirement-fault", error))?;
         if self.retirement.is_none() {
             self.state = Generation3dMutationDecodeState::Complete;
             return Ok(RetainedCloneStep::Complete(step.progress()));

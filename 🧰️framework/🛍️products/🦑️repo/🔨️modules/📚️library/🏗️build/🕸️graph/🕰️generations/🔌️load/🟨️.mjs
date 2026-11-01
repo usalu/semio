@@ -291,6 +291,7 @@ export async function expandStreamV1(entries,expand,{maximumProjects,maximumByte
  */
 export async function loadGenerationGraphV1(host,{policy="fresh",closure,selection,slice,lean,pin,externalInputs=[]}={}){
  externalInputs=readGenerationExternalInputsV1(externalInputs);
+ await host.preflight?.();
  const requestedAt=graphQueueRequestedAtV1()??Date.now(),identity=await host.identity(),roots=slice?[...new Set(slice.roots)]:closure?[...new Set(closure)]:undefined,rows=pin===undefined?await host.implementationRows():[],implementation=implementationDigestV1(rows),scoped=scopeImplementationRowsV1(rows),limits=host.expansionLimits??{maximumProjects:GENERATION_POLICY_V1.expansionMaximumProjects,maximumBytes:GENERATION_POLICY_V1.expansionMaximumBytes};
  let pointer;
  const attempt=async(builder,store,control)=>{

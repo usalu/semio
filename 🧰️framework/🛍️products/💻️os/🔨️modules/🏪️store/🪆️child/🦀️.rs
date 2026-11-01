@@ -22,6 +22,10 @@ use semio_framework_pack_json::{ArtifactCanonicalJsonNode, ArtifactCanonicalJson
 #[path="🛬️receive/🦀️.rs"]
 mod receiving;
 pub use receiving::ArtifactChildNativeReceiver;
+#[cfg(test)]
+pub(crate) use semio_framework_value::{RetainedWorkOutcome, retirement};
+#[cfg(test)]
+pub(crate) use semio_framework_value_testing_allocator::observe_retirement_allocations;
 
 // 🧩️ Composable-vs-referenceable artifact primitives (ticket `26/08/12/UNIFIED-COMPOSABLE-
 // ARTIFACT-SYSTEM` `📓️design-full-plan.md` §"1. Kernel primitives"). Two structurally distinct

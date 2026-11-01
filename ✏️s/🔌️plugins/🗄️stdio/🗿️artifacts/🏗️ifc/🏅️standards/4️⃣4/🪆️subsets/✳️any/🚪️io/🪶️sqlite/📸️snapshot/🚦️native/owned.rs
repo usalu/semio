@@ -3,8 +3,8 @@ use super::{Frame, IfcSnapshot, STDIO_IFC_DOCUMENT_SCHEMA, owned_graph::GraphRec
 use semio_framework_dsl_record::receiving::owned::{OwnedSlot, funds, metadata, receipt};
 use semio_framework_os_kernel::{ArtifactPackReceiving, NativeSnapshotDecodeOwner, OriginalArtifactPackReceiving, OriginalArtifactSnapshotReceiving, OriginalSnapshotRecordReceiving};
 use semio_framework_value::{
-    RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetireOwned, RetirementDemand, ValueError, ValueRefusalKind,
-    retirement::{RetirementCursor, RetirementStep},
+    RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetireOwned, RetirementDemand, ValueError, ValueRefusalKind,
+    retirement::{RetireOwned as RetireOwnedTrait, RetirementCursor, RetirementStep},
 };
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeCloseControl, NativeDecodeControl};
 use std::mem::size_of;
@@ -39,24 +39,29 @@ impl IfcOriginalPackReceiving {
         }
         Ok(())
     }
-    fn retire_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn retire_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome<RetainedCloneStep> {
         if self.closed {
-            return Ok(RetainedCloneStep::Complete(Default::default()));
+            return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 };
         }
-        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+        let demand = match self.close_demands(grant.maximum_copy_bytes) {
+            Ok(demand) => demand,
+            Err(error) => return RetainedWorkOutcome { result: Err(error), work: 0 },
+        };
         if !funds(grant, demand) {
-            return Ok(RetainedCloneStep::Progress(Default::default()));
+            return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 };
         }
         self.closing = true;
-        let progress = if !self.graph.terminal_is_empty() {
-            self.graph.close(grant)?.progress()
+        let turn = if !self.graph.terminal_is_empty() {
+            let turn = self.graph.close(grant);
+            RetainedWorkOutcome { work: turn.work, result: turn.result.map(|step| step.progress()) }
         } else if !self.record.terminal_is_empty() {
-            self.record.close_step(grant)?
+            self.record.close_step(grant)
         } else {
             self.closed = true;
-            receipt(demand)
+            RetainedWorkOutcome { result: Ok(receipt(demand)), work: 1 }
         };
-        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+        let complete = OriginalArtifactSnapshotReceiving::terminal_is_empty(self);
+        RetainedWorkOutcome { work: turn.work, result: turn.result.map(|progress| if complete { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }) }
     }
 }
 impl OriginalArtifactPackReceiving for IfcSnapshot {
@@ -167,7 +172,7 @@ impl OriginalArtifactSnapshotReceiving<IfcSnapshot> for IfcOriginalPackReceiving
             return Ok(RetainedCloneStep::Progress(Default::default()));
         }
         native.charge(d.capacity_bytes)?;
-        self.retire_step(grant)
+        self.retire_step(grant).result
     }
     fn terminal_is_empty(&self) -> bool {
         self.closed && self.graph.terminal_is_empty() && self.record.terminal_is_empty()
@@ -200,7 +205,7 @@ impl ArtifactPackReceiving for IfcSnapshot {
         })
     }
 }
-impl RetireOwned for IfcOriginalPackReceiving {
+impl RetireOwnedTrait for IfcOriginalPackReceiving {
     fn retirement(mut self) -> Box<dyn RetirementCursor> {
         self.closing = true;
         Box::new(self)
@@ -217,9 +222,10 @@ impl RetirementCursor for IfcOriginalPackReceiving {
         self.close_demands(body)
     }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
-        match self.retire_step(grant) {
-            Ok(step) => RetirementStep::Progress(step.progress()),
-            Err(error) => RetirementStep::Failure(error),
+        let turn = self.retire_step(grant);
+        match turn.result {
+            Ok(step) => RetirementStep::Progress(step.progress(), turn.work),
+            Err(error) => RetirementStep::Failure(error, turn.work),
         }
     }
     fn terminal_is_empty(&self) -> bool {

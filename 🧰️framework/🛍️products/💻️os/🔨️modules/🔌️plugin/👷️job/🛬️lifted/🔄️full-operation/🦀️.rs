@@ -15,6 +15,7 @@ use crate::reserved_jobs::QualifiedBoundedFirstStepProof;
 use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError};
 use semio_framework_plugin_ownership::bounded_ownership::{plugin_text_close, plugin_text_retirement_demand};
+use crate::{retired};
 
 #[doc(hidden)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -83,7 +84,56 @@ impl<A: ArtifactApp> TypedCommandFullOperationJob<A> {
 }
 
 impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A> {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_original(cx))
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
+        self.outcomes.borrow_outcome(descriptor)
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::{InteractiveJobCloseStep};
+        if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        let demand=self.close_demand()?;
+        retired(cx,demand,|grant|{
+            self.closing=true;self.pending=None;
+            if !self.outcomes.terminal_is_empty(){return self.outcomes.close_step(grant)}
+            let item=RetainedCloneProgress{copied_items:1,..Default::default()};
+            if let Some(parent)=self.parent_document_id.as_mut(){return Ok(RetainedCloneStep::Progress(plugin_text_close(parent,grant).unwrap_or_else(||{self.parent_document_id=None;item})))}
+            macro_rules! return_alias{($($field:ident),+)=>{$(if let Some(original)=self.$field.as_ref(){if std::sync::Arc::strong_count(original)<=1{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"typed command requires its original final owner retirement cursor"))}drop(self.$field.take());return Ok(RetainedCloneStep::Progress(item));})+}}
+            return_alias!(command,snapshot,config,history,children,draft,interaction_state,interaction_hover,peer_presence,presence_peers,transient);
+            if self.presence_local.is_some()||self.output.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"typed command requires its original retained completion or snapshot-read retirement cursor"))}
+            self.operation=None;Ok(RetainedCloneStep::Complete(item))
+        })
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demand()?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> {
+        Ok(self.close_demand()?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demand()?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
+        Ok(self.close_demand()?.depth)
+    }
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.outcomes.terminal_is_empty() && self.owner_terminal_is_empty()
+    }
+}
+
+impl<A: ArtifactApp> TypedCommandFullOperationJob<A> {
+    fn step_original<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind;
         if cx.is_cancelled() {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
@@ -156,49 +206,6 @@ impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOpe
             TypedCommandFullOperationPhase::Fault => self.fault(b"typed command remains faulted"),
         }
         Ok(None)
-    }
-
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
-        self.outcomes.borrow_outcome(descriptor)
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_job::{InteractiveJobCloseStep,close_original_retained_step};
-        if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
-        let demand=self.close_demand()?;
-        close_original_retained_step(cx,demand,|grant|{
-            self.closing=true;self.pending=None;
-            if !self.outcomes.terminal_is_empty(){return self.outcomes.close_step(grant)}
-            let item=RetainedCloneProgress{copied_items:1,..Default::default()};
-            if let Some(parent)=self.parent_document_id.as_mut(){return Ok(RetainedCloneStep::Progress(plugin_text_close(parent,grant).unwrap_or_else(||{self.parent_document_id=None;item})))}
-            macro_rules! return_alias{($($field:ident),+)=>{$(if let Some(original)=self.$field.as_ref(){if std::sync::Arc::strong_count(original)<=1{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"typed command requires its original final owner retirement cursor"))}drop(self.$field.take());return Ok(RetainedCloneStep::Progress(item));})+}}
-            return_alias!(command,snapshot,config,history,children,draft,interaction_state,interaction_hover,peer_presence,presence_peers,transient);
-            if self.presence_local.is_some()||self.output.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"typed command requires its original retained completion or snapshot-read retirement cursor"))}
-            self.operation=None;Ok(RetainedCloneStep::Complete(item))
-        })
-    }
-
-    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
-        Ok(self.close_demand()?.copy_bytes)
-    }
-
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> {
-        Ok(self.close_demand()?.capacity_bytes)
-    }
-
-    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
-        Ok(self.close_demand()?.release_bytes)
-    }
-
-    fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
-        Ok(self.close_demand()?.depth)
-    }
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.outcomes.terminal_is_empty() && self.owner_terminal_is_empty()
     }
 }
 

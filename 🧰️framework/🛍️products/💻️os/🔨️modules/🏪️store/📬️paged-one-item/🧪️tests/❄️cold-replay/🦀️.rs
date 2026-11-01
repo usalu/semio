@@ -60,7 +60,7 @@ fn replay_step_with(factory: paged::ColdMutationApplyFactory<PlainDocument, Docu
     for _ in 0..10_000 {
         if !registry.has_returned() && active.is_none() { break; }
         let demand = if let Some(active) = active.as_ref() { semio_framework_value_snapshot_read::artifact_retirement_box_demands(active, 4096).unwrap() } else { registry.returned_admission_demands::<PlainDocument>(|_| RetirementDemand { capacity_bytes: semio_framework_value::factory::FactorySharedRetirement::<PlainDocument>::constructor_capacity_bytes(), depth: 1, ..Default::default() }).unwrap() };
-        semio_framework_value_snapshot_read::advance_returned_snapshot_read(&registry, &mut active, &snapshots, retained(demand)).unwrap();
+        semio_framework_value_snapshot_read::advance_returned_snapshot_read(&registry, &mut active, &snapshots, retained(demand)).result.unwrap();
     }
     assert!(!registry.has_returned() && active.is_none());
     receiver.finish();

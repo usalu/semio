@@ -28,5 +28,4 @@ export function testResultSourceIdentity(): void {
   assert.equal(Object.keys(projection).length, fixture.expected.count);
   assert.equal(projection[fixture.sources[0]!.identity], tip);
   assert.equal(projection[fixture.sources[1]!.identity], factor * tip);
-  console.log(`[DEBUG] FEM typed result-source oracle: ${fixture.sources.length} canonical identities, two same-named physical sources retained, independent Three/Buffer/JSONPatch agreement`);
 }

@@ -36,7 +36,7 @@ impl<T> SharedOwner<T> {
         if self.value.is_none()||grant.maximum_items==0{return crate::RetainedWorkOutcome{result:Ok(empty()),work:0}}
         if grant.maximum_depth==0{return crate::RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"shared release requires admitted depth")),work:0}}
         let bytes=Self::allocation_bytes();if bytes>grant.maximum_release_bytes{return crate::RetainedWorkOutcome{result:Ok(empty()),work:0}}
-        let value=Arc::into_inner(self.value.take().unwrap());let released_bytes=if value.is_some(){bytes}else{0};crate::RetainedWorkOutcome{result:Ok(SharedRelease{value,progress:RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}}),work:1}
+        let value=Arc::into_inner(match self.value.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("value absent").into()),work:0}});let released_bytes=if value.is_some(){bytes}else{0};crate::RetainedWorkOutcome{result:Ok(SharedRelease{value,progress:RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}}),work:1}
     }
 
 }

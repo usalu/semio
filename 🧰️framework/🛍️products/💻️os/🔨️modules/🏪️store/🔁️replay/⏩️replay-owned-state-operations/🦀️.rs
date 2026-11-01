@@ -5,10 +5,10 @@ use semio_framework_os_spr::ColdMutation;
 
 impl<P,Mutation:super::Mutation<P>+OpBinary> ReplayOwnedState<P,Mutation>{
 
-    pub(super) fn advance_with_operation_cap(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, original:Option<RetainedCloneGrant>, mut control:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>, cold_operation:Option<fn(&mut Self,&Edit<Mutation>)->Result<(),VcsError>>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+    pub(super) fn advance_with_operation_cap(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, original:Option<RetainedCloneGrant>, mut control:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>, cold_operation:Option<fn(&mut Self,&Edit<Mutation>)->Result<(),VcsError>>, cold_prefix:Option<fn(&mut Self,&Edit<Mutation>)->Result<(),VcsError>>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         if maximum_operations == 0 && !self.finished { return Ok(ReplayStep::Pending(self.progress)); }
         let mut completed_operations = 0usize;
-        let cold = original.is_none() && self.operation_preparation_factory.is_none() && cold_operation.is_some();
+        let cold = original.is_none() && self.operation_preparation_factory.is_none() && cold_operation.is_some() && cold_prefix.is_some();
         let original = if cold { Some(Self::cold_authority_grant()) } else { original };
         while !self.finished {
             if let Some(retirement) = self.replay_retirement.as_mut() {
@@ -58,7 +58,13 @@ impl<P,Mutation:super::Mutation<P>+OpBinary> ReplayOwnedState<P,Mutation>{
                         if deadline() || completed_operations >= maximum_operations { return Ok(ReplayStep::Pending(self.progress)); }
                         continue;
                     }
-                    return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native prefix replay requires its retained original preparation issuer")));
+                    if !cold{return Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native prefix replay requires its retained original preparation issuer")));}
+                    cold_prefix.expect("admitted cold replay prefix authority")(self,edit)?;
+                    self.operation += 1;
+                    completed_operations = completed_operations.saturating_add(1);
+                    if self.prefix_work_progress { self.progress.done = self.progress.done.saturating_add(1); }
+                    if deadline() || completed_operations >= maximum_operations { return Ok(ReplayStep::Pending(self.progress)); }
+                    continue;
                 }
                 self.cursor+=1;self.operation=0;self.record();continue;
             }
@@ -266,7 +272,7 @@ where
     Mutation: super::Mutation<P> + ColdMutation<P> + OpBinary,
 {
 
-    pub(super) fn step_with_operation_cap(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, original:Option<RetainedCloneGrant>, mut control:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {self.advance_with_operation_cap(edits,maximum_operations,original,control,Some(Self::replay_operation),deadline)}
+    pub(super) fn step_with_operation_cap(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, original:Option<RetainedCloneGrant>, mut control:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {self.advance_with_operation_cap(edits,maximum_operations,original,control,Some(Self::replay_operation),Some(Self::replay_prefix_operation),deadline)}
 
     /// 🐣️ A replay of `order[from..]` starting from `base`, the projection after `order[..from]`, reading every
     /// operation of a document of `schema` through `supersessions`. `edits` must hold every edit the suffix names.
@@ -367,6 +373,22 @@ where
     /// state and its outcome recorded. A `Report` replay never aborts on a leaf: an inverse the leaf refuses on the replayed
     /// state is one `Fatal` `mutation.inverse-refused` message on that mutation, the operation folds forward exactly as every
     /// messageless fold site folds it, and its edit stages no inverse rows for it — the report blocks finalizing until that
+
+    /// ⏭️ Folds one prefix operation on the cold diff arithmetic: a prefix replays messageless and stages no rows.
+    fn replay_prefix_operation(&mut self, edit: &Edit<Mutation>) -> Result<(), VcsError> {
+        let index = self.operation;
+        let id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded operation identity");
+        if edit.forwards[index].may_emit_foreign_steps() {
+            let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
+            self.unit_flags.insert((digest, index), semio_framework_os_spr::ColdMutation::foreign_step_source(&edit.forwards[index], self.state.as_ref().expect("replay prefix state"), 0).map_err(VcsError::from)?.is_some());
+        }
+        let effective = effective_operation::<P, Mutation>(&edit.forwards[index], index as u32, id, &self.schema, &self.supersessions);
+        if let Some(operation) = effective.operation() {
+            let state = self.state.as_mut().ok_or_else(|| VcsError::ValidationFailed("edit replay lost its running projection".into()))?;
+            if let (Some(next), _) = fold_operation::<P, Mutation>(state, operation, index as u32) { <Arc<P> as ColdFoldProjection<P, Mutation>>::advance(state, next); }
+        }
+        Ok(())
+    }
     /// mutation is edited or withdrawn. A `Merge` replay refuses with [`VcsError::InverseRefused`].
     fn replay_operation(&mut self, edit: &Edit<Mutation>) -> Result<(), VcsError> where P:Clone, Mutation:semio_framework_os_spr::ColdMutation<P> {
         let index = self.operation;

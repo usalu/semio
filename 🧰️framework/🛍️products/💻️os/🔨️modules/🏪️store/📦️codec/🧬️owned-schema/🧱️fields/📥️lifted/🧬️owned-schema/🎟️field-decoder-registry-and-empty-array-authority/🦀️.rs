@@ -51,10 +51,10 @@ impl<T: FromValue + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for Ar
         if grant.maximum_depth < demand.depth { return Err(self.diagnostic("artifact-envelope.history-entry-depth-refused", 0)); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.terminal = true;
-        if self.retirement.is_some() { return artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (self.diagnostic("artifact-envelope.history-entry-retirement-fault", 0)).with_native(error)); }
+        if self.retirement.is_some() { return artifact_retirement_box_close_step(&mut self.retirement, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (self.diagnostic("artifact-envelope.history-entry-retirement-fault", 0)).with_native(error)); }
         if let Some(value) = self.value.take() {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            match self.retirement_factory.as_ref().expect("history value retains its factory").retire_owned(value, child) {
+            match self.retirement_factory.as_ref().expect("history value retains its factory").retire_owned(value, child).result {
                 Ok((owner, progress)) => {
                     *self.retirement = Some(owner);
                     if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(self.diagnostic("artifact-envelope.history-entry-constructor-receipt", 0).with_progress(progress)); }
@@ -73,7 +73,7 @@ impl<T: FromValue + Send + 'static> ArtifactOwnedHistoryEntryAuthority<T> for Ar
         let failure = self.diagnostic("artifact-envelope.history-entry-factory-close", 0);
         let owner = self.factory_close.as_mut().expect("remaining original history factory");
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = owner.step(child).map_err(|error| (failure).with_native(error))?;
+        let step = owner.step(child).result.map_err(|error| (failure).with_native(error))?;
         let terminal = owner.terminal_is_empty();
         admit_retained_clone_close(child, step, terminal, "original history decoder factory").map_err(|error| (self.diagnostic("artifact-envelope.history-entry-factory-receipt", 0)).with_native(error).with_progress(step.progress()))?;
         if terminal { drop(self.factory_close.take()); }
@@ -424,7 +424,7 @@ where
                 return Ok(());
             }
             let Ok(demand) = retired.demands(ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) else { return Err(ArtifactEnvelopeFieldDecoderRegistryFault::FalseTerminal) };
-            if ErasedSnapshotRetirement::close_step(&mut retired, artifact_retirement_self_grant(demand, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)).is_err() { return Err(ArtifactEnvelopeFieldDecoderRegistryFault::FalseTerminal); }
+            if ErasedSnapshotRetirement::close_step(&mut retired, artifact_retirement_self_grant(demand, ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)).result.is_err() { return Err(ArtifactEnvelopeFieldDecoderRegistryFault::FalseTerminal); }
         }
         Err(ArtifactEnvelopeFieldDecoderRegistryFault::FalseTerminal)
     }

@@ -7,7 +7,7 @@ pub fn ledger_demands(ledger:&Option<Arc<JobPayloadOperationLedger>>)->Retiremen
 pub fn close_ledger(ledger:&mut Option<Arc<JobPayloadOperationLedger>>,grant:RetainedCloneGrant)->RetainedWorkOutcome{
  if ledger.is_none(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0};}
  let demand=ledger_demands(ledger);if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
- let original=ledger.take().unwrap();let released_bytes=if let Some(original)=Arc::into_inner(original){drop(original);demand.release_bytes}else{0};
+ let original=match ledger.take(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("ledger absent").into()),work:0}};let released_bytes=if let Some(original)=Arc::into_inner(original){drop(original);demand.release_bytes}else{0};
  RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()})),work:1}
 }
 

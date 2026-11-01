@@ -50,10 +50,10 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactStoreEnvelopeRe
 impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreEnvelopeRetirement<P, Mutation> {
     fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if self.ownership_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
-        let step = if self.active.is_some() { artifact_retirement_box_close_step(&mut self.active, grant) }
-            else if self.vcs.is_some() { retirement_owner_close(&mut self.vcs, grant) }
+        let step = if self.active.is_some() { artifact_retirement_box_close_step(&mut self.active, grant).result }
+            else if self.vcs.is_some() { retirement_owner_close(&mut self.vcs, grant).result }
             else if self.messages.is_some() { ArtifactEditMessageLedgerRetirement::admit_boxed(&mut self.messages, &mut self.active, grant).map(RetainedCloneStep::Progress) }
-            else { artifact_retirement_admit_owned(&mut self.metadata, &mut self.active, grant) }?;
+            else { artifact_retirement_admit_owned(&mut self.metadata, &mut self.active, grant).result }?;
         Ok(if self.ownership_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { self.ownership_is_empty() }
@@ -91,7 +91,7 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactGenesisRetir
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-        let step = if self.snapshot.is_some() { retirement_owner_close(&mut self.snapshot, grant)? } else { retirement_owner_close(&mut self.pack, grant)? };
+        let step = if self.snapshot.is_some() { retirement_owner_close(&mut self.snapshot, grant).result? } else { retirement_owner_close(&mut self.pack, grant).result? };
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { self.snapshot.is_none() && self.pack.is_none() }
@@ -146,7 +146,7 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactStoreDisplac
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if let Some(snapshot) = self.pending.take() {
-            return match self.factory.as_ref().expect("pending displaced snapshot retains its original factory").retire(snapshot, child) {
+            return match self.factory.as_ref().expect("pending displaced snapshot retains its original factory").retire(snapshot, child).result {
                 Ok((owner, progress)) => {
                     *self.active = Some(owner);
                     if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "displaced snapshot constructor changed its admitted receipt")); }
@@ -155,13 +155,13 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for ArtifactStoreDisplac
                 Err((error, snapshot)) => { *self.pending = Some(snapshot); Err(error) }
             };
         }
-        if self.active.is_some() { return semio_framework_value::close_factory_ticket(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_framework_value::close_factory_ticket(&mut self.active, child).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(factory) = self.factory.take() {
             *self.closing_factory = Some(semio_framework_value::FactoryAuthority::new(factory));
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
         }
         let authority = self.closing_factory.as_mut().expect("displaced snapshot retains its closing factory");
-        let step = authority.step(child)?;
+        let step = authority.step(child).result?;
         let step = admit_retained_clone_close(child, step, authority.terminal_is_empty(), "displaced snapshot factory capability")?;
         if authority.terminal_is_empty() { drop(self.closing_factory.take()); }
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
@@ -281,7 +281,7 @@ impl ArtifactStoreDisplacedRetirements {
             drop(self.owners.pop_front());
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty }));
         }
-        let step = owner.close_step(child)?;
+        let step = owner.close_step(child).result?;
         let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original displaced queue child")?;
         if matches!(step, RetainedCloneStep::Complete(_)) && !owner.terminal_is_empty() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "displaced child reported completion while original ownership remains")); }
         Ok(RetainedCloneStep::Progress(step.progress()))

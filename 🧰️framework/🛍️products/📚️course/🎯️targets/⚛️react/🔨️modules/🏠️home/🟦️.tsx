@@ -321,6 +321,8 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
         onSwipeIdChange={interactive ? follow.onSwipe : undefined}
         revealedId={activeGrid && follow.following !== undefined ? follow.presentation?.reveal ?? null : undefined}
         revealedBy={activeGrid && follow.following !== undefined ? follow.presentation?.revealedBy : undefined}
+        pressed={activeGrid && follow.following !== undefined ? follow.presentation?.pressed ?? false : undefined}
+        onPressedChange={interactive ? follow.onPressed : undefined}
         onRevealedIdChange={interactive ? (page, source) => follow.onRevealed(page ?? undefined, source ?? undefined) : undefined}
         onOpenedIdChange={(page) => (page === null || clientAccess(course, page, props.at)) && session.open(page === null ? container === undefined ? { screen: "home" } : { screen: "home", page: container } : { screen: "home", page })}
         lifecycle={{ budget: pages.length, warmStartMs: 0, warmIntervalMs: 0 }}

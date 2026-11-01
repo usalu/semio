@@ -40,7 +40,7 @@ pub mod editor {
             #[path = "."]
             pub mod edit {
                 pub use semio_s_artifact_stdio_pdf_schema_4::editor::pdf17vt::modes::edit::*;
-                pub use semio_s_artifact_stdio_pdf_testkit::editor::pdf17vt::modes::edit::windows;
+                pub use semio_s_artifact_stdio_pdf_schema_4::editor::pdf17vt::modes::edit::windows;
             }
         }
     }

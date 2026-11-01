@@ -1,4 +1,5 @@
 /// 🎟️ Actual concrete and shared producer birth retain original inputs on refused grants.
+fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
 impl ArtifactReservedToolJob {
     /// 📦️ Quotes the existing source header, mounted shell and original business metadata.
     pub fn mounted_birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+size_of::<Option<Self>>()+size_of::<semio_framework::action_bus::ErasedToolJob>()+size_of::<semio_framework_job::Operation>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
@@ -10,7 +11,7 @@ impl ArtifactReservedToolJob {
         if source.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted reserved producer original is absent").into())}
         let demand=Self::mounted_birth_demands();
         let mut admitted=None;
-        semio_framework_job::admit_original_construction(cx,&mut admitted,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},|_|{
+        built(cx,&mut admitted,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},||{
             source.as_mut().unwrap().bind_operation(*operation)?;
             *receiving=Some(semio_framework::action_bus::ErasedToolJob::from_owned(Box::new(source.take().unwrap())));
             Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))

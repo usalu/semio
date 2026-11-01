@@ -4,13 +4,13 @@ funding::physical_close!(PaintedPreparationRetirement,funding::PhysicalClose);
 funding::physical_close!(DocumentVectorRetirement<'_>,funding::PhysicalClose);
 funding::physical_close!(ScenePlanCloseJob,funding::PhysicalClose);
 fn test_work()->funding::Wallet{let value:serde_json::Value=serde_json::from_str(include_str!("../../../🔤️text/🧪️tests/🎟️original/🔣️.json")).unwrap();let v=&value["stock"];funding::Wallet::from_grant(semio_framework_value::RetainedCloneGrant{maximum_items:v["items"].as_u64().unwrap()as usize,maximum_copy_bytes:v["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:v["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:v["release"].as_u64().unwrap()as usize,maximum_depth:v["depth"].as_u64().unwrap()as usize},2_000_000)}
-#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::{booleans::*,identity::*,paint::*,picking::*,placement::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*};
+#[allow(unused_imports)] use {semio_s_artifact_draw_drawing_scene::{booleans::*,identity::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*},semio_s_artifact_draw_drawing_scene_paint::{*,picking::*,placement::*}};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_framework_test_fixtures::fixture_text;
 
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::PathSegment;
-#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::picking::PaintedPathStroke;
-#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::paint::*;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene_paint::picking::PaintedPathStroke;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene_paint::*;
 #[test]
 fn prepared_regions_created_round_ellipses_preserve_translated_paint_and_stroke_holes(){
  let rows:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🎬️scene/🎨️paint/🥚️ellipse/🔣️.json")).unwrap();

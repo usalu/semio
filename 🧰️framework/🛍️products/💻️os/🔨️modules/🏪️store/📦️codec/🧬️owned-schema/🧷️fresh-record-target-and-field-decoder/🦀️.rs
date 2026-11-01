@@ -433,7 +433,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDe
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.active_retirement.is_some() {
-            return artifact_retirement_box_close_step(&mut self.active_retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (Self::diagnostic("vcs", "artifact-envelope.target-retirement")).with_native(error));
+            return artifact_retirement_box_close_step(&mut self.active_retirement, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (Self::diagnostic("vcs", "artifact-envelope.target-retirement")).with_native(error));
         }
         if let Some(vcs) = self.target.vcs.take() {
             let (snapshots, mutations) = (self.initial_snapshot_factory.clone(), self.mutation_factory.clone());

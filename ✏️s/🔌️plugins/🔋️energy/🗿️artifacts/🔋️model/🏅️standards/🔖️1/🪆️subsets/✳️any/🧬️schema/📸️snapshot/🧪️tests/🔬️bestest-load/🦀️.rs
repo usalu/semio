@@ -3,7 +3,7 @@ use crate::snapshot::EnergyModelSnapshot;
 use pack::snapshot::{ArtifactDsl, ArtifactPack};
 
 fn done(snapshot: EnergyModelSnapshot) {
-    semio_framework_value_native_owned::blocking::retire(snapshot).expect("funded retirement");
+    snapshot.retire().expect("funded retirement");
 }
 
 fn case_600() -> EnergyModelSnapshot {

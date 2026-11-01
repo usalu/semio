@@ -279,60 +279,56 @@ const ROUTER_EFFECT_ADMISSION_TURNS: usize = 4_096;
 
 const ROUTER_EFFECT_CLOSE_TURNS: usize = 65_536;
 
-/// 🏃️ Drives one router effect through the compute pool under its own paid payload authority; the authority is retired before the outcome is returned.
+/// 🏃️ Drives one router effect through the compute pool on its own original caller; the caller's cancellation root and payload authority are retired before the outcome is returned.
 pub async fn run_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, runtime: &R, scope: &ScopeHandle, ctx: OperationContext, retained: semio_framework_job::RetainedCloneGrant, handler: &Arc<dyn RouterEffectHandler>, effect: RouterEffect) -> RouterEffectJobOutcome {
     use semio_framework_job::{Generation,OperationId};
     if ctx.cancel.is_cancelled().await {
         return RouterEffectJobOutcome::Cancelled;
     }
     let (operation, generation) = (OperationId(ctx.trace.0), Generation(u64::from(ctx.generation)));
-    let mut authority = match semio_framework_job_payload::JobPayloadAuthority::admit(operation, generation, retained) {
-        Ok(Some((authority, _))) => authority,
-        Ok(None) => return RouterEffectJobOutcome::Fault("router effect payload authority was refused its grant".to_string()),
+    let now_ms = runtime.now_ms().await;
+    let deadline_us = ctx.deadline_ms.map_or(u64::MAX, |deadline| deadline.saturating_sub(now_ms).saturating_mul(1000).saturating_add(semio_framework_job::default_now_us().unwrap_or(0)));
+    let mut caller = match semio_framework_os_services::ComputeOriginalCaller::admit(operation, generation, retained, deadline_us) {
+        Ok(Some(caller)) => caller,
+        Ok(None) => return RouterEffectJobOutcome::Fault("router effect compute caller was refused its grant".to_string()),
         Err(error) => return RouterEffectJobOutcome::Fault(error.to_string()),
     };
-    let mut wallet = RouterEffectWallet { original: retained, progress: semio_framework_job::RetainedCloneProgress::default() };
-    let outcome = drive_router_effect_job(compute, runtime, scope, &ctx, retained, handler, effect, &authority, &mut wallet).await;
+    let mut wallet = RouterEffectWallet { original: retained, progress: caller.cumulative_receipt() };
+    let outcome = drive_router_effect_job(compute, runtime, scope, &ctx, retained, handler, effect, &mut caller, &mut wallet).await;
     for _ in 0..ROUTER_EFFECT_CLOSE_TURNS {
-        if authority.terminal_is_empty() {
+        if caller.terminal_is_empty() {
             break;
         }
-        let Ok(grant) = semio_framework_os_services::ComputeRetainedRecipient::remaining_grant(&wallet) else { break };
-        let Ok(step) = authority.close_step(grant) else { break };
-        let progress = step.progress();
-        if semio_framework_os_services::ComputeRetainedRecipient::record_progress(&mut wallet, progress).is_err() {
-            break;
-        }
-        if progress == semio_framework_job::RetainedCloneProgress::default() {
+        let Ok(step) = caller.retire_paid(&mut wallet) else { break };
+        if step.progress() == semio_framework_job::RetainedCloneProgress::default() {
             runtime.sleep_until(runtime.now_ms().await.saturating_add(1)).await;
         }
     }
     outcome
 }
 
-async fn drive_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, runtime: &R, scope: &ScopeHandle, ctx: &OperationContext, retained: semio_framework_job::RetainedCloneGrant, handler: &Arc<dyn RouterEffectHandler>, effect: RouterEffect, authority: &semio_framework_job_payload::JobPayloadAuthority, wallet: &mut RouterEffectWallet) -> RouterEffectJobOutcome {
-    use semio_framework_job::{Generation,InteractiveStage,OperationId,RetainedCloneProgress,StepBudget};
-    use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,WorkerJobAdmissionContext};
+async fn drive_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, runtime: &R, _scope: &ScopeHandle, ctx: &OperationContext, retained: semio_framework_job::RetainedCloneGrant, handler: &Arc<dyn RouterEffectHandler>, effect: RouterEffect, caller: &mut semio_framework_os_services::ComputeOriginalCaller, wallet: &mut RouterEffectWallet) -> RouterEffectJobOutcome {
+    use semio_framework_job::{Generation,InteractiveStage,OperationId,RetainedCloneProgress};
+    use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,WorkerJobCloseStep};
     let (operation, generation) = (OperationId(ctx.trace.0), Generation(u64::from(ctx.generation)));
     let mut result = None;
-    let mut admission = RetainedCloneProgress::default();
-    let mut sequence = 0u64;
     let mut job = Some(DynRouterEffectJob(Some(handler.create_job(effect))));
-    let mut params = Some(BatchJobParams { operation, generation, cancel: ctx.cancel.clone(), config: BatchDriveConfig { retained, site: "router-effect", stage: InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_us: 1000 }, now_us: semio_framework_job::default_now_us });
-    let mut completion = None;
-    let now_ms = runtime.now_ms().await;
-    let deadline_us = ctx.deadline_ms.map_or(u64::MAX, |deadline| deadline.saturating_sub(now_ms).saturating_mul(1000).saturating_add(semio_framework_job::default_now_us().unwrap_or(0)));
-    let mut control = match WorkerJobAdmissionContext::new(operation, generation, StepBudget::new(1, deadline_us, retained), semio_framework_job::default_now_us, &mut admission) {
-        Ok(control) => control,
-        Err(error) => {
-            close_unadmitted_router_effect(runtime, ctx, &mut job, &mut params, &mut sequence, authority, wallet).await;
-            return RouterEffectJobOutcome::Fault(error.to_string());
+    let mut params = None;
+    match caller.admit_alias(&mut *wallet) {
+        Ok(Some(cancel)) => params = Some(BatchJobParams { operation, generation, cancel, config: BatchDriveConfig { retained, site: "router-effect", stage: InteractiveStage::InteractiveStep, fuel_per_step: 64, step_budget_us: 1000 }, now_us: semio_framework_job::default_now_us }),
+        Ok(None) | Err(_) => {
+            close_unadmitted_router_effect(runtime, &mut job, &mut params, caller, wallet).await;
+            return RouterEffectJobOutcome::Fault("router effect cancellation alias was refused its grant".to_string());
         }
-    };
-    let mut admitted = false;
+    }
+    let mut completion = None;
+    let mut refused = None;
     for _ in 0..ROUTER_EFFECT_ADMISSION_TURNS {
+        if ctx.cancel.is_cancelled_now() {
+            break;
+        }
         match compute
-            .run_job(runtime, scope, ctx, retained, &mut job, &mut params, &mut control, wallet, &mut completion, |outcome| {
+            .run_job(runtime, ctx, caller, &mut job, &mut params, &mut *wallet, &mut completion, |outcome| {
                 result = Some(match outcome {
                     JobOutcomeView::Complete { output: Some(output), .. } => copy_router_effect_payload(output).map_or_else(RouterEffectJobOutcome::Fault, RouterEffectJobOutcome::Complete),
                     JobOutcomeView::Complete { output: None, .. } => RouterEffectJobOutcome::Complete(Vec::new()),
@@ -346,23 +342,22 @@ async fn drive_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, run
             })
             .await
         {
-            Ok(true) => {
-                admitted = true;
-                break;
-            }
+            Ok(true) => break,
             Ok(false) => {}
             Err(error) => {
-                drop(control);
-                close_unadmitted_router_effect(runtime, ctx, &mut job, &mut params, &mut sequence, authority, wallet).await;
-                return RouterEffectJobOutcome::Fault(error.to_string());
+                refused = Some(error.to_string());
+                break;
             }
         }
         runtime.sleep_until(runtime.now_ms().await.saturating_add(1)).await;
     }
-    drop(control);
     let Some(mut completion) = completion else {
-        close_unadmitted_router_effect(runtime, ctx, &mut job, &mut params, &mut sequence, authority, wallet).await;
-        return if admitted { RouterEffectJobOutcome::WorkerLost } else { RouterEffectJobOutcome::Fault("router effect compute admission was never granted".to_string()) };
+        close_unadmitted_router_effect(runtime, &mut job, &mut params, caller, wallet).await;
+        return match refused {
+            Some(error) => RouterEffectJobOutcome::Fault(error),
+            None if ctx.cancel.is_cancelled_now() => RouterEffectJobOutcome::Cancelled,
+            None => RouterEffectJobOutcome::Fault("router effect compute admission was never granted".to_string()),
+        };
     };
     let compute_result = completion.result().clone();
     let faulted = completion.fault().is_some();
@@ -370,17 +365,13 @@ async fn drive_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, run
         if completion.terminal_is_empty() {
             break;
         }
-        let Ok(grant) = semio_framework_os_services::ComputeRetainedRecipient::remaining_grant(&*wallet) else { break };
-        let mut progress = RetainedCloneProgress::default();
-        let step = {
-            let Ok(mut cx) = StepContext::with_payload_authority(operation, generation, StepBudget::new(1, u64::MAX, grant), &ctx.cancel, semio_framework_job::default_now_us, &mut sequence, &mut progress, authority) else { break };
-            completion.close_step(&mut cx)
+        let step = caller.turn_retiring(&mut *wallet, |cx| completion.close_step(cx));
+        let stalled = match &step {
+            Ok(WorkerJobCloseStep::Blocked) => true,
+            Ok(_) => caller.receipt() == RetainedCloneProgress::default(),
+            Err(_) => break,
         };
-        let blocked = matches!(step, Ok(semio_framework_job_worker_authority::WorkerJobCloseStep::Blocked));
-        if step.is_err() || semio_framework_os_services::ComputeRetainedRecipient::record_progress(wallet, progress).is_err() {
-            break;
-        }
-        if blocked {
+        if stalled {
             runtime.sleep_until(runtime.now_ms().await.saturating_add(1)).await;
         }
     }
@@ -388,6 +379,7 @@ async fn drive_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, run
         return RouterEffectJobOutcome::WorkerLost;
     }
     drop(completion);
+    close_unadmitted_router_effect(runtime, &mut job, &mut params, caller, wallet).await;
     match compute_result {
         Ok(()) if !faulted => result.unwrap_or(RouterEffectJobOutcome::WorkerLost),
         Ok(()) => RouterEffectJobOutcome::WorkerLost,
@@ -397,11 +389,10 @@ async fn drive_router_effect_job<R: HostAsyncRuntime>(compute: &ComputePool, run
     }
 }
 
-/// 🧹️ Retires the original job and parameters of an effect whose compute admission was refused.
-async fn close_unadmitted_router_effect<R: HostAsyncRuntime>(runtime: &R, ctx: &OperationContext, job: &mut Option<DynRouterEffectJob>, params: &mut Option<semio_framework_job_worker_authority::BatchJobParams>, sequence: &mut u64, authority: &semio_framework_job_payload::JobPayloadAuthority, wallet: &mut RouterEffectWallet) {
-    use semio_framework_job::{Generation,OperationId,RetainedCloneProgress,StepBudget};
-    use semio_framework_os_services::ComputeRetainedRecipient;
-    let (operation, generation) = (OperationId(ctx.trace.0), Generation(u64::from(ctx.generation)));
+/// 🧹️ Retires the original job and parameters an effect's compute admission never took over.
+async fn close_unadmitted_router_effect<R: HostAsyncRuntime>(runtime: &R, job: &mut Option<DynRouterEffectJob>, params: &mut Option<semio_framework_job_worker_authority::BatchJobParams>, caller: &mut semio_framework_os_services::ComputeOriginalCaller, wallet: &mut RouterEffectWallet) {
+    use semio_framework_job::{InteractiveJobCloseStep,RetainedCloneProgress};
+    use semio_framework_value::RetainedWorkOutcome;
     for _ in 0..ROUTER_EFFECT_CLOSE_TURNS {
         let Some(original) = job.as_mut() else { break };
         original.begin_close();
@@ -409,14 +400,9 @@ async fn close_unadmitted_router_effect<R: HostAsyncRuntime>(runtime: &R, ctx: &
             drop(job.take());
             break;
         }
-        let Ok(grant) = wallet.remaining_grant() else { break };
-        let mut progress = RetainedCloneProgress::default();
-        let step = {
-            let Ok(mut cx) = StepContext::with_payload_authority(operation, generation, StepBudget::new(1, u64::MAX, grant), &ctx.cancel, semio_framework_job::default_now_us, sequence, &mut progress, authority) else { break };
-            original.close_step(&mut cx)
-        };
-        let blocked = matches!(step, Ok(semio_framework_job::InteractiveJobCloseStep::Blocked));
-        if step.is_err() || wallet.record_progress(progress).is_err() {
+        let step = caller.turn_retiring(&mut *wallet, |cx| original.close_step(cx));
+        let blocked = matches!(step, Ok(InteractiveJobCloseStep::Blocked));
+        if step.is_err() {
             break;
         }
         if blocked {
@@ -425,8 +411,23 @@ async fn close_unadmitted_router_effect<R: HostAsyncRuntime>(runtime: &R, ctx: &
     }
     if let Some(semio_framework_job_worker_authority::BatchJobParams { cancel, .. }) = params.take() {
         let mut retirement = semio_framework_async::CancelTokenRetirement::from_token(cancel);
-        if let Ok(grant) = wallet.remaining_grant() {
-            let _ = retirement.return_alias_step(&ctx.cancel, grant);
+        for _ in 0..ROUTER_EFFECT_CLOSE_TURNS {
+            if retirement.terminal_is_empty() {
+                break;
+            }
+            let step = caller.turn_retiring(&mut *wallet, |cx| {
+                let turn = retirement.return_alias_step(cx.original_cancel_token(), cx.retained_grant());
+                let result = turn.result.map_err(|error| match error {
+                    semio_framework_async::CancelTokenRetirementError::Refused(error) => error,
+                    semio_framework_async::CancelTokenRetirementError::Blocked(_) => semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "router effect cancellation alias remains blocked"),
+                });
+                semio_framework_job::receive_original_retained_work(cx, RetainedWorkOutcome { result, work: turn.work })
+            });
+            match step {
+                Ok(step) if step.progress() == RetainedCloneProgress::default() => runtime.sleep_until(runtime.now_ms().await.saturating_add(1)).await,
+                Ok(_) => {}
+                Err(_) => break,
+            }
         }
     }
 }

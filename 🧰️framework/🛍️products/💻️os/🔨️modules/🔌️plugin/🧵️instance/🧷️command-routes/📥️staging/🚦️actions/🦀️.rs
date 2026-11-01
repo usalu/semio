@@ -29,6 +29,7 @@ use store::{MemberFactory, Mutation, ReferenceSpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
+use semio_framework_value::RetainedWorkOutcome;
 use semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolTag;
 use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
 use semio_framework_plugin_instance_dispatch::dispatch_emit;
@@ -56,7 +57,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if matches!(source.original_tool_tag,Some(ToolTag::Scrub(_))){
             use semio_framework_job::{OriginalConstructionDemand,admit_original_construction};
             let bytes=std::mem::size_of::<(ToolTag,Option<ToolTag>,Option<semio_framework_plugin_tool_run::tool_jobs_tool_machine::ScrubTag>)>();
-            admit_original_construction(cx,&mut source.original_press_tag,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{let Some(ToolTag::Scrub(tag))=source.original_tool_tag.take()else{unreachable!()};Ok((tag,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))})?;
+            admit_original_construction(cx,&mut source.original_press_tag,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{let Some(ToolTag::Scrub(tag))=source.original_tool_tag.take()else{unreachable!()};RetainedWorkOutcome{result:Ok((tag,RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})?;
             return Ok(None)
         }
         if source.original_press_result.is_none(){
@@ -470,7 +471,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let grant=cx.retained_grant();let bytes=size_of::<semio_framework_plugin_job::AgentLanePreview<A>>();if cx.should_yield()||grant.maximum_items<2||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(false)}
             let Some(operation_id)=self.media.admit_typed_operation_slot(&*self.pending, &*self.tools)else{return Ok(false)};
             let revision=self.stores.store.content_revision_now();let key=ToolOperationKey{app_instance_id:meta.instance_id,document:ArtifactDocumentAuthority(meta.instance_id),operation_id,base_revision:semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().expect("revision lane width"))),generation:semio_framework_job::Generation(self.stores.store.generation_now())};
-            let Some(caller)=cx.original_source_parent()?.admit_loan(cx)?else{return Ok(false)};
+            let mut loan=None;cx.original_source_parent()?.admit_loan(&mut loan,cx)?;let Some(caller)=loan else{return Ok(false)};
             cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
             let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"plugin_agent_lane_preview",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:0,step_budget_us:0};
             self.tools.agent_lane_preview=Some(semio_framework_plugin_job::AgentLanePreview{key:Some(key),caller:std::mem::ManuallyDrop::new(Some(caller)),starting:true,producer_request:None,producer_request_retirement:None,producer:None,children:None,completion:None,completion_close:None,lease:None,lease_close:None,config,maximum_bytes:0,steps:0,publication:None,complete:false,closing:false,publication_close:None});

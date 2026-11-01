@@ -63,7 +63,7 @@ fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
         let mut cleanup = ReturnedSnapshotReadRetirement::new(retained, retirement.clone());
         for _ in 0..32_768 {
             let grant = physical_grant().retained_grant();
-            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| cleanup.close_step(grant).unwrap());
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| cleanup.close_step(grant).result.unwrap());
             assert!(step.progress().fits(grant));
             assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
             if cleanup.terminal_is_empty() { break; }

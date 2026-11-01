@@ -21,7 +21,7 @@ fn fixture() -> serde_json::Value {
 fn workspace_fixture() -> std::path::PathBuf {
     let manifest = manifest_dir!();
     for ancestor in manifest.ancestors() {
-        let candidate = ancestor.join("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧫️fixtures/persistence-data-class-v1/🔣️.json");
+        let candidate = ancestor.join("🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧫️fixtures/persistence-data-class-v1/🔣️.json");
         if candidate.is_file() {
             return candidate;
         }

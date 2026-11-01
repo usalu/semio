@@ -1,7 +1,7 @@
 //! 🌐 Controlled IFC population construction and complete retained EXPRESS rule execution.
 use super::ast::*;
 use super::evaluator::*;
-use crate::catalog::{ifc_is_subtype, IfcTypeExpression};
+use semio_s_artifact_stdio_ifc4x3_schema::{ifc_is_subtype, IfcTypeExpression};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcSnapshot, IfcValue};
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;

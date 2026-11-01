@@ -12,7 +12,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
     pub(crate) fn close_original_typed_tag(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_value::RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
         if !self.original_typed_command.original_binding()?.matches(cx)||Some(self.original_typed_command.original_decoder()?)!=cx.native_receiving_identity(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"direct tool tag requires its original command receiving source").into())}
         let body=self.original_typed_command.original_body()?;let d=self.original_typed_tag_close_demands(body)?;let mut output=semio_framework_value::RetainedCloneStep::Progress(Default::default());
-        semio_framework_job::close_original_retained_step(cx,d,|grant|{output=if !self.original_typed_tag_close.is_empty(){self.original_typed_tag_close.select(body)?.step(grant)?}else{self.original_typed_tag_close.begin_granted(&mut self.original_typed_tag,grant)?.unwrap_or(semio_framework_value::RetainedCloneStep::Progress(Default::default()))};Ok(output)})?;Ok(output)
+        semio_framework_job::close_original_retained_step(cx,d,|grant|{let result=(||{output=if !self.original_typed_tag_close.is_empty(){self.original_typed_tag_close.select(body)?.step(grant).result?}else{self.original_typed_tag_close.begin_granted(&mut self.original_typed_tag,grant).result?.unwrap_or(semio_framework_value::RetainedCloneStep::Progress(Default::default()))};Ok(output)})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;Ok(output)
     }
 
     pub(super) fn close_terminal_is_empty(&self) -> bool {

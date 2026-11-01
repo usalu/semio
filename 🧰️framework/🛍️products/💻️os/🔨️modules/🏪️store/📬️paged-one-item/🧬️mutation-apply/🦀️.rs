@@ -5,7 +5,7 @@ use semio_framework_value_snapshot_projection::snapshot_projection::SnapshotProj
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory;
 use semio_framework_os_spr::{MutationDiff,RetainedMutation,RetainedMutationOwner,RetainedDiffOwner,RetainedMutationDecisionStep,RetainedDiffPreflightStep,RetainedMutationInverseStep,RetainedMutationCloseContext,MutationMessage,retained_mutation_birth_demand,begin_retained_mutation,decide_retained_mutation,begin_retained_diff,preflight_retained_diff,inverse_retained_mutation,commit_retained_diff,Mutation};
-use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement},RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneSource,RetainedCloneRef,retained_clone::{RetainedClone,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,admit_retained_clone_progress}};
+use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement},RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneSource,RetainedCloneRef,retained_clone::{RetainedClone,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,RetainedCloneSourceAdmission,admit_retained_clone_progress}};
 use semio_framework_value_factory::{ArtifactOwnedValueRetirementFactory,vector::{FactoryVectorRetirement,FactoryIssuerIdentity}};
 use std::{mem::{size_of,ManuallyDrop},sync::Arc};
 use protocol::MutationMessageConcat;
@@ -20,6 +20,7 @@ pub struct MutationApplyEdit<S:SnapshotProjection,M:RetainedMutation<S>>{
  semantics:ManuallyDrop<Option<RetainedMutationOwner<S,M>>>,
  diff:ManuallyDrop<Option<M::Diff>>,
  source:ManuallyDrop<Option<RetainedCloneSource<M::Diff>>>,
+ admission:ManuallyDrop<Option<RetainedCloneSourceAdmission<M::Diff,M::Diff,()>>>,
  plan:ManuallyDrop<Option<RetainedDiffOwner<S,M::Diff>>>,
  inverse:ManuallyDrop<Option<Vec<M>>>,
  inverse_close:Option<FactoryVectorRetirement<M>>,
@@ -30,7 +31,7 @@ pub struct MutationApplyEdit<S:SnapshotProjection,M:RetainedMutation<S>>{
  refused:bool,
  closing:bool,
 }
-impl<S:SnapshotProjection,M:RetainedMutation<S>> Default for MutationApplyEdit<S,M>{fn default()->Self{Self{stage:Stage::Birth,semantics:ManuallyDrop::new(None),diff:ManuallyDrop::new(None),source:ManuallyDrop::new(None),plan:ManuallyDrop::new(None),inverse:ManuallyDrop::new(None),inverse_close:None,messages:ManuallyDrop::new([None,None]),join:ManuallyDrop::new(None),retirement:Default::default(),issuer:None,refused:false,closing:false}}}
+impl<S:SnapshotProjection,M:RetainedMutation<S>> Default for MutationApplyEdit<S,M>{fn default()->Self{Self{stage:Stage::Birth,semantics:ManuallyDrop::new(None),diff:ManuallyDrop::new(None),source:ManuallyDrop::new(None),admission:ManuallyDrop::new(None),plan:ManuallyDrop::new(None),inverse:ManuallyDrop::new(None),inverse_close:None,messages:ManuallyDrop::new([None,None]),join:ManuallyDrop::new(None),retirement:Default::default(),issuer:None,refused:false,closing:false}}}
 impl<S:SnapshotProjection,M:RetainedMutation<S>> MutationApplyEdit<S,M>{
  fn context(mutations:&dyn ArtifactOwnedValueRetirementFactory<M>)->RetainedMutationCloseContext<'_,M>{RetainedMutationCloseContext{mutations}}
  fn parent_copy()->usize{size_of::<Stage>()}
@@ -47,7 +48,7 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> PagedOneItemEdit<S,M> for Mutat
   let mut demand=match self.stage{
    Stage::Birth=>retained_mutation_birth_demand::<S,M>(),
    Stage::Decide=>self.semantics.as_ref().unwrap().decision_demand(mutation,before,body)?,
-   Stage::Source=>RetirementDemand{copy_bytes:RetainedCloneSource::<M::Diff>::constructor_copy_bytes()+size_of::<Option<M::Diff>>(),capacity_bytes:RetainedCloneSource::<M::Diff>::owned_constructor_capacity_bytes::<()>(),depth:1,..Default::default()},
+   Stage::Source=>self.admission.as_ref().ok_or_else(||fault("retained mutation diff admission is absent"))?.next_demand()?,
    Stage::Plan=>semio_framework_os_spr::retained_diff_birth_demand::<S,M::Diff>(),
    Stage::Preflight=>self.plan.as_ref().unwrap().preflight_demand(self.source.as_ref().unwrap().try_borrow()?,before,post.original()?,body)?,
    Stage::Inverse=>{let a=self.plan.as_ref().unwrap().inverse_admission(self.source.as_ref().unwrap().try_borrow()?,before)?;self.semantics.as_ref().unwrap().inverse_demand(mutation,&a,body)?},
@@ -64,12 +65,10 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> PagedOneItemEdit<S,M> for Mutat
   let previous=self.stage;
   let mut p=match self.stage{
    Stage::Birth=>{let Some((o,p))=begin_retained_mutation::<S,M>(g)else{return Ok(PagedOneItemEditStep::Progress(Default::default()));};*self.semantics=Some(o);self.stage=Stage::Decide;p}
-   Stage::Decide=>{let result=decide_retained_mutation(self.semantics.as_mut().unwrap(),mutation,before,body,g)?;let p=result.progress();match result{RetainedMutationDecisionStep::Progress(_)=>{},RetainedMutationDecisionStep::Admitted(_,d,rows)=>{*self.diff=Some(d);self.messages[0]=Some(rows);self.stage=Stage::Source;},RetainedMutationDecisionStep::Refused(_,rows)=>{self.messages[0]=Some(rows);self.refused=true;self.stage=Stage::Join;}}p}
+   Stage::Decide=>{let result=decide_retained_mutation(self.semantics.as_mut().unwrap(),mutation,before,body,g)?;let p=result.progress();match result{RetainedMutationDecisionStep::Progress(_)=>{},RetainedMutationDecisionStep::Admitted(_,d,rows)=>{*self.admission=Some(RetainedCloneSource::admission_owned(d,()));self.messages[0]=Some(rows);self.stage=Stage::Source;},RetainedMutationDecisionStep::Refused(_,rows)=>{self.messages[0]=Some(rows);self.refused=true;self.stage=Stage::Join;}}p}
    Stage::Source=>{
-    let d=RetirementDemand{copy_bytes:RetainedCloneSource::<M::Diff>::constructor_copy_bytes()+size_of::<Option<M::Diff>>(),capacity_bytes:RetainedCloneSource::<M::Diff>::owned_constructor_capacity_bytes::<()>(),depth:1,..Default::default()};
-    if !semio_framework_os_spr::retained_mutation_demand_fits(d,g){return Ok(PagedOneItemEditStep::Progress(Default::default()));}
-    let child=RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-size_of::<Option<M::Diff>>(),..g};
-    match RetainedCloneSource::admit_owned(self.diff.take().unwrap(),(),child){Ok((s,mut p))=>{*self.source=Some(s);self.stage=Stage::Plan;p.copied_bytes+=size_of::<Option<M::Diff>>();p},Err((e,d,()))=>{*self.diff=Some(d);return Err(e);}}
+    let admission=self.admission.as_mut().ok_or_else(||fault("retained mutation diff admission is absent"))?;
+    if admission.phase()!="ready"{admission.advance(g).result?.progress()}else{let mut output=None;let step=admission.take_output(&mut output,g).result?;if let Some(source)=output{*self.source=Some(source);self.admission.take();self.stage=Stage::Plan;}step.progress()}
    }
    Stage::Plan=>{let Some((o,p))=begin_retained_diff::<S,M::Diff>(g)else{return Ok(PagedOneItemEditStep::Progress(Default::default()));};*self.plan=Some(o);self.stage=Stage::Preflight;p}
    Stage::Preflight=>{let result=preflight_retained_diff(self.plan.as_mut().unwrap(),self.source.as_ref().unwrap().try_borrow()?,before,post.original()?,body,g,receiving).map_err(|error|{let mut p=error.retained_progress();if p!=RetainedCloneProgress::default(){p.copied_bytes=p.copied_bytes.saturating_add(Self::parent_copy());}error.with_retained_progress(p)})?;let p=result.progress();match result{RetainedDiffPreflightStep::Progress(_)=>{},RetainedDiffPreflightStep::Admitted(_,rows)=>{self.messages[1]=Some(rows);self.stage=Stage::Inverse;},RetainedDiffPreflightStep::Refused(_,rows)=>{self.messages[1]=Some(rows);self.refused=true;self.stage=Stage::Join;}}p}
@@ -109,7 +108,8 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> MutationApplyEdit<S,M>{
  fn owner_close_demands(&self,mutations:&dyn ArtifactOwnedValueRetirementFactory<M>,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(o)=self.semantics.as_ref(){return if o.terminal_is_empty(){Ok(scalar(size_of::<Option<RetainedMutationOwner<S,M>>>()))}else{o.close_demand(Self::context(mutations),body)};}
   if let Some(o)=self.plan.as_ref(){return if o.terminal_is_empty(){Ok(scalar(size_of::<Option<RetainedDiffOwner<S,M::Diff>>>()))}else{o.close_demand(body)};}
-  if let Some(o)=self.source.as_ref(){return if o.terminal_is_empty(){Ok(scalar(size_of::<Option<RetainedCloneSource<M::Diff>>>()))}else{o.next_close_demand(body)};}
+  if let Some(a)=self.admission.as_ref(){return if a.phase()=="ready"{a.next_demand()}else{a.next_return_demand()};}
+   if let Some(o)=self.source.as_ref(){return if o.terminal_is_empty(){Ok(scalar(size_of::<Option<RetainedCloneSource<M::Diff>>>()))}else{o.next_close_demand(body)};}
   if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<M::Diff>(false,&None,body);}
   if self.diff.is_some(){return self.retirement.next_owner_demands::<M::Diff>(true,&None,body);}
   if let Some(o)=self.inverse_close.as_ref(){return if o.terminal_is_empty(){Ok(scalar(size_of::<Option<FactoryVectorRetirement<M>>>()))}else{o.demands(mutations,body)};}
@@ -123,16 +123,17 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> MutationApplyEdit<S,M>{
   let moved=||RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()});
   if let Some(o)=self.semantics.as_mut(){if o.terminal_is_empty(){drop(self.semantics.take());return Ok(moved());}return o.close_step(Self::context(mutations),grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
   if let Some(o)=self.plan.as_mut(){if o.terminal_is_empty(){drop(self.plan.take());return Ok(moved());}return o.close_step(grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
-  if let Some(o)=self.source.as_mut(){if o.terminal_is_empty(){drop(self.source.take());return Ok(moved());}return o.close_step(grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
+  if let Some(a)=self.admission.as_mut(){if a.phase()=="ready"{let mut output=None;let step=a.take_output(&mut output,grant).result?;if let Some(source)=output{*self.source=Some(source);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}let mut back=None;let step=a.return_inputs(&mut back,grant).result?;if let Some((diff,()))=back{*self.diff=Some(diff);self.admission.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}
+   if let Some(o)=self.source.as_mut(){if o.terminal_is_empty(){drop(self.source.take());return Ok(moved());}return o.close_step(grant).result.map(|s|RetainedCloneStep::Progress(s.progress()));}
   if !self.retirement.is_empty(){return self.retirement.step_granted(grant).result.map(|s|RetainedCloneStep::Progress(s.progress()));}
   if let Some(s)=self.retirement.begin_granted(&mut self.diff,grant).result?{return Ok(RetainedCloneStep::Progress(s.progress()));}
-  if let Some(o)=self.inverse_close.as_mut(){if o.terminal_is_empty(){self.inverse_close=None;return Ok(moved());}return o.close_step(mutations,grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
+  if let Some(o)=self.inverse_close.as_mut(){if o.terminal_is_empty(){self.inverse_close=None;return Ok(moved());}return o.close_step(mutations,grant).result.map(|s|RetainedCloneStep::Progress(s.progress()));}
   if let Some(rows)=self.inverse.take(){return match FactoryVectorRetirement::admit(rows,grant){Ok((o,p))=>{self.inverse_close=Some(o);Ok(RetainedCloneStep::Progress(p))},Err((e,rows))=>{*self.inverse=Some(rows);Err(e)}};}
   if let Some(o)=self.join.as_mut(){if o.terminal_is_empty(){drop(self.join.take());return Ok(moved());}return o.close_step(grant).map(|s|RetainedCloneStep::Progress(s.progress()));}
   if self.messages.iter().any(Option::is_some){let batches=std::array::from_fn(|i|self.messages[i].take().unwrap_or_default());return match MutationMessageConcat::admit(batches,grant){Ok((mut o,p))=>{o.begin_close();*self.join=Some(o);Ok(RetainedCloneStep::Progress(p))},Err((e,batches))=>{for(i,b)in batches.into_iter().enumerate(){self.messages[i]=Some(b);}Err(e)}};}
   Ok(RetainedCloneStep::Complete(Default::default()))
  }
- fn owner_terminal_is_empty(&self)->bool{self.semantics.is_none()&&self.plan.is_none()&&self.source.is_none()&&self.diff.is_none()&&self.inverse.is_none()&&self.inverse_close.is_none()&&self.join.is_none()&&self.messages.iter().all(Option::is_none)&&self.retirement.is_empty()}
+ fn owner_terminal_is_empty(&self)->bool{self.semantics.is_none()&&self.plan.is_none()&&self.source.is_none()&&self.admission.is_none()&&self.diff.is_none()&&self.inverse.is_none()&&self.inverse_close.is_none()&&self.join.is_none()&&self.messages.iter().all(Option::is_none)&&self.retirement.is_empty()}
 }
 impl<S:SnapshotProjection,M:RetainedMutation<S>> Drop for MutationApplyEdit<S,M>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"retained mutation edit requires complete original ownership closure");if empty{unsafe{ManuallyDrop::drop(&mut self.semantics);ManuallyDrop::drop(&mut self.diff);ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.plan);ManuallyDrop::drop(&mut self.inverse);ManuallyDrop::drop(&mut self.messages);ManuallyDrop::drop(&mut self.join);}}}}
 /// 🏭️ Every mounted mutation family supplies required retained semantics and a typed central apply plan.

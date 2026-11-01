@@ -130,7 +130,7 @@ pub fn fault(message: &str) -> ValueError { ValueError::new(ValueRefusalKind::In
             let source = fields[self.field].as_bytes();
             if self.active.is_none() && self.is_shared(self.field) {
                 if let Some(lease) = lease {
-                    let (clone, progress) = lease.admit_clone(grant)?;
+                    let (clone, progress) = lease.admit_clone(grant).result?;
                     self.shared[self.field] = Some(clone);
                     self.source = Some(seal);
                     self.field += 1;

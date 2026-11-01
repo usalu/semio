@@ -115,13 +115,13 @@ impl<A: ArtifactApp> CommandHistory<A> {
                 if owner.published(){
                     if !owner.terminal_is_empty(){cx.with_original_retirement(|cx|owner.close_step(&mut stores.store,cx))?;return Ok(false)}
                     let mut d=semio_framework_os_store_engine_replay::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands();d.copy_bytes+=1;
-                    cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,d,|_|{*pending=None;*completed=true;Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}))?;
+                    cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,d,|_|{*pending=None;*completed=true;semio_framework_value::RetainedWorkOutcome{result:Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}}))?;
                     return Ok(*completed)
                 }
                 if owner.prepared(){owner.publish(&mut stores.store,cx)?;}else{owner.advance(&mut stores.store,&transaction.id,cx)?;}
                 return Ok(false)
             }
-            if stores.store.open_transaction().is_none(){let mut admitted=None;semio_framework_job::admit_original_construction(cx,&mut admitted,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:1,capacity_bytes:0,release_bytes:0,depth:1},|_|{*completed=true;Ok(((),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()}))})?;return Ok(*completed)}
+            if stores.store.open_transaction().is_none(){let mut admitted=None;semio_framework_job::admit_original_construction(cx,&mut admitted,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:1,capacity_bytes:0,release_bytes:0,depth:1},|_|{*completed=true;semio_framework_value::RetainedWorkOutcome{result:Ok(((),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})),work:1}})?;return Ok(*completed)}
             semio_framework_os_store_engine_replay::abort::OriginalStreamAbort::admit(&stores.store,&transaction.id,cx,pending)?;
             return Ok(false)
         }

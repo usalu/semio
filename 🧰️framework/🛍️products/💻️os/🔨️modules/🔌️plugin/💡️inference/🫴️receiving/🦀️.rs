@@ -3,7 +3,7 @@ use super::ArtifactDocumentPayload;
 use base64_codec::{Base64Control, Base64ControlError, Base64DecodeCursor, Base64Input};
 use semio_framework::action_bus::{admit_original_tool_construction_scoped, OriginalToolSourceBinding, ToolJobAdmissionDemand};
 use semio_framework_job::{close_original_retained_step, InteractiveJobCloseStep, OriginalTurnFailure, StepContext};
-use semio_framework_value::{retirement::controlled::ControlledRetirement, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
+use semio_framework_value::{retirement::controlled::ControlledRetirement, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind};
 use std::mem::{size_of, ManuallyDrop};
 
 #[derive(semio_framework_value::RetireOwned)]
@@ -118,7 +118,7 @@ impl OriginalArtifactDocumentReceiving {
         self.closing = true;
         if self.terminal_is_empty() { return Ok(InteractiveJobCloseStep::Complete { progress: Default::default() }); }
         if let Some(owner) = self.close_owner.as_mut() {
-            let step = close_original_retained_step(cx, owner.next_demand(4096)?, |grant| owner.step(grant))?;
+            let step = close_original_retained_step(cx, owner.next_demand(4096)?, |grant| { let result = owner.step(grant); RetainedWorkOutcome { result, work: owner.last_turn_work() } })?;
             if owner.terminal_is_empty() { *self.close_owner = None; }
             return Ok(step);
         }
@@ -133,7 +133,7 @@ impl OriginalArtifactDocumentReceiving {
             } else if let Some(index) = self.decoded.iter().position(Option::is_some) {
                 *self.close_owner = Some(ControlledRetirement::retain(DocumentSourceOwner::Bytes(self.decoded[index].take().expect("original decoded bytes"))));
             }
-            Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
+            RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
         })
     }
 

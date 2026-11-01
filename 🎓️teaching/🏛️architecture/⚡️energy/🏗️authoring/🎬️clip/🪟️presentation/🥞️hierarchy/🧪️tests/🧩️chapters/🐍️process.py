@@ -47,7 +47,6 @@ def main():
          "handoff": metadata["handoff"]} for frame, metadata in zip(frames, result["metadata"], strict=True)]}
     (work / "dom.json").write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     (work / "result.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
-    print("[DEBUG] Public boundary process", label, os.getpid(), work, flush=True)
 
 
 if __name__ == "__main__":

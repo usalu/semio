@@ -2,7 +2,8 @@
 use semio_framework_value::{DslValue,ToValue,FromValue};
 use semio_framework_pack_error::PackError;
 use crate::record::{EncodeOptions as PackEncodeOptions,DecodeOptions as PackDecodeOptions};
-use semio_framework_dsl_record::{RecordSpecProducer,BorrowedRecordSpecProducer};
+use semio_framework_dsl_record::RecordSpecProducer;
+pub use semio_framework_dsl_record::BorrowedRecordSpecProducer;
 /// 🧬️ Native snapshot registration depends only on authentic immutable Pack metadata.
 pub trait ArtifactPackMetadata:Sized{
     const EXTENSION:&'static str;

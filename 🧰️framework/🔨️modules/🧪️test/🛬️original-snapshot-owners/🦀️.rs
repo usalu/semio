@@ -32,7 +32,7 @@ pub fn with_decoding<T>(operation: impl FnOnce(&mut NativeSnapshotDecodeOwner<'_
     let result = operation(&mut owner);
     drop(owner);
     while native.has_retirement_owner() {
-        native.close_retirement_recipient(grant).expect("original decode recipient closes");
+        native.close_retirement_recipient(grant).result.expect("original decode recipient closes");
     }
     result
 }
@@ -48,7 +48,7 @@ pub fn with_encoding<T>(operation: impl FnOnce(&mut NativeSnapshotEncodeOwner<'_
     let result = operation(&mut owner);
     drop(owner);
     while native.has_retirement_owner() {
-        native.close_retirement_recipient(grant).expect("original encode recipient closes");
+        native.close_retirement_recipient(grant).result.expect("original encode recipient closes");
     }
     result
 }
@@ -63,7 +63,7 @@ pub fn with_sqlite_recipient<T>(limits: SqliteDatabaseLimits, accept: &mut dyn F
         operation(&mut control)
     };
     while !recipient.terminal_is_empty() {
-        recipient.close_step(grant).expect("original SQLite recipient closes");
+        recipient.close_step(grant).result.expect("original SQLite recipient closes");
     }
     result
 }
@@ -94,23 +94,23 @@ fn close_original(native: &mut IoRunControl<'_, '_>) {
         while owner.native().has_retirement_owner() {
             let grant = owner.remaining_grant();
             let result = owner.native().close_retirement_recipient(grant);
-            let progress = match &result {
+            let progress = match &result.result {
                 Ok(step) => step.progress(),
                 Err(error) => error.retained_progress(),
             };
             owner.record_progress(progress).expect("original decode close is funded");
-            result.expect("original decode recipient closes");
+            result.result.expect("original decode recipient closes");
         }
     }
     let mut owner = native.snapshot_encode().expect("original encode direction");
     while owner.native().has_retirement_owner() {
         let grant = owner.remaining_grant();
         let result = owner.native().close_retirement_recipient(grant);
-        let progress = match &result {
+        let progress = match &result.result {
             Ok(step) => step.progress(),
             Err(error) => error.retained_progress(),
         };
         owner.record_progress(progress).expect("original encode close is funded");
-        result.expect("original encode recipient closes");
+        result.result.expect("original encode recipient closes");
     }
 }

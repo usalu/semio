@@ -7128,7 +7128,7 @@
   backdrop-filter: blur(var(--veil-blur)) saturate(var(--glass-saturate));
   background-color: color-mix(in srgb, var(--surface-bg) calc(var(--veil-alpha) * 100%), transparent);
 }
-/* 🌫 The card under the pointer wears the veil's tint, so the page behind it is the only crisp surface. */
+/* 🌫 The card whose explore control is pressed wears the veil's tint, so the page behind it is the only crisp surface. */
 [data-layered-card][data-tinted] > * {
   position: relative;
 }

@@ -215,8 +215,8 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
-        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op") },
+        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op")).unwrap() },
+        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op")).unwrap() },
         timestamp: semio_framework_os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
         transaction: None, verb: None, line: None,
     };
@@ -289,8 +289,8 @@ async fn sample_wire_envelope_for_fixtures() -> MutationEnvelope {
         dependencies: vec![MutationId("op-1".to_string())],
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op") },
-        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
+        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op")).unwrap() },
+        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op")).unwrap() },
         timestamp: semio_framework_os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
         transaction: None, verb: None, line: None,
     }

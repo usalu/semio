@@ -19,12 +19,12 @@ impl<T: RetireOwned, const N: usize> RetirementCursor for Vector<T, N> {
         })
     }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
-        let demand = match self.next_demand(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return RetirementStep::Failure(error) };
+        let demand = match self.next_demand(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return RetirementStep::Failure(error, 0) };
         if !retained_clone_grant_admits(grant, demand) { return RetirementStep::BudgetExhausted; }
         if let Some(value) = self.0.pop() { return RetirementStep::Child(value.retirement()); }
         if self.0.pages.pop().is_some() { return RetirementStep::Bytes(demand.release_bytes); }
         if self.0.pages.capacity() != 0 { drop(std::mem::take(&mut self.0.pages)); return RetirementStep::Bytes(demand.release_bytes); }
-        RetirementStep::Complete
+        RetirementStep::Complete(1)
     }
     fn terminal_is_empty(&self) -> bool { self.0.len == 0 && self.0.pages.is_empty() && self.0.pages.capacity() == 0 }
     fn terminal_release_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
@@ -57,10 +57,10 @@ impl<K: RetireOwned, V: RetireOwned, const N: usize, const S: usize> RetirementC
         })
     }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
-        let demand = match self.next_demand(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return RetirementStep::Failure(error) };
+        let demand = match self.next_demand(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return RetirementStep::Failure(error, 0) };
         if !retained_clone_grant_admits(grant, demand) { return RetirementStep::BudgetExhausted; }
         if self.owner.len != 0 {
-            let Some(page) = self.owner.pages.get_mut(self.page) else { return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated, "fixed map lost an initialized original entry")); };
+            let Some(page) = self.owner.pages.get_mut(self.page) else { return RetirementStep::Failure(ValueError::literal(ValueRefusalKind::InvariantViolated, "fixed map lost an initialized original entry"), 1); };
             if self.slot == page.len() { self.page += 1; self.slot = 0; return RetirementStep::ProcessedBytes(demand.copy_bytes); }
             let value = page[self.slot].take();
             self.slot += 1;
@@ -69,7 +69,7 @@ impl<K: RetireOwned, V: RetireOwned, const N: usize, const S: usize> RetirementC
         }
         if self.owner.pages.pop().is_some() { return RetirementStep::Bytes(demand.release_bytes); }
         if self.owner.pages.capacity() != 0 { drop(std::mem::take(&mut self.owner.pages)); return RetirementStep::Bytes(demand.release_bytes); }
-        RetirementStep::Complete
+        RetirementStep::Complete(1)
     }
     fn terminal_is_empty(&self) -> bool { self.owner.len == 0 && self.owner.pages.is_empty() && self.owner.pages.capacity() == 0 }
     fn terminal_release_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }

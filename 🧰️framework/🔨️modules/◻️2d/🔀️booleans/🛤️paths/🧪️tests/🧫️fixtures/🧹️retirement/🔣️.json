@@ -1,6 +1,6 @@
 {
  "source": "transformed overlapping rectangles",
- "minimumWork": 12,
+ "minimumWork": 11,
  "cases": [
   {"phase":"fresh","offset":0},
   {"phase":"admitting","offset":2},
@@ -8,7 +8,7 @@
   {"phase":"transforming","offset":2},
   {"phase":"boolean","offset":2},
   {"phase":"flattenClosing","offset":1},
-  {"phase":"booleanClosing","offset":1},
+  {"phase":"booleanClosing","offset":0},
   {"phase":"complete","offset":0},
   {"phase":"failure","offset":0,"maxWork":2},
   {"phase":"failure","offset":0,"maxSegments":2},

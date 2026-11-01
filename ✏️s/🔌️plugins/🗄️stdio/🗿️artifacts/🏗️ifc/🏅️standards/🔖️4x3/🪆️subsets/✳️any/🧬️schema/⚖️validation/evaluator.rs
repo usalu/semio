@@ -1,6 +1,6 @@
 //! 🧠 Budgeted native EXPRESS interpreter over the canonical immutable syntax.
 use super::ast::*;
-use crate::catalog::{ifc4x3_catalog, IfcCatalog};
+use semio_s_artifact_stdio_ifc4x3_schema::{ifc4x3_catalog, IfcCatalog};
 use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};

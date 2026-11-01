@@ -211,6 +211,9 @@
             "minLength": 1
           }
         },
+        "pressed": {
+          "type": "boolean"
+        },
         "camera": {
           "type": "object",
           "required": [

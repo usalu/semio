@@ -45,5 +45,4 @@ fn fem3d_scalar_publication_refuses_reused_counters_from_another_document() {
         drop(state);
         drain_recovery_state(&mut registry, identity, shell);
     });
-    eprintln!("[DEBUG] FEM3D refused foreign canonical scalar/progress without changing fields, accepted exact authority, and retired original pages");
 }

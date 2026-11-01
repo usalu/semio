@@ -565,7 +565,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
           </div>
         ),
       },
-      ...buildVirtualFileSystemDescriptorColumns(schema, locale),
+      ...(locale === undefined ? [] : buildVirtualFileSystemDescriptorColumns(schema, locale)),
     ];
     return [...base, ...extraColumns];
   }, [extraColumns, onToggleExpand, schema, nameLabel, collapseLabel, expandLabel, locale]);

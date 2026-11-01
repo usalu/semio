@@ -142,15 +142,15 @@ async fn cancelled_hydration_retires_the_same_original_opened_actor_owner() {
     for actor in fixture["retiredActors"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()) {
         let mut hydration = RetainedPersistedDocumentHydration::<DemoSnapshot, DemoMutation>::from_pack(files.pack.clone(), history.clone(), expected.clone(), None, "demo/v1".into(), fixture_demo_owners(), semio_framework_job::OperationId(701), semio_framework_job::Generation(1), u64::MAX, PersistedDocumentHydrationTarget::Store { generation: 0 }, ActorId(actor.into()));
         let zero=RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0};
-        assert_eq!(hydration.close_step(zero).unwrap(),RetainedCloneStep::Progress(Default::default()));
+        assert_eq!(hydration.close_step(zero).result.unwrap(),RetainedCloneStep::Progress(Default::default()));
         let grant=|key:&str|{let n=|axis:&str|fixture[key][axis].as_u64().unwrap()as usize;RetainedCloneGrant{maximum_items:n("items"),maximum_copy_bytes:n("copy"),maximum_capacity_bytes:n("capacity"),maximum_release_bytes:n("release"),maximum_depth:n("depth")}};
         let mut charged = 0;
         for _ in 0..32 {
-            let admitted=grant("grant");let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||hydration.close_step(admitted).unwrap());let receipt=step.progress();assert!(receipt.fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));charged+=receipt.released_bytes;
+            let admitted=grant("grant");let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||hydration.close_step(admitted).result.unwrap());let receipt=step.progress();assert!(receipt.fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));charged+=receipt.released_bytes;
         }
         assert!(!hydration.terminal_is_empty(),"three release bytes cannot physically release the original actor allocation");
         for _ in 0..fixture["maximumTurns"].as_u64().unwrap() {
-            let admitted=grant("cleanupGrant");let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||hydration.close_step(admitted).unwrap());let receipt=step.progress();assert!(receipt.fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));charged+=receipt.released_bytes;if matches!(step,RetainedCloneStep::Complete(_)){break}
+            let admitted=grant("cleanupGrant");let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||hydration.close_step(admitted).result.unwrap());let receipt=step.progress();assert!(receipt.fits(admitted));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));charged+=receipt.released_bytes;if matches!(step,RetainedCloneStep::Complete(_)){break}
         }
         assert!(hydration.terminal_is_empty());
         receipts.push(charged);
@@ -285,8 +285,8 @@ async fn interior_revert_store(early_exit: bool) -> ArtifactStore<DemoSnapshot, 
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: SchemaId("demo/v1".into()), payload: add(1).encode_op().unwrap() },
-        inverse: semio_framework_os_spr::InverseMutation { schema: SchemaId("demo/v1".into()), payload: Vec::new() },
+        diff: semio_framework_os_spr::ArtifactDiff { schema: SchemaId("demo/v1".into()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&add(1).encode_op().unwrap()).unwrap() },
+        inverse: semio_framework_os_spr::InverseMutation { schema: SchemaId("demo/v1".into()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&Vec::new()).unwrap() },
         timestamp: HybridLogicalTimestamp { actor: 4, physical_ms: u64::MAX / 2, logical: 0 },
         transaction: None,
         verb: None,

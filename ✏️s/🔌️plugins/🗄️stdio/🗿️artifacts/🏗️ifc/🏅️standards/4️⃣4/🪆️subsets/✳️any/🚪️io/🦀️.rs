@@ -325,6 +325,9 @@ semio_framework_plugin::derive_artifact_facets!(
 );
 
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::*;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::io::{binary,text};
+use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::io::{binary::mutations as mutation_binary, text::mutations as mutation_text};
+use semio_s_artifact_stdio_ifc_4_inferences::standards::v4::subsets::any::schema::inferences;
 use semio_s_artifact_stdio_ifc_4_descriptor::standards::v4::subsets::any::schema::descriptor::ifc_artifact_schema_descriptor;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcSnapshot;
 use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::IfcMutation;
@@ -373,10 +376,10 @@ pub fn register_pilot_languages() {
         id: "stdio.ifc.op",
         extension: None,
         role: semio_framework_dsl::LanguageRole::Ops,
-        grammar: Some(text::mutations::COMPONENT_GRAMMAR_SEMIO),
-        grammar_path: Some(text::mutations::COMPONENT_GRAMMAR_PATH),
-        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
+        grammar: Some(mutation_text::COMPONENT_GRAMMAR_SEMIO),
+        grammar_path: Some(mutation_text::COMPONENT_GRAMMAR_PATH),
+        protocol: Some(mutation_binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(mutation_binary::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.op"),
     });
     semio_framework_dsl::register_language(semio_framework_dsl::LanguageSpec {
@@ -405,8 +408,8 @@ pub fn register_pilot_languages() {
         role: semio_framework_dsl::LanguageRole::Spr,
         grammar: None,
         grammar_path: None,
-        protocol: Some(binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-        protocol_path: Some(binary::mutations::COMPONENT_PROTOCOL_PATH),
+        protocol: Some(mutation_binary::COMPONENT_PROTOCOL_SEMIO),
+        protocol_path: Some(mutation_binary::COMPONENT_PROTOCOL_PATH),
         hooks: semio_framework_dsl::passthrough_hooks("stdio.ifc.spr"),
     });
 }

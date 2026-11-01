@@ -1,6 +1,6 @@
 # 🧺️ Demonstrator: Entwerfen mit Bestand
 
-The demonstrator of the research project "Entwerfen mit Bestand" (`@semio-tech/mit-bestand-demonstrator`): a German-locked landing page that shows eight live panes of the framework OS (`generator`, `koordinator`, `aggregator`, `aussuchen`, `bearbeiten`, `verfolgen`, `energy`, `fem3d`; the catalog is `🔨️modules/🧩️runtime/🔣️.json`, the brands `🪧️brand.ts`). The dev server listens on port `6029`; a release build assembles the static site (`build`). A German version of the developer chapter follows the last section.
+The demonstrator of the research project "Entwerfen mit Bestand" (`@semio-tech/mit-bestand-demonstrator`): a landing page in English and German, with no default language (the stored choice, else the browser's preferred languages, else a picker; a switcher stays in the navbar), that shows eight live panes of the framework OS (`generator`, `koordinator`, `aggregator`, `aussuchen`, `bearbeiten`, `verfolgen`, `energy`, `fem3d`; the catalog is `🔨️modules/🧩️runtime/🔣️.json`, the brands `🪧️brand.ts`). The dev server listens on port `6029`; a release build assembles the static site (`build`). A German version of the developer chapter follows the last section.
 
 | Path | What |
 |---|---|

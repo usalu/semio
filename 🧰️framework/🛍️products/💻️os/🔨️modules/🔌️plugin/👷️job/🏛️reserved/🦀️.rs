@@ -34,6 +34,7 @@ use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationContr
 use semio_framework_plugin_decl_app::tool_contract::ArtifactToolPublicationLane;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactToolRegistration;
 use crate::lifted_full_operation_job::TypedCommandFullOperationJobFactory;
+use crate::{retired};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum FrameworkReservedStage {
@@ -93,10 +94,8 @@ macro_rules! framework_reserved_job {
                 }
                 Ok(crate::reserved_job_bytes::demands(&self.raw, &self.operation))
             }
-        }
 
-        impl semio_framework_job::InteractiveJob for $job {
-            fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+            fn step_original<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
                 if cx.is_cancelled() {
                     return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
                 }
@@ -150,6 +149,12 @@ macro_rules! framework_reserved_job {
                 }
                 Ok(None)
             }
+        }
+
+        impl semio_framework_job::InteractiveJob for $job {
+            fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+                semio_framework_job::InteractiveJobStep::from_callback(self.step_original(cx))
+            }
 
             fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
                 self.outcomes.borrow_outcome(descriptor)
@@ -165,7 +170,7 @@ macro_rules! framework_reserved_job {
                 let demand=self.close_demand()?;
                 let remaining=cx.retained_grant();
                 if !cx.should_yield()&&remaining.maximum_items>0&&remaining.maximum_depth<demand.depth{return Err(semio_framework_job::OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::DepthLimit,"original reserved close exceeds caller depth")))}
-                let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{self.pending=None;if !self.outcomes.terminal_is_empty(){self.outcomes.close_step(grant)}else{crate::reserved_job_bytes::close(&mut self.raw,&mut self.operation,grant)}})?;
+                let step=retired(cx,demand,|grant|{self.pending=None;if !self.outcomes.terminal_is_empty(){self.outcomes.close_step(grant)}else{crate::reserved_job_bytes::close(&mut self.raw,&mut self.operation,grant)}})?;
                 Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
             }
 
@@ -399,6 +404,7 @@ pub struct FrameworkConfigurationBinaryJob<A: ArtifactApp> {
     pub receiving:ManuallyDrop<Option<store::os_store::command_format::receiving::RetainedArtifactCommandReceiving<A::ConfigMutation>>>,
     pub native:semio_framework_job_native_decode::OriginalNativeDecodeSource,
     pub failure:ManuallyDrop<Option<OriginalConfigurationFailure>>,
+    pub place:ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<OriginalConfigurationFailure>>>,
     pub state: [u8; 8],
     pub pending: Option<semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind>,
     pub outcomes: semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes,
@@ -406,9 +412,12 @@ pub struct FrameworkConfigurationBinaryJob<A: ArtifactApp> {
 }
 
 impl<A: ArtifactApp> FrameworkConfigurationBinaryJob<A> {
+    fn admit_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{if !self.place.as_ref().is_some_and(|place|place.ready()){if self.place.is_none(){*self.place=Some(Default::default());}self.place.as_mut().ok_or_else(||ValueError::invariant("original configuration failure place"))?.prepare(cx)?;return Ok(None)}let place=self.place.as_mut().ok_or_else(||ValueError::invariant("original configuration failure place"))?;if !place.pending(){let original=&mut *self.failure;place.with_body(cx,|_,slot|{*slot=original.take();Ok(())})?;}let admitted=semio_framework_job::admit_original_domain_failure(place,cx)?;if self.place.as_ref().is_some_and(|place|place.terminal_is_empty()){*self.place=None;}Ok(admitted)}
+
     pub fn close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if !self.outcomes.terminal_is_empty() { return self.outcomes.close_demands(); }
-        if self.failure.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
+        if self.place.is_some(){return Ok(Default::default())}
+        if self.failure.is_some(){return Ok(semio_framework_job::original_domain_failure_demand::<OriginalConfigurationFailure>())}
         if let Some(owner)=self.receiving.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.close_demands(body)}}
         if !self.native.terminal_is_empty(){return self.native.retirement_demands(body)}
         if self.raw.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.raw.capacity(),depth:1,..Default::default()})}
@@ -420,9 +429,52 @@ impl<A: ArtifactApp> FrameworkConfigurationBinaryJob<A> {
 }
 
 impl<A: ArtifactApp> semio_framework_job::InteractiveJob for FrameworkConfigurationBinaryJob<A> {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_original(cx))
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
+        self.outcomes.borrow_outcome(descriptor)
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::InteractiveJobCloseStep as Step;
+        self.closing=true;if self.terminal_is_empty(){return Ok(Step::Complete{progress:Default::default()})}let demand=self.close_demand(cx.retained_grant().maximum_copy_bytes)?;
+        let remaining=cx.retained_grant();
+        if !cx.should_yield()&&remaining.maximum_items>0&&remaining.maximum_depth<demand.depth{return Err(semio_framework_job::OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::DepthLimit,"original configuration close exceeds caller depth")))}
+        if self.outcomes.terminal_is_empty(){
+            if self.failure.is_some()||self.place.is_some(){if let Some(failure)=self.admit_failure(cx)?{return Err(failure)}return Ok(Step::Pending{progress:Default::default()})}
+            if let Some(owner)=self.receiving.as_mut(){if !owner.terminal_is_empty(){if let Some(outcome)=owner.close_on_original(cx,&mut self.native)?{let progress=outcome.progress;match(outcome.value,outcome.receiving_refusal){(Err(producer),Some(receiving))=>*self.failure=Some(OriginalConfigurationFailure::Native{producer:semio_framework_job::OriginalTurnFailure::from(semio_framework_job::OriginalTurnPrimary::Receiving(producer)),receiving}),(Err(producer),None)=>return Err(semio_framework_job::OriginalTurnFailure::from(semio_framework_job::OriginalTurnPrimary::Receiving(producer))),(Ok(_),Some(receiving))=>return Err(receiving),(Ok(_),None)=>{}}return Ok(Step::Pending{progress})}return Ok(Step::Pending{progress:Default::default()})}}
+            if self.receiving.is_none()&&!self.native.terminal_is_empty(){let step=self.native.close_step(cx)?;return Ok(Step::Pending{progress:step.progress()})}
+        }
+        let step=retired(cx,demand,|grant|{
+            self.pending=None;if !self.outcomes.terminal_is_empty(){return self.outcomes.close_step(grant)}
+            if self.receiving.as_ref().is_some_and(|owner|owner.terminal_is_empty()){self.receiving.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
+            if self.raw.capacity()!=0{let released_bytes=self.raw.capacity();drop(std::mem::take(&mut self.raw));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:0,released_bytes,..Default::default()}))}
+            if let Some(owner)=self.decoded_close.as_mut(){if !owner.terminal_is_empty(){return owner.step(grant)}drop(self.decoded_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
+            if let Some(original)=self.decoded.take(){self.decoded_close=Some(ConfigurationDecodeRetirement{original:ManuallyDrop::new(Some(original)),payload:None});return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
+            self.operation=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
+        })?;
+        Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
+    }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { self.close_demand(usize::MAX).map(|demand| demand.copy_bytes) }
+    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { self.close_demand(body).map(|demand| demand.capacity_bytes) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { self.close_demand(usize::MAX).map(|demand| demand.release_bytes) }
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { self.close_demand(usize::MAX).map(|demand| demand.depth) }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.raw.capacity() == 0 && self.decoded.is_none() && self.decoded_close.is_none() && self.receiving.is_none() && self.native.terminal_is_empty() && self.failure.is_none() && self.place.is_none() && self.operation.is_none() && self.outcomes.terminal_is_empty()
+    }
+}
+
+impl<A: ArtifactApp> FrameworkConfigurationBinaryJob<A> {
+    fn step_original<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind;
-        if self.failure.is_some(){if let Some(failure)=semio_framework_job::admit_original_domain_failure(&mut self.failure,cx)?{return Err(failure)}return Ok(None)}
+        if self.failure.is_some()||self.place.is_some(){if let Some(failure)=self.admit_failure(cx)?{return Err(failure)}return Ok(None)}
         if cx.is_cancelled() {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
         }
@@ -441,55 +493,18 @@ impl<A: ArtifactApp> semio_framework_job::InteractiveJob for FrameworkConfigurat
         match self.stage {
             FrameworkConfigurationBinaryStage::Envelope=>{
                 cx.set_stage("framework-configuration-binary-source");if !self.native.admit_step(cx)?{return Ok(None)}
-                if self.receiving.is_none(){if cx.should_yield(){return Ok(None)}if let Some((owner,progress))=store::os_store::command_format::receiving::RetainedArtifactCommandReceiving::admit(&self.raw,(0,self.raw.len()),cx.retained_grant())?{*self.receiving=Some(owner);cx.consume_retained(progress)?;cx.consume_fuel(progress.copied_items as u64);self.stage=FrameworkConfigurationBinaryStage::Decode;}}
+                if self.receiving.is_none(){if cx.should_yield(){return Ok(None)}if let Some((owner,progress))=store::os_store::command_format::receiving::RetainedArtifactCommandReceiving::admit(&self.raw,(0,self.raw.len()),cx.retained_grant()).result?{*self.receiving=Some(owner);cx.consume_retained(progress)?;cx.consume_fuel(progress.copied_items as u64);self.stage=FrameworkConfigurationBinaryStage::Decode;}}
             },
             FrameworkConfigurationBinaryStage::Decode=>{
                 cx.set_stage("framework-configuration-binary-decode");let owner=self.receiving.as_mut().expect("original command receiving frame remains mounted");
-                if owner.is_ready(){let grant=cx.retained_grant();if cx.should_yield(){return Ok(None)}let mut command=None;let progress=owner.take_into(&mut command,grant)?;if let Some(command)=command{let output=self.decoded.as_ref().expect("original configuration completion remains mounted");let mut slot=output.lock().unwrap_or_else(std::sync::PoisonError::into_inner);assert!(slot.is_none(),"original configuration completion cannot overwrite its typed source");*slot=Some(Ok(command));self.stage=FrameworkConfigurationBinaryStage::Complete;}cx.consume_retained(progress)?;cx.consume_fuel(progress.copied_items as u64);return Ok(None)}
-                if let Some(outcome)=owner.receive_step(&self.raw,cx.retained_grant().maximum_copy_bytes,cx,&mut self.native)?{match(outcome.value,outcome.receiving_refusal){(Err(producer),Some(receiving))=>*self.failure=Some(OriginalConfigurationFailure::Native{producer,receiving}),(Err(producer),None)=>return Err(producer.into()),(Ok(_),Some(receiving))=>return Err(receiving),(Ok(progress),None)=>{self.cursor=self.cursor.saturating_add(progress.copied_items);self.state=(self.cursor as u64).to_le_bytes();self.pending=Some(ReservedOutcomeKind::Checkpoint{applied_progress:self.cursor as u64});}}}
+                if owner.is_ready(){let grant=cx.retained_grant();if cx.should_yield(){return Ok(None)}let mut command=None;let progress=owner.take_into(&mut command,grant).result?;if let Some(command)=command{let output=self.decoded.as_ref().expect("original configuration completion remains mounted");let mut slot=output.lock().unwrap_or_else(std::sync::PoisonError::into_inner);assert!(slot.is_none(),"original configuration completion cannot overwrite its typed source");*slot=Some(Ok(command));self.stage=FrameworkConfigurationBinaryStage::Complete;}cx.consume_retained(progress)?;cx.consume_fuel(progress.copied_items as u64);return Ok(None)}
+                if let Some(outcome)=owner.receive_step(&self.raw,cx.retained_grant().maximum_copy_bytes,cx,&mut self.native)?{match(outcome.value,outcome.receiving_refusal){(Err(producer),Some(receiving))=>*self.failure=Some(OriginalConfigurationFailure::Native{producer:semio_framework_job::OriginalTurnFailure::from(semio_framework_job::OriginalTurnPrimary::Receiving(producer)),receiving}),(Err(producer),None)=>return Err(semio_framework_job::OriginalTurnFailure::from(semio_framework_job::OriginalTurnPrimary::Receiving(producer))),(Ok(_),Some(receiving))=>return Err(receiving),(Ok(progress),None)=>{self.cursor=self.cursor.saturating_add(progress.copied_items);self.state=(self.cursor as u64).to_le_bytes();self.pending=Some(ReservedOutcomeKind::Checkpoint{applied_progress:self.cursor as u64});}}}
             },
             FrameworkConfigurationBinaryStage::Complete => {
                 self.pending = Some(ReservedOutcomeKind::Commit);
             }
         }
         Ok(None)
-    }
-
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
-        self.outcomes.borrow_outcome(descriptor)
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_job::InteractiveJobCloseStep as Step;
-        self.closing=true;if self.terminal_is_empty(){return Ok(Step::Complete{progress:Default::default()})}let demand=self.close_demand(cx.retained_grant().maximum_copy_bytes)?;
-        let remaining=cx.retained_grant();
-        if !cx.should_yield()&&remaining.maximum_items>0&&remaining.maximum_depth<demand.depth{return Err(semio_framework_job::OriginalTurnFailure::from(ValueError::literal(ValueRefusalKind::DepthLimit,"original configuration close exceeds caller depth")))}
-        if self.outcomes.terminal_is_empty(){
-            if self.failure.is_some(){if let Some(failure)=semio_framework_job::admit_original_domain_failure(&mut self.failure,cx)?{return Err(failure)}return Ok(Step::Pending{progress:Default::default()})}
-            if let Some(owner)=self.receiving.as_mut(){if !owner.terminal_is_empty(){if let Some(outcome)=owner.close_on_original(cx,&mut self.native)?{let progress=outcome.progress;match(outcome.value,outcome.receiving_refusal){(Err(producer),Some(receiving))=>*self.failure=Some(OriginalConfigurationFailure::Native{producer,receiving}),(Err(producer),None)=>return Err(producer.into()),(Ok(_),Some(receiving))=>return Err(receiving),(Ok(_),None)=>{}}return Ok(Step::Pending{progress})}return Ok(Step::Pending{progress:Default::default()})}}
-            if self.receiving.is_none()&&!self.native.terminal_is_empty(){let step=self.native.close_step(cx)?;return Ok(Step::Pending{progress:step.progress()})}
-        }
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
-            self.pending=None;if !self.outcomes.terminal_is_empty(){return self.outcomes.close_step(grant)}
-            if self.receiving.as_ref().is_some_and(|owner|owner.terminal_is_empty()){self.receiving.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
-            if self.raw.capacity()!=0{let released_bytes=self.raw.capacity();drop(std::mem::take(&mut self.raw));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:0,released_bytes,..Default::default()}))}
-            if let Some(owner)=self.decoded_close.as_mut(){if !owner.terminal_is_empty(){return owner.step(grant)}drop(self.decoded_close.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
-            if let Some(original)=self.decoded.take(){self.decoded_close=Some(ConfigurationDecodeRetirement{original:ManuallyDrop::new(Some(original)),payload:None});return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
-            self.operation=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
-        })?;
-        Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
-    }
-    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> { self.close_demand(usize::MAX).map(|demand| demand.copy_bytes) }
-    fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { self.close_demand(body).map(|demand| demand.capacity_bytes) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { self.close_demand(usize::MAX).map(|demand| demand.release_bytes) }
-    fn next_close_depth_demand(&self) -> Result<usize, ValueError> { self.close_demand(usize::MAX).map(|demand| demand.depth) }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.closing && self.raw.capacity() == 0 && self.decoded.is_none() && self.decoded_close.is_none() && self.receiving.is_none() && self.native.terminal_is_empty() && self.failure.is_none() && self.operation.is_none() && self.outcomes.terminal_is_empty()
     }
 }
 
@@ -882,7 +897,7 @@ pub fn tool_job_registration<A: ArtifactApp>(
     validate_tool_job_rows::<A>(registry, runtime_controller_id, artifact_schema, generated_ids, bus, registrations, A::bounded_first_step_tool_proofs())
 }
 
-/// 🚪️ Admits each proof row only when owner, controller, schema, factory and generated migration join exactly.
+/// 🚪️ Admits each proof row only when owner, controller, schema, factory and generated catalog join exactly.
 pub(crate) fn validate_tool_job_rows<A: ArtifactApp>(
     registry: &AppActionRegistry,
     runtime_controller_id: &str,

@@ -48,7 +48,6 @@ export async function verifyLinkedReadLedger(): Promise<void> {
    }
   }
  } finally {if(previous)artifacts.set(key,previous);else artifacts.delete(key);}
- console.log("[DEBUG] Linked read ledger: native completed request identity, responsive source, exact faults and stale retirement PASS");
 }
 
 /** 🧱️ Exact BLAKE3 pin, byte count, original body retirement and interruption transcripts. */
@@ -63,5 +62,4 @@ export async function verifyLinkedSnapshotBlob(): Promise<void> {
   if(mode==="valid"){const bytes=await read;assert.deepEqual(Array.from(bytes),fixture.snapshot.bytes);assert.ok(original.every(byte=>byte===0));}
   else await assert.rejects(read);
  }
- console.log("[DEBUG] Linked snapshot: exact BLAKE3/size and five refusal transcripts PASS");
 }

@@ -37,5 +37,4 @@ export function testFem2dEventMechanisms(): void {
     const segments = decodeScopedIdentity(target);
     assert.equal(encodeScopedIdentity(segments), target);
   }
-  console.log("[DEBUG] FEM2d sparse transform inverse and independent peer fields agree with Three matrix geometry; typed deletion identities round-trip through shared scope codec");
 }

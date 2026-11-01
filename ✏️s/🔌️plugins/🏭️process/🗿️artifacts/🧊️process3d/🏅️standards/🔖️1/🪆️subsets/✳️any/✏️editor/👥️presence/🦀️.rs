@@ -298,7 +298,7 @@ impl store::SnapshotRetirementFactory<Process3dPresence> for Process3dPresenceRe
         semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<Process3dPresence>()
     }
 
-    fn retire(&self, root: std::sync::Arc<Process3dPresence>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<Process3dPresence>)> {
+    fn retire(&self, root: std::sync::Arc<Process3dPresence>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, std::sync::Arc<Process3dPresence>)> {
         semio_framework_value::retirement::arc_custody::admit_shared_retirement(root, grant, true)
     }
 }

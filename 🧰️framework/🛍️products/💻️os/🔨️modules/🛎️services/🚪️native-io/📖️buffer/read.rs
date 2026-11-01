@@ -9,7 +9,7 @@ impl NativeIoJob{
   cx.original_source_parent()?.validate_borrowed_context(cx)?;
   self.request_path=Some(path);
   if page.is_some_and(|(_,maximum)|maximum==0||maximum>semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES){self.result=Some(Err("native I/O page exceeded the mounted one-page output authority".into()));self.state=NativeIoState::Finished;semio_framework_job::receive_original_retained_work(cx,control())?;return Ok(None)}
-  let path=self.request_path.as_ref().unwrap();match File::open(path){Ok(file)=>self.state=NativeIoState::InspectingRead{file,page},Err(error)=>{self.result=Some(Err(format!("{}: {error}",path.display())));self.state=NativeIoState::Finished}}
+  let path=self.request_path.as_ref().ok_or_else(||ValueError::invariant("request_path absent"))?;match File::open(path){Ok(file)=>self.state=NativeIoState::InspectingRead{file,page},Err(error)=>{self.result=Some(Err(format!("{}: {error}",path.display())));self.state=NativeIoState::Finished}}
   semio_framework_job::receive_original_retained_work(cx,control())?;Ok(None)
  }
  fn observe_original_file(&mut self,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
@@ -40,7 +40,7 @@ impl NativeIoJob{
    if self.pending_payload.is_none(){let NativeIoState::FinishingRead{writer,..}=&mut self.state else{unreachable!()};let turn=writer.finish_next(&mut self.pending_payload,cx);semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(())}
    if self.read_buffer.is_some(){let d=NativeReadBuffer::release_demand(&self.read_buffer);if !permits(g,d){return Ok(())}let turn=NativeReadBuffer::release(&mut self.read_buffer,g);semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(())}
    if !permits(g,fixed()){return Ok(())}
-   let NativeIoState::FinishingRead{eof,..}=std::mem::replace(&mut self.state,NativeIoState::Finished)else{unreachable!()};let bytes=self.pending_payload.take().expect("original finished payload slot");self.result=Some(Ok(match eof{Some(eof)=>NativeIoValue::Page{bytes,eof},None=>NativeIoValue::Bytes(bytes)}));semio_framework_job::receive_original_retained_work(cx,control())?;return Ok(())
+   let NativeIoState::FinishingRead{eof,..}=std::mem::replace(&mut self.state,NativeIoState::Finished)else{return Err(ValueError::invariant("state invariant violated").into())};let bytes=self.pending_payload.take().ok_or_else(||ValueError::invariant("original finished payload slot"))?;self.result=Some(Ok(match eof{Some(eof)=>NativeIoValue::Page{bytes,eof},None=>NativeIoValue::Bytes(bytes)}));semio_framework_job::receive_original_retained_work(cx,control())?;return Ok(())
   }
   if matches!(self.state,NativeIoState::ClosingReadFile{..}){
    if !permits(g,fixed()){return Ok(())}
@@ -52,14 +52,14 @@ impl NativeIoJob{
     let turn=writer.clear_chunk(g);if matches!(&turn.result,Ok(RetainedCloneStep::Complete(_))){let state=std::mem::replace(&mut self.state,NativeIoState::Finished);self.state=match state{NativeIoState::ReadingBuffered{file,writer,..}=>NativeIoState::Reading{file,writer},NativeIoState::ReadingPageBuffered{file,writer,cursor,length,remaining,buffered}=>NativeIoState::ReadingPage{file,writer,cursor:cursor+buffered as u64,length,remaining:remaining-buffered},_=>unreachable!()};}
     semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(())
    }
-   let bytes=self.read_buffer.as_ref().expect("original buffered read backing").initialized_prefix(length)?;let turn=writer.append_next(bytes,cx);semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(())
+   let bytes=self.read_buffer.as_ref().ok_or_else(||ValueError::invariant("original buffered read backing"))?.initialized_prefix(length)?;let turn=writer.append_next(bytes,cx);semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(())
   }
   let (maximum,eof)=match &self.state{NativeIoState::Reading{..}=>(self.known_file_length.unwrap_or(0).saturating_sub(self.read_total as u64).max(1).min(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES as u64)as usize,None),NativeIoState::ReadingPage{cursor,length,remaining,..}=>((*remaining).min(usize::try_from(length.saturating_sub(*cursor)).unwrap_or(usize::MAX)),Some(*cursor>=*length)),_=>unreachable!()};
   if maximum==0||eof==Some(true){if !permits(g,fixed()){return Ok(())}let NativeIoState::ReadingPage{file,writer,..}=std::mem::replace(&mut self.state,NativeIoState::Finished)else{unreachable!()};self.state=NativeIoState::ClosingReadFile{file,writer,eof};semio_framework_job::receive_original_retained_work(cx,control())?;return Ok(())}
   if self.read_buffer.is_none(){let d=NativeReadBuffer::birth_demand();if !permits(g,d){return Ok(())}let turn=NativeReadBuffer::admit(&mut self.read_buffer,g);semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(())}
   if g.maximum_copy_bytes==0||!permits(g,fixed()){return Ok(())}
   let readable=maximum.min(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES).min(g.maximum_copy_bytes);
-  let buffer=self.read_buffer.as_mut().unwrap();
+  let buffer=self.read_buffer.as_mut().ok_or_else(||ValueError::invariant("read_buffer absent"))?;
   if buffer.initialized_len()<readable{let turn=buffer.initialize_prefix(readable,g.maximum_copy_bytes,g);semio_framework_job::receive_original_retained_work(cx,turn)?;return Ok(())}
   let bytes=buffer.initialized_prefix_mut(readable)?;
   let result=match &mut self.state{NativeIoState::Reading{file,..}|NativeIoState::ReadingPage{file,..}=>file.read(bytes),_=>unreachable!()};

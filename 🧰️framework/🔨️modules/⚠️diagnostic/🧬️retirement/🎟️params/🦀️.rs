@@ -21,13 +21,13 @@ impl RetirementCursor for ParamsBoxRetirement{
   let action=self.action();if matches!(action,Action::Done){return RetirementStep::Complete(0)}
   let demand=self.demand();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetirementStep::BudgetExhausted}
   let progress=match action{
-   Action::Take=>{self.values=unsafe{self.source.as_mut().unwrap().take_field(|root|std::ptr::addr_of_mut!((*root).0))};self.taken=true;P{copied_items:1,..Default::default()}},
-   Action::Text(key,bytes)=>{let pair=self.values.last_mut().unwrap();let text=if key{&mut pair.0}else{&mut pair.1};*text=String::new();P{copied_items:1,released_bytes:bytes,..Default::default()}},
+   Action::Take=>{let Some(source)=self.source.as_mut()else{return RetirementStep::Failure(ValueError::invariant("diagnostic retirement source absent"),0)};self.values=unsafe{source.take_field(|root|std::ptr::addr_of_mut!((*root).0))};self.taken=true;P{copied_items:1,..Default::default()}},
+   Action::Text(key,bytes)=>{let Some(pair)=self.values.last_mut()else{return RetirementStep::Failure(ValueError::invariant("diagnostic retirement row absent"),0)};let text=if key{&mut pair.0}else{&mut pair.1};*text=String::new();P{copied_items:1,released_bytes:bytes,..Default::default()}},
    Action::Row=>{self.values.pop();P{copied_items:1,..Default::default()}},
    Action::Vector(bytes)=>{self.values=Vec::new();P{copied_items:1,released_bytes:bytes,..Default::default()}},
-   Action::Shell=>unsafe{self.source.as_mut().unwrap().release_empty(grant)},
+   Action::Shell=>{let Some(source)=self.source.as_mut()else{return RetirementStep::Failure(ValueError::invariant("diagnostic retirement source absent"),0)};unsafe{source.release_empty(grant)}},
    Action::Clear=>{self.source=None;P{copied_items:1,..Default::default()}},
-   Action::Done=>unreachable!(),
+   Action::Done=>return RetirementStep::Complete(0),
   };RetirementStep::Progress(progress,1)
  }
  fn terminal_is_empty(&self)->bool{self.source.is_none()}
@@ -40,7 +40,7 @@ pub(super) fn demands()->RetirementDemand{RetirementDemand{capacity_bytes:size_o
 /// 🛡️ The funded cursor owns the original Box before its sole Vec field transfers exactly once.
 pub(super) fn admit(original:&mut Option<BoxOriginal<FaultParams>>,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(Box<dyn RetirementCursor>,P)>>{
  if original.is_none(){return RetainedWorkOutcome{result:Ok(None),work:0}}
- if !original.as_ref().unwrap().is_initialized(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"diagnostic parameters require their initialized original Box")),work:0}}
+ if !match original.as_ref(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("original absent").into()),work:0}}.is_initialized(){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"diagnostic parameters require their initialized original Box")),work:0}}
  let demand=demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return RetainedWorkOutcome{result:Ok(None),work:0}}
  let layout=std::alloc::Layout::new::<ParamsBoxRetirement>();let Some(pointer)=std::ptr::NonNull::new(unsafe{std::alloc::alloc(layout)}.cast::<ParamsBoxRetirement>())else{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::AllocationFailed,"diagnostic parameter cursor allocation refused")),work:1}};
  let mut cursor=unsafe{pointer.as_ptr().write(ParamsBoxRetirement{source:None,values:Vec::new(),taken:false});Box::from_raw(pointer.as_ptr())};cursor.source=original.take();

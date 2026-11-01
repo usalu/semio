@@ -11,4 +11,3 @@ assert.equal(validate(cases),true,JSON.stringify(validate.errors));
 for(const change of [v=>v.cases[0].placements[0].axes[0]=[1],v=>v.cases[0].placements[0].family='Radial',v=>delete v.cases[0].placements[0].origin]){
  const invalid=structuredClone(cases);change(invalid);assert.equal(validate(invalid),false);
 }
-console.log('[DEBUG] Seven translation-group contracts accepted; three malformed cases rejected.');

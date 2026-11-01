@@ -20,6 +20,7 @@ name = "authoring_law"
 path = "../../🧪️tests/⚖️authoring-law/🦀️.rs"
 
 [dependencies]
+semio-s-plugin-energy-engine-sim-retirement = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-os-store-operation-wire = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }

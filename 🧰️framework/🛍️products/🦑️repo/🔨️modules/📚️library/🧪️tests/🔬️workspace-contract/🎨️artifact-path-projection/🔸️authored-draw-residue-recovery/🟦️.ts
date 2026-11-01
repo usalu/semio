@@ -149,7 +149,7 @@ export function registerAuthoredDrawResidueRecoveryTests(): void {
       expect(row.imports, row.path).toEqual(oracle);
     }
     for (const [name, binding] of Object.entries(contract.inputDiscovery!.workspaceImports)) {
-      expect(JSON.parse(context.files[binding.manifestPath]!.content).name).toBe(name);
+      expect(JSON.parse(context.files[binding.manifestPath]!.content).name).toBe(name.split("/").slice(0, 2).join("/"));
       expect(context.files[binding.entryPath]).toBeDefined();
     }
   });

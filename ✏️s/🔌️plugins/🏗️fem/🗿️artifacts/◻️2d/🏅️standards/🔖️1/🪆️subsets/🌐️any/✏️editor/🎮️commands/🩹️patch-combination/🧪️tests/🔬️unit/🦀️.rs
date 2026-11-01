@@ -99,5 +99,4 @@ fn combination_name_and_terms_preserve_independent_intent(){
     let mut sum=protocol::ColdMutation::diff(&first,&base).into_parts().0;protocol::ColdMutationDiff::absorb(&mut sum,protocol::ColdMutation::diff(&second,&base).into_parts().0);protocol::ColdMutationDiff::absorb(&mut sum,protocol::ColdMutation::diff(&name,&base).into_parts().0);
     assert_eq!(protocol::apply_diff_cold(&sum,&base).unwrap(),combined);
     assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);
-    eprintln!("[DEBUG] combination name and independent keyed terms preserve all authored fields and sparse undo");
 }

@@ -162,7 +162,3 @@ pub fn ifc_to_bim_controlled(snapshot:&IfcSnapshot,control:&mut dyn FnMut(Exchan
     checkpoint(control,"bim-complete",output.storeys.len(),output.storeys.len())?;
     Ok(Composition {snapshot:output,confidence:Confidence::High,diagnostics:vec![loss("BIM spatial projection retains supported authored parameters only; IFC identities, geometry, properties outside the reserved authored set, families and analytical semantics remain in the source graph")]})
 }
-
-#[cfg(test)]
-#[path="🧪️tests/native_bim.rs"]
-mod tests;

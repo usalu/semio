@@ -115,6 +115,7 @@ pub struct GeometryEngine {
     owners:ManuallyDrop<Owners>,
     totals:EngineTotals,
     pub(super) failure:ManuallyDrop<Option<InferenceWorkFailure>>,
+    failure_place:semio_framework_job::OriginalDomainReservation<InferenceWorkFailure>,
 }
 impl Drop for GeometryEngine{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"geometry engine requires paid same-caller closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owners)}}}}
 
@@ -125,7 +126,7 @@ impl GeometryEngine {
     /// 🏗️ An engine whose cache holds at most `budget_bytes`; a zero budget disables the cache.
     pub fn new(catalogue: Arc<Catalogue>, computes:Arc<dyn semio_s_artifact_procedural_3d_geometry_compute::GeometryComputeContext>, budget_bytes: usize) -> Self {
         let config = InferenceCacheConfig { enabled: budget_bytes > 0, budget_bytes, record_stats: true, ..Default::default() };
-        Self { catalogue, computes, cache: semio_framework_async::poll::resolve_ready(InferenceCache::new(config)), owners:ManuallyDrop::new(Owners{base:None,run:None,closing:None,source:None,scope:None,admission_identity:None}), totals: EngineTotals::default(),failure:ManuallyDrop::new(None) }
+        Self { catalogue, computes, cache: semio_framework_async::poll::resolve_ready(InferenceCache::new(config)), owners:ManuallyDrop::new(Owners{base:None,run:None,closing:None,source:None,scope:None,admission_identity:None}), totals: EngineTotals::default(),failure:ManuallyDrop::new(None),failure_place:Default::default() }
     }
 
     /// 🧷️ Whether the retained run of the request with this digest is open: neither finished nor replaced. A cancelled run stays open, so continuing it reports the cancellation.
@@ -146,7 +147,7 @@ impl GeometryEngine {
         let identity=AdmissionIdentity::of(request).ok_or_else(changed)?;
         if request.closing.is_some()||self.owners.admission_identity.as_ref().is_some_and(|original|*original!=identity){return Err(changed().into())}
         if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
-        if self.owners.source.is_none(){let scope=Source::capture(cx)?;let parent=cx.original_source_parent()?;let Some(source)=parent.admit_loan(cx)?else{return Ok(false)};self.owners.source=Some(source);self.owners.scope=Some(scope);self.owners.admission_identity=Some(identity);return Ok(false)}
+        if self.owners.source.is_none(){let scope=Source::capture(cx)?;let parent=cx.original_source_parent()?;if !parent.admit_loan(&mut self.owners.source,cx)?{return Ok(false)}self.owners.scope=Some(scope);self.owners.admission_identity=Some(identity);return Ok(false)}
         if !metadata(cx,size_of::<Base>()+size_of::<Run>())?{return Ok(false)}
         let mut request=donor.take().unwrap();let(digest,snapshot,cancellation_id)=request.payload.take().unwrap();
         self.owners.base=Some(Base{digest,snapshot});self.owners.run=Some(Run{cursor:InferenceCursor::new(),values:InferenceValues::new(),bypass:request.mode==CacheMode::Bypass,cancellation_id});self.owners.admission_identity=None;self.totals.runs+=1;Ok(true)
@@ -167,6 +168,7 @@ impl GeometryEngine {
             match ControlledRetirement::new(payload){Ok(owner)=>self.owners.closing=Some(owner),Err((error,(base,cancellation)))=>{self.owners.base=base;retired_run.cancellation_id=cancellation.unwrap();self.owners.run=Some(retired_run);return Err(error.into())}}return Ok(false)
         }
         if let Some(owner)=self.owners.closing.as_mut(){if !owner.terminal_is_empty(){let demand=owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:owner.last_turn_work()}})?;return Ok(false)}self.owners.closing=None;}
+        if !self.failure_place.terminal_is_empty(){let demand=self.failure_place.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;let place=&mut self.failure_place;semio_framework_job::close_original_retained_step(cx,demand,|grant|place.close_step(grant))?;return Ok(false)}
         if let Some(source)=self.owners.source.as_mut(){let parent=cx.original_source_parent()?;source.close_step(parent,cx)?;if !source.terminal_is_empty(){return Ok(false)}self.owners.source=None;}
         self.owners.scope=None;self.owners.admission_identity=None;Ok(true)
     }
@@ -188,7 +190,7 @@ impl GeometryEngine {
     pub fn hold_failure(&mut self,original:InferenceWorkFailure){assert!(self.failure.is_none(),"original geometry engine already retains its field refusal");*self.failure=Some(original);}
     pub fn has_failure(&self)->bool{self.failure.is_some()}
     pub fn admit_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{
-        protocol::admit_inference_failure(&mut self.failure,cx)
+        protocol::admit_inference_failure(&mut self.failure,&mut self.failure_place,cx)
     }
     /// 🛑️ Cancels the run in flight: the in-flight widget job is cancelled and finished widgets stay valid.
     pub fn cancel(&mut self) {
@@ -243,7 +245,7 @@ impl GeometryEngine {
     pub fn retire_cold(&mut self){if self.terminal_is_empty(){semio_framework_async::poll::resolve_ready(self.cache.clear());}}
 
     /// 🧾️ Every original request, value and source loan has returned through its paid closure.
-    pub fn terminal_is_empty(&self)->bool{self.failure.is_none()&&self.owners.base.is_none()&&self.owners.run.is_none()&&self.owners.closing.is_none()&&self.owners.source.is_none()&&self.owners.scope.is_none()&&self.owners.admission_identity.is_none()}
+    pub fn terminal_is_empty(&self)->bool{self.failure.is_none()&&self.failure_place.terminal_is_empty()&&self.owners.base.is_none()&&self.owners.run.is_none()&&self.owners.closing.is_none()&&self.owners.source.is_none()&&self.owners.scope.is_none()&&self.owners.admission_identity.is_none()}
 
     /// 📸️ The base snapshot of the current run.
     pub fn base(&self) -> Option<&Generation3dSnapshot> {

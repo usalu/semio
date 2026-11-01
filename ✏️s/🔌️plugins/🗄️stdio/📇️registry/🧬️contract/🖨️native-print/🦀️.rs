@@ -24,7 +24,7 @@ pub fn print_as_original_caller<T>(limits: SqliteDatabaseLimits, operation: impl
     });
     let mut closed = Ok(());
     while closed.is_ok() && native.has_retirement_owner() {
-        closed = native.close_retirement_recipient(PRINT_GRANT).map(|_| ());
+        closed = native.close_retirement_recipient(PRINT_GRANT).result.map(|_| ());
     }
     match closed {
         Ok(()) => result,

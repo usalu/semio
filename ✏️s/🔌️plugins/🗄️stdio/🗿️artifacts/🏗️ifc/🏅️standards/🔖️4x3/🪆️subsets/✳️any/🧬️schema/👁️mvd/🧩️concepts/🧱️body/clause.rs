@@ -4,7 +4,7 @@ use super::helpers::*;
 use super::super::population::{IfcMvdPopulationLookup, IfcMvdPopulationPin, IfcMvdPopulationRequestPin, IfcMvdPopulationRequestView, IfcMvdPopulationStatus, IfcMvdPopulationView};
 use super::super::preparation::{IfcMvdRequestIndexPin, IfcMvdRequestIndexView};
 use super::super::source_index::IdMatch;
-use crate::validation::metadata;
+use semio_s_artifact_stdio_ifc4x3_express::metadata;
 #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) struct ClauseState {
     authority: Option<semio_framework_job::OriginalSourceBinding>,

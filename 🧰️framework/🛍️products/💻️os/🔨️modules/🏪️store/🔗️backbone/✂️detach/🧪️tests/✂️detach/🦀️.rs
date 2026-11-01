@@ -22,7 +22,7 @@ async fn observe_refusal(case_id: &str) {
     let payload = vec![payload_byte; payload_length];
     let expected_pointer = payload.as_ptr();
     let expected_capacity = payload.capacity();
-    local.send(BackboneMessage::Mutations { envelopes: payload }).await.expect("original queued payload");
+    local.send(BackboneMessage::Mutations { envelopes: semio_framework_value::paged::PagedBytes::try_from_slice(&payload).unwrap() }).await.expect("original queued payload");
     let original_outbox = Arc::as_ptr(local.outbox.as_ref().unwrap());
     store.log.envelope.backbone = Some(local.descriptor().await);
     *store.wire.backbone = Some(Backbones::Memory(local));
@@ -66,7 +66,7 @@ async fn observe_refusal(case_id: &str) {
                 break;
             }
             let grant = cleanup_grant("backbone");
-            let step = retirement.close_step(grant).expect("retire exact returned owner before assertions");
+            let step = retirement.close_step(grant).result.expect("retire exact returned owner before assertions");
             assert!(step.progress().fits(grant));
         }
         assert!(retirement.terminal_is_empty());

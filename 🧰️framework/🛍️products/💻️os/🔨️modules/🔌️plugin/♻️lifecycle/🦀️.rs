@@ -40,7 +40,7 @@ impl<T> BoundedConfigRetirementFactory<T> {
 impl<T: semio_framework_value::retirement::RetireOwned> store::ArtifactOwnedValueRetirementFactory<T> for BoundedConfigRetirementFactory<T> {
     fn retirement_birth_bytes(&self, _: &T) -> usize { semio_framework_value::retirement::owned_retirement_birth_bytes::<T>() }
 
-    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, T)> {
+    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, T)> {
         semio_framework_value::retirement::admit_owned_retirement(value, grant)
     }
 }
@@ -48,7 +48,7 @@ impl<T: semio_framework_value::retirement::RetireOwned> store::ArtifactOwnedValu
 impl<T: semio_framework_value::retirement::RetireOwned + Sync> store::SnapshotRetirementFactory<T> for BoundedConfigRetirementFactory<T> {
     fn retirement_birth_bytes(&self, _: &std::sync::Arc<T>) -> usize { semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<T>() }
 
-    fn retire(&self, snapshot: std::sync::Arc<T>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, std::sync::Arc<T>)> {
+    fn retire(&self, snapshot: std::sync::Arc<T>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, std::sync::Arc<T>)> {
         semio_framework_value::retirement::arc_custody::admit_shared_retirement(snapshot, grant, false)
     }
 }
@@ -289,16 +289,16 @@ where
 
     fn close_step(&mut self,grant:store::os_store::one_item::ArtifactStoreOneItemGrant)->Result<RetainedCloneStep,ValueError>{
         let grant=grant.retained_grant();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !self.closing||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}let demand=self.close_demands(grant.maximum_copy_bytes)?;if grant.maximum_depth<demand.depth{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"bounded config preparation exceeds admitted depth"));}if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        if let Some(owner)=self.active_retirement.as_mut(){if owner.terminal_is_empty(){self.active_retirement=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}));}return owner.close_step(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if let Some(owner)=self.active_retirement.as_mut(){if owner.terminal_is_empty(){self.active_retirement=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}));}return owner.close_step(child).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
         if let Some(owner)=self.returned_read.as_mut(){if owner.terminal_is_empty(){self.returned_read=None;return Ok(RetainedCloneStep::Progress(Default::default()));}return owner.step(child).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if let Some(slot)=self.returned_factories.iter_mut().find(|slot|slot.is_some()){let factory=slot.as_mut().unwrap();let step=factory.step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,factory.terminal_is_empty(),"returned preparation issuer alias")?;if factory.terminal_is_empty(){*slot=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if let Some(slot)=self.returned_factories.iter_mut().find(|slot|slot.is_some()){let factory=slot.as_mut().unwrap();let step=factory.step(child).result?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,factory.terminal_is_empty(),"returned preparation issuer alias")?;if factory.terminal_is_empty(){*slot=None;}return Ok(RetainedCloneStep::Progress(step.progress()));}
         if let Some(prepared)=self.prepared.take(){let mutations=self.mutation_factory.as_ref().expect("captured window mutation issuer").clone();let snapshots=self.snapshot_factory.as_ref().expect("captured window root issuer").clone();return match prepared.admit_retirement(mutations,snapshots,child){Ok((owner,receipt))=>{self.active_retirement=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},Err((error,original,mutations,snapshots))=>{self.prepared=Some(original);self.returned_factories=[Some(semio_framework_value::FactoryAuthority::new(mutations)),Some(semio_framework_value::FactoryAuthority::new(snapshots))];Err(error)}};}
-        if self.mutation.is_some(){let(owner,receipt)=semio_framework_value::FactoryOwnedRetirement::admit_original(&mut self.mutation,self.mutation_factory.as_ref().expect("captured window mutation issuer"),child)?.expect("funded original window mutation remains");self.active_retirement=Some(owner);return Ok(RetainedCloneStep::Progress(receipt));}
+        if self.mutation.is_some(){let(owner,receipt)=semio_framework_value::FactoryOwnedRetirement::admit_original(&mut self.mutation,self.mutation_factory.as_ref().expect("captured window mutation issuer"),child).result?.expect("funded original window mutation remains");self.active_retirement=Some(owner);return Ok(RetainedCloneStep::Progress(receipt));}
         if let Some(base)=self.base.take(){match base.try_return_to_registry_witness(){Ok(witness)=>{self.returned_read=Some(ControlledRetirement::new(witness).map_err(|(error,_)|error).expect("returned registry witness has genuine ownership"));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));},Err(original)=>{self.base=Some(original);return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"bounded config original base read refuses registry return"));}}}
         if let Some(authority)=self.authority.take(){return match authority.retire(child){Ok((owner,receipt))=>{self.active_retirement=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},Err((error,original))=>{self.authority=Some(original);Err(error)}};}
         if let Some(factory)=self.mutation_factory.take(){let factory:std::sync::Arc<dyn semio_framework_value::FactoryRetirement>=factory;self.closing_factories[0]=Some(semio_framework_value::FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
         if let Some(factory)=self.snapshot_factory.take(){let factory:std::sync::Arc<dyn semio_framework_value::FactoryRetirement>=factory;self.closing_factories[1]=Some(semio_framework_value::FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-        let slot=self.closing_factories.iter_mut().find(|slot|slot.is_some()).expect("bounded config original factory close");let factory=slot.as_mut().unwrap();let step=factory.step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,factory.terminal_is_empty(),"window captured factory")?;if factory.terminal_is_empty(){*slot=None;}Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+        let slot=self.closing_factories.iter_mut().find(|slot|slot.is_some()).expect("bounded config original factory close");let factory=slot.as_mut().unwrap();let step=factory.step(child).result?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,factory.terminal_is_empty(),"window captured factory")?;if factory.terminal_is_empty(){*slot=None;}Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
     fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
@@ -473,17 +473,8 @@ where
     fn next_close_release_byte_demand(&self) -> Result<usize,ValueError> { Ok(self.retirement_demands(0)?.release_bytes) }
     fn next_close_depth_demand(&self) -> Result<usize,ValueError> { Ok(self.retirement_demands(0)?.depth) }
 
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        match self.authority.as_mut() {
-            Some(authority) => {
-                if self.cancel_requested.load(std::sync::atomic::Ordering::Acquire) {
-                    authority.request_cancel();
-                }
-                authority.step(cx)
-            }
-            None if self.terminal_handoff => semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(semio_framework_job::OriginalTurnFailure::from),
-            None => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact-store.initializer-owner-missing").into()),
-        }
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_original(cx))
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
@@ -513,12 +504,31 @@ where
                 return Ok(Step::Pending{progress:step.progress()})
             }
         }
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_granted(grant,demand))?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:self.close_granted(grant,demand),work:1})?;
         Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
     }
 
     fn terminal_is_empty(&self) -> bool {
         ArtifactStoreInitializationJob::terminal_is_empty(self)
+    }
+}
+
+impl<P, Mutation> ArtifactStoreInitializationJob<P, Mutation>
+where
+    P: semio_framework_os_kernel::StoreState,
+    Mutation: semio_framework_os_kernel::StoreMutationFor<P>,
+{
+    fn step_original<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        match self.authority.as_mut() {
+            Some(authority) => {
+                if self.cancel_requested.load(std::sync::atomic::Ordering::Acquire) {
+                    authority.request_cancel();
+                }
+                authority.step(cx)
+            }
+            None if self.terminal_handoff => semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None).map_err(semio_framework_job::OriginalTurnFailure::from),
+            None => Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact-store.initializer-owner-missing").into()),
+        }
     }
 }
 

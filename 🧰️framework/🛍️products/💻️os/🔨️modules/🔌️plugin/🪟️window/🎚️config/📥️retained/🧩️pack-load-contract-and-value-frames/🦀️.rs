@@ -1,6 +1,7 @@
 //! 🧩️ Pack load contract and value frames: the mounted token, the controlled demands, the pack load diagnostic, phase, progress and step, the erased pack load, the expected and built values, the value frame, the retained string and the retained typed state. See [`super`].
 
 use super::*;
+fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum WindowConfigPackLoadDiagnostic {
@@ -91,7 +92,7 @@ impl WindowConfigPackLoad {
         let Some(inner)=self.inner.as_ref()else{return Ok(PluginLifecycleStep::Complete(Default::default()))};
         if !inner.terminal_is_empty(){return self.inner.as_mut().unwrap().close_step_context(cx).map(|step|match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),other=>other})}
         let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|_|{let original=self.inner.take().unwrap();self.closed_progress=original.progress();self.closed_diagnostic=original.diagnostic();drop(original);Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))})?;
+        let step=retired(cx,demand,|_|{let original=self.inner.take().unwrap();self.closed_progress=original.progress();self.closed_diagnostic=original.diagnostic();drop(original);Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))})?;
         Ok(if self.inner.is_none(){PluginLifecycleStep::Complete(step.progress())}else{PluginLifecycleStep::Progress(step.progress())})
     }
 

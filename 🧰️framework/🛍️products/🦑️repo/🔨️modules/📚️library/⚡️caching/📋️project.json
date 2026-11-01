@@ -229,6 +229,7 @@
         "test-javascript-generation-followup",
         "test-javascript-generation-ingress",
         "test-javascript-incremental-sync",
+        "test-javascript-input-identity",
         "test-javascript-installed-paths",
         "test-javascript-partition",
         "test-javascript-provider-walk",
@@ -2262,6 +2263,30 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
         "command": "repo ./📜️script.ts test javascript-installed-paths",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-javascript-input-identity": {
+      "executor": "repo:script",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "command": "repo ./📜️script.ts test javascript-input-identity",
         "forwardAllArgs": false
       },
       "metadata": {

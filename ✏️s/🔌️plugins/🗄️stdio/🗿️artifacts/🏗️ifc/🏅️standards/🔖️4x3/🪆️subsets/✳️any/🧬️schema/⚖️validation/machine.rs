@@ -7,55 +7,55 @@ use semio_framework_value::{
 };
 use std::{cmp::Ordering, mem::size_of};
 
-type Handle = usize;
-const NONE: usize = usize::MAX;
-const MAXIMUM_DEPTH: usize = 256;
-const MAXIMUM_NODES: usize = 10_000_000;
+pub type Handle = usize;
+pub const NONE: usize = usize::MAX;
+pub const MAXIMUM_DEPTH: usize = 256;
+pub const MAXIMUM_NODES: usize = 10_000_000;
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-enum Logical {
+pub enum Logical {
     False,
     Unknown,
     True,
 }
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-enum AggregateKind {
+pub enum AggregateKind {
     List,
     Set,
     Bag,
     Array,
 }
 #[derive(Clone, Copy, Debug)]
-enum Text {
+pub enum Text {
     Static(&'static str),
     Source(usize),
     Owned(usize),
 }
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-enum Entity {
+pub enum Entity {
     Original(usize),
     Constructed(usize),
     View(usize),
 }
 #[derive(Clone, Copy, Default, Debug)]
-struct Cursor {
-    source: bool,
-    next: Option<usize>,
+pub struct Cursor {
+    pub source: bool,
+    pub next: Option<usize>,
 }
 #[derive(Clone, Copy, Debug)]
-struct Aggregate {
-    kind: AggregateKind,
-    lower: i128,
-    first: Option<usize>,
-    last: Option<usize>,
-    length: usize,
+pub struct Aggregate {
+    pub kind: AggregateKind,
+    pub lower: i128,
+    pub first: Option<usize>,
+    pub last: Option<usize>,
+    pub length: usize,
 }
 impl Aggregate {
-    fn empty(kind: AggregateKind) -> Self {
+    pub fn empty(kind: AggregateKind) -> Self {
         Self { kind, lower: 1, first: None, last: None, length: 0 }
     }
 }
 #[derive(Clone, Copy, Debug)]
-enum Value {
+pub enum Value {
     Missing,
     Logical(Logical),
     Integer(i128),
@@ -71,7 +71,7 @@ enum Value {
     Local { base: Handle, view: usize },
 }
 #[derive(Clone, Copy, Debug)]
-enum Raw {
+pub enum Raw {
     Missing,
     Logical(Logical),
     Integer(i128),
@@ -83,60 +83,60 @@ enum Raw {
     Aggregate { cursor: Cursor, kind: AggregateKind, lower: i128, length: usize },
 }
 #[derive(Clone, Copy)]
-struct Edge {
-    value: Handle,
-    next: Option<usize>,
+pub struct Edge {
+    pub value: Handle,
+    pub next: Option<usize>,
 }
 #[derive(Clone, Copy)]
-struct Scope {
-    parent: Option<usize>,
-    bindings: Option<usize>,
-    root: usize,
-    memo: Option<usize>,
+pub struct Scope {
+    pub parent: Option<usize>,
+    pub bindings: Option<usize>,
+    pub root: usize,
+    pub memo: Option<usize>,
 }
 #[derive(Clone, Copy)]
-struct Binding {
-    name: &'static str,
-    value: Handle,
-    declaration: Option<&'static str>,
-    next: Option<usize>,
+pub struct Binding {
+    pub name: &'static str,
+    pub value: Handle,
+    pub declaration: Option<&'static str>,
+    pub next: Option<usize>,
 }
 #[derive(Clone, Copy)]
-struct Constructed {
-    declaration: &'static metadata::StaticEntity,
-    fields: [Option<(&'static str, Handle)>; 32],
-    length: usize,
-    version: u64,
-    view: Option<usize>,
+pub struct Constructed {
+    pub declaration: &'static metadata::StaticEntity,
+    pub fields: [Option<(&'static str, Handle)>; 32],
+    pub length: usize,
+    pub version: u64,
+    pub view: Option<usize>,
 }
 #[derive(Clone, Copy)]
-struct LocalView {
-    original: usize,
-    root: usize,
-    next: Option<usize>,
-    record: Constructed,
+pub struct LocalView {
+    pub original: usize,
+    pub root: usize,
+    pub next: Option<usize>,
+    pub record: Constructed,
 }
 #[derive(Clone, Copy)]
-struct Memo {
-    entity: Entity,
-    rule: usize,
-    value: Option<Handle>,
-    active: bool,
-    root: usize,
-    parent: Option<usize>,
-    dependencies: Option<usize>,
-    cacheable: bool,
+pub struct Memo {
+    pub entity: Entity,
+    pub rule: usize,
+    pub value: Option<Handle>,
+    pub active: bool,
+    pub root: usize,
+    pub parent: Option<usize>,
+    pub dependencies: Option<usize>,
+    pub cacheable: bool,
 }
 #[derive(Clone, Copy)]
-struct Dependency {
-    entity: Entity,
-    version: u64,
-    next: Option<usize>,
+pub struct Dependency {
+    pub entity: Entity,
+    pub version: u64,
+    pub next: Option<usize>,
 }
 #[derive(Clone, Copy)]
-struct DomainSlot {
-    expression: Option<&'static metadata::StaticTypeExpression>,
-    name: Option<&'static str>,
+pub struct DomainSlot {
+    pub expression: Option<&'static metadata::StaticTypeExpression>,
+    pub name: Option<&'static str>,
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RetainedRuleKind {
@@ -172,7 +172,7 @@ pub struct RetainedPopulationReport<'a> {
     pub work: u64,
 }
 #[derive(Clone, Copy)]
-enum Kind {
+pub enum Kind {
     Eval,
     EvalInner,
     RootRead,
@@ -222,36 +222,36 @@ enum Kind {
     AggregateUnique,
 }
 #[derive(Clone, Copy)]
-struct Frame {
-    kind: Kind,
-    expression: Option<&'static ExpressExpression>,
-    statement: Option<&'static ExpressStatement>,
-    function: Option<&'static ExpressFunction>,
-    body: &'static [ExpressStatement],
-    declarations: &'static [ExpressVariable],
-    name: &'static str,
-    scope: usize,
-    depth: usize,
-    stage: usize,
-    position: usize,
-    a: usize,
-    b: usize,
-    c: usize,
-    d: usize,
-    i: i128,
-    j: i128,
-    k: i128,
-    cursor: Cursor,
-    other: Cursor,
-    truth: Logical,
-    identity: bool,
-    type_expression: Option<&'static metadata::StaticTypeExpression>,
-    entity: Option<&'static metadata::StaticEntity>,
-    owner: &'static str,
-    record_entity: Option<Entity>,
+pub struct Frame {
+    pub kind: Kind,
+    pub expression: Option<&'static ExpressExpression>,
+    pub statement: Option<&'static ExpressStatement>,
+    pub function: Option<&'static ExpressFunction>,
+    pub body: &'static [ExpressStatement],
+    pub declarations: &'static [ExpressVariable],
+    pub name: &'static str,
+    pub scope: usize,
+    pub depth: usize,
+    pub stage: usize,
+    pub position: usize,
+    pub a: usize,
+    pub b: usize,
+    pub c: usize,
+    pub d: usize,
+    pub i: i128,
+    pub j: i128,
+    pub k: i128,
+    pub cursor: Cursor,
+    pub other: Cursor,
+    pub truth: Logical,
+    pub identity: bool,
+    pub type_expression: Option<&'static metadata::StaticTypeExpression>,
+    pub entity: Option<&'static metadata::StaticEntity>,
+    pub owner: &'static str,
+    pub record_entity: Option<Entity>,
 }
 impl Frame {
-    fn new(kind: Kind, scope: usize, depth: usize) -> Self {
+    pub fn new(kind: Kind, scope: usize, depth: usize) -> Self {
         Self {
             kind,
             expression: None,
@@ -281,41 +281,40 @@ impl Frame {
             record_entity: None,
         }
     }
-    fn eval(expression: &'static ExpressExpression, scope: usize, depth: usize) -> Self {
+    pub fn eval(expression: &'static ExpressExpression, scope: usize, depth: usize) -> Self {
         Self { expression: Some(expression), ..Self::new(Kind::Eval, scope, depth) }
     }
 }
 semio_framework_value::artifact_retire_leaf!(Value, Edge, Scope, Binding, Constructed, LocalView, Memo, Dependency, DomainSlot, RetainedRuleRecord, Frame);
 #[derive(Default, semio_framework_value::RetireOwned)]
-struct Store {
-    values: Vec<Value>,
-    edges: Vec<Edge>,
-    tasks: Vec<Frame>,
-    results: Vec<Handle>,
-    scopes: Vec<Scope>,
-    bindings: Vec<Binding>,
-    entities: Vec<Constructed>,
-    originals: Vec<Constructed>,
-    memos: Vec<Memo>,
-    texts: Vec<String>,
-    scratch: Vec<usize>,
-    domains: Vec<DomainSlot>,
-    records: Vec<RetainedRuleRecord>,
-    diagnostics: Vec<RetainedRuleRecord>,
-    views: Vec<LocalView>,
-    dependencies: Vec<Dependency>,
+pub struct Store {
+    pub values: Vec<Value>,
+    pub edges: Vec<Edge>,
+    pub tasks: Vec<Frame>,
+    pub results: Vec<Handle>,
+    pub scopes: Vec<Scope>,
+    pub bindings: Vec<Binding>,
+    pub entities: Vec<Constructed>,
+    pub originals: Vec<Constructed>,
+    pub memos: Vec<Memo>,
+    pub texts: Vec<String>,
+    pub scratch: Vec<usize>,
+    pub domains: Vec<DomainSlot>,
+    pub records: Vec<RetainedRuleRecord>,
+    pub diagnostics: Vec<RetainedRuleRecord>,
+    pub views: Vec<LocalView>,
+    pub dependencies: Vec<Dependency>,
 }
 #[derive(Clone, Copy)]
-enum Initial {
+pub enum Initial {
     Expression(&'static ExpressExpression),
     Call(&'static str, &'static [i128]),
     Population,
     Local(usize),
-    #[cfg(test)]
     Prepared(&'static ExpressExpression, &'static [(&'static str, u64)]),
 }
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum Flow {
+pub enum Flow {
     None,
     Return(Handle),
     Escape,
@@ -329,21 +328,21 @@ pub struct MachineEnvironment<'a> {
     pub mutations: &'a [IfcMutation],
 }
 #[derive(Clone, Copy, PartialEq, Eq)]
-struct EnvironmentIdentity {
-    overlay: usize,
-    receiver: usize,
-    source: usize,
-    mutations: usize,
-    length: usize,
+pub struct EnvironmentIdentity {
+    pub overlay: usize,
+    pub receiver: usize,
+    pub source: usize,
+    pub mutations: usize,
+    pub length: usize,
 }
 impl MachineEnvironment<'_> {
     pub const fn empty() -> Self {
         Self { overlay: None, receiver: None, source: None, mutations: &[] }
     }
-    fn source_value(&self, node: usize) -> Result<&IfcValue, ValueError> {
+    pub fn source_value(&self, node: usize) -> Result<&IfcValue, ValueError> {
         self.receiver.ok_or_else(|| refusal("express.runtime-source"))?.source_value(self.overlay.ok_or_else(|| refusal("express.runtime-overlay"))?, self.source.ok_or_else(|| refusal("express.runtime-snapshot"))?, self.mutations, node)
     }
-    fn identity(&self) -> Result<EnvironmentIdentity, ValueError> {
+    pub fn identity(&self) -> Result<EnvironmentIdentity, ValueError> {
         match (self.overlay, self.receiver, self.source) {
             (Some(overlay), Some(receiver), Some(source)) => {
                 overlay.check_authority(source, self.mutations)?;
@@ -363,28 +362,32 @@ impl MachineEnvironment<'_> {
         })
     }
 }
+/// 🧩 Continuation executor of every frame kind the domain crate owns.
+pub type Foreign = fn(&mut RetainedMachine, Frame, &MachineEnvironment<'_>) -> Result<(), ValueError>;
 pub struct RetainedMachine {
-    program: &'static ExpressProgram,
-    store: Option<Store>,
-    retirement: RetainedCloneClose,
-    initial: Option<Initial>,
-    initialized: bool,
-    failed: bool,
-    closing: bool,
-    iterations: usize,
-    work: u64,
-    flow: Flow,
-    environment: Option<EnvironmentIdentity>,
-    population_complete: bool,
-    population_valid: bool,
-    population_finished: bool,
+    pub foreign: Foreign,
+    pub program: &'static ExpressProgram,
+    pub store: Option<Store>,
+    pub retirement: RetainedCloneClose,
+    pub initial: Option<Initial>,
+    pub initialized: bool,
+    pub failed: bool,
+    pub closing: bool,
+    pub iterations: usize,
+    pub work: u64,
+    pub flow: Flow,
+    pub environment: Option<EnvironmentIdentity>,
+    pub population_complete: bool,
+    pub population_valid: bool,
+    pub population_finished: bool,
 }
 impl RetainedMachine {
     pub fn birth_demands() -> RetirementDemand {
         fixed(size_of::<Store>() + size_of::<Initial>() + size_of::<Self>())
     }
-    pub fn new(program: &'static ExpressProgram) -> Self {
+    pub fn with_foreign(program: &'static ExpressProgram, foreign: Foreign) -> Self {
         Self {
+            foreign,
             program,
             store: None,
             retirement: Default::default(),
@@ -401,13 +404,13 @@ impl RetainedMachine {
             population_finished: false,
         }
     }
-    fn store(&self) -> &Store {
+    pub fn store(&self) -> &Store {
         self.store.as_ref().expect("retained semantic store")
     }
-    fn store_mut(&mut self) -> &mut Store {
+    pub fn store_mut(&mut self) -> &mut Store {
         self.store.as_mut().expect("retained semantic store")
     }
-    fn birth(&mut self, initial: Initial, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+    pub fn birth(&mut self, initial: Initial, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         if self.store.is_some() || self.closing {
             return Err(refusal("express.runtime-already-started").into());
         }
@@ -429,13 +432,13 @@ impl RetainedMachine {
     pub fn start_population(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         self.birth(Initial::Population, cx)
     }
-    pub(super) fn start_local(&mut self, row: usize, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+    pub fn start_local(&mut self, row: usize, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         if !std::ptr::eq(self.program, super::ifc4x3_express_program()) {
             return Err(refusal("express.local-program-authority").into());
         }
         self.birth(Initial::Local(row), cx)
     }
-    pub(super) fn local_status(&self) -> Option<&'static str> {
+    pub fn local_status(&self) -> Option<&'static str> {
         if !matches!(self.initial, Some(Initial::Local(_))) || !self.population_finished || self.closing {
             return None;
         }
@@ -454,7 +457,7 @@ impl RetainedMachine {
         let store = self.store.as_ref()?;
         Some(RetainedPopulationReport { complete: self.population_complete, valid: self.population_complete && self.population_valid, results: &store.records, diagnostics: &store.diagnostics, work: self.work })
     }
-    fn growth<T>(vector: &Vec<T>, additional: usize) -> Result<Option<RetirementDemand>, ValueError> {
+    pub fn growth<T>(vector: &Vec<T>, additional: usize) -> Result<Option<RetirementDemand>, ValueError> {
         if vector.capacity() - vector.len() >= additional {
             return Ok(None);
         }
@@ -464,11 +467,11 @@ impl RetainedMachine {
         }
         Ok(Some(RetirementDemand { copy_bytes: capacity(vector.len(), size_of::<T>())?, capacity_bytes: capacity(target, size_of::<T>())?, release_bytes: capacity(vector.capacity(), size_of::<T>())?, depth: 1 }))
     }
-    fn reserve<T>(vector: &mut Vec<T>, additional: usize) {
+    pub fn reserve<T>(vector: &mut Vec<T>, additional: usize) {
         let target = (vector.len() + additional).max(vector.capacity().saturating_mul(2)).max(16);
         vector.reserve_exact(target - vector.len());
     }
-    fn next_growth(&self) -> Result<Option<(usize, RetirementDemand)>, ValueError> {
+    pub fn next_growth(&self) -> Result<Option<(usize, RetirementDemand)>, ValueError> {
         let store = self.store();
         for (index, demand) in [
             Self::growth(&store.values, 8)?,
@@ -497,7 +500,7 @@ impl RetainedMachine {
         }
         Ok(None)
     }
-    fn reserve_table(&mut self, index: usize) {
+    pub fn reserve_table(&mut self, index: usize) {
         let store = self.store_mut();
         match index {
             0 => Self::reserve(&mut store.values, 8),
@@ -555,33 +558,33 @@ impl RetainedMachine {
         }
         Ok(demand)
     }
-    fn make(&mut self, value: Value) -> Handle {
+    pub fn make(&mut self, value: Value) -> Handle {
         let id = self.store().values.len();
         self.store_mut().values.push(value);
         id
     }
-    fn result(&mut self, value: Value) {
+    pub fn result(&mut self, value: Value) {
         let id = self.make(value);
         self.store_mut().results.push(id);
     }
-    fn pop(&mut self) -> Result<Handle, ValueError> {
+    pub fn pop(&mut self) -> Result<Handle, ValueError> {
         self.store_mut().results.pop().ok_or_else(|| refusal("express.runtime-result-stack"))
     }
-    fn push(&mut self, frame: Frame) -> Result<(), ValueError> {
+    pub fn push(&mut self, frame: Frame) -> Result<(), ValueError> {
         if frame.depth > MAXIMUM_DEPTH {
             return Err(refusal("express.depth"));
         }
         self.store_mut().tasks.push(frame);
         Ok(())
     }
-    fn bind(&mut self, scope: usize, name: &'static str, value: Handle, declaration: Option<&'static str>) -> usize {
+    pub fn bind(&mut self, scope: usize, name: &'static str, value: Handle, declaration: Option<&'static str>) -> usize {
         let next = self.store().scopes[scope].bindings;
         let binding = self.store().bindings.len();
         self.store_mut().bindings.push(Binding { name, value, declaration, next });
         self.store_mut().scopes[scope].bindings = Some(binding);
         binding
     }
-    fn scope(&mut self, parent: Option<usize>) -> usize {
+    pub fn scope(&mut self, parent: Option<usize>) -> usize {
         let index = self.store().scopes.len();
         let (root, memo) = parent
             .map(|parent| {
@@ -592,20 +595,20 @@ impl RetainedMachine {
         self.store_mut().scopes.push(Scope { parent, bindings: None, root, memo });
         index
     }
-    fn detached_scope(&mut self, source: usize) -> usize {
+    pub fn detached_scope(&mut self, source: usize) -> usize {
         let scope = self.store().scopes[source];
         let index = self.scope(None);
         self.store_mut().scopes[index].root = scope.root;
         self.store_mut().scopes[index].memo = scope.memo;
         index
     }
-    fn root_scope(&mut self, parent: usize) -> usize {
+    pub fn root_scope(&mut self, parent: usize) -> usize {
         let index = self.scope(Some(parent));
         self.store_mut().scopes[index].root = index;
         self.store_mut().scopes[index].memo = None;
         index
     }
-    fn append(&mut self, aggregate: Handle, value: Handle) -> Result<(), ValueError> {
+    pub fn append(&mut self, aggregate: Handle, value: Handle) -> Result<(), ValueError> {
         let Value::Aggregate(mut items) = self.store().values[aggregate] else {
             return Err(refusal("express.aggregate-builder"));
         };
@@ -621,7 +624,7 @@ impl RetainedMachine {
         self.store_mut().values[aggregate] = Value::Aggregate(items);
         Ok(())
     }
-    fn item(&mut self, cursor: &mut Cursor, env: &MachineEnvironment<'_>) -> Result<Option<Handle>, ValueError> {
+    pub fn item(&mut self, cursor: &mut Cursor, env: &MachineEnvironment<'_>) -> Result<Option<Handle>, ValueError> {
         let Some(index) = cursor.next else { return Ok(None) };
         if cursor.source {
             let edge = env.receiver.and_then(PopulationReceiver::arena).and_then(|arena| arena.edges.get(index)).ok_or_else(|| refusal("express.runtime-source-edge"))?;
@@ -633,7 +636,7 @@ impl RetainedMachine {
             Ok(Some(edge.value))
         }
     }
-    fn raw(&self, mut handle: Handle, env: &MachineEnvironment<'_>) -> Result<Raw, ValueError> {
+    pub fn raw(&self, mut handle: Handle, env: &MachineEnvironment<'_>) -> Result<Raw, ValueError> {
         let mut override_aggregate = None;
         for _ in 0..MAXIMUM_DEPTH {
             let value = *self.store().values.get(handle).ok_or_else(|| refusal("express.foreign-value"))?;
@@ -697,7 +700,7 @@ impl RetainedMachine {
         }
         Err(refusal("express.depth"))
     }
-    fn text<'a>(&'a self, text: Text, env: &'a MachineEnvironment<'_>) -> Result<&'a str, ValueError> {
+    pub fn text<'a>(&'a self, text: Text, env: &'a MachineEnvironment<'_>) -> Result<&'a str, ValueError> {
         match text {
             Text::Static(value) => Ok(value),
             Text::Owned(index) => self.store().texts.get(index).map(String::as_str).ok_or_else(|| refusal("express.runtime-text")),
@@ -707,10 +710,10 @@ impl RetainedMachine {
             },
         }
     }
-    fn truth(&self, handle: Handle, env: &MachineEnvironment<'_>) -> Result<Logical, ValueError> {
+    pub fn truth(&self, handle: Handle, env: &MachineEnvironment<'_>) -> Result<Logical, ValueError> {
         Ok(if let Raw::Logical(value) = self.raw(handle, env)? { value } else { Logical::Unknown })
     }
-    fn integer(&self, handle: Handle, env: &MachineEnvironment<'_>) -> Result<Option<i128>, ValueError> {
+    pub fn integer(&self, handle: Handle, env: &MachineEnvironment<'_>) -> Result<Option<i128>, ValueError> {
         Ok(if let Raw::Integer(value) = self.raw(handle, env)? { Some(value) } else { None })
     }
     /// 🧭 Execute one continuation or one exact native table growth without recursive semantic calls.
@@ -720,13 +723,13 @@ impl RetainedMachine {
         }
         self.advance_inner(env, cx)
     }
-    pub(super) fn advance_local(&mut self, env: &MachineEnvironment<'_>, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+    pub fn advance_local(&mut self, env: &MachineEnvironment<'_>, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         if !matches!(self.initial, Some(Initial::Local(_))) {
             return Err(refusal("express.local-not-started").into());
         }
         self.advance_inner(env, cx)
     }
-    fn advance_inner(&mut self, env: &MachineEnvironment<'_>, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+    pub fn advance_inner(&mut self, env: &MachineEnvironment<'_>, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         if self.closing || self.store.is_none() {
             return Err(refusal("express.runtime-not-live").into());
         }
@@ -785,7 +788,7 @@ impl RetainedMachine {
         }
         Ok(self.population_finished || self.initialized && self.store().tasks.is_empty())
     }
-    fn initialize(&mut self) -> Result<(), ValueError> {
+    pub fn initialize(&mut self) -> Result<(), ValueError> {
         let scope = self.scope(None);
         match self.initial.ok_or_else(|| refusal("express.runtime-initial"))? {
             Initial::Expression(expression) => {
@@ -806,9 +809,6 @@ impl RetainedMachine {
                 if self.program.schema != "IFC4X3_ADD2" {
                     return Err(refusal("express.program-schema"));
                 }
-                if std::ptr::eq(self.program, super::ifc4x3_express_program()) && super::program_index::PROGRAM_SHA256 != super::EXPRESS_PROGRAM_SHA256 {
-                    return Err(refusal("express.program-index-stale"));
-                }
                 let frame = match self.initial {
                     Some(Initial::Local(row)) => Frame { a: row, b: 0, identity: true, ..Frame::new(Kind::Population, scope, 1) },
                     _ => Frame::new(Kind::Population, scope, 1),
@@ -818,7 +818,6 @@ impl RetainedMachine {
                 self.push(Frame::new(Kind::Header, scope, 1))?;
                 self.initialized = true;
             }
-            #[cfg(test)]
             Initial::Prepared(expression, _) => {
                 self.push(Frame { expression: Some(expression), ..Frame::new(Kind::PreparedQuery, scope, 1) })?;
                 self.push(Frame::new(Kind::Normalize, scope, 1))?;
@@ -839,9 +838,9 @@ impl RetainedMachine {
             return Err(refusal("express.runtime-not-closing"));
         }
         if self.store.is_some() {
-            self.retirement.begin_granted(&mut self.store, grant)?.ok_or_else(|| refusal("express.runtime-close-owner"))
+            self.retirement.begin_granted(&mut self.store, grant).result?.ok_or_else(|| refusal("express.runtime-close-owner"))
         } else if !self.retirement.is_empty() {
-            self.retirement.step_granted(grant)
+            self.retirement.step_granted(grant).result
         } else {
             Ok(RetainedCloneStep::Complete(Default::default()))
         }
@@ -850,38 +849,16 @@ impl RetainedMachine {
         self.store.is_none() && self.retirement.is_empty()
     }
 }
-impl Default for RetainedMachine {
-    fn default() -> Self {
-        Self::new(super::ifc4x3_express_program())
-    }
-}
 
 include!("machine-expression.rs");
 include!("machine-operation.rs");
 include!("machine-statement.rs");
 include!("machine-population.rs");
-include!("machine-domain.rs");
-include!("machine-rules.rs");
-include!("machine-root.rs");
-#[cfg(test)]
-#[path = "machine-local-tests.rs"]
-mod local_tests;
+include!("machine-index.rs");
 
-#[cfg(test)]
-#[path = "machine-custody-tests.rs"]
-mod custody_tests;
 
-#[cfg(test)]
-#[path = "machine-aggregate-tests.rs"]
-mod aggregate_tests;
 
-#[cfg(test)]
-#[path = "machine-typeof-tests.rs"]
-mod typeof_tests;
 
-#[cfg(test)]
-#[path = "machine-root-tests.rs"]
-mod root_tests;
 
 pub enum RetainedScalar<'a> {
     Missing,
@@ -911,7 +888,6 @@ impl RetainedScalar<'_> {
     pub fn integer(&self) -> Option<i128> {
         if let Self::Integer(value) = self { Some(*value) } else { None }
     }
-    #[cfg(test)]
     pub fn text(&self) -> String {
         match self {
             Self::Logical(value) => match value {

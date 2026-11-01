@@ -16,7 +16,7 @@ pub struct ActionIngressRecord{pub source:std::mem::ManuallyDrop<Option<ActionIn
 impl ActionIngressRecord{
  pub fn receive(source:&mut Option<ActionIngressSource>,caller:&mut Option<semio_framework_job::OriginalCallerSourceLoan>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self>,semio_framework_job::OriginalTurnFailure>{
   let grant=cx.retained_grant();let bytes=size_of::<ActionIngressSource>();if source.is_none()||cx.should_yield()||grant.maximum_items<1+usize::from(caller.is_none())||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(None)}
-  if caller.is_none(){let Some(loan)=cx.original_source_parent()?.admit_loan(cx)?else{return Ok(None)};*caller=Some(loan);}
+  if caller.is_none()&&!cx.original_source_parent()?.admit_loan(caller,cx)?{return Ok(None)}
   Self::receive_with_loan(source,caller,cx)
  }
  fn receive_with_loan(source:&mut Option<ActionIngressSource>,caller:&mut Option<semio_framework_job::OriginalCallerSourceLoan>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self>,semio_framework_job::OriginalTurnFailure>{
@@ -41,7 +41,7 @@ impl ActionIngressRecord{
  pub fn close_original_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
   if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
   if self.source.is_none()&&self.retirement.is_none(){let step=self.caller.as_mut().unwrap().close_step(cx.original_source_parent()?,cx)?;if self.caller.as_ref().unwrap().terminal_is_empty(){self.caller.take();}return Ok(step)}
-  self.validate_context(cx)?;let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_granted(grant))
+  self.validate_context(cx)?;let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:self.close_granted(grant),work:1})
  }
 }
 
@@ -62,7 +62,7 @@ impl ActionIngress {
   for id in 0..16{if let Some(record)=self.action_ingress_sources.get(id){if !record.ready(){record.validate_context(cx)?;return if record.source.as_ref().and_then(|source|source.action.as_deref())==Some(action)&&self.pending_action_ingress_identity==Some((cx.operation(),cx.generation())){Ok(Some(id))}else{Ok(None)}}}}
   if let Some(original)=self.pending_action_ingress.as_ref(){if original.action.as_deref()!=Some(action)||self.pending_action_ingress_identity!=Some((cx.operation(),cx.generation())){return Ok(None)}}else{
    let grant=cx.retained_grant();let bytes=size_of::<ActionIngressSource>()+action.len();if cx.should_yield()||grant.maximum_items<2||grant.maximum_copy_bytes<bytes||grant.maximum_capacity_bytes<action.len()||grant.maximum_depth<2{return Ok(None)}
-   let Some(caller)=cx.original_source_parent()?.admit_loan(cx)?else{return Ok(None)};*self.pending_action_ingress_caller=Some(caller);
+   if !cx.original_source_parent()?.admit_loan(&mut *self.pending_action_ingress_caller,cx)?{return Ok(None)}
    cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<ActionIngressSource>(),..Default::default()})?;
    *self.pending_action_ingress=Some(ActionIngressSource{original_typing_ready:false,original_typing_control_ready:false,original_press_result:None,original_tool_dispatch:None,original_press_tag:None,original_tool_tag:None,original_tool_tag_ready:false,action:Some(String::new()),args:args.take(),prepared:None,assembled:None,fault:fault.take()});self.pending_action_ingress_identity=Some((cx.operation(),cx.generation()));
    let original=self.pending_action_ingress.as_mut().unwrap();let name=original.action.as_mut().unwrap();name.try_reserve_exact(action.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original action name capture allocation refused"))?;name.push_str(action);cx.consume_retained(RetainedCloneProgress{copied_items:0,copied_bytes:action.len(),retained_capacity_bytes:name.capacity(),..Default::default()})?;

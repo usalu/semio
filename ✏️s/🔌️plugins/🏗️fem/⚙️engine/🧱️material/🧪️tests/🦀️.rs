@@ -19,7 +19,7 @@ fn receive<I:NativeRecordSource+RetireOwned>(input:impl Fn()->I,expected:&serde_
   while turns<cut&&!owner.output_ready(){let d=owner.demands(4096).unwrap();let g=funded(d);let mut denied=g;denied.maximum_items=0;assert_eq!(control.with_construction_recipient(&mut recipient,|control|owner.advance(control,4096,denied)).unwrap().progress(),Default::default());let step=control.with_construction_recipient(&mut recipient,|control|owner.advance(control,4096,g)).unwrap();assert!(step.progress().fits(g));turns+=1;}
   if owner.output_ready(){finished=turns;let g=funded(owner.take_demand().unwrap());let(material,p)=owner.take(g).unwrap().unwrap();assert!(p.fits(g));assert_eq!(material.id.as_str(),expected["id"].as_str().unwrap());assert_eq!(material.name.as_str(),expected["name"].as_str().unwrap());let value=material.to_value();for key in ["e","g","nu","rho"]{if expected.get(key).is_some(){assert_eq!(value.get(key).unwrap().as_f64().unwrap().to_bits(),expected[key].as_f64().unwrap().to_bits());}}drain(value);drain(material);}
   drain(owner);if finished>0&&cut>finished{break;}
- }assert!(finished>0);eprintln!("[DEBUG] native material dimension={NATIVE_MATERIAL_DIMENSION} input={} every-prefix normalTurns={finished}",std::any::type_name::<I>());
+ }assert!(finished>0);
 }
 #[test]
 fn native_material_receives_canonical_and_authored_original_values(){
@@ -37,5 +37,5 @@ fn native_material_refuses_invalid_parts_without_dropping_partial_fields(){
  for case in law["refused"].as_array().unwrap().iter().filter(|case|case["dimension"].as_u64()==Some(NATIVE_MATERIAL_DIMENSION as u64)){
   let a=RetainedCloneSource::<DslValue>::owned_constructor_demand::<()>();let mut source=Some(RetainedCloneSource::admit_owned(DslValue::from(&case["row"]),(),funded(RetirementDemand{copy_bytes:RetainedCloneSource::<DslValue>::constructor_copy_bytes(),capacity_bytes:a.capacity_bytes,depth:a.depth,..Default::default()})).unwrap_or_else(|_|panic!("material refused original input")).0);let(mut owner,_)=Owner::begin_shell(funded(Owner::shell_demand())).unwrap();owner.admit_original(&mut source,funded(owner.original_capture_demand().unwrap())).unwrap();owner.begin_receiver(funded(owner.receiver_birth_demand().unwrap())).unwrap();let mut callback=|_|true;let mut control=NativeDecodeControl::new(1<<20,&mut callback);let mut recipient=Recipient;let mut found=false;
   for _ in 0..192{let g=funded(owner.demands(4096).unwrap());match control.with_construction_recipient(&mut recipient,|control|owner.advance(control,4096,g)){Ok(step)=>assert!(step.progress().fits(g)),Err(error)=>{assert!(error.retained_progress().fits(g));found=true;break;}}assert!(!owner.output_ready());}assert!(found);assert!(owner.borrow_input().is_ok());drain(owner);refused+=1;
- }assert!(refused>0);eprintln!("[DEBUG] native material dimension={NATIVE_MATERIAL_DIMENSION} invalid field vectors={refused}, original and partial owned fields retained through refusal");
+ }assert!(refused>0);
 }

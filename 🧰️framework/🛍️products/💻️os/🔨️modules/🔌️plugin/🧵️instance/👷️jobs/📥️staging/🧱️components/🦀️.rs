@@ -56,6 +56,9 @@ pub struct PendingReserved<A: ArtifactApp> {
     pub pending_render_identity: Option<(semio_framework_job::OperationId,semio_framework_job::Generation)>,
     pub pending_render_close_failure:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
     pub pending_render_compound:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalClosureFailure>>,
+    pub pending_render_failure_place:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure>>>,
+    pub pending_render_compound_place:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<semio_framework_job::OriginalClosureFailure>>>,
+    pub pending_configuration_failure_place:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalDomainReservation<semio_framework_plugin_job::reserved_jobs::OriginalConfigurationFailure>>>,
     pub pending_render_retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure>>>,
     pub pending_reserved: ArtifactFixedRegistry<PendingFrameworkReserved>,
     pub reserved_commits: std::collections::VecDeque<FrameworkReservedCommit<A::Snapshot,A::Mutation>>,
@@ -92,6 +95,9 @@ impl<A: ArtifactApp> PendingReserved<A> {
             pending_render_identity: None,
             pending_render_close_failure: std::mem::ManuallyDrop::new(None),
             pending_render_compound: std::mem::ManuallyDrop::new(None),
+            pending_render_failure_place: std::mem::ManuallyDrop::new(None),
+            pending_render_compound_place: std::mem::ManuallyDrop::new(None),
+            pending_configuration_failure_place: std::mem::ManuallyDrop::new(None),
             pending_render_retirement: std::mem::ManuallyDrop::new(None),
             pending_reserved: ArtifactFixedRegistry::new(),
             reserved_commits: std::collections::VecDeque::with_capacity(ARTIFACT_LIVE_OUTPUT_SLOTS),
@@ -102,7 +108,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
 
     pub fn original_render_tree_source<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<&'a mut Option<semio_framework_ui_runtime::ComponentTree>,semio_framework_job::OriginalTurnFailure>{
         self.pending_render_tree_identity.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source has no initiating identity"))?.validate(cx)?;
-        if !self.pending_render_tree_ready || self.pending_render_work.is_some() || self.pending_render_source.is_some() || self.pending_render_failure.is_some() || self.pending_render_compound.is_some() || self.pending_render_close_failure.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source is not ready for donation").into());}
+        if !self.pending_render_tree_ready || self.pending_render_work.is_some() || self.pending_render_source.is_some() || self.pending_render_failure.is_some() || self.pending_render_failure_place.is_some() || self.pending_render_compound.is_some() || self.pending_render_compound_place.is_some() || self.pending_render_close_failure.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source is not ready for donation").into());}
         Ok(&mut self.pending_render_tree)
     }
 }
@@ -176,7 +182,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
     pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.tool_operations,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.latest_wins_commands,64)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_effect_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_event_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_ui_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_completion_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_composed_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.latest_wins_order,64)?])}
 
     /// 🌱️ Moves original tool registrations into their actual fixed-queue runtime under the same mounted caller.
-    pub fn admit_original(sources:&mut Option<OriginalToolOperationsSources>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Self>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if sources.is_none()||output.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original tool runtime birth requires retained registrations and an empty destination").into())}let mut d=Self::birth_demands()?;d.copy_bytes=d.copy_bytes.checked_add(2*std::mem::size_of::<OriginalToolOperationsSources>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original tool source extent overflow"))?;semio_framework_job::admit_original_construction(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:d.depth},|_|{let source=sources.take().unwrap();Ok((Self::from_original(source),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))})?;Ok(output.is_some())}
+    pub fn admit_original(sources:&mut Option<OriginalToolOperationsSources>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Self>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if sources.is_none()||output.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original tool runtime birth requires retained registrations and an empty destination").into())}let mut d=Self::birth_demands()?;d.copy_bytes=d.copy_bytes.checked_add(2*std::mem::size_of::<OriginalToolOperationsSources>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original tool source extent overflow"))?;semio_framework_job::admit_original_construction(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:d.depth},|_|{let source=sources.take().unwrap();semio_framework_value::RetainedWorkOutcome{result:Ok((Self::from_original(source),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})),work:1}})?;Ok(output.is_some())}
 
     /// ⌨️ The composite source preserves both original input and actual fixed runtime headers.
     pub fn original_birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let mut demand=Self::birth_demands()?;demand.copy_bytes=demand.copy_bytes.checked_add(2*std::mem::size_of::<OriginalToolOperationsSources>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original tool source extent overflow"))?;Ok(demand)}
@@ -268,4 +274,15 @@ impl ToolActionBus{
  pub fn original_terminal_is_empty(&self)->bool{match self{Self::Reference(_)=>true,Self::Original(bus)=>bus.terminal_is_empty()}}
  pub fn original_close_demands(&self)->semio_framework_value::RetirementDemand{match self{Self::Reference(_)=>Default::default(),Self::Original(bus)=>bus.close_demands()}}
  pub fn original_close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedCloneStep{match self{Self::Reference(_)=>semio_framework_value::RetainedCloneStep::Complete(Default::default()),Self::Original(bus)=>bus.close_step(grant)}}
+}
+
+/// 🛡️ Moves one resident failure into its prepaid domain reservation and publishes it as the original turn failure once the reservation is funded.
+pub fn admit_pending_domain_failure<T:semio_framework_job::OriginalDomainFailure>(failure:&mut Option<T>,place:&mut Option<semio_framework_job::OriginalDomainReservation<T>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{
+    if failure.is_none()&&place.is_none(){return Ok(None)}
+    if !place.as_ref().is_some_and(|place|place.ready()){place.get_or_insert_with(Default::default).prepare(cx)?;return Ok(None)}
+    let reservation=place.as_mut().ok_or_else(||semio_framework_value::ValueError::invariant("original domain failure place"))?;
+    if !reservation.pending(){reservation.with_body(cx,|_,slot|{*slot=failure.take();Ok(())})?;}
+    let admitted=semio_framework_job::admit_original_domain_failure(reservation,cx)?;
+    if place.as_ref().is_some_and(|place|place.terminal_is_empty()){*place=None;}
+    Ok(admitted)
 }

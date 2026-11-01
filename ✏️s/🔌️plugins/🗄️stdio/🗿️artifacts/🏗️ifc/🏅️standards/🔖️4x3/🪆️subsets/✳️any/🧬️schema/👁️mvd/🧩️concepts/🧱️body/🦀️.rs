@@ -3,7 +3,7 @@ use super::native::*;
 use super::concept_types::*;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, retained_clone_grant_admits};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
-use crate::catalog::query::{IfcAttributeQueryWork, IfcAttributeQueryStatus, Ifc4x3AttributeMetadata};
+use semio_s_artifact_stdio_ifc4x3_schema::query::{IfcAttributeQueryWork, IfcAttributeQueryStatus, Ifc4x3AttributeMetadata};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcSnapshot, IfcValue};
 use std::{mem::size_of, sync::Arc};
 mod domain;

@@ -25,7 +25,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
   if !plugin_grant_funds(demand,grant)||self.retained_close_fault_refusal.is_some(){return Ok(RetainedCloneStep::Progress(Default::default()));}
   if let Some(original)=self.retained_close_fault.as_ref(){if self.terminal_fault.is_none(){self.terminal_fault=Some(semio_framework_plugin_decl_app::borrowed_report(original.origin,&original.code.0,original.severity,&original.message,original.retryable));if let Some(lease)=self.cancellation_lease.as_ref(){lease.cancel();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}}
   let result=if self.retained_close_fault_retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retained_close_fault_retirement,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.retained_close_fault,&mut self.retained_close_fault_retirement,grant)};
-  match result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(original)=>{self.retained_close_fault_refusal=Some(original);Ok(RetainedCloneStep::Progress(Default::default()))}}
+  match result.result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(original)=>{self.retained_close_fault_refusal=Some(original);Ok(RetainedCloneStep::Progress(Default::default()))}}
  }
 
  pub fn granted_retirement_ready(&self)->bool{self.pending_stream_abort.is_none()&&self.result_page.is_none()&&(self.stage==MountedTypedCommandFullOperationStage::Retiring||self.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing)||self.pending_child_publication.as_ref().is_some_and(|owner|matches!(owner.phase,PendingChildGroupPublicationPhase::Acknowledged|PendingChildGroupPublicationPhase::Closing)))}
@@ -80,8 +80,8 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
    let step=owner.close_step(child)?;
    return match step{PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)=>{if !progress.fits(child)||matches!(step,PluginLifecycleStep::Complete(_))&&!owner.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original mounted child publication invalid completion receipt").with_retained_progress(progress).into());}Ok(RetainedCloneStep::Progress(progress))},PluginLifecycleStep::AwaitingInput{..}|PluginLifecycleStep::Blocked{..}=>Ok(RetainedCloneStep::Progress(Default::default()))};
   }
-  if self.publication_retirement.is_some(){let selected=semio_framework_value::select_factory_ticket(&mut self.publication_retirement,self.original_emission_body.unwrap_or(grant.maximum_copy_bytes))?;return Ok(selected.step(grant)?);}
-  if self.publication.is_some(){return match A::admit_completion_retirement(&mut self.publication,grant)?{Some((owner,progress))=>{self.publication_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},None=>Ok(RetainedCloneStep::Progress(Default::default()))};}
+  if self.publication_retirement.is_some(){let selected=semio_framework_value::select_factory_ticket(&mut self.publication_retirement,self.original_emission_body.unwrap_or(grant.maximum_copy_bytes))?;return Ok(selected.step(grant).result?);}
+  if self.publication.is_some(){return match A::admit_completion_retirement(&mut self.publication,grant).result?{Some((owner,progress))=>{self.publication_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},None=>Ok(RetainedCloneStep::Progress(Default::default()))};}
   if let Some(owner)=self.completion_retirement.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){self.completion_retirement.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}
   if let Some(original)=self.completion.take(){match ControlledRetirement::new(original){Ok(owner)=>self.completion_retirement=Some(owner),Err((error,original))=>{self.completion=Some(original);return Err(error.into());}}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
   if let Some(owner)=self.output_retirement.as_mut(){let step=owner.step(grant)?;if owner.terminal_is_empty(){self.output_retirement.take();}return Ok(RetainedCloneStep::Progress(step.progress()));}
@@ -90,11 +90,13 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  }
 }
 /// 🧷️ Admits the original fixture caller whose source binding the blank mounted operations carry.
+#[cfg(any(test, feature = "artifact-app-testing"))]
 fn fixture_source_caller()->(semio_framework_job::OriginalJobFixtureCaller,semio_framework_job::OriginalSourceBinding){
  let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(semio_framework_job::OperationId(17),semio_framework_job::Generation(9),FIXTURE_STOCK,||Some(1),u64::MAX,100_000);
  let binding=caller.turn(FIXTURE_STOCK,|cx|Ok(semio_framework_job::OriginalSourceBinding::borrow(cx))).unwrap();
  (caller,binding)
 }
+#[cfg(any(test, feature = "artifact-app-testing"))]
 const FIXTURE_STOCK:RetainedCloneGrant=RetainedCloneGrant{maximum_items:100_000,maximum_copy_bytes:1<<24,maximum_capacity_bytes:1<<24,maximum_release_bytes:1<<24,maximum_depth:128};
 /// 🧱️ A blank mounted operation for laws that read one retained field of it.
 #[doc(hidden)]

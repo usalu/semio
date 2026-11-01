@@ -37,7 +37,7 @@ impl<const N:usize> RendererOriginalIoNode<N>{
   if self.job.is_some(){return if request.is_none(){Ok(true)}else{Err(invalid("native invocation already retains its original request"))}}
   if request.is_none(){return Err(invalid("native invocation requires its original request"))}
   if !self.origin.body_ready(){let identity=cx.original_source_parent()?.source_identity()?;let binding=OriginalSourceBinding::borrow(cx);let result=self.origin.admit(cx);if !self.origin.terminal_is_empty()&&self.binding.is_none(){self.binding=Some(binding);self.source_identity=Some(identity)}result?;return Ok(false)}
-  if !control_allowed(cx,false){return Ok(false)}self.job=Some(NativeIoJob::new(request.take().unwrap()));post_control(cx)?;Ok(true)
+  if !control_allowed(cx,false){return Ok(false)}self.job=Some(NativeIoJob::new(request.take().ok_or_else(||ValueError::invariant("request absent"))?));post_control(cx)?;Ok(true)
  }
  fn receive_return(&mut self,cx:&mut StepContext<'_>)->Result<RetainedCloneProgress,OriginalTurnFailure>{let before=cx.retained_progress();if self.returned_continuation.is_some(){self.origin.receive_continuation(cx,&mut self.returned_continuation)?;}else if self.returned_outcome.is_some(){self.origin.receive_outcome(cx,&mut self.returned_outcome)?;}span(before,cx.retained_progress())}
  /// ▶️ A real preclaimed receiver captures and receives every original callback before semantic settlement.
@@ -55,7 +55,7 @@ impl<const N:usize> RendererOriginalIoNode<N>{
  /// 👁️ Complete callback and qualification causes remain borrowed from their actual retained carrier.
  pub fn borrow_continuation(&self)->Option<OriginalJobContinuationView<'_>>{self.origin.continuation().or(self.returned_continuation.as_ref()).map(OriginalJobContinuation::view)}
  /// 🔎️ Producer payloads remain borrowed until their exact descriptor is acknowledged.
- pub fn borrow_outcome(&self)->Result<Option<JobOutcomeView<'_>>,ValueError>{self.origin.outcome().filter(|descriptor|!descriptor.is_acknowledged()).map(|descriptor|self.job.as_ref().expect("original descriptor retains its producer").borrow_outcome(descriptor)).transpose()}
+ pub fn borrow_outcome(&self)->Result<Option<JobOutcomeView<'_>>,ValueError>{self.origin.outcome().filter(|descriptor|!descriptor.is_acknowledged()).map(|descriptor|self.job.as_ref().ok_or_else(||ValueError::invariant("original descriptor retains its producer"))?.borrow_outcome(descriptor)).transpose()}
  pub fn result_status(&self)->Option<NativeIoResultStatus>{self.acknowledged.then(||self.job.as_ref().and_then(NativeIoJob::result_status)).flatten()}
  pub fn request_backing_identity(&self)->Option<*const u8>{self.job.as_ref().and_then(NativeIoJob::retained_request_backing_identity)}
  pub fn producer_is_empty(&self)->bool{self.job.is_none()}
@@ -68,14 +68,14 @@ impl<const N:usize> RendererOriginalIoNode<N>{
  /// 📮️ Caller-owned page output survives publication refusal and its reservation clears in a separate paid turn.
  pub fn supply_next_page(&mut self,output:&mut Option<OriginalSuppliedJobPage>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;if self.closing||!self.acknowledged{return Err(invalid("native page publication requires an acknowledged live result"))}
-  if output.is_some(){let reservation=self.reservation.as_mut().ok_or_else(||invalid("native supplied page requires its retained reservation"))?;if !self.job.as_mut().unwrap().supply_result_last_page(reservation,output,cx)?{return Ok(false)}close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.reservation.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(self.reservation.is_none())}
+  if output.is_some(){let reservation=self.reservation.as_mut().ok_or_else(||invalid("native supplied page requires its retained reservation"))?;if !self.job.as_mut().ok_or_else(||ValueError::invariant("job absent"))?.supply_result_last_page(reservation,output,cx)?{return Ok(false)}close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{self.reservation.take();RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})?;return Ok(self.reservation.is_none())}
   let pages=match self.result_status(){Some(NativeIoResultStatus::Bytes{pages,..}|NativeIoResultStatus::Page{pages,..})=>pages,_=>return Err(invalid("native invocation does not retain a page result"))};if pages==0{return Ok(false)}
-  if !self.reservation.as_ref().is_some_and(OriginalJobPageReservation::ready){self.returns.reserve(&mut self.reservation,cx)?;return Ok(false)}self.job.as_mut().unwrap().supply_result_last_page(self.reservation.as_mut().unwrap(),output,cx)?;Ok(false)
+  if !self.reservation.as_ref().is_some_and(OriginalJobPageReservation::ready){self.returns.reserve(&mut self.reservation,cx)?;return Ok(false)}self.job.as_mut().ok_or_else(||ValueError::invariant("job absent"))?.supply_result_last_page(self.reservation.as_mut().ok_or_else(||ValueError::invariant("reservation absent"))?,output,cx)?;Ok(false)
  }
  /// 🔁️ Streaming preserves the actual path, Origin and finite source across paid result retirement.
  pub fn restart_read_page(&mut self,offset:u64,max_bytes:usize,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;if self.closing||!self.acknowledged||self.reservation.is_some(){return Err(invalid("native page restart requires its acknowledged original invocation"))}
-  if self.returns.retains_source(self.source_identity.unwrap()){self.returns.close_returned_step(cx)?;return Ok(false)}let job=self.job.as_mut().unwrap();if job.result_status().is_some(){job.close_result_step(cx)?;return Ok(false)}if !job.restart_read_page(offset,max_bytes,cx)?{return Ok(false)}self.terminal_seen=false;self.acknowledged=false;Ok(true)
+  if self.returns.retains_source(self.source_identity.ok_or_else(||ValueError::invariant("source_identity absent"))?){self.returns.close_returned_step(cx)?;return Ok(false)}let job=self.job.as_mut().ok_or_else(||ValueError::invariant("job absent"))?;if job.result_status().is_some(){job.close_result_step(cx)?;return Ok(false)}if !job.restart_read_page(offset,max_bytes,cx)?{return Ok(false)}self.terminal_seen=false;self.acknowledged=false;Ok(true)
  }
  pub fn begin_close(&mut self){self.closing=true;if let Some(job)=self.job.as_mut(){job.begin_close();}}
  /// ♻️ Returned capsules, descriptors, producer, World pages, actual Origin and caller header close in order.

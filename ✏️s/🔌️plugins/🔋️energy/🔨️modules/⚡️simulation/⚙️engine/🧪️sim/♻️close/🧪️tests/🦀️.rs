@@ -45,5 +45,4 @@ fn original_terminal_backings_are_retired_before_energy_authority_drop(){
  let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(close.take()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  while !decoder.terminal_is_empty(){caller.turn(stock(),|cx|{let step=decoder.close_step(cx.retained_grant())?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);Ok(())}).unwrap();}
  caller.retire(stock());
- eprintln!("[DEBUG] Energy original Unicode String and f64 Vec keep concrete ownership through paid tail retirement; terminal cursor drop has zero heap effects");
 }

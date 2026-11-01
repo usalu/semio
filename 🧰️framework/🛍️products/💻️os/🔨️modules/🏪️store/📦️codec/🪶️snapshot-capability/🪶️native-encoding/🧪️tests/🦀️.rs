@@ -171,7 +171,7 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
         assert!((<EstimatedEncoding as semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations>::sqlite_codec().import)("fixture.expansion/v1", &dialect, &mut Some(database.clone()), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, short),&mut snapshot_encoding_owner).is_err());
     }
 
-drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).result.unwrap();}
 }
 
 #[test]
@@ -226,7 +226,7 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
         }
     }
 
-drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).result.unwrap();}
 }
 
 fn encoding_stops_inside_owned_output(encoding: SnapshotEncoding) {
@@ -270,7 +270,7 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
     assert_eq!(result.is_err(), case["expectedCanceled"].as_bool().unwrap(), "{encoding:?} encoding must stop during real output ownership");
     assert!(reached, "expected an interior EncodeNative byte checkpoint");
     ENCODER_CALLS.with(|count| assert_eq!(count.get(), 0, "ordinary printer/packer must not be called"));
-drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).result.unwrap();}
 }
 #[test]
 fn sqlite_snapshot_native_binary_encoding_stops_inside_owned_output() {
@@ -297,7 +297,7 @@ fn with_fresh_encode_owner<R>(maximum: usize, live: &std::cell::Cell<bool>, gran
         operation(&mut owner)
     };
     while native.has_retirement_owner() {
-        native.close_retirement_recipient(grant).unwrap();
+        native.close_retirement_recipient(grant).result.unwrap();
     }
     result
 }
@@ -362,7 +362,7 @@ let mut snapshot_decoding_progress=|_|snapshot_original_live.get();let mut snaps
         let mut tiny = limits;
         tiny.max_allocation_bytes = 1;
         assert!(encode_fresh!(encoding, &mut |_| true, tiny).is_err());
-drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).result.unwrap();}
     }
 }
 

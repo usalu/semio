@@ -1,4 +1,7 @@
 extern crate semio_framework_os_kernel as store;
+pub(crate) fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
+pub(crate) fn built_with<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|control|semio_framework_value::RetainedWorkOutcome{result:construct(control),work:1})}
+pub(crate) fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 pub use semio_framework_plugin_host_configuration::OriginalHostConfiguration;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as vcs;
@@ -679,7 +682,35 @@ pub struct ChildEmissionPreviewJob<A:ArtifactApp>{
 }
 
 impl<A:ArtifactApp> semio_framework_job::InteractiveJob for ChildEmissionPreviewJob<A>{
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_original(cx))
+    }
+    fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,ValueError>{
+        match descriptor.kind(){
+            semio_framework_job::JobOutcomeKind::Yield=>descriptor.yielded(),
+            semio_framework_job::JobOutcomeKind::Cancelled=>descriptor.cancelled(),
+            semio_framework_job::JobOutcomeKind::Complete if self.emit.is_none()&&self.rejection.is_none()&&self.retirement_fault.is_none()=>descriptor.complete(None,None),
+            semio_framework_job::JobOutcomeKind::Fault=>self.fault_publication.borrow_outcome(descriptor),
+            _=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"child preview descriptor requires its original semantic result")),
+        }
+    }
+    fn begin_close(&mut self){self.closing=true;}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::InteractiveJobCloseStep as Step;
+        if !self.closing||cx.should_yield(){return Ok(Step::Blocked);}
+        let demand=self.close_owned_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=retired(cx,demand,|grant|self.close_owned_turn(grant).result.map(RetainedCloneStep::Progress))?;
+        Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
+    }
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.close_owned_demands(copy)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.depth)}
+    fn terminal_is_empty(&self)->bool{self.closing&&self.fault_publication.terminal_is_empty()&&self.emit.is_none()&&self.ephemeral.is_none()&&self.completion.is_none()&&self.retirement.is_none()&&self.retirement_payload.is_none()&&self.retirement_fault.is_none()&&self.rejection.is_none()&&self.completion_retirement.is_none()}
+}
+
+impl<A:ArtifactApp> ChildEmissionPreviewJob<A>{
+    fn step_original<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::JobOutcomeBorrow;
         if cx.is_cancelled(){return JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
         if cx.should_yield(){return Ok(None)}
@@ -714,28 +745,6 @@ impl<A:ArtifactApp> semio_framework_job::InteractiveJob for ChildEmissionPreview
             Ok(ChildEmitPreparationStep::Refused(fault,_))|Err(fault)=>{self.retirement_fault=Some(fault);Ok(None)}
         }
     }
-    fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,ValueError>{
-        match descriptor.kind(){
-            semio_framework_job::JobOutcomeKind::Yield=>descriptor.yielded(),
-            semio_framework_job::JobOutcomeKind::Cancelled=>descriptor.cancelled(),
-            semio_framework_job::JobOutcomeKind::Complete if self.emit.is_none()&&self.rejection.is_none()&&self.retirement_fault.is_none()=>descriptor.complete(None,None),
-            semio_framework_job::JobOutcomeKind::Fault=>self.fault_publication.borrow_outcome(descriptor),
-            _=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"child preview descriptor requires its original semantic result")),
-        }
-    }
-    fn begin_close(&mut self){self.closing=true;}
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_job::InteractiveJobCloseStep as Step;
-        if !self.closing||cx.should_yield(){return Ok(Step::Blocked);}
-        let demand=self.close_owned_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let turn=self.close_owned_turn(grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(RetainedCloneStep::Progress),work:turn.work}})?;
-        Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
-    }
-    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.copy_bytes)}
-    fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.close_owned_demands(copy)?.capacity_bytes)}
-    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.release_bytes)}
-    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.depth)}
-    fn terminal_is_empty(&self)->bool{self.closing&&self.fault_publication.terminal_is_empty()&&self.emit.is_none()&&self.ephemeral.is_none()&&self.completion.is_none()&&self.retirement.is_none()&&self.retirement_payload.is_none()&&self.retirement_fault.is_none()&&self.rejection.is_none()&&self.completion_retirement.is_none()}
 }
 
 impl<A:ArtifactApp> ChildEmissionPreviewJob<A>{

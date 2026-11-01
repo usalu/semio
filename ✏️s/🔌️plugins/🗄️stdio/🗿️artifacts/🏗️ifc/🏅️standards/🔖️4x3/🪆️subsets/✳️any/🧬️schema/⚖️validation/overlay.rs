@@ -5,8 +5,8 @@ use semio_framework_value::{
     retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneStep},
     RetirementDemand, ValueError,
 };
-pub(super) use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcSnapshot, IfcValue};
-pub(super) use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::IfcMutation;
+pub use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcSnapshot, IfcValue};
+pub use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::IfcMutation;
 use std::mem::size_of;
 
 #[derive(Clone, Copy, Debug, semio_framework_value::RetireOwned)]
@@ -293,9 +293,9 @@ impl PopulationOverlay {
             return Err(refusal("express.overlay-not-closing"));
         }
         if self.storage.is_some() {
-            self.retirement.begin_granted(&mut self.storage, grant)?.ok_or_else(|| refusal("express.overlay-close-owner"))
+            self.retirement.begin_granted(&mut self.storage, grant).result?.ok_or_else(|| refusal("express.overlay-close-owner"))
         } else if !self.retirement.is_empty() {
-            self.retirement.step_granted(grant)
+            self.retirement.step_granted(grant).result
         } else {
             Ok(RetainedCloneStep::Complete(Default::default()))
         }

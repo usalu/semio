@@ -117,14 +117,14 @@ where
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "installed cursor exceeds admitted owner depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.started = true;
-        if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, RetainedCloneGrant { maximum_items: 1, ..grant }).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, RetainedCloneGrant { maximum_items: 1, ..grant }).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         let store = &mut *view.store;
         match self.phase {
             ArtifactStoreCursorDisposerPhase::ReturnedReads => {
                 if store.snapshot_read_leases_terminal_is_empty() { self.phase = ArtifactStoreCursorDisposerPhase::Displaced; }
                 else {
                     let factory = store.close_host_initial_snapshot_retirement_factory().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "returned read requires installed snapshot factory"))?;
-                    return advance_returned_snapshot_read(store.close_host_snapshot_read_leases(), &mut self.active, factory, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+                    return advance_returned_snapshot_read(store.close_host_snapshot_read_leases(), &mut self.active, factory, grant).result.map(|step| RetainedCloneStep::Progress(step.progress()));
                 }
             }
             ArtifactStoreCursorDisposerPhase::Displaced => {

@@ -162,14 +162,14 @@ impl Generation2dImportJob {
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if !self.publication.terminal_is_empty() {
-            return self.publication.close_step(child).map(|step| step.progress());
+            return self.publication.close_step(child).result.map(|step| step.progress());
         }
         if self.delivered {
             self.delivered = false;
             return Ok(RetainedCloneProgress { copied_items: 1, ..Default::default() });
         }
         if self.active.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant).result.map(|step| step.progress());
         }
         if self.pending_completion_rejection.is_some() {
             return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_completion_rejection, &mut self.active, grant).result.map(|step| step.progress());
@@ -196,9 +196,11 @@ impl Generation2dImportJob {
 
 impl Generation2dImportJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.delivered {
-            let step = self.publication.close_step(cx.retained_grant())?;
+            let turn = self.publication.close_step(cx.retained_grant());
+            cx.consume_fuel(turn.work);
+            let step = turn.result?;
             cx.consume_retained(step.progress())?;
             if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
                 self.delivered = false;
@@ -206,7 +208,7 @@ impl Generation2dImportJob {
             return Ok(None);
         }
         if self.closing || cx.is_cancelled() {
-            return JobOutcomeBorrow::admit_cancelled(cx);
+            return JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into);
         }
         if cx.should_yield() {
             return Ok(None);
@@ -226,7 +228,7 @@ impl Generation2dImportJob {
             return Ok(None);
         }
         if self.completed {
-            return JobOutcomeBorrow::admit_complete(cx, None, None);
+            return JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into);
         }
         if !self.decoded {
             cx.set_stage("generation2d-import-decode");
@@ -255,12 +257,12 @@ impl Generation2dImportJob {
             return Ok(None);
         }
         self.completed = true;
-        JobOutcomeBorrow::admit_complete(cx, None, None)
+        JobOutcomeBorrow::admit_complete(cx, None, None).map_err(Into::into)
     }
 }
 
 impl InteractiveJob for Generation2dImportJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {
@@ -295,11 +297,8 @@ impl InteractiveJob for Generation2dImportJob {
         semio_framework_job::close_original_granted_step(cx,|grant|{
             use semio_framework_job::InteractiveJobCloseStep;
             self.closing = true;
-            Ok(match self.close_turn(grant) {
-                Ok(progress) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress },
-                Ok(progress) => InteractiveJobCloseStep::Pending { progress },
-                Err(error) => return Err(error),
-            })
+            let result = self.close_turn(grant).map(|progress| if self.terminal_is_empty() { InteractiveJobCloseStep::Complete { progress } } else { InteractiveJobCloseStep::Pending { progress } });
+            semio_framework_value::RetainedWorkOutcome { result, work: 1 }
         })
     }
 

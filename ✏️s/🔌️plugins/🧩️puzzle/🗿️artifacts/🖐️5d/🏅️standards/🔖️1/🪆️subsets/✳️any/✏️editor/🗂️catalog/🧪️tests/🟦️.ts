@@ -23,5 +23,4 @@ test("Puzzle5D dictionary publication preserves normalized wire values", async (
   const pending = driver.split("ArtifactCommandWorkStep::Pending { stage, preview } =>")[1]!.split("ArtifactCommandWorkStep::Replay")[0]!;
   expect(pending).not.toContain("work_progress");
   expect(fixture.construction.pendingSemanticItems).toBe(0);
-  console.log("[DEBUG] Puzzle5D authored dictionary vectors=6 independent mathjs/Map agree; staged cursor retains original owners");
 });

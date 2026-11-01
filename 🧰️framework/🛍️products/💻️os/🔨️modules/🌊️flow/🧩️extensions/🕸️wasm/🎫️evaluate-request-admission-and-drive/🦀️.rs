@@ -189,7 +189,7 @@ pub(super) fn evaluation_drive_original(registry:&neural_engine::SharedRegistry,
             return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}
         }
         if retained.compact_cleanup&&(retained.compact_request.is_some()||retained.compact_active.is_some()){
-            let result=if retained.compact_active.is_some(){evaluation_child_close(&mut retained.compact_active,remaining)}else{evaluation_admit_original(&mut retained.compact_request,&mut retained.compact_active,remaining)};
+            let result=if retained.compact_active.is_some(){evaluation_child_close(&mut retained.compact_active,remaining,&mut retained.work)}else{evaluation_admit_original(&mut retained.compact_request,&mut retained.compact_active,remaining,&mut retained.work)};cx.consume_fuel(retained.take_work());
             match result{Ok(step)=>physical=physical.checked_add(step.progress()).expect("original SDK compact source receipt"),Err(error)=>{physical=physical.checked_add(error.retained_progress()).expect("original SDK failed compact source receipt");retained.fault=Some(error.into());retained.cancel();}}
             if retained.compact_request.is_none()&&retained.compact_active.is_none(){retained.compact_cleanup=false;}return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None};
         }
@@ -197,7 +197,7 @@ pub(super) fn evaluation_drive_original(registry:&neural_engine::SharedRegistry,
         if physical!=Default::default(){return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}}
         let before_units=retained.units;let restarting=retained.restarting;let (step,receipt,failed)=match retained.advance(registry,&key.1,cx){Ok((step,receipt))=>(step,receipt,false),Err(error)=>{let receipt=retained.normal_step_progress();retained.fault=Some(error);retained.cancel();(EvaluationStep::Working(retained.progress()),receipt,true)}};
         if !failed&&!retained.normal_context_posted&&receipt==Default::default()&&retained.units==before_units{return EvaluationReply{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress:physical,returned_request,refusal:None}}
-        let work=if restarting&&!retained.restarting&&retained.units==0{receipt.copied_items.max(1)}else{retained.units.checked_sub(before_units).expect("original evaluation unit progress changes only at explicit restart").max(receipt.copied_items).max(1)};if !retained.normal_context_posted{cx.consume_fuel(work as u64);}
+        let work=if restarting&&!retained.restarting&&retained.units==0{receipt.copied_items.max(1)}else{retained.units.checked_sub(before_units).expect("original evaluation unit progress changes only at explicit restart").max(receipt.copied_items).max(1)};if !retained.normal_context_posted{cx.consume_fuel(work as u64);}cx.consume_fuel(retained.take_work());
         physical=physical.checked_add(receipt).expect("original evaluation cumulative physical receipt");
         let funded=receipt.fits(remaining)&&physical.fits(memory_grant);if !funded{if retained.fault.is_none(){retained.fault=Some("original evaluation exceeded its caller memory grant".into());}retained.cancel();}
         match step{

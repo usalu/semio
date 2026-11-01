@@ -21,7 +21,6 @@ describe("FEM exact mutation grammar vocabulary",()=>{
       const rust=readFileSync(resolve(generator,"🧩️json/🦀️.rs"),"utf8").split("pub const KINDS:")[1]!.split("];",1)[0]!;const rustKinds=[...rust.matchAll(/"([a-z-]+)"/g)].map(row=>row[1]!);expect(new Set(rustKinds)).toEqual(new Set(routeKinds));const routePaths=Object.fromEntries([...routes.matchAll(/^  "([a-z-]+)": \{ subset: "[a-z]+", path: "([^"]+)"/gm)].map(row=>[row[1]!,row[2]!]));const rustRoutes=readFileSync(resolve(generator,"🧩️json/🏗️generate/🦀️.rs"),"utf8");const rustPaths=Object.fromEntries([...rustRoutes.matchAll(/"([a-z-]+)" => Some\("([^"]+)"\)/g)].map(row=>[row[1]!,row[2]!]));expect(rustPaths).toEqual(routePaths);for(const path of Object.values(routePaths)){expect(path).toContain("/🧪️tests/🧫️fixtures/");for(const name of ["⏮️before.json","⏭️after.json"])expect(existsSync(resolve(subsets,path,name))).toBe(true);}
       const three=dimension==="🧊️3d";const entity=three?"solid":"region";const scenarios=[[`${three?"🧊️":"🗺️"}create-${entity}`],[`🚫️delete-${entity}`],[`🔄️replace-${entity}`],["🧭️move-selection"]];
       for(const[scenario]of scenarios){const root=resolve(subsets,`🕸️mesh/🧪️tests/🧫️fixtures/${scenario}`);const before=read(resolve(root,"⏮️before.json"));const after=read(resolve(root,"⏭️after.json"));const oracle=read(resolve(root,"🩹️oracle.json"));expect(applyPatch(structuredClone(before),oracle,true,false).newDocument).toEqual(after);expect(after).not.toEqual(before);}
-      console.log(`[DEBUG] ${dimension} all39 carrier routes and four authored geometry/selection snapshots equal independent RFC6902 output`);
     });
 
     it(`${dimension} names all39 schema variants and preserves every selected neutral payload`,()=>{
@@ -31,7 +30,6 @@ describe("FEM exact mutation grammar vocabulary",()=>{
       const kinds=aggregate.oneOf.map((reference:{$ref:string})=>kebab((registry.get(reference.$ref)as{properties:{mutation:{const:string}}}).properties.mutation.const));expect(new Set(rules.map(rule=>rule[1]))).toEqual(new Set(kinds));
       const test=resolve(text,"🧪️tests/🔬️mutation-grammar-conformance/🦀️.rs");const cases=[...readFileSync(test,"utf8").matchAll(/\("([^\"]+)",include_str!\("([^\"]+)"\)\)/g)];expect(cases).toHaveLength(39);
       for(const row of cases){const mutation=read(resolve(dirname(test),row[2]!));expect(kebab(mutation.mutation)).toBe(row[1]);const reference=aggregate.oneOf.find((reference:{$ref:string})=>kebab((registry.get(reference.$ref)as{properties:{mutation:{const:string}}}).properties.mutation.const)===row[1]);const leaf=ajv.getSchema(reference.$ref)!;expect(leaf(mutation),`${row[1]} ${row[2]}: ${JSON.stringify(leaf.errors)}`).toBe(true);}
-      console.log(`[DEBUG] ${dimension} grammar39 keyword rules and neutral payloads verified against independent Ajv union`);
     });
   }
 });

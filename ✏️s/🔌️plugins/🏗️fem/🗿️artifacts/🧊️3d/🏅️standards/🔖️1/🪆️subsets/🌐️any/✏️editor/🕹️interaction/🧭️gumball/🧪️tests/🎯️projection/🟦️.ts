@@ -13,5 +13,4 @@ export function testFem3dSelectionProjectionOracle(): void {
   assert.deepEqual(centroid.toArray(), vector.pivot);
   assert.equal(points.length, vector.nodeCount);
   assert.deepEqual(points.map(node => node.id), nodes.map(node => node.id));
-  console.log(`[DEBUG] FEM3d ${selected.length} selection identities project to ${points.length} document-ordered nodes and the Three.js centroid`);
 }

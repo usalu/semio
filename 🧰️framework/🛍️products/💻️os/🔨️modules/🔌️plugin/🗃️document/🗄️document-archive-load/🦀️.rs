@@ -164,9 +164,9 @@ impl PendingDocumentArchiveMember {
             drop(self.pages.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));
         }
         let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-        if self.entry_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.entry_retirement,child).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if self.entry_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.entry_retirement,child).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
         let original=self.entry.take().expect("quoted original archive member");
-        match semio_framework_value::retirement::admit_owned_retirement(original,child) {
+        match semio_framework_value::retirement::admit_owned_retirement(original,child) .result {
             Ok((owner,progress))=>{self.entry_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original archive member birth")?;Ok(RetainedCloneStep::Progress(progress))}
             Err((error,original))=>{self.entry=Some(original);Err(error)}
         }
@@ -354,11 +354,11 @@ where
         let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty));}
         let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-        if self.retained.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retained,child).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if self.archive_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.archive_retirement,child).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if self.retained.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retained,child).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if self.archive_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.archive_retirement,child).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
         if let Some(hydration)=self.hydration.as_mut(){
             if store::ErasedSnapshotRetirement::terminal_is_empty(hydration){drop(self.hydration.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
-            let step=store::ErasedSnapshotRetirement::close_step(hydration,child)?;
+            let step=store::ErasedSnapshotRetirement::close_step(hydration,child).result?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,store::ErasedSnapshotRetirement::terminal_is_empty(hydration),"original archive hydration")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
@@ -381,13 +381,13 @@ where
         }
         if self.history_custody.is_none(){self.history_custody=self.decoded_history.take();}
         if let Some(original)=self.history_custody.take(){
-            match semio_framework_value::retirement::admit_owned_retirement(original,child){
+            match semio_framework_value::retirement::admit_owned_retirement(original,child).result {
                 Ok((owner,progress))=>{self.retained=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original archive history birth")?;return Ok(RetainedCloneStep::Progress(progress));}
                 Err((error,original))=>{self.history_custody=Some(original);return Err(error);}
             }
         }
         if let Some(original)=self.archive.take(){
-            return match semio_framework_value::retirement::admit_owned_retirement(original,child){
+            return match semio_framework_value::retirement::admit_owned_retirement(original,child).result {
                 Ok((owner,progress))=>{self.archive_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original physical archive birth")?;Ok(RetainedCloneStep::Progress(progress))}
                 Err((error,original))=>{self.archive=Some(original);Err(error)}
             };

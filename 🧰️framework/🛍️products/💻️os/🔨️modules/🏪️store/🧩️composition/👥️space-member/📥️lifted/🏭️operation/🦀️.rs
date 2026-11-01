@@ -41,7 +41,7 @@ impl<P: Send> ErasedSnapshotRetirement for UnsupportedMemberSnapshotOpen<P> {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { semio_framework_os_store_read::retirement_owner_demands(&self.request, body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if grant.maximum_items != 0 && grant.maximum_depth >= self.next_depth_demand()? { self.diagnostic.get_or_insert(MemberOpenDiagnostic::Cancelled); }
-        semio_framework_os_store_read::retirement_owner_close(&mut self.request, grant)
+        semio_framework_os_store_read::retirement_owner_close(&mut self.request, grant).result
     })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { self.request.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(semio_framework_os_store_read::retirement_owner_demands(&self.request, 0)?.copy_bytes) }
@@ -93,7 +93,7 @@ impl<M: Send> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
         if cx.should_yield(){return Ok(RetainedCloneStep::Progress(empty))}
         grant.maximum_copy_bytes=grant.maximum_copy_bytes.min(usize::try_from(cx.fuel_remaining().saturating_sub(1)).unwrap_or(usize::MAX));
         let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-        let result=self.snapshot.close_step(child).and_then(|step|admit_retained_clone_close(child,step,self.snapshot.terminal_is_empty(),"unsupported factory request"));
+        let result=self.snapshot.close_step(child).result.and_then(|step|admit_retained_clone_close(child,step,self.snapshot.terminal_is_empty(),"unsupported factory request"));
         semio_framework_os_store_member_open::receive_member_close(cx,result).map(|step|RetainedCloneStep::Progress(step.progress()))
     }
     fn terminal_is_empty(&self) -> bool { self.snapshot.terminal_is_empty()&&self.source_loan.is_none() }

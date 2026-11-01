@@ -89,8 +89,8 @@ where P: ToValue, M: ToValue + Mutation<P> {
         if !covers(grant, demand) { return Ok(ArtifactCodecCatalogStep::Blocked); }
         self.closing = true;
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let progress = if self.failure_close.is_some() { crate::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.failure_close, child)?.progress() }
-        else if self.failure.is_some() { crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.failure, &mut self.failure_close, child)?.progress() }
+        let progress = if self.failure_close.is_some() { crate::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.failure_close, child).result?.progress() }
+        else if self.failure.is_some() { crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.failure, &mut self.failure_close, child).result?.progress() }
         else if let Some(owners) = self.original.as_mut() { if owners.uninstalled_owners_terminal_is_empty() { drop(self.original.take()); item() } else { close_catalog(owners, child)?.progress() } }
         else { self.done = true; item() };
         if progress == Default::default() { return Ok(ArtifactCodecCatalogStep::Blocked); }

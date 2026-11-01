@@ -1,5 +1,5 @@
 //! 🧪️ Actual details render preparation retains contextual source choices and small original request payloads.
-use super::super::super::DetailsTestProfile;
+use super::super::DetailsTestProfile;
 use super::*;
 use semio_framework_plugin::app_testing::OriginalWorkFixture;
 fn source() -> IfcSnapshot {

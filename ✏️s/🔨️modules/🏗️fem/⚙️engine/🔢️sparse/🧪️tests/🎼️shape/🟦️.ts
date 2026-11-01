@@ -15,6 +15,5 @@ export function testSubspaceShapeOracle():void{
    }
    for(const [order,modes]of [[-1,1],[1,-1],[NaN,1],[1,NaN],[Infinity,1],[Number.MAX_SAFE_INTEGER+1,1]])assert.equal(subspaceShapeAdmitted(order!,modes!,wordBits),false);
   }
-  console.log(`[DEBUG] ${law.cases.length*2} sparse subspace layouts match independent SQLite exact integer pricing for 32/64-bit owners; multi-page problems pass logical admission`);
  }finally{database.close();}
 }

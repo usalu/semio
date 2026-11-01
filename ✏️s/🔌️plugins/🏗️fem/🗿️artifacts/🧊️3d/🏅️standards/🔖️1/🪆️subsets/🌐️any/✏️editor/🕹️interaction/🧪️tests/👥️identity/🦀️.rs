@@ -56,7 +56,6 @@ fn scoped_targets_separate_all_entity_kinds_and_repeated_load_ids() {
     let material = fem3d_entity_target("material", "same").unwrap();
     assert_eq!(gumball::fem3d_transform_targets(&doc, &[node]), gumball::Fem3dTransformTargets { node_ids: vec!["same".into()], solid_ids: Vec::new() });
     assert!(gumball::fem3d_transform_targets(&doc, &[material]).is_empty());
-    eprintln!("[DEBUG] FEM3d canonical targets separate all namespaces and repeated UTF8 load IDs by case");
 }
 
 #[test]
@@ -79,7 +78,6 @@ fn scoped_load_commands_modify_only_the_addressed_case_and_reject_raw_ids() {
     for malformed in ["same", "scope:1:7:unknown4:same", "scope:1:4:node4:same1:x"] {
         assert!(remove_selection::handle(&remove_selection::RemoveSelection { ids: vec![fem3d_entity_target("material", "same").unwrap(), malformed.into()] }, &view, &config).is_err());
     }
-    eprintln!("[DEBUG] FEM3d scoped inspector and delete commands preserve peer load cases and atomically refuse malformed targets");
 }
 
 #[test]
@@ -93,7 +91,6 @@ fn viewport_identity_collisions_are_distinct_and_unencodable_ids_refuse_scene() 
     let mut malformed = doc;
     malformed.nodes[0].id.clear();
     assert!(semio_s_artifact_fem_3d_scene::standards::v1::subsets::any::scene::fem3d_scene_parts(&malformed, None, 1.0, None).is_err());
-    eprintln!("[DEBUG] FEM3d viewport hit identities preserve namespace and load ownership with explicit scene admission failure");
 }
 
 /// 🛂️ Public cold JSON and metered typed admission enforce the same owner namespace contract.
@@ -126,7 +123,6 @@ fn public_json_identity_admission_refuses_invalid_owners_and_controlled_scratch_
     let mut canceled = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1 << 20, &mut cancel);
     assert!(valid.validate_interaction_identities_controlled(&mut canceled).is_err());
     assert_eq!(canceled.owned_bytes(), 0);
-    eprintln!("[DEBUG] FEM3d public JSON refused four invalid owner vectors; native identity scratch was explicitly funded, zero-budget refused and cancellation preserved ownership");
 }
 
 #[test]
@@ -152,5 +148,4 @@ fn snapshot_identity_admission_preserves_namespaces_and_refuses_invalid_owners()
     let operation = semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation::CreateNode(semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: invalid_node, index: None });
     assert_eq!(protocol::ColdMutation::diff(&operation, &doc).diff(), &Default::default());
     assert_eq!(crate::vcs::apply_mutation(&doc, &operation).unwrap().0, doc);
-    eprintln!("[DEBUG] FEM3d snapshot text/binary admission accepts scoped collisions and refuses duplicate, empty or oversized owners");
 }

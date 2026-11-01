@@ -13,11 +13,20 @@ export type DemonstratorTextKey = keyof typeof catalog.texts;
 /** 🏷️ A key naming a label with `normal` and `beginner` wording. */
 export type DemonstratorLabelKey = DemonstratorTextKey extends infer K ? (K extends `${infer P}.label.normal` ? P : never) : never;
 
-/** 🔒️ The one locale the whole demonstrator is locked to. */
-export const DEMONSTRATOR_LOCKED_LOCALE: DemonstratorLocale = catalog.lockedLocale === "en" ? "en" : catalog.lockedLocale === "de" ? "de" : unsupportedLocale(catalog.lockedLocale);
+/** 🌎️ Every locale the demonstrator ships, English first and German second; none is preselected. */
+export const DEMONSTRATOR_LOCALES: readonly DemonstratorLocale[] = ["en", "de"];
 
-function unsupportedLocale(locale: string): never {
-  throw new Error(`Unsupported demonstrator locale: ${locale}`);
+/** 🗣️ Each locale named in its own words, shown to a viewer who has not chosen a language yet. */
+export const DEMONSTRATOR_LOCALE_ENDONYMS: Readonly<Record<DemonstratorLocale, string>> = { en: "English", de: "Deutsch" };
+
+/** 🧭️ The first candidate language tag (`en`, `de-AT`, ...) naming a shipped locale; `undefined` when none does, so the viewer is asked instead of served a guessed language. */
+export function resolveDemonstratorLocale(candidates: readonly (string | null | undefined)[]): DemonstratorLocale | undefined {
+  for (const candidate of candidates) {
+    const primary = candidate?.toLowerCase().split("-")[0];
+    const match = DEMONSTRATOR_LOCALES.find((locale) => locale === primary);
+    if (match !== undefined) return match;
+  }
+  return undefined;
 }
 
 /** 📖️ The text of `key` in `locale`; there is no fallback, an unknown key is a defect. */
@@ -25,9 +34,13 @@ export function demonstratorText(key: DemonstratorTextKey, locale: DemonstratorL
   return catalog.texts[key][locale];
 }
 
-/** 🧵️ The text of `key` in `locale` with every `{{name}}` placeholder filled from `params`. */
+/** 🧵️ The text of `key` in `locale` with every `{{name}}` placeholder filled from `params`; a placeholder without a value is a defect and throws. */
 export function demonstratorFormat(key: DemonstratorTextKey, locale: DemonstratorLocale, params: Readonly<Record<string, string>>): string {
-  return demonstratorText(key, locale).replace(/\{\{(\w+)\}\}/g, (_, name: string) => params[name] ?? "");
+  return demonstratorText(key, locale).replace(/\{\{(\w+)\}\}/g, (_, name: string) => {
+    const value = params[name];
+    if (value === undefined) throw new Error(`demonstrator text ${key} lacks the placeholder value ${name}`);
+    return value;
+  });
 }
 
 /** 🏷️ The wire shape of a manifest `LocalizedLabel`: one cell per terminology and locale, here the same text for every terminology. */

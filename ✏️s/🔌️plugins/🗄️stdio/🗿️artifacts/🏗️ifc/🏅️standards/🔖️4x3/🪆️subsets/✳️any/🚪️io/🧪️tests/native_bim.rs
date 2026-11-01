@@ -1,4 +1,8 @@
 use super::*;
+use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot,Site,Building,Storey};
+use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::Point2;
+use bim::{bim_to_ifc_controlled,ifc_to_bim_controlled};
+use std::collections::{BTreeMap,HashMap};
 use pack::snapshot::ArtifactPack;
 
 #[test]
@@ -52,10 +56,10 @@ fn actual_controlled_native_bim_routes_preserve_five_paired_rotations(){
         let mut decode=semio_framework_value::NativeDecodeControl::new(256*1024*1024,&mut receive);let mut encode=semio_framework_value::NativeEncodeControl::new(256*1024*1024,&mut publish);decode.install_retirement_recipient(&mut dr).unwrap();encode.install_retirement_recipient(&mut er).unwrap();
         let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1_000_000,maximum_copy_bytes:256*1024*1024,maximum_capacity_bytes:256*1024*1024,maximum_release_bytes:256*1024*1024,maximum_depth:128};
         let mut control=IoRunControl::new(&mut decode,&mut encode,grant);
-        let graph=semio_framework_async::poll::resolve_ready(<super::super::domains::BimIntoIfc as Deserializer<IfcSnapshot>>::deserialize(&input,&mut control)).unwrap().value;
+        let graph=semio_framework_async::poll::resolve_ready(<domains::BimIntoIfc as Deserializer<IfcSnapshot>>::deserialize(&input,&mut control)).unwrap().value;
         assert!(graph.entities.iter().filter(|entity|entity.name=="IFCAXIS2PLACEMENT3D").all(|axis|axis.args.len()==3&&matches!(axis.args[1],IfcValue::Unset)==matches!(axis.args[2],IfcValue::Unset)));drop(control);
         let mut control=IoRunControl::new(&mut decode,&mut encode,grant);
-        let payload=semio_framework_async::poll::resolve_ready(<super::super::domains::IfcIntoBim as Serializer<IfcSnapshot>>::serialize(&graph,&ArchiveChildren::empty(),&mut control)).unwrap().value;drop(control);
+        let payload=semio_framework_async::poll::resolve_ready(<domains::IfcIntoBim as Serializer<IfcSnapshot>>::serialize(&graph,&ArchiveChildren::empty(),&mut control)).unwrap().value;drop(control);
         let IoPayload::Binary(bytes)=payload else{panic!("Native BIM pack required")};let restored=ModelSnapshot::decode_pack(&bytes).unwrap();assert!((restored.buildings.values().next().unwrap().rotation-angle).abs()<1e-12,"{}",row["id"]);
         for _ in 0..1_000_000{if !decode.has_retirement_owner()&&!encode.has_retirement_owner(){break;}decode.close_retirement_recipient(grant).unwrap();encode.close_retirement_recipient(grant).unwrap();}assert!(!decode.has_retirement_owner()&&!encode.has_retirement_owner());
     }
@@ -124,8 +128,8 @@ fn native_bim_nonidentity_site_and_contradictory_storey_frames_refuse() {
 fn actual_native_bim_composers_publish_target_snapshot_packs() {
     use semio_framework_plugin::io::{ErasedComposeSource,IoPayload};
     let source=source();
-    let exported=semio_framework_async::poll::resolve_ready((super::super::domains::entries()[1].compose)(&[ErasedComposeSource {dialect:super::super::domains::BIM_DIALECT,payload:IoPayload::Binary(source.encode_pack())}])).unwrap();
-    let restored=semio_framework_async::poll::resolve_ready((super::super::domains::entries()[0].compose)(&[ErasedComposeSource {dialect:crate::io::IFC4X3_DIALECT,payload:exported.payload}])).unwrap();
+    let exported=semio_framework_async::poll::resolve_ready((domains::entries()[1].compose)(&[ErasedComposeSource {dialect:domains::BIM_DIALECT,payload:IoPayload::Binary(source.encode_pack())}])).unwrap();
+    let restored=semio_framework_async::poll::resolve_ready((domains::entries()[0].compose)(&[ErasedComposeSource {dialect:crate::io::IFC4X3_DIALECT,payload:exported.payload}])).unwrap();
     let IoPayload::Binary(bytes)=restored.payload else {panic!("Native BIM pack required")};
     assert_eq!(ModelSnapshot::decode_pack(&bytes).unwrap().storeys.len(),2);
 }

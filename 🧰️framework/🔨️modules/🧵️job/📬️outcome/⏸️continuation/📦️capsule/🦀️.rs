@@ -33,13 +33,13 @@ impl OriginalJobContinuation{
   if self.terminal_is_empty(){return Ok(Default::default())}
   if self.witness.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned continuation must redeem its held return before insertion or close"))}
   if !self.inserted{return Ok(RetirementDemand{depth:1,..Default::default()})}
-  let frame=self.frame.as_ref().expect("prepaid original continuation frame");if !frame.terminal_is_empty(){return frame.demand(copy)}
+  let frame=self.frame.as_ref().ok_or_else(||ValueError::invariant("prepaid original continuation frame"))?;if !frame.terminal_is_empty(){return frame.demand(copy)}
   Ok(RetirementDemand{release_bytes:size_of::<OriginalReturnFrame>(),depth:1,..Default::default()})
  }
  pub(super) fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,OriginalTurnFailure>{
   if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}self.validate(cx)?;if self.witness.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned continuation must redeem its held return before insertion or close").into())}
   if !self.inserted{return crate::close_original_retained_step(cx,RetirementDemand{depth:1,..Default::default()},|_|{let frame=self.frame.as_mut().expect("prepaid original continuation frame");let payload=frame.owner.original_mut().expect("uninserted original continuation");assert!(payload.callback.is_none()&&payload.qualification.is_none()&&payload.receipt_qualification.is_none()&&frame.descriptor.is_none(),"one genuine continuation insertion");payload.callback=self.callback.take();payload.qualification=self.qualification.take();payload.receipt_qualification=self.receipt_qualification.take();frame.descriptor=self.descriptor.take();self.inserted=true;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}})}
-  let frame=self.frame.as_mut().unwrap();if !frame.terminal_is_empty(){let demand=frame.demand(cx.retained_grant().maximum_copy_bytes)?;return crate::close_original_retained_step(cx,demand,|grant|frame.close_step(grant))}
+  let frame=self.frame.as_mut().ok_or_else(||ValueError::invariant("frame absent"))?;if !frame.terminal_is_empty(){let demand=frame.demand(cx.retained_grant().maximum_copy_bytes)?;return crate::close_original_retained_step(cx,demand,|grant|frame.close_step(grant))}
   crate::close_original_retained_step(cx,RetirementDemand{release_bytes:size_of::<OriginalReturnFrame>(),depth:1,..Default::default()},|_|{self.frame.take();self.source=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:size_of::<OriginalReturnFrame>(),..Default::default()})),work:1}})
  }
 }

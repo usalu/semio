@@ -187,7 +187,7 @@ impl ArtifactOwnedValueRetirementFactory<MapMutation> for MapRetirementFactory {
     fn retire_owned(&self, value: MapMutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, MapMutation)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, MapMutation)> {
         let MapMutation::ReplaceMap(MapBody { lifetime, .. }) = &value;
         assert_eq!(lifetime.active_iterators.load(Ordering::SeqCst), 0);
-        semio_framework_value::retirement::admit_owned_retirement(value, grant)
+        semio_framework_value::retirement::admit_owned_retirement(value, grant).result
     })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 impl semio_framework_value::retirement::RetireOwned for MapLifetime {
@@ -240,11 +240,11 @@ fn fixture_encoding_grant(items: usize, copy: usize) -> ArtifactStoreOneItemGran
 fn retire_fixture_owned<T: semio_framework_value::retirement::RetireOwned>(original: T) {
     let grant = fixture_retirement_grant();
     let (admitted, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value::retirement::admit_owned_retirement(original, grant));
-    let (owner, progress) = admitted.unwrap_or_else(|_| panic!("fixture map original frame was refused"));
+    let (owner, progress) = admitted.result.unwrap_or_else(|_| panic!("fixture map original frame was refused"));
     assert!(progress.fits(grant)); assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
     let mut owner = Some(owner);
     for _ in 0..100_000 {
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut owner, grant).unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut owner, grant).result.unwrap());
         assert!(step.progress().fits(grant)); assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
         if owner.is_none() { return; }
     }
@@ -307,15 +307,15 @@ fn member_canonical_reader_map_retirement_preserves_refused_original_and_paid_ca
             assert_eq!(serde_json::to_value(&original).unwrap(),plain["edit"]["forwards"][0]);
         }
         let (result,heap)=observe_heap_allocations_on_this_thread(||MapRetirementFactory.retire_owned(original,policy));
-        let (owner,birth)=result.unwrap_or_else(|_|panic!("independently funded original map refused"));
+        let (owner,birth)=result.result.unwrap_or_else(|_|panic!("independently funded original map refused"));
         assert!(birth.fits(policy));assert_eq!((heap.requested_bytes,heap.released_bytes),(birth.retained_capacity_bytes,birth.released_bytes));
         let mut owner=Some(owner);let mut released=birth.released_bytes;
         for turn in 0..100_000 {
             if turn==cancel_cut {
-                let (step,heap)=observe_heap_allocations_on_this_thread(||semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut owner,RetainedCloneGrant{maximum_items:0,..policy}).unwrap());
+                let (step,heap)=observe_heap_allocations_on_this_thread(||semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut owner,RetainedCloneGrant{maximum_items:0,..policy}).result.unwrap());
                 assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(owner.is_some());
             }
-            let (step,heap)=observe_heap_allocations_on_this_thread(||semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut owner,policy).unwrap());
+            let (step,heap)=observe_heap_allocations_on_this_thread(||semio_framework_value_snapshot_read::artifact_retirement_box_close_step(&mut owner,policy).result.unwrap());
             let progress=step.progress();assert!(progress.fits(policy));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));released+=progress.released_bytes;
             if lifetime.root_drops.load(Ordering::SeqCst)==1 {assert!(released>=payload);}
             if owner.is_none(){break;}assert!(turn+1<100_000);

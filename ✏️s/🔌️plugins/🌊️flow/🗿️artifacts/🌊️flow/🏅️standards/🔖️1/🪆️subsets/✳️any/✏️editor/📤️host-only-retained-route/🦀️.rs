@@ -119,7 +119,7 @@ impl FlowHostEffectJob {
 }
 
 impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
-    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>,_return_claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from))}
 
     fn borrow_outcome<'a>(&'a self,descriptor:&'a semio_framework_job::JobOutcomeDescriptor)->Result<semio_framework_job::JobOutcomeView<'a>,semio_framework_value::ValueError>{
         match descriptor.kind(){semio_framework_job::JobOutcomeKind::Yield=>descriptor.yielded(),semio_framework_job::JobOutcomeKind::Cancelled=>descriptor.cancelled(),semio_framework_job::JobOutcomeKind::Complete if self.completed=>descriptor.complete(None,None),_=>Err(Self::fault())}
@@ -133,7 +133,7 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
+        semio_framework_job::close_original_granted_step(cx,|grant|{let result=(||{
             use semio_framework_job::InteractiveJobCloseStep as Close;use semio_framework_value::{RetainedCloneProgress as Progress,RetainedCloneStep};
             if !self.closing||grant.maximum_items==0{return Ok(Close::Blocked)}let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return Err(error)};
             if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Close::Blocked)}
@@ -144,7 +144,7 @@ impl semio_framework_job::InteractiveJob for FlowHostEffectJob {
             if let Some(cursor)=owner.as_mut(){if cursor.terminal_is_empty(){*owner=None;return Ok(Close::Pending{progress:Progress{copied_items:1,..Default::default()}})}return Ok(match cursor.step(grant){Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>Close::Pending{progress},Err(error)=>return Err(error)})}
             if let Some(payload)=self.payload.take(){self.payload_close=Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(payload));return Ok(Close::Pending{progress:Progress{copied_items:1,..Default::default()}})}
             Ok(Close::Complete{progress:Default::default()})
-        })
+        })();let work=u64::from(matches!(&result,Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}) if *progress!=Default::default()));semio_framework_value::RetainedWorkOutcome{result,work}})
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
     fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(copy)?.capacity_bytes)}

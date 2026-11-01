@@ -1,6 +1,13 @@
 //! 👁️ Published ADD2 entity and concept scope, separate from exchange conformance.
 
+#[cfg(test)]
+#[global_allocator]
+static IFC_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 mod header;
+#[cfg(test)]
+use semio_s_artifact_stdio_ifc4x3_schema as catalog;
+#[cfg(test)]
+use semio_s_artifact_stdio_ifc4x3_step as io;
 #[path = "🧾️requirements/coverage.rs"]
 mod requirements_coverage;
 pub use header::{IfcMvdDeclaration, ifc4x3_mvd_declarations, ifc4x3_mvd_header_mutation, ifc4x3_mvd_header_text};
@@ -54,37 +61,11 @@ pub struct IfcMvdScope {
     pub causes: &'static [&'static str],
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct IfcMvdEntry {
-    pub id: &'static str,
-    pub name: &'static str,
-    pub href: &'static str,
-    pub universal: bool,
-    pub reference: Option<&'static [&'static str]>,
-    pub alignment: Option<&'static [&'static str]>,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct IfcMvdSource {
-    pub url: &'static str,
-    pub sha256: &'static str,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct IfcMvdCatalog {
-    pub schema: &'static str,
-    pub source_commit: &'static str,
-    pub sources: &'static [IfcMvdSource],
-    pub conformance_evaluated: bool,
-    pub entities: &'static [IfcMvdEntry],
-    pub concepts: &'static [IfcMvdEntry],
-}
-
-include!("data.rs");
+pub use semio_s_artifact_stdio_ifc4x3_mvd_catalog::{decode_mvd, embedded_mvd, IfcMvdCatalog, IfcMvdEntry, IfcMvdSource};
 
 /// 📚️ Read immutable official scope data without a runtime parser or third-party dependency.
 pub fn ifc4x3_mvd_catalog() -> &'static IfcMvdCatalog {
-    &CATALOG
+    embedded_mvd()
 }
 
 fn scope(entry: Option<&'static IfcMvdEntry>, view: IfcMvdView) -> IfcMvdScope {
@@ -108,12 +89,12 @@ fn scope(entry: Option<&'static IfcMvdEntry>, view: IfcMvdView) -> IfcMvdScope {
 /// 🏛️ Inspect exact declared entity scope while preserving unrestricted repair access.
 pub fn ifc4x3_mvd_entity_scope(entity: &str, view: IfcMvdView) -> IfcMvdScope {
     let id = entity.to_ascii_uppercase();
-    scope(CATALOG.entities.binary_search_by_key(&id.as_str(), |entry| entry.id).ok().map(|index| &CATALOG.entities[index]), view)
+    scope(embedded_mvd().entities.binary_search_by_key(&id.as_str(), |entry| entry.id).ok().map(|index| &embedded_mvd().entities[index]), view)
 }
 
 /// 🧩 Inspect a concept by its exact documentation path.
 pub fn ifc4x3_mvd_concept_scope(id: &str, view: IfcMvdView) -> IfcMvdScope {
-    scope(CATALOG.concepts.binary_search_by_key(&id, |entry| entry.id).ok().map(|index| &CATALOG.concepts[index]), view)
+    scope(embedded_mvd().concepts.binary_search_by_key(&id, |entry| entry.id).ok().map(|index| &embedded_mvd().concepts[index]), view)
 }
 
 /// 🗣️ Resolve a view's label using an explicit supported language.
@@ -129,6 +110,19 @@ pub fn ifc4x3_mvd_label(view: IfcMvdView, locale: IfcMvdLocale) -> &'static str 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn hostile_scope_resources_are_refused_and_decoded_rows_are_sorted_for_binary_lookup() {
+        let resource = include_bytes!("📖️catalog/mvd.ifcj");
+        let catalog = decode_mvd(resource).unwrap();
+        for rows in [catalog.entities, catalog.concepts] {
+            assert!(rows.windows(2).all(|pair| pair[0].id < pair[1].id));
+        }
+        assert!(decode_mvd(&resource[..resource.len() / 2]).is_err());
+        assert!(decode_mvd(&[]).is_err());
+        let foreign = include_bytes!("../../../../../../📚️catalog/🧾️json-pack/🧪️tests/🧫️fixtures/minimal.ifcj");
+        assert!(matches!(decode_mvd(foreign), Err(semio_s_artifact_stdio_ifc_json_pack::JsonPackError::Shape(_))));
+    }
 
     #[test]
     fn neutral_scope_cases_match_the_public_native_interface() {
@@ -150,8 +144,8 @@ mod tests {
         for row in cases["concepts"].as_array().unwrap() {
             assert_eq!(state(ifc4x3_mvd_concept_scope(row["id"].as_str().unwrap(), view(row["view"].as_str().unwrap())).state), row["state"].as_str().unwrap());
         }
-        assert_eq!(CATALOG.entities.len(), crate::catalog::ifc4x3_catalog().entities.len());
-        assert!(!CATALOG.conformance_evaluated);
+        assert_eq!(embedded_mvd().entities.len(), crate::catalog::ifc4x3_catalog().entities.len());
+        assert!(!embedded_mvd().conformance_evaluated);
         assert_eq!(ifc4x3_mvd_label(IfcMvdView::Reference, IfcMvdLocale::De), "Referenzansicht");
     }
 }

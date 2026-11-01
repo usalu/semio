@@ -17,8 +17,8 @@ impl<W:RetireOwned+Sync> StagedLease<W>{
   turn
  }
  pub(super) fn borrow<T:?Sized,F>(&self,discriminator:usize,project:F)->RetainedCloneRef<'_,T> where F:for<'source>FnOnce(&'source W)->&'source T{self.lease.as_ref().expect("staged lease is ready").borrow(discriminator,project)}
- pub(super) fn next_take_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.lease.as_ref().expect("staged lease is ready").next_take_demands(body)}
- pub(super) fn take_authority(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneSourceTake<W>>{self.lease.as_mut().expect("staged lease is ready").take_authority(grant)}
+ pub(super) fn next_take_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.lease.as_ref().ok_or_else(||ValueError::invariant("staged lease is ready"))?.next_take_demands(body)}
+ pub(super) fn take_authority(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneSourceTake<W>>{match self.lease.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("staged lease is ready").into()),work:0}}.take_authority(grant)}
  pub(super) fn next_close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(retiring)=self.retiring.as_ref(){return retiring.next_demand(body)}
   if let Some(lease)=self.lease.as_ref(){return lease.next_close_demand(body)}

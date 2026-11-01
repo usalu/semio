@@ -114,7 +114,7 @@ where
     pub(super) fn step_begin_targets(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
         if self.target_address.is_some() {
             let step = semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.target_address, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant });
-            return self.admitted_step(step, cx);
+            return self.admitted_step(step.result, cx);
         }
         if self.target_source.is_none() {
             type Events=semio_framework_os_vcs::ArtifactHistoryLedger<semio_framework_os_spr::MutationEnvelope>;
@@ -193,7 +193,7 @@ where
             } else if let Err(diagnostic) = self.admit_active(retired_strings, cx, grant) { return self.reject(diagnostic); }
             self.operation_index += 1;
         } else {
-            let step = match semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.pending_target, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant }) {
+            let step = match semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.pending_target, &mut self.active, RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant }) .result {
                 Ok(step) => step,
                 Err(_) => return self.reject(MemberOpenDiagnostic::Initialization),
             };

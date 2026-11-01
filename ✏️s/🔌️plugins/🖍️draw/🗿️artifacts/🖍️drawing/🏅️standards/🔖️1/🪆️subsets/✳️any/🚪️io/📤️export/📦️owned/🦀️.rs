@@ -6,7 +6,7 @@ use semio_framework_os_kernel::io::io_mechanism::OwnedSerializerOutput;
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},ValueError};
 use crate::serializers::artifacts::svg::v1_1::any::write::{SvgWriteJob, SvgWriteRetirement, SvgWriteLimits};
 use crate::serializers::artifacts::pdf::v1_4::any::write::{PdfWriteJob, PdfWriteRetirement, PdfWriteLimits};
-use semio_s_artifact_draw_drawing_scene::paint::scene::{ScenePaintJob, ScenePaintRetirement, PreparedScene, PaintedSceneLimits};
+use semio_s_artifact_draw_drawing_scene_paint::scene::{ScenePaintJob, ScenePaintRetirement, PreparedScene, PaintedSceneLimits};
 pub const RAW_OUTPUT_LIMIT:usize=25_165_824;
 #[derive(Clone,Copy)]
 pub struct ExportOptions{pub format:&'static str,pub width:Option<u32>,pub height:Option<u32>,pub transparent:bool}

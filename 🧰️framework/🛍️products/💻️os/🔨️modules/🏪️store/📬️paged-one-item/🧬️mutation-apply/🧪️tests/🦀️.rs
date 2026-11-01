@@ -171,9 +171,7 @@ struct OriginalSource<T: semio_framework_value::retirement::RetireOwned + Sync>(
 
 impl<T: semio_framework_value::retirement::RetireOwned + Sync> OriginalSource<T> {
     fn new(original: T) -> Self {
-        use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneSource};
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RetainedCloneSource::<T>::constructor_copy_bytes(), maximum_capacity_bytes: RetainedCloneSource::<T>::owned_constructor_capacity_bytes::<()>(), maximum_depth: 1, ..Default::default() };
-        Self(RetainedCloneSource::admit_owned(original, (), grant).unwrap_or_else(|_| panic!("original test source admission")).0)
+        Self(semio_framework_value::testing::admit_owned_source(original, ()).0)
     }
     fn borrow(&self) -> semio_framework_value::retained_clone::RetainedCloneRef<'_, T> { self.0.try_borrow().unwrap() }
 }
@@ -185,7 +183,7 @@ impl<T: semio_framework_value::retirement::RetireOwned + Sync> OriginalSource<T>
             if self.0.terminal_is_empty() { return; }
             let demand = self.0.next_close_demand(4096).unwrap();
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4096.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            assert!(self.0.close_step(grant).unwrap().progress().fits(grant));
+            assert!(self.0.close_step(grant).result.unwrap().progress().fits(grant));
         }
         panic!("original test source did not physically close");
     }
@@ -202,7 +200,7 @@ enum Outcome { Completed { post: PlainDocument, inverse: Vec<DocumentMutation>, 
 struct OriginalMutationIssuer;
 impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation> for OriginalMutationIssuer {
     fn retirement_birth_bytes(&self, value: &DocumentMutation) -> usize { semio_framework_value::ArtifactOwnedValueRetirementFactory::retirement_birth_bytes(&OwnedValueRetirementFactory::<DocumentMutation>::default(), value) }
-    fn retire_owned(&self, value: DocumentMutation, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, DocumentMutation)> {
+    fn retire_owned(&self, value: DocumentMutation, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, DocumentMutation)> {
         ORIGINAL_ISSUER_RETIRES.set(ORIGINAL_ISSUER_RETIRES.get() + 1);
         semio_framework_value::ArtifactOwnedValueRetirementFactory::retire_owned(&OwnedValueRetirementFactory::<DocumentMutation>::default(), value, grant)
     }
@@ -236,7 +234,7 @@ impl Receiver {
             if self.owner.terminal_is_empty() { return; }
             let demand = self.owner.retirement_demands(WIDE).unwrap();
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-            assert!(self.owner.close_step(grant).unwrap().progress().fits(grant));
+            assert!(self.owner.close_step(grant).result.unwrap().progress().fits(grant));
         }
         panic!("original receiving owner did not close");
     }
@@ -291,7 +289,7 @@ fn prepare_with(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<Documen
                 if retirement.terminal_is_empty() { break; }
                 let copy = retirement.next_copy_byte_demand().unwrap();
                 let quoted = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: retirement.next_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: retirement.next_release_byte_demand().unwrap(), maximum_depth: retirement.next_depth_demand().unwrap() };
-                assert!(retirement.close_step(quoted).unwrap().progress().fits(quoted));
+                assert!(retirement.close_step(quoted).result.unwrap().progress().fits(quoted));
                 assert!(turn < 99_999, "prepared original owners must reach typed terminal closure");
             }
             assert!(retirement.terminal_is_empty());
@@ -396,7 +394,7 @@ fn config_apply_reaches_prepared_with_independent_scalar_owner(){
     let prepared=prepared.expect("scalar config prepared");assert_eq!(**prepared.post_snapshot(),expected);assert_eq!(prepared.edit().inverse.get(0).unwrap().value,base);assert_eq!(*root,base);
     let(mut ticket,receipt)=prepared.admit_retirement(mutations,snapshots,policy.retained_grant()).unwrap_or_else(|_|panic!("scalar config candidate retirement"));assert!(receipt.fits(policy.retained_grant()));
     for _ in 0..100000{
-        if ticket.terminal_is_empty(){break;}let copy=ticket.next_copy_byte_demand().unwrap();let quote=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:ticket.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:ticket.next_release_byte_demand().unwrap(),maximum_depth:ticket.next_depth_demand().unwrap()};assert!(ticket.close_step(quote).unwrap().progress().fits(quote));
+        if ticket.terminal_is_empty(){break;}let copy=ticket.next_copy_byte_demand().unwrap();let quote=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:ticket.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:ticket.next_release_byte_demand().unwrap(),maximum_depth:ticket.next_depth_demand().unwrap()};assert!(ticket.close_step(quote).result.unwrap().progress().fits(quote));
     }
     assert!(ticket.terminal_is_empty());owner.begin_close();
     for _ in 0..100000{
@@ -557,11 +555,11 @@ union EditIssuerSlot{original:ZstEditOriginal,other:ZstEditOther}
 thread_local!{static OTHER_EDIT_ISSUER_CALLS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};}
 impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation> for ZstEditOriginal{
  fn retirement_birth_bytes(&self,_:&DocumentMutation)->usize{semio_framework_value::owned_retirement_birth_bytes::<DocumentMutation>()}
- fn retire_owned(&self,row:DocumentMutation,g:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,DocumentMutation)>{semio_framework_value::admit_owned_retirement(row,g)}
+ fn retire_owned(&self,row:DocumentMutation,g:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,DocumentMutation)>{semio_framework_value::admit_owned_retirement(row,g)}
 }
 impl semio_framework_value::ArtifactOwnedValueRetirementFactory<DocumentMutation> for ZstEditOther{
  fn retirement_birth_bytes(&self,_:&DocumentMutation)->usize{semio_framework_value::owned_retirement_birth_bytes::<DocumentMutation>()}
- fn retire_owned(&self,row:DocumentMutation,_:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,DocumentMutation)>{OTHER_EDIT_ISSUER_CALLS.set(OTHER_EDIT_ISSUER_CALLS.get()+1);Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign zero-sized editor issuer must not receive original inverse rows"),row))}
+ fn retire_owned(&self,row:DocumentMutation,_:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,DocumentMutation)>{OTHER_EDIT_ISSUER_CALLS.set(OTHER_EDIT_ISSUER_CALLS.get()+1);semio_framework_value::RetainedWorkOutcome{result:Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"foreign zero-sized editor issuer must not receive original inverse rows"),row)),work:1}}
 }
 /// 🔑️ Generic editor refusal preserves its original inverse vector before a differently typed same-address issuer can act.
 

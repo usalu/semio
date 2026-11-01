@@ -44,7 +44,7 @@ impl ChildContentReadRetirement {
 impl semio_framework_value::retirement::RetirementCursor for ChildContentReadRetirement {
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.demands(maximum_body_bytes)}
 
- fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Progress(p)|RetainedCloneStep::Complete(p))if p!=Default::default()=>RetirementStep::Progress(p),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete,Ok(_)=>RetirementStep::BudgetExhausted}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep;match self.step(grant){Err(error)=>RetirementStep::Failure(error,0),Ok(RetainedCloneStep::Progress(p)|RetainedCloneStep::Complete(p))if p!=Default::default()=>RetirementStep::Progress(p,1),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete(0),Ok(_)=>RetirementStep::BudgetExhausted}}
  fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
  fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.demands(copy).ok().map(|d|d.capacity_bytes)}

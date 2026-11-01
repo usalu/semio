@@ -46,28 +46,16 @@ fn guest_relay_lifecycle_wait(pool: &WorkerPool, mut ready: impl FnMut() -> bool
     Err(detail.to_string())
 }
 
-fn guest_relay_lifecycle_probe_session(control: &Arc<GuestRelayLifecycleProbeControl>, generation: u64, terminal_output: Option<Vec<u8>>, remaining: usize, retained:semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_job_worker::WorkerJobSession<GuestRelayLifecycleProbeJob>, String> {
+fn guest_relay_lifecycle_probe_session(control: &Arc<GuestRelayLifecycleProbeControl>, _generation: u64, terminal_output: Option<Vec<u8>>, remaining: usize, retained:semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<GuestRelayAdmission<GuestRelayLifecycleProbeJob>, String> {
     let job = GuestRelayLifecycleProbeJob { control: Arc::clone(control), remaining, terminal_output, publication: None, closing: false };
-    let params = semio_framework_job_worker_authority::BatchJobParams {
-        operation: semio_framework_job::OperationId(generation),
-        generation: semio_framework_job::Generation(generation),
-        cancel: semio_framework_job::root_cancel_token(),
-        config: semio_framework_job_worker_authority::BatchDriveConfig {
-            retained,
-            site: "plugin-host.relay-lifecycle",
-            stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
-            fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
-            step_budget_us: semio_framework_job::USER_VISIBLE_LANE_WALL_US,
-        },
-        now_us: semio_framework_job::default_now_us,
+    let config = semio_framework_job_worker_authority::BatchDriveConfig {
+        retained,
+        site: "plugin-host.relay-lifecycle",
+        stage: semio_framework_job::InteractiveStage::UserVisibleSimStep,
+        fuel_per_step: semio_framework_job::USER_VISIBLE_LANE_FUEL,
+        step_budget_us: semio_framework_job::USER_VISIBLE_LANE_WALL_US,
     };
-    admit_guest_relay_session(job, params, retained).map_err(|mut rejected| {
-        rejected.begin_close();
-        control.wake();
-        control.release_one();
-        control.release_one();
-        "relay lifecycle probe admission refused".to_string()
-    })
+    Ok(GuestRelayAdmission::new(job, config))
 }
 
 fn exercise_abandoned_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace,wake_authority:GuestRelayWakeAuthority) -> Result<GuestRelayLifecycleProjection, String> {
@@ -78,7 +66,7 @@ fn exercise_abandoned_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace,wak
         let (index, generation) = registry.reserve().ok_or_else(|| "relay lifecycle slot unavailable".to_string())?;
         let control = Arc::new(GuestRelayLifecycleProbeControl::new());
         let session = guest_relay_lifecycle_probe_session(&control, generation, None, 2,wake_authority.drive_policy)?;
-        registry.mount(index, generation, GuestRelayMountedOwner::LifecycleProbe(session));
+        registry.mount(index, generation, GuestRelayMountedOwner::AdmittingProbe(session));
         let mut first_reason = None;
         for event in &trace.events {
             if let Some(dropped) = event.strip_prefix("drop:").and_then(|value| value.parse::<u64>().ok()) {
@@ -125,7 +113,7 @@ fn exercise_live_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace,wake_aut
                 let control = Arc::new(GuestRelayLifecycleProbeControl::new());
                 control.wake();
                 let session = guest_relay_lifecycle_probe_session(&control, generation, Some(output.as_bytes().to_vec()), 0,wake_authority.drive_policy)?;
-                registry.mount(index, generation, GuestRelayMountedOwner::LifecycleProbe(session));
+                registry.mount(index, generation, GuestRelayMountedOwner::AdmittingProbe(session));
                 for _ in 0..256 {
                     let _ = registry.pump(index, generation, std::task::Waker::noop());
                     let slot = registry.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -142,7 +130,7 @@ fn exercise_live_relay_lifecycle_trace(trace: &GuestRelayLifecycleTrace,wake_aut
                 let control = Arc::new(GuestRelayLifecycleProbeControl::new());
                 let (other_index, other_generation) = registry.reserve().ok_or_else(|| "relay lifecycle competing slot unavailable".to_string())?;
                 let session = guest_relay_lifecycle_probe_session(&control, other_generation, None, 2,wake_authority.drive_policy)?;
-                registry.mount(other_index, other_generation, GuestRelayMountedOwner::LifecycleProbe(session));
+                registry.mount(other_index, other_generation, GuestRelayMountedOwner::AdmittingProbe(session));
                 registry.detach(other_index, other_generation);
                 guest_relay_lifecycle_wait(&pool, || control.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some(), "relay lifecycle competing reaper did not park")?;
                 control.wake();

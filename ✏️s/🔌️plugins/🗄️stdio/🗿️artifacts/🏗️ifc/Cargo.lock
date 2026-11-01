@@ -353,6 +353,7 @@ dependencies = [
  "semio-framework-2d-engine",
  "semio-framework-2d-retire",
  "semio-framework-value",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
@@ -362,6 +363,7 @@ dependencies = [
  "semio-framework-2d-engine",
  "semio-framework-2d-retire",
  "semio-framework-value",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
@@ -370,6 +372,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-2d-booleans",
  "semio-framework-2d-engine",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -514,6 +517,7 @@ dependencies = [
  "semio-framework-async-timer",
  "semio-framework-trace",
  "semio-framework-value",
+ "semio-framework-value-allocation-return",
  "wasm-bindgen",
 ]
 
@@ -648,6 +652,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-native-storage",
  "semio-framework-value-ordered",
  "semio-framework-value-paged-text",
  "semio-framework-value-persistent",
@@ -807,11 +812,51 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
+ "semio-framework-job-context",
  "semio-framework-job-payload",
+ "semio-framework-job-testing-caller",
  "semio-framework-trace",
- "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-retained-clone",
  "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-job-clock"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-trace",
+ "semio-framework-value-retained-clone",
+]
+
+[[package]]
+name = "semio-framework-job-context"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-job-clock",
+ "semio-framework-job-failure",
+ "semio-framework-job-payload",
+ "semio-framework-job-receiving",
+ "semio-framework-trace",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-job-failure"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-retained-clone",
 ]
 
 [[package]]
@@ -838,7 +883,9 @@ name = "semio-framework-job-payload"
 version = "0.1.0"
 dependencies = [
  "semio-framework-trace",
- "semio-framework-value",
+ "semio-framework-value-control-contract",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
 ]
 
 [[package]]
@@ -848,6 +895,24 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-job-payload",
  "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-job-receiving"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-native-owned",
+ "semio-framework-value-retained-clone",
+]
+
+[[package]]
+name = "semio-framework-job-testing-caller"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-job-context",
+ "semio-framework-trace",
+ "semio-framework-value-retained-clone",
 ]
 
 [[package]]
@@ -1782,6 +1847,7 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-native-storage",
 ]
 
 [[package]]
@@ -3213,7 +3279,6 @@ dependencies = [
  "semio-framework-plugin-runtime-instances",
  "semio-framework-plugin-runtime-ops",
  "semio-framework-plugin-testing-acceptance",
- "semio-framework-plugin-testing-caller",
  "semio-framework-plugin-testing-laws",
  "semio-framework-plugin-time-travel",
  "semio-framework-plugin-time-travel-panel",
@@ -3221,6 +3286,7 @@ dependencies = [
  "semio-framework-plugin-tool-run",
  "semio-framework-plugin-tool-run-turns",
  "semio-framework-plugin-window-config",
+ "semio-framework-plugin-window-config-original",
  "semio-framework-plugin-window-kits",
  "semio-framework-plugin-window-kits-rich",
  "semio-framework-plugin-window-transient",
@@ -3455,6 +3521,7 @@ dependencies = [
  "semio-framework-plugin-interaction",
  "semio-framework-plugin-mounted-owner",
  "semio-framework-plugin-operation",
+ "semio-framework-plugin-original-job-ownership",
  "semio-framework-plugin-ownership",
  "semio-framework-plugin-window-config",
  "semio-framework-plugin-window-kits",
@@ -3465,6 +3532,7 @@ dependencies = [
  "semio-framework-tool-machine",
  "semio-framework-tool-run",
  "semio-framework-tool-run-presentation",
+ "semio-framework-tool-typing-edit",
  "semio-framework-ui-contract",
  "semio-framework-ui-layout",
  "semio-framework-ui-locale",
@@ -4110,6 +4178,7 @@ dependencies = [
  "semio-framework-plugin-scrub-host",
  "semio-framework-plugin-time-travel",
  "semio-framework-plugin-tool-run",
+ "semio-framework-plugin-typing-edit",
  "semio-framework-plugin-window-config",
  "semio-framework-plugin-window-kits",
  "semio-framework-plugin-window-transient",
@@ -4193,6 +4262,7 @@ dependencies = [
  "semio-framework-plugin-scrub-host",
  "semio-framework-plugin-time-travel",
  "semio-framework-plugin-tool-run",
+ "semio-framework-plugin-typing-edit",
  "semio-framework-plugin-window-config",
  "semio-framework-tool-machine",
  "semio-framework-ui-contract",
@@ -4399,6 +4469,17 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "serde_json",
+]
+
+[[package]]
+name = "semio-framework-plugin-original-job-ownership"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-job",
+ "semio-framework-job-payload",
+ "semio-framework-plugin-ownership",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -4781,6 +4862,7 @@ dependencies = [
  "semio-framework-plugin-operation",
  "semio-framework-plugin-ownership",
  "semio-framework-plugin-window-config",
+ "semio-framework-plugin-window-config-original",
  "semio-framework-plugin-window-kits",
  "semio-framework-plugin-window-transient",
  "semio-framework-replication",
@@ -4868,7 +4950,6 @@ dependencies = [
  "semio-framework-plugin-reactor-app",
  "semio-framework-plugin-reactor-lifecycle",
  "semio-framework-plugin-runtime-instances",
- "semio-framework-plugin-testing-caller",
  "semio-framework-plugin-window-config",
  "semio-framework-plugin-window-transient",
  "semio-framework-schema-registry",
@@ -5116,6 +5197,7 @@ dependencies = [
  "semio-framework-plugin-ownership",
  "semio-framework-plugin-tool-run-operations",
  "semio-framework-plugin-window-config",
+ "semio-framework-plugin-window-config-original",
  "semio-framework-plugin-window-kits",
  "semio-framework-plugin-window-transient",
  "semio-framework-replication",
@@ -5188,6 +5270,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-plugin-typing-edit"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin-decl-app",
+ "semio-framework-plugin-decl-emission",
+ "semio-framework-plugin-tool-run",
+ "semio-framework-tool-machine",
+ "semio-framework-tool-typing-edit",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-plugin-window-config"
 version = "0.1.0"
 dependencies = [
@@ -5216,6 +5313,31 @@ name = "semio-framework-plugin-window-config-mutation"
 version = "0.1.0"
 dependencies = [
  "semio-framework-value",
+ "semio-framework-value-retirement-queue",
+]
+
+[[package]]
+name = "semio-framework-plugin-window-config-original"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-hash",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-os-store-codec-registry",
+ "semio-framework-os-store-operation-wire",
+ "semio-framework-os-store-text-io",
+ "semio-framework-plugin-ownership",
+ "semio-framework-plugin-window-config",
+ "semio-framework-plugin-window-config-mutation",
+ "semio-framework-plugin-window-config-registry",
+ "semio-framework-plugin-window-config-replace",
+ "semio-framework-tool-run",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-framework-value-retirement-queue",
 ]
 
@@ -5297,6 +5419,7 @@ dependencies = [
  "semio-framework-plugin-ownership",
  "semio-framework-plugin-window-config",
  "semio-framework-plugin-window-config-mutation",
+ "semio-framework-plugin-window-config-original",
  "semio-framework-plugin-window-config-registry",
  "semio-framework-ui-contract",
  "semio-framework-ui-declaration",
@@ -5741,6 +5864,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-tool-typing-edit"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-replication",
+ "semio-framework-tool-machine",
+ "semio-framework-value",
+]
+
+[[package]]
 name = "semio-framework-trace"
 version = "0.1.0"
 
@@ -6148,11 +6281,13 @@ dependencies = [
  "semio-framework-value-native-owned",
  "semio-framework-value-original-slot",
  "semio-framework-value-persistent",
+ "semio-framework-value-read",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retained-map",
  "semio-framework-value-retirement",
  "semio-framework-value-shared-issuance",
  "semio-framework-value-snapshot-projection",
+ "semio-framework-value-sort",
  "serde",
  "serde_json",
 ]
@@ -6212,6 +6347,16 @@ dependencies = [
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "semio-framework-value-shared-issuance",
+ "semio-framework-value-sort",
+]
+
+[[package]]
+name = "semio-framework-value-equality"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
 ]
 
 [[package]]
@@ -6249,6 +6394,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-value-native-default"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-native-decoding",
+ "semio-framework-value-native-storage",
+ "semio-framework-value-ordered",
+ "semio-framework-value-paged-list",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
+]
+
+[[package]]
 name = "semio-framework-value-native-encoding"
 version = "0.1.0"
 dependencies = [
@@ -6263,11 +6421,20 @@ dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-decoding",
+ "semio-framework-value-native-default",
+ "semio-framework-value-native-storage",
  "semio-framework-value-ordered",
  "semio-framework-value-persistent",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-value-native-storage"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
 ]
 
 [[package]]
@@ -6326,13 +6493,25 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-derive",
+ "semio-framework-value-equality",
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-encoding",
  "semio-framework-value-paged-list",
  "semio-framework-value-retained-clone",
+ "semio-framework-value-retained-work",
  "semio-framework-value-retirement",
  "semio-framework-value-shared-issuance",
  "semio-framework-value-snapshot-projection",
+]
+
+[[package]]
+name = "semio-framework-value-read"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-factory",
+ "semio-framework-value-retained-clone",
+ "semio-framework-value-retirement",
 ]
 
 [[package]]
@@ -6367,6 +6546,15 @@ dependencies = [
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "serde",
+]
+
+[[package]]
+name = "semio-framework-value-retained-work"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value-control-contract",
+ "semio-framework-value-paged-list",
+ "semio-framework-value-retirement",
 ]
 
 [[package]]
@@ -6429,6 +6617,10 @@ dependencies = [
  "semio-framework-value-factory",
  "semio-framework-value-native-owned",
 ]
+
+[[package]]
+name = "semio-framework-value-sort"
+version = "0.1.0"
 
 [[package]]
 name = "semio-s-artifact-bim-model-examples"
@@ -7723,6 +7915,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
+ "semio-framework-pack-json",
  "semio-framework-schema",
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
@@ -7836,6 +8029,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-stdio-ifc-2x3-viewer"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d-compute",
+ "semio-framework-artifact-reference",
+ "semio-framework-async-macros",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-ifc-2x3-base",
+ "semio-s-artifact-stdio-ifc-2x3-base-model",
+ "semio-s-artifact-stdio-ifc-2x3-base-mutations",
+]
+
+[[package]]
 name = "semio-s-artifact-stdio-ifc-4"
 version = "0.1.0"
 dependencies = [
@@ -7859,8 +8071,10 @@ dependencies = [
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-ifc-4-descriptor",
+ "semio-s-artifact-stdio-ifc-4-inferences",
  "semio-s-artifact-stdio-ifc-4-model",
  "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc-details",
  "semio-s-artifact-stdio-txt",
  "serde_json",
 ]
@@ -7968,8 +8182,18 @@ dependencies = [
  "semio-s-artifact-stdio-ifc-4-descriptor",
  "semio-s-artifact-stdio-ifc-4-model",
  "semio-s-artifact-stdio-ifc-4-mutations",
- "semio-s-artifact-stdio-ifc-declarations",
- "semio-s-artifact-stdio-ifc4x3-add2-catalog",
+ "semio-s-artifact-stdio-ifc-details",
+ "semio-s-artifact-stdio-ifc4x3-evaluator",
+ "semio-s-artifact-stdio-ifc4x3-exchange",
+ "semio-s-artifact-stdio-ifc4x3-express",
+ "semio-s-artifact-stdio-ifc4x3-fem",
+ "semio-s-artifact-stdio-ifc4x3-machine",
+ "semio-s-artifact-stdio-ifc4x3-mvd",
+ "semio-s-artifact-stdio-ifc4x3-population",
+ "semio-s-artifact-stdio-ifc4x3-rules",
+ "semio-s-artifact-stdio-ifc4x3-schema",
+ "semio-s-artifact-stdio-ifc4x3-step",
+ "semio-s-artifact-stdio-ifc4x3-templates",
  "semio-s-artifact-stdio-txt",
  "serde_json",
 ]
@@ -8004,6 +8228,7 @@ dependencies = [
  "semio-s-artifact-stdio-ifc-2x3-cobie",
  "semio-s-artifact-stdio-ifc-2x3-cv20",
  "semio-s-artifact-stdio-ifc-2x3-sav",
+ "semio-s-artifact-stdio-ifc-2x3-viewer",
  "semio-s-artifact-stdio-ifc-4",
  "semio-s-artifact-stdio-ifc-4-descriptor",
  "semio-s-artifact-stdio-ifc-4-inferences",
@@ -8016,6 +8241,161 @@ dependencies = [
 [[package]]
 name = "semio-s-artifact-stdio-ifc-declarations"
 version = "0.1.0"
+dependencies = [
+ "semio-framework-deflate",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc-details"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc-declarations",
+ "semio-s-artifact-stdio-ifc-details-guidance",
+ "semio-s-artifact-stdio-ifc-details-provider",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc-details-edit"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-trace",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc-declarations",
+ "semio-s-artifact-stdio-ifc-details-profile",
+ "semio-s-artifact-stdio-ifc-details-type",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc-details-guidance"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-plugin-decl-staged-form",
+ "semio-framework-trace",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc-declarations",
+ "semio-s-artifact-stdio-ifc-details-edit",
+ "semio-s-artifact-stdio-ifc-details-profile",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc-details-profile"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-job",
+ "semio-framework-plugin",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc-declarations",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc-details-provider"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-trace",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc-declarations",
+ "semio-s-artifact-stdio-ifc-details-edit",
+ "semio-s-artifact-stdio-ifc-details-profile",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc-details-type"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-trace",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc-declarations",
+ "semio-s-artifact-stdio-ifc-details-profile",
+ "semio-s-artifact-stdio-ifc-details-wire",
+ "semio-s-artifact-stdio-ifc-domain",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc-details-wire"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-trace",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc-declarations",
+ "semio-s-artifact-stdio-ifc-details-profile",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc-domain"
+version = "0.1.0"
+dependencies = [
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc-declarations",
+]
 
 [[package]]
 name = "semio-s-artifact-stdio-ifc-geometry"
@@ -8024,6 +8404,7 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-job",
  "semio-framework-pack-json",
+ "semio-framework-trace",
  "semio-framework-trace-memory-testing",
  "semio-framework-value",
  "semio-framework-value-paged-list",
@@ -8037,6 +8418,14 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-async-macros",
  "semio-framework-pack-json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc-json-pack"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-deflate",
+ "serde_json",
 ]
 
 [[package]]
@@ -8338,6 +8727,206 @@ name = "semio-s-artifact-stdio-ifc4x3-add2-catalog-types-00"
 version = "0.1.0"
 dependencies = [
  "semio-s-artifact-stdio-ifc-declarations",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc4x3-evaluator"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-trace",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc4x3-express",
+ "semio-s-artifact-stdio-ifc4x3-schema",
+ "semio-s-artifact-stdio-ifc4x3-step",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc4x3-exchange"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-async-macros",
+ "semio-framework-diagnostic",
+ "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-bim-model-schema",
+ "semio-s-artifact-bim-model-snapshot",
+ "semio-s-artifact-stdio-gltf-model",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc4x3-express",
+ "semio-s-artifact-stdio-ifc4x3-step",
+ "semio-s-artifact-stdio-txt",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc4x3-express"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-s-artifact-stdio-ifc-declarations",
+ "semio-s-artifact-stdio-ifc-json-pack",
+ "semio-s-artifact-stdio-ifc4x3-add2-catalog",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc4x3-fem"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-async-macros",
+ "semio-framework-diagnostic",
+ "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-plugin",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-bim-model-schema",
+ "semio-s-artifact-bim-model-snapshot",
+ "semio-s-artifact-fem-3d-model",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc4x3-exchange",
+ "semio-s-artifact-stdio-ifc4x3-express",
+ "semio-s-artifact-stdio-ifc4x3-schema",
+ "semio-s-artifact-stdio-ifc4x3-step",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc4x3-machine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc4x3-express",
+ "semio-s-artifact-stdio-ifc4x3-population",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc4x3-mvd"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc4x3-express",
+ "semio-s-artifact-stdio-ifc4x3-mvd-catalog",
+ "semio-s-artifact-stdio-ifc4x3-schema",
+ "semio-s-artifact-stdio-ifc4x3-step",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc4x3-mvd-catalog"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-s-artifact-stdio-ifc-json-pack",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc4x3-population"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-job",
+ "semio-framework-plugin",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc4x3-express",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc4x3-rules"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-job",
+ "semio-framework-plugin",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc-4-mutations",
+ "semio-s-artifact-stdio-ifc-details",
+ "semio-s-artifact-stdio-ifc4x3-express",
+ "semio-s-artifact-stdio-ifc4x3-machine",
+ "semio-s-artifact-stdio-ifc4x3-schema",
+ "semio-s-artifact-stdio-ifc4x3-step",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc4x3-schema"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-ifc-declarations",
+ "semio-s-artifact-stdio-ifc-domain",
+ "semio-s-artifact-stdio-ifc4x3-add2-catalog",
+ "semio-s-artifact-stdio-ifc4x3-express",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc4x3-step"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-async-macros",
+ "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-plugin",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-ifc-4-model",
+ "semio-s-artifact-stdio-txt",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-ifc4x3-templates"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async-macros",
+ "semio-s-artifact-stdio-ifc-json-pack",
+ "semio-s-artifact-stdio-ifc4x3-express",
+ "serde_json",
 ]
 
 [[package]]
@@ -8650,7 +9239,6 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-s-artifact-stdio-pdf-snapshot-surfaces",
  "semio-s-artifact-stdio-pdf-tables",
- "semio-s-artifact-stdio-pdf-testkit",
  "semio-s-artifact-stdio-pdf-tests",
  "semio-s-artifact-stdio-pdf-tests-2",
  "semio-s-artifact-stdio-pdf-viewer",
@@ -9546,7 +10134,6 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-schema-4",
  "semio-s-artifact-stdio-pdf-snapshot",
  "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-testkit",
  "semio-s-artifact-stdio-pdf-tests",
  "semio-s-artifact-stdio-pdf-tests-2",
  "serde_json",
@@ -10207,10 +10794,12 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-diff",
  "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-lift",
+ "semio-s-artifact-stdio-pdf-lower",
  "semio-s-artifact-stdio-pdf-mut-base-2",
+ "semio-s-artifact-stdio-pdf-mut-family-11",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-testkit",
  "semio-s-artifact-stdio-pdf-tests-2",
  "serde_json",
 ]
@@ -10255,7 +10844,6 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-schema-4",
  "semio-s-artifact-stdio-pdf-snapshot",
  "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-testkit",
  "semio-s-artifact-stdio-pdf-tests",
  "semio-s-artifact-stdio-pdf-tests-2",
  "serde_json",
@@ -10519,7 +11107,6 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-schema-4",
  "semio-s-artifact-stdio-pdf-schema-5",
  "semio-s-artifact-stdio-pdf-snapshot-2",
- "semio-s-artifact-stdio-pdf-testkit",
  "semio-s-artifact-stdio-pdf-tests-2",
  "serde_json",
 ]
@@ -11743,97 +12330,3 @@ name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
-
-[[package]]
-name = "semio-framework-plugin-original-job-ownership"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-job",
- "semio-framework-job-payload",
- "semio-framework-plugin-ownership",
- "semio-framework-value",
-]
-[[package]]
-name = "semio-framework-plugin-typing-edit"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-job",
- "semio-framework-os-kernel",
- "semio-framework-plugin-decl-app",
- "semio-framework-plugin-decl-emission",
- "semio-framework-plugin-tool-run",
- "semio-framework-tool-machine",
- "semio-framework-tool-typing-edit",
- "semio-framework-value",
-]
-[[package]]
-name = "semio-framework-plugin-window-config-original"
-version = "0.1.0"
-dependencies = [
- "semio-framework",
- "semio-framework-diagnostic",
- "semio-framework-dsl-record",
- "semio-framework-hash",
- "semio-framework-job",
- "semio-framework-os-kernel",
- "semio-framework-os-store-codec-registry",
- "semio-framework-os-store-operation-wire",
- "semio-framework-os-store-text-io",
- "semio-framework-plugin-ownership",
- "semio-framework-plugin-window-config",
- "semio-framework-plugin-window-config-mutation",
- "semio-framework-plugin-window-config-registry",
- "semio-framework-plugin-window-config-replace",
- "semio-framework-tool-run",
- "semio-framework-value",
- "semio-framework-value-native-owned",
- "semio-framework-value-persistent",
- "semio-framework-value-retirement-queue",
-]
-[[package]]
-name = "semio-framework-tool-typing-edit"
-version = "0.1.0"
-dependencies = [
- "semio-framework-job",
- "semio-framework-replication",
- "semio-framework-tool-machine",
- "semio-framework-value",
-]
-[[package]]
-name = "semio-s-artifact-stdio-ifc-2x3-base-catalog"
-version = "0.1.0"
-dependencies = [
- "semio-framework-async-macros",
- "semio-framework-deflate",
- "semio-framework-pack-json",
- "serde_json",
-]
-[[package]]
-name = "semio-s-artifact-stdio-ifc-2x3-viewer"
-version = "0.1.0"
-dependencies = [
- "semio-framework-2d-compute",
- "semio-framework-artifact-reference",
- "semio-framework-async-macros",
- "semio-framework-job",
- "semio-framework-os-kernel",
- "semio-framework-pack-json",
- "semio-framework-plugin",
- "semio-framework-ui-locale",
- "semio-framework-value",
- "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-ifc-2x3-base",
- "semio-s-artifact-stdio-ifc-2x3-base-model",
- "semio-s-artifact-stdio-ifc-2x3-base-mutations",
-]
-[[package]]
-name = "semio-s-artifact-stdio-ifc-4-catalog"
-version = "0.1.0"
-dependencies = [
- "semio-framework-async-macros",
- "semio-framework-deflate",
- "semio-framework-pack-json",
- "serde_json",
-]

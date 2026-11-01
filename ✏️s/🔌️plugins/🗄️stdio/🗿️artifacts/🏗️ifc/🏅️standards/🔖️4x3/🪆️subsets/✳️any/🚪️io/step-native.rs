@@ -8,7 +8,7 @@ use std::mem::size_of;
 pub struct Ifc4x3IntoTxtNative;
 impl Serializer<IfcSnapshot> for Ifc4x3IntoTxtNative {
     const INTO: semio_framework_artifact_reference::Dialect = TXT_DIALECT;
-    const FIDELITY: IoFidelity = IoFidelity::Lossless;
+    const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn serialize(source: &IfcSnapshot, _: &ArchiveChildren, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         control.receive_nested::<Vec<u8>, IoOutcome<IoPayload>>(|slot, original| {
             *slot = Some(write_ifc4x3_step_pack(source, &mut original.snapshot_encode()?)?);

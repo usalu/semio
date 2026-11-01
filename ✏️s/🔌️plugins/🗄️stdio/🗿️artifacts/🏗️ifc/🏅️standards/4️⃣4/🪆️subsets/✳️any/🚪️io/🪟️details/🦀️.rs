@@ -1,6 +1,6 @@
 //! 🧭️ IFC4 profile for complete catalog-aware snapshot details.
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::catalog::{IfcCatalog,IfcAttributeDeclaration,IfcTypeExpression};
-#[path="../../../../../../🔎️details/🦀️.rs"]mod shared;
+use semio_s_artifact_stdio_ifc_details as shared;
 pub type Ifc4DetailsProvider<'a>=shared::IfcDetailsProvider<'a,Ifc4DetailsProfile>;
 pub struct Ifc4DetailsProfile;
 impl shared::IfcDetailsProfile for Ifc4DetailsProfile{type CandidateRules=();const MAXIMUM_ATTRIBUTES:usize=semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::catalog::IFC4_MAXIMUM_ATTRIBUTES;fn catalog()->&'static IfcCatalog{semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::catalog::ifc4_catalog()}}

@@ -1,9 +1,9 @@
-#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::{booleans::*,identity::*,paint::*,picking::*,placement::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*};
+#[allow(unused_imports)] use {semio_s_artifact_draw_drawing_scene::{booleans::*,identity::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*},semio_s_artifact_draw_drawing_scene_paint::{*,picking::*,placement::*}};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_framework_test_fixtures::fixture_text;
 
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::preparation::{DrawingSceneSource, DocumentVectorPreparationJob, DocumentSceneLimits, DocumentAlgorithmLimits, DocumentSceneContent};
-#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::placement::*;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene_paint::placement::*;
 use semio_s_artifact_draw_drawing_model::{DrawingLayerNode, DrawingImageAsset};
 use semio_s_artifact_draw_drawing_model::layer_base;
 

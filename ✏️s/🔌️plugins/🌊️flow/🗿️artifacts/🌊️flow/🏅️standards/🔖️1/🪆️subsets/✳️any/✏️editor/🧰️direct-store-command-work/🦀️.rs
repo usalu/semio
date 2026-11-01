@@ -389,7 +389,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
     }
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        semio_framework_job::close_original_granted_step(cx,|grant|{
+        semio_framework_job::close_original_granted_step(cx,|grant|{let result=(||{
             if !self.closing {
                 return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
             }
@@ -404,7 +404,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
                 return Ok(semio_framework_job::InteractiveJobCloseStep::Pending { progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() } });
             }
             Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() })
-        })
+        })();let work=u64::from(matches!(&result,Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}) if *progress!=Default::default()));semio_framework_value::RetainedWorkOutcome{result,work}})
     }
 
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {

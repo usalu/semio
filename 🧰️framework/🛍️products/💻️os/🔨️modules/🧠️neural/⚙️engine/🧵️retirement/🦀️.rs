@@ -51,6 +51,7 @@ impl ValueRetirement {
     pub fn original_value(&self)->Option<&Value> {match self.root.as_ref()?.original()? {Owner::Value(value)=>Some(value),_=>None}}
     pub fn terminal_is_empty(&self)->bool {self.root.is_none()&&self.owners.terminal_is_empty()}
     pub fn next_reserve_capacity_byte_demand(&self)->Result<usize,ValueError> {self.owners.next_reserve_capacity_byte_demand()}
+    pub fn next_reserve_depth_demand(&self)->Result<usize,ValueError> {Ok(self.owners.reserve_demand()?.depth)}
     pub fn reserve_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> {self.owners.reserve_step(grant).result}
     pub const fn domain_frame_birth_bytes()->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<Owner>()}
     fn admit_domain(&mut self,value:Owner,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,Owner)> {
@@ -300,9 +301,9 @@ impl RetainedDictionaryInput {
             self.phase="input-bind-value";
             if let Some(frame)=self.frames.last_mut() {
                 if self.shared_key.is_none() {
-                    match SharedOwner::admit(frame.key.take().unwrap(),grant).result {Ok((owner,receipt))=>{self.shared_key=Some(owner);progress=receipt;},Err((error,key))=>{frame.key=Some(key);return Err(error);}}
+                    match SharedOwner::admit(frame.key.take().ok_or_else(||ValueError::invariant("key absent"))?,grant).result {Ok((owner,receipt))=>{self.shared_key=Some(owner);progress=receipt;},Err((error,key))=>{frame.key=Some(key);return Err(error);}}
                 } else if self.shared_value.is_none() {
-                    match SharedOwner::admit(self.value.take().unwrap(),grant).result {Ok((owner,receipt))=>{self.shared_value=Some(owner);progress=receipt;},Err((error,value))=>{self.value=Some(value);return Err(error);}}
+                    match SharedOwner::admit(self.value.take().ok_or_else(||ValueError::invariant("value absent"))?,grant).result {Ok((owner,receipt))=>{self.shared_value=Some(owner);progress=receipt;},Err((error,value))=>{self.value=Some(value);return Err(error);}}
                 } else {
                     self.update=Some(frame.dictionary.pairs.begin_set_shared(self.shared_key.take().unwrap(),self.shared_value.take().unwrap()));
                 }

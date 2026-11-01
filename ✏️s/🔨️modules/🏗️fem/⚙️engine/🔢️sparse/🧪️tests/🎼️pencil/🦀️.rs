@@ -53,6 +53,5 @@ fn original_symmetric_pencil_matches_independent_sparse_storage_and_refuses_owne
         let mut closed = false;
         for _ in 0..20_000 { let turn = owner.close_step(4096); released += turn.2; if turn.0 { closed = true; break; } }
         assert!(closed && first.terminal_is_empty() && second.terminal_is_empty()); assert_eq!(allocated, released);
-        println!("[DEBUG] {} original signed pencil order{n} preserves B backing and exact page conservation", case["id"]);
     }
 }

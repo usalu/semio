@@ -26,3 +26,7 @@ semio-framework-deflate = { path = "../../../🗜️deflate/📦️packages/🦀
 [features]
 # 🪝️ Exposes the `testkit` hooks (aliases and forwarders of crate-private items) for the companion crate `semio-framework-pixels-tests`.
 testkit = []
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }

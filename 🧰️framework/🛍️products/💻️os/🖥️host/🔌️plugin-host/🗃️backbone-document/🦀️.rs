@@ -233,7 +233,7 @@ where
     let (mut retirement, _) = owners.retire_envelope_uninstalled(envelope, birth).map_err(|(error, _, _)| fault(error))?;
     loop {
         let demand = retirement.next_demand(4096).map_err(fault)?;
-        match retirement.close_step(grant_of(demand)).map_err(fault)? {
+        match retirement.close_step(grant_of(demand)).result.map_err(fault)? {
             semio_framework_value::retained_clone::RetainedCloneStep::Complete(_) => {
                 assert!(retirement.terminal_is_empty(), "backbone envelope retirement reports its exact terminal");
                 return Ok(());

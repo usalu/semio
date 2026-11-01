@@ -82,9 +82,9 @@ impl ArtifactSqliteSnapshotHost for DocxSnapshot {
 
     fn retire_sqlite_snapshot(self) {
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
-        let (mut retirement, _) = semio_framework_value::retirement::admit_owned_retirement(self, grant).unwrap_or_else(|(error, _)| panic!("DOCX SQLite cold retirement refused: {error:?}"));
+        let (mut retirement, _) = semio_framework_value::retirement::admit_owned_retirement(self, grant).result.unwrap_or_else(|(error, _)| panic!("DOCX SQLite cold retirement refused: {error:?}"));
         while !retirement.terminal_is_empty() {
-            retirement.close_step(grant).expect("DOCX SQLite cold retirement grant");
+            if let Err(error) = retirement.close_step(grant).result { panic!("DOCX SQLite cold retirement grant: {error:?}"); }
         }
     }
 

@@ -1,0 +1,10 @@
+import {readFileSync,existsSync} from "node:fs";
+import {resolve} from "node:path";
+const REPO="/Users/ueli/Documents/semio";
+const {readRustSourceClosureV1}=await import(REPO+"/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts");
+const wasm=["target_arch=\"wasm32\"","target_os=\"wasi\"","target_family=\"wasm\"","debug_assertions","panic=\"unwind\"","target_pointer_width=\"32\""];
+const [dir,mode]=process.argv.slice(2);
+const toml=Bun.TOML.parse(readFileSync(dir+"/Cargo.toml","utf8")) as any;
+const entry=resolve(dir,toml.lib?.path??"src/lib.rs");
+const files=await readRustSourceClosureV1([entry],REPO,mode==="test"?["test",...wasm]:wasm,async(p:string)=>existsSync(p)?new Uint8Array(readFileSync(p)):null,{manifestDirectory:dir,generated:()=>{}});
+for(const f of files)console.log(f.path);

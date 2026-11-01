@@ -1,0 +1,27 @@
+STATUS: PARTIAL. Edits done for fem3d, fem2d and the procedural generate form. GREEN (wasm32-wasip2, before the round-2 edits): fem3d terminology + results-window (guesti18n-1.txt). UNVERIFIED: everything edited since (fem2d, generate form, play-app call site, new tests); guesti18n-3-* checks are blocked by foreign crates (framework-os-flow-extensions take_work/work errors, stdio pdf-schema).
+
+## Root cause
+statik caption `Case: dead` (and every other caption of the fem3d results window) was built from English `format!` literals in `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/.../✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs` (`Case:`, `Mode N: .. Hz`, `Buckling mode N: factor`, ` · phase`, `No load case defined`, `Result not found`, `Analysis/Modal/Buckling error`), and `progress_caption` shipped a mixed `English · Deutsch` string. The window's `render` had no label set.
+
+## Fix (fem3d, existing mechanism `app_labels!` / `Fem3dLabels`)
+- `.../✏️editor/🗣️terminology/🦀️.rs`: 18 new labels (all four axes en/de): `case_caption` (Case/Lastfall), `mode_shape`, `buckling_mode`, `no_load_case`, `result_missing`, `analysis_error`, `modal_error`, `buckling_error`, `stage_{meshing,assembly,statics,modes,validation,visual,cancelled,failed,preparing,queued}`. The existing German-is-a-translation test covers them automatically.
+- results window `🦀️.rs`: `render`, `render_pending`, `render_static/modal/buckling`, `playback_caption`, `progress_caption` take `labels: &Fem3dLabels`; captions use `labels.*` (phase/factor reuse existing labels). The case id stays data (`Lastfall: dead`).
+- `✏️editor/🖥️play-app/🦀️.rs`: both call sites pass the panel's `labels` (already resolved from the view state).
+- Demonstrator spec data (wording is per language, no default): `D/🧪️tests/🎭️acceptance/🧬️simulation/🧫️cases.json` + `🔣️.json` caption is now `^(Case|Lastfall): dead$`; `D/.../acceptance/🟦️.ts` and `1101-tools/e2eready/probe.ts` match it as `RegExp`.
+
+## Tests (language-agnostic)
+`.../📊️results/🧪️tests/🔬️unit/🦀️.rs`: `static_case_caption_follows_the_requested_locale_3d` renders the static frame with `NATIVE_EN` and `NATIVE_DE` and asserts `"{case_caption}: dead"` per locale and that the two labels differ; `progress_stage_labels_are_monolingual_per_locale` forbids the old `a · b` bilingual strings. Existing tests in that file were already stale against the 6-arg `render`; I updated every call to the new 7-arg signature, `Factor` and the pending-stage assertion. Not compiled/run (needs `--tests`, blocked by the same foreign crates). Third-party oracle: none applicable (UI wording, no numeric output).
+
+## Audit of the other 7 panes (default-visible guest text)
+- koordinator (cad), aggregator (puzzle), energie, aussuchen (sourcing), bearbeiten (process), verfolgen (gis): panel/window labels, action args and mutation labels all go through `LocalizedLabel::native(en, de)`, `say(locale, ..)` or `app_labels!`; no English-only default text found. Layout `titles` passed to `create_default_layout` are English literals but the shell resolves the window-kind label first (`route-and-chrome/🟦️.tsx:224`), so they do not surface.
+- generator (procedural): fixed `format!("{} values", ..)` in `🫀️foundation/🖼️semantic-ui/🦀️.rs` `generation_tree` (now `Werte` in German through its existing `label` closure). Left open (non-default Generate-mode form window, needs a locale param plus new labels in Generation2d/3dLabels): `generation_form` literals `No input widgets to generate from.`, `Field N`, `(no image)`.
+- Remaining English-only text found, not default-visible: fem 2d results window (`◻️2d/.../📊️results/🦀️.rs` lines ~417/563/591/607 `Analysis error`, `No load case defined`; same pattern, fix as above if fem 2d ever ships in a pane); engine error strings appended after the localized noun in fem captions (`{error}` comes from the solver); process `needs stock ..` failure diagnostic; mutation no-op warnings in fem 3d (`already has that value`); cad default object labels `Box N`/`Node N` are authored data, expected by `rowText: "Box \\d+"`.
+- `Unknown body: ..` fallbacks exist in every plugin (internal fault text, unreachable by users).
+
+## Not done / next
+Re-run `1101-tools/guesti18n/chk.sh <label>` for the editor crate and `cargo test -p semio-s-artifact-fem-3d-editor-results-window` once stdio pdf-schema compiles (it fails with 14 foreign E0433/E0432 errors in guesti18n-1.txt). German statik run then proves `Lastfall: dead`.
+
+## Round 2 (coordinator follow-up)
+- Generate form: `🫀️foundation/🖼️semantic-ui/🦀️.rs` gains `GenerationFormLabels { no_inputs, field, no_image }` and `generation_form(.., words)`; `No input widgets..`, `Field N`, `(no image)` come from it. Both apps got labels `form_no_inputs`, `form_field`, `form_no_image` (en/de) in their `Generation3dLabels`/`Generation2dLabels`; both `📝️form` windows pass them.
+- fem 2d results window: 7 labels added to `Fem2dLabels` (`mode_shape`, `buckling_mode`, `no_load_case`, `result_missing`, `analysis_error`, `modal_error`, `buckling_error`); `render_static/modal/buckling`, `static_layers`, `playback_caption_layer` take `labels` (phase/factor reuse existing). New test `no_load_case_fault_follows_the_requested_locale_2d`.
+- Check scripts: `1101-tools/guesti18n/chk3.sh` (gen3, gen2, fem wasm, `--tests` native for both results windows). Re-run it when `semio-framework-os-flow-extensions` and `semio-s-artifact-stdio-pdf-schema-4` compile.

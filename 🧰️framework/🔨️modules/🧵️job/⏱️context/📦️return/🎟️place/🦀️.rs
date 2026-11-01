@@ -10,7 +10,7 @@ impl OriginalCallerReturnPlace{
  pub fn terminal_is_empty(&self)->bool{self.credit.is_none()&&self.witness.is_none()&&self.identity.is_none()}
  pub fn is_admitted(&self)->bool{self.credit.is_some()}
  pub fn admit(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if let Some(credit)=self.credit.as_ref(){credit.qualify_source(cx,self.identity.unwrap())?;return Ok(credit.has_unused_capture()&&self.witness.is_none())}
+  if let Some(credit)=self.credit.as_ref(){credit.qualify_source(cx,self.identity.ok_or_else(||ValueError::invariant("identity absent"))?)?;return Ok(credit.has_unused_capture()&&self.witness.is_none())}
   let parent=cx.original_source_parent()?;let bound=cx.return_budget.as_ref().is_some_and(|budget|budget.get().is_bound());
   if !parent.admit_return_origin(cx)?||!bound{return Ok(false)}
   let identity=OriginalSourceBinding::borrow(cx);let result=claim_original_return(cx,&mut self.credit);
@@ -23,11 +23,11 @@ impl OriginalCallerReturnPlace{
   self.witness=Some(credit.issue_return(OriginalReturnPhase::Capture)?);Ok(())
  }
  pub fn settle_return(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  let Some(credit)=self.credit.as_ref()else{return Ok(true)};credit.qualify_source(cx,self.identity.unwrap())?;
+  let Some(credit)=self.credit.as_ref()else{return Ok(true)};credit.qualify_source(cx,self.identity.ok_or_else(||ValueError::invariant("identity absent"))?)?;
   let captured=self.witness.is_some();
-  if !captured{let credit=self.credit.as_mut().unwrap();self.witness=Some(if credit.has_unused_capture(){credit.issue_success_return()?}else{credit.issue_return(OriginalReturnPhase::Receive)?})}
-  receive_original_return_witness(cx,self.credit.as_mut().unwrap(),&mut self.witness)?;
-  if self.credit.as_ref().unwrap().terminal_is_empty(){self.credit.take();self.identity=None;return Ok(true)}
+  if !captured{let credit=self.credit.as_mut().ok_or_else(||ValueError::invariant("credit absent"))?;self.witness=Some(if credit.has_unused_capture(){credit.issue_success_return()?}else{credit.issue_return(OriginalReturnPhase::Receive)?})}
+  receive_original_return_witness(cx,self.credit.as_mut().ok_or_else(||ValueError::invariant("credit absent"))?,&mut self.witness)?;
+  if self.credit.as_ref().ok_or_else(||ValueError::invariant("credit absent"))?.terminal_is_empty(){self.credit.take();self.identity=None;return Ok(true)}
   Ok(false)
  }
 }

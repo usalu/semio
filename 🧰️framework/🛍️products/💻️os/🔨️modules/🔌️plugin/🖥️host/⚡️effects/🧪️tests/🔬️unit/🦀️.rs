@@ -373,7 +373,7 @@ async fn router_effect_runs_through_the_retained_compute_session() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn router_effect_on_a_stopped_compute_pool_returns_worker_lost_without_stranding_its_owner() {
+async fn router_effect_on_a_stopped_compute_pool_still_completes_on_its_original_caller() {
     let runtime = ManualRuntime::new(0).await;
     let scope = runtime.open_scope(ScopeOwner::Service("stopped-router-compute"), None).await;
     let pool = semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1));
@@ -382,7 +382,7 @@ async fn router_effect_on_a_stopped_compute_pool_returns_worker_lost_without_str
     let ctx = OperationContext { actor: 1, generation: 0, trace: TraceId(91), lane: 2, deadline_ms: None, cancel: CancelToken::root().await, capability: None };
     let handler: Arc<dyn RouterEffectHandler> = Arc::new(RecordingRouterHandler(Arc::new(AtomicUsize::new(0))));
     let outcome = run_router_effect_job(&compute, &runtime, &scope, ctx, fixture_router_grant(), &handler, RouterEffect::CacheRead { engine_id: "e".to_string(), key: "k".to_string() }).await;
-    assert!(matches!(outcome, RouterEffectJobOutcome::WorkerLost));
+    assert!(matches!(outcome, RouterEffectJobOutcome::Complete(ref output) if output == b"ok"));
 }
 //#endregion 🚀️ClassificationTests
 

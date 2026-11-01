@@ -43,6 +43,7 @@ semio-s-plugin-energy-engine-air-exchange = { workspace = true }
 semio-s-plugin-energy-engine-calendar = { workspace = true }
 semio-s-plugin-energy-engine-model = { workspace = true }
 semio-s-plugin-energy-engine-schedule = { workspace = true }
+semio-s-artifact-energy-model-snapshot-bridge = { workspace = true }
 semio-s-artifact-energy-model-snapshot-sqlite-admission = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-async = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }

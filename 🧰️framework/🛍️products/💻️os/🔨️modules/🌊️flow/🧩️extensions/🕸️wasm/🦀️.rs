@@ -78,5 +78,6 @@ use external_completion::EvaluationExternalCompletion;
 // #region ⏱️EvaluationJobs
 
 #[path="⚠️failure/🦀️.rs"] mod original_failure;
+pub use original_failure::admit_evaluation_failure;
 
 // #endregion ⏱️EvaluationJobs

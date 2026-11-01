@@ -2,6 +2,7 @@
 use super::{IfcSnapshot, IfcTypedValue, IfcValue};
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource, FieldProjectionView as V, projection_path_error};
 use semio_framework_os_kernel::NativeSnapshotEncodeOwner as Owner;
+use semio_framework_value::retirement::RetireOwned as RetireOwnedTrait;
 use semio_framework_value::{RetireOwned, ValueError, ValueRefusalKind};
 use std::mem::size_of;
 const NONE: usize = usize::MAX;
@@ -46,7 +47,7 @@ fn work(owner: &mut Owner<'_, '_>, bytes: usize) -> Result<(), ValueError> {
     owner.record_progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })?;
     owner.native().step()
 }
-fn vector<T: RetireOwned>(count: usize, owner: &mut Owner<'_, '_>) -> Result<Vec<T>, ValueError> {
+fn vector<T: RetireOwnedTrait>(count: usize, owner: &mut Owner<'_, '_>) -> Result<Vec<T>, ValueError> {
     owner.receive::<Vec<T>, Vec<T>>(|slot, native, body| {
         *slot = Some(Vec::new());
         body.allocate_encode_vec_into(native, count, slot.as_mut().unwrap(), 1)?;

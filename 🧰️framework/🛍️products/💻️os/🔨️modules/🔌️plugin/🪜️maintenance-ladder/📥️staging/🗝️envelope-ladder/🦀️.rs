@@ -38,7 +38,7 @@ pub(super) fn erased_step<T: store::ErasedSnapshotRetirement + ?Sized>(owner: &m
     if owner.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
     let demand = erased_demand(owner, grant.maximum_copy_bytes).map_err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
     if !plugin_turn_admitted(demand, grant)? { return Ok(RetainedCloneStep::Progress(empty)); }
-    let step = owner.close_step(grant).map_err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
+    let step = owner.close_step(grant).result.map_err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
     admit_retained_clone_close(grant, step, owner.terminal_is_empty(), "envelope returned owner").map_err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from)?;
     Ok(step)
 }

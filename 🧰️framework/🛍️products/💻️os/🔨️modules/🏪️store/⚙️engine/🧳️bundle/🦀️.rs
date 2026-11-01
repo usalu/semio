@@ -125,7 +125,7 @@ where
                 return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}));
             }
             if publication.item_closing {
-                if let Some(stage)=publication.stage.as_mut(){if stage.retiring.is_some(){let step=artifact_retirement_box_close_step(&mut stage.retiring,item_grant.retained_grant()).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress()));}}
+                if let Some(stage)=publication.stage.as_mut(){if stage.retiring.is_some(){let step=artifact_retirement_box_close_step(&mut stage.retiring,item_grant.retained_grant()).result.map_err(|error|VcsError::ValidationFailed(error.into_message()))?;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress()));}}
                 if publication.preparation.is_none(){return Err(VcsError::ValidationFailed("staged batch item lost its original preparation before closure".into()));}
                 let step=spend_item_close_grant(&mut publication.preparation,item_grant,receiving).map_err(VcsError::InverseRefused)?;
                 if matches!(step,RetainedCloneStep::Complete(_)){publication.item_closing=false;}

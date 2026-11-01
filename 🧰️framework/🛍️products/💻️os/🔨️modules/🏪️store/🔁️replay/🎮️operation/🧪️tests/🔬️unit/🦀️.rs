@@ -2,7 +2,7 @@
 
 use super::*;
 use semio_framework_value::retirement::{RetireOwned, controlled::ControlledRetirement, arc_custody::SharedControlledRetirement};
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
 
 #[derive(semio_framework_value::RetireOwned)]
 struct TextInput {

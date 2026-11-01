@@ -135,21 +135,21 @@ pub type FlowStore = ArtifactStore<FlowHostSnapshot, FlowMutation>;
 pub struct FlowSnapshotRetirementFactory;
 impl SnapshotRetirementFactory<FlowHostSnapshot> for FlowSnapshotRetirementFactory {
     fn retirement_birth_bytes(&self,_:&Arc<FlowHostSnapshot>)->usize {semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<FlowHostSnapshot>()}
-    fn retire(&self,value:Arc<FlowHostSnapshot>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Arc<FlowHostSnapshot>)> {semio_framework_value::retirement::arc_custody::admit_shared_retirement(value,grant,true)}
+    fn retire(&self,value:Arc<FlowHostSnapshot>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,Arc<FlowHostSnapshot>)> {semio_framework_value::retirement::arc_custody::admit_shared_retirement(value,grant,true)}
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct FlowOwnedHostSnapshotRetirementFactory;
 impl ArtifactOwnedValueRetirementFactory<FlowHostSnapshot> for FlowOwnedHostSnapshotRetirementFactory {
     fn retirement_birth_bytes(&self,_:&FlowHostSnapshot)->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<FlowHostSnapshot>()}
-    fn retire_owned(&self,value:FlowHostSnapshot,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,FlowHostSnapshot)> {semio_framework_value::retirement::admit_owned_retirement(value,grant)}
+    fn retire_owned(&self,value:FlowHostSnapshot,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,FlowHostSnapshot)> {semio_framework_value::retirement::admit_owned_retirement(value,grant)}
 }
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct FlowMutationRetirementFactory;
 impl ArtifactOwnedValueRetirementFactory<FlowMutation> for FlowMutationRetirementFactory {
     fn retirement_birth_bytes(&self,_:&FlowMutation)->usize {semio_framework_value::retirement::owned_retirement_birth_bytes::<FlowMutation>()}
-    fn retire_owned(&self,value:FlowMutation,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,FlowMutation)> {semio_framework_value::retirement::admit_owned_retirement(value,grant)}
+    fn retire_owned(&self,value:FlowMutation,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,FlowMutation)> {semio_framework_value::retirement::admit_owned_retirement(value,grant)}
 }
 
 impl MemberStoreProducer<FlowHostSnapshot,FlowMutation> for crate::io::binary::snapshot::FlowSnapshotPackProducer {

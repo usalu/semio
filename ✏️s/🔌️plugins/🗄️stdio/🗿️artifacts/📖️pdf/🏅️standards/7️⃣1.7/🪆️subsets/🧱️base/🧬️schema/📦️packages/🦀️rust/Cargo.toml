@@ -43,7 +43,10 @@ semio-s-artifact-stdio-pdf-conformance-support = { path = "../../🏅️conforma
 semio-s-artifact-stdio-pdf-diff = { path = "../../../../../../4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-graph-projection = { path = "../../🔎️graph-projection/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-inferences = { path = "../../💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-lift = { path = "../../../🔨️modules/⬇️lift/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-lower = { path = "../../../🔨️modules/⬆️lower/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-mut-base-2 = { path = "../../../../../../📦️packages/🦀️rust" }
+semio-s-artifact-stdio-pdf-mut-family-11 = { path = "../../🧬️mutations/🪄️replace-page/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-mut-family-8 = { path = "../../../🔨️modules/🖋️content/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-snapshot-2 = { path = "../../📸️snapshot/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf-tests-2 = { path = "../../../../🧾️vt/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/📦️packages/🦀️rust" }

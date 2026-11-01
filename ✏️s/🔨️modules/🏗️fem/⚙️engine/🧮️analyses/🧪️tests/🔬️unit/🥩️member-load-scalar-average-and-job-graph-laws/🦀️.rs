@@ -155,5 +155,4 @@ fn numerical_owner_page_admission_refuses_before_allocating_and_is_not_singulari
     let mut complete = false;
     for _ in 0..100 { if construction.close_step(MOUNTED_OWNER_PAGE_BYTES).0 { complete = true; break; } }
     assert!(complete);
-    eprintln!("[DEBUG] numerical owner over-capacity admission refused before allocation with resource classification");
 }

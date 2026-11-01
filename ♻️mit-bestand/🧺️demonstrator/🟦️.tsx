@@ -12,12 +12,12 @@ import {
   bootstrapElementsSurfaceChromeDocument,
   capturePosterFromCanvases,
   centeredLastRowCells,
-  initUiLocaleSync,
   nearSquareGrid,
   readStoredUiChromeAppearance,
-  readStoredUiChromeLayout,
   readStoredUiDriver,
   UI_MOBILE_MEDIA_QUERY,
+  UI_TABLET_MEDIA_QUERY,
+  elementsSurfaceDeviceForMatches,
   useElementsSurfaceChrome,
   useLabel,
   useLabelFormatter,
@@ -34,8 +34,10 @@ import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
 import { createFrameworkOsHostPortsV1 } from "@semio-tech/framework-os-dev/host-ports";
 import { DemonstratorCard } from "./⚛️demonstrator-card.tsx";
 import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "./⚛️footer.tsx";
-import { demonstratorUiLabel } from "./🔨️modules/🌐️locale/⚛️.ts";
-import { DEMONSTRATOR_LOCALE, DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, ENTWERFEN_MIT_BESTAND_LOGO_SVG, ENTWERFEN_MIT_BESTAND_NAME, demonstratorPaneBootVariants, type DemonstratorPaneSpec } from "./🪧️brand.ts";
+import { DemonstratorLocalePicker, DemonstratorLocaleSwitcher } from "./⚛️locale-picker.tsx";
+import { commitDemonstratorLocale, demonstratorUiLabel, readDemonstratorLocale } from "./🔨️modules/🌐️locale/⚛️.ts";
+import { type DemonstratorLocale } from "./🔨️modules/🌐️locale/🟦️.ts";
+import { DEMONSTRATOR_PANES, ENTWERFEN_MIT_BESTAND_LOGO_SVG, ENTWERFEN_MIT_BESTAND_NAME, demonstratorGeneralIntroduction, demonstratorPaneBootVariants, demonstratorPaneViews, type DemonstratorPaneView } from "./🪧️brand.ts";
 import "./🎨️globals.css";
 
 // 🎪️ Page-owning (single React root, no `ShellScope` of its own) — plain browser storage is correct;
@@ -46,9 +48,10 @@ const demonstratorStorage = createBrowserStoragePort();
 const FRAMEWORK_OS_HOST_PORTS = createFrameworkOsHostPortsV1();
 
 bootstrapElementsSurfaceChromeDocument(readStoredUiChromeAppearance(demonstratorStorage));
-// 🇩🇪️ The whole demonstrator is German-locked (see 🪧️brand.ts) — resolve synchronously before the
-// first render so the landing page's own chrome (Skip/Back/Next/Done) never flashes English.
-initUiLocaleSync(DEMONSTRATOR_LOCALE);
+// 🌐️ No language is assumed: the stored choice, else the browser's preferred languages, is committed synchronously before the
+// first render so the landing page's own chrome never flashes another language; with neither, the viewer is asked.
+const INITIAL_LOCALE = readDemonstratorLocale();
+if (INITIAL_LOCALE !== undefined) commitDemonstratorLocale(INITIAL_LOCALE);
 
 /** 📱️ Touch phones swipe through the same grid one app at a time instead of seeing every card at once. */
 const DEMONSTRATOR_SWIPE_MEDIA_QUERY = `${UI_MOBILE_MEDIA_QUERY} and (hover: none) and (pointer: coarse)`;
@@ -70,7 +73,7 @@ const DEMONSTRATOR_LIFECYCLE = { budget: DEMONSTRATOR_PANES.length, warmStartMs:
 const DEMONSTRATOR_INSETS = { top: "calc(var(--size-workbench) * 1.5)", bottom: "5.5rem" } as const;
 
 /** 🎪️ One app's live shell: the standalone module it runs, the branded app id its manifest declares, its tour only while opened. */
-function DemonstratorShell({ pane, opened }: { readonly pane: DemonstratorPaneSpec; readonly opened: boolean }) {
+function DemonstratorShell({ pane, locale, opened }: { readonly pane: DemonstratorPaneView; readonly locale: DemonstratorLocale; readonly opened: boolean }) {
   const variants = demonstratorPaneBootVariants(pane.variant);
   const catalog = useMemo(() => composeSpecificOsCatalogV1(window.location.href, { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => false, progress: () => {} }).catalog, []);
   const runtimeBoot = useMemo(() => resolvePlaygroundBoot(catalog, variants.runtime), [catalog, variants.runtime]);
@@ -89,34 +92,50 @@ function DemonstratorShell({ pane, opened }: { readonly pane: DemonstratorPaneSp
       brand={pane.brand}
       shellId={pane.id}
       storageNamespace={pane.id}
+      initialLocale={locale}
       suppressAutoIntroduction={!opened}
     />
   );
 }
 
-const demonstratorPaneShortLabel = (pane: (typeof DEMONSTRATOR_PANES)[number]): string => pane.brand.shortWindowTitle?.split(" · ").at(-1) ?? pane.label;
+const demonstratorPaneShortLabel = (pane: DemonstratorPaneView): string => pane.shortWindowTitle.split(" · ").at(-1) ?? pane.label;
 
-const DEMONSTRATOR_PAGES: readonly LayeredPane[] = DEMONSTRATOR_PANES.map((pane) => ({ id: pane.id, label: pane.label, shortLabel: demonstratorPaneShortLabel(pane), icon: pane.icon, capturePoster: capturePosterFromCanvases, render: ({ opened }) => <DemonstratorShell pane={pane} opened={opened} /> }));
-const DEMONSTRATOR_SPECS = new Map(DEMONSTRATOR_PANES.map((pane) => [pane.id, pane]));
+/** 📄️ The eight apps as pages of the overview, worded and branded for `locale`. */
+const demonstratorPages = (views: readonly DemonstratorPaneView[], locale: DemonstratorLocale): readonly LayeredPane[] =>
+  views.map((pane) => ({ id: pane.id, label: pane.label, shortLabel: demonstratorPaneShortLabel(pane), icon: pane.icon, capturePoster: capturePosterFromCanvases, render: ({ opened }) => <DemonstratorShell pane={pane} locale={locale} opened={opened} /> }));
 
 /** 🃏️ An app's card, centred in its cell of the card grid (when swiping, the overview centres it on its page itself). */
-function renderDemonstratorCard(page: LayeredPane, state: LayeredCardState) {
-  const card = <DemonstratorCard pane={DEMONSTRATOR_SPECS.get(page.id)!} lifted={state.revealed} onClick={state.open} />;
+const demonstratorCardRenderer = (views: readonly DemonstratorPaneView[]) => (page: LayeredPane, state: LayeredCardState) => {
+  const card = <DemonstratorCard pane={views.find((view) => view.id === page.id)!} lifted={state.revealed} onClick={state.open} />;
   return state.mode === "swipe" ? card : <div className="flex min-h-0 min-w-0 justify-center overflow-x-hidden overflow-y-auto px-double">{card}</div>;
-}
+};
 //#endregion 🎪️DemonstratorPages
 
 //#region 🎪️DemonstratorLanding
 function DemonstratorLanding() {
+  const [locale, setLocale] = useState<DemonstratorLocale | undefined>(INITIAL_LOCALE);
+  const chooseLocale = useCallback((chosen: DemonstratorLocale) => {
+    commitDemonstratorLocale(chosen);
+    setLocale(chosen);
+  }, []);
+  return locale === undefined ? <DemonstratorLocalePicker onChoose={chooseLocale} /> : <DemonstratorLocaleLanding locale={locale} onChooseLocale={chooseLocale} />;
+}
+
+function DemonstratorLocaleLanding({ locale, onChooseLocale }: { readonly locale: DemonstratorLocale; readonly onChooseLocale: (locale: DemonstratorLocale) => void }) {
+  const views = useMemo(() => demonstratorPaneViews(locale), [locale]);
+  const pages = useMemo(() => demonstratorPages(views, locale), [views, locale]);
+  const renderCard = useMemo(() => demonstratorCardRenderer(views), [views]);
+  const introduction = useMemo(() => demonstratorGeneralIntroduction(locale), [locale]);
   const viewportMobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
+  const viewportTablet = useMediaQuery(UI_TABLET_MEDIA_QUERY);
   const swipe = useMediaQuery(DEMONSTRATOR_SWIPE_MEDIA_QUERY);
   const surfaceChrome = useMemo(
     () => ({
       appearance: readStoredUiChromeAppearance(demonstratorStorage),
-      device: (viewportMobile ? "mobile" : readStoredUiChromeLayout(demonstratorStorage) === "tablet" ? "tablet" : "desktop") as "mobile" | "tablet" | "desktop",
+      device: elementsSurfaceDeviceForMatches({ mobile: viewportMobile, tablet: viewportTablet }),
       driver: readStoredUiDriver(demonstratorStorage),
     }),
-    [viewportMobile],
+    [viewportMobile, viewportTablet],
   );
   useElementsSurfaceChrome(surfaceChrome);
 
@@ -147,12 +166,12 @@ function DemonstratorLanding() {
       <>
         {revealed ? null : (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex flex-wrap items-end justify-between gap-single px-double py-single">
-            <div className="pointer-events-auto">{aProjectOfLuhUdkFooterItem("landingProjectOf", DEMONSTRATOR_LOCALE, false).content}</div>
-            <div className="pointer-events-auto">{fundedByZukunftBauFooterItem("landingFundedBy", DEMONSTRATOR_LOCALE, false).content}</div>
+            <div className="pointer-events-auto">{aProjectOfLuhUdkFooterItem("landingProjectOf", locale, viewportMobile).content}</div>
+            <div className="pointer-events-auto">{fundedByZukunftBauFooterItem("landingFundedBy", locale, viewportMobile).content}</div>
           </div>
         )}
         {introductionDismissed ? null : (
-          <UIIntroduction introduction={ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION} stepIndex={introductionStep} completedInteractionIndices={[]} onStepIndexChange={setIntroductionStep} onDismiss={() => setIntroductionDismissed(true)} />
+          <UIIntroduction introduction={introduction} stepIndex={introductionStep} completedInteractionIndices={[]} onStepIndexChange={setIntroductionStep} onDismiss={() => setIntroductionDismissed(true)} />
         )}
         {revealed ? null : (
           <div className="pointer-events-none absolute inset-x-0 top-0 z-40">
@@ -165,12 +184,13 @@ function DemonstratorLanding() {
                   content: (
                     <div className="flex min-w-0 shrink-0 items-center gap-single">
                       <ShellBrandLogo svg={ENTWERFEN_MIT_BESTAND_LOGO_SVG} className="size-workbench shrink-0" />
-                      <span data-slot="app-name" className="px-single text-sm font-semibold text-foreground">
+                      <h1 data-slot="app-name" className="m-0 px-single text-sm font-semibold text-foreground">
                         {ENTWERFEN_MIT_BESTAND_NAME}
-                      </span>
+                      </h1>
                     </div>
                   ),
                 },
+                { key: "language", content: <DemonstratorLocaleSwitcher locale={locale} onChoose={onChooseLocale} /> },
               ]}
               showFullscreenToggle={false}
               className="bg-transparent"
@@ -181,19 +201,22 @@ function DemonstratorLanding() {
     );
 
   return (
-    <LayeredOverview
-      panes={DEMONSTRATOR_PAGES}
-      cells={DEMONSTRATOR_CELLS}
-      renderCard={renderDemonstratorCard}
-      overlayClassName="grid items-center"
-      overlayStyle={DEMONSTRATOR_OVERLAY_STYLE}
-      renderChrome={renderChrome}
-      mode={swipe ? "swipe" : "strip"}
-      insets={DEMONSTRATOR_INSETS}
-      lifecycle={DEMONSTRATOR_LIFECYCLE}
-      labels={labels}
-      onOpenedIdChange={dismissIntroduction}
-    />
+    <main className="h-full w-full">
+      <LayeredOverview
+        key={locale}
+        panes={pages}
+        cells={DEMONSTRATOR_CELLS}
+        renderCard={renderCard}
+        overlayClassName="grid items-center"
+        overlayStyle={DEMONSTRATOR_OVERLAY_STYLE}
+        renderChrome={renderChrome}
+        mode={swipe ? "swipe" : "strip"}
+        insets={DEMONSTRATOR_INSETS}
+        lifecycle={DEMONSTRATOR_LIFECYCLE}
+        labels={labels}
+        onOpenedIdChange={dismissIntroduction}
+      />
+    </main>
   );
 }
 //#endregion 🎪️DemonstratorLanding

@@ -34,5 +34,4 @@ export async function verifySnapshotPackReader(): Promise<void> {
   else {await assert.rejects(run,error=>mode !== "cancelFailure" || error instanceof AggregateError && error.errors.length === 2 && error.errors[0].message === "snapshot-read.media-type" && error.errors[1].message === "original cancellation refused");assert.equal(cancelled,mode === "foreignHandle" ? 0 : 1);}
   assert.ok(originals.every(original => original.every(byte=>byte===0)),"original chunks retire before success/refusal");
  }
- console.log("[DEBUG] Snapshot Pack reader: Buffer + Ajv valid original transfer and seven refusal transcripts PASS");
 }

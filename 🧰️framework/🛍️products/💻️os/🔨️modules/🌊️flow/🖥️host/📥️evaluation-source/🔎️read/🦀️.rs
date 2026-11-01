@@ -173,7 +173,7 @@ if self.origin.is_some_and(|original|original!=origin){return Some(FlowSourceRea
 impl Drop for FlowSourceRead{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original read admission must finish explicit custody");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.sources)}}}}
 struct ReadRetirement(FlowSourceRead);
 impl RetirementCursor for ReadRetirement{
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Ok(step)if step.progress()!=Default::default()=>RetirementStep::Progress(step.progress()),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete,Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Ok(step)if step.progress()!=Default::default()=>RetirementStep::Progress(step.progress(),1),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete(0),Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error,0)}}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.0.retirement.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
  fn next_selected_work_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.0.next_close_demands(copy)?.copy_bytes)}

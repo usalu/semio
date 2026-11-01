@@ -56,6 +56,11 @@ pub fn energy_outcome(step: Result<RetainedCloneStep, ValueError>) -> semio_fram
     semio_framework_value::RetainedWorkOutcome { result: step, work }
 }
 
+/// 🏗️ Wraps one construction step into the work-counted outcome: one work unit iff the construction succeeded.
+pub fn energy_construct<T>(result: Result<(T, RetainedCloneProgress), ValueError>) -> semio_framework_value::RetainedWorkOutcome<(T, RetainedCloneProgress)> {
+    semio_framework_value::RetainedWorkOutcome { work: u64::from(result.is_ok()), result }
+}
+
 /// 🎟️ Runs one funded retained step under the original caller from a plain owner step.
 pub fn energy_retained_step(cx: &mut semio_framework_job::StepContext<'_>, demand: RetirementDemand, advance: impl FnOnce(RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>) -> Result<semio_framework_job::InteractiveJobCloseStep, semio_framework_job::OriginalTurnFailure> {
     semio_framework_job::close_original_retained_step(cx, demand, |grant| energy_outcome(advance(grant)))

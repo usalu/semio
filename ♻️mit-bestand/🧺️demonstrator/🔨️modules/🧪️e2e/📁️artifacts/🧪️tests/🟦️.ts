@@ -29,8 +29,10 @@ export async function testDemonstratorE2eArtifactPaths(workspace: string): Promi
       const title = node.arguments[0];
       if (typescript.isStringLiteral(title)) titles.push(title.text);
       else {
-        assert.equal(title.getText(entry), "`${paneCase.paneId} boot`");
-        titles.push(...fixture.titles.filter((value: string) => value.endsWith(" boot")));
+        assert.ok(typescript.isTemplateExpression(title) && title.templateSpans.length === 1);
+        assert.ok(["language", "paneCase.paneId"].includes(title.templateSpans[0].expression.getText(entry)));
+        const head = title.head.text, tail = title.templateSpans[0].literal.text;
+        titles.push(...fixture.titles.filter((value: string) => value.length > head.length + tail.length && value.startsWith(head) && value.endsWith(tail)));
       }
     }
     typescript.forEachChild(node, visit);

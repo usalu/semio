@@ -165,7 +165,6 @@ fn retained_thermal_free_constrained_and_partial_delivery_match_independent_bala
   let balance=step.balance.as_mut().unwrap();assert!((balance.free_temp_c-row["free"][1].as_f64().unwrap()).abs()<1e-10);assert!((balance.required_w-row["required"].as_f64().unwrap()).abs()<1e-10);balance.delivered_w=row["delivered"].as_f64().unwrap();balance.stage=BalanceStage::Settle;
   while step.balance.as_ref().unwrap().stage==BalanceStage::Settle {let turn=step.step_funded(&model,&SimulationConfig::default(),&pre,&mut state,semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:512,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1});assert!(turn.fault.is_none());turns+=1;assert!(turns<2000);}
   assert!((state.solver.solution[0]-row["settled"][0].as_f64().unwrap()).abs()<1e-10);assert!((state.solver.solution[1]-row["settled"][1].as_f64().unwrap()).abs()<1e-10);assert_eq!(pointers,(state.solver.matrix.as_ptr(),state.solver.scratch.as_ptr(),state.solver.solution.as_ptr()));
-  println!("[DEBUG] original retained Energy thermal {} matched Mathjs free/constrained/delivered solution in {} turns",row["id"],turns);
  }
 }
 
@@ -178,7 +177,6 @@ fn retained_thermal_fault_refuses_physical_commit_and_restored_foreign_dimension
   let mut turns=0;
   loop {let turn=step.step_funded(&model,&SimulationConfig::default(),&pre,&mut state,semio_framework_value::RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:512,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1});if let Some(fault)=turn.fault{assert_eq!(fault,if foreign {DenseSolveFault::Dimensions}else{DenseSolveFault::Singular});assert!(turn.progress.copied_bytes<=512);break;}turns+=1;assert!(turns<100);}
   assert_eq!(state.zones.get(&zone_id).unwrap().air,original);assert_eq!(step.balance.as_ref().unwrap().stage,BalanceStage::Solve);
-  println!("[DEBUG] retained Energy typed {} fault stopped before original physical commit",if foreign {"foreign dimension"}else{"singular"});
  }
 }
 

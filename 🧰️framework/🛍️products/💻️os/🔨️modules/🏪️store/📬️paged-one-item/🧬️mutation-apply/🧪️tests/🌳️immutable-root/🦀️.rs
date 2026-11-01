@@ -22,26 +22,29 @@ impl ImmutableRootProjection for Document{
     fn root_projection_demand(_original:RetainedCloneRef<'_,Self>)->Result<RetirementDemand,ValueError>{
         Ok(RetirementDemand{copy_bytes:size_of::<Self>()*2+size_of::<SealedShared<String>>()+PersistentList::<Node>::projection_demand().copy_bytes,depth:1,..Default::default()})
     }
-    fn project_root(original:RetainedCloneRef<'_,Self>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
+    fn project_root(original:RetainedCloneRef<'_,Self>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<Option<(Self,RetainedCloneProgress)>>{
+        let result=(||->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
         let demand=Self::root_projection_demand(original)?;
         if !retained_clone_grant_admits(grant,demand){return Ok(None);}
         let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-size_of::<Self>()*2,..grant};
-        let Some((nodes,_))=PersistentList::project(original.project(0,|document|&document.nodes),child)?else{return Ok(None);};
-        let(title,_)=original.get().title.try_duplicate(child)?;
+        let Some((nodes,_))=PersistentList::project(original.project(0,|document|&document.nodes),child).result?else{return Ok(None);};
+        let(title,_)=original.get().title.try_duplicate(child).result?;
         Ok(Some((Self{title,nodes},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
+        })();
+        semio_framework_value::RetainedWorkOutcome{work:u64::from(result.is_ok()),result}
     }
 }
 
 pub(super) fn fixture_grant()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096}}
-pub(super) fn seal_text(value:String)->SealedShared<String>{SealedShared::admit(value,SharedIssuer::owned(),fixture_grant()).unwrap_or_else(|_|panic!("paid fixture string birth")).0}
+pub(super) fn seal_text(value:String)->SealedShared<String>{SealedShared::admit(value,SharedIssuer::owned(),fixture_grant()).result.unwrap_or_else(|_|panic!("paid fixture string birth")).0}
 pub(super) fn node_owned(id:String,text:String)->Node{Node{id:seal_text(id),text:seal_text(text)}}
 pub(super) fn list_owned(rows:Vec<Node>)->PersistentList<Node>{
     let mut rows=rows.into_iter();let mut pages=Vec::new();
     loop{
         let mut count=0;
-        let leaf=std::array::from_fn(|_|rows.next().map(|row|{count+=1;SealedShared::admit(row,SharedIssuer::owned(),fixture_grant()).unwrap_or_else(|_|panic!("paid fixture row birth")).0}));
+        let leaf=std::array::from_fn(|_|rows.next().map(|row|{count+=1;SealedShared::admit(row,SharedIssuer::owned(),fixture_grant()).result.unwrap_or_else(|_|panic!("paid fixture row birth")).0}));
         if count==0{break;}
-        pages.push(PersistentList::admit_leaf(leaf,count,fixture_grant()).unwrap_or_else(|_|panic!("paid fixture leaf birth")).0);
+        pages.push(PersistentList::admit_leaf(leaf,count,fixture_grant()).result.unwrap_or_else(|_|panic!("paid fixture leaf birth")).0);
     }
     while pages.len()>1{
         let mut originals=pages.into_iter();let mut parents=Vec::new();
@@ -49,7 +52,7 @@ pub(super) fn list_owned(rows:Vec<Node>)->PersistentList<Node>{
             let mut count=0;
             let children=std::array::from_fn(|_|originals.next().inspect(|_|count+=1));
             if count==0{break;}
-            parents.push(PersistentList::admit_branch(children,fixture_grant()).unwrap_or_else(|_|panic!("paid fixture branch birth")).0);
+            parents.push(PersistentList::admit_branch(children,fixture_grant()).result.unwrap_or_else(|_|panic!("paid fixture branch birth")).0);
         }
         pages=parents;
     }

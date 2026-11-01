@@ -3,7 +3,7 @@ use super::*;
 struct NativeOnlySnapshot;
 impl pack::snapshot::ArtifactPackMetadata for NativeOnlySnapshot{
  const EXTENSION:&'static str="energy";
- fn native_record_spec_producer()->Option<semio_framework_dsl_record::BorrowedRecordSpecProducer>{None}
+ fn native_record_spec_producer()->Option<pack::snapshot::BorrowedRecordSpecProducer>{None}
  fn native_pack_schema_hash()->[u8;32]{[0;32]}
 }
 impl ArtifactStoreSnapshot for NativeOnlySnapshot{}

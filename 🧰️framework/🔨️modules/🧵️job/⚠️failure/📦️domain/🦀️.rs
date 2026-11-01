@@ -112,7 +112,7 @@ impl<T:OriginalDomainFailure> OriginalDomainReservation<T>{
   if !self.ready()||self.pending()||!self.matches(cx)?||cx.should_yield()||cx.is_cancelled()||cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(None)}
   let total=cx.original_total_retained_grant();let fuel=cx.original_total_fuel_remaining();if total.maximum_items<=1||fuel<=1{return Ok(None)}
   let mut grant=cx.retained_grant();grant.maximum_items=grant.maximum_items.min(total.maximum_items-1);
-  let issued=cx.fuel_remaining().min(fuel-1);let deadline=cx.original_absolute_deadline_us();let payload=self.frame.as_mut().expect("ready domain frame").owner.original_mut().expect("unretired domain payload");
+  let issued=cx.fuel_remaining().min(fuel-1);let deadline=cx.original_absolute_deadline_us();let payload=self.frame.as_mut().ok_or_else(||ValueError::invariant("ready domain frame"))?.owner.original_mut().ok_or_else(||ValueError::invariant("unretired domain payload"))?;
   let result=cx.with_retained_loan(grant,|same|same.with_original_work_loan(issued,deadline,|body|run(body,&mut payload.original)));
   match result{Ok(value)=>Ok(Some(value)),Err(failure)=>{payload.callback_refusal=Some(failure);Ok(None)}}
  }
@@ -148,11 +148,11 @@ impl<T:OriginalDomainFailure> RetireOwned for OriginalDomainReservation<T>{
 pub fn admit_original_domain_failure<T:OriginalDomainFailure>(reservation:&mut OriginalDomainReservation<T>,cx:&mut impl OriginalFailureContext)->Result<Option<OriginalTurnFailure>,OriginalTurnFailure>{
  if !reservation.ready()||!reservation.pending()||cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(RetirementDemand{depth:1,..Default::default()}){return Ok(None)}
  if !reservation.matches(cx)?{
-  let payload=reservation.frame.as_mut().expect("pending domain frame").owner.original_mut().expect("pending domain payload");if payload.publication_refusal.is_none(){
-   payload.publication_refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"original domain reservation requires its initiating source").into());let progress=RetainedCloneProgress{copied_items:1,..Default::default()};let receipt=cx.consume_retained(progress).err();cx.consume_fuel(1);let context=cx.original_failure_identity().err();let failure=payload.publication_refusal.as_mut().expect("recorded original source refusal");failure.effects=progress;failure.receipt_refusal=receipt;failure.context_refusal=context;
+  let payload=reservation.frame.as_mut().ok_or_else(||ValueError::invariant("pending domain frame"))?.owner.original_mut().ok_or_else(||ValueError::invariant("pending domain payload"))?;if payload.publication_refusal.is_none(){
+   payload.publication_refusal=Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"original domain reservation requires its initiating source").into());let progress=RetainedCloneProgress{copied_items:1,..Default::default()};let receipt=cx.consume_retained(progress).err();cx.consume_fuel(1);let context=cx.original_failure_identity().err();let failure=payload.publication_refusal.as_mut().ok_or_else(||ValueError::invariant("recorded original source refusal"))?;failure.effects=progress;failure.receipt_refusal=receipt;failure.context_refusal=context;
   }return Ok(None)
  }
- let owner=reservation.frame.take().expect("pending prepaid domain frame");reservation.source=None;cx.consume_fuel(1);
+ let owner=reservation.frame.take().ok_or_else(||ValueError::invariant("pending prepaid domain frame"))?;reservation.source=None;cx.consume_fuel(1);
  let mut failure=OriginalTurnFailure::from(OriginalTurnPrimary::Domain(OriginalDomainPrimary{owner}));
  failure.receipt_refusal=cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()}).err();Ok(Some(failure))
 }

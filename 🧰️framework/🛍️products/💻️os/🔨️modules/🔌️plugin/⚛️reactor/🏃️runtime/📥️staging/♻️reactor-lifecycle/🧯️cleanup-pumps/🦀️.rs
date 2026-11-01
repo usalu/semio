@@ -197,17 +197,8 @@ impl<PA: PluginApp> RuntimeLiveCleanupJob<PA> {
     }
 }
 impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeLiveCleanupJob<PA> {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        if cx.is_cancelled(){
-            if let Some(original)=self.cell.as_ref(){
-                let drained=cx.with_original_native_weak_source(original,|cell,cx|{
-                    let step=runtime_drain_maintenance_source(cell,cx)?;
-                    Ok(matches!(step,PluginLifecycleStep::Complete(progress) if progress==RetainedCloneProgress::default()))
-                })?;
-                if !drained{return Ok(None)}
-            }
-        }
-        semio_framework_plugin_job::reserved_job_outcomes::drive_turn(self, cx)
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_original(cx))
     }
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.publication.borrow_outcome(descriptor)
@@ -238,6 +229,21 @@ impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeLiveCleanupJo
     }
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.cell.is_none() && self.publication.terminal_is_empty()
+    }
+}
+
+impl<PA: PluginApp> RuntimeLiveCleanupJob<PA> {
+    fn step_original<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        if cx.is_cancelled(){
+            if let Some(original)=self.cell.as_ref(){
+                let drained=cx.with_original_native_weak_source(original,|cell,cx|{
+                    let step=runtime_drain_maintenance_source(cell,cx)?;
+                    Ok(matches!(step,PluginLifecycleStep::Complete(progress) if progress==RetainedCloneProgress::default()))
+                })?;
+                if !drained{return Ok(None)}
+            }
+        }
+        semio_framework_plugin_job::reserved_job_outcomes::drive_turn(self, cx)
     }
 }
 /// 🧭️ Drains retained app sources under the persistent actor issuer before retiring its live worker.
@@ -387,19 +393,8 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
     }
 }
 impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJob<PA> {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
-        if cx.is_cancelled(){
-            if let Some(original)=self.state.as_ref(){
-                let drained=cx.with_original_native_weak_source(original,|state,cx|{
-                    let cell=match state.cell.try_lock(){Ok(cell)=>cell,Err(std::sync::TryLockError::WouldBlock)=>return Ok(false),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("cancelled close source is poisoned").into())};
-                    let Some(cell)=cell.as_ref()else{return Ok(true)};
-                    let step=runtime_drain_maintenance_source(cell,cx)?;
-                    Ok(matches!(step,PluginLifecycleStep::Complete(progress) if progress==RetainedCloneProgress::default()))
-                })?;
-                if !drained{return Ok(None)}
-            }
-        }
-        semio_framework_plugin_job::reserved_job_outcomes::drive_turn(self, cx)
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_original(cx))
     }
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.publication.borrow_outcome(descriptor)
@@ -434,6 +429,23 @@ impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJ
     }
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.state.is_none() && self.publication.terminal_is_empty()
+    }
+}
+
+impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
+    fn step_original<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        if cx.is_cancelled(){
+            if let Some(original)=self.state.as_ref(){
+                let drained=cx.with_original_native_weak_source(original,|state,cx|{
+                    let cell=match state.cell.try_lock(){Ok(cell)=>cell,Err(std::sync::TryLockError::WouldBlock)=>return Ok(false),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("cancelled close source is poisoned").into())};
+                    let Some(cell)=cell.as_ref()else{return Ok(true)};
+                    let step=runtime_drain_maintenance_source(cell,cx)?;
+                    Ok(matches!(step,PluginLifecycleStep::Complete(progress) if progress==RetainedCloneProgress::default()))
+                })?;
+                if !drained{return Ok(None)}
+            }
+        }
+        semio_framework_plugin_job::reserved_job_outcomes::drive_turn(self, cx)
     }
 }
 /// 🧯️ The actual close state owns every app rung through cancellation, expiry and physical worker return.

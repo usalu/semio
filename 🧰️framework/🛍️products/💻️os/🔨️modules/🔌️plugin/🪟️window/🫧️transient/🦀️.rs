@@ -13,6 +13,7 @@ use semio_framework_plugin_window_config_mutation::ErasedWindowMutationValue;
 use semio_framework_value::{FactoryBoxedValue,FactoryBoxedPublication,retirement::controlled::ControlledRetirement};
 use std::collections::BTreeMap;
 use std::sync::Arc;
+fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
 
 fn next_key<K: Ord + Clone, V>(map: &BTreeMap<K, V>, cursor: Option<&K>) -> Option<K> {
     cursor.and_then(|cursor| map.range((std::ops::Bound::Excluded(cursor), std::ops::Bound::Unbounded)).next().map(|(key, _)| key.clone())).or_else(|| map.keys().next().cloned())
@@ -286,7 +287,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
     fn capture_original_header(&self,window_id:&str,document_generation:u64,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<WindowTransientAuthority>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let partition=self.partitions.get(window_id).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"native Window transient capture requires an already admitted original partition"))?;
         let copy=2*size_of::<WindowTransientAuthority>()+size_of::<WindowTransientSnapshot>();
-        semio_framework_job::admit_original_construction(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:0,release_bytes:0,depth:1},|_|{let snapshot=partition.store.current_read_original()?.into_erased();let generation=partition.store.generation_now();Ok((WindowTransientAuthority{window_id:String::new(),window_kind_id:String::new(),generation,snapshot:WindowTransientSnapshot{window_id:String::new(),window_kind_id:O::WINDOW_KIND_ID,generation,document_generation,snapshot},pending_snapshot:None,retired_snapshots:Default::default()},RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))})
+        built(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:0,release_bytes:0,depth:1},||{let snapshot=partition.store.current_read_original()?.into_erased();let generation=partition.store.generation_now();Ok((WindowTransientAuthority{window_id:String::new(),window_kind_id:String::new(),generation,snapshot:WindowTransientSnapshot{window_id:String::new(),window_kind_id:O::WINDOW_KIND_ID,generation,document_generation,snapshot},pending_snapshot:None,retired_snapshots:Default::default()},RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))})
     }
 
     fn capture(&mut self, window_id: &str, document_generation: u64) -> Result<WindowTransientAuthority, Fault> {
@@ -421,7 +422,7 @@ impl<O: WindowTransientOwner> ErasedWindowTransientStoreOwner for TypedWindowTra
         }
         let slot = self.factory_close.iter_mut().find(|slot| slot.is_some()).expect("original transient issuer retirement remains");
         let factory = slot.as_mut().unwrap();
-        let step = factory.step(grant).map_err(|error| Fault::from(error.into_message()))?;
+        let step = factory.step(grant).result.map_err(|error| Fault::from(error.into_message()))?;
         if factory.terminal_is_empty() { *slot = None; }
         Ok(PluginLifecycleStep::retained(step, self.terminal_is_empty()))
     }

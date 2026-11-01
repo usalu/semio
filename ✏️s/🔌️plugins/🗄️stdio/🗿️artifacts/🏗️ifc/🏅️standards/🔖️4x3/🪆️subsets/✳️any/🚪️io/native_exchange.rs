@@ -9,40 +9,21 @@ use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::{io as glt
 use std::sync::OnceLock;
 use semio_framework_os_kernel::io::{io_mechanism::{self, ArchiveChildren, Deserializer, IoEntry, IoRunControl, Serializer}, io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult}};
 use pack::snapshot::{ArtifactNativeSnapshot, NativeSnapshotEncoding, NativeSnapshotInput};
+use semio_s_artifact_stdio_ifc4x3_step as io;
+mod validation {
+    pub use semio_s_artifact_stdio_ifc4x3_express::metadata;
+}
 #[path="native_pack.rs"]
-mod original_pack;
+pub mod original_pack;
 #[path = "native-gltf-owned.rs"]
 mod gltf_owned;
 
 #[path = "native_gltf.rs"]
-mod projection;
+pub mod projection;
 #[path = "native_graph.rs"]
-mod graph;
+pub mod graph;
 #[path = "native_bim.rs"]
 pub mod bim;
-#[path = "native_fem.rs"]
-pub mod fem;
-#[path = "native_fem_owned.rs"]
-mod fem_owned;
-#[path = "native_fem_build.rs"]
-mod fem_build;
-#[cfg(test)]
-#[path = "fem/nodal/native-support.rs"]
-mod nodal_support;
-#[cfg(test)]
-#[path = "fem/self-weight/native-exchange-tests.rs"]
-mod self_weight_tests;
-#[cfg(test)]
-#[path = "fem/nodal/native-export-tests.rs"]
-mod nodal_export_tests;
-#[cfg(test)]
-#[path = "fem/nodal/native-tests.rs"]
-mod fem_nodal_tests;
-#[cfg(test)]
-#[path="🧪️tests/native_fem_owned.rs"]
-mod fem_owned_tests;
-#[path = "native_domains.rs"]
-pub mod domains;
 pub use projection::{gltf_to_ifc_controlled, ifc_to_gltf_controlled};
 
 pub const GLTF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
@@ -59,16 +40,16 @@ impl std::fmt::Display for ExchangeError {
 }
 impl std::error::Error for ExchangeError {}
 
-fn error(code: &'static str, message: impl Into<String>) -> ExchangeError { ExchangeError { code, message: message.into() } }
-fn checkpoint(control: &mut dyn FnMut(ExchangeProgress) -> bool, phase: &'static str, completed: usize, total: usize) -> Result<(), ExchangeError> {
+pub fn error(code: &'static str, message: impl Into<String>) -> ExchangeError { ExchangeError { code, message: message.into() } }
+pub fn checkpoint(control: &mut dyn FnMut(ExchangeProgress) -> bool, phase: &'static str, completed: usize, total: usize) -> Result<(), ExchangeError> {
     if control(ExchangeProgress { phase, completed, total }) { Ok(()) } else { Err(error("exchange.cancelled", "Geometry exchange cancelled; no artifact published")) }
 }
-fn loss(message: impl Into<String>) -> Diagnostic {
+pub fn loss(message: impl Into<String>) -> Diagnostic {
     let mut value = Diagnostic::error("exchange.geometry-only", TextSpan::default(), message);
     value.severity = Severity::Warning;
     value
 }
-fn composition_error(value: impl std::fmt::Display) -> ComposeError { ComposeError { message: value.to_string(), diagnostics: vec![] } }
+pub fn composition_error(value: impl std::fmt::Display) -> ComposeError { ComposeError { message: value.to_string(), diagnostics: vec![] } }
 
 /// 📤 Native IFC4x3 snapshot packs and ADD2 source compose into real glTF snapshot packs.
 pub struct IfcToGltf;
@@ -184,14 +165,15 @@ impl Deserializer<IfcSnapshot> for GlbIntoIfcNative {
     async fn deserialize(payload:&IoPayload,control:&mut IoRunControl<'_,'_>)->IoResult<IfcSnapshot>{gltf_owned::import_payload(payload,true,control)}
 }
 
-/// 📡 Controlled host routes have explicit lossy fidelity and publish target-owned native artifact packs.
+/// 📡 Controlled host routes of the glTF, GLB and UTF-8 STEP carriers have explicit lossy fidelity and publish target-owned native artifact packs; the domain exchanges extend this list in their own crate.
+pub fn base_io_entries()->Vec<IoEntry> {
+    vec![original_pack::serializer::<IfcIntoGltfNative>(),original_pack::deserializer::<GltfIntoIfcNative>(),original_pack::serializer::<IfcIntoGlb>(),original_pack::deserializer::<GlbIntoIfcNative>(),original_pack::serializer::<crate::io::Ifc4x3IntoTxtNative>(),original_pack::deserializer::<crate::io::TxtIntoIfc4x3Native>()]
+}
+
+/// 📡 The memoized carrier routes.
 pub fn io_entries()->&'static[IoEntry] {
     static ENTRIES:OnceLock<Vec<IoEntry>>=OnceLock::new();
-    ENTRIES.get_or_init(||{
-        let mut entries=vec![original_pack::serializer::<IfcIntoGltfNative>(),original_pack::deserializer::<GltfIntoIfcNative>(),original_pack::serializer::<IfcIntoGlb>(),original_pack::deserializer::<GlbIntoIfcNative>(),original_pack::serializer::<crate::io::Ifc4x3IntoTxtNative>(),original_pack::deserializer::<crate::io::TxtIntoIfc4x3Native>()];
-        entries.extend(domains::io_entries());
-        entries
-    }).as_slice()
+    ENTRIES.get_or_init(base_io_entries).as_slice()
 }
 
 /// 📇 Native composition registry routes publish target-owned artifact packs.
@@ -203,3 +185,9 @@ pub fn entries() -> &'static [ComposerEntry] {
 #[cfg(test)]
 #[path = "🧪️tests/native_exchange.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🧪️tests/native_step_entry.rs"]
+mod step_entry_tests;
+#[cfg(test)]
+#[path = "🧪️tests/native_step_import_entry.rs"]
+mod step_import_entry_tests;

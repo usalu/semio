@@ -8218,6 +8218,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-plugin-abi",
  "semio-framework-plugin-reactor-lifecycle",
+ "semio-framework-plugin-testing-caller",
  "semio-framework-trace",
  "semio-framework-ui-contract",
  "semio-framework-ui-runtime",
@@ -10634,6 +10635,7 @@ dependencies = [
  "semio-s-artifact-draw-drawing-model",
  "semio-s-artifact-draw-drawing-mutations",
  "semio-s-artifact-draw-drawing-scene",
+ "semio-s-artifact-draw-drawing-scene-paint",
  "semio-s-artifact-draw-drawing-structure",
  "semio-s-artifact-draw-drawing-transform",
  "semio-s-artifact-draw-drawing-write",
@@ -10727,6 +10729,7 @@ dependencies = [
  "semio-s-artifact-draw-drawing-model",
  "semio-s-artifact-draw-drawing-mutations",
  "semio-s-artifact-draw-drawing-scene",
+ "semio-s-artifact-draw-drawing-scene-paint",
  "semio-s-artifact-draw-drawing-structure",
 ]
 
@@ -10772,6 +10775,7 @@ dependencies = [
  "semio-s-artifact-draw-drawing-model",
  "semio-s-artifact-draw-drawing-mutations",
  "semio-s-artifact-draw-drawing-scene",
+ "semio-s-artifact-draw-drawing-scene-paint",
  "semio-s-artifact-draw-drawing-structure",
  "semio-s-artifact-draw-drawing-transform",
 ]
@@ -10991,6 +10995,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-draw-drawing-scene-paint"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d",
+ "semio-framework-job",
+ "semio-framework-value",
+ "semio-framework-value-persistent",
+ "semio-s-artifact-draw-drawing-geometry",
+ "semio-s-artifact-draw-drawing-model",
+ "semio-s-artifact-draw-drawing-scene",
+]
+
+[[package]]
 name = "semio-s-artifact-draw-drawing-structure"
 version = "0.1.0"
 dependencies = [
@@ -11067,6 +11084,7 @@ dependencies = [
  "semio-s-artifact-draw-drawing-io",
  "semio-s-artifact-draw-drawing-model",
  "semio-s-artifact-draw-drawing-scene",
+ "semio-s-artifact-draw-drawing-scene-paint",
  "semio-s-artifact-stdio-deflate",
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-semio-base",
@@ -15834,7 +15852,10 @@ dependencies = [
  "semio-s-artifact-stdio-pdf-diff",
  "semio-s-artifact-stdio-pdf-graph-projection",
  "semio-s-artifact-stdio-pdf-inferences",
+ "semio-s-artifact-stdio-pdf-lift",
+ "semio-s-artifact-stdio-pdf-lower",
  "semio-s-artifact-stdio-pdf-mut-base-2",
+ "semio-s-artifact-stdio-pdf-mut-family-11",
  "semio-s-artifact-stdio-pdf-mut-family-8",
  "semio-s-artifact-stdio-pdf-snapshot-2",
  "semio-s-artifact-stdio-pdf-tests-2",

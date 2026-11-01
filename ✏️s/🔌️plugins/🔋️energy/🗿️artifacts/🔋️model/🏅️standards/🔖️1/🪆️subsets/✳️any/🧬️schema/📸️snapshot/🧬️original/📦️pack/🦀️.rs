@@ -14,7 +14,7 @@ pub fn source(state:&EnergyModelSnapshot)->(&dyn FieldProjectionSource,BorrowedR
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"native Energy intrinsic Pack projection differs from its declared source")}
 
 impl semio_framework_dsl_record::receiving::owned::NativeIntrinsicRecord for EnergyModelSnapshot{const INTRINSIC_FIELD_ID:u16=1;}
-impl semio_framework_dsl_record::receiving::owned::DslOwnedReceivingField for EnergyModelSnapshot{type Cursor=semio_framework_dsl_record::receiving::owned::NativeIntrinsicReceiving<Self>;}
+impl semio_framework_dsl_record::receiving::owned::DslOwnedReceivingField for EnergyModelSnapshot{type Cursor=semio_framework_dsl_record::receiving::owned::NativeIntrinsicReceiving<Self>;fn receiving_cursor()->Self::Cursor{Default::default()}}
 impl semio_framework_dsl_record::receiving::owned::DslOwnedReceivingRecord for EnergyModelSnapshot{}
 
 /// 🔏️ Digest of the authored one-field intrinsic Record graph, checked against the defining borrowed schema hasher.

@@ -19,12 +19,12 @@ pub struct NoTransientRetirementFactory;
 
 impl store::SnapshotRetirementFactory<NoTransient> for NoTransientRetirementFactory {
     fn retirement_birth_bytes(&self, _: &Arc<NoTransient>) -> usize { semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<NoTransient>() }
-    fn retire(&self, root: Arc<NoTransient>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<NoTransient>)> { semio_framework_value::retirement::arc_custody::admit_shared_retirement(root, grant, true) }
+    fn retire(&self, root: Arc<NoTransient>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<NoTransient>)> { semio_framework_value::retirement::arc_custody::admit_shared_retirement(root, grant, true) }
 }
 
 impl store::ArtifactOwnedValueRetirementFactory<NoTransient> for NoTransientRetirementFactory {
     fn retirement_birth_bytes(&self, _: &NoTransient) -> usize { semio_framework_value::retirement::owned_retirement_birth_bytes::<NoTransient>() }
-    fn retire_owned(&self, root: NoTransient, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, NoTransient)> { semio_framework_value::retirement::admit_owned_retirement(root, grant) }
+    fn retire_owned(&self, root: NoTransient, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, NoTransient)> { semio_framework_value::retirement::admit_owned_retirement(root, grant) }
 }
 
 pub fn no_transient_store_disposer() -> Box<dyn ArtifactOwnedDisposer<Store>> {

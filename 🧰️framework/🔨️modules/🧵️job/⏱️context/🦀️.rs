@@ -203,13 +203,11 @@ impl<'a> StepContext<'a> {
     }
     pub fn consume_receiving_retained(&mut self,grant:RetainedCloneGrant,progress:RetainedCloneProgress)->Result<(),ValueError>{let original=self.receiving_issued.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"semantic receipt lacks its original receiving scope"))?;if grant.maximum_items>original.maximum_items||grant.maximum_copy_bytes>original.maximum_copy_bytes||grant.maximum_capacity_bytes>original.maximum_capacity_bytes||grant.maximum_release_bytes>original.maximum_release_bytes||grant.maximum_depth>original.maximum_depth||!progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"semantic receipt differs from original receiving grant").with_retained_progress(progress))}let child=std::mem::take(&mut self.receiving_spent);let mismatch=||ValueError::literal(ValueRefusalKind::InvariantViolated,"semantic receipt omitted accepted original construction spend").with_retained_progress(progress);let delta=RetainedCloneProgress{copied_items:progress.copied_items.checked_sub(child.copied_items).ok_or_else(mismatch)?,copied_bytes:progress.copied_bytes.checked_sub(child.copied_bytes).ok_or_else(mismatch)?,retained_capacity_bytes:progress.retained_capacity_bytes.checked_sub(child.retained_capacity_bytes).ok_or_else(mismatch)?,released_bytes:progress.released_bytes.checked_sub(child.released_bytes).ok_or_else(mismatch)?};self.consume_retained(delta)}
     pub fn new(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, preview_sequence: &'a mut u64,retained_progress:&'a mut RetainedCloneProgress) -> StepContext<'a> {
-        StepContext::with_payload_ledger(operation, generation, budget, cancel, now_us, ClockStride::new(), preview_sequence, Arc::new(JobPayloadOperationLedger::new(operation, generation)),retained_progress)
+        StepContext::with_payload_ledger(budget, cancel, now_us, ClockStride::new(), preview_sequence, Arc::new(JobPayloadOperationLedger::new(operation, generation)),retained_progress)
     }
 
-    #[allow(clippy::too_many_arguments)]
-    fn with_payload_ledger(operation: OperationId, generation: Generation, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, clock: ClockStride, preview_sequence: &'a mut u64, payload_ledger: Arc<JobPayloadOperationLedger>,retained_progress:&'a mut RetainedCloneProgress) -> StepContext<'a> {
-        assert_eq!(payload_ledger.operation, operation, "job payload ledger operation must match its step context");
-        assert_eq!(payload_ledger.generation, generation, "job payload ledger generation must match its step context");
+    fn with_payload_ledger(budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, clock: ClockStride, preview_sequence: &'a mut u64, payload_ledger: Arc<JobPayloadOperationLedger>,retained_progress:&'a mut RetainedCloneProgress) -> StepContext<'a> {
+        let (operation, generation) = (payload_ledger.operation, payload_ledger.generation);
         assert!(retained_progress.fits(budget.retained),"original job recipient exceeds its incoming retained grant");
         StepContext { original_decoder:None,receiving_spent:Default::default(),receiving_issued:None,retained:budget.retained, retained_progress, operation, generation, fuel_remaining: budget.fuel,original_total_fuel:budget.fuel,original_total_work_start:0,original_absolute_deadline:budget.deadline_us,original_total_retained:budget.retained,
             work_units_spent:0, deadline_us: budget.deadline_us, now_us, clock: std::cell::Cell::new(clock), cancel:StepCancelReference::Owned(cancel), stage: "initial", preview_sequence, payload_ledger:JobPayloadLedgerReference::Owned(payload_ledger), source_parent:None,return_budget:None,reserved_return_progress:Default::default(),reserved_return_work:0,native_weak_parent:None,source_epoch:None,original_retirement:false,original_clock_binding:None,original_work_recipient:None,original_total_retained_start:Default::default(),retained_policy:None,original_physical_recipient:None, payload_page_granted: false }
@@ -487,6 +485,8 @@ pub mod testkit {
     pub fn set_cancel_receipt_refusal(value:bool){NEXT_CANCEL_REFUSAL.with(|flag|flag.set(value))}
     pub(crate) fn narrow_loan_receipt(cx:&mut StepContext<'_>){if NEXT_LOAN_REFUSAL.with(|flag|flag.replace(false)){cx.retained.maximum_items=cx.retained_progress().copied_items}}
     pub(crate) fn narrow_cancel_receipt(cx:&mut StepContext<'_>){if NEXT_CANCEL_REFUSAL.with(|flag|flag.replace(false)){cx.retained_policy=Some((RetainedCloneGrant{maximum_items:0,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:0},cx.retained_progress()))}}
+    /// 🔁️ Opens the next fixture turn on one long-lived context: production builds a fresh context, with a fresh one-page payload grant, for every reactor turn.
+    pub fn renew_payload_page_grant(cx:&mut StepContext<'_>){cx.payload_page_granted=false}
     /// 👶️ Reads the defining child's actual ready, closing and initiating identity fields.
     pub fn child_source_status(child:&OriginalCallerChildSource)->(bool,bool,usize,OriginalSourceBinding){child.test_status()}
     /// 🪙️ Reads the genuine parent's currently borrowable source ledger.
@@ -530,8 +530,6 @@ pub mod testkit {
 
     pub fn payload_ledger(operation:OperationId,generation:Generation)->Arc<JobPayloadOperationLedger>{Arc::new(JobPayloadOperationLedger::new(operation,generation))}
     pub fn payload_ledger_terminal_is_empty(ledger:&JobPayloadOperationLedger)->bool{ledger.terminal_is_empty()}
-    #[allow(clippy::too_many_arguments)]
-    pub fn step_context_with_payload_ledger<'a>(operation:OperationId,generation:Generation,budget:StepBudget,cancel:CancelToken,now_us:fn()->Option<u64>,clock:ClockStride,preview_sequence:&'a mut u64,payload_ledger:Arc<JobPayloadOperationLedger>,retained_progress:&'a mut RetainedCloneProgress)->StepContext<'a>{StepContext::with_payload_ledger(operation,generation,budget,cancel,now_us,clock,preview_sequence,payload_ledger,retained_progress)}
     pub fn ledger_demands(ledger:&Option<Arc<JobPayloadOperationLedger>>)->RetirementDemand{payload_retirement::ledger_demands(ledger)}
     pub fn close_ledger(ledger:&mut Option<Arc<JobPayloadOperationLedger>>,grant:RetainedCloneGrant)->semio_framework_value_retained_clone::RetainedWorkOutcome{payload_retirement::close_ledger(ledger,grant)}
 }

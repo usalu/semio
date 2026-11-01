@@ -49,7 +49,7 @@ pub(super) fn input(name: &str, bits: u64) -> Fem3dSnapshotValue {
     source.load_cases = vec![FemLoadCase { id: "case".into(), name: "Case".into(), loads: vec![FemLoad::Nodal { id: "native-zero".into(), node_id: "b".into(), dof: dof(name), value: f64::from_bits(bits) }], self_weight: false }];
     source
 }
-pub(super) fn retire<T: RetireOwned>(value: T) {
+pub(super) fn retire<T: semio_framework_value::retirement::RetireOwned>(value: T) {
     let mut owner = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).ok().unwrap();
     for _ in 0..1_000_000 {
         if owner.terminal_is_empty() {

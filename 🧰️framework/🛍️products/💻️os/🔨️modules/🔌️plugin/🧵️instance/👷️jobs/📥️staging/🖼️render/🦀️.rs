@@ -26,13 +26,15 @@ use crate::jobs_instance_root::{OriginalRenderInteractionStamp, original_render_
 pub mod work;
 
 impl<A: ArtifactApp> PendingReserved<A> {
-    pub fn render_failure_terminal_is_empty(&self)->bool{self.pending_render_work.is_none()&&self.pending_render_source.is_none()&&self.pending_render_tree.is_none()&&self.pending_render_tree_close.is_none()&&self.pending_render_tree_identity.is_none()&&self.pending_render_failure.is_none()&&self.pending_render_close_failure.is_none()&&self.pending_render_compound.is_none()&&self.pending_render_retirement.is_none()&&self.pending_render_identity.is_none()}
+    pub fn render_failure_terminal_is_empty(&self)->bool{self.pending_render_work.is_none()&&self.pending_render_source.is_none()&&self.pending_render_tree.is_none()&&self.pending_render_tree_close.is_none()&&self.pending_render_tree_identity.is_none()&&self.pending_render_failure.is_none()&&self.pending_render_close_failure.is_none()&&self.pending_render_compound.is_none()&&self.pending_render_failure_place.is_none()&&self.pending_render_compound_place.is_none()&&self.pending_render_retirement.is_none()&&self.pending_render_identity.is_none()}
 
     pub fn render_failure_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if let Some(work)=self.pending_render_work.as_ref(){return work.demand(body)}
         if let Some(source)=self.pending_render_source.as_ref(){return source.demand(body)}
         if self.pending_render_tree.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         if let Some(tree)=self.pending_render_tree_close.as_ref(){return tree.next_demand(body)}
+        if let Some(place)=self.pending_render_failure_place.as_ref(){return place.retirement_demands(body)}
+        if let Some(place)=self.pending_render_compound_place.as_ref(){return place.retirement_demands(body)}
         if self.pending_render_close_failure.is_some()||self.pending_render_compound.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         if let Some(owner)=self.pending_render_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.selected_demand(body)}}
         if self.pending_render_failure.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
@@ -47,7 +49,15 @@ impl<A: ArtifactApp> PendingReserved<A> {
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|cx,grant|{
             if let Some(owner)=self.pending_render_retirement.as_mut(){
                 if owner.terminal_is_empty(){drop(self.pending_render_retirement.take());self.pending_render_identity=None;self.pending_render_tree_identity=None;return Ok((PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}),true))}
-                let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
+                let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:1}})?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
+            }
+            if let Some(place)=self.pending_render_failure_place.as_mut(){
+                if place.terminal_is_empty(){*self.pending_render_failure_place=None;return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}
+                let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|place.close_step(grant))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
+            }
+            if let Some(place)=self.pending_render_compound_place.as_mut(){
+                if place.terminal_is_empty(){*self.pending_render_compound_place=None;return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))}
+                let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|place.close_step(grant))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
             }
             if let Some(source)=self.pending_render_failure.take(){
                 match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(owner)=>{*self.pending_render_retirement=Some(owner);Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}),false))},Err((failure,source))=>{*self.pending_render_failure=Some(source);Err(failure.into())}}
@@ -76,7 +86,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
         if let Some(body)=self.pending_render_tree_close.as_mut(){
             if !body.terminal_is_empty(){
                 let demand=body.next_demand(cx.retained_grant().maximum_copy_bytes)?;
-                semio_framework_job::close_original_retained_step(cx,demand,|grant|body.step(grant))?;
+                semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=body.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
                 return Ok(Some(false));
             }
             let grant=cx.retained_grant();
@@ -125,13 +135,13 @@ impl<A: ArtifactApp> PendingReserved<A> {
     }
 
     pub(crate) fn prepare_render_closure_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        if self.pending_render_compound.is_some(){
-            if let Some(original)=semio_framework_job::admit_original_domain_failure(&mut self.pending_render_compound,cx)?{assert!(self.pending_render_failure.is_none());*self.pending_render_failure=Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(original));}
-            return Ok(self.pending_render_compound.is_none());
+        if self.pending_render_compound.is_some()||self.pending_render_compound_place.is_some(){
+            if let Some(original)=crate::jobs_components::admit_pending_domain_failure(&mut *self.pending_render_compound,&mut *self.pending_render_compound_place,cx)?{assert!(self.pending_render_failure.is_none());*self.pending_render_failure=Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(original));}
+            return Ok(self.pending_render_compound.is_none()&&self.pending_render_compound_place.is_none());
         }
         if self.pending_render_close_failure.is_none(){return Ok(true)}
         if !matches!(self.pending_render_failure.as_ref(),Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(_))){
-            if let Some(original)=semio_framework_job::admit_original_domain_failure(&mut self.pending_render_failure,cx)?{*self.pending_render_failure=Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(original));}
+            if let Some(original)=crate::jobs_components::admit_pending_domain_failure(&mut *self.pending_render_failure,&mut *self.pending_render_failure_place,cx)?{*self.pending_render_failure=Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(original));}
             return Ok(false);
         }
         let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
@@ -142,7 +152,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
     }
 
     pub fn receive_render_failure(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        if self.pending_render_failure.is_none()&&self.pending_render_compound.is_none()&&self.pending_render_close_failure.is_none(){return Ok(false)}
+        if self.pending_render_failure.is_none()&&self.pending_render_failure_place.is_none()&&self.pending_render_compound.is_none()&&self.pending_render_compound_place.is_none()&&self.pending_render_close_failure.is_none(){return Ok(false)}
         if !self.prepare_render_closure_failure(cx)?{return Ok(true)}
         match self.close_pending_render_tree_on_original(cx){Ok(Some(true))=>{},Ok(_)=>return Ok(true),Err(failure)=>{self.retain_render_closure_failure(failure, cx);return Ok(true)}}
         if matches!(self.pending_render_failure.as_ref(),Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(_))){
@@ -152,7 +162,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
             cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Err(failure);
         }
         if self.pending_render_identity!=Some((cx.operation(),cx.generation())){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending render domain requires its unchanged initiating source identity").into())}
-        if let Some(failure)=semio_framework_job::admit_original_domain_failure(&mut self.pending_render_failure,cx)?{self.pending_render_identity=None;self.pending_render_tree_identity=None;return Err(failure)}
+        if let Some(failure)=crate::jobs_components::admit_pending_domain_failure(&mut *self.pending_render_failure,&mut *self.pending_render_failure_place,cx)?{self.pending_render_identity=None;self.pending_render_tree_identity=None;return Err(failure)}
         Ok(true)
     }
 }

@@ -36,7 +36,7 @@ impl MediaRetireOwned for IntrinsicMediaEncoding {
 impl MediaRetirementCursor for IntrinsicMediaEncoding {
     fn next_demand(&self,body:usize)->Result<RetirementDemand,MediaValueError>{self.demand(body)}
     fn close_step(&mut self, grant: MediaGrant) -> MediaRetirementStep {
-        match self.close(grant) { Ok(step) => if self.empty() && step.progress() == MediaProgress::default() { MediaRetirementStep::Complete } else { MediaRetirementStep::Progress(step.progress()) }, Err(error) => MediaRetirementStep::Failure(error) }
+        match self.close(grant) { Ok(step) => if self.empty() && step.progress() == MediaProgress::default() { MediaRetirementStep::Complete(0) } else { MediaRetirementStep::Progress(step.progress(),1) }, Err(error) => MediaRetirementStep::Failure(error,0) }
     }
     fn terminal_is_empty(&self) -> bool { self.empty() }
     fn next_depth_demand(&self) -> Result<usize, MediaValueError> { Ok(self.demand(0)?.depth) }

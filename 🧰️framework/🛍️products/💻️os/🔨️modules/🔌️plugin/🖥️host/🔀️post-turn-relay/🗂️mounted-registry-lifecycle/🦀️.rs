@@ -91,7 +91,7 @@ impl GuestRelayMountedRegistry {
         None
     }
 
-    pub(super) fn mount(&self, index: usize, generation: u64, mut owner: GuestRelayMountedOwner) {
+    pub(super) fn mount(&self, index: usize, generation: u64, owner: GuestRelayMountedOwner) {
         let mut slot = self.slots[index].lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let reserved = std::mem::replace(&mut *slot, GuestRelayMountedSlot::Empty);
         let GuestRelayMountedSlot::Reserved { generation: reserved_generation, output } = reserved else {
@@ -102,9 +102,6 @@ impl GuestRelayMountedRegistry {
             debug_assert!(false, "mounted relay generation must match its reserved output owner");
             *slot = GuestRelayMountedSlot::Reserved { generation: reserved_generation, output };
             return;
-        }
-        if self.reaper_failed.load(std::sync::atomic::Ordering::Acquire){
-            if let GuestRelayMountedOwner::Rejected(rejected)=&mut owner{Self::close_rejected(rejected);}
         }
         *slot =
             GuestRelayMountedSlot::Mounted(GuestRelayMountedSession { wake:GuestRelayWakeCustody::new(), generation, owner, checked_out: None, lifecycle_probe_checked_out: None, outcome_stage: GuestRelayOutcomeStage::Idle, outcome_kind: GuestRelayOutcomeKind::Continues, outcome_page: 0, output, terminal: None, lifecycle: GuestRelayMountedLifecycle::Running });
@@ -122,14 +119,16 @@ impl GuestRelayMountedRegistry {
             } else if let Some(owner) = session.lifecycle_probe_checked_out.take() {
                 owner.begin_close();
             } else {
-                match &session.owner {
+                match &mut session.owner {
                     GuestRelayMountedOwner::Session(owner) => {
                         let _ = owner.begin_close();
                     }
                     GuestRelayMountedOwner::LifecycleProbe(owner) => {
                         let _ = owner.begin_close();
                     }
-                    GuestRelayMountedOwner::Rejected(_) | GuestRelayMountedOwner::Empty => {}
+                    GuestRelayMountedOwner::Admitting(owner) => owner.begin_close(),
+                    GuestRelayMountedOwner::AdmittingProbe(owner) => owner.begin_close(),
+                    GuestRelayMountedOwner::Empty => {}
                 }
             }
             session.lifecycle = GuestRelayMountedLifecycle::DetachedForReap;
@@ -165,10 +164,6 @@ impl GuestRelayMountedRegistry {
 
     fn fail_detached(&self) {
         self.reaper_failed.store(true,std::sync::atomic::Ordering::Release);
-    }
-
-    fn close_rejected(owner:&mut GuestRelayRefusedSource<GuestColdRelayJob>){
-        owner.begin_close();
     }
 
     pub(super) fn reap_one(&self, waker: &std::task::Waker) -> GuestRelayMountedReap {

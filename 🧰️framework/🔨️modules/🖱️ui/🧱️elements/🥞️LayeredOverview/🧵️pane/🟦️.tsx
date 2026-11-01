@@ -198,24 +198,27 @@ function zoomTrigger(node: EventTarget | null, host: HTMLElement): Element | nul
 }
 
 /** 🃏️ The stable host of one card: the pointer zooms its page only while it is over the card's explore control
- * (`data-layered-zoom`); keyboard focus anywhere in the card reveals the page, and leaving that focus conceals it. The card
- * itself is the app's. Memoized, so a reveal re-renders only the two cards whose state changed. A pointer hover conceals
+ * (`data-layered-zoom`) and only centers the level on it; pressing that control (pointer or Enter/Space) turns the page clear until release. Keyboard focus anywhere in the card centers the level, and leaving that focus conceals it. The card
+ * itself is the app's. Memoized, so a reveal re-renders only the two cards whose state changed. A pointer press conceals
  * the other hosts without rendering them again, and marks each one `data-concealed`: the slot and the hit target stay,
- * and a survey of the page treats the host as unseen, so a pet that stood on that card falls. The hovered card is marked `data-tinted` and wears the veil's wash. */
+ * and a survey of the page treats the host as unseen, so a pet that stood on that card falls. The pressed card is marked `data-tinted` and wears the veil's wash. */
 export const LayeredCardHost = /* @__PURE__ */ React.memo(function LayeredCardHost(props: {
   readonly pane: LayeredPane;
   readonly mode: LayeredMode;
   readonly revealed: boolean;
+  readonly cleared: boolean;
   readonly source: LayeredRevealSource | null;
   readonly zoomHold: React.MutableRefObject<LayeredZoomHold | null>;
   readonly onOpen: (id: string) => void;
   readonly onReveal: (id: string, source: LayeredRevealSource) => void;
   readonly onConceal: (id: string) => void;
+  readonly onPress: (id: string, source: LayeredRevealSource) => void;
+  readonly onRelease: () => void;
   readonly onElement: (id: string, element: HTMLElement | null) => void;
   readonly renderCard: LayeredOverviewProps["renderCard"];
   readonly placement: { readonly onCell: React.RefCallback<HTMLDivElement> | undefined; readonly style: React.CSSProperties | undefined } | null;
 }): React.ReactElement {
-  const { pane, onOpen, onElement, onReveal, onConceal, zoomHold } = props;
+  const { pane, onOpen, onElement, onReveal, onConceal, onPress, onRelease, zoomHold } = props;
   const open = React.useCallback(() => onOpen(pane.id), [onOpen, pane.id]);
   const onCell = props.placement?.onCell;
   const ref = React.useCallback((element: HTMLDivElement | null) => { onElement(pane.id, element); onCell?.(element); }, [onElement, pane.id, onCell]);
@@ -225,6 +228,7 @@ export const LayeredCardHost = /* @__PURE__ */ React.memo(function LayeredCardHo
       data-layered-card={pane.id}
       data-revealed={props.revealed ? "" : undefined}
       data-reveal={props.source ?? undefined}
+      data-cleared={props.cleared ? "" : undefined}
       data-layered-cell={props.placement === null ? undefined : pane.id}
       className={props.placement === null ? "contents" : "pointer-events-none flex min-h-0 min-w-0 items-center-safe justify-center overflow-y-auto px-[36px] [:where(&)_*]:touch-pinch-zoom"}
       style={props.placement?.style}
@@ -244,12 +248,27 @@ export const LayeredCardHost = /* @__PURE__ */ React.memo(function LayeredCardHo
         if (!leavingHost && (from === null || to !== null)) return;
         const decision = layeredZoomOut(zoomHold.current);
         zoomHold.current = decision.hold;
+        onRelease();
         if (decision.conceal) onConceal(pane.id);
       }}
+      onPointerDown={(event) => {
+        if (event.pointerType !== "mouse" || event.button !== 0 || zoomTrigger(event.target, event.currentTarget) === null) return;
+        onPress(pane.id, "pointer");
+      }}
+      onPointerUp={onRelease}
+      onPointerCancel={onRelease}
+      onKeyDown={(event) => {
+        if ((event.key === "Enter" || event.key === " ") && !event.repeat && zoomTrigger(event.target, event.currentTarget) !== null) onPress(pane.id, "focus");
+      }}
+      onKeyUp={(event) => (event.key === "Enter" || event.key === " ") && onRelease()}
       onFocus={(event) => focusVisible(event.target) && onReveal(pane.id, "focus")}
-      onBlur={(event) => !event.currentTarget.contains(event.relatedTarget as Node | null) && onConceal(pane.id)}
+      onBlur={(event) => {
+        if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+        onRelease();
+        onConceal(pane.id);
+      }}
     >
-      {props.renderCard(pane, { mode: props.mode, revealed: props.revealed, opened: false, open })}
+      {props.renderCard(pane, { mode: props.mode, revealed: props.revealed, cleared: props.cleared, opened: false, open })}
     </div>
   );
 });

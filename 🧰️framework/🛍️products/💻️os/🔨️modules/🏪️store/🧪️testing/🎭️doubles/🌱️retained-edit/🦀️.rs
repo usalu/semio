@@ -124,13 +124,13 @@ impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValu
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if self.active_retirement.is_some() {
-            let step = artifact_retirement_box_close_step(&mut self.active_retirement, child)?;
+            let step = artifact_retirement_box_close_step(&mut self.active_retirement, child).result?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if self.semantic_refusal.is_some() { return artifact_retirement_admit_owned(&mut self.semantic_refusal, &mut self.active_retirement, child); }
+        if self.semantic_refusal.is_some() { return artifact_retirement_admit_owned(&mut self.semantic_refusal, &mut self.active_retirement, child).result; }
         if let Some(inverse) = self.inverse.as_mut() {
             if let Some(mutation) = inverse.pop() {
-                return match DemoMutationRetirementFactory.retire_owned(mutation, child) {
+                return match DemoMutationRetirementFactory.retire_owned(mutation, child).result {
                     Ok((owner, progress)) => {
                         self.active_retirement = Some(owner);
                         Ok(RetainedCloneStep::Progress(progress))

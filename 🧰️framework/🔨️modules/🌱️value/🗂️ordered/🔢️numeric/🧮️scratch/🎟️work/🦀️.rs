@@ -21,7 +21,7 @@ impl<K:Copy+Ord,V> NumericWorkInsertCursor<K,V>{
   match self.phase{
    0=>{self.current=index.root;self.phase=1;},
    1=>{if let Some(current)=self.current{match self.key.cmp(&index.node(current).key){
-    Ordering::Equal=>{let generation=index.generation;let node=index.node_mut(current);self.previous=node.value.replace(self.value.take().unwrap());node.generation=generation;self.phase=3;},
+    Ordering::Equal=>{let generation=index.generation;let node=index.node_mut(current);self.previous=node.value.replace(self.value.take().ok_or("value absent")?);node.generation=generation;self.phase=3;},
     order=>{self.parent=Some(current);self.current=if order==Ordering::Less{index.node(current).left}else{index.node(current).right};},
    }}else{self.phase=2;}},
    2=>{if !work.slot(&mut index.nodes)?{return Ok(NumericWorkStep::Pending);}let placed=index.nodes.len();let node=Node{key:self.key,value:self.value.take(),generation:index.generation,count_generation:index.generation,count:1,height:1,left:None,right:None,parent:self.parent};work.push(&mut index.nodes,node).map_err(|(error,_)|error)?;if let Some(parent)=self.parent{if self.key<index.node(parent).key{index.node_mut(parent).left=Some(placed)}else{index.node_mut(parent).right=Some(placed)}}else{index.root=Some(placed)}self.current=self.parent;self.phase=3;},
@@ -54,7 +54,7 @@ impl<K:Copy+Ord,V> NumericWorkRemoveCursor<K,V>{
   match self.phase{
    0=>{self.current=index.root;self.phase=1;},
    1=>{if let Some(current)=self.current{match self.key.cmp(&index.node(current).key){Ordering::Equal=>self.phase=2,order=>self.current=if order==Ordering::Less{index.node(current).left}else{index.node(current).right}}}else{self.phase=4;}},
-   2=>{let current=self.current.unwrap();if index.node(current).generation==index.generation{self.value=index.node_mut(current).value.take();self.phase=3;}else{self.phase=4;}},
+   2=>{let current=self.current.ok_or("current absent")?;if index.node(current).generation==index.generation{self.value=index.node_mut(current).value.take();self.phase=3;}else{self.phase=4;}},
    3=>{if let Some(current)=self.current{self.current=repair_one(index,current);}else{self.phase=4;}},
    _=>return Ok(NumericWorkStep::Pending),
   }Ok(if self.phase==4{NumericWorkStep::Complete}else{NumericWorkStep::Progress})

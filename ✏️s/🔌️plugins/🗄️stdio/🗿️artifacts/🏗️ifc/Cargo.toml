@@ -3,6 +3,19 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/👁️mvd/📖️catalog/📦️packages/🦀️rust",
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/👥️population/📦️packages/🦀️rust",
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/📚️rules/📦️packages/🦀️rust",
+  "📚️catalog/🧾️json-pack/📦️packages/🦀️rust",
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/🌳️express/📦️packages/🦀️rust",
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/📚️catalog/🧭️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/🧮️evaluator/📦️packages/🦀️rust",
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/⚙️machine/📦️packages/🦀️rust",
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/🏷️templates/📦️packages/🦀️rust",
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/👁️mvd/📦️packages/🦀️rust",
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🧾️step/📦️packages/🦀️rust",
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🌉️exchange/📦️packages/🦀️rust",
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🏗️fem/📦️packages/🦀️rust",
   "📐️geometry/🕳️rings/📦️packages/🦀️rust",
   "📐️geometry/📦️packages/🦀️rust",
   "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/📚️catalog/🧩️components/*/*/📦️packages/🦀️rust",
@@ -12,6 +25,14 @@ members = [
   "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📚️catalog/🧩️components/*/*/📦️packages/🦀️rust",
   "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📚️catalog/📦️packages/🦀️rust",
   "📚️catalog/📦️packages/🦀️rust",
+  "📚️catalog/⚖️domain/📦️packages/🦀️rust",
+  "🔎️details/📦️packages/🦀️rust",
+  "🔎️details/🧭️profile/📦️packages/🦀️rust",
+  "🔎️details/📨️wire/📦️packages/🦀️rust",
+  "🔎️details/🔤️type/📦️packages/🦀️rust",
+  "🔎️details/✏️edit/📦️packages/🦀️rust",
+  "🔎️details/👁️provider/📦️packages/🦀️rust",
+  "🔎️details/🧶️guidance/📦️packages/🦀️rust",
   "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/📦️packages/🦀️rust",
   "🏅️standards/🔖️4x3/🪆️subsets/✳️any/📦️packages/🦀️rust",
   "🏅️standards/4️⃣4/🪆️subsets/✳️any/📦️packages/🦀️rust",
@@ -55,6 +76,48 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 [workspace.dependencies.pack]
 path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust"
 package = "semio-framework-pack"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-json-pack]
+path = "📚️catalog/🧾️json-pack/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc4x3-add2-catalog]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/📚️catalog/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc4x3-express]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/🌳️express/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc4x3-schema]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/📚️catalog/🧭️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc4x3-evaluator]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/🧮️evaluator/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc4x3-population]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/👥️population/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc4x3-rules]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/📚️rules/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc4x3-machine]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/⚙️machine/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc4x3-templates]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/🏷️templates/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc4x3-mvd-catalog]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/👁️mvd/📖️catalog/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc4x3-mvd]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/👁️mvd/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc4x3-step]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🧾️step/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc4x3-exchange]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🌉️exchange/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc4x3-fem]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🏗️fem/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-ifc-4x3]
 path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/📦️packages/🦀️rust"
@@ -158,12 +221,6 @@ path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/�
 [workspace.dependencies.semio-s-artifact-stdio-ifc-geometry]
 path = "📐️geometry/📦️packages/🦀️rust"
 
-[workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base-catalog]
-path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📚️catalog/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-stdio-ifc-4-catalog]
-path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📚️catalog/📦️packages/🦀️rust"
-
 [workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-base-model]
 path = "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
 
@@ -181,3 +238,30 @@ path = "🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20/📦️packages/�
 
 [workspace.dependencies.semio-s-artifact-stdio-ifc-2x3-sav]
 path = "🏅️standards/🔖️2x3/🪆️subsets/🧮️sav/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-declarations]
+path = "📚️catalog/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-domain]
+path = "📚️catalog/⚖️domain/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-details]
+path = "🔎️details/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-details-profile]
+path = "🔎️details/🧭️profile/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-details-wire]
+path = "🔎️details/📨️wire/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-details-type]
+path = "🔎️details/🔤️type/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-details-edit]
+path = "🔎️details/✏️edit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-details-provider]
+path = "🔎️details/👁️provider/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-details-guidance]
+path = "🔎️details/🧶️guidance/📦️packages/🦀️rust"

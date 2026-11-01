@@ -12,7 +12,7 @@ impl CoreInstanceOpening{
  pub fn begin(module:&Arc<CoreModule>,cx:&mut StepContext<'_>)->Result<Option<Self>,OriginalTurnFailure>{
   let epoch=cx.original_source_epoch().ok_or_else(||refused("Core opening requires the initiating input epoch"))?;
   if !charge(cx,size_of::<Self>(),0,0)?{return Ok(None)}
-  let parent=cx.original_source_parent()?;let Some(source)=parent.admit_loan(cx)?else{return Ok(None)};
+  let parent=cx.original_source_parent()?;let mut loan=None;if !parent.admit_loan(&mut loan,cx)?{return Ok(None)}let Some(source)=loan else{return Ok(None)};
   Ok(Some(Self{core:ManuallyDrop::new(Some(CoreInstance{module:Arc::clone(module),memories:Vec::new(),tables:Vec::new(),globals:Vec::new(),data:Vec::new(),elements:Vec::new(),machine:None,next_host_call:1})),source:ManuallyDrop::new(Some(source)),epoch,phase:Phase::Vectors(0),invocation_complete:false,returning_frame:false}))
  }
  fn validate(&self,module:&Arc<CoreModule>,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{

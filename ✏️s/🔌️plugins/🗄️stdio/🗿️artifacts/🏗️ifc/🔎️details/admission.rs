@@ -215,10 +215,13 @@ impl EventAdmission {
     pub fn close_demands(&self) -> Result<RetirementDemand, ValueError> {
         self.codec.retirement_demands()
     }
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let step = self.codec.close(grant).map_err(|error| error.reason)?;
+    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+        let step = match self.codec.close(grant) {
+            Ok(step) => step,
+            Err(error) => return refused(error.reason),
+        };
         let progress = RetainedCloneProgress { copied_items: step.processed_items, copied_bytes: step.copied_bytes, retained_capacity_bytes: step.retained_capacity_bytes, released_bytes: step.released_bytes };
-        Ok(if step.complete { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+        RetainedWorkOutcome { result: Ok(if step.complete { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }), work: 1 }
     }
 }
 #[cfg(test)]

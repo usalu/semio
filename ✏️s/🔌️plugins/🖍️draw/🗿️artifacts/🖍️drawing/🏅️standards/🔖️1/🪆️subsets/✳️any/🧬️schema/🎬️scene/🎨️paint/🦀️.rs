@@ -3,7 +3,7 @@ use semio_s_artifact_draw_drawing_model::PathSegment;
 use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_s_artifact_draw_drawing_model::stroke::{StrokeCap, StrokeJoin};
 use crate::picking::PaintedPathStroke;
-use crate::preparation::DocumentSceneError;
+use semio_s_artifact_draw_drawing_scene::preparation::DocumentSceneError;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value_persistent::work::RetainedWorkLedger;
 use semio_framework_2d::{flatten::{PathFlattenJob,PathFlattenInput,PathFlattenRetirement,FlatContour},stroke::{StrokeOutlineJob,StrokeOutlineInput,StrokeOutlineRetirement,StrokeGeometryStyle,StrokeGeometryCap,StrokeGeometryJoin,StrokeContour},booleans::{BooleanJob,BooleanInput,BooleanOperand,BooleanOperation,BooleanFillRule,BooleanRetirement}};
@@ -122,7 +122,7 @@ semio_framework_2d::physical_work_retirement!(PaintedPreparationRetirement,Paint
 fn distance(p:Point,a:Point,b:Point)->f64{let dx=b[0]-a[0];let dy=b[1]-a[1];let length=dx.hypot(dy);let t=if length>0.0{(((p[0]-a[0])*dx+(p[1]-a[1])*dy)/length).clamp(0.0,length)}else{0.0};(p[0]-a[0]-if length>0.0{dx*t/length}else{0.0}).hypot(p[1]-a[1]-if length>0.0{dy*t/length}else{0.0})}
 /// 🪪️ A fixed stamp identifies the exact immutable cache entry and its preparation precision.
 #[derive(Clone,Copy,Debug,PartialEq)]
-pub struct PreparedRegionStamp{pub source:crate::identity::SceneIdentity,pub build:u64,pub entry:usize,pub flatness:f64}
+pub struct PreparedRegionStamp{pub source:semio_s_artifact_draw_drawing_scene::identity::SceneIdentity,pub build:u64,pub entry:usize,pub flatness:f64}
 impl PreparedRegionStamp{
  fn valid(self)->bool{self.source.matches(self.source)&&self.build!=0&&self.entry<1024&&precision(self.flatness)}
  fn matches(self,live:Self)->bool{self.valid()&&live.valid()&&self==live}
@@ -141,6 +141,10 @@ impl PreparedRegionQueryJob{
 
 #[path="📋️prepare/🦀️.rs"]
 pub mod scene;
+#[path="../../🧮️geometry/🎯️picking/🎨️paint/🦀️.rs"]
+pub mod picking;
+#[path="../📍️placement/🦀️.rs"]
+pub mod placement;
 
 #[cfg(test)]
 #[path="🧪️tests/🖊️stroke/🦀️.rs"]

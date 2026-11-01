@@ -1,5 +1,6 @@
 //! 🎼️ Modal and publication stages: the modal, LDLT and subspace solves and the mode scalar and progress publication stages of the staged numerical step. See [`super`].
 
+use semio_s_fem_payload_turns::NumericalStep;
 use super::*;
 
 impl Fem3dNumericalChild {
@@ -40,7 +41,7 @@ impl Fem3dNumericalChild {
 
     /// 🔨 Steps the LDLT factorization.
     pub(super) fn step_ldlt(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
-        let end = child_end(self.ldlt.as_mut().ok_or_else(|| b"fem3d.numerical-ldlt".to_vec())?.step(context))?;
+        let end = child_end(self.ldlt.as_mut().ok_or_else(|| b"fem3d.numerical-ldlt".to_vec())?.step_plain(context))?;
         if self.observe_child_end(end)? {
             self.stage = Fem3dNumericalStage::BeginSubspace;
         }
@@ -61,7 +62,7 @@ impl Fem3dNumericalChild {
 
     /// 🛰 Steps the subspace iteration.
     pub(super) fn step_subspace(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
-        let end = child_end(self.subspace.as_mut().ok_or_else(|| b"fem3d.numerical-subspace".to_vec())?.step(context))?;
+        let end = child_end(self.subspace.as_mut().ok_or_else(|| b"fem3d.numerical-subspace".to_vec())?.step_plain(context))?;
         if self.observe_child_end(end)? {
             self.node_cursor = 0;
             self.scalar_axis = 0;

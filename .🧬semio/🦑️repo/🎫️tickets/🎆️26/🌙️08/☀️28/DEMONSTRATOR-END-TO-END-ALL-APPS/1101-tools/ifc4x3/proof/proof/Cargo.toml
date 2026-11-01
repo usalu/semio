@@ -1,0 +1,8 @@
+[package]
+name = "proof"
+version = "0.0.0"
+edition = "2021"
+[dependencies]
+semio-s-artifact-stdio-ifc4x3-express = { path = "../express" }
+serde_json = "1"
+semio-s-artifact-stdio-ifc-json-pack = { path = "../jp" }

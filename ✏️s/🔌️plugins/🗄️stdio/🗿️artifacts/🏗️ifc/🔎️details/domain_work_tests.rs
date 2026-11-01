@@ -1,5 +1,5 @@
 //! 🧪️ Original declaration metadata retains source identity and refuses unfunded transitions.
-use super::super::super::DetailsTestProfile;
+use super::super::DetailsTestProfile;
 use super::*;
 use semio_framework_plugin::app_testing::OriginalWorkFixture;
 fn grant() -> semio_framework_value::retained_clone::RetainedCloneGrant {

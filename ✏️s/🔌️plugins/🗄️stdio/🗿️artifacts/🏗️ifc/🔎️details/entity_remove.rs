@@ -95,15 +95,15 @@ impl EntityRemoval {
     pub(super) fn close_demands(&self) -> RetirementDemand {
         RetirementDemand { copy_bytes: size_of::<Option<(usize, usize, usize, usize)>>(), depth: 1, ..Default::default() }
     }
-    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub(super) fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
         if !self.closing {
-            return Err(invalid("IFC entity removal close was not started"));
+            return refused(invalid("IFC entity removal close was not started"));
         }
         let demand = self.close_demands();
         if !retained_clone_grant_admits(grant, demand) {
-            return Ok(RetainedCloneStep::Progress(Default::default()));
+            return idle_step(RetainedCloneStep::Progress(Default::default()));
         }
         self.binding = None;
-        Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
+        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
     }
 }

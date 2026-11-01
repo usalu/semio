@@ -84,14 +84,14 @@ impl CoverageJob{
     }else{if let(Some(previous),Some(first))=(self.previous,self.first){if !self.edge(previous,first,work)?{return Ok(false)}}self.contour+=1;self.point=0;self.first=None;self.previous=None;}self.prepared+=1;
    }
    Stage::Events=>{
-    if self.sorter.as_ref().unwrap().done(){let mut sorter=self.sorter.take().unwrap();self.sorted=std::mem::take(&mut sorter.source);self.scratch=std::mem::take(&mut sorter.target);self.stage=Stage::Apply;}
-    else{let events=&self.events;return self.sorter.as_mut().unwrap().step(work,|a,b|events[a].y.total_cmp(&events[b].y).then_with(||events[a].add.cmp(&events[b].add)))}
+    if self.sorter.as_ref().ok_or(PixelEditError::Invalid("sorter absent"))?.done(){let mut sorter=self.sorter.take().ok_or(PixelEditError::Invalid("sorter absent"))?;self.sorted=std::mem::take(&mut sorter.source);self.scratch=std::mem::take(&mut sorter.target);self.stage=Stage::Apply;}
+    else{let events=&self.events;return self.sorter.as_mut().ok_or(PixelEditError::Invalid("sorter absent"))?.step(work,|a,b|events[a].y.total_cmp(&events[b].y).then_with(||events[a].add.cmp(&events[b].add)))}
    }
    Stage::Apply=>{
     if self.y>=f64::from(self.input.height){self.stage=Stage::Done;return Ok(false)}let event=self.sorted.get(self.event).map(|id|self.events[*id]);
     if let Some(event)=event.filter(|event|event.y<=self.y){
      if event.add{if !grow(&mut self.active,1,MAX_POINTS,work)?{return Ok(false)}if !work.copy_bytes(2*std::mem::size_of::<usize>()){return Ok(false)}self.positions[event.edge]=self.active.len();self.active.push(event.edge);}
-     else{let at=self.positions[event.edge];let bytes=(if at+1<self.active.len(){3}else{1})*std::mem::size_of::<usize>();if !work.copy_bytes(bytes){return Ok(false)}let last=self.active.pop().unwrap();if at<self.active.len(){self.active[at]=last;self.positions[last]=at;}self.positions[event.edge]=NONE;}self.event+=1;
+     else{let at=self.positions[event.edge];let bytes=(if at+1<self.active.len(){3}else{1})*std::mem::size_of::<usize>();if !work.copy_bytes(bytes){return Ok(false)}let last=self.active.pop().ok_or(PixelEditError::Invalid("pop target absent"))?;if at<self.active.len(){self.active[at]=last;self.positions[last]=at;}self.positions[event.edge]=NONE;}self.event+=1;
     }else{self.end=((self.row+1)as f64).min(event.map_or(f64::from(self.input.height),|event|event.y)).min(f64::from(self.input.height));self.copy=0;self.copied.clear();self.stage=Stage::Copy;}
    }
    Stage::Copy=>{
@@ -99,8 +99,8 @@ impl CoverageJob{
     else{self.sorter=Some(MergeSort::new(std::mem::take(&mut self.copied),std::mem::take(&mut self.scratch)));self.stage=Stage::Sort;}
    }
    Stage::Sort=>{
-    if self.sorter.as_ref().unwrap().done(){let mut sorter=self.sorter.take().unwrap();self.copied=std::mem::take(&mut sorter.source);self.scratch=std::mem::take(&mut sorter.target);self.scan=0;self.stage=Stage::Cross;}
-    else{let edges=&self.edges;let y=self.y;return self.sorter.as_mut().unwrap().step(work,|a,b|{let x=edges[a];let z=edges[b];let delta=x_at(x,y)-x_at(z,y);if delta.abs()>EPS{delta.total_cmp(&0.)}else{x.dx.total_cmp(&z.dx).then_with(||a.cmp(&b))}})}
+    if self.sorter.as_ref().ok_or(PixelEditError::Invalid("sorter absent"))?.done(){let mut sorter=self.sorter.take().ok_or(PixelEditError::Invalid("sorter absent"))?;self.copied=std::mem::take(&mut sorter.source);self.scratch=std::mem::take(&mut sorter.target);self.scan=0;self.stage=Stage::Cross;}
+    else{let edges=&self.edges;let y=self.y;return self.sorter.as_mut().ok_or(PixelEditError::Invalid("sorter absent"))?.step(work,|a,b|{let x=edges[a];let z=edges[b];let delta=x_at(x,y)-x_at(z,y);if delta.abs()>EPS{delta.total_cmp(&0.)}else{x.dx.total_cmp(&z.dx).then_with(||a.cmp(&b))}})}
    }
    Stage::Cross=>{
     if self.scan+1<self.copied.len(){let left=self.edges[self.copied[self.scan]];self.scan+=1;let right=self.edges[self.copied[self.scan]];let slope=left.dx-right.dx;if slope>0.{let cross=self.y+(x_at(right,self.y)-x_at(left,self.y))/slope;if cross>self.y+EPS&&cross<self.end{self.end=cross;}}}

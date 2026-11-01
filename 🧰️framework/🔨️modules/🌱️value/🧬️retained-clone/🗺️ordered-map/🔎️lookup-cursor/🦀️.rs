@@ -54,7 +54,7 @@ impl<K:BoundedOrd> RetainedOrderedMapLookupCursor<K>{
             return Ok((Some(result),BoundedOrdProgress{compared_items:1,compared_bytes:0},Default::default()));
         }
         if self.comparison.is_none(){if grant.maximum_items==0{return Ok((None,Default::default(),Default::default()));}let turn=K::admit_bounded_ord_cursor(retirement);work+=turn.work;let Some((comparison,p))=turn.result?else{return Ok((None,Default::default(),Default::default()));};self.middle=self.low+(self.high-self.low)/2;self.comparison=Some(comparison);return Ok((None,Default::default(),p));}
-        let comparison=self.comparison.as_mut().unwrap();
+        let comparison=self.comparison.as_mut().ok_or_else(||ValueError::invariant("comparison absent"))?;
         match {let turn=comparison.compare(source.project(self.middle+1,|map|map.get_index(self.middle).unwrap().0),target,grant,retirement);work+=turn.work;turn.result}?{
             BoundedOrdStep::Authority(progress)=>Ok((None,Default::default(),progress)),
             BoundedOrdStep::Progress(p)=>Ok((None,p,Default::default())),

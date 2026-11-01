@@ -33,7 +33,6 @@ test("all five optical fields have sparse forward and base-derived inverse inten
       expect(restored.model.glazing_materials[0]).toEqual({...fixture.base,conductivity_w_m_k:fixture.peer.value});
     }
   }
-  console.log("[DEBUG] energy optical neutral cases="+fixture.cases.length+" fields=5 AJV/RFC6902 sparse-inverse independent-peer=passed");
 });
 
 /** 📜️ The neutral history contract keeps independent peer fields through local inverse/revision replay. */
@@ -47,7 +46,6 @@ test("energy peer history field intent agrees with an independent event replay",
  const undone=applyPatch(revised,[{op:"replace",path:"/site/latitude_deg",value:base.site.latitude_deg}],true,false).newDocument;
  expect(undone.name).toBe(law.peer.localName);expect(undone.site.longitude_deg).toBe(law.peer.remoteLongitude);
  expect(law.documents.archive.history).toBe("preserve-events");expect(law.documents.import.semanticMutationRows).toBe(0);expect(law.documents.example.semanticMutationRows).toBe(0);
- console.log("[DEBUG] energy neutral history RFC6902 independent-fields undo/revision preserved; native document/peer gate owns actual runtime evidence");
 });
 
 /** 📡️ Neutral wire identities agree with the authored protocol and both grammar surfaces. */
@@ -58,5 +56,4 @@ test("optical wire cases retain unique declared protocol identities",()=>{
   expect(records.find(r=>r[1]===row.kind)?.[2]).toBe(String(row.binaryTag));expect(row.binaryPrefix).toEqual([1,row.binaryTag%128+128,Math.floor(row.binaryTag/128)]);
   for(const name of ["📖️.grammar.semio","📖️mutations.grammar.semio"]){const grammar=readFileSync(new URL("../../../../🚪️io/📝️text/🧬️mutations/"+name,import.meta.url),"utf8");expect(grammar.split("\n").find(l=>l.startsWith("op = "))?.split(" | ")).toContain(row.kind);expect(grammar).toContain(row.kind+" = ");}
  }
- console.log("[DEBUG] energy optical wire neutral cases=5 tags300to304 unique protocol and both grammar rosters=passed");
 });

@@ -63,7 +63,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     /// ♻️ Returns one exact original read under the installed genesis issuer.
     pub fn settle_native_read_step(&mut self,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>
     where P:Send+Sync+'static,
-    {semio_framework_value_snapshot_read::advance_returned_snapshot_read(&self.read_registry,&mut self.close_active,factory,grant)}
+    {semio_framework_value_snapshot_read::advance_returned_snapshot_read(&self.read_registry,&mut self.close_active,factory,grant).result}
     pub(super) fn read_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>
     where P:Send+Sync+'static,
     {

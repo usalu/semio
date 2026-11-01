@@ -6,6 +6,7 @@ use std::mem::ManuallyDrop;
 use semio_framework_job::{OriginalTurnFailure, StepContext};
 use crate::original_receiving::metadata;
 use semio_framework::{Fault, FaultCode, FaultScope, FaultOrigin, FaultCause, FaultParams, Severity};
+fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 pub(super) struct FaultCursor{pub output:ManuallyDrop<Option<Fault>>,pub closing:ManuallyDrop<Option<ControlledRetirement<Fault>>>,pub field:usize,pub nested:usize,pub kind:u8,pub cause:usize,cause_field:usize,pub seen:u8,progress_seen:u8,cause_seen:bool,pub reserved:bool,pub closed:bool}
 impl FaultCursor{
  pub const fn empty()->Self{Self{output:ManuallyDrop::new(None),closing:ManuallyDrop::new(None),field:0,nested:0,kind:0,cause:0,cause_field:0,seen:0,progress_seen:0,cause_seen:false,reserved:false,closed:false}}
@@ -65,7 +66,7 @@ impl FaultCursor{
   let(name,value)=&mut fields[self.nested];if self.cause_field<name.len(){if !metadata(cx)?{return Ok(None)}let byte=name.as_bytes()[self.cause_field];if !(if self.cause_field==0{byte.is_ascii_lowercase()}else{byte.is_ascii_alphanumeric()}){return Err(invalid())}self.cause_field+=1;return Ok(None)}if name.is_empty(){return Err(invalid())}if !metadata(cx)?{return Ok(None)}let text=take_text(value)?;params.push((std::mem::take(name),text));self.nested+=1;self.cause_field=0;Ok(None)
  }
  pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-  if let Some(owner)=self.closing.as_mut(){if !owner.terminal_is_empty(){semio_framework_job::close_original_retained_step(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|grant|owner.step(grant))?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.closing.take();return Ok(false)}
+  if let Some(owner)=self.closing.as_mut(){if !owner.terminal_is_empty(){retired(cx,owner.selected_demand(cx.retained_grant().maximum_copy_bytes)?,|grant|owner.step(grant))?;return Ok(false)}if !metadata(cx)?{return Ok(false)}self.closing.take();return Ok(false)}
   if self.output.is_some(){if !metadata(cx)?{return Ok(false)}let output=self.output.take().unwrap();match ControlledRetirement::new(output){Ok(owner)=>*self.closing=Some(owner),Err((error,output))=>{*self.output=Some(output);return Err(error.into())}}return Ok(false)}
   if !metadata(cx)?{return Ok(false)}self.closed=true;Ok(true)
  }

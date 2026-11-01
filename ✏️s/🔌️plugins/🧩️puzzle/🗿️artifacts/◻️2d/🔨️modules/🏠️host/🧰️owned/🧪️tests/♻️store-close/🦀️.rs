@@ -19,7 +19,6 @@ async fn standalone_history_close_resumes_past_the_original_ledger_page() {
             close_puzzle2d_store(&mut store).unwrap();
             assert!(store.close_owned_store_terminal_is_empty());
             close_puzzle2d_store(&mut store).unwrap();
-            eprintln!("[DEBUG] standalone history close edits={edits} scheduled=false terminal=true");
             continue;
         }
         let mut turns = 0;
@@ -36,6 +35,5 @@ async fn standalone_history_close_resumes_past_the_original_ledger_page() {
             assert!(turns < 100_000, "a funded close cursor must make progress");
         }
         if edits == 400 { assert!(turns > 384); }
-        eprintln!("[DEBUG] standalone history close edits={edits} scheduled=true turns={turns} terminal=true");
     }
 }

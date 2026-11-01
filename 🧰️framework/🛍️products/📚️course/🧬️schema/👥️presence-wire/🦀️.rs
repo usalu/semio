@@ -191,6 +191,8 @@ pub struct PresencePresentation {
     #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "present")]
     pub revealed_by: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "present")]
+    pub pressed: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "present")]
     pub task_page: Option<u16>,
     #[serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "present")]
     pub viewport: Option<PresencePoint>,

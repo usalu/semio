@@ -3,12 +3,12 @@ mod scene_funding;
 #[path="../../../../../../🚪️io/📤️export/🧵️serializers/🧪️tests/🎟️vector/🦀️.rs"]
 mod original_vector;
 use semio_framework_value::RetainedCloneGrant;
-#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::{booleans::*,identity::*,paint::*,picking::*,placement::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*};
+#[allow(unused_imports)] use {semio_s_artifact_draw_drawing_scene::{booleans::*,identity::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*},semio_s_artifact_draw_drawing_scene_paint::{*,picking::*,placement::*}};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_framework_test_fixtures::fixture_text;
 
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::preparation::{DocumentScenePlan, DocumentSceneContent};
-#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::paint::scene::*;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene_paint::scene::*;
 fn plan(source:&str)->DocumentScenePlan{
  use semio_s_artifact_draw_drawing_scene::preparation::{DocumentSceneLimits,DocumentAlgorithmLimits};
  let rows:serde_json::Value=serde_json::from_str(fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🎬️scene/📋️prepare/🎬️vector/🔣️.json")).unwrap();let row=rows.as_array().unwrap().iter().find(|r|r["name"]==source).unwrap();let document:semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot=serde_json::from_value(row["document"].clone()).unwrap();let l=&row["limits"];let limits=DocumentSceneLimits{max_nodes:l["maxNodes"].as_u64().unwrap()as usize,max_depth:l["maxDepth"].as_u64().unwrap()as usize,max_segments:l["maxSegments"].as_u64().unwrap()as usize,max_references:l["maxReferences"].as_u64().unwrap()as usize,max_source_bytes:l["maxSourceBytes"].as_u64().unwrap()as usize};let algorithms=DocumentAlgorithmLimits{max_work:10000000,trace:DocumentTraceLimits{max_pixels:100000,max_admitted_pixels:100000,max_source_bytes:100000,max_edges:65536,max_segments:65536,max_retained_segments:65536,max_work:10000000},booleans:DocumentBooleanLimits{tolerance:0.005,epsilon:1e-8,max_depth:32,max_references:256,max_edges:65536,max_parameters:262144,max_atomic_edges:65536,max_segments:65536,max_retained_segments:262144,max_work:10000000}};let(close,output)=original_vector::prepare(&document,limits,algorithms);close.close();output

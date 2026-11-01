@@ -35,13 +35,13 @@ impl<T:RetireOwned+Sync> SharedControlledRetirement<T> {
             if self.lease_only {
                 let extent=if Arc::weak_count(source)==0{arc_bytes::<T>()}else{0};
                 if grant.maximum_release_bytes<extent{return Ok(RetainedCloneStep::Progress(empty));}
-                self.last_work=1;let value=Arc::into_inner(self.source.take().unwrap());
+                self.last_work=1;let value=Arc::into_inner(self.source.take().ok_or_else(||ValueError::invariant("source absent"))?);
                 let released_bytes=if let Some(value)=value{*self.owned=Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("admitted shared payload refused: {error}")));extent}else{0};
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes,..empty}));
             }
             let extent=if Arc::weak_count(source)==0{arc_bytes::<T>()}else{0};
             if grant.maximum_release_bytes<extent||Arc::strong_count(source)!=1{return Ok(RetainedCloneStep::Progress(empty));}
-            self.last_work=1;let source=self.source.take().unwrap();
+            self.last_work=1;let source=self.source.take().ok_or_else(||ValueError::invariant("source absent"))?;
             match Arc::try_unwrap(source){Ok(value)=>{*self.owned=Some(ControlledRetirement::new(value).unwrap_or_else(|(error,_)|panic!("admitted shared payload refused: {error}")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:extent,..empty}));},Err(source)=>{*self.source=Some(source);return Ok(RetainedCloneStep::Progress(empty));}}
         }
         let owned=self.owned.as_mut().unwrap();

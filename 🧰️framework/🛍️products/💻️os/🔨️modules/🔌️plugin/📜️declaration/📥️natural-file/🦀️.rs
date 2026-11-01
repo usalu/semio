@@ -27,6 +27,7 @@ use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
 use crate::ArtifactEditor;
 use crate::EditorApp;
+fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum NaturalFileImportStage {
@@ -160,7 +161,33 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
 }
 
 impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImportJob<E> {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_original(cx))
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
+        self.outcomes.borrow_outcome(descriptor)
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::InteractiveJobCloseStep as Step;
+        self.closing=true;let demand=self.close_owned_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=retired(cx,demand,|grant|{self.pending=None;if !self.outcomes.terminal_is_empty(){return self.outcomes.close_step(grant)}self.close_owned_turn(grant).map(|step|match step{PluginLifecycleStep::Progress(progress)=>RetainedCloneStep::Progress(progress),PluginLifecycleStep::Complete(progress)=>RetainedCloneStep::Complete(progress),PluginLifecycleStep::Blocked{..}|PluginLifecycleStep::AwaitingInput{..}=>RetainedCloneStep::Progress(Default::default())})})?;
+        Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
+    }
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_owned_demands(body)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.depth)}
+    fn terminal_is_empty(&self)->bool{self.closing&&self.port.capacity()==0&&self.media.is_none()&&self.decoder.is_none()&&self.completion.is_none()&&self.emit.is_none()&&self.pending_completion_rejection.is_none()&&self.retirement.is_none()&&self.pending_bytes.is_none()&&self.pending_media_value.is_none()&&self.pending_media_text.is_none()&&self.pending_port.is_none()&&self.outcomes.terminal_is_empty()}
+}
+
+impl<E: ArtifactEditor> NaturalFileImportJob<E> {
+    fn step_original<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         use semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind;
         if cx.is_cancelled() {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx).map_err(semio_framework_job::OriginalTurnFailure::from);
@@ -271,26 +298,6 @@ impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImpor
         }
         Ok(None)
     }
-
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {
-        self.outcomes.borrow_outcome(descriptor)
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_job::InteractiveJobCloseStep as Step;
-        self.closing=true;let demand=self.close_owned_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{self.pending=None;if !self.outcomes.terminal_is_empty(){return self.outcomes.close_step(grant)}self.close_owned_turn(grant).map(|step|match step{PluginLifecycleStep::Progress(progress)=>RetainedCloneStep::Progress(progress),PluginLifecycleStep::Complete(progress)=>RetainedCloneStep::Complete(progress),PluginLifecycleStep::Blocked{..}|PluginLifecycleStep::AwaitingInput{..}=>RetainedCloneStep::Progress(Default::default())})})?;
-        Ok(match step{Step::Pending{progress}|Step::Complete{progress}=>if self.terminal_is_empty(){Step::Complete{progress}}else{Step::Pending{progress}},Step::Blocked=>Step::Blocked})
-    }
-    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.copy_bytes)}
-    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_owned_demands(body)?.capacity_bytes)}
-    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.release_bytes)}
-    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_owned_demands(0)?.depth)}
-    fn terminal_is_empty(&self)->bool{self.closing&&self.port.capacity()==0&&self.media.is_none()&&self.decoder.is_none()&&self.completion.is_none()&&self.emit.is_none()&&self.pending_completion_rejection.is_none()&&self.retirement.is_none()&&self.pending_bytes.is_none()&&self.pending_media_value.is_none()&&self.pending_media_text.is_none()&&self.pending_port.is_none()&&self.outcomes.terminal_is_empty()}
 }
 
 impl<E: ArtifactEditor> ArtifactReservedJob for NaturalFileImportJob<E> {}
@@ -319,11 +326,11 @@ impl<E:ArtifactEditor> NaturalFileImportJob<E>{
     fn close_owned_turn(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,ValueError>{
         let demand=self.close_owned_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
-        if self.retirement.is_some(){let step=semio_framework_value::close_factory_ticket(&mut self.retirement,grant)?;return Ok(PluginLifecycleStep::Progress(step.progress()));}
-        if let Some(original)=self.pending_bytes.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_bytes=Some(original);Err(error)}};}
-        if let Some(original)=self.pending_media_value.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_media_value=Some(original);Err(error)}};}
-        if let Some(original)=self.pending_media_text.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_media_text=Some(original);Err(error)}};}
-        if let Some(original)=self.pending_port.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_port=Some(original);Err(error)}};}
+        if self.retirement.is_some(){let step=semio_framework_value::close_factory_ticket(&mut self.retirement,grant).result?;return Ok(PluginLifecycleStep::Progress(step.progress()));}
+        if let Some(original)=self.pending_bytes.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result {Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_bytes=Some(original);Err(error)}};}
+        if let Some(original)=self.pending_media_value.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_media_value=Some(original);Err(error)}};}
+        if let Some(original)=self.pending_media_text.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_media_text=Some(original);Err(error)}};}
+        if let Some(original)=self.pending_port.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_port=Some(original);Err(error)}};}
         if let Some(decoder)=self.decoder.as_mut(){match decoder{
             NaturalFileDecodeOwner::Controlled(owner)=>{
                 if owner.terminal_is_empty(){let released_bytes=size_of_val(&**owner);self.decoder.take();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}));}
@@ -331,13 +338,13 @@ impl<E:ArtifactEditor> NaturalFileImportJob<E>{
                 if step.progress().is_some_and(|progress|!progress.fits(grant))||matches!(step,PluginLifecycleStep::Complete(_))&&!owner.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"natural-file decoder violated its original retirement grant or terminal witness"));}
                 return Ok(match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step});
             },
-            NaturalFileDecodeOwner::Synchronous(raw)=>{let original=std::mem::take(raw);return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.decoder.take();self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{*raw=original;Err(error)}};}
+            NaturalFileDecodeOwner::Synchronous(raw)=>{let original=std::mem::take(raw);return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.decoder.take();self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{*raw=original;Err(error)}};}
         }}
-        if let Some(original)=self.pending_completion_rejection.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_completion_rejection=Some(original);Err(error)}};}
-        if let Some(original)=self.emit.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.emit=Some(original);Err(error)}};}
-        if let Some(original)=self.media.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.media=Some(original);Err(error)}};}
-        if self.port.capacity()!=0{let original=std::mem::take(&mut self.port);return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.port=original;Err(error)}};}
-        if let Some(original)=self.completion.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.completion=Some(original);Err(error)}};}
+        if let Some(original)=self.pending_completion_rejection.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result {Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.pending_completion_rejection=Some(original);Err(error)}};}
+        if let Some(original)=self.emit.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.emit=Some(original);Err(error)}};}
+        if let Some(original)=self.media.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.media=Some(original);Err(error)}};}
+        if self.port.capacity()!=0{let original=std::mem::take(&mut self.port);return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.port=original;Err(error)}};}
+        if let Some(original)=self.completion.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant).result{Ok((owner,progress))=>{self.retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.completion=Some(original);Err(error)}};}
         Ok(PluginLifecycleStep::Complete(Default::default()))
     }
 }

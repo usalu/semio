@@ -100,7 +100,7 @@ fn retire_bounded(mut child: Box<dyn ErasedSnapshotRetirement>, bytes: usize) {
     for _ in 0..1_000_000 {
         if child.terminal_is_empty() { return; }
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: child.next_copy_byte_demand().unwrap(), maximum_capacity_bytes: child.next_capacity_byte_demand(4096).unwrap(), maximum_release_bytes: child.next_release_byte_demand().unwrap().max(bytes), maximum_depth: child.next_depth_demand().unwrap() };
-        let step = child.close_step(grant).expect("message retirement");
+        let step = child.close_step(grant).result.expect("message retirement");
         assert!(step.progress().fits(grant));
     }
     panic!("message retirement did not terminate");

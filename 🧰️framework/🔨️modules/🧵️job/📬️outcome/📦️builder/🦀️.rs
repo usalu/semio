@@ -91,7 +91,7 @@ impl RetainedPayloadBuilder{
   let Some(reservation)=self.reservation.as_ref()else{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original page backing has no retained reservation")),work:0}};
   if !reservation.held||reservation.extent==0||reservation.ledger.as_ref().is_none_or(|ledger|!Arc::ptr_eq(ledger,cx.payload_ledger())){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original page backing changed its retained reservation")),work:0}}
   if cx.is_cancelled()||cx.should_yield()||cx.payload_page_granted(){return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-  let turn=JobPayloadPageSource::admit(reservation.extent,cx.retained_grant());let result=match turn.result{Ok(Some((source,p)))=>{let mut reservation=self.reservation.take().unwrap();self.staged=Some((reservation.ledger.take().unwrap(),source,0));cx.grant_payload_page();Ok(RetainedCloneStep::Progress(p))},Ok(None)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(error)=>Err(error)};
+  let turn=JobPayloadPageSource::admit(reservation.extent,cx.retained_grant());let result=match turn.result{Ok(Some((source,p)))=>{let mut reservation=match self.reservation.take(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("reservation absent").into()),work:0}};self.staged=Some((match reservation.ledger.take(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("ledger absent").into()),work:0}},source,0));cx.grant_payload_page();Ok(RetainedCloneStep::Progress(p))},Ok(None)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(error)=>Err(error)};
   RetainedWorkOutcome{result,work:turn.work}
  }
  /// ✍️ Reserves the original counter, admits backing, publishes ownership and copies bytes on separate funded turns.
@@ -129,7 +129,7 @@ impl RetainedPayloadBuilder{
   if !crate::retained_clone::retained_clone_grant_admits(grant,demand){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0};}
   if let Some(source)=self.incoming.as_ref(){let released=source.allocated_capacity_bytes();drop(self.incoming.take());return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()})),work:1}}
   if let Some(reservation)=self.reservation.as_mut(){
-   if reservation.held{reservation.ledger.as_ref().unwrap().release(self.stream,reservation.extent);reservation.held=false;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+   if reservation.held{match reservation.ledger.as_ref(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("ledger absent").into()),work:0}}.release(self.stream,reservation.extent);reservation.held=false;return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
    if reservation.ledger.is_some(){return close_ledger(&mut reservation.ledger,grant)}
    self.reservation.take();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
   }

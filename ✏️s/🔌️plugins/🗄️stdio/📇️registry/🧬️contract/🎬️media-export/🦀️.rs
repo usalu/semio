@@ -1,13 +1,13 @@
 //! 🎬️ Format-neutral lifecycle for a truly incremental Stdio media serializer.
 
-use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, StepContext};
+use semio_framework_job::{InteractiveJobStep, OriginalJobReturnClaim, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, Operation, StepContext};
 use semio_framework_job_fault_publication::RetainedFaultPublication;
 use semio_framework_plugin::app::{ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactSnapshotCloseLease};
 use semio_framework_plugin::{
     ArtifactApp, ArtifactMediaExportJobRequest, ArtifactReservedJob, Fault, MediaClass, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, PortMultiplicity, ToolExecutionContract,
 };
 use semio_framework_value::retirement::RetireOwned;
-use semio_framework_value::{ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+use semio_framework_value::{RetainedWorkOutcome,ErasedSnapshotRetirement,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 use std::sync::Arc;
 
 pub const PLAYBACK_PORT_ID: &str = "playback:out";
@@ -137,7 +137,37 @@ impl<S: IncrementalMediaExportSpec> IncrementalMediaExportJob<S> {
 }
 
 impl<S: IncrementalMediaExportSpec> InteractiveJob for IncrementalMediaExportJob<S> {
-    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step<'a>(&'a mut self, context: &mut StepContext<'_>, _return_claim: &mut OriginalJobReturnClaim<'_>) -> InteractiveJobStep<'a> {
+        InteractiveJobStep::from_callback(self.step_owned(context))
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Complete if self.completed && self.fault.is_none() => descriptor.complete(None, None),
+            JobOutcomeKind::Fault if self.fault.is_some() => self.fault_publication.borrow_outcome(descriptor),
+            _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "media export outcome descriptor differs from its original job state")),
+        }
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{self.begin_close();let mut work=0;let result=self.close_turn(grant,&mut work).map(semio_framework_value::RetainedCloneStep::Progress);RetainedWorkOutcome{result,work}})?;
+        Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
+    }
+    fn terminal_is_empty(&self)->bool{self.cursor.is_none()&&self.page.capacity()==0&&self.chunks.is_none()&&self.output_retirement.is_none()&&self.fault.is_none()&&self.fault_publication.terminal_is_empty()&&self.completion.is_none()&&self.credit.is_none()&&self.snapshot.is_none()&&self.snapshot_close.is_none()&&self.request_metadata.is_none()&&self.metadata_retirement.is_none()&&self.pending_result.is_none()}
+}
+impl<S:IncrementalMediaExportSpec> IncrementalMediaExportJob<S>{
+    fn step_owned<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.closing || context.is_cancelled() {
             return JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into);
         }
@@ -170,32 +200,6 @@ impl<S: IncrementalMediaExportSpec> InteractiveJob for IncrementalMediaExportJob
         Ok(None)
     }
 
-    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
-        match descriptor.kind() {
-            JobOutcomeKind::Yield => descriptor.yielded(),
-            JobOutcomeKind::Cancelled => descriptor.cancelled(),
-            JobOutcomeKind::Complete if self.completed && self.fault.is_none() => descriptor.complete(None, None),
-            JobOutcomeKind::Fault if self.fault.is_some() => self.fault_publication.borrow_outcome(descriptor),
-            _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "media export outcome descriptor differs from its original job state")),
-        }
-    }
-
-    fn begin_close(&mut self) {
-        self.closing = true;
-    }
-
-    fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
-    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
-    fn next_close_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.release_bytes)}
-    fn next_close_depth_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.depth)}
-    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
-        let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{self.begin_close();let progress=self.close_turn(grant)?;Ok(semio_framework_value::RetainedCloneStep::Progress(progress))})?;
-        Ok(if self.terminal_is_empty(){InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
-    }
-    fn terminal_is_empty(&self)->bool{self.cursor.is_none()&&self.page.capacity()==0&&self.chunks.is_none()&&self.output_retirement.is_none()&&self.fault.is_none()&&self.fault_publication.terminal_is_empty()&&self.completion.is_none()&&self.credit.is_none()&&self.snapshot.is_none()&&self.snapshot_close.is_none()&&self.request_metadata.is_none()&&self.metadata_retirement.is_none()&&self.pending_result.is_none()}
-}
-impl<S:IncrementalMediaExportSpec> IncrementalMediaExportJob<S>{
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         let item=RetirementDemand{depth:1,..Default::default()};
         if let Some(owner)=self.output_retirement.as_ref(){return semio_framework_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body);}
@@ -214,22 +218,24 @@ impl<S:IncrementalMediaExportSpec> IncrementalMediaExportJob<S>{
         Ok(Default::default())
     }
 
-    fn close_turn(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+    fn charge(work:&mut u64,turn:RetainedWorkOutcome)->Result<RetainedCloneProgress,ValueError>{*work+=turn.work;turn.result.map(|step|step.progress())}
+
+    fn close_turn(&mut self,grant:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneProgress,ValueError>{
         use semio_framework_plugin::plugin_app_close_prelude::store::{os_store::snapshot_read::artifact_retirement_admit_owned,os_store::snapshot_read::artifact_retirement_box_close_step};
         let demand=self.close_demands(grant.maximum_copy_bytes)?;
         if demand==RetirementDemand::default(){return Ok(Default::default());}
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"media export close exceeds its admitted depth"));}
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(Default::default());}
         let item=RetainedCloneProgress{copied_items:1,..Default::default()};
-        if self.output_retirement.is_some(){return artifact_retirement_box_close_step(&mut self.output_retirement,grant).map(|step|step.progress());}
-        if !self.fault_publication.terminal_is_empty(){return self.fault_publication.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map(|step|step.progress());}
-        if self.fault.is_some(){return artifact_retirement_admit_owned(&mut self.fault,&mut self.output_retirement,grant).map(|step|step.progress());}
-        if self.cursor.is_some(){return artifact_retirement_admit_owned(&mut self.cursor,&mut self.output_retirement,grant).map(|step|step.progress());}
+        if self.output_retirement.is_some(){return Self::charge(work,artifact_retirement_box_close_step(&mut self.output_retirement,grant));}
+        if !self.fault_publication.terminal_is_empty(){return Self::charge(work,self.fault_publication.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}));}
+        if self.fault.is_some(){return Self::charge(work,artifact_retirement_admit_owned(&mut self.fault,&mut self.output_retirement,grant));}
+        if self.cursor.is_some(){return Self::charge(work,artifact_retirement_admit_owned(&mut self.cursor,&mut self.output_retirement,grant));}
         if self.page.capacity()!=0{let released=std::mem::take(&mut self.page).capacity();return Ok(RetainedCloneProgress{released_bytes:released,..item});}
-        if self.chunks.is_some(){return artifact_retirement_admit_owned(&mut self.chunks,&mut self.output_retirement,grant).map(|step|step.progress());}
-        if self.pending_result.is_some(){return artifact_retirement_admit_owned(&mut self.pending_result,&mut self.output_retirement,grant).map(|step|step.progress())}
-        if self.completion.is_some(){return artifact_retirement_admit_owned(&mut self.completion,&mut self.output_retirement,grant).map(|step|step.progress());}
-        if self.credit.is_some(){return artifact_retirement_admit_owned(&mut self.credit,&mut self.output_retirement,grant).map(|step|step.progress());}
+        if self.chunks.is_some(){return Self::charge(work,artifact_retirement_admit_owned(&mut self.chunks,&mut self.output_retirement,grant));}
+        if self.pending_result.is_some(){return Self::charge(work,artifact_retirement_admit_owned(&mut self.pending_result,&mut self.output_retirement,grant));}
+        if self.completion.is_some(){return Self::charge(work,artifact_retirement_admit_owned(&mut self.completion,&mut self.output_retirement,grant));}
+        if self.credit.is_some(){return Self::charge(work,artifact_retirement_admit_owned(&mut self.credit,&mut self.output_retirement,grant));}
         if let Some(snapshot)=self.snapshot.as_ref(){
             if !self.snapshot_close.as_ref().is_some_and(|lease|lease.can_release(snapshot)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"media export snapshot has no live close witness"));}
             self.snapshot=None;

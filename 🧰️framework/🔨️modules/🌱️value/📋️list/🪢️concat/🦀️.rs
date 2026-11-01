@@ -50,7 +50,7 @@ impl<T:RetireOwned> OriginalVectorConcat<T>{
   let mut work=0;let result=(||{
    let d=self.demand(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
    if self.phase==4{self.phase=1;work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}
-   if self.returned.is_some(){let output=self.output.as_mut().ok_or_else(invalid)?;if output.len()==output.capacity(){return Err(invalid())}output.push(self.returned.take().unwrap());work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<T>(),..Self::moved()}))}
+   if self.returned.is_some(){let output=self.output.as_mut().ok_or_else(invalid)?;if output.len()==output.capacity(){return Err(invalid())}output.push(self.returned.take().ok_or_else(||ValueError::invariant("returned absent"))?);work=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<T>(),..Self::moved()}))}
    let Some(chunk)=self.chunks.get_mut(self.index)else{self.phase=2;work=1;return Ok(RetainedCloneStep::Complete(Self::moved()))};
    if !chunk.remaining().is_empty(){let turn=chunk.take_front(Self::child(grant));work=turn.work;let(value,p)=turn.result?.ok_or_else(invalid)?;*self.returned=Some(value);return Ok(RetainedCloneStep::Progress(p))}
    if !chunk.terminal_is_empty(){if !chunk.close_started(){chunk.begin_close();work=1;return Ok(RetainedCloneStep::Progress(Self::moved()))}let turn=chunk.step(Self::child(grant));work=turn.work;return turn.result.map(|s|RetainedCloneStep::Progress(s.progress()))}

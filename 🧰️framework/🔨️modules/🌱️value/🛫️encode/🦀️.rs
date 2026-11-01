@@ -66,7 +66,7 @@ impl<'a> NativeEncodeControl<'a> {
         })();
         match preflight{
             Err(error)=>crate::RetainedWorkOutcome{result:Err(error),work:0},
-            Ok(true)=>self.retirement.as_mut().unwrap().close_step(grant),
+            Ok(true)=>match self.retirement.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("retirement absent").into()),work:0}}.close_step(grant),
             Ok(false)=>crate::RetainedWorkOutcome{result:Ok(if self.retirement.as_ref().is_some_and(|r|r.terminal_is_empty()){crate::RetainedCloneStep::Complete(Default::default())}else{crate::RetainedCloneStep::Progress(Default::default())}),work:0}
         }
     }
@@ -99,22 +99,22 @@ impl<'a> NativeEncodeControl<'a> {
     /// ▶️ Rebinds a moved operation receipt to the current hop's cancellation callback.
     pub fn resume(receipt:NativeEncodeContinuation,callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool)->Result<Self,ValueError>{
         if receipt.owned_bytes>receipt.maximum_bytes||(receipt.total!=0&&receipt.completed>receipt.total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native encode continuation has invalid cumulative accounting"));}
-        Ok(Self{scope_maximum:None,retirement:None,receiving:receipt.receiving,maximum_bytes:receipt.maximum_bytes,owned_bytes:receipt.owned_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback,allocation:allocation::Binding::Local})
+        Ok(Self{scope_maximum:(!receipt.receiving).then_some(receipt.maximum_bytes),retirement:None,receiving:receipt.receiving,maximum_bytes:receipt.maximum_bytes,owned_bytes:receipt.owned_bytes,completed:receipt.completed,total:receipt.total,started:false,stage:receipt.stage,depth:0,callback,allocation:allocation::Binding::Local})
     }
 
     /// 🚦️ Binds the exact caller ceiling and cancellation callback.
-    pub fn new(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool)->Self{Self{scope_maximum:None,retirement:None,receiving:false,maximum_bytes,owned_bytes:0,completed:0,total:0,started:false,stage:0,depth:0,callback,allocation:allocation::Binding::Local}}
+    pub fn new(maximum_bytes:usize,callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool)->Self{Self{scope_maximum:Some(maximum_bytes),retirement:None,receiving:false,maximum_bytes,owned_bytes:0,completed:0,total:0,started:false,stage:0,depth:0,callback,allocation:allocation::Binding::Local}}
     /// 📏️ Returns the complete allowance and cumulative admitted ownership.
     pub fn maximum_bytes(&self)->usize{self.maximum_bytes}
     /// 📊️ Returns storage admitted across every nested stage.
     pub fn owned_bytes(&self)->usize{self.owned_bytes}
     /// 🛂️ Starts with zero storage authority; each original retained turn must supply its grant.
-    pub fn new_retained(callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool)->Self{let mut control=Self::new(0,callback);control.receiving=true;control}
+    pub fn new_retained(callback:&'a mut dyn FnMut(NativeEncodeProgress)->bool)->Self{let mut control=Self::new(0,callback);control.receiving=true;control.scope_maximum=None;control}
     /// 🎟️ Binds this original turn's allocation authority without resetting cumulative ownership.
-    pub fn admit_turn_capacity(&mut self,maximum_capacity_bytes:usize)->Result<(),ValueError>{let whole=if self.receiving{self.scope_maximum}else{Some(self.maximum_bytes)};let next=crate::native_receiving::turn::maximum(self.owned_bytes,maximum_capacity_bytes,whole)?;self.maximum_bytes=if self.receiving{self.scope_maximum.map_or(next,|maximum|maximum.min(next))}else{self.maximum_bytes.min(next)};Ok(())}
+    pub fn admit_turn_capacity(&mut self,maximum_capacity_bytes:usize)->Result<(),ValueError>{let whole=self.scope_maximum;let next=crate::native_receiving::turn::maximum(self.owned_bytes,maximum_capacity_bytes,whole)?;self.maximum_bytes=whole.map_or(next,|maximum|maximum.min(next));Ok(())}
 
     /// 🪙️ Consumes the same admission owner under an exact checked source capacity.
-    pub fn admit_capacity(mut self,source_bytes:usize,multiples:usize,scaffold_bytes:usize)->Result<Self,(Self,ValueError)>{match source_bytes.checked_mul(multiples).and_then(|bytes|bytes.checked_add(scaffold_bytes)).filter(|bytes|*bytes<=isize::MAX as usize&&*bytes>=self.owned_bytes){Some(maximum)=>{self.maximum_bytes=maximum;Ok(self)},None=>Err((self,ValueError::literal(ValueRefusalKind::OwnershipLimit,"native encoding capacity exceeds source policy or admitted ownership")))}}
+    pub fn admit_capacity(mut self,source_bytes:usize,multiples:usize,scaffold_bytes:usize)->Result<Self,(Self,ValueError)>{match source_bytes.checked_mul(multiples).and_then(|bytes|bytes.checked_add(scaffold_bytes)).filter(|bytes|*bytes<=isize::MAX as usize&&*bytes>=self.owned_bytes){Some(maximum)=>{self.maximum_bytes=maximum;if !self.receiving{self.scope_maximum=Some(maximum);}Ok(self)},None=>Err((self,ValueError::literal(ValueRefusalKind::OwnershipLimit,"native encoding capacity exceeds source policy or admitted ownership")))}}
     /// 📐️ Applies a narrower physical stage ceiling without resetting ownership.
     pub fn scoped_maximum<T,E:From<ValueError>>(&mut self,maximum:usize,operation:impl FnOnce(&mut Self)->Result<T,E>)->Result<T,E>{maximum::run(self,maximum,operation)}
     /// 🛑️ Checks cancellation before an expensive operation.
@@ -142,3 +142,7 @@ impl<'a> NativeEncodeControl<'a> {
 }
 
 
+
+#[cfg(test)]
+#[path="🧪️tests/🚦️turn-ceiling/🦀️.rs"]
+mod turn_ceiling_tests;

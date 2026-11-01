@@ -19,7 +19,7 @@ struct ZeroPayloadRetirement<T> {
 impl<T: Send + 'static> store::ErasedSnapshotRetirement for ZeroPayloadRetirement<T> {
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Ok(semio_framework_value::RetirementDemand{depth:usize::from(self.value.is_some()),..Default::default()})}
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, ValueError> { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         if self.value.is_none() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
         }
@@ -31,7 +31,7 @@ impl<T: Send + 'static> store::ErasedSnapshotRetirement for ZeroPayloadRetiremen
         }
         drop(self.value.take());
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 
     fn terminal_is_empty(&self) -> bool {
         self.value.is_none()
@@ -62,23 +62,23 @@ fn admit_zero_payload_birth<V>(grant: RetainedCloneGrant) -> Result<RetainedClon
 impl<T: Send + 'static> store::ArtifactOwnedValueRetirementFactory<T> for ZeroPayloadRetirementFactory<T> {
     fn retirement_birth_bytes(&self, _value: &T) -> usize { size_of::<ZeroPayloadRetirement<T>>() }
 
-    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, T)> {
+    fn retire_owned(&self, value: T, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, T)> { let result = (|| -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, T)> {
         match admit_zero_payload_birth::<T>(grant) {
             Ok(progress) => Ok((Box::new(ZeroPayloadRetirement { value: ManuallyDrop::new(Some(value)) }), progress)),
             Err(error) => Err((error, value)),
         }
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 impl<T: Send + Sync + 'static> store::SnapshotRetirementFactory<T> for ZeroPayloadRetirementFactory<T> {
     fn retirement_birth_bytes(&self, _snapshot: &Arc<T>) -> usize { size_of::<ZeroPayloadRetirement<Arc<T>>>() }
 
-    fn retire(&self, snapshot: Arc<T>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<T>)> {
+    fn retire(&self, snapshot: Arc<T>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<T>)> { let result = (|| -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<T>)> {
         match admit_zero_payload_birth::<Arc<T>>(grant) {
             Ok(progress) => Ok((Box::new(ZeroPayloadRetirement { value: ManuallyDrop::new(Some(snapshot)) }), progress)),
             Err(error) => Err((error, snapshot)),
         }
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 /// 🫙️ Exact owner catalogue for a store whose snapshot and mutation types are statically empty.

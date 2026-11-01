@@ -23,7 +23,9 @@ export interface SchemaReferenceClosure { readonly root: SchemaSourceInput; read
 export type SchemaReferenceErrorCode = JsonSyntaxErrorCode | "coordinate-byte-budget" | "document-byte-budget" | "duplicate-anchor" | "duplicate-input-identity" | "duplicate-input-path" | "duplicate-resource-id" | "invalid-anchor" | "invalid-base-uri" | "invalid-input" | "invalid-resource-id" | "invalid-schema" | "invalid-vocabulary" | "malformed-json-pointer" | "malformed-reference-fragment" | "reference-budget" | "resource-budget" | "schema-budget" | "source-byte-budget" | "unknown-anchor" | "unknown-keyword" | "unknown-resource" | "unknown-schema-pointer" | "unsupported-dialect" | "unsupported-dynamic-reference" | "unsupported-keyword" | "unsupported-vocabulary";
 /** ⚠️ Reports deterministic owned refusal with source position authority. */
 export class SchemaReferenceError extends Error {
-  constructor(readonly code: SchemaReferenceErrorCode, readonly origin: SchemaSourcePosition | null, message: string) { super(message); this.name = "SchemaReferenceError"; }
+  readonly code: SchemaReferenceErrorCode;
+  readonly origin: SchemaSourcePosition | null;
+  constructor(code: SchemaReferenceErrorCode, origin: SchemaSourcePosition | null, message: string) { super(message); this.name = "SchemaReferenceError"; this.code = code; this.origin = origin; }
 }
 
 type SchemaNode = { input: SchemaSourceInput; pointer: string; node: JsonSyntaxNode; uri: string };

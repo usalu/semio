@@ -43,7 +43,7 @@ impl FlowEvaluationSeeds{
 impl Drop for FlowEvaluationSeeds{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original builtin seed must finish explicit closure");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.owners)}}}}
 struct SeedRetirement(FlowEvaluationSeeds);
 impl RetirementCursor for SeedRetirement{
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Ok(step)if step.progress()!=RetainedCloneProgress::default()=>RetirementStep::Progress(step.progress()),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete,Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.0.close_step(grant){Ok(step)if step.progress()!=RetainedCloneProgress::default()=>RetirementStep::Progress(step.progress(),1),Ok(RetainedCloneStep::Complete(_))=>RetirementStep::Complete(0),Ok(_)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error,0)}}
  fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{self.0.retirement.as_ref().map_or(Ok(0),|owner|owner.next_copy_byte_demand())}
  fn next_selected_work_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.0.next_close_demands(copy)?.copy_bytes)}

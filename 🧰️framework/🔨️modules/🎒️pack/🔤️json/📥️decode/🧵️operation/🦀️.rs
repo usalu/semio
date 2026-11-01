@@ -22,7 +22,7 @@ fn debit(total:RetainedCloneGrant,used:&mut RetainedCloneProgress,receipt:Retain
     if !used.fits(total){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON operation exceeded original cumulative authority").with_retained_progress(receipt));}Ok(())
 }
 fn admit<T:RetireOwned>(original:&mut Option<T>,closing:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-    match semio_framework_value::admit_owned_retirement(original.take().expect("original JSON outcome retained before admission"),grant).result{
+    match semio_framework_value::admit_owned_retirement(original.take().ok_or_else(||ValueError::invariant("original JSON outcome retained before admission"))?,grant).result{
         Ok((owner,receipt))=>{*closing=Some(owner);Ok(RetainedCloneStep::Progress(receipt))},
         Err((error,value))=>{*original=Some(value);Err(error)},
     }

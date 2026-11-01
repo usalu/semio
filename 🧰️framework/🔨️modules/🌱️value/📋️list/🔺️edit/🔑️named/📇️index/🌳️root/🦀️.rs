@@ -19,7 +19,7 @@ impl<T:RetireOwned+Send+Sync+'static> NamedPersistentRoot<T>{
  if let Some(owner)=output.as_ref(){if owner.closing||owner.len!=self.len||owner.projection!=self.key as usize||!ranked.original.check_binding(&owner.original)?||owner.directory.as_ref().is_some_and(|actual|actual.identity()!=directory.identity()){return Err(invalid())}if owner.ready(){return Ok(RetainedCloneStep::Complete(Default::default()))}}
  if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
  if output.is_none(){*output=Some(AdmittedNamedKeyIndex{original:ManuallyDrop::new(None),directory:ManuallyDrop::new(None),retirement:Default::default(),len:self.len,projection:self.key as usize,closing:false});work+=1;}
- let owner=output.as_mut().unwrap();if owner.original.is_none(){take_work!(work,ranked.original.bind(&mut owner.original,grant)).ok_or_else(invalid)?;return Ok(RetainedCloneStep::Progress(paid(d)))}
+ let owner=output.as_mut().ok_or_else(||ValueError::invariant("output absent"))?;if owner.original.is_none(){take_work!(work,ranked.original.bind(&mut owner.original,grant)).ok_or_else(invalid)?;return Ok(RetainedCloneStep::Progress(paid(d)))}
  let(alias,_)=take_work!(work,directory.try_duplicate(grant));*owner.directory=Some(alias);Ok(RetainedCloneStep::Complete(paid(d)))
  })();crate::RetainedWorkOutcome{result,work}}
 

@@ -7,6 +7,10 @@ use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use std::sync::Arc;
 
 type Source = wire::SnapshotSource;
+type SourceAdmission = semio_framework_value::retained_clone::RetainedCloneSourceAdmission<IfcSnapshot, Arc<IfcSnapshot>>;
+fn snapshot_of(owner: &Arc<IfcSnapshot>) -> &IfcSnapshot {
+    owner
+}
 fn missing_root_argument(event:&editing::SnapshotEditEvent,snapshot:&IfcSnapshot,address:&pointer::PathAdmission)->Option<pointer::NativeAddress>{
     let editing::SnapshotEditEvent::InsertValue{path,..}=event else{return None;};
     if address.field_count()!=4||!address.field_is(path,2,"args"){return None;}
@@ -101,6 +105,7 @@ pub struct IfcDetailsWork<E: editing::SnapshotEditingEditor, C: IfcDetailsProfil
     header_cursor: <Vec<IfcValue> as RetainedClone>::Cursor,
     parts_cursor:<Vec<IfcComplexType> as RetainedClone>::Cursor,
     source: Option<Source>,
+    source_admission: Option<SourceAdmission>,
     entity: Option<IfcEntity>,
     value: Option<IfcValue>,
     header_values: Option<Vec<IfcValue>>,
@@ -158,6 +163,7 @@ impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, 
             pending: None,
             semantic_emit: None,
             unborn: None,
+            source_admission: None,
             retirement: Default::default(),
             control: Default::default(),
             position: None,
@@ -304,6 +310,9 @@ impl<E: editing::SnapshotEditingEditor, C: IfcDetailsProfile> IfcDetailsWork<E, 
         }
         if self.semantic_emit.is_some() {
             return self.retirement.next_owner_demands::<Emit<IfcMutation, E::ConfigMutation, E::DraftMutation>>(true, &None, body);
+        }
+        if let Some(admission) = self.source_admission.as_ref() {
+            return if admission.phase() == "ready" { admission.next_demand() } else { admission.next_return_demand() };
         }
         if self.unborn.is_some() {
             return self.retirement.next_owner_demands::<Arc<IfcSnapshot>>(true, &None, body);
@@ -480,21 +489,28 @@ where
                 if grant.maximum_copy_bytes < alias_bytes+metadata {
                     return Ok(ArtifactCommandWorkStep::Pending { stage: "ifc-edit-source", preview: b"" });
                 }
-                let source_grant = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - alias_bytes-metadata, ..grant };
-                let (source, mut progress) = match Source::admit_borrowed(Arc::clone(owner), |snapshot| snapshot.as_ref(), source_grant) {
-                    Ok(source) => source,
-                    Err((error, original)) => {
-                        self.unborn = Some(original);
-                        cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: alias_bytes, ..Default::default() })?;
-                        return Err(error.into());
+                if self.source_admission.is_none() && self.source.is_none() {
+                    self.source_admission = Some(Source::admission_borrowed(Arc::clone(owner), snapshot_of));
+                    cx.consume_retained(RetainedCloneProgress { copied_items: 1, copied_bytes: alias_bytes + metadata, ..Default::default() })?;
+                    cx.consume_fuel(1);
+                    return Ok(ArtifactCommandWorkStep::Progress { stage: "ifc-edit-source", preview: b"" });
+                }
+                if let Some(admission) = self.source_admission.as_mut() {
+                    let step_grant = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - alias_bytes, ..grant };
+                    if !semio_framework_value::retained_clone::retained_clone_grant_admits(step_grant, admission.next_demand()?) {
+                        return Ok(ArtifactCommandWorkStep::Pending { stage: "ifc-edit-source", preview: b"" });
                     }
-                };
-                progress.copied_bytes += alias_bytes+metadata;
-                self.source = Some(source);
+                    let turn = if admission.phase() == "ready" { admission.take_output(&mut self.source, step_grant) } else { admission.advance(step_grant) };
+                    cx.consume_fuel(turn.work);
+                    let step = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
+                    cx.consume_retained(step.progress())?;
+                    if self.source.is_none() {
+                        return Ok(ArtifactCommandWorkStep::Progress { stage: "ifc-edit-source", preview: b"" });
+                    }
+                    self.source_admission = None;
+                }
                 self.position=position;self.header_column=header.map(|(column,_)|column);self.prefix=header.map_or(0,|(_,prefix)|prefix);
                 if let Some(address)=address{let entity=&input.snapshot.entities[address.position];let args=address.part.and_then(|part|entity.complex.get(part)).map_or(entity.args.as_slice(),|part|part.args.as_slice());self.argument=(args.get(address.argument).is_some()||insertion.is_some()).then_some(address.argument);self.part=address.part;self.prefix=address.prefix;}
-                cx.consume_retained(progress)?;
-                cx.consume_fuel(1);
                 self.prepared = true;
                 return Ok(ArtifactCommandWorkStep::Progress { stage: "ifc-edit-source", preview: b"" });
             }
@@ -549,30 +565,75 @@ where
                 cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})?;cx.consume_fuel(1);
                 return Ok(ArtifactCommandWorkStep::Progress{stage:"ifc-edit-constituent-argument",preview:b""});
             }
-            let step = if let Some(column) = self.header_column {
-                self.header_cursor.advance(source.borrow().project(column, |snapshot| header_values(snapshot, column)), cx.retained_grant().maximum_copy_bytes.min(4096), cx.retained_grant())?
+            let ready = if self.header_column.is_some() {
+                self.header_cursor.output_ready()
+            } else if self.part.is_some() {
+                self.parts_cursor.output_ready()
+            } else if self.argument.is_some() {
+                self.value_cursor.output_ready()
+            } else {
+                self.cursor.output_ready()
+            };
+            let grant = cx.retained_grant();
+            if ready {
+                let demand = if self.header_column.is_some() {
+                    self.header_cursor.take_demand()?
+                } else if self.part.is_some() {
+                    self.parts_cursor.take_demand()?
+                } else if self.argument.is_some() {
+                    self.value_cursor.take_demand()?
+                } else {
+                    self.cursor.take_demand()?
+                };
+                if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+                    return Ok(ArtifactCommandWorkStep::Pending { stage: "ifc-edit-copy", preview: b"" });
+                }
+                let missing = || Fault::from("IFC retained edit copy payload is missing");
+                let progress = if self.header_column.is_some() {
+                    let turn = self.header_cursor.take(grant);
+                    cx.consume_fuel(turn.work);
+                    let (values, progress) = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?.ok_or_else(missing)?;
+                    self.header_values = Some(values);
+                    progress
+                } else if self.part.is_some() {
+                    let turn = self.parts_cursor.take(grant);
+                    cx.consume_fuel(turn.work);
+                    let (parts, progress) = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?.ok_or_else(missing)?;
+                    self.parts = Some(parts);
+                    progress
+                } else if self.argument.is_some() {
+                    let turn = self.value_cursor.take(grant);
+                    cx.consume_fuel(turn.work);
+                    let (value, progress) = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?.ok_or_else(missing)?;
+                    self.value = Some(value);
+                    progress
+                } else {
+                    let turn = self.cursor.take(grant);
+                    cx.consume_fuel(turn.work);
+                    let (entity, progress) = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?.ok_or_else(missing)?;
+                    self.entity = Some(entity);
+                    progress
+                };
+                cx.consume_retained(progress)?;
+                return Ok(ArtifactCommandWorkStep::Progress { stage: "ifc-edit-copy", preview: b"" });
+            }
+            let body = grant.maximum_copy_bytes.min(4096);
+            let turn = if let Some(column) = self.header_column {
+                self.header_cursor.advance(source.borrow().project(column, |snapshot| header_values(snapshot, column)), body, grant)
             } else {
                 let position = self.position.expect("retained entity position");
                 let entity = source.borrow().project(position, |snapshot| &snapshot.entities[position]);
-                if self.part.is_some(){self.parts_cursor.advance(entity.project(0,|entity|&entity.complex),cx.retained_grant().maximum_copy_bytes.min(4096),cx.retained_grant())?}
-                else if let Some(index) = self.argument {
-                    self.value_cursor.advance(entity.project(index, |entity| &entity.args[index]), cx.retained_grant().maximum_copy_bytes.min(4096), cx.retained_grant())?
+                if self.part.is_some() {
+                    self.parts_cursor.advance(entity.project(0, |entity| &entity.complex), body, grant)
+                } else if let Some(index) = self.argument {
+                    self.value_cursor.advance(entity.project(index, |entity| &entity.args[index]), body, grant)
                 } else {
-                    self.cursor.advance(entity, cx.retained_grant().maximum_copy_bytes.min(4096), cx.retained_grant())?
+                    self.cursor.advance(entity, body, grant)
                 }
             };
+            cx.consume_fuel(turn.work);
+            let step = turn.result.map_err(|error| semio_framework_job::OriginalTurnFailure::debit_original(error, cx))?;
             cx.consume_retained(step.progress())?;
-            cx.consume_fuel(step.progress().copied_items as u64);
-            if matches!(step, RetainedCloneStep::Complete(_)) {
-                if self.header_column.is_some() {
-                    self.header_values = self.header_cursor.take();
-                } else if self.part.is_some(){self.parts=self.parts_cursor.take();}
-                else if self.argument.is_some() {
-                    self.value = self.value_cursor.take();
-                } else {
-                    self.entity = self.cursor.take();
-                }
-            }
             return Ok(ArtifactCommandWorkStep::Progress { stage: "ifc-edit-copy", preview: b"" });
         }
         if self.complete {
@@ -657,7 +718,8 @@ where
         if !self.rules_validated {
             let mut demand=self.rules.demands(input.snapshot,self.pending.as_deref().unwrap_or(&[]))?;demand.copy_bytes+=std::mem::size_of::<bool>();
             if !semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),demand){return Ok(ArtifactCommandWorkStep::Pending{stage:"ifc-edit-rules",preview:b""});}
-            if let Some(candidate)=self.constituent_roster.type_admission().and_then(|admission|candidate_rules::IfcTypeCandidate::new::<C>(admission,event,input.snapshot,&self.address,self.pending.as_deref().expect("prepared IFC mutations"))){
+            if let Some(check)=self.constituent_roster.type_admission().and_then(|admission|admission.candidate::<C>(event,input.snapshot,&self.address,self.pending.as_deref().expect("prepared IFC mutations"))){
+                let candidate=IfcTypeCandidate::new(&check,input.snapshot,self.pending.as_deref().expect("prepared IFC mutations"));
                 match self.rules.advance(&candidate,cx)?{IfcCandidateRuleStep::Pending=>return Ok(ArtifactCommandWorkStep::Progress{stage:"ifc-edit-rules",preview:b""}),IfcCandidateRuleStep::Complete=>{},IfcCandidateRuleStep::Invalid=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"express.local-rule-false").into()),IfcCandidateRuleStep::Incomplete=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"express.local-rule-incomplete").into())}
             }
             self.rules_validated=true;
@@ -728,6 +790,7 @@ where
             && self.pending.is_none()
             && self.semantic_emit.is_none()
             && self.unborn.is_none()
+            && self.source_admission.is_none()
             && self.retirement.is_empty()
             && !self.publication.codec_live()
             && self.source.as_ref().is_none_or(Source::terminal_is_empty)
@@ -786,29 +849,45 @@ where
                 return self.retirement.step_granted(grant);
             }
             if self.value.is_some() {
-                return self.retirement.begin_granted(&mut self.value, grant)?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "IFC argument retirement omitted its owner"));
+                return owned_step(self.retirement.begin_granted(&mut self.value, grant), "IFC argument retirement omitted its owner");
             }
             if self.original_event.is_some() {
-                return self.retirement.begin_granted(&mut self.original_event, grant)?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "IFC original event retirement omitted its owner"));
+                return owned_step(self.retirement.begin_granted(&mut self.original_event, grant), "IFC original event retirement omitted its owner");
             }
             if self.header_values.is_some() {
-                return self.retirement.begin_granted(&mut self.header_values, grant)?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "IFC header retirement omitted its owner"));
+                return owned_step(self.retirement.begin_granted(&mut self.header_values, grant), "IFC header retirement omitted its owner");
             }
-            if self.parts.is_some(){return self.retirement.begin_granted(&mut self.parts,grant)?.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"IFC constituent retirement omitted its owner"));}
+            if self.parts.is_some(){return owned_step(self.retirement.begin_granted(&mut self.parts, grant), "IFC constituent retirement omitted its owner");}
             if self.entity.is_some() {
-                return self.retirement.begin_granted(&mut self.entity, grant)?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "IFC entity retirement omitted its owner"));
+                return owned_step(self.retirement.begin_granted(&mut self.entity, grant), "IFC entity retirement omitted its owner");
             }
             if self.garbage.is_some() {
-                return self.retirement.begin_granted(&mut self.garbage, grant)?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "IFC displaced values omitted their owner"));
+                return owned_step(self.retirement.begin_granted(&mut self.garbage, grant), "IFC displaced values omitted their owner");
             }
             if self.pending.is_some() {
-                return self.retirement.begin_granted(&mut self.pending, grant)?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "IFC pending mutations omitted their owner"));
+                return owned_step(self.retirement.begin_granted(&mut self.pending, grant), "IFC pending mutations omitted their owner");
             }
             if self.semantic_emit.is_some() {
-                return self.retirement.begin_granted(&mut self.semantic_emit, grant)?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "IFC semantic emission omitted its owner"));
+                return owned_step(self.retirement.begin_granted(&mut self.semantic_emit, grant), "IFC semantic emission omitted its owner");
+            }
+            if let Some(admission) = self.source_admission.as_mut() {
+                let turn = if admission.phase() == "ready" {
+                    admission.take_output(&mut self.source, grant)
+                } else {
+                    let mut inputs = None;
+                    let turn = admission.return_inputs(&mut inputs, grant);
+                    if let Some((owner, ())) = inputs {
+                        self.unborn = Some(owner);
+                    }
+                    turn
+                };
+                if admission.terminal_is_empty() || self.source.is_some() {
+                    self.source_admission = None;
+                }
+                return turn;
             }
             if self.unborn.is_some() {
-                return self.retirement.begin_granted(&mut self.unborn, grant)?.ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "IFC refused source omitted its original owner"));
+                return owned_step(self.retirement.begin_granted(&mut self.unborn, grant), "IFC refused source omitted its original owner");
             }
             if let Some(source) = self.source.as_mut().filter(|source| !source.terminal_is_empty()) {
                 return source.close_step(grant);
@@ -816,7 +895,7 @@ where
             if let Some(source) = self.publication.view.source.as_mut().filter(|source| !source.terminal_is_empty()) {
                 return source.close_step(grant);
             }
-            Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
+            idle_step(RetainedCloneStep::Complete(RetainedCloneProgress::default()))
         })
     }
 }

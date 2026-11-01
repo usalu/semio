@@ -9,6 +9,10 @@ use serde_json::Value;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use store::Mutation;
 use semio_framework_value::{RetirementDemand, ValueError};
+/// 🪙️ A mounted close action records its single actual effect as one unit of independent CPU.
+fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
+/// 🏗️ A mounted construction records its single actual effect as one unit of independent CPU.
+fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,RetainedCloneProgress),ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_composition_publication::ChildPublicationResultV1;
@@ -146,7 +150,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  /// 🪃️ Original streamed aborts need their real Store while returning retained replay reads.
  pub fn stream_abort_close_demands(&self,store:&store::ConfigStore<A::Snapshot,A::Mutation>,body:usize)->Result<RetirementDemand,ValueError>{let Some(owner)=self.pending_stream_abort.as_ref()else{return Ok(Default::default())};if owner.terminal_is_empty(){Ok(semio_framework_os_store_engine_replay::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands())}else{owner.close_demands(store,body)}}
  /// ♻️ Contextual retirement drains the actual abort before the mounted generic frame can close.
- pub fn close_stream_abort(&mut self,store:&mut store::ConfigStore<A::Snapshot,A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let Some(owner)=self.pending_stream_abort.as_mut()else{return Ok(true)};if !owner.terminal_is_empty(){owner.close_step(store,cx)?;return Ok(false)}let d=semio_framework_os_store_engine_replay::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands();semio_framework_job::close_original_retained_step(cx,d,|_|{self.pending_stream_abort=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;Ok(self.pending_stream_abort.is_none())}
+ pub fn close_stream_abort(&mut self,store:&mut store::ConfigStore<A::Snapshot,A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let Some(owner)=self.pending_stream_abort.as_mut()else{return Ok(true)};if !owner.terminal_is_empty(){owner.close_step(store,cx)?;return Ok(false)}let d=semio_framework_os_store_engine_replay::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands();retired(cx,d,|_|{self.pending_stream_abort=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;Ok(self.pending_stream_abort.is_none())}
  /// 📏️ Quotes the actual fixed mounted header and original input transfers before admission.
  pub fn original_frame_release_demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Box<Self>>(),release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
  /// 📐️ Fresh boxed placement writes the fixed header once and moves original field headers.
@@ -166,7 +170,7 @@ include!("../🪟️mounted/♻️frontier/🦀️.rs");
 /// 🪢️ Returns the worker's original cancellation ancestor alias against the lease root the operation still owns, since that root can never become unique while the operation retains it.
 fn return_session_cancel_alias(session: &semio_framework_job_worker::MountedWorkerJobSession<semio_framework::ErasedToolJob>, lease: &Option<ToolCancellationLease>, grant: RetainedCloneGrant) -> Option<Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure>> {
     let lease = lease.as_ref()?;
-    matches!(session.has_original_cancel_alias_witness(lease.cancel_token()), Ok(true)).then(|| match session.return_original_cancel_alias_step(lease.cancel_token(), grant) {
+    matches!(session.has_original_cancel_alias_witness(lease.cancel_token()), Ok(true)).then(|| match session.return_original_cancel_alias_step(lease.cancel_token(), grant).result {
         Ok(Some(step)) => Ok(PluginLifecycleStep::Progress(step.progress())),
         Ok(None) | Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => Ok(PluginLifecycleStep::AwaitingInput { reason: "typed operation original cancellation alias awaits its issuing root" }),
         Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => Err(error.into()),
@@ -207,6 +211,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     /// keeps advancing it. The operation is terminal the moment its session is refused —
     /// cancel the lease so the next publication unit mints the exact fault page.
     pub fn drive_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure> {
+        {static N:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(0);let n=N.fetch_add(1,std::sync::atomic::Ordering::Relaxed);if n%2048==0{eprintln!("[DEBUG] drive_worker_step n={n} stage={:?} prod_req={} reserved_pending={} user_cancel={} terminal_seen={} cancelled={} session={} rejected={} sem={} outc={} resume={} fuel={} yield={}",self.stage,self.producer_request.is_some(),self.original_reserved_producer_pending(),self.user_cancel_requested,self.terminal_seen,cx.is_cancelled(),self.session.is_some(),self.session_rejected.is_some(),self.worker_semantic_pending,self.worker_outcome_pending,self.worker_resume_pending,cx.fuel_remaining(),cx.should_yield());}}
         self.validate_original_producer_source(cx)?;
         if self.stage != MountedTypedCommandFullOperationStage::Worker {return Ok(PluginLifecycleStep::Blocked{reason:"typed command awaits its bounded revision-validated publication or ACK turn"});}
         if !self.source_identity.matches(cx){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted worker requires its original source identity independently of its registry record").into())}
@@ -303,16 +308,16 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
         }
         let step_fuel=cx.fuel_remaining().min(contract.max_work_units_per_step);
         let step_deadline_us=cx.now_us().map_or(cx.deadline_us(),|now|now.saturating_add(u64::from(contract.max_step_micros)));
-        match cx.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(same)){
+        match cx.with_retained_loan(grant,|loaned|loaned.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(same))){
             Ok(semio_framework_job_worker::WorkerJobPoll::Outcome|semio_framework_job_worker::WorkerJobPoll::Terminal)=>{
                 let Some((issued,progress))=session.take_checked_out_retained_step_receipt()else{return Ok(PluginLifecycleStep::Blocked{reason:"typed operation original worker receipt awaits its sole recipient"});};
                 self.worker_semantic_pending=true;
-                if !progress.fits(issued)||!progress.fits(grant)||issued.maximum_items>grant.maximum_items||issued.maximum_copy_bytes>grant.maximum_copy_bytes||issued.maximum_capacity_bytes>grant.maximum_capacity_bytes||issued.maximum_release_bytes>grant.maximum_release_bytes||issued.maximum_depth>grant.maximum_depth{return Err(plugin_sdk_fault("typed operation original worker receipt exceeded its received turn").with_retained_progress(progress).into());}
+                if !progress.fits(issued)||!progress.fits(grant)||issued.maximum_items>grant.maximum_items||issued.maximum_copy_bytes>grant.maximum_copy_bytes||issued.maximum_capacity_bytes>grant.maximum_capacity_bytes||issued.maximum_release_bytes>grant.maximum_release_bytes||issued.maximum_depth>grant.maximum_depth{return Err(plugin_sdk_fault(format!("[DEBUG] typed operation original worker receipt exceeded its received turn: issued={issued:?} grant={grant:?} progress={progress:?}")).with_retained_progress(progress).into());}
                 if matches!(session.checked_out_outcome(),Ok(None))&&session.resume().is_ok(){self.worker_semantic_pending=false;}
                 Ok(PluginLifecycleStep::Progress(progress))
             }
             Ok(semio_framework_job_worker::WorkerJobPoll::Submitted|semio_framework_job_worker::WorkerJobPoll::Rejected)=>Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),
-            Ok(_)=>Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted worker awaits its next outcome"}),
+            Ok(other)=>{if cx.fuel_remaining()%256==0{eprintln!("[DEBUG] worker poll {other:?} fuel={} step_fuel={step_fuel}",cx.fuel_remaining());}Ok(PluginLifecycleStep::AwaitingInput{reason:"typed operation mounted worker awaits its next outcome"})}
             Err(failure)=>Err(failure)
 
         }
@@ -587,11 +592,11 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
         if self.publication_retirement.is_none() {
-            if self.meta.view_state.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.meta.view_state, &mut self.publication_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(semio_framework_job::OriginalTurnFailure::from); }
-            if self.window_config_authority.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.window_config_authority, &mut self.publication_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(semio_framework_job::OriginalTurnFailure::from); }
-            if self.window_transient_authority.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.window_transient_authority, &mut self.publication_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(semio_framework_job::OriginalTurnFailure::from); }
+            if self.meta.view_state.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.meta.view_state, &mut self.publication_retirement, grant).result.map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(semio_framework_job::OriginalTurnFailure::from); }
+            if self.window_config_authority.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.window_config_authority, &mut self.publication_retirement, grant).result.map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(semio_framework_job::OriginalTurnFailure::from); }
+            if self.window_transient_authority.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.window_transient_authority, &mut self.publication_retirement, grant).result.map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(semio_framework_job::OriginalTurnFailure::from); }
         }
-        if let Some(original)=self.captured_child_content.take(){match semio_framework_value::retirement::arc_custody::admit_shared_retirement(original,grant,true){Ok((owner,progress))=>{self.publication_retirement=Some(owner);return Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.captured_child_content=Some(original);return Err(error.into())}}}
+        if let Some(original)=self.captured_child_content.take(){match semio_framework_value::retirement::arc_custody::admit_shared_retirement(original,grant,true).result{Ok((owner,progress))=>{self.publication_retirement=Some(owner);return Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.captured_child_content=Some(original);return Err(error.into())}}}
         if self.pending_publication_outcome.pending() || self.pending_publication_outcome.report.is_some() {
             let bytes = self.pending_publication_outcome.copy_demand();
             self.pending_publication_outcome = PendingPublicationOutcome::new();

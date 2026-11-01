@@ -653,6 +653,6 @@ fn close_original_patch_reader(reader:SnapshotPatchReadCursor<'_>,maximum_bytes:
     use semio_framework_value::{retained_clone::RetainedCloneGrant,close_factory_ticket};
     let grant=RetainedCloneGrant::one_capacity_turn(reader.retirement_birth_bytes(),256);
     let(owner,birth)=reader.into_retirement(grant).map_err(|(error,_)|error).unwrap();assert!(birth.fits(grant));let mut owner=Some(owner);
-    for _ in 0..100000{let Some(cursor)=owner.as_ref()else{return;};let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:cursor.next_capacity_byte_demand(maximum_bytes).unwrap(),maximum_release_bytes:if cursor.terminal_is_empty(){std::mem::size_of_val(cursor.as_ref())}else{cursor.next_release_byte_demand().unwrap()},maximum_depth:if cursor.terminal_is_empty(){1}else{cursor.next_depth_demand().unwrap()}};assert!(close_factory_ticket(&mut owner,grant).unwrap().progress().fits(grant));}
+    for _ in 0..100000{let Some(cursor)=owner.as_ref()else{return;};let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:maximum_bytes,maximum_capacity_bytes:cursor.next_capacity_byte_demand(maximum_bytes).unwrap(),maximum_release_bytes:if cursor.terminal_is_empty(){std::mem::size_of_val(cursor.as_ref())}else{cursor.next_release_byte_demand().unwrap()},maximum_depth:if cursor.terminal_is_empty(){1}else{cursor.next_depth_demand().unwrap()}};assert!(close_factory_ticket(&mut owner,grant).result.unwrap().progress().fits(grant));}
     panic!("original patch reader failed to retire");
 }

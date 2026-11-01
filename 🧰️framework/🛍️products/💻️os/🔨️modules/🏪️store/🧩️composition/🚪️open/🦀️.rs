@@ -439,7 +439,7 @@ impl MemberOpenRequest {
 
 impl ErasedSnapshotRetirement for MemberOpenRequest {
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:MemberOpenRequest::next_copy_byte_demand(self)?,capacity_bytes:MemberOpenRequest::next_capacity_byte_demand(self,body)?,release_bytes:MemberOpenRequest::next_release_byte_demand(self)?,depth:MemberOpenRequest::next_depth_demand(self)?})}
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> { MemberOpenRequest::close_step(self, grant) })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::ValueError> { MemberOpenRequest::close_step(self, grant) })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn terminal_is_empty(&self) -> bool { MemberOpenRequest::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { MemberOpenRequest::next_copy_byte_demand(self) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { MemberOpenRequest::next_capacity_byte_demand(self, body) }

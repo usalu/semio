@@ -14,7 +14,7 @@ fn finish(instance:u32,source:&mut store::ArtifactStore<DrawingSnapshot,semio_s_
 fn render(source:&store::ArtifactStore<DrawingSnapshot,semio_s_artifact_draw_drawing_mutations::DrawingMutation>,instance:u32,base:u64)->AppRenderOperationContext{AppRenderOperationContext{app_instance_id:instance,base_revision:semio_framework_job::RevisionId(base),generation:semio_framework_job::Generation(source.generation()),canonical_base_revision:source.content_revision()}}
 #[semio_framework_async_macros::async_test]
 async fn mounted_painted_query_borrows_resolved_source_and_retires_after_real_replacement(){
- use semio_s_artifact_draw_drawing_scene::picking::PaintedPathHitJob;
+ use semio_s_artifact_draw_drawing_scene_paint::picking::PaintedPathHitJob;
  let checks:Vec<Value>=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🎬️resolved/🔣️.json")).unwrap();
  for check in checks{for grant in [1,7,4096]{
   let row=rows().into_iter().find(|row|row["name"]==check["source"]).unwrap();let mut source=source(&row).await;let first=render(&source,710021,u64::from_le_bytes(source.content_revision()[..8].try_into().unwrap()));let captured=identity(first);let read=source.snapshot_read().unwrap();assert!(prepare(first,read.get()));let(slot,id)=install(first,read);let mut worker=factory(id,&input(slot,captured,id),None).unwrap();
@@ -75,8 +75,8 @@ async fn mounted_vector_geometry_real_edit_replaces_only_complete_live_geometry(
 }
 #[semio_framework_async_macros::async_test]
 async fn mounted_painted_scene_holds_actual_source_until_complete_cache_publication(){
- use semio_s_artifact_draw_drawing_scene::paint::scene::PreparedPaint;
- use semio_s_artifact_draw_drawing_scene::paint::PreparedRegionQueryJob;
+ use semio_s_artifact_draw_drawing_scene_paint::scene::PreparedPaint;
+ use semio_s_artifact_draw_drawing_scene_paint::PreparedRegionQueryJob;
  let checks:Vec<Value>=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🎬️resolved/🔣️.json")).unwrap();
  for check in checks{for grant in [1,7,4096]{let row=rows().into_iter().find(|r|r["name"]==check["source"]).unwrap();let mut source=source(&row).await;let first=render(&source,710031,u64::from_le_bytes(source.content_revision()[..8].try_into().unwrap()));let captured=identity(first);let read=source.snapshot_read().unwrap();assert!(prepare(first,read.get()));let(slot,id)=install(first,read);let shell=MOUNTED.with(|r|r.borrow().shells[slot].clone());let mut worker=factory(id,&input(slot,captured,id),None).unwrap();let(mut cache_units,mut done)=(0,false);for _ in 0..2000000{let cache_active=shell.borrow().as_ref().unwrap().cache.is_some();if cache_active{cache_units+=1;let owner=shell.borrow();let state=owner.as_ref().unwrap();assert!(state.visual.is_none());assert!(state.cleanup.is_none());assert!(state.producer.as_ref().unwrap().snapshot_authority_matches(captured.generation,captured.revision));with_query(captured,|status,scene|{assert_eq!(status,SceneAdmissionStatus::Pending);assert!(scene.is_none());});}match step_bounded(&mut *worker){JobStep::Running(_)=>{},JobStep::Done(_)=>{done=true;break;},JobStep::Failed(e)=>panic!("{}",String::from_utf8_lossy(&e))}}assert!(done&&cache_units>1);drop(worker);with_query(captured,|status,scene|{assert_eq!(status,SceneAdmissionStatus::Ready);let borrowed=scene.unwrap();let scene=borrowed.scene;assert_eq!(scene.plan.nodes.len(),scene.geometry.len());let index=scene.plan.nodes.iter().position(|n|n.id=="result").unwrap();let PreparedPaint::Path(regions)=&scene.geometry[index].paint else{panic!("actual cached path required")};let stamp=borrowed.stamp(index).unwrap();let point=serde_json::from_value(check["point"].clone()).unwrap();let mut query=PreparedRegionQueryJob::new(stamp,point,0.0,scene.flatness).unwrap();while !query.advance(regions,stamp,grant).unwrap().done{}assert_eq!(query.result(stamp).unwrap(),check["expected"].as_bool().unwrap());});finish(first.app_instance_id,&mut source);}}
 }
@@ -88,8 +88,8 @@ async fn mounted_painted_scene_refuses_real_edit_during_cache_and_retires_before
 
 #[semio_framework_async_macros::async_test]
 async fn mounted_cache_cursor_survives_short_borrows_and_refuses_same_source_replacement_build(){
- use semio_s_artifact_draw_drawing_scene::paint::scene::PreparedPaint;
- use semio_s_artifact_draw_drawing_scene::paint::PreparedRegionQueryJob;
+ use semio_s_artifact_draw_drawing_scene_paint::scene::PreparedPaint;
+ use semio_s_artifact_draw_drawing_scene_paint::PreparedRegionQueryJob;
  let checks:Vec<serde_json::Value>=serde_json::from_str(fixture_text!("../../../../🧪️tests/🧫️fixtures/🧮️geometry/🎯️picking/🎨️paint/🎬️resolved/🔣️.json")).unwrap();
  for check in checks{for grant in [1,7,4096]{
   let row=rows().into_iter().find(|r|r["name"]==check["source"]).unwrap();let mut source=source(&row).await;let first=render(&source,710033,u64::from_le_bytes(source.content_revision()[..8].try_into().unwrap()));let captured=identity(first);let read=source.snapshot_read().unwrap();assert!(prepare(first,read.get()));let(slot,id)=install(first,read);let mut worker=factory(id,&input(slot,captured,id),None).unwrap();assert!(drive(worker.as_mut()));drop(worker);

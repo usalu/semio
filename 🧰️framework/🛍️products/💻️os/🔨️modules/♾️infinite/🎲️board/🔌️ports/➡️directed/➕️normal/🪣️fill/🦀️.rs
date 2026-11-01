@@ -155,16 +155,17 @@ impl BoardFillSnapshot {
         if self.terminal_is_empty() { return Ok(semio_framework_job::InteractiveJobCloseStep::Complete { progress: Default::default() }); }
         let demand = self.next_close_demands(cx.retained_grant().maximum_copy_bytes)?;
         let step = semio_framework_job::close_original_retained_step(cx, demand, |grant| {
+            let done = |step| semio_framework_value::RetainedWorkOutcome { result: Ok(step), work: 1 };
             if let Some(kind) = self.kinds.len.checked_sub(1).and_then(|index| self.kinds.get_mut(index)) {
-                if !kind.handles.terminal_is_empty() { return Ok(kind.handles.close_plain_granted(grant)); }
+                if !kind.handles.terminal_is_empty() { return done(kind.handles.close_plain_granted(grant)); }
             }
-            if !self.kinds.is_empty() { return Ok(self.kinds.close_plain_granted(grant)); }
-            if !self.rules.is_empty() { return Ok(self.rules.close_plain_granted(grant)); }
-            if !self.handles.is_empty() { return Ok(self.handles.close_plain_granted(grant)); }
-            if !self.nodes.is_empty() { return Ok(self.nodes.close_plain_granted(grant)); }
-            macro_rules! retire { ($field:ident) => { if !self.$field.terminal_is_empty() { return Ok(self.$field.close_plain_granted(grant)); } }; }
+            if !self.kinds.is_empty() { return done(self.kinds.close_plain_granted(grant)); }
+            if !self.rules.is_empty() { return done(self.rules.close_plain_granted(grant)); }
+            if !self.handles.is_empty() { return done(self.handles.close_plain_granted(grant)); }
+            if !self.nodes.is_empty() { return done(self.nodes.close_plain_granted(grant)); }
+            macro_rules! retire { ($field:ident) => { if !self.$field.terminal_is_empty() { return done(self.$field.close_plain_granted(grant)); } }; }
             retire!(rules); retire!(handles); retire!(nodes); retire!(kinds);
-            Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default()))
+            done(semio_framework_value::RetainedCloneStep::Complete(Default::default()))
         })?;
         Ok(if self.terminal_is_empty() { semio_framework_job::InteractiveJobCloseStep::Complete { progress: step.progress() } } else { step })
     }

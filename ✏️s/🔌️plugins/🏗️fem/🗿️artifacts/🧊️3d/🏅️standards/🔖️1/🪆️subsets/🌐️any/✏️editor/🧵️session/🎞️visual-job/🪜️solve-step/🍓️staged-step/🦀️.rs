@@ -1,5 +1,6 @@
 //! 🍓️ Staged step: the numerical child staged solve step across solid mesh, assembly, PCG and the finishing stages. See [`super`].
 
+use semio_s_fem_payload_turns::NumericalStep;
 use super::*;
 
 #[path = "🏗️mesh-and-assembly-stages/🦀️.rs"]
@@ -61,7 +62,7 @@ impl Fem3dNumericalChild {
             return Ok(false);
         }
         if self.stage == Fem3dNumericalStage::SolidMesh {
-            let end = child_end(self.mesh.as_mut().ok_or_else(|| b"fem3d.numerical-solid-mesh-child".to_vec())?.step(context))?;
+            let end = child_end(self.mesh.as_mut().ok_or_else(|| b"fem3d.numerical-solid-mesh-child".to_vec())?.step_plain(context))?;
             if self.observe_child_end(end)? {
                 self.point_cursor = 0;
                 self.stage = Fem3dNumericalStage::SolidMeshReservePoints;
@@ -112,7 +113,7 @@ impl Fem3dNumericalChild {
             semio_framework_job::close_original_retained_step(context, RetirementDemand { depth: 1, ..Default::default() }, |_| {
                 self.mesh = None;
                 self.stage = Fem3dNumericalStage::SolidMaterial;
-                Ok(semio_framework_job::RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() })), work: 1 }
             })?;
             return Ok(false);
         }

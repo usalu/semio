@@ -17,6 +17,9 @@ semio_framework_ui_locale::app_labels! {
         schema_prefix: native_en "Schema:", native_de "Schema:", reuse_en "Schema:", reuse_de "Schema:";
         widgets_prefix: native_en "Widgets:", native_de "Elemente:", reuse_en "Widgets:", reuse_de "Elemente:";
         show_mode_prefix: native_en "Show mode:", native_de "Anzeigemodus:", reuse_en "Show mode:", reuse_de "Anzeigemodus:";
+        form_no_inputs: native_en "No input widgets to generate from.", native_de "Keine Eingabeelemente zum Generieren vorhanden.", reuse_en "No input widgets to generate from.", reuse_de "Keine Eingabeelemente zum Generieren vorhanden.";
+        form_field: native_en "Field", native_de "Feld", reuse_en "Field", reuse_de "Feld";
+        form_no_image: native_en "(no image)", native_de "(kein Bild)", reuse_en "(no image)", reuse_de "(kein Bild)";
         generate_hint: native_en "Add a generation to edit input values.", native_de "Erstelle eine Generation, um Eingabewerte zu bearbeiten.", reuse_en "Add a generation to edit input values.", reuse_de "Erstelle eine Generation, um Eingabewerte zu bearbeiten.";
         preview_hint: native_en "(evaluate a generation to preview output)", native_de "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)", reuse_en "(evaluate a generation to preview output)", reuse_de "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)";
         source_slider: native_en "Slider", native_de "Schieberegler", reuse_en "Slider", reuse_de "Schieberegler";

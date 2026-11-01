@@ -5,7 +5,7 @@ fn raster_wallet()->funding::Wallet{let data:serde_json::Value=serde_json::from_
 fn scene(input:RasterSceneInput)->funding::Funded<RasterSceneJob>{funding::Funded::from_parts(RasterSceneJob::new(input),raster_wallet())}
 fn painted(input:PathRasterInput)->funding::Funded<PathRasterJob>{funding::Funded::from_parts(PathRasterJob::new(input),raster_wallet())}
 fn through(job:&mut funding::Funded<RasterSceneJob>,quantum:usize)->Result<RasterSceneProgress,RasterSceneError>{for _ in 0..2000000{let p=job.turn(quantum,|owner,work|owner.advance(quantum,work))?;if p.done{return Ok(p);}assert!(job.last_turn_work()>0,"finite stock blocked at {:?}",job.next_work_demand());}panic!("finite scene observation bound exhausted");}
-use crate::{booleans::*,identity::*,paint::*,picking::*,placement::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*};
+use crate::{booleans::*,identity::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_framework_test_fixtures::fixture_text;
 

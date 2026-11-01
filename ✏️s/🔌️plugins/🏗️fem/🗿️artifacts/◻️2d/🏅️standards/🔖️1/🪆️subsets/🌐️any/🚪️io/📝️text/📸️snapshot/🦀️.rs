@@ -36,7 +36,7 @@ pub type Fem2dSnapshotText = String;
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
-use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoadCase, FemRegion, FemSection, FemSupport, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemRegion, FemSection, FemSupport, FemAnalysisSettings, FemAnalysisSettings, FemCombination, FemElement, FemLoadCase, FemRegion, FemSection, FemSupport};
+use crate::standards::v1::subsets::any::schema::structure::{FemCombination, FemElement, FemLoadCase, FemRegion, FemSection, FemSupport, FemAnalysisSettings};
 use semio_s_fem_material::planar::FemMaterialValue;
 use semio_s_fem_node::planar::FemNodeValue;
 use ::semio_framework_schema::ArtifactSchema;

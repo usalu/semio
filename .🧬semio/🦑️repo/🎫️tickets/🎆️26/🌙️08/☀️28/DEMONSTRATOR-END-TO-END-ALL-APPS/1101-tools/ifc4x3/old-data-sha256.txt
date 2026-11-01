@@ -1,0 +1,5 @@
+7dd26f40f50e65045a301065a8254c23936bb10f75482fb52ce6e70ae93b7d27  ⚖️validation/program.rs
+d741eab57d612a8a67d15d64b3a28d577c6aa91fd41b29778843beac43deb50c  ⚖️validation/metadata-data.rs
+5e0ff6fc4836a8835d092253194c8a2f86074704fdada4a41f338fd3bd24b373  ⚖️validation/program-index-data.rs
+58e724b3395a1447589fe3f48ea59648d6a2189e34c3fe93530961ac3971718d  🏷️templates/data.rs
+8ffd9edd3107675ee4b970daae44a92a989f97111dee74095d924abf6a9d203c  👁️mvd/data.rs

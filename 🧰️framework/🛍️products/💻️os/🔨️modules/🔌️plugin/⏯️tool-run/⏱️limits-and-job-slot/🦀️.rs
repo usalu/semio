@@ -2,6 +2,7 @@
 
 use super::*;
 use semio_framework_plugin_interaction::UiAssemblyResult;
+fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
 //#region 🔖️Limits
 /// ⏱️ Wall budget of one driver turn; every job step inside it keeps its own interactive-lane slice.
@@ -48,7 +49,9 @@ pub struct ToolRunJobSlot<C> {
     pub cancel_retirement: Option<semio_framework_async::CancelTokenRetirement>,
     pub preview_sequence: u64,
     pub authority: Option<semio_framework_job_payload::JobPayloadAuthority>,
-    pub outcome: Option<semio_framework_job::JobOutcomeDescriptor>,
+    pub origin: semio_framework_job::OriginalJobReturnOrigin,
+    pub returned: Option<semio_framework_job::OriginalJobOutcome>,
+    pub continuation: Option<semio_framework_job::OriginalJobContinuation>,
     pub outcome_received: bool,
     pub original_failure: std::mem::ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,
     failure_retirement: Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>,
@@ -57,7 +60,7 @@ pub struct ToolRunJobSlot<C> {
 
 impl<C> ToolRunJobSlot<C> {
     pub fn new(job: ToolRunJobHandle<C>, purpose: ToolRunJobPurpose, generation: u32, receiving: semio_framework_tool_run::ToolRunReceivingLimits) -> Self {
-        Self { receiving, job, purpose, operation: semio_framework_job::allocate_operation_id(), generation: semio_framework_job::Generation(u64::from(generation)), cancel: None, cancel_retirement: None, preview_sequence: 0, authority: None, outcome:None, outcome_received:false, original_failure:std::mem::ManuallyDrop::new(None), failure_retirement:None, closing: false }
+        Self { receiving, job, purpose, operation: semio_framework_job::allocate_operation_id(), generation: semio_framework_job::Generation(u64::from(generation)), cancel: None, cancel_retirement: None, preview_sequence: 0, authority: None, origin: semio_framework_job::OriginalJobReturnOrigin::empty(), returned: None, continuation: None, outcome_received:false, original_failure:std::mem::ManuallyDrop::new(None), failure_retirement:None, closing: false }
     }
 
     pub fn interactive(&mut self) -> &mut dyn semio_framework_job::InteractiveJob {
@@ -75,7 +78,7 @@ impl<C> ToolRunJobSlot<C> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.job_is_empty() && self.authority.is_none() && self.outcome.is_none() && self.original_failure.is_none() && self.failure_retirement.is_none() && self.cancel.is_none() && self.cancel_retirement.is_none()
+        self.job_is_empty() && self.authority.is_none() && self.origin.terminal_is_empty() && self.returned.is_none() && self.continuation.is_none() && self.original_failure.is_none() && self.failure_retirement.is_none() && self.cancel.is_none() && self.cancel_retirement.is_none()
     }
 
     /// 📐️ Bytes of the boxed job frame once every owner inside it is returned: the last allocation a retiring slot still holds.
@@ -87,10 +90,40 @@ impl<C> ToolRunJobSlot<C> {
     }
 
     pub fn retargetable(&mut self) -> Option<&mut dyn ToolRunRetargetableJob<C>> {
+        let live = !self.closing && self.outcome().is_none();
         match &mut self.job {
-            ToolRunJobHandle::Retargetable(job) if !self.closing && self.outcome.is_none() => Some(job.as_mut()),
+            ToolRunJobHandle::Retargetable(job) if live => Some(job.as_mut()),
             _ => None,
         }
+    }
+
+    pub fn outcome(&self) -> Option<&semio_framework_job::JobOutcomeDescriptor> {
+        self.origin.outcome()
+    }
+
+    pub fn drive(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        if self.returned.is_none() && self.continuation.is_none() {
+            if !self.origin.body_ready() {
+                self.origin.admit(cx)?;
+                return Ok(());
+            }
+            let (_, receiver) = self.origin.context_parts()?;
+            let interactive: &mut dyn semio_framework_job::InteractiveJob = match &mut self.job {
+                ToolRunJobHandle::Plain(job) => job.as_mut(),
+                ToolRunJobHandle::Retargetable(job) => job.as_mut(),
+            };
+            match semio_framework_job::drive_step(interactive, cx, receiver, TOOL_RUN_JOB_SITE, semio_framework_job::InteractiveStage::InteractiveStep, &mut None)? {
+                semio_framework_job::OriginalJobReturn::Preparing | semio_framework_job::OriginalJobReturn::Pending => return Ok(()),
+                semio_framework_job::OriginalJobReturn::Outcome(reply) => self.returned = Some(reply.into_descriptor()),
+                semio_framework_job::OriginalJobReturn::Continuation(value) => self.continuation = Some(value),
+            }
+        }
+        if self.returned.is_some() {
+            self.origin.receive_outcome(cx, &mut self.returned)?;
+        } else {
+            self.origin.receive_continuation(cx, &mut self.continuation)?;
+        }
+        Ok(())
     }
 
     pub fn begin_close(&mut self) {
@@ -104,17 +137,18 @@ impl<C> ToolRunJobSlot<C> {
     }
 
     pub fn borrow_outcome(&self)->Result<Option<semio_framework_job::JobOutcomeView<'_>>,ValueError>{
-        let Some(descriptor)=self.outcome.as_ref()else{return Ok(None)};
+        let Some(descriptor)=self.outcome()else{return Ok(None)};
         let job:&dyn semio_framework_job::InteractiveJob=match &self.job{ToolRunJobHandle::Plain(job)=>job.as_ref(),ToolRunJobHandle::Retargetable(job)=>job.as_ref()};
         job.borrow_outcome(descriptor).map(Some)
     }
 
     pub fn next_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-        if self.outcome.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
+        if let Some(outcome)=self.outcome(){return Ok(RetirementDemand{depth:if outcome.is_acknowledged(){1}else{2},..Default::default()})}
         if let Some(owner)=self.failure_retirement.as_ref(){return Ok(if owner.terminal_is_empty(){RetirementDemand{release_bytes:size_of_val(owner.as_ref()),depth:1,..Default::default()}}else{RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original ToolRun failure depth overflow"))?}})}
         if self.original_failure.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<semio_framework_job::OriginalTurnFailure>(),depth:2,..Default::default()})}
         let job:&dyn semio_framework_job::InteractiveJob=match &self.job{ToolRunJobHandle::Plain(job)=>job.as_ref(),ToolRunJobHandle::Retargetable(job)=>job.as_ref()};
         if self.closing&&job.terminal_is_empty(){
+            if !self.origin.terminal_is_empty()||self.returned.is_some()||self.continuation.is_some(){return self.origin.retirement_demands(body)}
             if let Some(owner)=self.authority.as_ref(){return Ok(if owner.terminal_is_empty(){RetirementDemand{depth:1,..Default::default()}}else{owner.retirement_demands()})}
             if let Some(retirement)=self.cancel_retirement.as_ref(){return if retirement.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{retirement.retirement_demands()}}
             if self.cancel.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
@@ -128,18 +162,28 @@ impl<C> ToolRunJobSlot<C> {
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
         let demand=self.next_demands(grant.maximum_copy_bytes)?;
         if !tool_grant_funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
-        if self.outcome.is_none()&&self.failure_retirement.is_none()&&self.original_failure.is_none()&&!self.job_is_empty(){
+        if self.outcome().is_none()&&self.failure_retirement.is_none()&&self.original_failure.is_none()&&!self.job_is_empty(){
             if cx.should_yield()||!tool_grant_funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
             let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=cx.with_retained_loan(child,|cx|self.interactive().close_step(cx))?;
             return Ok(RetainedCloneStep::Progress(step.progress()))
         }
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
-        if let Some(descriptor)=self.outcome.as_mut(){if !descriptor.is_acknowledged(){return Ok(RetainedCloneStep::Progress(descriptor.acknowledge(grant).progress()))}drop(self.outcome.take());self.outcome_received=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
-        if let Some(owner)=self.failure_retirement.as_mut(){if owner.terminal_is_empty(){drop(self.failure_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.close_step(child)?;admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original ToolRun callback failure")?;return Ok(RetainedCloneStep::Progress(step.progress()))}
-        if let Some(original)=self.original_failure.take(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};return match semio_framework_value::retirement::admit_owned_retirement(original,child){Ok((owner,progress))=>{self.failure_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{*self.original_failure=Some(original);Err(error)}}}
+        if self.outcome().is_some(){
+            self.origin.acknowledge_outcome(cx)?;
+            if self.outcome().is_none(){self.outcome_received=false;}
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))
+        }
+        if self.job_is_empty()&&self.failure_retirement.is_none()&&self.original_failure.is_none()&&(!self.origin.terminal_is_empty()||self.returned.is_some()||self.continuation.is_some()){
+            if self.returned.is_some(){self.origin.receive_outcome(cx,&mut self.returned)?;return Ok(RetainedCloneStep::Progress(Default::default()))}
+            if self.continuation.is_some(){self.origin.receive_continuation(cx,&mut self.continuation)?;return Ok(RetainedCloneStep::Progress(Default::default()))}
+            let step=self.origin.close_step(cx)?;
+            return Ok(RetainedCloneStep::Progress(step.progress()))
+        }
+        let step=retired(cx,demand,|grant|{
+        if let Some(owner)=self.failure_retirement.as_mut(){if owner.terminal_is_empty(){drop(self.failure_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}))}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.close_step(child).result?;admit_retained_clone_close(child,step,owner.terminal_is_empty(),"original ToolRun callback failure")?;return Ok(RetainedCloneStep::Progress(step.progress()))}
+        if let Some(original)=self.original_failure.take(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};return match semio_framework_value::retirement::admit_owned_retirement(original,child).result{Ok((owner,progress))=>{self.failure_retirement=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{*self.original_failure=Some(original);Err(error)}}}
         if self.job_is_empty(){
-            if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){drop(self.authority.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}return owner.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}
-            if let Some(retirement)=self.cancel_retirement.as_mut(){if retirement.terminal_is_empty(){drop(self.cancel_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}return match retirement.close_step(grant){Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)}}
+            if let Some(owner)=self.authority.as_mut(){if owner.terminal_is_empty(){drop(self.authority.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}return owner.close_step(grant).result.map(|step|RetainedCloneStep::Progress(step.progress()))}
+            if let Some(retirement)=self.cancel_retirement.as_mut(){if retirement.terminal_is_empty(){drop(self.cancel_retirement.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}return match retirement.close_step(grant).result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(semio_framework_async::CancelTokenRetirementError::Blocked(_))=>Ok(RetainedCloneStep::Progress(Default::default())),Err(semio_framework_async::CancelTokenRetirementError::Refused(error))=>Err(error)}}
             if let Some(token)=self.cancel.take(){self.cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(token));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}
         }
             Ok(RetainedCloneStep::Complete(Default::default()))

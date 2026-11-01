@@ -5,14 +5,17 @@ import Ajv from "ajv";
 import schema from "./ast.schema.json" with {type:"json"};
 import cases from "./native-cases.json" with {type:"json"};
 import {compileIfc4x3Express} from "./compiler.ts";
+import {decodeJsonPack,encodeJsonPack} from "../../../../../../📚️catalog/🛠️extract/📦️json-pack.ts";
 
 test("native canonical program has complete schema-admitted corpus and current source digest",async()=>{
  const compilation=await compileIfc4x3Express();expect(compilation.diagnostics).toEqual([]);
  const admit=new Ajv({strict:true,allErrors:true}).compile(schema);expect(admit(compilation.program)).toBe(true);
  for(const [name,count] of Object.entries(cases.compiled))expect(compilation.program[name as keyof typeof cases.compiled].length).toBe(count);
  expect(compilation.program.globalRules.map(rule=>rule.name).toSorted()).toEqual(cases.globalRules.toSorted());
- const digest=createHash("sha256").update(JSON.stringify(compilation.program)).digest("hex"),native=await readFile(new URL("program.rs",import.meta.url),"utf8");
- expect(native.match(/EXPRESS_PROGRAM_SHA256: &str = "([a-f0-9]{64})"/)?.[1]).toBe(digest);
+ const json=JSON.stringify(compilation.program),digest=createHash("sha256").update(json).digest("hex"),pack=new Uint8Array(await readFile(new URL("🌳️express/program.ifcj",import.meta.url)));
+ expect(createHash("sha256").update(JSON.stringify(decodeJsonPack(pack))).digest("hex")).toBe(digest);
+ expect(Buffer.from(encodeJsonPack(JSON.parse(json)))).toEqual(Buffer.from(pack));
+ expect(await readFile(new URL("🌳️express/program.json",import.meta.url),"utf8")).toBe(json+"\n");
 });
 
 test("retained population reports cannot advertise incomplete validation as valid",async()=>{

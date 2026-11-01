@@ -2,7 +2,8 @@
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::{semantics::{self, SemanticField, SemanticFieldState, SemanticProjection}, snapshot::IfcSnapshot};
 use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::{self, IfcMutation};
 use semio_s_artifact_stdio_contract::editing::{self, SnapshotDetailPathSegment as Segment, SnapshotDetailsProvider, SnapshotDetailValue, SnapshotDetailPresentation, SnapshotDetailItemCapabilities, SnapshotEditEvent};
-use semio_framework_plugin::{app::InteractionView, plugin_app_close_prelude as ui, ActionId, Buildable, BuiltNode, HasBase, HasChildren, TreeWindows, UiAssemblyResult, UiMapBuilder, UiText, UiValue, WindowKindDefinition, WindowKit, TreeWindowKit};
+use semio_framework_plugin::{app::InteractionView, plugin_app_close_prelude as ui, ActionId, Buildable, BuiltNode, HasBase, HasChildren, TreeWindows, UiAssemblyResult, UiMapBuilder, UiText, UiValue, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::plugin_app_close_prelude::TreeWindowKit;
 use semio_framework_ui_locale::{Locale, LocalizedLabel};
 use semio_framework_value::DslValue;
 
@@ -102,5 +103,5 @@ pub fn topology(snapshot:&IfcSnapshot)->protocol::InteractionTopology {
 }
 pub fn install_interaction(definition:&mut semio_framework_plugin::AppDefinition){
     definition.interactions.push(semio_framework_plugin::InteractionDefinition{id:semantics::DOMAIN.into(),label:LocalizedLabel::native("IFC Entities","IFC-Entitäten"),granularities:vec![semio_framework_plugin::GranularityDefinition{id:semantics::GRANULARITY.into(),label:LocalizedLabel::native("Entity","Entität"),icon_id:"box".into()}],hierarchy:semio_framework_plugin::HierarchyProvider::Topology,hover:semio_framework_plugin::HoverSpec::default(),selection:semio_framework_plugin::SelectionSpec{modes:vec![semio_framework_plugin::SelectionMode::Multiple,semio_framework_plugin::SelectionMode::Single],methods:vec![semio_framework_plugin::SelectionMethod::Pick],merges:vec![semio_framework_plugin::MergeMode::Replace,semio_framework_plugin::MergeMode::Invertive],transitive:false,broadcast:true}});
-    for window in &mut definition.window_kinds {if window.id==BODY_KEY||window.id==semio_framework_plugin::MeshWindowKit::KIND_ID{window.interactions=vec![semio_framework_plugin::InteractionRef::new(semantics::DOMAIN)];}}
+    for window in definition.window_kinds.iter_mut() {if window.id==BODY_KEY||window.id==semio_framework_plugin::MeshWindowKit::KIND_ID{window.interactions=vec![semio_framework_plugin::InteractionRef::new(semantics::DOMAIN)];}}
 }

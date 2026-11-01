@@ -18,6 +18,7 @@ path = "🦀️.rs"
 [dependencies]
 semio-s-artifact-fem-3d-scene = { path = "../../../../../🎬️scene/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
+semio-s-fem-payload-turns = { path = "../../../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/📮️payload-turns/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-ui-scene = { workspace = true }

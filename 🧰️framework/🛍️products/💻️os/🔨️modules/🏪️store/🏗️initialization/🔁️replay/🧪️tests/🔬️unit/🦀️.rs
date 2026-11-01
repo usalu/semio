@@ -110,7 +110,7 @@ fn grant_with_items(items: usize) -> RetainedCloneGrant {
 }
 
 fn accounted_turn(init: &Initializer) -> bool {
-    matches!(init.phase, Phase::AdmitOwners | Phase::AdmitCatalog | Phase::Adopt { .. } | Phase::RetireCancelled | Phase::RetireFault) && !init.index_open
+    matches!(init.phase, Phase::AdmitOwners | Phase::AdmitCatalog | Phase::RetireCancelled | Phase::RetireFault) && !init.index_open
         || init.runtime.as_ref().is_some_and(|runtime| runtime.close_active.is_some())
 }
 
@@ -119,7 +119,7 @@ impl ReplayOriginal{
  fn new()->Self{let stock=RetainedCloneGrant{maximum_items:1<<24,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096};Self{caller:Some(semio_framework_job::OriginalJobFixtureCaller::admit(OperationId(7),Generation(3),stock,||Some(1),u64::MAX,1<<24)),decoder:semio_framework_job::OriginalJobDecodeOwner::empty()}}
  fn turn<T>(&mut self,grant:RetainedCloneGrant,advance:impl FnOnce(&mut StepContext<'_>)->Result<T,semio_framework_job::OriginalTurnFailure>)->Result<T,semio_framework_job::OriginalTurnFailure>{self.caller.as_mut().expect("replay retains its initiating source until close").turn_with_decoder(grant,&mut self.decoder,advance)}
  fn receipt(&self)->RetainedCloneProgress{self.caller.as_ref().unwrap().receipt()}
- fn finish(&mut self){while !self.decoder.terminal_is_empty(){self.caller.as_mut().unwrap().turn(WIDE,|cx|{let step=self.decoder.close_step(cx.retained_grant())?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);Ok(())}).unwrap();}self.caller.take().unwrap().retire(WIDE);}
+ fn finish(&mut self){while !self.decoder.terminal_is_empty(){self.caller.as_mut().unwrap().turn(WIDE,|cx|{let turn=self.decoder.close_step(cx.retained_grant());let step=turn.result?;cx.consume_retained(step.progress())?;cx.consume_fuel(turn.work);Ok(())}).unwrap();}self.caller.take().unwrap().retire(WIDE);}
 }
 
 fn turn(init:&mut Initializer,original:&mut ReplayOriginal,grant:RetainedCloneGrant) -> (Outcome, RetainedCloneProgress, bool) {

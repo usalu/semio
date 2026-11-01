@@ -31,5 +31,4 @@ export function verifyEnergyRetainedStateOracle():void{
  }
  const zone=new Ajv({strict:true}).compile({type:"object",additionalProperties:false,properties:{volume_m3:{type:"number",exclusiveMinimum:0},multiplier:{type:"integer",minimum:1}}});
  for(const refusal of fixture.refusals){const patch=refusal.patch;const admitted=(!Object.hasOwn(patch,"volume_m3")||typeof patch.volume_m3==="number"&&Number.isFinite(patch.volume_m3)&&patch.volume_m3>0)&&(!Object.hasOwn(patch,"multiplier")||typeof patch.multiplier==="number"&&patch.multiplier>0);assert.equal(admitted,refusal.admitted);assert.equal(zone(patch),refusal.admitted);}
- console.log(`[DEBUG] Energy immutable state ${fixture.cases.length} language-neutral forward/inverse intents and ${fixture.refusals.length} independent semantic refusals match independent RFC6902 and Ajv; physical authority proof remains native`);
 }

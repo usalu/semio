@@ -38,7 +38,7 @@ pub fn evaluation_owned_birth<T:RetireOwned>()->RetirementDemand{
     RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(),depth:1,..Default::default()}
 }
 
-pub fn evaluation_admit_original<T:RetireOwned>(original:&mut Option<T>,active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+pub fn evaluation_admit_original<T:RetireOwned>(original:&mut Option<T>,active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneStep,ValueError>{
     let empty=RetainedCloneProgress::default();
     if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
     let demand=evaluation_owned_birth::<T>();
@@ -46,7 +46,8 @@ pub fn evaluation_admit_original<T:RetireOwned>(original:&mut Option<T>,active:&
     if grant.maximum_capacity_bytes<demand.capacity_bytes{return Ok(RetainedCloneStep::Progress(empty));}
     if active.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"evaluation source admission retains a live child"));}
     let source=original.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"evaluation source admission lost its original field"))?;
-    match semio_framework_value::retirement::admit_owned_retirement(source,grant){
+    let turn=semio_framework_value::retirement::admit_owned_retirement(source,grant);*work+=turn.work;
+    match turn.result{
         Ok((owner,progress))=>{*active=Some(owner);Ok(RetainedCloneStep::Progress(progress))},
         Err((error,source))=>{*original=Some(source);Err(error)},
     }
@@ -56,8 +57,9 @@ pub fn evaluation_child_demands(active:&Option<Box<dyn ErasedSnapshotRetirement>
     active.as_ref().map_or(Ok(Default::default()),|owner|semio_framework_value::factory_ticket_demands(owner,copy))
 }
 
-pub fn evaluation_child_close(active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-    semio_framework_value::close_factory_ticket(active,grant)
+pub fn evaluation_child_close(active:&mut Option<Box<dyn ErasedSnapshotRetirement>>,grant:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneStep,ValueError>{
+    let turn=semio_framework_value::close_factory_ticket(active,grant);*work+=turn.work;
+    turn.result
 }
 
 /// ⚠️ Keeps each original typed failure without allocating display text during a normal turn.

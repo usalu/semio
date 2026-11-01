@@ -159,7 +159,7 @@ impl semio_framework_value::retirement::RetirementCursor for CollisionMeshRetire
     fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep;
         if self.terminal_is_empty() {
-            return RetirementStep::Complete;
+            return RetirementStep::Complete(0);
         }
         if grant.maximum_items == 0 || grant.maximum_depth == 0 {
             return RetirementStep::BudgetExhausted;
@@ -188,12 +188,12 @@ impl semio_framework_value::retirement::RetirementCursor for CollisionMeshRetire
             drop(std::mem::take(&mut *self.triangles));
             return RetirementStep::Bytes(demand);
         }
-        let Some(node) = self.tree.pop() else { return RetirementStep::Complete };
+        let Some(node) = self.tree.pop() else { return RetirementStep::Complete(1) };
         match node.into_step() {
             collision::BvhTreeStep::Leaf => {}
             collision::BvhTreeStep::Branch(left, right) => {
                 if self.tree.len() + 2 > self.tree.capacity() {
-                    return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "collision mesh tree exceeds its retirement stack"));
+                    return RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "collision mesh tree exceeds its retirement stack"), 1);
                 }
                 self.tree.push(right);
                 self.tree.push(left);

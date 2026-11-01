@@ -1,4 +1,4 @@
-#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::{booleans::*,identity::*,paint::*,picking::*,placement::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*};
+#[allow(unused_imports)] use {semio_s_artifact_draw_drawing_scene::{booleans::*,identity::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*},semio_s_artifact_draw_drawing_scene_paint::{*,picking::*,placement::*}};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_framework_test_fixtures::fixture_text;
 

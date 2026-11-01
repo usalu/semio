@@ -275,9 +275,9 @@ pub fn render(
     }
     let key = results_cache_key(operation);
     match display.mode {
-        DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera, interaction, animation, key, window_instance_id, active_utility),
-        DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera, interaction, animation, key, window_instance_id, active_utility),
-        DisplayMode::Buckling(mode_index) => render_buckling(doc, display.source_id.as_deref(), mode_index, camera, interaction, animation, key, window_instance_id, active_utility),
+        DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera, interaction, animation, key, window_instance_id, active_utility, labels),
+        DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera, interaction, animation, key, window_instance_id, active_utility, labels),
+        DisplayMode::Buckling(mode_index) => render_buckling(doc, display.source_id.as_deref(), mode_index, camera, interaction, animation, key, window_instance_id, active_utility, labels),
     }
 }
 
@@ -307,7 +307,7 @@ fn render_mounted(
             let retained = if view.retained { labels.previous_results.as_str() } else { "" };
             layers.push(semio_framework_pack_json::json!({ "id": "analysis-progress", "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0], "text": { "content": format!("{status} · {} / {} · {} {:.3e} {retained}", visual.progress_completed, visual.progress_total, labels.residual.as_str(), visual.residual_norm), "size": 11.0 } }));
         }
-        layers.extend(playback_caption_layer(animation));
+        layers.extend(playback_caption_layer(animation, labels));
         layers
     });
     let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
@@ -323,12 +323,12 @@ pub fn mode_shape_scale(doc: &Fem2dSnapshot, amplitude: f64) -> f64 {
 
 /// ⏯️ The transport read-out a running window carries in its own corner — silent while stopped, so a
 /// still results window looks exactly as it always did.
-fn playback_caption_layer(animation: &semio_s_fem_app_surface::FemResultsAnimation) -> Option<Value> {
+fn playback_caption_layer(animation: &semio_s_fem_app_surface::FemResultsAnimation, labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels) -> Option<Value> {
     animation.playing.then(|| {
         semio_framework_pack_json::json!({
             "id": "playback-caption",
             "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 36.0],
-            "text": { "content": format!("phase {:.2} · \u{25b6} {} Hz", animation.phase, animation.speed), "size": 11.0 },
+            "text": { "content": format!("{} {:.2} · \u{25b6} {} Hz", labels.phase.as_str(), animation.phase, animation.speed), "size": 11.0 },
         })
     })
 }
@@ -399,22 +399,23 @@ fn render_static(
     key: Option<ResultsCacheKey>,
     window_instance_id: Option<&str>,
     active_utility: &str,
+    labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let amplitude = animation.amplitude();
     let scene = with_static_results(doc, key, |results| {
         let case_id = source_id.map(str::to_string).or_else(|| doc.load_cases.first().and_then(|case| semio_s_fem_analyses_model::encode_result_source_parts("loadCase", &case.id).ok()));
         let Some(case_id) = case_id else {
-            return Err("No load case defined".to_string());
+            return Err(labels.no_load_case.as_str().to_owned());
         };
         let Some(result) = results.get(&case_id) else {
-            return Err(format!("Result not found: {case_id}"));
+            return Err(format!("{}: {case_id}", labels.result_missing.as_str()));
         };
-        Ok(static_layers(doc, &case_id, result, interaction, animation, amplitude))
+        Ok(static_layers(doc, &case_id, result, interaction, animation, amplitude, labels))
     });
     let layers = match scene {
         Ok(Ok(layers)) => layers,
         Ok(Err(message)) => return placeholder(Label::data(message)),
-        Err(error) => return placeholder(Label::data(format!("Analysis error: {error}"))),
+        Err(error) => return placeholder(Label::data(format!("{}: {error}", labels.analysis_error.as_str()))),
     };
     let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
     semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
@@ -430,6 +431,7 @@ fn static_layers(
     interaction: &semio_s_artifact_fem_2d_editor_interaction::editor::fem2d::interaction::Fem2dInteractionSnapshot,
     animation: &semio_s_fem_app_surface::FemResultsAnimation,
     amplitude: f64,
+    labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
 ) -> Vec<Value> {
     let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
     let mut disp_map: HashMap<String, [f64; 6]> = HashMap::new();
@@ -437,7 +439,7 @@ fn static_layers(
         disp_map.insert(d.node_id.clone(), d.values);
     }
     layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, doc.analysis.deformation_scale * amplitude));
-    layers.extend(playback_caption_layer(animation));
+    layers.extend(playback_caption_layer(animation, labels));
 
     //#region 🔖️ReactionLabels
     let mut reaction_entries: Vec<(&semio_s_fem_model::NodeReaction, f64, f64)> = Vec::new();
@@ -545,6 +547,7 @@ fn render_modal(
     key: Option<ResultsCacheKey>,
     window_instance_id: Option<&str>,
     active_utility: &str,
+    labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let scale = mode_shape_scale(doc, animation.amplitude());
     let mode = with_mode_values(doc, key, ModeKey::Modal(mode_index), |(freq_hz, disp_map)| {
@@ -553,14 +556,14 @@ fn render_modal(
         layers.push(semio_framework_pack_json::json!({
             "id": "modal-caption",
             "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
-            "text": { "content": format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1), "size": 12.0 },
+            "text": { "content": format!("{} {}: {freq_hz:.3} Hz", labels.mode_shape.as_str(), mode_index + 1), "size": 12.0 },
         }));
-        layers.extend(playback_caption_layer(animation));
+        layers.extend(playback_caption_layer(animation, labels));
         layers
     });
     let layers = match mode {
         Ok(layers) => layers,
-        Err(error) => return placeholder(Label::data(format!("Modal analysis error: {error}"))),
+        Err(error) => return placeholder(Label::data(format!("{}: {error}", labels.modal_error.as_str()))),
     };
     let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
     semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
@@ -580,6 +583,7 @@ fn render_buckling(
     key: Option<ResultsCacheKey>,
     window_instance_id: Option<&str>,
     active_utility: &str,
+    labels: &semio_s_artifact_fem_2d_editor_terminology::editor::fem2d::terminology::Fem2dLabels,
 ) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let source = source_id.map(semio_s_fem_analyses_model::decode_result_source_identity).transpose().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("fem2d.result-source", "invalid buckling result source identity"))?;
     let case_id = match source {
@@ -588,7 +592,7 @@ fn render_buckling(
         None => doc.load_cases.first().map(|case| case.id.clone()),
     };
     let Some(case_id) = case_id else {
-        return placeholder(Label::data("No load case defined"));
+        return placeholder(Label::data(labels.no_load_case.as_str()));
     };
     let scale = mode_shape_scale(doc, animation.amplitude());
     let mode = with_mode_values(doc, key, ModeKey::Buckling(case_id, mode_index), |(factor, disp_map)| {
@@ -597,14 +601,14 @@ fn render_buckling(
         layers.push(semio_framework_pack_json::json!({
             "id": "buckling-caption",
             "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
-            "text": { "content": format!("Buckling mode {}: factor {factor:.3}", mode_index + 1), "size": 12.0 },
+            "text": { "content": format!("{} {}: {} {factor:.3}", labels.buckling_mode.as_str(), mode_index + 1, labels.factor.as_str()), "size": 12.0 },
         }));
-        layers.extend(playback_caption_layer(animation));
+        layers.extend(playback_caption_layer(animation, labels));
         layers
     });
     let layers = match mode {
         Ok(layers) => layers,
-        Err(error) => return placeholder(Label::data(format!("Buckling analysis error: {error}"))),
+        Err(error) => return placeholder(Label::data(format!("{}: {error}", labels.buckling_error.as_str()))),
     };
     let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
     semio_s_fem_app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })

@@ -797,5 +797,4 @@ fn assembly_order_pages_admit_exact_grants_and_retire_every_original_backing() {
     }
     assert!(closed, "paged order releases all original backing");
     assert!(job.plan.dof_map.order.terminal_is_empty() && job.plan.dof_map.slots.terminal_is_empty() && job.plan.inv_perm.terminal_is_empty() && job.plan.free_new.terminal_is_empty() && job.plan.compact_of_new.terminal_is_empty());
-    eprintln!("[DEBUG] FEM assembly paged order={order}, exact item/copy/capacity/depth refusals preserved source={pointer:p}, closed={closed}");
 }

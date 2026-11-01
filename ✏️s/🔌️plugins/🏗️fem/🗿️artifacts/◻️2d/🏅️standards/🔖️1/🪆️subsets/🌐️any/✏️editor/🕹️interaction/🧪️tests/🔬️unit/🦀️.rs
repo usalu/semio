@@ -219,7 +219,6 @@ fn scoped_entity_identity_prevents_cross_kind_and_case_collisions() {
     assert!(after.load_cases[1].loads.is_empty());
     let highlights = model_window::fem2d_structure_layers_with(&document, "#38bdf8", "#94a3b8", "#f97316", &Fem2dInteractionSnapshot { selected_ids: vec![target("material").into()], ..Default::default() });
     assert!(!semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Array(highlights)).contains("sel-node-n1"));
-    println!("[DEBUG] FEM2d typed identities keep node/material collisions and duplicate load names separate through tree, details, geometry, patch and central deletion");
 }
 
 #[test]
@@ -253,7 +252,6 @@ fn scoped_identity_admission_refuses_unaddressable_entities_and_duplicate_load_o
         assert_eq!(outcome.messages()[0].code.0, fixture["identityAdmission"][expected].as_str().expect("declared diagnostic"));
         assert!(operation.inverse(&before).expect("refused aggregate inverse").is_empty());
     }
-    println!("[DEBUG] FEM2d typed identity admission refuses empty ids and duplicate case-owned loads before any forward or inverse publication");
 }
 
 #[test]
@@ -282,7 +280,6 @@ fn borrowed_identity_admission_precedes_native_snapshot_construction_and_observe
     drop(control);
     assert!(callbacks > 0);
     assert_eq!(before.nodes[0].id, "n1");
-    println!("[DEBUG] FEM2d borrowed identity admission checks original records, duplicate case owners and cancellation before constructing native snapshot roots");
 }
 
 #[test]
@@ -316,5 +313,4 @@ fn public_json_snapshot_admission_refuses_invalid_owners_and_accepts_distinct_na
     snapshot.validate_interaction_identities_controlled(&mut control).expect("controlled cross namespaces admit");
     assert!(control.owned_bytes() > 0, "semantic identity scratch carries original allocation authority");
     <Fem2dSnapshot as semio_framework_value::FromValue>::retire_decoded(snapshot);
-    println!("[DEBUG] FEM2d public JSON snapshot admission refuses empty, oversized and duplicate owning IDs while allowing cross-kind and cross-case names");
 }

@@ -741,7 +741,6 @@ fn weather_job_original48_midnight_and_chronology_refusals_match_neutral_sources
  for _ in 0..original.len()+2{let mut receipt=RetainedCloneProgress::default();let _=fixture_step(&mut job,semio_framework_job::StepBudget::new(1,u64::MAX,ENERGY_BATCH_GRANT),Probe::Original);if job.weather_fault.is_some()||job.stage!=EnergyJobStage::ResolveWeather{break;}}assert_eq!(job.weather_fault.is_none(),case["runAdmitted"].as_bool().unwrap(),"{}",case["id"]);assert_eq!(configuration(&job).weather.as_ref().unwrap().records,original);
  if job.weather_fault.is_none(){assert_eq!(job.stage,EnergyJobStage::Precompute);for query in case["queries"].as_array().unwrap(){if query["expected"].is_null(){continue;}let date=&query["date"];let selected=weather_index(&job, crate::calendar::SimDate::new(date[0].as_u64().unwrap()as u16,date[1].as_u64().unwrap()as u8,date[2].as_u64().unwrap()as u8),query["hour"].as_u64().unwrap()as u8).unwrap();let actual=hour_weather(&job, selected,query["policy"]=="RepeatDay").unwrap();for(i,row)in[actual.previous,actual.current,actual.next].iter().enumerate(){assert_eq!(*row,original[query["expected"][i].as_u64().unwrap()as usize]);}}}
  close_owned_job(&mut job);}
- eprintln!("[DEBUG] Energy original retained weather10 sources midnight/leap/rollover/refusal posts preserved native source authority");
 }
 
 /// 🪪️ Genuine complete input projections match Serde's independent fields and retain exact paid cursor ownership.
@@ -759,7 +758,6 @@ fn input_identity_original_full_fields_match_serde_and_paid_cancellation_frontie
  for stop in [None,Some(0),Some(1),Some(17),Some(113),Some(1000)]{let mut job=NativeEnergyJob::from_preborn(Engine::job(model.clone(),config.clone()).unwrap());let pointers=(&job.model as*const Model as usize,configuration(&job) as*const SimulationConfig as usize,configuration(&job).weather.as_ref().unwrap().records.as_ptr());let mut completed=false;
  for turn in 0..1_000_000{if stop==Some(turn){break;}let demand=job.input_identity.next_demand();assert!(demand.copy_bytes<=4096&&demand.capacity_bytes<=4096);let denied=RetainedCloneGrant{maximum_items:0,..energy_self_funded(demand)};let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||advance_input_identity(&mut job, denied).unwrap());assert_eq!(step,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=energy_self_funded(demand);let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||advance_input_identity(&mut job, grant).unwrap());assert!(step.fits(grant));assert_ne!(step,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.retained_capacity_bytes,step.released_bytes));assert_eq!(pointers,(&job.model as*const Model as usize,configuration(&job) as*const SimulationConfig as usize,configuration(&job).weather.as_ref().unwrap().records.as_ptr()));if let Some(digest)=job.input_identity.digest(){assert_eq!(*digest,expected_digest);assert_eq!(job.cursor().input_identity_bytes,expected.len());assert!(job.cursor().input_identity_ready);completed=true;break;}}
  assert_eq!(completed,stop.is_none());while !job.input_identity.terminal_is_empty(){let demand=job.input_identity.close_demand();assert!(demand.copy_bytes<=4096&&demand.release_bytes<=4096);let denied=RetainedCloneGrant{maximum_items:0,..energy_self_funded(demand)};let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.input_identity.close_step(denied).unwrap());assert_eq!(step,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=energy_self_funded(demand);let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.input_identity.close_step(grant).unwrap());assert!(step.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.retained_capacity_bytes,step.released_bytes));}close_owned_job(&mut job);}
- eprintln!("[DEBUG] Energy full Model+Config original projections match Serde48 weather fields and6 paid cancellation/allocation/source-pointer prefixes");
 }
 /// ♻️ Real Energy cancellation delegates original builder/model custody and every physical release to shared quotes.
 #[test]
@@ -776,7 +774,6 @@ fn energy_precompute_close_delegates_original_factory_quotes_and_physical_receip
   }
   close_owned_job(&mut job);assert!(job.terminal_is_empty());
  }}
- eprintln!("[DEBUG] Energy original precompute builders/models delegated {observed_turns} actual physical paid retirement turns");
 }
 
 #[global_allocator]

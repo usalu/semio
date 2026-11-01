@@ -15,13 +15,14 @@ impl<M:Send+'static> GestureOperation<M>{pub fn request_cancellation(&mut self){
 pub fn reserve_live<M:Send+'static>(available:bool,birth:RetainedCloneGrant,handoff:RetainedCloneGrant)->Result<SealedSharedBirth<GestureSlot<M>>,ValueError>{
  if !available{return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"all original gesture operation slots remain occupied"));}
  if handoff.maximum_items==0||handoff.maximum_copy_bytes<size_of::<SealedShared<GestureSlot<M>>>()||handoff.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original gesture capture alias is not funded"));}
- SealedShared::prepare_birth(birth)
+ SealedShared::prepare_birth(birth).result.map(|(birth,_)|birth)
 }
 #[doc(hidden)]
-pub fn issue_live<M:RetireOwned+Send+'static>(birth:SealedSharedBirth<GestureSlot<M>>,slot:GestureSlot<M>,operation:u64,handoff:RetainedCloneGrant)->(GestureOperation<M>,GestureCapture<M>){
- let(slot,_)=birth.materialize(slot,SharedIssuer::owned());
- let(alias,_)=slot.try_duplicate(handoff).unwrap_or_else(|_|panic!("prevalidated original gesture handoff remains funded"));
- (GestureOperation{operation,slot,decision:None,settled:false},GestureCapture::Issued(alias))
+pub fn issue_live<M:RetireOwned+Send+'static>(mut birth:SealedSharedBirth<GestureSlot<M>>,slot:GestureSlot<M>,operation:u64,handoff:RetainedCloneGrant)->Result<(GestureOperation<M>,GestureCapture<M>),ValueError>{
+ let publication=birth.publication(handoff)?.ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original gesture publication is not funded"))?;
+ let(slot,_)=publication.commit(slot,SharedIssuer::owned()).result?;
+ let(alias,_)=slot.try_duplicate(handoff).result?;
+ Ok((GestureOperation{operation,slot,decision:None,settled:false},GestureCapture::Issued(alias)))
 }
 
 #[doc(hidden)]

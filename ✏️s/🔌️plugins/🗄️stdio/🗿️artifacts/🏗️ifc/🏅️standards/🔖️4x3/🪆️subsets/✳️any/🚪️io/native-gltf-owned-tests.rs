@@ -25,7 +25,7 @@ fn glb(text: &str, bin: &[u8]) -> Vec<u8> {
 fn grant() -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 16_000_000, maximum_copy_bytes: 1024 * 1024 * 1024, maximum_capacity_bytes: 128 * 1024 * 1024, maximum_release_bytes: 128 * 1024 * 1024, maximum_depth: 512 }
 }
-fn retire<T: RetireOwned>(value: T) {
+fn retire<T: semio_framework_value::retirement::RetireOwned>(value: T) {
     let mut r = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).ok().unwrap();
     while !r.terminal_is_empty() {
         r.step(grant()).unwrap();

@@ -49,7 +49,7 @@ fn close_ledger(ledger: ArtifactEditMessageLedger) {
     let mut owner = ArtifactEditMessageLedgerRetirement::new(ledger);
     while !owner.terminal_is_empty() {
         let g = grant();
-        checked(|| owner.close_step(g), g);
+        checked(|| owner.close_step(g).result, g);
     }
 }
 #[test]

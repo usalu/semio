@@ -1,7 +1,8 @@
 import { composeSpecificOsCatalogV1 } from "@semio-tech/s-dev-catalog-ts";
 import { bootFrameworkOsDev } from "@semio-tech/framework-os-dev";
 import { PUZZLE_BOARD_SESSION_FACTORIES } from "@semio-tech/puzzle-2d";
-import { DEMONSTRATOR_SHELL_BRANDS } from "../🪧️brand.ts";
+import { DEMONSTRATOR_PANES, DEMONSTRATOR_SHELL_BRANDS, ENTWERFEN_MIT_BESTAND_NAME, demonstratorPaneBootVariants, demonstratorPaneViews } from "../🪧️brand.ts";
+import { readDemonstratorLocale } from "../🔨️modules/🌐️locale/⚛️.ts";
 const operation = new AbortController();
 window.addEventListener("pagehide", () => operation.abort(), { once: true });
 const admission = { maxBytes: 2097152, maxRows: 512, maxEdges: 4096, maxWork: 65536, deadlineMs: performance.now() + 30000, now: () => performance.now(), cancelled: () => operation.signal.aborted, progress: (event: { readonly completed: number; readonly total: number; readonly work: number }) => window.dispatchEvent(new CustomEvent("semio:catalog-progress", { detail: event })) };
@@ -9,3 +10,6 @@ const variant = import.meta.env.VITE_SEMIO_PLUGIN;
 if (typeof variant !== "string" || !variant) throw new Error("Demonstrator entry requires its explicit selected variant");
 const mounted = await bootFrameworkOsDev({ variant, admission, catalogRows: composeSpecificOsCatalogV1(window.location.href, admission).rows, brands: DEMONSTRATOR_SHELL_BRANDS, surfaceSessionFactories: PUZZLE_BOARD_SESSION_FACTORIES });
 window.addEventListener("pagehide", () => mounted.dispose(), { once: true });
+const shellPane = DEMONSTRATOR_PANES.find((pane) => pane.variant === variant || demonstratorPaneBootVariants(pane.variant).runtime === variant);
+const shellLocale = readDemonstratorLocale();
+document.title = (shellPane !== undefined && shellLocale !== undefined && demonstratorPaneViews(shellLocale).find((view) => view.id === shellPane.id)?.windowTitle) || ENTWERFEN_MIT_BESTAND_NAME;

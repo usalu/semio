@@ -87,7 +87,7 @@ where
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "completed record exceeds admitted depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         if self.retirement.is_some() {
-            let step = retirement_owner_close(&mut self.retirement, grant)?;
+            let step = retirement_owner_close(&mut self.retirement, grant).result?;
             return Ok(if self.ownership_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });
         }
         if self.envelope.is_some() {
@@ -110,7 +110,7 @@ where
         for index in 0..self.factory_retirement.len() {
             if let Some(factory) = self.factory_retirement[index].as_mut() {
                 let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-                let step = factory.step(child)?;
+                let step = factory.step(child).result?;
                 semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "completed original factory")?;
                 if factory.terminal_is_empty() { self.factory_retirement[index] = None; }
                 return Ok(if self.ownership_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });

@@ -619,7 +619,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
             }
             PeerRosterPublicationStage::DecodeTyped => {
                 if self.pending_pack.is_some() || self.rejected.is_some() {
-                    let step = if self.rejected.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected, original.remaining_grant()) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_pack, &mut self.rejected, original.remaining_grant()) }.map_err(refused)?;
+                    let step = if self.rejected.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected, original.remaining_grant()) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_pack, &mut self.rejected, original.remaining_grant()) }.result.map_err(refused)?;
                     original.record_progress(step.progress()).map_err(refused)?;
                     return Ok(PeerRosterTurn::Spent);
                 }
@@ -744,7 +744,7 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
             return Ok(match step { PluginLifecycleStep::Progress(progress) | PluginLifecycleStep::Complete(progress) => PluginLifecycleStep::Progress(progress), other => other });
         }
         if self.rejected.is_some() {
-            let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected, grant)?;
+            let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected, grant).result?;
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
         if let Some(commit) = self.pending_commit.take() {
@@ -757,16 +757,16 @@ impl<A: ArtifactApp> PeerRosterPublication<A> {
             }
         }
         if self.pending_commit_retirement.is_some() {
-            return semio_framework_value_retirement_owner::retirement_owner_close(&mut self.pending_commit_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress()));
+            return semio_framework_value_retirement_owner::retirement_owner_close(&mut self.pending_commit_retirement, grant).result.map(|step| PluginLifecycleStep::Progress(step.progress()));
         }
-        if self.pending_actor.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_actor, &mut self.rejected, grant).map(|step| PluginLifecycleStep::Progress(step.progress())); }
-        if self.pending_presence.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_presence, &mut self.rejected, grant).map(|step| PluginLifecycleStep::Progress(step.progress())); }
-        if self.pending_pack.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_pack, &mut self.rejected, grant).map(|step| PluginLifecycleStep::Progress(step.progress())); }
+        if self.pending_actor.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_actor, &mut self.rejected, grant).result.map(|step| PluginLifecycleStep::Progress(step.progress())); }
+        if self.pending_presence.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_presence, &mut self.rejected, grant).result.map(|step| PluginLifecycleStep::Progress(step.progress())); }
+        if self.pending_pack.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_pack, &mut self.rejected, grant).result.map(|step| PluginLifecycleStep::Progress(step.progress())); }
         if !self.raw.terminal_is_empty() {
             return Ok(PluginLifecycleStep::Progress(self.raw.close_step(grant).progress()));
         }
         if self.pack_close.is_some() {
-            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.pack_close, grant).map(|step| PluginLifecycleStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.pack_close, grant).result.map(|step| PluginLifecycleStep::Progress(step.progress()));
         }
         if self.packs_len != 0 {
             *self.pending_pack = self.packs[self.packs_len - 1].take(); self.packs_len -= 1;

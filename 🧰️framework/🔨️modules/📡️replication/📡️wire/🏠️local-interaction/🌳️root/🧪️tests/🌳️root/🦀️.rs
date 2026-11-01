@@ -29,13 +29,13 @@ pub(super) fn drain(owner:Result<semio_framework_value::retirement::controlled::
     let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:bytes,maximum_capacity_bytes:owner.next_capacity_byte_demand(bytes).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
     assert_eq!(owner.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap().progress(),RetainedCloneProgress::default());
     assert_eq!(owner.step(RetainedCloneGrant {maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,..grant}).unwrap().progress(),RetainedCloneProgress::default());
-    let mut retired=0;let mut dbg=(0usize,0usize,0usize,0usize);
+    let mut retired=0;
     for _ in 0..200000 {
-        if owner.terminal_is_empty(){eprintln!("[DEBUG] drain bytes={bytes} copied={} items={} cap={} rel={}",dbg.0,dbg.1,dbg.2,dbg.3);return retired;}
+        if owner.terminal_is_empty(){return retired;}
         let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:bytes,maximum_capacity_bytes:owner.next_capacity_byte_demand(bytes).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
         let(step,birth,free)=semio_framework_trace_memory_testing::observe_backing(||owner.step(grant).unwrap());let progress=step.progress();
         assert!(progress.fits(grant));assert_eq!(birth,progress.retained_capacity_bytes);assert_eq!(free,progress.released_bytes);assert!(progress.copied_items!=0);
-        retired+=progress.copied_bytes;dbg.0+=progress.copied_bytes;dbg.1+=progress.copied_items;dbg.2+=progress.retained_capacity_bytes;dbg.3+=progress.released_bytes;
+        retired+=progress.copied_bytes;
     }
     panic!("retained root failed to close")
 }

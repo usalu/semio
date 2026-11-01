@@ -157,7 +157,7 @@ impl ArtifactActor {
                 let _ = stream.close(None).await;
                 return Err(DocumentConnectFailure::Short);
             }
-            let(socket_actor,identity_progress)=semio_framework_value::SharedUtf8::admit(std::mem::take(&mut socket.actor_id),actor_identity_grant).unwrap_or_else(|(error,_)|panic!("original pre-admitted socket actor invariant: {error}"));
+            let(socket_actor,identity_progress)=semio_framework_value::SharedUtf8::admit(std::mem::take(&mut socket.actor_id),actor_identity_grant).result.unwrap_or_else(|(error,_)|panic!("original pre-admitted socket actor invariant: {error}"));
             Ok(ConnectedDocumentSocket { stream, socket_actor, authority,identity_progress })
         }));
     }
@@ -400,7 +400,7 @@ impl ArtifactActor {
 
     #[cfg(any(test, feature = "testing"))]
     pub fn install_test_socket_actor(&mut self, actor: &str) {
-        let(original,receipt)=semio_framework_value::SharedUtf8::admit(actor.to_owned(),self.actor_identity_grant).unwrap_or_else(|(error,_)|panic!("original fixture actor admission: {error}"));add_actor_identity_progress(&mut self.actor_identity_progress,receipt);self.socket_actor = Some(original);
+        let(original,receipt)=semio_framework_value::SharedUtf8::admit(actor.to_owned(),self.actor_identity_grant).result.unwrap_or_else(|(error,_)|panic!("original fixture actor admission: {error}"));add_actor_identity_progress(&mut self.actor_identity_progress,receipt);self.socket_actor = Some(original);
         self.socket_actor_confirmed = false;
     }
 
@@ -409,7 +409,7 @@ impl ArtifactActor {
         let (stream, _) = tokio_tungstenite::connect_async(url).await.expect("test socket connects");
         let (write, read) = stream.split();
         self.semio_hub = Some(HubConn { write, read });
-        let(original,receipt)=semio_framework_value::SharedUtf8::admit(actor.to_owned(),self.actor_identity_grant).unwrap_or_else(|(error,_)|panic!("original fixture actor admission: {error}"));add_actor_identity_progress(&mut self.actor_identity_progress,receipt);self.socket_actor = Some(original);
+        let(original,receipt)=semio_framework_value::SharedUtf8::admit(actor.to_owned(),self.actor_identity_grant).result.unwrap_or_else(|(error,_)|panic!("original fixture actor admission: {error}"));add_actor_identity_progress(&mut self.actor_identity_progress,receipt);self.socket_actor = Some(original);
         self.socket_actor_confirmed = false;
         self.session_color = None;
         self.send_client_frame(

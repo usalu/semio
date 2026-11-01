@@ -212,7 +212,6 @@ fn mounted_visual_complete_field_pages_match_independent_json_and_close_one_page
     let mut turns = 0;
     while !lease.close_step(CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY).0 { turns += 1; assert!(turns < 512); }
     assert!(lease.terminal_is_empty());
-    eprintln!("[DEBUG] FEM2D complete field packet fields={count}, bytes={}, close_turns={turns}", packet.len());
 }
 
 #[test]

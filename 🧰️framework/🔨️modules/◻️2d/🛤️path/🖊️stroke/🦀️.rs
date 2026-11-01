@@ -112,7 +112,7 @@ impl StrokeOutlineJob {
   self.new_polygon.extend_from_slice(points);if area<0.0{self.new_polygon.reverse();}self.polygons.push(std::mem::take(&mut self.new_polygon));self.count+=length;Ok(true)
  }
  fn circle_point(&self,center:Vec2,angle:f64)->Vec2 {let (s,c)=angle.sin_cos();[center[0]+self.radius*c,center[1]+self.radius*s]}
- fn round_point(&mut self,p:Vec2,work:&mut RetainedWorkLedger)->Result<bool,StrokeOutlineError>{self.check(p)?;if self.count>=MAX_POINTS{return Err(StrokeOutlineError::Invalid("Stroke outline exceeds point budget"));}let index=self.round.as_ref().unwrap().polygon;if !Self::append(&mut self.polygons[index],&[p],work)?{return Ok(false);}self.count+=1;Ok(true)}
+ fn round_point(&mut self,p:Vec2,work:&mut RetainedWorkLedger)->Result<bool,StrokeOutlineError>{self.check(p)?;if self.count>=MAX_POINTS{return Err(StrokeOutlineError::Invalid("Stroke outline exceeds point budget"));}let index=self.round.as_ref().ok_or(StrokeOutlineError::Invalid("round absent"))?.polygon;if !Self::append(&mut self.polygons[index],&[p],work)?{return Ok(false);}self.count+=1;Ok(true)}
  fn join(&self,[before,p,after]:[Vec2;3])->Option<Primitive>{
   let a=unit(before,p);let b=unit(p,after);let cross=a[0]*b[1]-a[1]*b[0];let dot=(a[0]*b[0]+a[1]*b[1]).clamp(-1.0,1.0);if cross==0.0&&dot>0.0{return None;}let side=if cross<0.0{1.0}else{-1.0};let n=normal(a);let z=normal(b);let from=shifted(p,n,side*self.radius);let to=shifted(p,z,side*self.radius);
   if self.input.style.join==StrokeGeometryJoin::Round{let start=if cross<0.0{to}else{from};let theta=(start[1]-p[1]).atan2(start[0]-p[0]);return Some(Primitive::Round{center:p,a:theta,b:theta+cross.abs().atan2(dot)});}
@@ -127,8 +127,8 @@ impl StrokeOutlineJob {
  fn outline(&mut self,work:&mut RetainedWorkLedger)->Result<bool,StrokeOutlineError>{
   if let Some(round)=&self.round{
    let Some(node)=round.stack.last()else{self.round=None;return Ok(true);};let center=round.center;let span=node.b-node.a;let error=2.0*self.round_bound*(span/4.0).sin().powi(2);
-   if span<=std::f64::consts::PI&&error<=self.input.tolerance{let completed=self.round_point(self.circle_point(center,node.b),work)?;if completed{self.round.as_mut().unwrap().stack.pop();}return Ok(completed);}
-   if node.depth>=32{return Err(StrokeOutlineError::Invalid("Stroke outline exceeds subdivision budget"));}if !work.can_step(){return Ok(false);}let middle=(node.a+node.b)/2.0;let stack=&mut self.round.as_mut().unwrap().stack;stack.pop();stack.extend([ArcNode{a:middle,b:node.b,depth:node.depth+1},ArcNode{a:node.a,b:middle,depth:node.depth+1}]);return Ok(true);
+   if span<=std::f64::consts::PI&&error<=self.input.tolerance{let completed=self.round_point(self.circle_point(center,node.b),work)?;if completed{self.round.as_mut().ok_or(StrokeOutlineError::Invalid("round absent"))?.stack.pop();}return Ok(completed);}
+   if node.depth>=32{return Err(StrokeOutlineError::Invalid("Stroke outline exceeds subdivision budget"));}if !work.can_step(){return Ok(false);}let middle=(node.a+node.b)/2.0;let stack=&mut self.round.as_mut().ok_or(StrokeOutlineError::Invalid("round absent"))?.stack;stack.pop();stack.extend([ArcNode{a:middle,b:node.b,depth:node.depth+1},ArcNode{a:node.a,b:middle,depth:node.depth+1}]);return Ok(true);
   }
   if let Some(primitive)=self.queue.front(){
    match primitive{
@@ -179,7 +179,7 @@ impl StrokeOutlineJob {
     let a=src.points[self.edge];let b=src.points[(self.edge+1)%n];let length=(b[0]-a[0]).hypot(b[1]-a[1]);let left=length-self.position;let take=left.min(self.remaining);let from=self.location();let end_edge=take==left;let end_dash=take==self.remaining;let position=self.position+take;
     if take>0.0&&position==self.position{return Err(StrokeOutlineError::Invalid("Stroke dashing exceeds numeric limits"));}let to=if end_edge{b}else{[a[0]+(b[0]-a[0])*position/length,a[1]+(b[1]-a[1])*position/length]};
     if self.dash%2==0{
-     if let Some(active)=self.active{if !self.runs[active].painted{if !work.copy_bytes(std::mem::size_of::<Vec2>()){return Ok(false);}*self.runs[active].points.last_mut().unwrap()=to;self.runs[active].painted=true;if self.first.is_none(){self.first=Some(active);}self.last=Some(active);}else if !self.run_point(active,to,work)?{return Ok(false);}}
+     if let Some(active)=self.active{if !self.runs[active].painted{if !work.copy_bytes(std::mem::size_of::<Vec2>()){return Ok(false);}*self.runs[active].points.last_mut().ok_or(StrokeOutlineError::Invalid("last_mut target absent"))?=to;self.runs[active].painted=true;if self.first.is_none(){self.first=Some(active);}self.last=Some(active);}else if !self.run_point(active,to,work)?{return Ok(false);}}
      else if !self.create_run(from,to,true,work)?{return Ok(false);}
     }else{self.active=None;}
     self.position=position;self.remaining-=take;if end_dash{self.dash=(self.dash+1)%self.pattern.len();self.remaining=self.pattern[self.dash];}if end_edge{self.edge+=1;self.position=0.0;}
@@ -187,7 +187,7 @@ impl StrokeOutlineJob {
    Stage::Finish=>{
     let src=&self.sources[self.source];let seam=if src.closed{if let(Some(first),Some(last))=(self.first,self.last){if self.runs[first].points[0]==src.points[0]&&self.runs[last].points.last()==Some(&src.points[0])&&first!=last{let end=self.runs[last].points.len();Some([self.runs[last].points[end-2],src.points[0],self.runs[first].points[1]])}else{None}}else{None}}else{None};
     if seam.is_some(){let target=self.seams.len()+1;if !Self::reserve(&mut self.seams,target,MAX_POINTS,work)?||!work.copy_bytes(std::mem::size_of::<[Vec2;3]>()){return Ok(false);}}
-    if src.closed{if let(Some(first),Some(last))=(self.first,self.last){if self.runs[first].points[0]==src.points[0]&&self.runs[last].points.last()==Some(&src.points[0]){if first==last{self.runs[first].closed=true;self.runs[first].points.pop();}else{self.runs[first].cap_start=false;self.runs[last].cap_end=false;self.seams.push(seam.unwrap());}}}}
+    if src.closed{if let(Some(first),Some(last))=(self.first,self.last){if self.runs[first].points[0]==src.points[0]&&self.runs[last].points.last()==Some(&src.points[0]){if first==last{self.runs[first].closed=true;self.runs[first].points.pop();}else{self.runs[first].cap_start=false;self.runs[last].cap_end=false;self.seams.push(seam.ok_or(StrokeOutlineError::Invalid("seam absent"))?);}}}}
     self.active=None;self.source+=1;self.stage=Stage::Source;
    }
    Stage::Outline=>return self.outline(work),Stage::Done=>{}

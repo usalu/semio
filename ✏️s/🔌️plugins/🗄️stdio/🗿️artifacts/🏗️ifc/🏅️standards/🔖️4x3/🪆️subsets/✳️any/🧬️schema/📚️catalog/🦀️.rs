@@ -1,13 +1,14 @@
 //! 📚 IFC4X3_ADD2 EXPRESS declarations and structural validation.
 use std::collections::{BTreeMap, BTreeSet};
-use std::sync::OnceLock;
+#[cfg(test)]
+#[global_allocator]
+static IFC_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 pub mod query;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcSnapshot, IfcValue};
 
 use semio_s_artifact_stdio_ifc_declarations as declaration;
 pub use declaration::{IfcCatalog,IfcTypeExpression,IfcAttributeDeclaration,IfcDerivedDeclaration,IfcEntityDeclaration,IfcTypeDeclaration};
-#[path="../../../../../../📚️catalog/⚖️domain/🦀️.rs"]
-mod domain;
+use semio_s_artifact_stdio_ifc_domain as domain;
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct IfcDiagnostic {
     pub code: String,
@@ -18,16 +19,15 @@ pub struct IfcDiagnostic {
 
 /// 📏️ Largest inherited serialized tuple in this pinned normative profile.
 pub const IFC4X3_MAXIMUM_ATTRIBUTES: usize = 21;
-use semio_s_artifact_stdio_ifc4x3_add2_catalog::build_catalog;
-static IFC4X3_CATALOG: OnceLock<IfcCatalog> = OnceLock::new();
+use semio_s_artifact_stdio_ifc4x3_add2_catalog as add2_catalog;
 
 /// 📖 Resolve the complete retained catalog without a runtime parser or external dependency.
 pub fn ifc4x3_catalog() -> &'static IfcCatalog {
-    IFC4X3_CATALOG.get_or_init(build_catalog)
+    add2_catalog::catalog()
 }
 
 /// 🧊 Borrow an existing immutable catalog without causing cold heap construction inside a retained request.
-pub fn ifc4x3_cached_catalog() -> Option<&'static IfcCatalog> { IFC4X3_CATALOG.get() }
+pub fn ifc4x3_cached_catalog() -> Option<&'static IfcCatalog> { add2_catalog::cached_catalog() }
 
 /// 🧬 Resolve inherited serialization positions, including derived redeclarations.
 pub fn ifc_attribute_declarations(name:&str)->Option<Vec<IfcAttributeDeclaration>>{declaration::ifc_attributes(ifc4x3_catalog(),name).map(<[IfcAttributeDeclaration]>::to_vec)}

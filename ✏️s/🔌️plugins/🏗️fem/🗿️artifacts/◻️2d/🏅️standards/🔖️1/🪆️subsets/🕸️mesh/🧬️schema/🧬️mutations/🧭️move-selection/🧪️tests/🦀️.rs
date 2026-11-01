@@ -47,7 +47,6 @@ fn transform_inverse_preserves_collaborator_fields_and_matches_diff_inverse() {
     }
     assert_eq!(cursor, before);
     assert_eq!(summed, negative);
-    println!("[DEBUG] FEM2d transform undo preserves peer node ordinate, region fields and independently authored holes; semantic inverse equals central diff inverse");
 }
 
 #[test]
@@ -60,5 +59,4 @@ fn transform_non_finite_output_is_refused_before_publication() {
     assert_eq!(outcome.diff(), &Fem2dDiff::default());
     assert_eq!(outcome.messages()[0].code.0, fixture["overflow"]["expectedCode"].as_str().expect("refusal code"));
     assert!(operation.inverse(&before).expect("refused inverse").is_empty());
-    println!("[DEBUG] FEM2d transform overflow refuses before any region or node publication");
 }

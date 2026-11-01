@@ -59,7 +59,7 @@ impl<'source> SnapshotPatchReadCursor<'source>{
     pub fn into_retirement(self,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Box<dyn semio_framework_value::ErasedSnapshotRetirement>,semio_framework_value::retained_clone::RetainedCloneProgress),(ValueError,Self)>{
         let Self{parser,candidate,patch,admitted}=self;
         let(source,parser)=parser.into_grammar();
-        semio_framework_value::admit_owned_retirement((parser,candidate,patch),grant).map_err(|(error,(parser,candidate,patch))|(error,Self{parser:JsonSourceCursor::from_grammar(source,parser),candidate,patch,admitted}))
+        semio_framework_value::admit_owned_retirement((parser,candidate,patch),grant).result.map_err(|(error,(parser,candidate,patch))|(error,Self{parser:JsonSourceCursor::from_grammar(source,parser),candidate,patch,admitted}))
     }
 }
 fn refusal(message:&'static str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}

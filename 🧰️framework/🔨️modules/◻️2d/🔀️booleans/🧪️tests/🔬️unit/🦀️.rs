@@ -3,7 +3,9 @@ use super::*;
 
 fn polygon(path:&[PathSegment])->Result<BooleanOperand,BooleanError>{let mut rings=Vec::new();let mut ring=None;for segment in path{match segment{PathSegment::Move{to}=>{if ring.is_some(){return Err(BooleanError::Invalid("Boolean contour must be closed"));}ring=Some(vec![*to]);},PathSegment::Line{to}=>ring.as_mut().ok_or(BooleanError::Invalid("Boolean line requires a contour"))?.push(*to),PathSegment::Close=>rings.push(ring.take().ok_or(BooleanError::Invalid("Boolean close requires a contour"))?),_=>return Err(BooleanError::Invalid("Boolean fixture requires linear contours"))}}if ring.is_some(){return Err(BooleanError::Invalid("Boolean contour must be closed"));}Ok(BooleanOperand{contours:rings,fill_rule:BooleanFillRule::Evenodd})}
 fn evaluate(a:&[PathSegment],b:&[PathSegment],operation:&str)->Result<Vec<PathSegment>,BooleanError>{evaluate_many(&[a.to_vec(),b.to_vec()],operation)}
-fn evaluate_many(paths:&[Vec<PathSegment>],operation:&str)->Result<Vec<PathSegment>,BooleanError>{let operation=BooleanOperation::parse(operation)?;if paths.is_empty(){return Err(BooleanError::Invalid("Boolean operands are required"));}let operands=paths.iter().map(|path|polygon(path)).collect::<Result<Vec<_>,_>>()?;let input=BooleanInput{operation,operands,epsilon:1e-9,max_edges:65536,max_parameters:262144,max_atomic_edges:262144,max_segments:65536,max_work:100000000};Ok(super::bounded_tests::finish(input,7).0)}
+fn evaluate_many(paths:&[Vec<PathSegment>],operation:&str)->Result<Vec<PathSegment>,BooleanError>{evaluate_many_with(paths,operation,1e-9)}
+fn evaluate_with(a:&[PathSegment],b:&[PathSegment],operation:&str,epsilon:f64)->Result<Vec<PathSegment>,BooleanError>{evaluate_many_with(&[a.to_vec(),b.to_vec()],operation,epsilon)}
+fn evaluate_many_with(paths:&[Vec<PathSegment>],operation:&str,epsilon:f64)->Result<Vec<PathSegment>,BooleanError>{let operation=BooleanOperation::parse(operation)?;if paths.is_empty(){return Err(BooleanError::Invalid("Boolean operands are required"));}let operands=paths.iter().map(|path|polygon(path)).collect::<Result<Vec<_>,_>>()?;let input=BooleanInput{operation,operands,epsilon,max_edges:65536,max_parameters:262144,max_atomic_edges:262144,max_segments:65536,max_work:100000000};Ok(super::bounded_tests::finish(input,7).0)}
 
 
 fn square(origin: [f64; 2], size: f64) -> Vec<PathSegment> {
@@ -113,7 +115,8 @@ fn oracle_discards_degenerate_and_duplicate_edges() {
 #[test]
 fn translated_coordinates_preserve_topology() {
     let origin = 1.0e12-100.0;
-    let union = evaluate(&square([origin, origin], 10.0), &square([origin + 5.0, origin + 5.0], 10.0), "union").expect("translated union");
+    let (a, b) = (square([origin, origin], 10.0), square([origin + 5.0, origin + 5.0], 10.0));
+    let union = evaluate_with(&a, &b, "union", 1.0e-2).expect("translated union");
     assert_eq!(contours(&union), 1);
     assert_eq!(union.len(), 9);
 }

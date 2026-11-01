@@ -7,9 +7,9 @@ impl ArtifactInstanceAliasRetirement{
 impl semio_framework_value::retirement::RetirementCursor for ArtifactInstanceAliasRetirement{
  fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
   use semio_framework_value::retirement::RetirementStep;
-  if self.terminal_is_empty(){return RetirementStep::Complete}
-  let demand=match self.demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error)};if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return RetirementStep::BudgetExhausted}
-  match self.original.alias_return_step(grant){Ok(RetainedCloneStep::Complete(progress))if progress==Default::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress),Err(error)=>RetirementStep::Failure(error)}
+  if self.terminal_is_empty(){return RetirementStep::Complete(0)}
+  let demand=match self.demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error,0)};if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return RetirementStep::BudgetExhausted}
+  match self.original.alias_return_step(grant){Ok(RetainedCloneStep::Complete(progress))if progress==Default::default()=>RetirementStep::Complete(0),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,1),Err(error)=>RetirementStep::Failure(error,0)}
  }
  fn terminal_is_empty(&self)->bool{self.original.terminal_is_empty()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}

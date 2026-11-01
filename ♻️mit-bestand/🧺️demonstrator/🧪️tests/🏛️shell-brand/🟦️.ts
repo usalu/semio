@@ -3,8 +3,15 @@ import { existsSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Footer, navbarFillItem } from "@semio-tech/ui-react";
-import { ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND, ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND, ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND, ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND, ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND, ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND, ENTWERFEN_MIT_BESTAND_STATIK_BRAND, ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND, ENTWERFEN_MIT_BESTAND_BRAND_IDS, ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION, isEntwerfenMitBestandBrandId } from "../../🪧️brand.ts";
-import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem, LUH_LOGO_URL, UDK_LOGO_URL, LUH_URL, UDK_URL, ZUKUNFT_BAU_PROJECT_URL } from "../../⚛️footer.tsx";
+import { ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND, ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND, ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND, ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND, ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND, ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND, ENTWERFEN_MIT_BESTAND_STATIK_BRAND, ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND, ENTWERFEN_MIT_BESTAND_BRAND_IDS, demonstratorGeneralIntroduction, demonstratorPaneViews, isEntwerfenMitBestandBrandId } from "../../🪧️brand.ts";
+import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../⚛️footer.tsx";
+
+const partnerLogo = (id: string, index: number) => demonstratorFooterItems("de").find((item) => item.id === id)!.logos[index]!;
+const LUH_LOGO_URL = partnerLogo("aProjectOfLuhUdk", 0).src;
+const UDK_LOGO_URL = partnerLogo("aProjectOfLuhUdk", 1).src;
+const LUH_URL = partnerLogo("aProjectOfLuhUdk", 0).href;
+const UDK_URL = partnerLogo("aProjectOfLuhUdk", 1).href;
+const ZUKUNFT_BAU_PROJECT_URL = partnerLogo("fundedByZukunftBau", 0).href;
 
 type Cells = { readonly native: { readonly de: string }; readonly reuse: { readonly de: string } };
 const german = (label: unknown): string => (label as Cells).native.de;
@@ -32,8 +39,14 @@ describe("demonstrator shell brands", () => {
     expect(ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND.id).toBe("entwerfen-mit-bestand-verfolgen");
     expect(isEntwerfenMitBestandBrandId(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.id)).toBe(true);
     expect(isEntwerfenMitBestandBrandId("semio-os")).toBe(false);
-    expect(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.windowTitle).toBe("Entwerfen mit Bestand · Energie");
-    expect(ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION.steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding"]);
+    expect(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.windowTitle).toBe("Entwerfen mit Bestand");
+    expect(ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND.locks?.locale).toBeUndefined();
+    const energy = (locale: "en" | "de") => demonstratorPaneViews(locale).find((pane) => pane.id === "energie")!;
+    expect(energy("en").brand.windowTitle).toBe("Entwerfen mit Bestand · Energy");
+    expect(energy("de").brand.windowTitle).toBe("Entwerfen mit Bestand · Energie");
+    expect(energy("en").brand.shortWindowTitle).toBe("EmB · Energy");
+    expect(energy("de").brand.shortWindowTitle).toBe("EmB · Energie");
+    expect(demonstratorGeneralIntroduction("de").steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding"]);
   });
 
   it("ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND introduction is app-specific only after the general landing tour was split out", () => {
@@ -99,7 +112,7 @@ describe("demonstrator shell brands", () => {
     });
     expect(german(steps.find((step) => step.id === "fill-distribution")?.body)).toMatch(/Schieberegler|Verteilung/i);
 
-    const funding = ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION.steps.find((step) => step.id === "funding")!;
+    const funding = demonstratorGeneralIntroduction("de").steps.find((step) => step.id === "funding")!;
     expect(funding.logos).toHaveLength(3);
     for (const logo of funding.logos!) {
       expect(logo.src).toMatch(/♻️mit-bestand\/🧺️demonstrator\/🖼️asset\/🪧️logos\//);
@@ -117,15 +130,15 @@ describe("demonstrator shell brands", () => {
   });
 
   it("mit-bestand/demonstrator footer credits render the funding/partner logos, links, and locale text", () => {
-    const fundedByMarkup = renderToStaticMarkup(createElement(Footer, { items: [navbarFillItem("fillLeft"), fundedByZukunftBauFooterItem("fundedByEn", "en"), navbarFillItem("fillRight")] }));
+    const fundedByMarkup = renderToStaticMarkup(createElement(Footer, { items: [navbarFillItem("fillLeft"), fundedByZukunftBauFooterItem("fundedByEn", "en", false), navbarFillItem("fillRight")] }));
     expect(fundedByMarkup).toContain("<button");
     expect(fundedByMarkup).toContain("Funded by");
     expect(fundedByMarkup).toContain("z-40");
     expect(ZUKUNFT_BAU_PROJECT_URL).toMatch(/^https:\/\/www\.zukunftbau\.de\//);
-    const fundedByDeMarkup = renderToStaticMarkup(createElement(Footer, { items: [fundedByZukunftBauFooterItem("fundedByDe", "de")] }));
+    const fundedByDeMarkup = renderToStaticMarkup(createElement(Footer, { items: [fundedByZukunftBauFooterItem("fundedByDe", "de", false)] }));
     expect(fundedByDeMarkup).toContain("Gefördert durch");
     expect(fundedByDeMarkup).toContain("hover:text-foreground");
-    const projectOfMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem()] }));
+    const projectOfMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem("projectOfDe", "de", false)] }));
     expect(projectOfMarkup).toContain("Ein Projekt von");
     expect(projectOfMarkup).toContain("hover:text-foreground");
     expect(projectOfMarkup).toContain("und");
@@ -134,7 +147,7 @@ describe("demonstrator shell brands", () => {
     expect(projectOfMarkup).toContain(LUH_URL);
     expect(projectOfMarkup).toContain(UDK_URL);
     expect(projectOfMarkup).toContain("z-40");
-    const projectOfEnMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem("projectOfEn", "en")] }));
+    const projectOfEnMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem("projectOfEn", "en", false)] }));
     expect(projectOfEnMarkup).toContain("A project of");
     expect(projectOfEnMarkup).toContain("and");
     const fundedByIconOnlyMarkup = renderToStaticMarkup(createElement(Footer, { items: [fundedByZukunftBauFooterItem("fundedByIconOnly", "en", true)] }));
@@ -153,7 +166,7 @@ describe("demonstrator shell brands", () => {
 });
 
 import Ajv from "ajv";
-import { DEMONSTRATOR_SHELL_BRANDS, DEMONSTRATOR_FOOTER_ITEMS } from "../../🪧️brand.ts";
+import { DEMONSTRATOR_SHELL_BRANDS, demonstratorFooterItems } from "../../🪧️brand.ts";
 import { shellFooterNavbarItem } from "@semio-tech/framework-os/modules/renderer/engine/elements/ShellFooter";
 import { manifestSchema as schema } from "@semio-tech/framework-manifest/schema";
 import fixture from "@semio-tech/framework-manifest/testing/fixtures/shell-footer.json" with { type: "json" };
@@ -162,14 +175,15 @@ import type { ShellFooterItem, ShellLocale } from "@semio-tech/framework";
 it("renders schema-owned neutral credits and validates every concrete owner contribution", () => {
   const validate = new Ajv({ strict: true }).addKeyword("x-semio-formats").compile(schema.$defs.ShellFooterItemV1);
   expect(validate(fixture.item)).toBe(true);
-  for (const item of DEMONSTRATOR_FOOTER_ITEMS) {
+  for (const locale of ["en", "de"] as const) for (const item of demonstratorFooterItems(locale)) {
     expect(validate(item)).toBe(true);
     for (const logo of item.logos) for (const path of [logo.src, logo.darkSrc].filter((path): path is string => path !== undefined)) {
       expect(existsSync(new URL("../../../../" + path.slice(1), import.meta.url))).toBe(true);
     }
   }
+  expect(demonstratorFooterItems("en")[0]!.logos[0]!.alt).not.toBe(demonstratorFooterItems("de")[0]!.logos[0]!.alt);
   expect(DEMONSTRATOR_SHELL_BRANDS).toHaveLength(8);
-  for (const brand of DEMONSTRATOR_SHELL_BRANDS) expect(brand.footerItems).toBe(DEMONSTRATOR_FOOTER_ITEMS);
+  for (const locale of ["en", "de"] as const) for (const pane of demonstratorPaneViews(locale)) expect(pane.brand.footerItems).toEqual(demonstratorFooterItems(locale));
   for (const row of fixture.cases) {
     const item = shellFooterNavbarItem(fixture.item as ShellFooterItem, row.locale as ShellLocale, row.compact);
     const markup = renderToStaticMarkup(createElement(Footer, { items: [item] }));
@@ -178,5 +192,5 @@ it("renders schema-owned neutral credits and validates every concrete owner cont
     if (row.separator) expect(markup).toContain(`>${row.separator}<`);
     expect(markup).toContain('rel="noopener noreferrer"');
   }
-  console.log(`Shell footer neutral cases=${fixture.cases.length}, owner brands=${DEMONSTRATOR_SHELL_BRANDS.length}, credits=${DEMONSTRATOR_FOOTER_ITEMS.length}`);
+  console.log(`Shell footer neutral cases=${fixture.cases.length}, owner brands=${DEMONSTRATOR_SHELL_BRANDS.length}, credits=${demonstratorFooterItems("en").length}`);
 });

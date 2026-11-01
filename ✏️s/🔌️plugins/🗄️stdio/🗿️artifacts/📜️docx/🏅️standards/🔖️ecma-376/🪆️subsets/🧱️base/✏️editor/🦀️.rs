@@ -215,9 +215,9 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         semio_framework_job::close_original_granted_step(cx,|grant|{
             if !self.closing {
-                return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
+                return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Blocked), work: 0 };
             }
-            Ok(self.copied_text.close_step(grant))
+            semio_framework_value::RetainedWorkOutcome { result: Ok(self.copied_text.close_step(grant)), work: 0 }
         })
     }
 
@@ -367,9 +367,9 @@ macro_rules! canonical_docx_set_page_work {
             fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
                 semio_framework_job::close_original_granted_step(cx,|grant|{
                     if !self.closing {
-                        return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked);
+                        return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_job::InteractiveJobCloseStep::Blocked), work: 0 };
                     }
-                    Ok(self.copied_text.close_step(grant))
+                    semio_framework_value::RetainedWorkOutcome { result: Ok(self.copied_text.close_step(grant)), work: 0 }
                 })
             }
 

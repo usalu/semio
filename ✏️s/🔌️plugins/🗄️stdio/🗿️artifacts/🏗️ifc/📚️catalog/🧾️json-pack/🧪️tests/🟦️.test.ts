@@ -1,0 +1,9 @@
+import {test} from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {inflateRawSync,deflateRawSync} from "node:zlib";
+import {decodeJsonPack,decodeJsonPayload,encodeJsonPack,encodeJsonPayload,MAXIMUM_PACK_DEPTH,type PackJson} from "../../🛠️extract/📦️json-pack.ts";
+const bytes=(url:string):Uint8Array=>new Uint8Array(readFileSync(new URL(url,import.meta.url))),json=(url:string):PackJson=>JSON.parse(readFileSync(new URL(url,import.meta.url),"utf8"));
+test("minimal fixture decodes to its neutral JSON and regenerates byte for byte",()=>{const pack=bytes("./🧫️fixtures/minimal.ifcj"),expected=json("./🧫️fixtures/minimal.json");assert.deepEqual(decodeJsonPack(pack),expected);assert.deepEqual(encodeJsonPack(expected),pack);assert.deepEqual(Object.keys(decodeJsonPack(pack) as object),Object.keys(expected as object));});
+test("third-party zlib and the payload reader agree on the container",()=>{const expected=json("./🧫️fixtures/minimal.json"),payload=inflateRawSync(bytes("./🧫️fixtures/minimal.ifcj"));assert.deepEqual(decodeJsonPayload(payload),expected);assert.deepEqual(Uint8Array.from(payload),encodeJsonPayload(expected));assert.deepEqual(decodeJsonPack(deflateRawSync(payload)),expected);});
+test("hostile payloads are refused",()=>{const payload=inflateRawSync(bytes("./🧫️fixtures/minimal.ifcj"));assert.throws(()=>decodeJsonPayload(payload.subarray(0,payload.length-1)),/truncated|index|tag/);assert.throws(()=>decodeJsonPayload(Uint8Array.from([...payload,0])),/trailing/);assert.throws(()=>decodeJsonPayload(Uint8Array.from([0,...payload.subarray(1)])),/magic/);assert.throws(()=>encodeJsonPayload(1.5),/integer/);assert.throws(()=>encodeJsonPayload(Array.from({length:MAXIMUM_PACK_DEPTH+2}).reduce<PackJson>(inner=>[inner],[])),/depth/);});

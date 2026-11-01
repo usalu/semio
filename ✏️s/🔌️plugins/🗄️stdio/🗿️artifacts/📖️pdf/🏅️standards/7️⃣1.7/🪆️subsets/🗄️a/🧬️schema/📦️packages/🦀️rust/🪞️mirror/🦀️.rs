@@ -22,7 +22,9 @@ pub mod standards {
         pub mod subsets {
             #[path = "."]
             pub mod base {
-                pub use semio_s_artifact_stdio_pdf_testkit::standards::v1_7::subsets::base::*;
+                #[path = "../../../../../🧱️base/🦀️.rs"]
+                mod component;
+                pub use component::*;
                 #[path = "."]
                 pub mod schema {
                     pub use semio_s_artifact_stdio_pdf_schema_4::standards::v1_7::subsets::base::schema::*;

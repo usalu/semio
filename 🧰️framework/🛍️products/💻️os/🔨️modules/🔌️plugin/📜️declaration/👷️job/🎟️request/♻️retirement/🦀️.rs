@@ -23,12 +23,12 @@ impl RetirementCursor for OriginalRequestWireClose{
   Ok(RetirementDemand{copy_bytes:original.next_close_copy_byte_demand()?,capacity_bytes:original.next_close_capacity_byte_demand(body)?,release_bytes:original.next_close_release_byte_demand()?,depth:original.next_close_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original request wire retirement depth overflow"))?})
  }
  fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{
-  let demand=match self.next_demand(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error)};
-  if self.original.is_none(){return RetirementStep::Complete;}
+  let demand=match self.next_demand(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetirementStep::Failure(error,0)};
+  if self.original.is_none(){return RetirementStep::Complete(0);}
   if grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return RetirementStep::BudgetExhausted;}
   let original=self.original.as_mut().expect("original wire slot remains owned");
-  if original.terminal_is_empty(){self.original.take();return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()});}
-  match original.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}){Ok(InteractiveJobCloseStep::Complete{progress}|InteractiveJobCloseStep::Pending{progress})=>RetirementStep::Progress(progress),Ok(InteractiveJobCloseStep::Blocked)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error)}
+  if original.terminal_is_empty(){self.original.take();return RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()},1);}
+  match original.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}){Ok(InteractiveJobCloseStep::Complete{progress}|InteractiveJobCloseStep::Pending{progress})=>RetirementStep::Progress(progress,1),Ok(InteractiveJobCloseStep::Blocked)=>RetirementStep::BudgetExhausted,Err(error)=>RetirementStep::Failure(error,0)}
  }
  fn terminal_is_empty(&self)->bool{self.original.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.next_demand(0)?.copy_bytes)}

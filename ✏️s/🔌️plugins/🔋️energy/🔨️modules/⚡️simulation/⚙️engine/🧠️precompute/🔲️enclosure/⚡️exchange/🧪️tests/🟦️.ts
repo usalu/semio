@@ -36,5 +36,4 @@ export function verifyEnclosureExchangeOracle():void{
  }
  const original=new EnclosureExchangeCursor(2,2,4,4,4,4).snapshot();for(const [index,value]of [[0,2n],[6,99n],[10,1n],[25,1n],[3,3n],[11,2n]] as const){const forged=original.slice();forged[index]=value;assert.throws(()=>EnclosureExchangeCursor.fromSnapshot(forged),/InvalidSnapshot|invalid-snapshot/);}
  const early=original.slice();early[6]=7n;early[3]=2n;early[7]=0n;assert.throws(()=>EnclosureExchangeCursor.fromSnapshot(early),/InvalidSnapshot/);
- console.log("[DEBUG] retained enclosure exchange 15 portable cases matched actual Mathjs radiosity and closed pair energy across "+totalTurns+" original scalar turns");
 }

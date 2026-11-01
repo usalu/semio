@@ -587,7 +587,7 @@ impl FrameBuildHandle {
 
     fn retire_original_frame_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
         let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
-        if let Some(owner)=self.original_outcome.as_mut(){if owner.acknowledge_outcome(cx)?{self.original_outcome.take().unwrap().begin_close();self.original_outcome_kind=None;self.original_outcome_acknowledged=false;}return Ok(false)}
+        if let Some(owner)=self.original_outcome.as_mut(){if owner.acknowledge_outcome(cx)?{self.original_outcome.take().ok_or_else(||ValueError::invariant("original_outcome absent"))?.begin_close();self.original_outcome_kind=None;self.original_outcome_acknowledged=false;}return Ok(false)}
         if !self.original_admission.terminal_is_empty(){self.original_admission.close_step(cx)?;return Ok(false)}
         if let Some(job)=self.original_job.as_mut(){if !job.terminal_is_empty(){job.close_step(cx)?;return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_job=None;return Ok(false)}
         if let Some(params)=self.original_params.take(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_params_cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));return Ok(false)}

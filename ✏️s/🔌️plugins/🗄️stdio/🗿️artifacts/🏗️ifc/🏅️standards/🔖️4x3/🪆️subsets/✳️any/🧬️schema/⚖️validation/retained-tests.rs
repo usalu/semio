@@ -23,8 +23,8 @@ fn expression(actual: &metadata::StaticTypeExpression, expected: &serde_json::Va
 #[test]
 fn static_declarations_preserve_every_released_serialization_position() {
     let released: serde_json::Value = serde_json::from_str(include_str!("../📚️catalog/🔣️.json")).unwrap();
-    assert_eq!(metadata::ENTITIES.len(), released["entities"].as_object().unwrap().len());
-    assert_eq!(metadata::TYPES.len(), released["types"].as_object().unwrap().len());
+    assert_eq!(metadata::entities().len(), released["entities"].as_object().unwrap().len());
+    assert_eq!(metadata::types().len(), released["types"].as_object().unwrap().len());
     for (key, expected) in released["entities"].as_object().unwrap() {
         let actual = metadata::entity(key).unwrap();
         assert_eq!(actual.name, expected["name"].as_str().unwrap());

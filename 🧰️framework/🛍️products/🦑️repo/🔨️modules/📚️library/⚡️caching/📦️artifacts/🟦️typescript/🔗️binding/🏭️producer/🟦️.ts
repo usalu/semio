@@ -1,6 +1,6 @@
-import artifactSchema from "../../../💾️storage/🧬️schema/🔣️.json";
+import artifactSchema from "../../../💾️storage/🧬️schema/🔣️.json" with { type: "json" };
 import {dirname,isAbsolute,join,relative,resolve,sep} from "node:path";
-import schema from "../🧬️schema/🔣️.json";
+import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 import {validateJsonSchemaSubset} from "./../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 /** 📎️ The public publication directory owned by the binding protocol. */
 export const typeScriptPackagePublicDirectoryV1=schema.$defs.Protocol.const.publicDirectory;

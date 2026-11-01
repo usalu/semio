@@ -46,6 +46,6 @@ pub fn render(host_snapshot: &FlowHostSnapshot, generation: &GenerationPlayState
     let Some(current) = semio_s_artifact_procedural_3d_model::generation_by_id(generation, selected_id) else {
         return built_text_node(semio_framework_ui_locale::Label::data(labels.generate_hint.as_str())).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.generate-form.hint", "fixed UI hint admission failed"));
     };
-    semio_s_procedural_core_semantic_ui::generation_form(&spec, &current.values, GENERATION_3D_PLAY_APP_ID, "updateGenerationValues", &current.id)
+    semio_s_procedural_core_semantic_ui::generation_form(&spec, &current.values, GENERATION_3D_PLAY_APP_ID, "updateGenerationValues", &current.id, &semio_s_procedural_core_semantic_ui::GenerationFormLabels { no_inputs: labels.form_no_inputs.as_str(), field: labels.form_field.as_str(), no_image: labels.form_no_image.as_str() })
 }
 //#endregion 🔖️Render

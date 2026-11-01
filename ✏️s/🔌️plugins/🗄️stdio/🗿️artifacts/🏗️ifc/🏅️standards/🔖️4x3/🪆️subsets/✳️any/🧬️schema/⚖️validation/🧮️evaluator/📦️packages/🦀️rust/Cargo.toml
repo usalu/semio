@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-stdio-ifc4x3-evaluator"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Controlled native EXPRESS evaluator and structural population validation."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-stdio-ifc4x3-express = { workspace = true }
+semio-s-artifact-stdio-ifc4x3-schema = { workspace = true }
+semio-s-artifact-stdio-ifc-4-model = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-stdio-ifc4x3-step = { workspace = true }
+semio-framework-trace = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+semio-framework-async-macros = { workspace = true }
+serde_json = { workspace = true }

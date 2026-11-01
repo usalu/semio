@@ -213,7 +213,7 @@ impl<T: Send + 'static> OwnedSchemaBoundedArrayAuthority<T> {
             admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original schema history entry decoder").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        if self.active_retirement.is_some() { return artifact_retirement_box_close_step(&mut self.active_retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (diagnostic).with_native(error)); }
+        if self.active_retirement.is_some() { return artifact_retirement_box_close_step(&mut self.active_retirement, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (diagnostic).with_native(error)); }
         if self.reservation.is_some() {
             let values = self.values.as_mut().ok_or(diagnostic)?;
             let reservation = self.reservation.take().expect("observed live history reservation");
@@ -225,7 +225,7 @@ impl<T: Send + 'static> OwnedSchemaBoundedArrayAuthority<T> {
         }
         if let Some(value) = self.rejected.take() {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match self.retirement_factory.as_ref().expect("history entry retains its factory").retire_owned(value, child) {
+            return match self.retirement_factory.as_ref().expect("history entry retains its factory").retire_owned(value, child).result {
                 Ok((owner, progress)) => { *self.active_retirement = Some(owner); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(diagnostic.with_progress(progress)); } Ok(RetainedCloneStep::Progress(progress)) }
                 Err((error, value)) => { *self.rejected = Some(value); Err(diagnostic.with_native(error)) }
             };
@@ -236,7 +236,7 @@ impl<T: Send + 'static> OwnedSchemaBoundedArrayAuthority<T> {
         }
         if let Some(owner) = self.ledger_retirement.as_mut() {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = owner.close_step(child).map_err(|error| (diagnostic).with_native(error))?;
+            let step = owner.close_step(child).result.map_err(|error| (diagnostic).with_native(error))?;
             admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original schema history ledger").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
             if owner.terminal_is_empty() { drop(self.ledger_retirement.take()); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
@@ -254,7 +254,7 @@ impl<T: Send + 'static> OwnedSchemaBoundedArrayAuthority<T> {
         if let Some(slot) = self.factories_close.iter_mut().find(|slot| slot.is_some()) {
             let owner = slot.as_mut().expect("observed original schema factory");
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = owner.step(child).map_err(|error| (diagnostic).with_native(error))?;
+            let step = owner.step(child).result.map_err(|error| (diagnostic).with_native(error))?;
             admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original schema history factory").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
             if owner.terminal_is_empty() { drop(slot.take()); }
             self.taken = self.factories_close.iter().all(Option::is_none);

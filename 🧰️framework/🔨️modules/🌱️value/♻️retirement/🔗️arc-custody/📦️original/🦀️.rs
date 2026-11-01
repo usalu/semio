@@ -13,7 +13,7 @@ pub struct SharedOriginalBirth<T:Send+Sync+'static>{source:ManuallyDrop<Option<A
 /// 📤️ One currently funded unique backing permits exactly one initialized payload publication.
 pub struct SharedOriginalPublication<'a,T:Send+Sync+'static>{birth:&'a mut SharedOriginalBirth<T>}
 impl<T:Send+Sync+'static> SharedOriginalPublication<'_,T>{
- pub fn commit(self,value:T)->crate::RetainedWorkOutcome<(SharedOriginalStorage<T>,RetainedCloneProgress)>{let mut source=self.birth.source.take().expect("funded original backing remains retained");let storage=Arc::get_mut(&mut source).expect("unpublished original backing is unique");storage.value.get_mut().write(value);storage.aliases.store(1,Ordering::Relaxed);crate::RetainedWorkOutcome{result:Ok((SharedOriginalStorage{source:ManuallyDrop::new(Some(source))},RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+ pub fn commit(self,value:T)->crate::RetainedWorkOutcome<(SharedOriginalStorage<T>,RetainedCloneProgress)>{let mut source=match self.birth.source.take(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("funded original backing remains retained").into()),work:0}};let storage=Arc::get_mut(&mut source).expect("unpublished original backing is unique");storage.value.get_mut().write(value);storage.aliases.store(1,Ordering::Relaxed);crate::RetainedWorkOutcome{result:Ok((SharedOriginalStorage{source:ManuallyDrop::new(Some(source))},RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
 }
 impl<T:Send+Sync+'static> SharedOriginalBirth<T>{
  pub fn publication(&mut self,grant:RetainedCloneGrant)->Result<Option<SharedOriginalPublication<'_,T>>,ValueError>{if self.source.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original birth storage already transferred"))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}Ok(Some(SharedOriginalPublication{birth:self}))}
@@ -40,7 +40,7 @@ impl<T:Send+Sync+'static> SharedOriginalStorage<T>{
  pub fn identity(&self)->usize{self.source.as_ref().expect("live original alias").value.get().cast::<T>()as usize}
  pub fn aliases(&self)->usize{self.source.as_ref().expect("live original alias").aliases.load(Ordering::Acquire)}
  pub fn duplicate(&self)->crate::RetainedWorkOutcome<Self>{
-  let source=self.source.as_ref().expect("live original alias");
+  let source=match self.source.as_ref(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("live original alias").into()),work:0}};
   let result=source.aliases.fetch_update(Ordering::AcqRel,Ordering::Acquire,|count|(count>0).then(||count.checked_add(1)).flatten()).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"original alias space exhausted")).map(|_|Self{source:ManuallyDrop::new(Some(Arc::clone(source)))});
   crate::RetainedWorkOutcome{result,work:1}
  }

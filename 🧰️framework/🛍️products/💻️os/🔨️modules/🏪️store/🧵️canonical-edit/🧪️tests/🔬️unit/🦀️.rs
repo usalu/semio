@@ -162,7 +162,7 @@ struct FixtureMutationRetirement;
 impl ArtifactOwnedValueRetirementFactory<FixtureMutation> for FixtureMutationRetirement {
     fn retirement_birth_bytes(&self, _: &FixtureMutation) -> usize { semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<FixtureMutation>() }
     fn retire_owned(&self, value: FixtureMutation, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, FixtureMutation)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress),(ValueError, FixtureMutation)> {
-        semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, grant).map(|(owner, progress)| (owner as Box<dyn ErasedSnapshotRetirement>, progress))
+        semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, grant).result.map(|(owner, progress)| (owner as Box<dyn ErasedSnapshotRetirement>, progress))
     })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
@@ -170,7 +170,7 @@ impl ArtifactOwnedValueRetirementFactory<FixtureMutation> for FixtureMutationRet
 pub(super) struct FixtureSnapshotRetirement;
 impl SnapshotRetirementFactory<u64> for FixtureSnapshotRetirement {
     fn retirement_birth_bytes(&self, _: &Arc<u64>) -> usize { semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<u64>() }
-    fn retire(&self, snapshot: Arc<u64>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<u64>)> {
+    fn retire(&self, snapshot: Arc<u64>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<u64>)> {
         semio_framework_value::retirement::arc_custody::admit_shared_retirement(snapshot, grant, false)
     }
 }
@@ -416,14 +416,14 @@ fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
         if owner.is_none() { assert!(physical_release >= payload_bytes + birth.capacity_bytes);  return; }
         let demand = factory_ticket_demands(owner.as_ref().unwrap(), grant.maximum_copy_bytes).unwrap();
         let actual = RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth, ..grant };
-        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| close_factory_ticket(&mut owner, RetainedCloneGrant { maximum_items: 0, ..actual }).unwrap());
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| close_factory_ticket(&mut owner, RetainedCloneGrant { maximum_items: 0, ..actual }).result.unwrap());
         assert_eq!((allocated, released), (0, 0)); assert_eq!(step.progress(), RetainedCloneProgress::default());
         if demand.release_bytes > 0 {
-            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| close_factory_ticket(&mut owner, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..actual }).unwrap());
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| close_factory_ticket(&mut owner, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..actual }).result.unwrap());
             assert_eq!((allocated, released), (0, 0)); assert_eq!(step.progress(), RetainedCloneProgress::default());
             assert_eq!(factory_ticket_demands(owner.as_ref().unwrap(), grant.maximum_copy_bytes).unwrap(), demand);
         }
-        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| close_factory_ticket(&mut owner, actual).unwrap());
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| close_factory_ticket(&mut owner, actual).result.unwrap());
         assert!(step.progress().fits(actual)); assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes)); physical_release += released;
     }
     panic!("final authority strings did not retire");

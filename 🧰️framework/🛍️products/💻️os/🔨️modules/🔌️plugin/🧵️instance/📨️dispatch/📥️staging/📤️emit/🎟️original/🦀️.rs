@@ -37,7 +37,7 @@ impl<'ctx,A:ArtifactApp,M:store::ReferenceSpaceMember+MemberFactory+'static,X:In
    5=>{let source=self.tools.original_emission_admission.as_mut().unwrap();if source.window_transient.as_ref().is_some_and(|owner|owner.handoff_complete()){source.advance_phase(5,6,cx)?;}else{source.capture_window_transient(&mut self.stores.window_transient_store,cx)?;}},
    6=>{
     let source=self.tools.original_emission_admission.as_mut().unwrap();if source.mounted.as_ref().unwrap().captured_child_content.is_some(){source.advance_phase(6,7,cx)?;return Ok(false)}let mounted=source.mounted.as_mut().unwrap();let bytes=semio_framework_value::retirement::arc_custody::arc_bytes::<ChildContentView>();let copy=size_of::<ChildContentView>()+2*size_of::<std::sync::Arc<ChildContentView>>();
-    if admit_original_construction(cx,&mut mounted.captured_child_content,OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:bytes,release_bytes:0,depth:1},|_|Ok((std::sync::Arc::new(ChildContentView::clone(&*self.child_composition.child_content_root)),RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:bytes,..Default::default()})))?{mounted.captured_child_content_generation=self.child_composition.child_content_generation;}
+    if admit_original_construction(cx,&mut mounted.captured_child_content,OriginalConstructionDemand{items:1,copy_bytes:copy,capacity_bytes:bytes,release_bytes:0,depth:1},|_|semio_framework_value::RetainedWorkOutcome{result:Ok((std::sync::Arc::new(ChildContentView::clone(&*self.child_composition.child_content_root)),RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:bytes,..Default::default()})),work:1})?{mounted.captured_child_content_generation=self.child_composition.child_content_generation;}
    },
    7=>{
     if self.tools.original_emission_admission.as_ref().unwrap().mounted.is_none(){self.tools.original_emission_admission.as_mut().unwrap().advance_phase(7,8,cx)?;return Ok(false)}
@@ -47,7 +47,7 @@ impl<'ctx,A:ArtifactApp,M:store::ReferenceSpaceMember+MemberFactory+'static,X:In
    },
    8=>{
     let source=self.tools.original_emission_admission.as_mut().unwrap();if !source.terminal_is_empty(){cx.with_original_retirement(|cx|source.close_step(&self.tools.tool_cancellations,cx))?;return Ok(false)}
-    let d=RetirementDemand{copy_bytes:size_of::<Option<Box<OriginalEmissionAdmission<A>>>>(),release_bytes:size_of::<OriginalEmissionAdmission<A>>(),depth:1,..Default::default()};close_original_retained_step(cx,d,|_|{self.tools.original_emission_admission.take();Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;
+    let d=RetirementDemand{copy_bytes:size_of::<Option<Box<OriginalEmissionAdmission<A>>>>(),release_bytes:size_of::<OriginalEmissionAdmission<A>>(),depth:1,..Default::default()};close_original_retained_step(cx,d,|_|{self.tools.original_emission_admission.take();semio_framework_value::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()})),work:1}})?;
    },
    _=>return Err(invalid("original emission admission has an invalid retained phase").into())
   }

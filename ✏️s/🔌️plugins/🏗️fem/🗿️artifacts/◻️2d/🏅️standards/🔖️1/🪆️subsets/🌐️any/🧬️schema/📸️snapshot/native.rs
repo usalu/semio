@@ -1,9 +1,10 @@
 //! 🛬️ Original authoring owners receive persistent FEM rows through physical grants and retain every close frontier.
 use super::{Fem2dSnapshot, Fem2dSnapshotValue};
 use semio_framework_value::{
-    ErasedSnapshotRetirement, OriginalReceivingPrimary, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind,
+    ErasedSnapshotRetirement, RetainedWorkOutcome, RetirementDemand, ValueError, ValueRefusalKind,
     retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneSourceTake, RetainedCloneStep, StagedSourceAdmission, retained_clone_grant_admits},
 };
+use semio_framework_value_native_owned::OriginalReceivingPrimary;
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient, NativeDecodeControl, NativeDecodeRetirementRecipient, NativeReceive, NativeReceiver, owned::NativePersistentListReceiver};
 use semio_framework_value_persistent::list::persistent::PersistentList;
 use semio_s_fem_material::planar::{FemMaterial, FemMaterialValue};
@@ -110,7 +111,7 @@ impl Fem2dSnapshot {
         drop(owner);
         native.with_retirement(wallet, |native| {
             while native.has_retirement_owner() {
-                native.close_retirement_recipient(wallet)?;
+                native.close_retirement_recipient(wallet).result?;
             }
             Ok(())
         })?;
@@ -282,13 +283,12 @@ impl Fem2dReceiving {
                 } else {
                     control.charge(d.capacity_bytes)?;
                     let admission = self.admission.as_mut().ok_or_else(invalid)?;
-                    let ready = admission.ready();
                     let turn = admission.advance(&mut self.source, g);
                     let p = turn.result?.progress();
                     if admission.terminal_is_empty() {
                         self.admission.take();
                     }
-                    if ready && self.source.is_some() {
+                    if self.source.is_some() {
                         self.phase = 1;
                     }
                     p

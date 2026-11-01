@@ -87,7 +87,7 @@ where
         if self.cancel.is_some() { let original = self.cancel.take().expect("original replacement cancellation remains retained"); *self.cancel_retirement = Some(semio_framework_async::CancelTokenRetirement::from_token(original)); return Ok(paid()); }
         if let Some(cancel) = self.cancel_retirement.as_mut() {
             if cancel.terminal_is_empty() { drop(self.cancel_retirement.take()); return Ok(paid()); }
-            return match cancel.close_step(child) {
+            return match cancel.close_step(child) .result {
                 Ok(step) => parent(step,cancel.terminal_is_empty()),
                 Err(semio_framework_async::CancelTokenRetirementError::Blocked(_)) => Ok(PluginLifecycleStep::AwaitingInput { reason: "replacement original cancellation retains its waiter or alias" }),
                 Err(semio_framework_async::CancelTokenRetirementError::Refused(error)) => Err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(error)),

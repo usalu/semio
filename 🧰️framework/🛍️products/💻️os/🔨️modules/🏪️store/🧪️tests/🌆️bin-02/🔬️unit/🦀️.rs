@@ -231,7 +231,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
         }
         assert_eq!(retained.retained_input_bytes(), 3);
         assert_eq!(retained.retained_typed_owners(), before);
-        assert_eq!(retained.close_step(RetainedCloneGrant::default()).unwrap().progress(), RetainedCloneProgress::default());
+        assert_eq!(retained.close_step(RetainedCloneGrant::default()).result.unwrap().progress(), RetainedCloneProgress::default());
         assert_eq!(retained.retained_typed_owners(), before);
         assert_eq!((snapshots.load(Ordering::SeqCst), mutations.load(Ordering::SeqCst)), (0, 0));
         let demand_fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🧵️job/🧪️tests/🧫️fixtures/📏️close-demand/🔣️.json")).unwrap();
@@ -246,9 +246,9 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
             let grant = RetainedCloneGrant { maximum_capacity_bytes: admission, maximum_release_bytes: admission, ..physical_test_close_grant() };
             assert!(demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth, "member-open actual frontier exceeds independently declared admission policy");
             demands.insert((demand.copy_bytes, demand.capacity_bytes, demand.release_bytes, demand.depth));
-            assert_eq!(retained.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap().progress(), RetainedCloneProgress::default());
+            assert_eq!(retained.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }).result.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!(retained.next_release_byte_demand().unwrap(), demand.release_bytes);
-            let step = retained.close_step(grant).unwrap();
+            let step = retained.close_step(grant).result.unwrap();
             assert!(step.progress().fits(grant));
             released += step.progress().released_bytes;
             if matches!(step, RetainedCloneStep::Complete(_)) { assert!(retained.terminal_is_empty()); }
@@ -517,7 +517,7 @@ async fn retained_member_common_root_copies_history_under_grant_and_publishes_th
                             if retirement.terminal_is_empty() { break; }
                             let body = retirement.next_copy_byte_demand().unwrap();
                             let step_grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: body, maximum_capacity_bytes: retirement.next_capacity_byte_demand(body).unwrap(), maximum_release_bytes: retirement.next_release_byte_demand().unwrap(), maximum_depth: retirement.next_depth_demand().unwrap() };
-                            retirement.close_step(step_grant).unwrap();
+                            retirement.close_step(step_grant).result.unwrap();
                         }
                         assert!(retirement.terminal_is_empty());
                     }
@@ -572,7 +572,7 @@ fn factory_preborn_tickets_retire_sole_snapshot_weak_without_losing_upgrade_witn
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
         let birth = witness.factory_retirement_birth_bytes();
-        let ((ticket,receipt), heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| witness.clone().preborn_factory_retirement(grant).unwrap_or_else(|error|panic!("funded witness birth refused: {}",error.error)));
+        let ((ticket,receipt), heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| witness.clone().preborn_factory_retirement(grant).result.unwrap_or_else(|error|panic!("funded witness birth refused: {}",error.error)));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (birth, 0));assert_eq!(receipt.retained_capacity_bytes,birth);assert!(receipt.fits(grant));
         let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(witness));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -583,9 +583,9 @@ fn factory_preborn_tickets_retire_sole_snapshot_weak_without_losing_upgrade_witn
             let demand=semio_framework_value::factory_ticket_demands(owner,grant.maximum_copy_bytes).unwrap();
             if demand.release_bytes!=0 {
                 let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value::close_factory_ticket(&mut slot,RetainedCloneGrant { maximum_release_bytes:demand.release_bytes-1,..grant }));
-                assert_eq!(step.unwrap().progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+                assert_eq!(step.result.unwrap().progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
             }
-            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value::close_factory_ticket(&mut slot,grant).unwrap());
+            let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value::close_factory_ticket(&mut slot,grant).result.unwrap());
             assert!(step.progress().fits(grant));let physical=step.progress().released_bytes;
             assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,physical));
             released += physical;
@@ -613,10 +613,10 @@ fn member_demo_preparation_source_prices_original_issuer_frames_and_paid_termina
         if owner.terminal_is_empty(){break;}
         let demand=owner.demands(grant.maximum_copy_bytes).unwrap();
         if demand.release_bytes!=0 {
-            let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(RetainedCloneGrant {maximum_release_bytes:demand.release_bytes-1,..grant}).unwrap());
+            let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(RetainedCloneGrant {maximum_release_bytes:demand.release_bytes-1,..grant}).result.unwrap());
             assert_eq!(step.progress(),RetainedCloneProgress::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         }
-        let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(grant).unwrap());
+        let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.step(grant).result.unwrap());
         assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));released+=step.progress().released_bytes;
     }
     assert!(owner.terminal_is_empty());assert!(released>=source_bytes);
@@ -755,7 +755,7 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     assert!(stale_read.is_none());
     assert_eq!(Arc::as_ptr(preview.state.as_ref().unwrap()),selected_pointer);
     let mut read_source={let read=selected_read.take().unwrap();let mut admission=read.source_admission().unwrap_or_else(|_|panic!("actual selected read close source"));for _ in 0..16{if admission.phase()=="ready"{break;}admission.advance(grant).result.expect("actual selected read close source stage");}let mut output=None;admission.take_output(&mut output,grant).result.expect("actual selected read close source publication");output.expect("actual selected read close source output")};
-    while !read_source.terminal_is_empty(){read_source.close_step(grant).expect("controlled original selected read return");}
+    while !read_source.terminal_is_empty(){read_source.close_step(grant).result.expect("controlled original selected read return");}
     let mut preview=Some(preview);
     let mut preview_retirement=None;
     while preview.is_some(){
@@ -764,7 +764,7 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
         }
     }
     while preview_retirement.is_some(){
-        receiving_fixture.receive(|native|native.with_retirement(grant,|original|semio_framework_value::close_factory_ticket_controlled(&mut preview_retirement,grant,original))).expect("actual selected snapshot and registry close");
+        receiving_fixture.receive(|native|native.with_retirement(grant,|original|semio_framework_value::close_factory_ticket_controlled(&mut preview_retirement,grant,original).result)).expect("actual selected snapshot and registry close");
     }
 
     close_demo_artifact_store(&mut store);
@@ -904,14 +904,14 @@ fn returned_snapshot_read_releases_an_alias_before_the_displaced_root_and_retire
     let completed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let canonical = Arc::new(DemoSnapshot { n: Some(1) });
     let factory=ExactDemoSnapshotRetirementFactory(Arc::clone(&completed));
-    let(mut displaced,progress)=factory.retire(Arc::clone(&canonical),grant).expect("counted original cursor birth is funded");
+    let(mut displaced,progress)=factory.retire(Arc::clone(&canonical),grant).result.expect("counted original cursor birth is funded");
     assert_eq!(progress.retained_capacity_bytes,std::mem::size_of::<ExactDemoSnapshotRetirement>());
-    assert_eq!(displaced.close_step(grant).expect("displaced root retains original external alias").progress(),RetainedCloneProgress::default());
+    assert_eq!(displaced.close_step(grant).result.expect("displaced root retains original external alias").progress(),RetainedCloneProgress::default());
     let mut returned = ReturnedSnapshotReadRetirement::new(canonical, Arc::new(DemoInitialSnapshotRetirementFactory));
-    let first=returned.close_step(grant).expect("returned read releases only its original alias");
+    let first=returned.close_step(grant).result.expect("returned read releases only its original alias");
     assert_eq!(first.progress(),RetainedCloneProgress { copied_items: 1,..Default::default() });
     assert!(!returned.terminal_is_empty(),"original factory capability remains separately owned");
-    for _ in 0..32 {if returned.terminal_is_empty(){break;}let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||returned.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
+    for _ in 0..32 {if returned.terminal_is_empty(){break;}let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||returned.close_step(grant).result.unwrap());assert!(step.progress().fits(grant));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
     assert!(returned.terminal_is_empty());drop(returned);
     drive_retirement_terminal(displaced);
     assert_eq!(completed.load(std::sync::atomic::Ordering::SeqCst), 1);
@@ -946,7 +946,7 @@ async fn erased_member_snapshot_read_releases_its_alias_before_the_live_current_
     let (retirement, admission) = SpaceMember::retire_snapshot_read_erased(&mut store, &mut read, grant).expect("erased read admission is funded by its grant");
     assert!(read.is_none() && admission.fits(grant));
     let mut retirement = retirement.expect("admitted erased read retirement");
-    let step = retirement.close_step(grant).expect("erased read releases its alias");
+    let step = retirement.close_step(grant).result.expect("erased read releases its alias");
     assert!(step.progress().fits(grant) && step.progress().copied_items == 1);
     assert!(!retirement.terminal_is_empty(),"actual factory capability remains separately owned after alias release");
     drive_retirement_terminal(retirement);

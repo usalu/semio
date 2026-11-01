@@ -10,7 +10,7 @@ const BYTES: usize = 64 * 1024 * 1024;
 type Matrix = [[f64; 4]; 4];
 const IDENTITY: Matrix = [[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]];
 
-pub(super) fn length_scale(snapshot: &IfcSnapshot, control: &mut dyn FnMut(ExchangeProgress) -> bool) -> Result<f64, ExchangeError> {
+pub fn length_scale(snapshot: &IfcSnapshot, control: &mut dyn FnMut(ExchangeProgress) -> bool) -> Result<f64, ExchangeError> {
     let mut entities = HashMap::new();
     let mut projects = Vec::new();
     for (i, entity) in snapshot.entities.iter().enumerate() {
@@ -46,7 +46,7 @@ pub(super) fn length_scale(snapshot: &IfcSnapshot, control: &mut dyn FnMut(Excha
     scale.ok_or_else(|| error("exchange.units", "Project has no length unit"))
 }
 
-pub(super) fn validate(snapshot:&IfcSnapshot,control:&mut dyn FnMut(ExchangeProgress)->bool)->Result<(),ExchangeError> {
+pub fn validate(snapshot:&IfcSnapshot,control:&mut dyn FnMut(ExchangeProgress)->bool)->Result<(),ExchangeError> {
     let mut limited=false;
     let result=crate::io::validate_ifc4x3_graph_controlled(snapshot,&mut |p| {
         if p.phase=="values"&&p.completed>4_000_000 {limited=true;return false;}
@@ -149,7 +149,7 @@ fn orientation(matrix:Matrix)->Result<i8,ExchangeError> {
     if matrix.iter().flatten().any(|value|!value.is_finite()) {return Err(error("exchange.transform","Transform composition is not finite"));}
     Ok(finite_orientation(matrix))
 }
-pub(super) fn finite_orientation(matrix:Matrix)->i8 {
+pub fn finite_orientation(matrix:Matrix)->i8 {
     let mut positive=[0u64;100];
     let mut negative=[0u64;100];
     for (columns,subtract) in [([0,1,2],false),([1,2,0],false),([2,0,1],false),([2,1,0],true),([1,0,2],true),([0,2,1],true)] {
@@ -277,7 +277,7 @@ fn add(snapshot:&mut IfcSnapshot,name:&str,args:Vec<IfcValue>)->IfcValue {
     snapshot.entities.push(IfcEntity {id,name:name.into(),args,complex:vec![]});
     IfcValue::Reference(id)
 }
-pub(super) fn graph()->(IfcSnapshot,IfcValue) {
+pub fn graph()->(IfcSnapshot,IfcValue) {
     let mut snapshot=IfcSnapshot {schema:"stdio.ifc".into(),header:IfcHeader::default(),entities:vec![]};
     snapshot.header.file_schema=vec![aggregate(vec![text("IFC4X3_ADD2")])];
     snapshot.header.file_description=vec![aggregate(vec![text("ViewDefinition [notYetAssigned]")]),text("2;1")];

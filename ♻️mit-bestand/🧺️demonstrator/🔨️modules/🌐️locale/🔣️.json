@@ -1,6 +1,5 @@
 {
   "version": 1,
-  "lockedLocale": "de",
   "locales": ["en", "de"],
   "texts": {
     "demonstrator.landing.grid.label.normal": { "en": "Every demonstrator", "de": "Alle Demonstratoren" },
@@ -19,6 +18,10 @@
     "demonstrator.landing.neighbourRight.label.beginner": { "en": "Swipe left to reach {{label}} on the right", "de": "Nach links wischen, um {{label}} rechts zu erreichen" },
     "demonstrator.landing.neighbourDown.label.normal": { "en": "Go down to {{label}}", "de": "Nach unten zu {{label}}" },
     "demonstrator.landing.neighbourDown.label.beginner": { "en": "Swipe up to reach {{label}} below", "de": "Nach oben wischen, um {{label}} unten zu erreichen" },
+    "demonstrator.landing.title": { "en": "Entwerfen mit Bestand · Demonstrator", "de": "Entwerfen mit Bestand · Demonstrator" },
+    "demonstrator.landing.language.label.normal": { "en": "Language", "de": "Sprache" },
+    "demonstrator.landing.language.label.beginner": { "en": "Choose the language of this page", "de": "Sprache dieser Seite wählen" },
+    "demonstrator.locale.choose": { "en": "Choose your language", "de": "Sprache wählen" },
     "demonstrator.card.open.label.normal": { "en": "Open demonstrator", "de": "Demonstrator öffnen" },
     "demonstrator.card.open.label.beginner": { "en": "Open this demonstrator", "de": "Diesen Demonstrator öffnen" },
     "demonstrator.card.openNamed.label.normal": { "en": "Open demonstrator {{label}}", "de": "Demonstrator {{label}} öffnen" },
@@ -128,6 +131,22 @@
     "demonstrator.brand.pane.verfolgen.description": { "en": "Trace shows spatially where existing components come from and where they go in later phases of use.\n\nOpen the map in full screen, zoom to locations and explore the connections.", "de": "Verfolgen zeigt räumlich, woher Bestandskomponenten stammen und wohin sie in späteren Nutzungsphasen gehen.\n\nÖffnen Sie die Karte im Vollbild, zoomen Sie auf Standorte und erkunden Sie die Zusammenhänge." },
     "demonstrator.brand.pane.statik.label": { "en": "Statics", "de": "Statik" },
     "demonstrator.brand.pane.statik.tagline": { "en": "Calculate the structure", "de": "Tragwerk berechnen" },
-    "demonstrator.brand.pane.statik.description": { "en": "Statics calculates frameworks from reused parts — with nodes, supports, loads and result display.\n\nIn full-screen mode you edit the FEM model and check the structural response.", "de": "Statik berechnet Stabwerke aus wiederverwendeten Bauteilen — mit Knoten, Auflagern, Lasten und Ergebnisdarstellung.\n\nIm Vollbildmodus bearbeiten Sie das FEM-Modell und prüfen Sie die strukturelle Antwort." }
+    "demonstrator.brand.pane.statik.description": { "en": "Statics calculates frameworks from reused parts — with nodes, supports, loads and result display.\n\nIn full-screen mode you edit the FEM model and check the structural response.", "de": "Statik berechnet Stabwerke aus wiederverwendeten Bauteilen — mit Knoten, Auflagern, Lasten und Ergebnisdarstellung.\n\nIm Vollbildmodus bearbeiten Sie das FEM-Modell und prüfen Sie die strukturelle Antwort." },
+    "demonstrator.brand.pane.generator.windowTitle": { "en": "Entwerfen mit Bestand · Generator", "de": "Entwerfen mit Bestand · Generator" },
+    "demonstrator.brand.pane.generator.shortWindowTitle": { "en": "EmB · Gen", "de": "EmB · Gen" },
+    "demonstrator.brand.pane.koordinator.windowTitle": { "en": "Entwerfen mit Bestand · Coordinator", "de": "Entwerfen mit Bestand · Koordinator" },
+    "demonstrator.brand.pane.koordinator.shortWindowTitle": { "en": "EmB · Coord", "de": "EmB · Koord" },
+    "demonstrator.brand.pane.aggregator.windowTitle": { "en": "Entwerfen mit Bestand · Aggregator", "de": "Entwerfen mit Bestand · Aggregator" },
+    "demonstrator.brand.pane.aggregator.shortWindowTitle": { "en": "EmB · Agg", "de": "EmB · Agg" },
+    "demonstrator.brand.pane.energie.windowTitle": { "en": "Entwerfen mit Bestand · Energy", "de": "Entwerfen mit Bestand · Energie" },
+    "demonstrator.brand.pane.energie.shortWindowTitle": { "en": "EmB · Energy", "de": "EmB · Energie" },
+    "demonstrator.brand.pane.aussuchen.windowTitle": { "en": "Entwerfen mit Bestand · Select", "de": "Entwerfen mit Bestand · Aussuchen" },
+    "demonstrator.brand.pane.aussuchen.shortWindowTitle": { "en": "EmB · Sel", "de": "EmB · Aus" },
+    "demonstrator.brand.pane.bearbeiten.windowTitle": { "en": "Entwerfen mit Bestand · Edit", "de": "Entwerfen mit Bestand · Bearbeiten" },
+    "demonstrator.brand.pane.bearbeiten.shortWindowTitle": { "en": "EmB · Edit", "de": "EmB · Bearb" },
+    "demonstrator.brand.pane.verfolgen.windowTitle": { "en": "Entwerfen mit Bestand · Trace", "de": "Entwerfen mit Bestand · Verfolgen" },
+    "demonstrator.brand.pane.verfolgen.shortWindowTitle": { "en": "EmB · Trace", "de": "EmB · Verf" },
+    "demonstrator.brand.pane.statik.windowTitle": { "en": "Entwerfen mit Bestand · Statics", "de": "Entwerfen mit Bestand · Statik" },
+    "demonstrator.brand.pane.statik.shortWindowTitle": { "en": "EmB · Statics", "de": "EmB · Statik" }
   }
 }

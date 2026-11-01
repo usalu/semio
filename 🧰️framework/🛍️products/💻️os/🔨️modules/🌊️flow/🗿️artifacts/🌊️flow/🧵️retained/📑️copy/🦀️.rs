@@ -12,7 +12,7 @@ use std::mem::{ManuallyDrop,size_of,size_of_val};
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close}};
 use crate::{FlowHostComponents, FlowHostSnapshot, neural, FlowChannelRef, FlowGui, FlowNodeGui, FlowPreviewGui, NodeChrome, SynapseSpec, Widget, WidgetLayout};
 use std::any::Any;
-use semio_framework_value::retained_clone::RetainedCloneSource;
+use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedCloneSourceAdmission};
 use crate::os_store::snapshot_read::SnapshotRead;
 use semio_framework_value::retirement::RetireOwned;
 use std::collections::LinkedList;
@@ -496,24 +496,24 @@ impl<R: RetireOwned + Send + Sync + 'static, T: Copy> CopyCursor<R, T> {
         if grant.maximum_depth<d.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"Flow copy close requires admitted depth"));}
         if grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_capacity_bytes<d.capacity_bytes||grant.maximum_release_bytes<d.release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
         let state=&mut*self.owned;
-        if !state.retirement.terminal_is_empty(){let step=state.retirement.step(grant)?;return account(&mut state.stalled_steps,grant,step,state.retirement.terminal_is_empty(),"selected Flow copy frontier");}
+        if !state.retirement.terminal_is_empty(){let step=state.retirement.step(grant).result?;return account(&mut state.stalled_steps,grant,step,state.retirement.terminal_is_empty(),"selected Flow copy frontier");}
         if let Some(task)=state.tasks.pop_front(){let bytes=size_of_val(task.as_ref())+task_link_bytes()+task.retire_release();task.retire(&mut state.retirement);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:bytes,..empty}));}
         else if let Some(result)=state.result.take(){result.retire(&mut state.retirement);}
-        else if let Some(source)=state.source_lease.as_mut(){let step=source.close_step(grant)?;if source.terminal_is_empty(){state.source_lease=None}return Ok(RetainedCloneStep::Progress(step.progress()));}
+        else if let Some(source)=state.source_lease.as_mut(){let step=source.close_step(grant).result?;if source.terminal_is_empty(){state.source_lease=None}return Ok(RetainedCloneStep::Progress(step.progress()));}
         else if let Some(active)=state.active_root_retirement.as_mut(){
             if active.terminal_is_empty(){let bytes=size_of_val(active.as_ref());state.active_root_retirement=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));}
-            let step=active.close_step(grant)?;let terminal=active.terminal_is_empty();
+            let step=active.close_step(grant).result?;let terminal=active.terminal_is_empty();
             let step=account(&mut state.stalled_steps,grant,step,terminal,"selected Flow root retirement")?;
             if matches!(step,RetainedCloneStep::Complete(_)){return Ok(RetainedCloneStep::Progress(step.progress()));}
             return Ok(step);
         }
-        else if let Some(root)=state.source.take(){match state.root_retirement.as_ref().expect("selected copy retirement factory").retire(root,grant){Ok((owner,progress))=>{state.active_root_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"Flow root retirement birth")?;return Ok(RetainedCloneStep::Progress(progress));},Err((error,root))=>{state.source=Some(root);return Err(error);}}}
+        else if let Some(root)=state.source.take(){match state.root_retirement.as_ref().expect("selected copy retirement factory").retire(root,grant).result{Ok((owner,progress))=>{state.active_root_retirement=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"Flow root retirement birth")?;return Ok(RetainedCloneStep::Progress(progress));},Err((error,root))=>{state.source=Some(root);return Err(error);}}}
         else if let Some(active)=state.factory_close.as_mut(){
             if active.terminal_is_empty(){let bytes=size_of_val(active.as_ref());state.factory_close=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));}
-            let step=active.close_step(grant)?;let terminal=active.terminal_is_empty();let step=account(&mut state.stalled_steps,grant,step,terminal,"selected Flow factory retirement")?;return Ok(if matches!(step,RetainedCloneStep::Complete(_)){RetainedCloneStep::Progress(step.progress())}else{step});
+            let step=active.close_step(grant).result?;let terminal=active.terminal_is_empty();let step=account(&mut state.stalled_steps,grant,step,terminal,"selected Flow factory retirement")?;return Ok(if matches!(step,RetainedCloneStep::Complete(_)){RetainedCloneStep::Progress(step.progress())}else{step});
         }
         else if let Some(factory)=state.root_retirement.take(){state.factory_source=Some(factory);}
-        else if let Some(factory)=state.factory_source.take(){match factory.preborn_factory_retirement(grant){Ok((owner,progress))=>{state.factory_close=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"Flow factory retirement birth")?;return Ok(RetainedCloneStep::Progress(progress));},Err(rejected)=>{state.factory_source=rejected.original;state.factory_close=rejected.ticket;return Err(rejected.error.with_retained_progress(rejected.progress));}}}
+        else if let Some(factory)=state.factory_source.take(){match factory.preborn_factory_retirement(grant).result{Ok((owner,progress))=>{state.factory_close=Some(owner);semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"Flow factory retirement birth")?;return Ok(RetainedCloneStep::Progress(progress));},Err(rejected)=>{state.factory_source=rejected.original;state.factory_close=rejected.ticket;return Err(rejected.error.with_retained_progress(rejected.progress));}}}
         else{return Ok(RetainedCloneStep::Complete(empty));}
         state.stalled_steps=0;
         Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}))
@@ -568,27 +568,44 @@ macro_rules! selected_cursor {
 selected_cursor!(FlowWidgetCopy, Widget);
 selected_cursor!(FlowSynapseCopy, SynapseSpec);
 selected_cursor!(FlowHostSnapshotCopy, FlowHostSnapshot);
-/// 🧳️ Failed intake preserves either the unadmitted original read or its admitted copy owner.
-pub enum FlowSnapshotCopyIntakeSource<R:RetireOwned+Sync>{Read(SnapshotRead<R>),Copy(FlowHostSnapshotCopy<R>)}
-impl<R:RetireOwned+Sync> FlowHostSnapshotCopy<R>{
+/// 🧬️ The Store state selects its one stable Flow snapshot projection, so staged source admission needs no captured function.
+pub trait FlowSnapshotProjection:RetireOwned+Sync+'static{fn project_snapshot(&self)->&FlowHostSnapshot;}
+/// 🧳️ Failed intake preserves the unadmitted original read, its partial staged admission or its admitted copy owner.
+pub enum FlowSnapshotCopyIntakeSource<R:FlowSnapshotProjection>{Read(SnapshotRead<R>),Admission(RetainedCloneSourceAdmission<FlowHostSnapshot,SnapshotRead<R>>),Copy(FlowHostSnapshotCopy<R>)}
+impl<R:FlowSnapshotProjection> FlowHostSnapshotCopy<R>{
     /// 📥️ Admits the exact original typed Store read and stable projection before any snapshot task is created.
-    pub fn from_read(read:SnapshotRead<R>,project:for<'source>fn(&'source R)->&'source FlowHostSnapshot,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Self,(semio_framework_job::OriginalTurnFailure,FlowSnapshotCopyIntakeSource<R>)>{
+    pub fn from_read(read:SnapshotRead<R>,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Self,(semio_framework_job::OriginalTurnFailure,FlowSnapshotCopyIntakeSource<R>)>{
         let grant=cx.retained_grant();let demand=RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<R>>::borrowed_constructor_demand::<SnapshotRead<R>>();
         if cx.is_cancelled()||cx.should_yield()||grant.maximum_items==0||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_depth<demand.depth{return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"Flow snapshot read intake awaits original admission").into(),FlowSnapshotCopyIntakeSource::Read(read)))}
         if !read.commit_authority_matches(source_generation,revision){cx.consume_fuel(1);return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"Flow snapshot read original revision changed").into(),FlowSnapshotCopyIntakeSource::Read(read)))}
         cx.consume_fuel(1);
-        let(source,progress)=RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<R>>::admit_borrowed(read,|read|project(read.get()),RetainedCloneGrant{maximum_items:1,..grant}).map_err(|(error,read)|(semio_framework_job::OriginalTurnFailure::debit_original(error,cx),FlowSnapshotCopyIntakeSource::Read(read)))?;
-        let cursor=CopyCursor{owned:ManuallyDrop::new(CopyState{tasks:LinkedList::new(),result:None,retirement:Retirement::default(),active_root_retirement:None,factory_close:None,source:None,source_lease:Some(source),source_generation:Some(source_generation),root_retirement:None,factory_source:None,allocation:FlowCopyAllocations::new(),progress:Default::default(),origin:Some((cx.operation().0,cx.generation().0)),revision,project:|_,_|None,index:0,started:false,finished:false,failed:false,closing:false,stalled_steps:0})};let copy=Self{cursor};match cx.consume_retained(progress){Ok(())=>Ok(copy),Err(error)=>Err((error.into(),FlowSnapshotCopyIntakeSource::Copy(copy)))}
+        let mut admission=RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<R>>::admission_borrowed(read,|read|read.get().project_snapshot());let mut output=None;
+        loop{
+            if cx.is_cancelled()||cx.should_yield(){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"Flow snapshot read intake awaits original admission").into(),FlowSnapshotCopyIntakeSource::Admission(admission)))}
+            let grant=RetainedCloneGrant{maximum_items:1,..cx.retained_grant()};
+            let ready=admission.phase()=="ready";
+            let turn=if ready{admission.take_output(&mut output,grant)}else{admission.advance(grant)};
+            cx.consume_fuel(turn.work);
+            let progress=match turn.result{Ok(step)=>step.progress(),Err(error)=>return Err((semio_framework_job::OriginalTurnFailure::debit_original(error,cx),FlowSnapshotCopyIntakeSource::Admission(admission)))};
+            let Some(source)=output.take()else{
+                if progress==RetainedCloneProgress::default(){return Err((ValueError::literal(ValueRefusalKind::WorkLimit,"Flow snapshot read intake awaits original admission").into(),FlowSnapshotCopyIntakeSource::Admission(admission)))}
+                if let Err(error)=cx.consume_retained(progress){return Err((error.into(),FlowSnapshotCopyIntakeSource::Admission(admission)))}
+                continue
+            };
+            let cursor=CopyCursor{owned:ManuallyDrop::new(CopyState{tasks:LinkedList::new(),result:None,retirement:Retirement::default(),active_root_retirement:None,factory_close:None,source:None,source_lease:Some(source),source_generation:Some(source_generation),root_retirement:None,factory_source:None,allocation:FlowCopyAllocations::new(),progress:Default::default(),origin:Some((cx.operation().0,cx.generation().0)),revision,project:|_,_|None,index:0,started:false,finished:false,failed:false,closing:false,stalled_steps:0})};let copy=Self{cursor};
+            return match cx.consume_retained(progress){Ok(())=>Ok(copy),Err(error)=>Err((error.into(),FlowSnapshotCopyIntakeSource::Copy(copy)))}
+        }
     }
 }
-/// 🏭️ The concrete Flow copy producer retains the original Store projection function.
-pub struct FlowSnapshotIntakeProducer<R:RetireOwned+Sync>{pub project:for<'source>fn(&'source R)->&'source FlowHostSnapshot}
-impl<R:RetireOwned+Sync+'static> semio_framework_job::OriginalSnapshotIntakeProducer<FlowHostSnapshot,SnapshotRead<R>> for FlowSnapshotIntakeProducer<R>{
+/// 🏭️ The concrete Flow copy producer selects the Store state's one snapshot projection.
+pub struct FlowSnapshotIntakeProducer<R:FlowSnapshotProjection>(std::marker::PhantomData<fn()->R>);
+impl<R:FlowSnapshotProjection> FlowSnapshotIntakeProducer<R>{pub fn new()->Self{Self(std::marker::PhantomData)}}
+impl<R:FlowSnapshotProjection> semio_framework_job::OriginalSnapshotIntakeProducer<FlowHostSnapshot,SnapshotRead<R>> for FlowSnapshotIntakeProducer<R>{
  type Intake=FlowHostSnapshotCopy<R>;
  type Rejected=FlowSnapshotCopyIntakeSource<R>;
  fn source_demands(&self)->Result<semio_framework_value::RetirementDemand,ValueError>{let demand=RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<R>>::borrowed_constructor_demand::<SnapshotRead<R>>();Ok(semio_framework_value::RetirementDemand{capacity_bytes:demand.capacity_bytes,depth:demand.depth,..Default::default()})}
  fn preserve_source(&self,source:SnapshotRead<R>)->Self::Rejected{FlowSnapshotCopyIntakeSource::Read(source)}
- fn admit(&self,source:SnapshotRead<R>,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Self::Intake,(semio_framework_job::OriginalTurnFailure,Self::Rejected)>{FlowHostSnapshotCopy::from_read(source,self.project,revision,source_generation,cx)}
+ fn admit(&self,source:SnapshotRead<R>,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Self::Intake,(semio_framework_job::OriginalTurnFailure,Self::Rejected)>{FlowHostSnapshotCopy::from_read(source,revision,source_generation,cx)}
 }
 impl<R:RetireOwned+Sync> semio_framework_job::OriginalSnapshotIntake<FlowHostSnapshot> for FlowHostSnapshotCopy<R>{
     fn next_normal_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.next_normal_demands(body)}

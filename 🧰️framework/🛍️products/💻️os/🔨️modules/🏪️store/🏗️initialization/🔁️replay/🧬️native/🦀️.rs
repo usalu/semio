@@ -120,20 +120,20 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
         if owner.terminal_is_empty(){Self::physical(cx,demand::<Option<ArtifactDerivedOperation<P,M>>>(),|_|{self.owner=None;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<ArtifactDerivedOperation<P,M>>>(),..Default::default()})})?;return Ok(self.owner.is_none());}
         let grant=cx.retained_grant();let quote=owner.demands(owner.context.generation,owner.context.base_revision,grant.maximum_copy_bytes)?;
         if !retained_clone_grant_admits(grant,quote){return Ok(false);}
-        let result=cx.with_native_retirement(|control|owner.close_step_controlled(grant,control));
+        let result=cx.with_native_retirement(|control|owner.close_step_controlled(grant,control).result);
         let receipt=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_retained(receipt)?;cx.consume_fuel(receipt.copied_items as u64);result?;Ok(false)
     }
     fn finish(&mut self,envelope:&mut ArtifactEnvelope<P,M>,runtime:&mut ArtifactStoreInitializationRuntime<P>,owners:&DocumentStoreOwners<P,M>,cx:&mut StepContext<'_>)->Result<bool,ValueError>{
         if !self.retire_owner(cx)?{return Ok(false);}
         if let Some(input)=self.input.as_ref(){
             if input.terminal_is_empty(){Self::physical(cx,demand::<Option<RetainedOwnedProjection<M>>>(),|_|{self.input=None;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<RetainedOwnedProjection<M>>>(),..Default::default()})})?;}
-            else{let quote=input.close_demand(cx.retained_grant().maximum_copy_bytes)?;Self::physical(cx,quote,|grant|self.input.as_mut().unwrap().close_step(grant).map(RetainedCloneStep::progress))?;}
+            else{let quote=input.close_demand(cx.retained_grant().maximum_copy_bytes)?;Self::physical(cx,quote,|grant|self.input.as_mut().unwrap().close_step(grant).result.map(RetainedCloneStep::progress))?;}
             return Ok(false);
         }
         if self.next_close.is_some(){
             let quote=semio_framework_value::factory_ticket_demands(self.next_close.as_ref().unwrap(),cx.retained_grant().maximum_copy_bytes)?;let grant=cx.retained_grant();
             if !retained_clone_grant_admits(grant,quote){return Ok(false);}
-            let result=cx.with_native_retirement(|control|semio_framework_value::close_factory_ticket_controlled(&mut self.next_close,grant,control));
+            let result=cx.with_native_retirement(|control|semio_framework_value::close_factory_ticket_controlled(&mut self.next_close,grant,control).result);
             let receipt=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};cx.consume_retained(receipt)?;cx.consume_fuel(receipt.copied_items as u64);result?;return Ok(false);
         }
         if self.closing&&self.next.is_some(){
@@ -158,7 +158,7 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
         if self.issuer.is_some(){Self::physical(cx,demand::<Arc<dyn semio_framework_value::FactoryRetirement>>(),|_|{self.issuer_close=Some(semio_framework_value::FactoryAuthority::new(self.issuer.take().unwrap()));Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(),..Default::default()})})?;return Ok(false);}
         if let Some(owner)=self.issuer_close.as_ref(){
             if owner.terminal_is_empty(){Self::physical(cx,demand::<Option<semio_framework_value::FactoryAuthority>>(),|_|{self.issuer_close=None;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<semio_framework_value::FactoryAuthority>>(),..Default::default()})})?;}
-            else{let quote=owner.demands(cx.retained_grant().maximum_copy_bytes)?;Self::physical(cx,quote,|grant|self.issuer_close.as_mut().unwrap().step(grant).map(RetainedCloneStep::progress))?;}
+            else{let quote=owner.demands(cx.retained_grant().maximum_copy_bytes)?;Self::physical(cx,quote,|grant|self.issuer_close.as_mut().unwrap().step(grant).result.map(RetainedCloneStep::progress))?;}
             return Ok(false);
         }
         let mut complete=false;

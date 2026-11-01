@@ -31,5 +31,4 @@ fn generalized_subspace_targets_positive_spectrum_and_certifies_original_residua
   if expected.is_empty(){assert_eq!(job.spectrum(),SubspaceSpectrum::NoPositive);assert!(job.visual_mode_scalar(0,0).is_none());}
   assert!(job.visual_progress().3);job.begin_close();while !job.terminal_is_empty(){let grant=close_grant(job_close_demand(&job));let(step,physical)=observe_original_numerical_allocations(||original.close_turn(&mut job,grant));let receipt=match step.expect("original numerical close"){InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>progress,outcome=>panic!("unadmitted original close: {outcome:?}")};assert!(physical.2<=NUMERICAL_OWNER_PAGE_BYTES);assert_eq!(physical.0,receipt.retained_capacity_bytes,"original close allocation receipt");assert_eq!(physical.1,receipt.released_bytes,"original close release receipt");}assert!(job.terminal_is_empty());original.finish();
  }
- println!("[DEBUG] retained generalized solver selects hidden positive modes, returns explicit no-positive spectrum, certifies Kx-lambdaBx and exactly funds every original allocation/release at most 4096 bytes");
 }

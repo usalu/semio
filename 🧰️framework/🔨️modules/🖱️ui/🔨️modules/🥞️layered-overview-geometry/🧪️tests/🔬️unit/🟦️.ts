@@ -22,6 +22,7 @@ import {
   glideOffset,
   inWindow,
   layeredCardConcealed,
+  layeredClearedId,
   layeredCardTinted,
   nearSquareGrid,
   nearestCell,
@@ -394,19 +395,27 @@ describe("🥞️ layered overview geometry", () => {
     expect(calls).toBe(1);
   });
 
-  it("conceals every other card on a pointer hover and none on keyboard focus", () => {
+  it("conceals every other card only on a pointer press, never on hover or keyboard focus", () => {
     const ids = ["learner", "physics", "intro"];
     const sources: readonly (LayeredRevealSource | null)[] = ["pointer", "focus", null];
     for (const revealedId of [null, ...ids]) {
       for (const source of sources) {
-        const concealed = ids.filter((id) => layeredCardConcealed(id, revealedId, source));
-        const wanted = source === "pointer" && revealedId !== null ? ids.filter((id) => id !== revealedId) : [];
-        expect(concealed).toEqual(wanted);
-        const tinted = ids.filter((id) => layeredCardTinted(id, revealedId, source));
-        const tint = source === "pointer" && revealedId !== null ? [revealedId] : [];
-        expect(tinted).toEqual(tint);
+        for (const pressed of [false, true]) {
+          const concealed = ids.filter((id) => layeredCardConcealed(id, revealedId, source, pressed));
+          const wanted = pressed && source === "pointer" && revealedId !== null ? ids.filter((id) => id !== revealedId) : [];
+          expect(concealed).toEqual(wanted);
+          const tinted = ids.filter((id) => layeredCardTinted(id, revealedId, source, pressed));
+          const tint = pressed && source === "pointer" && revealedId !== null ? [revealedId] : [];
+          expect(tinted).toEqual(tint);
+        }
       }
     }
+  });
+
+  it("clears the revealed page only while pressed", () => {
+    expect(layeredClearedId("physics", false)).toBeNull();
+    expect(layeredClearedId("physics", true)).toBe("physics");
+    expect(layeredClearedId(null, true)).toBeNull();
   });
 });
 // #endregion 🥞️LayeredOverviewGeometry

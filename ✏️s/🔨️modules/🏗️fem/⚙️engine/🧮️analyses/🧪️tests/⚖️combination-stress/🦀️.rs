@@ -51,7 +51,6 @@ fn combination_stress_matches_portable_tensor_invariants() {
         };
         for (slot, actual) in stress.into_iter().enumerate() { close(actual, vector["expectedStress"][slot].as_f64().unwrap(), id); }
         for actual in equivalent { close(actual, vector["expectedVonMises"].as_f64().unwrap(), id); assert!(actual >= 0.0); }
-        println!("[DEBUG] {id}: combined stress {stress:?}; equivalent stress matches independent principal-stress fixture");
     }
 }
 
@@ -74,5 +73,4 @@ fn combination_member_load_recovery_matches_direct_solve() {
         }
         _ => panic!("expected beam station recovery"),
     }
-    println!("[DEBUG] combined signed member loads preserve direct-solve beam station forces");
 }

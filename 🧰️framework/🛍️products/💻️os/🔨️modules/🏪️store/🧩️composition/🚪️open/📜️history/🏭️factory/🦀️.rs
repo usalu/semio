@@ -61,7 +61,7 @@ fn check_input(input: &Option<VerifiedMemberHistoryInput>, cx: &StepContext<'_>)
 }
 
 fn close_owner<O: ErasedSnapshotRetirement>(input: &mut Option<O>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    semio_framework_os_store_read::retirement_owner_close(input, grant)
+    semio_framework_os_store_read::retirement_owner_close(input, grant).result
 }
 
 impl<M: MemberFactory> MemberFactorySelection<M> {

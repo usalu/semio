@@ -263,11 +263,14 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
 
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         semio_framework_job::close_original_granted_step(cx,|_grant|{
-            Ok(if self.closing {
-                InteractiveJobCloseStep::Complete { progress: semio_framework_value::retained_clone::RetainedCloneProgress::default() }
-            } else {
-                InteractiveJobCloseStep::Blocked
-            })
+            semio_framework_value::RetainedWorkOutcome {
+                result: Ok(if self.closing {
+                    InteractiveJobCloseStep::Complete { progress: semio_framework_value::retained_clone::RetainedCloneProgress::default() }
+                } else {
+                    InteractiveJobCloseStep::Blocked
+                }),
+                work: 0,
+            }
         })
     }
 

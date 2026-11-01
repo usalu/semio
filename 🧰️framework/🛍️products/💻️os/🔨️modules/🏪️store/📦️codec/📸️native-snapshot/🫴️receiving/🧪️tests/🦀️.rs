@@ -8,19 +8,15 @@ use protocol::PackLimits;
 struct OriginalRecord{text:String,items:Vec<String>}
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:100000,maximum_copy_bytes:64<<20,maximum_capacity_bytes:64<<20,maximum_release_bytes:64<<20,maximum_depth:128}}
 fn caller()->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(11),Generation(3),stock(),||Some(0),u64::MAX,1000000)}
-fn receive(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>)->Result<RetainedCloneProgress,OriginalTurnFailure>{
- let result=cx.with_native_receiving::<_,semio_framework_value_native_owned::native_decoding::NativeConstructionStepFailure<ValueError>>(|native|native.receive_construction_step(demand,run));
+fn native_failure(primary:semio_framework_value_native_owned::OriginalReceivingPrimary,receipt_refusal:Option<ValueError>)->OriginalTurnFailure{OriginalTurnFailure{effects:primary.retained_progress(),primary:semio_framework_job::OriginalTurnPrimary::Receiving(primary),receipt_refusal,context_refusal:None}}
+fn receive(cx:&mut StepContext<'_>,_demand:RetirementDemand,run:impl FnOnce(&mut NativeDecodeControl<'_>,RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>)->Result<RetainedCloneProgress,OriginalTurnFailure>{
+ let grant=cx.retained_grant();let mut work=0;
+ let result=cx.with_native_receiving::<_,semio_framework_value_native_owned::OriginalReceivingPrimary>(|native|{let result=run(native,grant);let spent=result.as_ref().map_or(0,|step|step.progress().copied_items as u64);let turn=native.receive_retained_work(grant,semio_framework_value::RetainedWorkOutcome{result,work:spent});work=turn.work;turn.result});
  let progress=match &result { Ok(step)=>step.progress(),Err(error)=>error.retained_progress() };
- let reconciled=if let Some(grant)=cx.receiving_issued_grant() { cx.consume_receiving_retained(grant,progress) } else { assert_eq!(progress,Default::default());Ok(()) };
- cx.consume_fuel(progress.copied_items as u64);
- match(result,reconciled) {
-  (Ok(step),Ok(()))=>Ok(step.progress()),
-  (Err(error),Ok(()))=>Err(error.into()),
-  (Ok(_),Err(error))=>Err(error.into()),
-  (Err(error),Err(receipt))=>{let mut failure=OriginalTurnFailure::from(error);failure.context_refusal=Some(receipt);Err(failure)}
- }
+ let receipt=cx.consume_receiving_retained(grant,progress);cx.consume_fuel(work);
+ match result { Ok(step)=>{receipt?;Ok(step.progress())},Err(primary)=>Err(native_failure(primary,receipt.err())) }
 }
-fn finish(mut caller:OriginalJobFixtureCaller,mut decoder:OriginalJobDecodeOwner){while !decoder.terminal_is_empty(){caller.turn(stock(),|cx|{let step=decoder.close_step(cx.retained_grant())?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);Ok(())}).unwrap();}caller.retire(stock());}
+fn finish(mut caller:OriginalJobFixtureCaller,mut decoder:OriginalJobDecodeOwner){while !decoder.terminal_is_empty(){caller.turn(stock(),|cx|{let step=decoder.close_step(cx.retained_grant()).result?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);Ok(())}).unwrap();}caller.retire(stock());}
 #[test]
 fn original_snapshot_pack_receiving_preserves_same_source_control_and_paid_close(){
  let neutral=include_str!("../../../../../../../../🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🧪️tests/🧫️fixtures/🔣️.json");let row:serde_json::Value=serde_json::from_str(neutral).unwrap();let expected:OriginalRecord=serde_json::from_value(serde_json::json!({"text":row["text"],"items":row["items"]})).unwrap();let body=semio_framework_os_pack::record::encode_document(&OriginalRecord::__dsl_spec(),&expected.__dsl_to_record(),&Default::default()).unwrap();let envelope=semio_framework_os_semio::SemioEnvelope::from_envelope_id("test.original",semio_framework_os_semio::Component::Pack,1).unwrap();let source=semio_framework_os_semio::wrap_binary(&envelope,&body);let pointer=source.as_ptr();let mut original=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut owner:Option<OriginalSnapshotRecordReceiving<OriginalRecord>>=None;
@@ -29,7 +25,7 @@ fn original_snapshot_pack_receiving_preserves_same_source_control_and_paid_close
  let mut output=None;original.turn_with_decoder(stock(),&mut decoder,|cx|receive(cx,metadata::<OriginalRecord>(),|_,grant|owner.take_into(&mut output,grant).map(RetainedCloneStep::Progress))).unwrap();assert_eq!(output.as_ref(),Some(&expected));
  original.cancel().cancel_now();
  while !owner.terminal_is_empty(){let demand=owner.close_demands(4096).unwrap();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.turn_with_decoder(stock(),&mut decoder,|cx|cx.with_original_retirement(|cx|retire(cx,demand,|native,grant|owner.close_step(native,grant)))));let progress=result.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}
- let mut output=ControlledRetirement::new(output.take().unwrap()).ok().unwrap();while !output.terminal_is_empty(){original.turn_with_decoder(stock(),&mut decoder,|cx|cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,output.next_demand(4096)?,|grant|output.step(grant)))).unwrap();}drop(owner);drop(output);finish(original,decoder);
+ let mut output=ControlledRetirement::new(output.take().unwrap()).ok().unwrap();while !output.terminal_is_empty(){original.turn_with_decoder(stock(),&mut decoder,|cx|cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,output.next_demand(4096)?,|grant|semio_framework_value::RetainedWorkOutcome{result:output.step(grant),work:output.last_turn_work()}))).unwrap();}drop(owner);drop(output);finish(original,decoder);
 }
 
 fn retire(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce(&mut dyn semio_framework_value_native_owned::native_decoding::NativeDecodeCloseControl,RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>)->Result<RetainedCloneProgress,OriginalTurnFailure>{
@@ -41,9 +37,9 @@ fn retire(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce(&mut d
 #[test]
 fn original_snapshot_record_prefixes_retire_through_the_same_original_snapshot_recipient(){
  let expected=OriginalRecord{text:"original retained record 雪".repeat(40),items:vec!["one".into(),"two".into()]};let body=semio_framework_os_pack::record::encode_document(&OriginalRecord::__dsl_spec(),&expected.__dsl_to_record(),&Default::default()).unwrap();let envelope=semio_framework_os_semio::SemioEnvelope::from_envelope_id("test.original",semio_framework_os_semio::Component::Pack,1).unwrap();let source=semio_framework_os_semio::wrap_binary(&envelope,&body);
- for prefix in[0,1,8,64,512,4096,usize::MAX]{let mut original=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut owner=None;
+ for prefix in[0,1,8,64,512,4096,usize::MAX]{let mut original=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut owner:Option<OriginalSnapshotRecordReceiving<OriginalRecord>>=None;
   original.turn_with_decoder(stock(),&mut decoder,|cx|receive(cx,metadata::<OriginalSnapshotRecordReceiving<OriginalRecord>>(),|native,grant|{let(candidate,p)=OriginalSnapshotRecordReceiving::admit(&source,"test.original",PackLimits::default(),native,grant)?.unwrap();owner=Some(candidate);Ok(RetainedCloneStep::Progress(p))})).unwrap();let mut owner=owner.unwrap();let mut turns=0;
   while turns<prefix&&!owner.is_ready(){let demand=owner.demands(&source,4096).unwrap();original.turn_with_decoder(stock(),&mut decoder,|cx|receive(cx,demand,|native,grant|owner.step(&source,native,4096,grant).map(RetainedCloneStep::Progress))).unwrap();turns+=1;assert!(turns<100000);}
-  original.cancel().cancel_now();let mut retained=ControlledRetirement::new(owner).ok().unwrap();while !retained.terminal_is_empty(){let demand=retained.next_demand(4096).unwrap();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.turn_with_decoder(stock(),&mut decoder,|cx|cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,demand,|grant|retained.step(grant)))));let progress=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}drop(retained);finish(original,decoder);
+  original.cancel().cancel_now();let mut retained=ControlledRetirement::new(owner).ok().unwrap();while !retained.terminal_is_empty(){let demand=retained.next_demand(4096).unwrap();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.turn_with_decoder(stock(),&mut decoder,|cx|cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:retained.step(grant),work:retained.last_turn_work()}))));let progress=result.unwrap().progress();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}drop(retained);finish(original,decoder);
  }
 }

@@ -119,7 +119,7 @@ impl ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for DemoEph
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"ephemeral original close depth is not funded"));}
         if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
         let child=RetainedCloneGrant {maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        if self.active.is_some(){return artifact_retirement_box_close_step(&mut self.active,child).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if self.active.is_some(){return artifact_retirement_box_close_step(&mut self.active,child).result.map(|step|RetainedCloneStep::Progress(step.progress()));}
         if self.semantic_refusal.is_some() { return artifact_retirement_admit_owned(&mut self.semantic_refusal, &mut self.active, child); }
         if let Some(request)=self.request.take(){self.base=Some(request.base);self.mutation=Some(request.mutation);return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}
         if let Some(prepared)=self.prepared.take(){return match self.snapshots.as_ref().expect("original prepared root issuer").retire(prepared.next_root,child){Ok((owner,progress))=>{self.active=Some(owner);Ok(RetainedCloneStep::Progress(progress))},Err((error,original))=>{self.prepared=Some(ArtifactEphemeralOneItemPrepared {next_root:original});Err(error)}};}
@@ -134,7 +134,7 @@ impl ArtifactEphemeralOneItemPreparation<DemoSnapshot, DemoMutation> for DemoEph
         if let Some(witness)=self.published_root.take(){let factory:Arc<dyn semio_framework_value::FactoryRetirement>=witness;self.factories[0]=Some(semio_framework_value::FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}
         if let Some(snapshot)=self.snapshots.take(){let factory:Arc<dyn semio_framework_value::FactoryRetirement>=snapshot;self.factories[1]=Some(semio_framework_value::FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}
         if let Some(mutation)=self.mutations.take(){let factory:Arc<dyn semio_framework_value::FactoryRetirement>=mutation;self.factories[2]=Some(semio_framework_value::FactoryAuthority::new(factory));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}
-        let slot=self.factories.iter_mut().find(|slot|slot.is_some()).expect("original ephemeral close capability");let factory=slot.as_mut().unwrap();let step=factory.step(child)?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,factory.terminal_is_empty(),"original ephemeral preparation issuer")?;if factory.terminal_is_empty(){*slot=None;}Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
+        let slot=self.factories.iter_mut().find(|slot|slot.is_some()).expect("original ephemeral close capability");let factory=slot.as_mut().unwrap();let step=factory.step(child).result?;semio_framework_value::retained_clone::admit_retained_clone_close(child,step,factory.terminal_is_empty(),"original ephemeral preparation issuer")?;if factory.terminal_is_empty(){*slot=None;}Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
     fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
     fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.close_demands(body)?.capacity_bytes)}
@@ -278,7 +278,7 @@ impl RetainedCloneEditCursor<DemoSnapshot, DemoMutation> for DemoRetainedCloneEd
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if self.active_retirement.is_some() {
-            let step = artifact_retirement_box_close_step(&mut self.active_retirement, child)?;
+            let step = artifact_retirement_box_close_step(&mut self.active_retirement, child).result?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.semantic_refusal.is_some() { return artifact_retirement_admit_owned(&mut self.semantic_refusal, &mut self.active_retirement, child); }
@@ -413,7 +413,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for ProbedRetai
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..empty}));
         }
         if let Some(counter)=self.counter.as_mut() {
-            let step=counter.step(child)?;
+            let step=counter.step(child).result?;
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,counter.terminal_is_empty(),"original probe completion counter")?;
             if counter.terminal_is_empty(){self.counter=None;}
             return Ok(RetainedCloneStep::Progress(step.progress()));

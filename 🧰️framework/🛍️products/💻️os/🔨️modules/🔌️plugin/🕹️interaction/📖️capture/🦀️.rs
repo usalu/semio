@@ -107,12 +107,12 @@ struct CapturedRootRetirementState {
 impl SnapshotRetirementFactory<CapturedRoot> for CapturedRootRetirementFactory {
     fn retirement_birth_bytes(&self, _snapshot: &Arc<CapturedRoot>) -> usize { size_of::<CapturedRootRetirement>() }
 
-    fn retire(&self, root: Arc<CapturedRoot>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<CapturedRoot>)> {
+    fn retire(&self, root: Arc<CapturedRoot>, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<CapturedRoot>)> { let result = (|| -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<CapturedRoot>)> {
         match (RetainedCloneBirthDemand { capacity_bytes: size_of::<CapturedRootRetirement>(), depth: 1 }).admit(grant) {
             Ok(progress) => Ok((Box::new(CapturedRootRetirement { owned: ManuallyDrop::new(CapturedRootRetirementState { root: Some(root) }) }), progress)),
             Err(error) => Err((error, root)),
         }
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 }
 
 impl CapturedRootRetirement {
@@ -127,7 +127,7 @@ impl ErasedSnapshotRetirement for CapturedRootRetirement {
     /// 🧹️ Hands the captured lease back to its exact registry. The registry's ACCEPTANCE is the
     /// witness; reclaiming the accepted slot into an owned-value retirement belongs to the Store's
     /// own one-slot-per-step cursor, which this owner must never wait on.
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<RetainedCloneStep, ValueError> { let result = (|| -> Result<RetainedCloneStep, ValueError> {
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(idle));
@@ -146,7 +146,7 @@ impl ErasedSnapshotRetirement for CapturedRootRetirement {
             }
         }
         Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..idle }))
-    }
+    })(); let work = u64::from(result.is_ok()); semio_framework_value::RetainedWorkOutcome { result, work } }
 
     fn terminal_is_empty(&self) -> bool {
         self.owned.root.is_none()

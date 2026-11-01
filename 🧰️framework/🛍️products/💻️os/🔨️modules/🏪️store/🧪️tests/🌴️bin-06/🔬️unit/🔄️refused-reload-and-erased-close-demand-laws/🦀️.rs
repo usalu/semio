@@ -86,7 +86,7 @@ fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::Re
 struct NestedErasedDriver { inner:Option<Box<dyn ErasedSnapshotRetirement>> }
 
 impl NestedErasedDriver {
-    fn close(&mut self, grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{artifact_retirement_box_close_step(&mut self.inner,grant)}
+    fn close(&mut self, grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{artifact_retirement_box_close_step(&mut self.inner,grant).result}
 }
 
 struct UnsupportedDemandRetirement;

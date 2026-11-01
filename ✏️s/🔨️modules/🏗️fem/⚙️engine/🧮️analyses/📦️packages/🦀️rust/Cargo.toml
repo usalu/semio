@@ -25,7 +25,8 @@ semio-s-fem-algebra = { workspace = true }
 semio-s-fem-analyses-assembly = { workspace = true }
 semio-s-fem-analyses-model = { workspace = true }
 semio-s-fem-model = { workspace = true }
-semio-s-fem-sparse = { workspace = true }
+semio-s-fem-payload-turns = { workspace = true }
+semio-s-fem-sparse ={ workspace = true }
 semio-s-fem-sparse-subspace = { workspace = true }
 semio-framework-value-paged-list = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust" }
 semio-s-fem-static = { workspace = true }

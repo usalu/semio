@@ -1,5 +1,6 @@
 //! 🧮️ Solve and recovery stages: the CSR build, the PCG solve and the node scalar, reaction and stress recovery stages of the staged numerical step. See [`super`].
 
+use semio_s_fem_payload_turns::NumericalStep;
 use super::*;
 
 impl Fem3dNumericalChild {
@@ -54,7 +55,7 @@ impl Fem3dNumericalChild {
 
     /// 🔁 Steps the preconditioned conjugate gradient solve.
     pub(super) fn step_pcg(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
-        let end = child_end(self.pcg.as_mut().ok_or_else(|| b"fem3d.numerical-pcg".to_vec())?.step(context))?;
+        let end = child_end(self.pcg.as_mut().ok_or_else(|| b"fem3d.numerical-pcg".to_vec())?.step_plain(context))?;
         if self.observe_child_end(end)? {
             self.stage = Fem3dNumericalStage::ReadNodeScalar;
             self.node_cursor = 0;

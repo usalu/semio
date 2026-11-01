@@ -423,9 +423,9 @@ fn durable_boxed_terminal_retirement_requires_its_exact_release_grant(){
         let d=semio_framework_os_store_testing_prelude::artifact_retirement_box_demands(owner.as_ref().unwrap(),512).unwrap();
         assert_eq!((d.copy_bytes,d.capacity_bytes,d.depth),(0,0,depth));assert_eq!(d.release_bytes,std::mem::size_of::<Terminal>());
         let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:if row["funded"].as_bool().unwrap(){d.release_bytes}else{d.release_bytes-1},maximum_depth:d.depth};
-        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_os_store_testing_prelude::artifact_retirement_box_close_step(&mut owner,grant).unwrap());
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_os_store_testing_prelude::artifact_retirement_box_close_step(&mut owner,grant).result.unwrap());
         assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,step.progress().released_bytes));assert_eq!(owner.is_some(),row["retained"].as_bool().unwrap());assert_eq!(step.progress()!=RetainedCloneProgress::default(),row["visible"].as_bool().unwrap());
-        if owner.is_some(){semio_framework_os_store_testing_prelude::artifact_retirement_box_close_step(&mut owner,RetainedCloneGrant{maximum_release_bytes:d.release_bytes,..grant}).unwrap();}assert!(owner.is_none());
+        if owner.is_some(){semio_framework_os_store_testing_prelude::artifact_retirement_box_close_step(&mut owner,RetainedCloneGrant{maximum_release_bytes:d.release_bytes,..grant}).result.unwrap();}assert!(owner.is_none());
     }
 }
 

@@ -87,7 +87,7 @@ where
                 let factory = self.owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "prefix close requires installed factory"))?;
                 let entry = self.live.prefix_ring.pop().expect("observed original prefix owner");
                 if Arc::strong_count(&entry.snapshot) > 1 { drop(entry); return Ok((None, structural)); }
-                match factory.retire(entry.snapshot, grant) {
+                match factory.retire(entry.snapshot, grant) .result {
                     Ok((owner, receipt)) => Ok((Some(owner), receipt)),
                     Err((error, snapshot)) => { self.live.prefix_ring.push(PrefixSnapshot { snapshot, ..entry }); Err(error) }
                 }
@@ -98,7 +98,7 @@ where
                 let factory = self.owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "tail close requires installed factory"))?;
                 let (id, snapshot) = self.live.tail_undo_cache.take().expect("observed original tail owner");
                 if Arc::strong_count(&snapshot) > 1 { drop((id, snapshot)); return Ok((None, structural)); }
-                match factory.retire(snapshot, grant) {
+                match factory.retire(snapshot, grant) .result {
                     Ok((owner, receipt)) => Ok((Some(owner), receipt)),
                     Err((error, snapshot)) => { *self.live.tail_undo_cache = Some((id, snapshot)); Err(error) }
                 }
@@ -114,7 +114,7 @@ where
                 } else {
                     let factory = self.owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "current snapshot requires exact factory"))?;
                     let original = unsafe { std::mem::ManuallyDrop::take(&mut self.live.current) };
-                    factory.retire(original, grant)
+                    factory.retire(original, grant).result
                 };
                 match result {
                     Ok((owner, receipt)) => { self.live.current_detached = true; Ok((Some(owner), receipt)) }

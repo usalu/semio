@@ -21,7 +21,8 @@ pub mod standards {
                     pub use component::*;
                     #[path = "../../📐️geometry/🦀️.rs"]
                     pub mod geometry;
-                    pub use semio_s_artifact_stdio_ifc_4_catalog as catalog;
+                    #[path = "../../📚️catalog/🦀️.rs"]
+                    pub mod catalog;
                     #[path = "../../🔎️semantics/🦀️.rs"]
                     pub mod semantics;
                     #[path = "."]
@@ -45,8 +46,11 @@ pub mod standards {
                     pub mod binary;
                     #[path = "../../../🚪️io/📝️text/🦀️.rs"]
                     pub mod text;
-                    #[path = "../../../🚪️io/🪶️sqlite/🦀️.rs"]
-                    pub mod sqlite;
+                    #[path = "."]
+                    pub mod sqlite {
+                        #[path = "../../../🚪️io/🪶️sqlite/📸️snapshot/🦀️.rs"]
+                        pub mod snapshot;
+                    }
                 }
             }
         }

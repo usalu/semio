@@ -1,5 +1,5 @@
 //! 🧪️ Original enumeration metadata borrows full typed choices under retained authority and retirement.
-use super::super::super::DetailsTestProfile;
+use super::super::DetailsTestProfile;
 use super::*;
 use semio_framework_plugin::app_testing::OriginalWorkFixture;
 fn grant() -> RetainedCloneGrant {

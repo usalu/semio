@@ -24,6 +24,7 @@ use semio_framework_plugin::BuiltNode;
 use semio_framework_ui_contract::Buildable;
 use semio_framework_ui_contract::HasChildren;
 use semio_framework_ui_contract::HasStackLayout;
+use semio_s_artifact_fem_3d_editor_terminology::editor::fem3d::terminology::Fem3dLabels;
 use std::collections::HashMap;
 
 pub use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::{Fem3dResultRequest, Fem3dResultSource};
@@ -258,9 +259,9 @@ fn with_caption(scene: BuiltNode, caption: String) -> semio_framework_plugin::Ui
 }
 
 /// ⏯️ The transport read-out a running window carries in its caption — silent while stopped.
-fn playback_caption(animation: &semio_s_fem_app_surface::FemResultsAnimation) -> String {
+fn playback_caption(animation: &semio_s_fem_app_surface::FemResultsAnimation, labels: &Fem3dLabels) -> String {
     if animation.playing {
-        format!(" · phase {:.2} · \u{25b6} {} Hz", animation.phase, animation.speed)
+        format!(" · {} {:.2} · \u{25b6} {} Hz", labels.phase.as_str(), animation.phase, animation.speed)
     } else {
         String::new()
     }
@@ -291,7 +292,7 @@ fn failed(doc: &Fem3dSnapshot, window: &Fem3dResultsWindowConfig, interaction: &
 
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on the window's
 /// display selection, at the playback phase the window sits at.
-pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, operation: Option<semio_framework_plugin::AppRenderOperationContext>, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>, live: &dyn Fem3dLiveSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, operation: Option<semio_framework_plugin::AppRenderOperationContext>, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>, live: &dyn Fem3dLiveSession, labels: &Fem3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let display = config_result_display(cfg);
     if operation.is_some() {
         let mode = match display.mode { DisplayMode::Modal(index) => Some(index), _ => None };
@@ -300,7 +301,7 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: 
         let live_stage = live.result_stage(operation, authority);
         return live.with_result_fields(operation, doc, authority, request, &mut |fields| {
             let Some(fields) = fields else {
-                return render_pending(doc, cfg, interaction, operation, authority, live);
+                return render_pending(doc, cfg, interaction, operation, authority, live, labels);
             };
             let doc = fields.snapshot();
             let mut values = HashMap::with_capacity(fields.len());
@@ -321,43 +322,43 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: 
             }
             let scale = if display.mode.uses_mode_shape() { normalize_mode_shape(&mut values); mode_shape_scale(doc, cfg.animation.amplitude()) } else { doc.analysis.deformation_scale * cfg.animation.amplitude() };
             let mut caption = match display.mode {
-                DisplayMode::Modal(index) => format!("Mode {}: {:.3} Hz{}", index + 1, display.mode.display_eigenvalue(eigenvalue).expect("modal display value"), playback_caption(&cfg.animation)),
-                DisplayMode::Buckling(index) => format!("Buckling mode {}: factor {:.3}{}", index + 1, display.mode.display_eigenvalue(eigenvalue).expect("buckling display value"), playback_caption(&cfg.animation)),
-                DisplayMode::Static => format!("Case: {}{}", display.source_id.as_deref().and_then(|identity| semio_s_fem_analyses_model::borrow_result_source_identity(identity).ok()).map(|source| source.id).or_else(|| doc.load_cases.first().map(|case| case.id.as_str())).unwrap_or("∅"), playback_caption(&cfg.animation)),
+                DisplayMode::Modal(index) => format!("{} {}: {:.3} Hz{}", labels.mode_shape.as_str(), index + 1, display.mode.display_eigenvalue(eigenvalue).expect("modal display value"), playback_caption(&cfg.animation, labels)),
+                DisplayMode::Buckling(index) => format!("{} {}: {} {:.3}{}", labels.buckling_mode.as_str(), index + 1, labels.factor.as_str(), display.mode.display_eigenvalue(eigenvalue).expect("buckling display value"), playback_caption(&cfg.animation, labels)),
+                DisplayMode::Static => format!("{}: {}{}", labels.case_caption.as_str(), display.source_id.as_deref().and_then(|identity| semio_s_fem_analyses_model::borrow_result_source_identity(identity).ok()).map(|source| source.id).or_else(|| doc.load_cases.first().map(|case| case.id.as_str())).unwrap_or("∅"), playback_caption(&cfg.animation, labels)),
             };
-            if !fields.current_revision() { caption.push_str(" · "); caption.push_str(progress_caption(live_stage)); }
+            if !fields.current_revision() { caption.push_str(" · "); caption.push_str(progress_caption(live_stage, labels)); }
             with_caption(results_scene(doc, cfg, interaction, Some(&values), scale, (!display.mode.uses_mode_shape()).then_some(&stresses))?, caption)
         });
     }
     let key = results_cache_key(operation);
     match display.mode {
-        DisplayMode::Static => render_static(doc, cfg, interaction, display.source_id.as_deref(), key),
-        DisplayMode::Modal(mode_index) => render_modal(doc, cfg, interaction, mode_index, key),
-        DisplayMode::Buckling(mode_index) => render_buckling(doc, cfg, interaction, display.source_id.as_deref(), mode_index, key),
+        DisplayMode::Static => render_static(doc, cfg, interaction, display.source_id.as_deref(), key, labels),
+        DisplayMode::Modal(mode_index) => render_modal(doc, cfg, interaction, mode_index, key, labels),
+        DisplayMode::Buckling(mode_index) => render_buckling(doc, cfg, interaction, display.source_id.as_deref(), mode_index, key, labels),
     }
 }
 
 /// ⏳️ Gestures and pending generations retain the last admitted visualization without solving.
-pub fn render_pending(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, operation: Option<semio_framework_plugin::AppRenderOperationContext>, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>, live: &dyn Fem3dLiveSession) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+pub fn render_pending(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, operation: Option<semio_framework_plugin::AppRenderOperationContext>, authority: Option<semio_framework_plugin::WindowConfigAuthorityIdentity>, live: &dyn Fem3dLiveSession, labels: &Fem3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mode = cfg.result_mode.display(cfg.result_mode_index);
     let stage = result_request(doc, cfg.result_source_id.as_deref(), match mode { DisplayMode::Modal(index) => Some(index), _ => None }).ok().and_then(|mut request| { request.buckling = match mode { DisplayMode::Buckling(index) => Some(index), _ => None }; live.result_stage(operation, authority) });
     live.with_live_visual(operation, &mut |visual| {
-        with_caption(results_scene_with_visual(doc, cfg, interaction, None, doc.analysis.deformation_scale, None, visual)?, progress_caption(stage).into())
+        with_caption(results_scene_with_visual(doc, cfg, interaction, None, doc.analysis.deformation_scale, None, visual)?, progress_caption(stage, labels).to_owned())
     })
 }
 
-fn progress_caption(stage: Option<&str>) -> &'static str {
+fn progress_caption<'a>(stage: Option<&str>, labels: &'a Fem3dLabels) -> &'a str {
     match stage {
-        Some("fem3d.meshing") => "Generating mesh · Netz wird erzeugt",
-        Some("fem3d.assembly") => "Assembling analysis · Berechnung wird aufgebaut",
-        Some("fem3d.statics") => "Solving loads · Lasten werden berechnet",
-        Some("fem3d.modes") => "Computing modes · Eigenformen werden berechnet",
-        Some("fem3d.validation") => "Validating results · Ergebnisse werden geprüft",
-        Some("fem3d.visual" | "fem3d.validated") => "Preparing result view · Ergebnisansicht wird vorbereitet",
-        Some("fem3d.cancelled") => "Analysis cancelled · Berechnung abgebrochen",
-        Some("fem3d.failed") => "Analysis failed · Berechnung fehlgeschlagen",
-        Some(_) => "Preparing analysis · Berechnung wird vorbereitet",
-        None => "Analysis queued · Berechnung vorgemerkt",
+        Some("fem3d.meshing") => labels.stage_meshing.as_str(),
+        Some("fem3d.assembly") => labels.stage_assembly.as_str(),
+        Some("fem3d.statics") => labels.stage_statics.as_str(),
+        Some("fem3d.modes") => labels.stage_modes.as_str(),
+        Some("fem3d.validation") => labels.stage_validation.as_str(),
+        Some("fem3d.visual" | "fem3d.validated") => labels.stage_visual.as_str(),
+        Some("fem3d.cancelled") => labels.stage_cancelled.as_str(),
+        Some("fem3d.failed") => labels.stage_failed.as_str(),
+        Some(_) => labels.stage_preparing.as_str(),
+        None => labels.stage_queued.as_str(),
     }
 }
 
@@ -365,36 +366,36 @@ fn progress_caption(stage: Option<&str>) -> &'static str {
 /// solved displacements read through the playback amplitude, solids additionally colored by
 /// nodal-averaged von Mises stress. `source_id` selects a `fem3d_solve_all` case/combination id,
 /// falling back to the first load case when `None`/unknown. Caption names the active case.
-fn render_static(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, source_id: Option<&str>, key: Option<ResultsCacheKey>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn render_static(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, source_id: Option<&str>, key: Option<ResultsCacheKey>, labels: &Fem3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     if doc.load_cases.is_empty() {
-        return failed(doc, cfg, interaction, "No load case defined".into());
+        return failed(doc, cfg, interaction, labels.no_load_case.as_str().to_owned());
     }
     let amplitude = cfg.animation.amplitude();
     let frame = with_static_results(doc, key, |(results, stresses)| {
         let case_id = source_id.filter(|id| results.contains_key(*id)).map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
         let Some(case_id) = case_id else {
-            return Err("No load case defined".to_string());
+            return Err(labels.no_load_case.as_str().to_owned());
         };
         let Some(result) = results.get(&case_id) else {
-            return Err(format!("Result not found: {case_id}"));
+            return Err(format!("{}: {case_id}", labels.result_missing.as_str()));
         };
         let disp_map: HashMap<String, [f64; 6]> = result.displacements.iter().map(|d| (d.node_id.clone(), d.values)).collect();
         Ok((case_id.clone(), results_scene(doc, cfg, interaction, Some(&disp_map), doc.analysis.deformation_scale * amplitude, stresses.get(&case_id))))
     });
     match frame {
-        Ok(Ok((case_id, scene))) => with_caption(scene?, format!("Case: {case_id}{}", playback_caption(&cfg.animation))),
+        Ok(Ok((case_id, scene))) => with_caption(scene?, format!("{}: {case_id}{}", labels.case_caption.as_str(), playback_caption(&cfg.animation, labels))),
         Ok(Err(message)) => failed(doc, cfg, interaction, message),
-        Err(error) => failed(doc, cfg, interaction, format!("Analysis error: {error}")),
+        Err(error) => failed(doc, cfg, interaction, format!("{}: {error}", labels.analysis_error.as_str())),
     }
 }
 
 /// 📊️ Modal mode-shape overlay: instances offset by the selected mode's shape, normalized to unit peak
 /// then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent, with a frequency caption.
-fn render_modal(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, mode_index: usize, key: Option<ResultsCacheKey>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn render_modal(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, mode_index: usize, key: Option<ResultsCacheKey>, labels: &Fem3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let amplitude = cfg.animation.amplitude();
     match with_mode_values(doc, key, ModeKey::Modal(mode_index), |(freq_hz, shape)| (*freq_hz, results_scene(doc, cfg, interaction, Some(shape), mode_shape_scale(doc, amplitude), None))) {
-        Ok((freq_hz, scene)) => with_caption(scene?, format!("Mode {}: {freq_hz:.3} Hz{}", mode_index + 1, playback_caption(&cfg.animation))),
-        Err(error) => failed(doc, cfg, interaction, format!("Modal analysis error: {error}")),
+        Ok((freq_hz, scene)) => with_caption(scene?, format!("{} {}: {freq_hz:.3} Hz{}", labels.mode_shape.as_str(), mode_index + 1, playback_caption(&cfg.animation, labels))),
+        Err(error) => failed(doc, cfg, interaction, format!("{}: {error}", labels.modal_error.as_str())),
     }
 }
 
@@ -402,14 +403,14 @@ fn render_modal(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction
 /// peak then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent. `source_id` selects the
 /// reference load case, falling back to the first load case when `None`. Caption names the mode and its
 /// load factor.
-fn render_buckling(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, source_id: Option<&str>, mode_index: usize, key: Option<ResultsCacheKey>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+fn render_buckling(doc: &Fem3dSnapshot, cfg: &Fem3dResultsWindowConfig, interaction: &Fem3dInteractionSnapshot, source_id: Option<&str>, mode_index: usize, key: Option<ResultsCacheKey>, labels: &Fem3dLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
-        return failed(doc, cfg, interaction, "No load case defined".into());
+        return failed(doc, cfg, interaction, labels.no_load_case.as_str().to_owned());
     };
     let amplitude = cfg.animation.amplitude();
     match with_mode_values(doc, key, ModeKey::Buckling(case_id, mode_index), |(factor, shape)| (*factor, results_scene(doc, cfg, interaction, Some(shape), mode_shape_scale(doc, amplitude), None))) {
-        Ok((factor, scene)) => with_caption(scene?, format!("Buckling mode {}: factor {factor:.3}{}", mode_index + 1, playback_caption(&cfg.animation))),
-        Err(error) => failed(doc, cfg, interaction, format!("Buckling analysis error: {error}")),
+        Ok((factor, scene)) => with_caption(scene?, format!("{} {}: {} {factor:.3}{}", labels.buckling_mode.as_str(), mode_index + 1, labels.factor.as_str(), playback_caption(&cfg.animation, labels))),
+        Err(error) => failed(doc, cfg, interaction, format!("{}: {error}", labels.buckling_error.as_str())),
     }
 }
 // #endregion 🔖️Render

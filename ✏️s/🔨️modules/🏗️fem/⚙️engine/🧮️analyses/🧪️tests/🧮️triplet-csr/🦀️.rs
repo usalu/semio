@@ -60,5 +60,4 @@ fn original_triplet_csr_matches_portable_sparse_matrix_and_closes_every_page() {
         for _ in 0..4096 { if matrix.close_step(4096).0 { closed = true; break; } }
         assert!(closed && matrix.terminal_is_empty());
     }
-    println!("[DEBUG] original sparse triplet CSR corpus preserves sequence, matrix values and terminal page custody");
 }

@@ -28,5 +28,4 @@ test("browser parser exports retain original bodies and actual typed consumers",
     expect(calls).not.toContain("pollEnvelopeLoad");
     expect(calls).not.toContain("closeStep");
   }
-  console.log("[DEBUG] Puzzle 3D/5D Rust parser bodies match original SHA256; independent TypeScript AST confirms actual parser-only story consumers; native parser execution separate");
 });

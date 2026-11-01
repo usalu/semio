@@ -17,5 +17,4 @@ test("Energy terminal owners preserve concrete backing custody before authority 
  expect(root).toContain("authority.tail_moved&&authority.closing_tail.is_none()");
  expect(root).toContain("released_bytes:demand.release_bytes");
  expect(root).not.toContain("Ok(EnergyJobAuthority::close_step(self, context.retained_grant())?)");
- console.log("[DEBUG] Energy sixteen terminal owner fields and concrete UTF-8/f64 input bytes agree with independent Ajv/JSONPatch/Buffer oracles");
 });

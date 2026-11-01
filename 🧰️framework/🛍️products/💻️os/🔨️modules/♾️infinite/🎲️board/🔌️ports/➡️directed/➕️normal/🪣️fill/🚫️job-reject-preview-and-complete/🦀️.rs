@@ -74,42 +74,42 @@ impl BoardFillJob {
             context.consume_fuel(1);
             return BoardFillOffer::Yield;
         }
-        if self.commit_writer.is_none() {
-            self.commit_writer = Some(semio_framework_job_payload::RetainedJobPayloadWriter::new(semio_framework_job_payload::JobPayloadStream::CommitOutput));
+        let Some(writer) = self.commit_writer.as_mut() else {
+            self.commit_writer = Some(semio_framework_job_payload::RetainedPayloadBuilder::new(semio_framework_job_payload::JobPayloadStream::CommitOutput));
             context.consume_fuel(1);
             return BoardFillOffer::Yield;
-        }
-        let Some(encoder) = self.commit_encoder.as_ref() else { return self.fault_outcome("fill-commit-encoder") };
-        let start = encoder.output_cursor;
-        if start < BOARD_FILL_COMMIT_BYTES {
-            let Some(writer) = self.commit_writer.as_mut() else { return self.fault_outcome("fill-commit-writer") };
-            let mut page = match writer.admit_page(context) {
-                Ok(page) => page,
-                Err(_) => return BoardFillOffer::Yield,
-            };
-            let end = start.saturating_add(semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES).min(BOARD_FILL_COMMIT_BYTES);
-            if page.write(&encoder.bytes[start..end]).is_err() {
-                drop(page);
-                return self.fault_outcome("fill-commit-output");
-            }
-            page.commit();
-            let Some(encoder) = self.commit_encoder.as_mut() else { return self.fault_outcome("fill-commit-encoder") };
-            encoder.output_cursor = end;
-            if end < BOARD_FILL_COMMIT_BYTES {
-                context.consume_fuel(1);
-                return BoardFillOffer::Yield;
-            }
-        }
-        let Some(writer) = self.commit_writer.take() else { return self.fault_outcome("fill-commit-writer") };
-        let output = match writer.finish() {
-            Ok(output) => output,
-            Err(writer) => {
-                self.commit_writer = Some(writer);
-                return BoardFillOffer::Yield;
-            }
         };
+        if !writer.is_initialized() {
+            return match writer.advance_initialization(context).result {
+                Ok(_) => BoardFillOffer::Yield,
+                Err(_) => self.fault_outcome("fill-commit-output"),
+            };
+        }
+        let Some(encoder) = self.commit_encoder.as_mut() else { return self.fault_outcome("fill-commit-encoder") };
+        if encoder.output_cursor < BOARD_FILL_COMMIT_BYTES {
+            return match writer.append_original(context, &encoder.bytes, &mut encoder.output_cursor).result {
+                Ok(_) => BoardFillOffer::Yield,
+                Err(_) => self.fault_outcome("fill-commit-output"),
+            };
+        }
+        if writer.published().is_none() {
+            return match writer.seal(context).result {
+                Ok(_) => BoardFillOffer::Yield,
+                Err(_) => self.fault_outcome("fill-commit-output"),
+            };
+        }
+        let step = match writer.take_finished(&mut self.commit_output, context.retained_grant()).result {
+            Ok(step) => step,
+            Err(_) => return self.fault_outcome("fill-commit-output"),
+        };
+        if context.consume_retained(step.progress()).is_err() {
+            return self.fault_outcome("fill-commit-output");
+        }
+        if matches!(step, semio_framework_value::RetainedCloneStep::Progress(_)) {
+            return BoardFillOffer::Yield;
+        }
+        self.commit_writer = None;
         self.commit_encoder = None;
-        self.commit_output = Some(output);
         BoardFillOffer::Complete
     }
 

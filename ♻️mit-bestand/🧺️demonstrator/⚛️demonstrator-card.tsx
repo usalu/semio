@@ -3,7 +3,7 @@
 
 import { cn, Icon, OverviewCard, OverviewCardOpenChip, uiDataLabel, useLabel, useLabelFormatter } from "@semio-tech/ui-react";
 import { demonstratorUiLabel } from "./🔨️modules/🌐️locale/⚛️.ts";
-import { demonstratorPaneDescriptionParagraphs, type DemonstratorPaneSpec } from "./🪧️brand.ts";
+import { demonstratorPaneDescriptionParagraphs, type DemonstratorPaneView } from "./🪧️brand.ts";
 
 export function DemonstratorCard({
   pane,
@@ -11,7 +11,7 @@ export function DemonstratorCard({
   onClick,
   className,
 }: {
-  readonly pane: DemonstratorPaneSpec;
+  readonly pane: DemonstratorPaneView;
   /** 🎈️ Lifted while its app is revealed — never maps to window `active` (that paints the primary silhouette stroke). */
   readonly lifted?: boolean;
   readonly onClick: () => void;
@@ -34,13 +34,13 @@ export function DemonstratorCard({
       contentClassName="max-w-sm"
       footerRight={<OverviewCardOpenChip slot="demonstrator-pane-card">{openLabel}</OverviewCardOpenChip>}
     >
-      <span data-slot="demonstrator-pane-card-tagline" className="mb-double block text-xs font-medium leading-normal text-foreground">
+      <span data-slot="demonstrator-pane-card-tagline" className="mb-double block text-sm font-medium leading-normal text-foreground">
         {pane.tagline}
       </span>
       {bodyParagraphs.length > 0 && (
         <span data-slot="introduction-body" className="flex flex-col gap-double">
           {bodyParagraphs.map((paragraph, index) => (
-            <span key={index} data-slot="introduction-body-paragraph" className="block whitespace-pre-line text-xs leading-normal text-muted-foreground">
+            <span key={index} data-slot="introduction-body-paragraph" className="block whitespace-pre-line text-sm leading-normal text-muted-foreground">
               {paragraph}
             </span>
           ))}

@@ -14,3 +14,6 @@ workspace = true
 
 [lib]
 path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-deflate = { path = "../../../../../../../../🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust" }

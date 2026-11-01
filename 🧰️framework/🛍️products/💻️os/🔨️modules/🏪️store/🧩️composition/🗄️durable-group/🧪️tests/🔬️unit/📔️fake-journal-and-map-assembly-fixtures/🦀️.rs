@@ -169,7 +169,7 @@ fn map_member_admission(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordin
         semio_framework_job::OperationId(300 + ordinal),
         store.generation_now() + u64::from(stale),
         store.content_revision_now(),
-        semio_framework_value::SharedUtf8::admit(format!("map-owner-{ordinal}"), semio_framework_value::testing::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0,
+        semio_framework_value::SharedUtf8::admit(format!("map-owner-{ordinal}"), semio_framework_value::testing::physical_test_close_grant()).result.unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0,
         DemoMutation::SetN(SetN { n: next }),
     )
 }

@@ -88,5 +88,4 @@ fn sparse_field_intent_text_binary_equivalence(){
     ];
     for wire in vectors{let operation=semio_framework_pack_json::from_json_str::<Fem3dMutation>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("authored field event");semio_framework_os_kernel::os_store::test_support::assert_op_text_binary_equivalence(&operation);}
     for wire in[r#"{"mutation":"changeCombinationTerm","id":"c1","caseId":"lc1"}"#,r#"{"mutation":"changeLoad","caseId":"lc1","id":"l1","patch":{"kind":"nodal","value":null}}"#]{assert!(semio_framework_pack_json::from_json_str::<Fem3dMutation>(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err());}
-    eprintln!("[DEBUG] nine sparse semantic payloads preserve authored fields including empty geometry and nullable term removal through text/binary history codecs");
 }

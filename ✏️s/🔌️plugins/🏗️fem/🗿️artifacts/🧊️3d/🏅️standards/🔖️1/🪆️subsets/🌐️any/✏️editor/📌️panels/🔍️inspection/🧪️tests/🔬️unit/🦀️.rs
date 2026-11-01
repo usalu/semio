@@ -253,7 +253,6 @@ async fn a_multi_selection_headers_the_count_and_inspects_the_first_3d() {
         assert!(decoded.to_string().contains(row["expected"].as_str().unwrap()));
         assert_eq!(decoded["key"].as_str(), Some(format!("{ROOT}.selection.{identity}").as_str()));
     }
-    eprintln!("[DEBUG] FEM3d selected rows display localized semantic entity labels while their stable keys retain canonical scoped identities");
 }
 
 /// 🎯️ Focus and delete are activatable tree rows in the Actions section.

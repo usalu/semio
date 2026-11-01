@@ -33,7 +33,7 @@ impl Drop for StagedBodyOutput{fn drop(&mut self){assert!(std::thread::panicking
 impl RetireOwned for StagedBodyOutput{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(self)}fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}fn controlled_retirement_supported()->bool{true}}
 impl RetirementCursor for StagedBodyOutput{
     fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.demand(body)}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete;}match self.step(grant){Ok(step)=>RetirementStep::Progress(step.progress()),Err(error)=>RetirementStep::Failure(error)}}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.terminal_is_empty(){return RetirementStep::Complete(0);}match self.step(grant){Ok(step)=>RetirementStep::Progress(step.progress(),1),Err(error)=>RetirementStep::Failure(error,1)}}
     fn terminal_is_empty(&self)->bool{StagedBodyOutput::terminal_is_empty(self)}
     fn next_close_byte_demand(&self)->Option<usize>{Some(0)}fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demand(usize::MAX)?.copy_bytes)}fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(self.demand(body)?.copy_bytes)}

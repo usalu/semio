@@ -9,6 +9,8 @@ pub use contract::*;
 pub use storage::OwnedReceivingSlot;
 #[path="🔢️scalar/🦀️.rs"]mod scalar;
 pub use scalar::{OwnedScalar,ScalarReceiving};
+#[doc(hidden)]
+pub use scalar::scalar_sealed;
 #[path="📋️vector/🦀️.rs"]mod vector;
 pub use vector::VectorReceiving;
 #[path="🔢️array/🦀️.rs"]mod array;

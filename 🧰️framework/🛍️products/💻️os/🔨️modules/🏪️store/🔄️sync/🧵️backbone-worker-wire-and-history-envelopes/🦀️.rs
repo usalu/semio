@@ -151,7 +151,7 @@ pub async fn envelopes_from_history_edit(edit: &semio_framework_os_spr::HistoryE
         let meta = edit.meta.as_ref().and_then(|metas| metas.get(index));
         let dependencies = meta.map(|m| m.dependencies.iter().cloned().map(MutationId).collect()).unwrap_or_default();
         let original_actor=meta.and_then(|meta|meta.author_id.as_ref()).or(edit.actor.as_ref()).expect("original actor presence validated before envelope birth");
-        let(actor,receipt)=original_actor.admit_clone(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:actor_identity_grant.maximum_copy_bytes-identity_copied,..actor_identity_grant}).map_err(ValueError::into_message)?;identity_copied+=receipt.copied_bytes;
+        let(actor,receipt)=original_actor.admit_clone(semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:actor_identity_grant.maximum_copy_bytes-identity_copied,..actor_identity_grant}).result.map_err(ValueError::into_message)?;identity_copied+=receipt.copied_bytes;
         let timestamp = match meta.and_then(|meta| meta.hlt) {
             Some((actor, physical_ms, logical)) => semio_framework_os_spr::HybridLogicalTimestamp { actor, physical_ms: u64::try_from(physical_ms).map_err(|_| format!("edit {} op {index} has a negative hybrid-clock physical time", edit.id))?, logical },
             None => semio_framework_os_spr::HybridLogicalTimestamp::new(0, 0),

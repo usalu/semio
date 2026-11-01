@@ -47,7 +47,6 @@ fn every_selected_entity_is_removed_after_its_selected_referrers_and_restored() 
     let reversed = removal(&base, ids.into_iter().rev().collect());
     let reversed = reversed.iter().fold(base.clone(), |state, event| crate::vcs::apply_mutation(&state, event).unwrap().0);
     assert_eq!(reversed, Fem3dSnapshot::default(), "selection order cannot block selected dependencies");
-    eprintln!("[DEBUG] FEM3d nine interaction granularities remove in referential order and undo exactly");
 }
 
 #[test]
@@ -63,7 +62,6 @@ fn selected_loads_remove_once_without_removing_their_case_or_geometry() {
     assert_eq!(after.elements, base.elements);
     assert_eq!(after.solids, base.solids);
     assert_eq!(after.combinations, base.combinations);
-    eprintln!("[DEBUG] FEM3d selected loads remove exactly once without touching carrier geometry");
 }
 
 #[semio_framework_async_macros::async_test]

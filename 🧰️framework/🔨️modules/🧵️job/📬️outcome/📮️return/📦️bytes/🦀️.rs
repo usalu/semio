@@ -8,9 +8,9 @@ impl OriginalContiguousJobBytes{
   let demand=OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:length,release_bytes:0,depth:1};if cx.should_yield()||cx.is_cancelled()||!demand.fits(cx.retained_grant()){return Ok(false)}
   let parent=cx.original_source_parent()?;parent.validate_borrowed_context(cx)?;
   if output.is_none(){*output=Some(Self{bytes:None,source:None,binding:OriginalSourceBinding::borrow(cx),capacity:length,active:true});registry_control(cx,false)?;return Ok(false)}
-  let owner=output.as_mut().unwrap();if !owner.active||!owner.binding.matches(cx)||owner.capacity!=length{return Err(refusal("contiguous birth changed its original source or exact extent").into())}
+  let owner=output.as_mut().ok_or_else(||ValueError::invariant("output absent"))?;if !owner.active||!owner.binding.matches(cx)||owner.capacity!=length{return Err(refusal("contiguous birth changed its original source or exact extent").into())}
   if owner.source.is_none(){parent.admit_loan(&mut owner.source,cx)?;return Ok(false)}
-  owner.source.as_ref().unwrap().validate_context(cx)?;
+  owner.source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.validate_context(cx)?;
   admit_original_construction(cx,&mut owner.bytes,demand,|_|{let mut bytes=Vec::new();let result=bytes.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original contiguous backing allocation refused")).map(|()|{let capacity=bytes.capacity();(bytes,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})});semio_framework_value_retained_clone::RetainedWorkOutcome{result,work:1}})
  }
  pub fn borrowed_bytes(&self)->Option<&[u8]>{self.bytes.as_deref()}

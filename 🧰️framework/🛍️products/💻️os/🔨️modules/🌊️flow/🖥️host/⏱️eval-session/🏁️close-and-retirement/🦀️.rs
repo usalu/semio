@@ -58,7 +58,7 @@ impl FlowEvalSession {
     /// 🎟️ Quotes a new original retirement source handoff without allocating its queue or frame.
     pub fn next_retirement_admission_demands(&self)->Result<RetirementDemand,ValueError>{self.retirement.admission_demands()}
     pub fn next_retirement_reserve_capacity_byte_demand(&self)->Result<usize,ValueError>{self.retirement.owners.next_reserve_capacity_byte_demand()}
-    pub fn reserve_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.retirement.owners.reserve_step(grant)}
+    pub fn reserve_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.retirement.owners.reserve_step(grant).result}
     pub fn next_retirement_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement.demands(0)?.copy_bytes)}
     pub fn next_retirement_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError>{Ok(self.retirement.demands(copy)?.capacity_bytes)}
     pub fn next_retirement_release_byte_demand(&self)->Result<usize,ValueError>{Ok(self.retirement.demands(0)?.release_bytes)}

@@ -59,7 +59,7 @@ impl GenerationPlayRoot {
         loop {
             let copy=4096.max(retirement.next_copy_byte_demand().expect("cold generation copy demand"));
             let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:retirement.next_capacity_byte_demand(copy).expect("cold generation capacity demand"),maximum_release_bytes:retirement.next_release_byte_demand().expect("cold generation release demand"),maximum_depth:retirement.next_depth_demand().expect("cold generation depth demand")};
-            let step=retirement.close_step(grant).expect("cold generation retirement");
+            let step=retirement.close_step(grant).result.expect("cold generation retirement");
             assert!(step.progress().fits(grant),"cold generation receipt exceeds original grant");
             if matches!(step,RetainedCloneStep::Complete(_)){assert!(retirement.terminal_is_empty());break;}
             assert_ne!(step.progress(),Default::default(),"cold generation requires returned observer leases");
@@ -92,7 +92,7 @@ impl RetireOwned for GenerationPlayRoot {
 pub struct GenerationRootRetirement {owned:SharedControlledRetirement<GenerationPlayState>}
 impl store::ErasedSnapshotRetirement for GenerationRootRetirement {
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.owned.next_demand(body) }
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::ValueError>{self.owned.step(grant)}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome{semio_framework_value::RetainedWorkOutcome{result:self.owned.step(grant),work:1}}
     fn next_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.owned.next_copy_byte_demand()}
     fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{self.owned.next_capacity_byte_demand(copy)}
     fn next_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.owned.next_release_byte_demand()}

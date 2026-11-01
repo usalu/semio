@@ -1,15 +1,16 @@
 /** 🛤️ Curved transformed fill operands enter work-granted planar booleans. */
 import type {PathSegment,Vec2} from "../../📐️drawing-contract/🟦️.ts";
-import {BooleanJob,type BooleanInput,type BooleanOperand,type BooleanProgress} from "../🟦️.ts";
-import {PathFlattenJob,type FlatContour,type PathFlattenInput,type PathFlattenProgress} from "../../🛤️path/📏️flatten/🟦️.ts";
-import {UnitRetirement,type WorkRetirement,type WorkRetirementProgress} from "../../🧹️retire/🟦️.ts";
-export type PathBooleanRetirement=WorkRetirement;
-export type PathBooleanRetirementProgress=WorkRetirementProgress;
+import {BooleanJob,type BooleanInput,type BooleanOperand,type BooleanProgress,type BooleanRetirement} from "../🟦️.ts";
+import {PathFlattenJob,type FlatContours,type PathFlattenInput,type PathFlattenProgress} from "../../🛤️path/📏️flatten/🟦️.ts";
+import {RetainedWorkRetirement,type RetainedWorkDemand,type RetainedWorkLedger,type RetainedWorkRetirementCursor,type RetainedWorkRetirementProgress} from "../../../🌱️value/📋️list/🔗️persistent/🎟️work/🟦️.ts";
+import {RetainedWorkProducerRuntime,type RetainedWorkProducerStep} from "../../../🌱️value/📋️list/🔗️persistent/🎟️work/📈️producer/🟦️.ts";
+export type PathBooleanRetirement=RetainedWorkRetirementCursor;
+export type PathBooleanRetirementProgress=RetainedWorkRetirementProgress;
 export type PathBooleanOperand=PathFlattenInput&{fillRule:"nonzero"|"evenodd"};
 export type PathBooleanInput=Omit<BooleanInput,"operands">&{operands:readonly PathBooleanOperand[]};
 export type PathBooleanProgress={phase:"admitting"|"flattening"|"transforming"|"boolean"|"complete";operands:number;sourceSegments:number;points:number;work:number;flatten:PathFlattenProgress|null;boolean:BooleanProgress|null;done:boolean};
-export type PathBooleanOptions={workBudget?:number;signal?:AbortSignal;onProgress?:(p:PathBooleanProgress)=>void};
 function invalid(message:string):never{throw new RangeError(message);}
+const finiteSequence=(values:{length:number;at(index:number):number|undefined},length:number)=>{if(values.length!==length)return false;for(let at=0;at<length;at++){const value=values.at(at);if(value===undefined||!Number.isFinite(value)||Math.abs(value)>1e9)return false;}return true;};
 function copyPoint(p:Vec2):Vec2{if(!Array.isArray(p)||p.length!==2)invalid("Invalid boolean path point");return[p[0],p[1]];}
 function copySegment(s:PathSegment):PathSegment{
  if(!s||typeof s!=="object")invalid("Invalid boolean path segment");
@@ -22,50 +23,58 @@ function copySegment(s:PathSegment):PathSegment{
   default:return invalid("Invalid boolean path segment");
  }
 }
-/** ⏱️ Admits paths, flattens in world tolerance and transforms one point per grant. */
+/** ⏱️ The original path operands stay resident while caller-funded children publish world-space contours. */
 export class PathBooleanJob{
+ #runtime=new RetainedWorkProducerRuntime();#demand:RetainedWorkDemand={copyBytes:0,capacityBytes:0,releaseBytes:0,depth:1};
  private phase:PathBooleanProgress["phase"]="admitting";private work=0;private operands=0;private sourceSegments=0;private points=0;private at=0;private contourAt=0;private pointAt=0;
- private current:PathBooleanOperand|null=null;private admitted:PathSegment[]=[];private local:(FlatContour|null)[]=[];private world:Vec2[][]=[];private contour:Vec2[]|null=null;private prepared:BooleanOperand[]=[];
+ private current:PathBooleanOperand|null=null;private admitted:PathSegment[]=[];private local:FlatContours|null=null;private world:Vec2[][]=[];private contour:Vec2[]|null=null;private prepared:BooleanOperand[]=[];
  private flatten:PathFlattenJob|null=null;private flatProgress:PathFlattenProgress|null=null;private boolean:BooleanJob|null=null;private booleanProgress:BooleanProgress|null=null;private output:PathSegment[]=[];
- private retiredFlats:WorkRetirement[]=[];private retiredLocals:(FlatContour|null)[][]=[];private retiredContours:FlatContour[]=[];private closingContour:FlatContour|null=null;
- private flatRetirement:WorkRetirement|null=null;private booleanRetirement:WorkRetirement|null=null;private retained:BooleanOperand[]=[];private retainedOperand:BooleanOperand|null=null;
+ private retiredFlats:RetainedWorkRetirementCursor[]=[];
+ private booleanRetirement:BooleanRetirement|null=null;private retained:BooleanOperand[]=[];private retainedOperand:BooleanOperand|null=null;
  private cancelled=false;private transferred=false;private failure:unknown=null;
  constructor(private input:PathBooleanInput){
   if(!Array.isArray(input.operands)||input.operands.length<1||input.operands.length>1024)invalid("Invalid boolean path operands");
   const check=new BooleanJob({...input,operands:[{contours:[],fillRule:"nonzero"}]});check.cancel();this.input={...input};
  }
- private step():void{
+ lastTurnWork():number{return this.#runtime.lastTurnWork();}
+ lastTurnSemanticWork():number{return this.#runtime.lastTurnSemanticWork();}
+ nextWorkDemand():RetainedWorkDemand{return this.#demand;}
+ failurePending():boolean{return this.failure!==null||this.flatten?.failurePending()===true;}
+ settlementPending():boolean{
+  switch(this.phase){
+   case "flattening":return this.flatten?.settlementPending()===true;
+   case "transforming":{const contour=this.local?.at(this.contourAt);return contour===undefined||this.contour!==null&&this.pointAt>=contour.points.length;}
+   case "complete":return true;
+   case "admitting":return this.current!==null||this.operands>=this.input.operands.length;
+   default:return false;
+  }
+ }
+ private step(c:RetainedWorkProducerStep):void{
   if(this.phase==="admitting"){
    if(!this.current){
-    if(this.operands===this.input.operands.length){this.boolean=new BooleanJob({...this.input,operands:this.prepared});this.input={...this.input,operands:[]};this.prepared=[];this.phase="boolean";return;}const operand=this.input.operands[this.operands];
-    if(!operand||!Array.isArray(operand.segments)||operand.segments.length>65536||!Array.isArray(operand.transform)||operand.transform.length!==6||!operand.transform.every(n=>Number.isFinite(n)&&Math.abs(n)<=1e9)||!Number.isFinite(operand.tolerance)||operand.tolerance<1e-6||operand.tolerance>16||!["nonzero","evenodd"].includes(operand.fillRule))invalid("Invalid boolean path operand");
-    this.current={segments:operand.segments,transform:[...operand.transform],tolerance:operand.tolerance,fillRule:operand.fillRule};this.at=0;this.admitted=[];return;
+    if(this.operands===this.input.operands.length){this.boolean=new BooleanJob({...this.input,operands:this.prepared});this.input={...this.input,operands:[]};this.prepared=[];this.phase="boolean";c.commitControlWork();return;}const operand=this.input.operands[this.operands];
+    if(!operand||typeof operand.segments?.length!=="number"||operand.segments.length>65536||typeof operand.transform?.length!=="number"||!finiteSequence(operand.transform,6)||!Number.isFinite(operand.tolerance)||operand.tolerance<1e-6||operand.tolerance>16||!["nonzero","evenodd"].includes(operand.fillRule))invalid("Invalid boolean path operand");
+    this.current={segments:operand.segments,transform:Array.from({length:6},(_,at)=>operand.transform.at(at)!),tolerance:operand.tolerance,fillRule:operand.fillRule};this.at=0;this.admitted=[];c.commitSemanticWork();return;
    }
-   if(this.at<this.current.segments.length){if(this.sourceSegments>=this.input.maxEdges)invalid("Boolean paths exceed source segment budget");this.admitted.push(copySegment(this.current.segments[this.at++]!));this.sourceSegments++;return;}
-   this.flatten=new PathFlattenJob({...this.current,segments:this.admitted});this.admitted=[];this.phase="flattening";return;
+   if(this.at<this.current.segments.length){if(this.sourceSegments>=this.input.maxEdges)invalid("Boolean paths exceed source segment budget");this.admitted.push(copySegment(this.current.segments.at(this.at++)!));this.sourceSegments++;c.commitSemanticWork();return;}
+   this.flatten=new PathFlattenJob({...this.current,segments:this.admitted});this.admitted=[];this.phase="flattening";c.commitControlWork();return;
   }
   if(this.phase==="flattening"){
-
-   const p=this.flatten!.advance(1);this.flatProgress=p;if(this.points+p.points>this.input.maxEdges)invalid("Boolean paths exceed flattened point budget");
-   if(p.done){const transferred=this.flatten!.intoRetirement();this.retiredLocals.push(this.local);this.local=transferred.output!;if(this.flatRetirement)this.retiredFlats.push(this.flatRetirement);this.flatRetirement=transferred.job;this.phase="transforming";this.flatten=null;this.world=[];this.contour=null;this.contourAt=0;this.pointAt=0;}return;
+   const flatten=this.flatten!,p=c.advanceChild(flatten);this.flatProgress=p;if(this.points+p.points>this.input.maxEdges)invalid("Boolean paths exceed flattened point budget");
+   if(p.done){const transferred=flatten.intoRetirement();this.retiredFlats.push(transferred.job);this.local=transferred.output;this.phase="transforming";this.flatten=null;this.world=[];this.contour=null;this.contourAt=0;this.pointAt=0;c.commitControlWork();}return;
   }
   if(this.phase==="transforming"){
-   const local=this.local[this.contourAt];if(!local){this.prepared.push({contours:this.world,fillRule:this.current!.fillRule});this.retiredLocals.push(this.local);this.local=[];this.world=[];this.current=null;this.operands++;this.phase="admitting";return;}
-   if(!this.contour){this.contour=[];this.world.push(this.contour);return;}
-   const p=local.points[this.pointAt++];if(p){const m=this.current!.transform,q:Vec2=[m[0]!*p[0]+m[2]!*p[1]+m[4]!,m[1]!*p[0]+m[3]!*p[1]+m[5]!];if(!q.every(n=>Number.isFinite(n)&&Math.abs(n)<=1e9))invalid("Boolean world point exceeds coordinate budget");if(this.points>=this.input.maxEdges)invalid("Boolean paths exceed flattened point budget");this.contour.push(q);this.points++;return;}
-   this.retiredContours.push(local);this.local[this.contourAt]=null;this.contourAt++;this.pointAt=0;this.contour=null;return;
+   const local=this.local!.at(this.contourAt);if(!local){this.prepared.push({contours:this.world,fillRule:this.current!.fillRule});this.retiredFlats.push(this.local!.intoRetirement());this.local=null;this.world=[];this.current=null;this.operands++;this.phase="admitting";c.commitSemanticWork();return;}
+   if(!this.contour){this.contour=[];this.world.push(this.contour);c.commitControlWork();return;}
+   const p=local.points.at(this.pointAt++);if(p){const m=this.current!.transform as number[],q:Vec2=[m[0]!*p[0]+m[2]!*p[1]+m[4]!,m[1]!*p[0]+m[3]!*p[1]+m[5]!];if(!q.every(n=>Number.isFinite(n)&&Math.abs(n)<=1e9))invalid("Boolean world point exceeds coordinate budget");if(this.points>=this.input.maxEdges)invalid("Boolean paths exceed flattened point budget");this.contour.push(q);this.points++;c.commitSemanticWork();return;}
+   this.contourAt++;this.pointAt=0;this.contour=null;c.commitControlWork();return;
   }
   if(this.phase==="boolean"){
-
-
-   this.booleanProgress=this.boolean!.advance(1);if(this.booleanProgress.done){const transferred=this.boolean!.intoRetirement();this.output=transferred.output!;this.booleanRetirement=transferred.job;this.retained=transferred.operands as BooleanOperand[];this.boolean=null;this.phase="complete";}
+   this.booleanProgress=this.boolean!.advance(1);c.commitSemanticWork();if(this.booleanProgress.done){const transferred=this.boolean!.intoRetirement();this.output=transferred.output!;this.booleanRetirement=transferred.job;this.retained=transferred.operands as BooleanOperand[];this.boolean=null;this.phase="complete";}
   }
  }
- advance(budget:number):PathBooleanProgress{
-  if(!Number.isSafeInteger(budget)||budget<=0)invalid("Invalid boolean path work grant");if(this.cancelled)throw new DOMException("Path boolean cancelled","AbortError");if(this.failure)throw this.failure;
-  try{for(let at=0;at<budget&&this.phase!=="complete";at++){if(this.work>=this.input.maxWork)invalid("Boolean paths exceed work budget");this.step();this.work++;}}catch(error){this.failure=error;throw error;}
-  return{phase:this.phase,operands:this.operands,sourceSegments:this.sourceSegments,points:this.points,work:this.work,flatten:this.flatProgress,boolean:this.booleanProgress,done:this.phase==="complete"};
- }
+ private progress():PathBooleanProgress{return{phase:this.phase,operands:this.operands,sourceSegments:this.sourceSegments,points:this.points,work:this.work,flatten:this.flatProgress,boolean:this.booleanProgress,done:this.phase==="complete"};}
+ advance(items:number,work:RetainedWorkLedger):PathBooleanProgress{return this.#runtime.advance(items,work,{maximumWork:this.input.maxWork,workLimitMessage:"Boolean paths exceed work budget",validate:()=>{if(this.cancelled||this.transferred)throw new DOMException("Path boolean cancelled","AbortError");if(this.failure!==null)throw this.failure;},stopped:()=>this.phase==="complete",settlementPending:()=>this.settlementPending(),failurePending:()=>this.failurePending(),semanticWork:()=>this.work,recordSemanticWork:n=>{this.work+=n;},step:c=>{try{this.step(c);}catch(error){this.failure=error;throw error;}finally{this.#demand=c.work.nextDemand;}},progress:()=>this.progress()});}
  result():PathSegment[]{if(this.cancelled)throw new DOMException("Path boolean cancelled","AbortError");if(this.failure)throw this.failure;if(this.phase!=="complete")throw Error("Path boolean is incomplete");return this.output;}
  private retireOperands(items:BooleanOperand[]):boolean{
   if(this.retainedOperand){const contours=this.retainedOperand.contours as Vec2[][];if(contours.length){contours.pop();return false;}this.retainedOperand=null;return false;}
@@ -74,31 +83,29 @@ export class PathBooleanJob{
  /** 🧹️ Compose child cursors while private results remain unavailable to callers. */
  intoRetirement():{job:PathBooleanRetirement;output:PathSegment[]|null}{
   if(this.transferred)throw Error("Path boolean ownership already transferred");this.transferred=true;
-  if(this.flatten){const moved=this.flatten.intoRetirement();if(this.flatRetirement)this.retiredFlats.push(this.flatRetirement);this.flatRetirement=moved.job;if(moved.output){this.retiredLocals.push(this.local);this.local=moved.output;}this.flatten=null;}
+  if(this.flatten){const moved=this.flatten.intoRetirement();this.retiredFlats.push(moved.job);if(moved.output)this.retiredFlats.push(moved.output.intoRetirement());this.flatten=null;}
+  if(this.local){this.retiredFlats.push(this.local.intoRetirement());this.local=null;}
   if(this.boolean){const moved=this.boolean.intoRetirement();this.booleanRetirement=moved.job;this.retained=moved.operands as BooleanOperand[];if(moved.output)this.output=moved.output;this.boolean=null;}
   const output=this.phase==="complete"&&!this.cancelled&&!this.failure?this.output:null;if(output)this.output=[];this.cancelled=true;
-  let slot=0;const job=new UnitRetirement(()=>{
+  let slot=0;const job=new RetainedWorkRetirement((work,turn)=>{
+   const child=slot===0?this.retiredFlats[0]:undefined;
+   if(child!==undefined&&!child.terminalIsEmpty()){try{child.advance(1,work);}finally{turn.commitActualWork(child.lastTurnWork());}if(!child.terminalIsEmpty()||turn.actualWork()>0)return false;}
+   if(!work.canStep())return false;
+   const next=():boolean=>{slot++;turn.commitActualWork();return slot===11;};
    switch(slot){
-    case 0:if(this.retiredFlats.length){const child=this.retiredFlats[this.retiredFlats.length-1]!;if(child.advance(1).done)this.retiredFlats.pop();return false;}this.retiredFlats=[];if(this.flatRetirement){if(!this.flatRetirement.advance(1).done)return false;this.flatRetirement=null;}break;
-    case 1:if(this.booleanRetirement){if(!this.booleanRetirement.advance(1).done)return false;this.booleanRetirement=null;}break;
-    case 2:if(!this.retireOperands(this.retained))return false;this.retained=[];break;
-    case 3:this.input={...this.input,operands:[]};break;
-    case 4:this.current=null;break;
-    case 5:this.admitted=[];break;
-    case 6:if(this.closingContour){if(this.closingContour.points.length){this.closingContour.points.pop();return false;}this.closingContour=null;return false;}if(this.retiredContours.length){this.closingContour=this.retiredContours.pop()!;return false;}if(this.retiredLocals.length){const local=this.retiredLocals[this.retiredLocals.length-1]!;if(local.length){this.closingContour=local.pop()??null;return false;}this.retiredLocals.pop();return false;}if(this.local.length){this.closingContour=this.local.pop()??null;return false;}this.local=[];this.retiredLocals=[];this.retiredContours=[];break;
-    case 7:this.contour=null;break;
-    case 8:if(this.world.length){this.world.pop();return false;}this.world=[];break;
-    case 9:if(!this.retireOperands(this.prepared))return false;this.prepared=[];break;
-    case 10:this.output=[];break;
-    case 11:this.input.operands=[];break;
+    case 0:if(child!==undefined){this.retiredFlats.shift();turn.commitActualWork();return false;}return next();
+    case 1:if(this.booleanRetirement){if(!this.booleanRetirement.advance(1).done){turn.commitActualWork();return false;}this.booleanRetirement=null;}return next();
+    case 2:if(!this.retireOperands(this.retained)){turn.commitActualWork();return false;}this.retained=[];return next();
+    case 3:this.input={...this.input,operands:[]};return next();
+    case 4:this.current=null;return next();
+    case 5:this.admitted=[];return next();
+    case 6:this.contour=null;return next();
+    case 7:if(this.world.length){this.world.pop();turn.commitActualWork();return false;}this.world=[];return next();
+    case 8:if(!this.retireOperands(this.prepared)){turn.commitActualWork();return false;}this.prepared=[];return next();
+    case 9:this.output=[];return next();
+    default:this.input.operands=[];return next();
    }
-   return ++slot===12;
   });return{job,output};
  }
  cancel():void{this.cancelled=true;}
-}
-/** ⏳️ Publishes only complete paths after observers and cancellation checks. */
-export async function booleanPaths(input:PathBooleanInput,options:PathBooleanOptions={}):Promise<PathSegment[]>{
- const abort=()=>{if(options.signal?.aborted)throw new DOMException("Path boolean cancelled","AbortError");};abort();const job=new PathBooleanJob(input);
- try{for(;;){abort();const p=job.advance(options.workBudget??4096);options.onProgress?.(p);abort();if(p.done)return job.result();await new Promise<void>(resolve=>setTimeout(resolve,0));}}catch(error){job.cancel();throw error;}finally{const close=job.intoRetirement().job;while(!close.advance(4096).done)await new Promise<void>(resolve=>setTimeout(resolve,0));}
 }

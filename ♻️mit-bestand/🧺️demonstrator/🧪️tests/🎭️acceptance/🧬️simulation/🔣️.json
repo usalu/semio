@@ -81,7 +81,7 @@
           "const": "framework.category.display"
         },
         "caption": {
-          "const": "Case: dead"
+          "const": "^(Case|Lastfall): dead$"
         },
         "phase": {
           "type": "number",

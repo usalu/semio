@@ -12,29 +12,23 @@ import {
   type IntroductionDefinition,
   type ShellBrand,
   type ShellFooterItem,
-  type ShellLocale,
   type TutorialDefinition,
 } from "@semio-tech/framework";
 import type { IconName } from "@semio-tech/ui-react";
-import { DEMONSTRATOR_LOCKED_LOCALE, demonstratorLabel, demonstratorText } from "./🔨️modules/🌐️locale/🟦️.ts";
+import { demonstratorLabel, demonstratorText, type DemonstratorLocale } from "./🔨️modules/🌐️locale/🟦️.ts";
 
-/** 🏛️ Credits shared by the demonstrator's standalone shells. */
-export const DEMONSTRATOR_FOOTER_ITEMS: readonly ShellFooterItem[] = [
+/** 🏛️ Credits shared by the demonstrator's shells, captioned and described in the viewer's `locale`. */
+export const demonstratorFooterItems = (locale: DemonstratorLocale): readonly ShellFooterItem[] => [
   { id: "aProjectOfLuhUdk", placement: "leading", caption: { en: demonstratorText("demonstrator.footer.aProjectOf", "en"), de: demonstratorText("demonstrator.footer.aProjectOf", "de") }, separator: { en: demonstratorText("demonstrator.footer.and", "en"), de: demonstratorText("demonstrator.footer.and", "de") }, logos: [
-    { href: "https://www.iek.uni-hannover.de/ngs/team", src: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎓️luh/☀️logo.png`, darkSrc: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎓️luh/🌙️logo-dark.png`, alt: demonstratorText("demonstrator.partner.luh", DEMONSTRATOR_LOCKED_LOCALE) },
-    { href: "https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/", src: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎨️udk/☀️logo.png`, darkSrc: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎨️udk/🌙️logo-dark.png`, alt: demonstratorText("demonstrator.partner.udk", DEMONSTRATOR_LOCKED_LOCALE) },
+    { href: "https://www.iek.uni-hannover.de/ngs/team", src: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎓️luh/☀️logo.png`, darkSrc: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎓️luh/🌙️logo-dark.png`, alt: demonstratorText("demonstrator.partner.luh", locale) },
+    { href: "https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/", src: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎨️udk/☀️logo.png`, darkSrc: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🎨️udk/🌙️logo-dark.png`, alt: demonstratorText("demonstrator.partner.udk", locale) },
   ] },
   { id: "fundedByZukunftBau", placement: "trailing", caption: { en: demonstratorText("demonstrator.footer.fundedBy", "en"), de: demonstratorText("demonstrator.footer.fundedBy", "de") }, logos: [
-    { href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506", src: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🔮️zukunft-bau/☀️logo.png`, darkSrc: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🔮️zukunft-bau/🌙️logo-dark.png`, alt: demonstratorText("demonstrator.partner.zukunftBau", DEMONSTRATOR_LOCKED_LOCALE) },
+    { href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506", src: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🔮️zukunft-bau/☀️logo.png`, darkSrc: `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/🔮️zukunft-bau/🌙️logo-dark.png`, alt: demonstratorText("demonstrator.partner.zukunftBau", locale) },
   ] },
 ];
 
 //#region 🏷️DemonstratorShared
-/** 🇩🇪️ The whole demonstrator is German-locked (every brand's `locks.locale` below) — the
- * single source the landing page's boot-time `initUiLocaleSync` call reads, so it can never drift
- * from the per-app brands. */
-export const DEMONSTRATOR_LOCALE: ShellLocale = DEMONSTRATOR_LOCKED_LOCALE;
-
 /** 🏷️ Shell brand ids that receive Entwerfen-mit-Bestand partner chrome in the react renderer. */
 export const ENTWERFEN_MIT_BESTAND_BRAND_IDS = [
   "entwerfen-mit-bestand-aggregator",
@@ -62,8 +56,8 @@ export const ENTWERFEN_MIT_BESTAND_LOGO_SVG = `<svg viewBox="0 0 350 350" xmlns=
 
 const demonstratorLogoUrl = (file: string) => `/${DEMONSTRATOR_ASSETS_DIR}/🪧️logos/${file}`;
 
-/** 🎓️ General demonstrator introduction shown on the landing page only (not inside app shells). */
-export const ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION: IntroductionDefinition = {
+/** 🎓️ General demonstrator introduction, logo texts in the viewer's `locale`, shown on the landing page only (not inside app shells). */
+export const demonstratorGeneralIntroduction = (locale: DemonstratorLocale): IntroductionDefinition => ({
   title: demonstratorLabel("demonstrator.brand.shared.welcomeToDesigningWith"),
   steps: [
     {
@@ -100,14 +94,14 @@ export const ENTWERFEN_MIT_BESTAND_GENERAL_INTRODUCTION: IntroductionDefinition 
       interactions: [],
       ordered: false,
       logos: [
-        { src: demonstratorLogoUrl("🏢️bmwsb/☀️logo.png"), darkSrc: demonstratorLogoUrl("🏢️bmwsb/🌙️logo-dark.png"), alt: demonstratorText("demonstrator.partner.bmwsb", DEMONSTRATOR_LOCKED_LOCALE), href: "https://www.bmwsb.bund.de" },
-        { src: demonstratorLogoUrl("🏛️bbsr/☀️logo.png"), darkSrc: demonstratorLogoUrl("🏛️bbsr/🌙️logo-dark.png"), alt: demonstratorText("demonstrator.partner.bbsr", DEMONSTRATOR_LOCKED_LOCALE), href: "https://www.bbsr.bund.de" },
-        { src: demonstratorLogoUrl("🔮️zukunft-bau/☀️logo.png"), darkSrc: demonstratorLogoUrl("🔮️zukunft-bau/🌙️logo-dark.png"), alt: demonstratorText("demonstrator.partner.zukunftBau", DEMONSTRATOR_LOCKED_LOCALE), href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506" },
+        { src: demonstratorLogoUrl("🏢️bmwsb/☀️logo.png"), darkSrc: demonstratorLogoUrl("🏢️bmwsb/🌙️logo-dark.png"), alt: demonstratorText("demonstrator.partner.bmwsb", locale), href: "https://www.bmwsb.bund.de" },
+        { src: demonstratorLogoUrl("🏛️bbsr/☀️logo.png"), darkSrc: demonstratorLogoUrl("🏛️bbsr/🌙️logo-dark.png"), alt: demonstratorText("demonstrator.partner.bbsr", locale), href: "https://www.bbsr.bund.de" },
+        { src: demonstratorLogoUrl("🔮️zukunft-bau/☀️logo.png"), darkSrc: demonstratorLogoUrl("🔮️zukunft-bau/🌙️logo-dark.png"), alt: demonstratorText("demonstrator.partner.zukunftBau", locale), href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506" },
       ],
       demonstrations: [],
     },
   ],
-};
+});
 
 //#endregion 🏷️DemonstratorShared
 
@@ -358,12 +352,10 @@ export const ENTWERFEN_MIT_BESTAND_TUTORIAL: TutorialDefinition = {
 //#region 🏷️EntwerfenMitBestandAggregatorBrand
 /** 🏷️ Aggregator (puzzle3d): reuse terminology, app-specific introduction, recorded tutorial, Abbau Aufbau default example. */
 export const ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND: ShellBrand = {
-  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-aggregator",
-  windowTitle: "Entwerfen mit Bestand · Aggregator",
-  shortWindowTitle: "EmB · Agg",
+  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
+  locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "concrete-forest" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
@@ -518,12 +510,10 @@ const CAD_SHAPE_WINDOW_ID = "cad-play-shape";
 //#region 🏷️EntwerfenMitBestandGeneratorBrand
 /** 🏷️ Generator (generation3d): parametric flow editor for reuse-oriented component generation. */
 export const ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND: ShellBrand = {
-  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-generator",
-  windowTitle: "Entwerfen mit Bestand · Generator",
-  shortWindowTitle: "EmB · Gen",
+  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
+  locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "hexagonal-mushroom-column" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
@@ -569,12 +559,10 @@ export const ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND: ShellBrand = {
 //#region 🏷️EntwerfenMitBestandKoordinatorBrand
 /** 🏷️ Koordinator (cad): multi-model coordination for shape, building, energy, and structure views. */
 export const ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND: ShellBrand = {
-  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-koordinator",
-  windowTitle: "Entwerfen mit Bestand · Koordinator",
-  shortWindowTitle: "EmB · Koord",
+  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
+  locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "demo" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
@@ -624,12 +612,10 @@ const GIS2D_MAIN_WINDOW_ID = "gis2d-main";
 //#region 🏷️EntwerfenMitBestandAussuchenBrand
 /** 🏷️ Aussuchen (sourcing): curating reclaimed building components from available stock. */
 export const ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND: ShellBrand = {
-  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-aussuchen",
-  windowTitle: "Entwerfen mit Bestand · Aussuchen",
-  shortWindowTitle: "EmB · Aus",
+  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
+  locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "demo" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
@@ -669,12 +655,10 @@ export const ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND: ShellBrand = {
 //#region 🏷️EntwerfenMitBestandBearbeitenBrand
 /** 🏷️ Bearbeiten (process3d): machining steps that adapt a reclaimed component to its new use. */
 export const ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND: ShellBrand = {
-  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-bearbeiten",
-  windowTitle: "Entwerfen mit Bestand · Bearbeiten",
-  shortWindowTitle: "EmB · Bearb",
+  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
+  locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "concrete-forest" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
@@ -720,12 +704,10 @@ export const ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND: ShellBrand = {
 //#region 🏷️EntwerfenMitBestandVerfolgenBrand
 /** 🏷️ Verfolgen (gis2d): tracking where reclaimed components come from and where they go. */
 export const ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND: ShellBrand = {
-  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-verfolgen",
-  windowTitle: "Entwerfen mit Bestand · Verfolgen",
-  shortWindowTitle: "EmB · Verf",
+  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
+  locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "demo" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
@@ -788,12 +770,10 @@ const FEM3D_MODEL_WINDOW_ID = "fem3d-model";
 //#region 🏷️EntwerfenMitBestandEnergieBrand
 /** 🏷️ Energie (energy): thermal simulation of designs made from reused building components. */
 export const ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND: ShellBrand = {
-  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-energie",
-  windowTitle: "Entwerfen mit Bestand · Energie",
-  shortWindowTitle: "EmB · Energie",
+  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
+  locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "bestest-600" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
@@ -839,12 +819,10 @@ export const ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND: ShellBrand = {
 //#region 🏷️EntwerfenMitBestandStatikBrand
 /** 🏷️ Statik (fem3d): structural analysis of the Tragwerk assembled from reused building components. */
 export const ENTWERFEN_MIT_BESTAND_STATIK_BRAND: ShellBrand = {
-  footerItems: DEMONSTRATOR_FOOTER_ITEMS,
   id: "entwerfen-mit-bestand-statik",
-  windowTitle: "Entwerfen mit Bestand · Statik",
-  shortWindowTitle: "EmB · Statik",
+  windowTitle: ENTWERFEN_MIT_BESTAND_NAME,
   logoSvg: ENTWERFEN_MIT_BESTAND_LOGO_SVG,
-  locks: { locale: DEMONSTRATOR_LOCALE, terminology: "reuse", themeId: "semio" },
+  locks: { terminology: "reuse", themeId: "semio" },
   defaults: { exampleId: "concrete-forest" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
@@ -894,12 +872,29 @@ export type DemonstratorPaneSpec = {
   readonly id: string;
   readonly variant: string;
   readonly brand: ShellBrand;
+  readonly icon: IconName;
+  readonly text: (locale: DemonstratorLocale) => DemonstratorPaneText;
+};
+
+/** 🏷️ A pane's wording in one locale. */
+export type DemonstratorPaneText = {
   readonly label: string;
   readonly tagline: string;
   /** 📖 Overview copy — blank-line separated paragraphs (same convention as introduction steps). */
   readonly description: string;
-  readonly icon: IconName;
+  readonly windowTitle: string;
+  readonly shortWindowTitle: string;
 };
+
+/** 🌐️ A pane as one viewer sees it: its wording plus its brand carrying the localized window titles and partner credits. */
+export type DemonstratorPaneView = Omit<DemonstratorPaneSpec, "text" | "brand"> & DemonstratorPaneText & { readonly brand: ShellBrand };
+
+/** 🗣️ Resolves every pane in `locale`. */
+export const demonstratorPaneViews = (locale: DemonstratorLocale): readonly DemonstratorPaneView[] =>
+  DEMONSTRATOR_PANES.map(({ text, brand, ...pane }) => {
+    const wording = text(locale);
+    return { ...pane, ...wording, brand: { ...brand, windowTitle: wording.windowTitle, shortWindowTitle: wording.shortWindowTitle, footerItems: demonstratorFooterItems(locale) } };
+  });
 
 /** 📖 Splits pane overview copy into introduction-style body paragraphs. */
 export function demonstratorPaneDescriptionParagraphs(description: string): readonly string[] {
@@ -918,80 +913,56 @@ export const DEMONSTRATOR_PANES: readonly DemonstratorPaneSpec[] = [
     id: "generator",
     variant: "generator",
     brand: ENTWERFEN_MIT_BESTAND_GENERATOR_BRAND,
-    label: demonstratorText("demonstrator.brand.pane.generator.label", DEMONSTRATOR_LOCALE),
-    tagline: demonstratorText("demonstrator.brand.pane.generator.tagline", DEMONSTRATOR_LOCALE),
-    description:
-      demonstratorText("demonstrator.brand.pane.generator.description", DEMONSTRATOR_LOCALE),
+    text: (locale) => ({ label: demonstratorText("demonstrator.brand.pane.generator.label", locale), tagline: demonstratorText("demonstrator.brand.pane.generator.tagline", locale), description: demonstratorText("demonstrator.brand.pane.generator.description", locale), windowTitle: demonstratorText("demonstrator.brand.pane.generator.windowTitle", locale), shortWindowTitle: demonstratorText("demonstrator.brand.pane.generator.shortWindowTitle", locale) }),
     icon: "workflow",
   },
   {
     id: "koordinator",
     variant: "koordinator",
     brand: ENTWERFEN_MIT_BESTAND_KOORDINATOR_BRAND,
-    label: demonstratorText("demonstrator.brand.pane.koordinator.label", DEMONSTRATOR_LOCALE),
-    tagline: demonstratorText("demonstrator.brand.pane.koordinator.tagline", DEMONSTRATOR_LOCALE),
-    description:
-      demonstratorText("demonstrator.brand.pane.koordinator.description", DEMONSTRATOR_LOCALE),
+    text: (locale) => ({ label: demonstratorText("demonstrator.brand.pane.koordinator.label", locale), tagline: demonstratorText("demonstrator.brand.pane.koordinator.tagline", locale), description: demonstratorText("demonstrator.brand.pane.koordinator.description", locale), windowTitle: demonstratorText("demonstrator.brand.pane.koordinator.windowTitle", locale), shortWindowTitle: demonstratorText("demonstrator.brand.pane.koordinator.shortWindowTitle", locale) }),
     icon: "cad-shape",
   },
   {
     id: "aggregator",
     variant: "aggregator",
     brand: ENTWERFEN_MIT_BESTAND_AGGREGATOR_BRAND,
-    label: demonstratorText("demonstrator.brand.pane.aggregator.label", DEMONSTRATOR_LOCALE),
-    tagline: demonstratorText("demonstrator.brand.pane.aggregator.tagline", DEMONSTRATOR_LOCALE),
-    description:
-      demonstratorText("demonstrator.brand.pane.aggregator.description", DEMONSTRATOR_LOCALE),
+    text: (locale) => ({ label: demonstratorText("demonstrator.brand.pane.aggregator.label", locale), tagline: demonstratorText("demonstrator.brand.pane.aggregator.tagline", locale), description: demonstratorText("demonstrator.brand.pane.aggregator.description", locale), windowTitle: demonstratorText("demonstrator.brand.pane.aggregator.windowTitle", locale), shortWindowTitle: demonstratorText("demonstrator.brand.pane.aggregator.shortWindowTitle", locale) }),
     icon: "puzzle",
   },
   {
     id: "energie",
     variant: "energy",
     brand: ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND,
-    label: demonstratorText("demonstrator.brand.pane.energie.label", DEMONSTRATOR_LOCALE),
-    tagline: demonstratorText("demonstrator.brand.pane.energie.tagline", DEMONSTRATOR_LOCALE),
-    description:
-      demonstratorText("demonstrator.brand.pane.energie.description", DEMONSTRATOR_LOCALE),
+    text: (locale) => ({ label: demonstratorText("demonstrator.brand.pane.energie.label", locale), tagline: demonstratorText("demonstrator.brand.pane.energie.tagline", locale), description: demonstratorText("demonstrator.brand.pane.energie.description", locale), windowTitle: demonstratorText("demonstrator.brand.pane.energie.windowTitle", locale), shortWindowTitle: demonstratorText("demonstrator.brand.pane.energie.shortWindowTitle", locale) }),
     icon: "sun",
   },
   {
     id: "aussuchen",
     variant: "aussuchen",
     brand: ENTWERFEN_MIT_BESTAND_AUSSUCHEN_BRAND,
-    label: demonstratorText("demonstrator.brand.pane.aussuchen.label", DEMONSTRATOR_LOCALE),
-    tagline: demonstratorText("demonstrator.brand.pane.aussuchen.tagline", DEMONSTRATOR_LOCALE),
-    description:
-      demonstratorText("demonstrator.brand.pane.aussuchen.description", DEMONSTRATOR_LOCALE),
+    text: (locale) => ({ label: demonstratorText("demonstrator.brand.pane.aussuchen.label", locale), tagline: demonstratorText("demonstrator.brand.pane.aussuchen.tagline", locale), description: demonstratorText("demonstrator.brand.pane.aussuchen.description", locale), windowTitle: demonstratorText("demonstrator.brand.pane.aussuchen.windowTitle", locale), shortWindowTitle: demonstratorText("demonstrator.brand.pane.aussuchen.shortWindowTitle", locale) }),
     icon: "library",
   },
   {
     id: "bearbeiten",
     variant: "bearbeiten",
     brand: ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND,
-    label: demonstratorText("demonstrator.brand.pane.bearbeiten.label", DEMONSTRATOR_LOCALE),
-    tagline: demonstratorText("demonstrator.brand.pane.bearbeiten.tagline", DEMONSTRATOR_LOCALE),
-    description:
-      demonstratorText("demonstrator.brand.pane.bearbeiten.description", DEMONSTRATOR_LOCALE),
+    text: (locale) => ({ label: demonstratorText("demonstrator.brand.pane.bearbeiten.label", locale), tagline: demonstratorText("demonstrator.brand.pane.bearbeiten.tagline", locale), description: demonstratorText("demonstrator.brand.pane.bearbeiten.description", locale), windowTitle: demonstratorText("demonstrator.brand.pane.bearbeiten.windowTitle", locale), shortWindowTitle: demonstratorText("demonstrator.brand.pane.bearbeiten.shortWindowTitle", locale) }),
     icon: "hammer",
   },
   {
     id: "verfolgen",
     variant: "verfolgen",
     brand: ENTWERFEN_MIT_BESTAND_VERFOLGEN_BRAND,
-    label: demonstratorText("demonstrator.brand.pane.verfolgen.label", DEMONSTRATOR_LOCALE),
-    tagline: demonstratorText("demonstrator.brand.pane.verfolgen.tagline", DEMONSTRATOR_LOCALE),
-    description:
-      demonstratorText("demonstrator.brand.pane.verfolgen.description", DEMONSTRATOR_LOCALE),
+    text: (locale) => ({ label: demonstratorText("demonstrator.brand.pane.verfolgen.label", locale), tagline: demonstratorText("demonstrator.brand.pane.verfolgen.tagline", locale), description: demonstratorText("demonstrator.brand.pane.verfolgen.description", locale), windowTitle: demonstratorText("demonstrator.brand.pane.verfolgen.windowTitle", locale), shortWindowTitle: demonstratorText("demonstrator.brand.pane.verfolgen.shortWindowTitle", locale) }),
     icon: "gis2d",
   },
   {
     id: "statik",
     variant: "fem3d",
     brand: ENTWERFEN_MIT_BESTAND_STATIK_BRAND,
-    label: demonstratorText("demonstrator.brand.pane.statik.label", DEMONSTRATOR_LOCALE),
-    tagline: demonstratorText("demonstrator.brand.pane.statik.tagline", DEMONSTRATOR_LOCALE),
-    description:
-      demonstratorText("demonstrator.brand.pane.statik.description", DEMONSTRATOR_LOCALE),
+    text: (locale) => ({ label: demonstratorText("demonstrator.brand.pane.statik.label", locale), tagline: demonstratorText("demonstrator.brand.pane.statik.tagline", locale), description: demonstratorText("demonstrator.brand.pane.statik.description", locale), windowTitle: demonstratorText("demonstrator.brand.pane.statik.windowTitle", locale), shortWindowTitle: demonstratorText("demonstrator.brand.pane.statik.shortWindowTitle", locale) }),
     icon: "fem-app",
   },
 ];

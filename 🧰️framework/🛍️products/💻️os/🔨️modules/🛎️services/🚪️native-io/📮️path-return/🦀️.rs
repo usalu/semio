@@ -27,9 +27,9 @@ impl<const N:usize> OriginalNativePathReturnRegistry<N>{
    let slot=&self.slots[reservation.index];if slot.identity.load(Ordering::Acquire)!=identity||slot.generation.load(Ordering::Acquire)!=reservation.generation{return Err(refused("original native path reservation changed its source or generation"))}
    let Some(mut checked)=slot.checkout(if reservation.ready{RESERVED}else{CLAIMING})else{return Ok(false)};
    if !checked.owners().binding.is_some_and(|binding|binding.matches(cx)){return Err(refused("native path reservation changed its original caller context"))}
-   if reservation.ready{checked.owners().source.as_ref().unwrap().validate_context(cx)?;return Ok(true)}
+   if reservation.ready{checked.owners().source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.validate_context(cx)?;return Ok(true)}
    if checked.owners().source.is_none(){parent.admit_loan(&mut checked.owners().source,cx)?;return Ok(false)}
-   checked.owners().source.as_ref().unwrap().validate_context(cx)?;if !current(cx){return Ok(false)}
+   checked.owners().source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.validate_context(cx)?;if !current(cx){return Ok(false)}
    reservation.ready=true;checked.restore=RESERVED;receive_original_retained_work(cx,control())?;return Ok(true)
   }
   if N==0{return Err(refused("native path return requires a configured original place"))}if !current(cx){return Ok(false)}
@@ -66,10 +66,10 @@ impl<const N:usize> OriginalNativePathReservation<N>{
   let parent=cx.original_source_parent()?;parent.validate_borrowed_context(cx)?;let slot=&self.registry.slots[self.index];if slot.generation.load(Ordering::Acquire)!=self.generation||slot.identity.load(Ordering::Acquire)!=parent.source_identity()?{return Err(refused("native selected path changed its original source or generation"))}
   if let Some(owner)=output.as_ref(){
    if owner.target as*const dyn PathReturnTarget as*const()!=self.registry as*const _ as*const()||owner.index!=self.index||owner.generation!=self.generation||self.active{return Err(refused("native selected path output belongs to another original place"))}
-   let Some(mut checked)=slot.checkout(ISSUED)else{return Ok(false)};if !checked.owners().binding.is_some_and(|binding|binding.matches(cx)){return Err(refused("cached selected path changed its original caller context"))}checked.owners().source.as_ref().unwrap().validate_context(cx)?;return Ok(true)
+   let Some(mut checked)=slot.checkout(ISSUED)else{return Ok(false)};if !checked.owners().binding.is_some_and(|binding|binding.matches(cx)){return Err(refused("cached selected path changed its original caller context"))}checked.owners().source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.validate_context(cx)?;return Ok(true)
   }
   if !self.ready(){return Err(refused("native selected path requires its ready original reservation"))}
-  let Some(mut checked)=slot.checkout(RESERVED)else{return Ok(false)};checked.owners().source.as_ref().unwrap().validate_context(cx)?;
+  let Some(mut checked)=slot.checkout(RESERVED)else{return Ok(false)};checked.owners().source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.validate_context(cx)?;
   if checked.owners().path.is_none(){if paths.is_empty(){return Ok(false)}if !current(cx){return Ok(false)}let turn=paths.pop_into(&mut checked.owners().path,cx.retained_grant());receive_original_retained_work(cx,turn)?;return Ok(false)}
   if !current(cx){return Ok(false)}*output=Some(OriginalSuppliedNativePath{target:self.registry,index:self.index,generation:self.generation,path:checked.owners().path.take()});self.active=false;checked.restore=ISSUED;receive_original_retained_work(cx,control())?;Ok(true)
  }

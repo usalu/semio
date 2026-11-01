@@ -56,6 +56,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if let (Some(before), Some(after)) = (before, self.tools.typed_operation_stall_witness()) {
             if let Some(streak) = typed_operation_stall_streak::<A>(before, after) {
                 let verb = self.tools.tool_operations.get(after.0).map_or("<released>", |operation| operation.verb.as_str());
+                eprintln!("[DEBUG] stall {verb} streak={streak} operation={} stage={} flags={:#010b}", after.0, after.1, after.2);
                 semio_framework_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] typed-operation {verb} advanced {streak} units with no change: operation={} stage={} flags={:#010b}", after.0, after.1, after.2));
                 if after.1 == TYPED_OPERATION_STALL_PUBLISHING_STAGE && streak >= TYPED_OPERATION_STALL_FAULT_CEILING {
                     self.tools.fault_stalled_typed_operation_publication(after.0, streak)?;

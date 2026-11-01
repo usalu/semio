@@ -17,5 +17,4 @@ export function verifyTripletCsrOracle(): void {
       for (let i = 0; i < row.order; i++) for (let j = 0; j < row.order; j++) assert.equal(matrix.get([i, j]), row.matrix[i * row.order + j]);
     }
   }
-  console.log(`[DEBUG] ${fixture.cases.length} portable triplet CSR states match independent mathjs sparse matrices and original sequence accumulation`);
 }

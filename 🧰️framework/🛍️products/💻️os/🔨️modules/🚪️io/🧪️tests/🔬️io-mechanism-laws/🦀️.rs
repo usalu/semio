@@ -33,8 +33,8 @@ mod laws {
         decode.install_retirement_recipient(&mut decode_recipient).expect("the run owns an explicit decode retirement slot");
         encode.install_retirement_recipient(&mut encode_recipient).expect("the run owns an explicit encode retirement slot");
         let result={let mut control=IoRunControl::new(&mut decode,&mut encode,grant);operation(&mut control)};
-        while decode.has_retirement_owner(){decode.close_retirement_recipient(grant).expect("the decode recipient closes under the run grant");}
-        while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).expect("the encode recipient closes under the run grant");}
+        while decode.has_retirement_owner(){decode.close_retirement_recipient(grant).result.expect("the decode recipient closes under the run grant");}
+        while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).result.expect("the encode recipient closes under the run grant");}
         result
     }
 

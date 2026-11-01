@@ -164,7 +164,7 @@ impl RetainedWireFieldDecode{
  pub fn take_text_into(&mut self,recipient:&mut Option<String>,grant:RetainedCloneGrant)->Result<RetainedWireFieldStep,ValueError>{
   self.last_work=0;
   if !self.text||recipient.is_some()||!self.is_ready()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedWireFieldStep::Blocked)}
-  self.last_work=1;*recipient=Some(unsafe{String::from_utf8_unchecked(self.output.take().unwrap())});self.phase=3;self.receipt=Some((grant,RetainedCloneProgress{copied_items:1,..Default::default()}));Ok(RetainedWireFieldStep::Closed)
+  self.last_work=1;*recipient=Some(unsafe{String::from_utf8_unchecked(self.output.take().ok_or_else(||ValueError::invariant("output absent"))?)});self.phase=3;self.receipt=Some((grant,RetainedCloneProgress{copied_items:1,..Default::default()}));Ok(RetainedWireFieldStep::Closed)
  }
  pub fn cancel(&mut self){self.closing=true}
  /// ♻️ Releases only this original field's actual backing after its original physical release preflight.

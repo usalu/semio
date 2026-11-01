@@ -44,7 +44,7 @@ const snapshot=(layout:ReturnType<typeof partition>)=>JSON.stringify({receipt:re
 test("a growth detaches, resizes offline, attaches again and re-stamps receipt, journal and nested receipt",async()=>{
  const layout=partition(),state=freshWorld(),counts={released:0},lines:string[]=[];
  state.children=[join(layout.mount,"cs","v","fixed.dmg")];
- const outcome=await growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO},{...ports(layout,state,counts),report:line=>lines.push(line)});
+ const outcome=await growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO,language:"en"},{...ports(layout,state,counts),report:line=>lines.push(line)});
  expect(outcome).toEqual({partition:"rust",fromBytes:FROM,toBytes:TO,resumed:false,oldDevice:100,newDevice:101});
  expect(state.attached).toBe(true);expect(state.children).toEqual([]);expect(counts.released).toBe(1);
  expect(statSync(layout.image).size).toBe(TO);expect(existsSync(join(layout.directory,"grow.json"))).toBe(false);
@@ -56,16 +56,16 @@ test("a growth detaches, resizes offline, attaches again and re-stamps receipt, 
 });
 
 test("a growth killed at any effect resumes to exactly the state of an uninterrupted run, releases the lease every time and never leaves the image attached to a stale record",async()=>{
- const reference=partition(),seen:string[]=[];await growPartitionV1({partition:"rust",directory:reference.directory,targetBytes:TO},ports(reference,freshWorld(),{released:0},undefined,seen));
+ const reference=partition(),seen:string[]=[];await growPartitionV1({partition:"rust",directory:reference.directory,targetBytes:TO,language:"en"},ports(reference,freshWorld(),{released:0},undefined,seen));
  const expected=snapshot(reference),names=[...new Set(seen)];expect(names.length).toBeGreaterThan(15);
  let crashes=0;
  for(const name of names)for(let nth=1;nth<=seen.filter(item=>item===name).length;nth++){
   const layout=partition(),state=freshWorld(),counts={released:0};
-  await expect(growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO},ports(layout,state,counts,{name,nth}))).rejects.toThrow("crash at "+name);crashes++;
+  await expect(growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO,language:"en"},ports(layout,state,counts,{name,nth}))).rejects.toThrow("crash at "+name);crashes++;
   const held=name==='lease:before'?0:1;expect(counts.released,name).toBe(held);
   const journal=readGrowJournalV1(layout.directory);
   if(journal)expect(journal).toMatchObject({fromBytes:FROM,toBytes:TO});
-  const again=growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO},ports(layout,state,counts));
+  const again=growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO,language:"en"},ports(layout,state,counts));
   if(name==="journal:clear:after")await expect(again).rejects.toThrow("already has the declared size");else expect((await again).toBytes,name).toBe(TO);
   expect(counts.released,name).toBe(held+1);
   const final=JSON.parse(snapshot(layout)),want=JSON.parse(expected);
@@ -78,17 +78,17 @@ test("a growth killed at any effect resumes to exactly the state of an uninterru
 
 test("a busy image, a nested image that will not detach and a backing file of another size are refused with their reasons and keep the image usable",async()=>{
  const busy=partition(),busyState=freshWorld();busyState.holders=["cargo 123 ueli"];let clock=0;const fast={sleep:async(milliseconds:number)=>{clock+=milliseconds;},now:()=>clock};
- await expect(growPartitionV1({partition:"rust",directory:busy.directory,targetBytes:TO},{...ports(busy,busyState,{released:0}),...fast})).rejects.toThrow("in use");expect(clock).toBeGreaterThanOrEqual(300000);
+ await expect(growPartitionV1({partition:"rust",directory:busy.directory,targetBytes:TO,language:"en"},{...ports(busy,busyState,{released:0}),...fast})).rejects.toThrow("in use");expect(clock).toBeGreaterThanOrEqual(300000);
  const clears=partition(),clearState=freshWorld();clearState.holders=["bun 1 gc.log"];let polls=0;clock=0;const lines:string[]=[];
  const slow={...ports(clears,clearState,{released:0}),sleep:async(milliseconds:number)=>{clock+=milliseconds;if(++polls===3)clearState.holders=[];},now:()=>clock,report:(line:string)=>lines.push(line)};
- await growPartitionV1({partition:"rust",directory:clears.directory,targetBytes:TO},slow);expect(polls).toBe(3);expect(statSync(clears.image).size).toBe(TO);expect(lines.filter(line=>line.includes("still have files open")).length).toBe(3);
+ await growPartitionV1({partition:"rust",directory:clears.directory,targetBytes:TO,language:"en"},slow);expect(polls).toBe(3);expect(statSync(clears.image).size).toBe(TO);expect(lines.filter(line=>line.includes("still have files open")).length).toBe(3);
  expect(busyState.attached).toBe(true);expect(statSync(busy.image).size).toBe(FROM);expect(existsSync(join(busy.directory,"grow.json"))).toBe(false);
  const stuck=partition(),stuckState=freshWorld();stuckState.children=[join(stuck.mount,"cs","v","fixed.dmg")];stuckState.detachFails=true;
- await expect(growPartitionV1({partition:"rust",directory:stuck.directory,targetBytes:TO},{...ports(stuck,stuckState,{released:0}),sleep:async()=>{}})).rejects.toThrow("cannot be detached");
+ await expect(growPartitionV1({partition:"rust",directory:stuck.directory,targetBytes:TO,language:"en"},{...ports(stuck,stuckState,{released:0}),sleep:async()=>{}})).rejects.toThrow("cannot be detached");
  expect(statSync(stuck.image).size).toBe(FROM);
  const odd=partition();truncateSync(odd.image,FROM+MIB);
- await expect(growPartitionV1({partition:"rust",directory:odd.directory,targetBytes:TO},ports(odd,freshWorld(),{released:0}))).rejects.toBeInstanceOf(GrowRefusalV1);
- await expect(growPartitionV1({partition:"rust",directory:join(scratch(),"none"),targetBytes:TO},ports(odd,freshWorld(),{released:0}))).rejects.toThrow("no image with a receipt");
+ await expect(growPartitionV1({partition:"rust",directory:odd.directory,targetBytes:TO,language:"en"},ports(odd,freshWorld(),{released:0}))).rejects.toBeInstanceOf(GrowRefusalV1);
+ await expect(growPartitionV1({partition:"rust",directory:join(scratch(),"none"),targetBytes:TO,language:"en"},ports(odd,freshWorld(),{released:0}))).rejects.toThrow("no image with a receipt");
  const attachedResize=partition(),world=freshWorld();expect(()=>host(attachedResize,world).resize(attachedResize.image,TO)).toThrow("temporarily unavailable");
 });
 
@@ -97,25 +97,25 @@ test("a resumed growth re-reads the mount device and re-checks the holders befor
  const eventsPath=join(layout.mount,"storage-events.jsonl"),childPath=join(layout.child,"image.json");writeFileSync(eventsPath,restampJournalTextV1(readFileSync(eventsPath,"utf8"),{size:FROM,device:100},{size:FROM,device:555}));writeFileSync(childPath,restampChildReceiptTextV1(readFileSync(childPath,"utf8"),100,555));
  writeFileSync(join(layout.directory,"grow.json"),JSON.stringify({version:1,phase:"drained",partition:"rust",fromBytes:FROM,toBytes:TO,oldDevice:100,newDevice:null}));
  state.holders=["bun 9 files"];let clock=0;const calls={holders:0};const tools=host(layout,state);
- await expect(growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO},{lease:async()=>({release(){}}),tools:{...tools,holders:()=>{calls.holders++;return state.holders;}},sleep:async(milliseconds:number)=>{clock+=milliseconds;},now:()=>clock})).rejects.toThrow("in use");
+ await expect(growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO,language:"en"},{lease:async()=>({release(){}}),tools:{...tools,holders:()=>{calls.holders++;return state.holders;}},sleep:async(milliseconds:number)=>{clock+=milliseconds;},now:()=>clock})).rejects.toThrow("in use");
  expect(calls.holders).toBeGreaterThan(1);expect(readGrowJournalV1(layout.directory)).toMatchObject({phase:"drained",oldDevice:555});
- state.holders=[];await growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO},{lease:async()=>({release(){}}),tools});
+ state.holders=[];await growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO,language:"en"},{lease:async()=>({release(){}}),tools});
  const events=readFileSync(join(layout.mount,"storage-events.jsonl"),"utf8");expect(events).toContain(`${TO},${state.device}]`);
 });
 
 test("a detach that is busy for a moment is retried and succeeds, one that stays busy is refused with the open files",async()=>{
  const layout=partition(),state=freshWorld(),tools=host(layout,state);let busy=2,sleeps=0;
- await growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO},{lease:async()=>({release(){}}),tools:{...tools,detach:row=>{if(busy-->0)throw Error("Resource busy");tools.detach(row);}},sleep:async()=>{sleeps++;}});
+ await growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO,language:"en"},{lease:async()=>({release(){}}),tools:{...tools,detach:row=>{if(busy-->0)throw Error("Resource busy");tools.detach(row);}},sleep:async()=>{sleeps++;}});
  expect(sleeps).toBe(2);expect(statSync(layout.image).size).toBe(TO);
  const stuck=partition(),stuckState=freshWorld(),stuckTools=host(stuck,stuckState);let calls=0;
- await expect(growPartitionV1({partition:"rust",directory:stuck.directory,targetBytes:TO},{lease:async()=>({release(){}}),tools:{...stuckTools,detach:()=>{throw Error("Resource busy");},holders:()=>(calls++?["cargo 9 x"]:[])},sleep:async()=>{},now:()=>0})).rejects.toThrow("[open: cargo 9 x]");
+ await expect(growPartitionV1({partition:"rust",directory:stuck.directory,targetBytes:TO,language:"en"},{lease:async()=>({release(){}}),tools:{...stuckTools,detach:()=>{throw Error("Resource busy");},holders:()=>(calls++?["cargo 9 x"]:[])},sleep:async()=>{},now:()=>0})).rejects.toThrow("[open: cargo 9 x]");
 });
 
 test("a detach blocked only by allowlisted, system-signed scanners is force-unmounted once under the lease, logged in the journal, the outcome and an audit record; any other dissenter, path, signature or an unreadable lsof still refuses",async()=>{
  const SYS="/usr/libexec/syspolicyd";
  const run=async(dissenters:{pid:number;path:string}[],options:{holders?:string[];signed?:boolean;lsofFails?:boolean}={})=>{
   const layout=partition(),state=freshWorld(),tools=host(layout,state);let forced=0,calls=0;
-  const pending=growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO},{lease:async()=>({release(){}}),tools:{...tools,holders:()=>{if(calls++===0)return[];if(options.lsofFails&&state.attached&&!forced)throw Error("lsof failed");return state.attached&&!forced?options.holders??[]:[];},detach:row=>{if(!forced)throw Error("Resource busy");tools.detach(row);},dissenters:()=>dissenters,signedBySystem:()=>options.signed??true,forceUnmount:()=>{forced++;}},sleep:async()=>{},now:()=>0});pending.catch(()=>undefined);const attempt=pending;
+  const pending=growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO,language:"en"},{lease:async()=>({release(){}}),tools:{...tools,holders:()=>{if(calls++===0)return[];if(options.lsofFails&&state.attached&&!forced)throw Error("lsof failed");return state.attached&&!forced?options.holders??[]:[];},detach:row=>{if(!forced)throw Error("Resource busy");tools.detach(row);},dissenters:()=>dissenters,signedBySystem:()=>options.signed??true,forceUnmount:()=>{forced++;}},sleep:async()=>{},now:()=>0});pending.catch(()=>undefined);const attempt=pending;
   return{layout,attempt,counts:()=>forced};
  };
  const ok=await run([{pid:274,path:SYS}]);const outcome=await ok.attempt;expect(ok.counts()).toBe(1);expect(statSync(ok.layout.image).size).toBe(TO);
@@ -127,7 +127,7 @@ test("a detach blocked only by allowlisted, system-signed scanners is force-unmo
 
 test("a background collector that keeps files open is asked to stop under the lease and the growth goes on once it has exited",async()=>{
  const layout=partition(),state=freshWorld(),stopped:number[]=[];state.holders=["bun 77 gc.log"];const tools=host(layout,state),lines:string[]=[];let clock=0;
- await growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO},{lease:async()=>({release(){}}),tools:{...tools,stopCollectors:()=>{stopped.push(77);return[77];},holders:()=>stopped.length&&clock>=10000?[]:state.holders},sleep:async(milliseconds:number)=>{clock+=milliseconds;},now:()=>clock,report:line=>lines.push(line)});
+ await growPartitionV1({partition:"rust",directory:layout.directory,targetBytes:TO,language:"en"},{lease:async()=>({release(){}}),tools:{...tools,stopCollectors:()=>{stopped.push(77);return[77];},holders:()=>stopped.length&&clock>=10000?[]:state.holders},sleep:async(milliseconds:number)=>{clock+=milliseconds;},now:()=>clock,report:line=>lines.push(line)});
  expect(stopped).toEqual([77]);expect(statSync(layout.image).size).toBe(TO);expect(lines.some(line=>line.includes("collector 77"))).toBe(true);
 });
 
@@ -171,7 +171,7 @@ test.skipIf(process.platform!=="darwin")("a real seeded APFS image grows offline
   writeFileSync(join(mount,"storage-events.jsonl"),JSON.stringify({type:"reserved",allocation:{id:"c",child:{directory:join(mount,"cs","v"),parentIdentity:`[7,${statSync(image).ino},${from},${device}]`}}})+"\n");
   mkdirSync(join(mount,"cs","v"),{recursive:true});writeFileSync(join(mount,"cs","v","image.json"),JSON.stringify({dev:device,mountDirectory:{dev:String(device)}}));
   await expect(Promise.resolve().then(()=>tools.resize(image,TO))).rejects.toThrow();
-  const counts={released:0},outcome=await growPartitionV1({partition:"rust",directory,targetBytes:TO},{lease:async()=>({release:()=>{counts.released++;}}),tools});
+  const counts={released:0},outcome=await growPartitionV1({partition:"rust",directory,targetBytes:TO,language:"en"},{lease:async()=>({release:()=>{counts.released++;}}),tools});
   expect(outcome).toMatchObject({fromBytes:from,toBytes:TO,resumed:false,oldDevice:device});expect(counts.released).toBe(1);
   expect(statSync(image).size).toBe(TO);expect(await tools.volumeBytes(mount)).toBeGreaterThan(TO*0.9);expect((await tools.holders(mount)).length).toBeGreaterThanOrEqual(0);
   expect(readFileSync(join(mount,"seed.txt"),"utf8")).toBe("x");

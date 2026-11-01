@@ -2,7 +2,7 @@
 
 fn retire_original_envelope_cancel(cancel:semio_framework_job::CancelToken,source:RetainedCloneGrant){
     let mut owner=semio_framework_async::CancelTokenRetirement::from_token(cancel);
-    for _ in 0..256{if owner.terminal_is_empty(){break}let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||owner.close_step(source).unwrap());assert!(step.progress().fits(source));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));}
+    for _ in 0..256{if owner.terminal_is_empty(){break}let(step,born,freed)=semio_framework_trace_memory_testing::observe_backing(||owner.close_step(source).result.unwrap());assert!(step.progress().fits(source));assert_eq!((step.progress().retained_capacity_bytes,step.progress().released_bytes),(born,freed));}
     assert!(owner.terminal_is_empty());let(_,born,freed)=semio_framework_trace_memory_testing::observe_backing(||drop(owner));assert_eq!((born,freed),(0,0));
 }
 

@@ -57,7 +57,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
             let Some(operation_id)=self.media.admit_typed_operation_slot(&*self.pending,&*self.tools)else{return Ok(None)};
             let revision=self.stores.store.content_revision_now();let generation=semio_framework_job::Generation(self.stores.store.generation_now());let base_revision=semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap()));let operation=semio_framework_job::Operation::new(operation_id,base_revision,generation,operation_id.0);
             let bytes=size_of::<semio_framework_job::Operation>()+size_of::<Option<u64>>();let mut done=None;
-            semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{source.operation=Some(operation);self.tools.typed_operation_reservations[operation_id.0 as usize%ARTIFACT_LIVE_OUTPUT_SLOTS]=Some(operation_id.0);Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))})?;return Ok(None)
+            semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{source.operation=Some(operation);self.tools.typed_operation_reservations[operation_id.0 as usize%ARTIFACT_LIVE_OUTPUT_SLOTS]=Some(operation_id.0);semio_framework_value::RetainedWorkOutcome{result:Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})),work:1}})?;return Ok(None)
         }
         let operation=source.operation.unwrap();let id=operation.operation.0;
         if !self.tools.latest_wins_commands.can_insert(id)||self.tools.typed_operation_reservations[id as usize%ARTIFACT_LIVE_OUTPUT_SLOTS]!=Some(id){return Err(plugin_sdk_fault("typed pending source lost its original fixed registry reservation").into())}
@@ -304,6 +304,12 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
             }),
         );
         self.tools.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
+        if let QualifiedToolProof::FrameworkOwned(mut alias)|QualifiedToolProof::AppOwned(mut alias)=admission.proof{
+            while !alias.terminal_is_empty(){
+                let demand=alias.close_demands(cx.retained_grant().maximum_copy_bytes).map_err(|error|plugin_sdk_fault(error.to_string()))?;
+                semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:alias.close_step(grant),work:1}).map_err(|_|plugin_sdk_fault("typed operation admission proof refused its original close"))?;
+            }
+        }
         Ok(())
     }
 
@@ -359,7 +365,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         let decoded=std::sync::Arc::new(std::sync::Mutex::new(None));cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()}).expect("exact original configuration completion preflight remains exclusive");cx.consume_fuel(1);
         self.pending.pending_configuration_identity=Some((cx.operation(),cx.generation()));
         self.pending.pending_configuration_completion=Some(semio_framework_plugin_job::reserved_jobs::ConfigurationDecodeRetirement{original:ManuallyDrop::new(Some(decoded.clone())),payload:None});
-        let job=FrameworkConfigurationBinaryJob::<A>{raw:std::mem::take(command_bytes),cursor:0,stage:FrameworkConfigurationBinaryStage::Envelope,operation:Some(self.pending.pending_configuration_permit.as_ref().unwrap().operation),decoded:ManuallyDrop::new(Some(decoded)),decoded_close:None,receiving:ManuallyDrop::new(None),native:semio_framework_job_native_decode::OriginalNativeDecodeSource::empty(semio_framework_job_native_decode::OriginalNativeDecodePolicy{maximum_owned_bytes:semio_framework_plugin_job::reserved_jobs::FRAMEWORK_CONFIGURATION_NATIVE_OWNED_BYTES}),failure:ManuallyDrop::new(None),state:[0;8],pending:None,outcomes:semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(),closing:false};
+        let job=FrameworkConfigurationBinaryJob::<A>{raw:std::mem::take(command_bytes),cursor:0,stage:FrameworkConfigurationBinaryStage::Envelope,operation:Some(self.pending.pending_configuration_permit.as_ref().unwrap().operation),decoded:ManuallyDrop::new(Some(decoded)),decoded_close:None,receiving:ManuallyDrop::new(None),native:semio_framework_job_native_decode::OriginalNativeDecodeSource::empty(semio_framework_job_native_decode::OriginalNativeDecodePolicy{maximum_owned_bytes:semio_framework_plugin_job::reserved_jobs::FRAMEWORK_CONFIGURATION_NATIVE_OWNED_BYTES}),failure:ManuallyDrop::new(None),place:ManuallyDrop::new(None),state:[0;8],pending:None,outcomes:semio_framework_plugin_decl_app::tool_contract::ReservedJobOutcomes::new(),closing:false};
         let operation=self.pending.pending_configuration_permit.as_ref().unwrap().operation;
         self.pending.pending_configuration_worker=Some(semio_framework_plugin_job::reserved_jobs::configuration_worker::ConfigurationWorker::new(job,operation,proof.contract().max_output_bytes,proof.contract().max_work_units_per_step,self.mounted_policy.preparation,self.mounted_policy.close,cx));
         Ok(None)
@@ -370,7 +376,7 @@ impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'sta
         if let Some(owner)=self.pending.pending_configuration_completion.as_mut(){
             let demand=if owner.terminal_is_empty(){RetirementDemand{depth:1,..Default::default()}}else{owner.demand(cx.retained_grant().maximum_copy_bytes)?};
             let terminal=owner.terminal_is_empty();let mut removed=false;
-            semio_framework_job::close_original_retained_step(cx,demand,|grant|{if terminal{removed=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}else{owner.step(grant)}})?;
+            semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=if terminal{removed=true;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))}else{owner.step(grant)};semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
             if removed{self.pending.pending_configuration_completion.take();}return Ok(None)
         }
         let permit=self.pending.pending_configuration_permit.as_ref().expect("configuration commit retains its admitted permit");self.stores.validate_framework_reserved_commit(X::reserved_action_refusal(&*self.time_travel, &*self.tool_runs, "configuration-binary"), "configuration-binary", permit).await?;

@@ -1,9 +1,9 @@
-#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::{booleans::*,identity::*,paint::*,picking::*,placement::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*};
+#[allow(unused_imports)] use {semio_s_artifact_draw_drawing_scene::{booleans::*,identity::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*},semio_s_artifact_draw_drawing_scene_paint::{*,picking::*,placement::*}};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 use semio_framework_test_fixtures::fixture_text;
 
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::PathSegment;
-#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::picking::*;
+#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene_paint::picking::*;
 fn query(row:&serde_json::Value)->PaintedPathQuery{
  let q=&row["query"];
  PaintedPathQuery{point:serde_json::from_value(q["point"].clone()).unwrap(),transform:serde_json::from_value(q["transform"].clone()).unwrap(),tolerance:q["tolerance"].as_f64().unwrap(),flatness:q["flatness"].as_f64().unwrap(),fill:q["fill"].as_bool().unwrap(),fill_rule:serde_json::from_value(q["fillRule"].clone()).unwrap(),stroke:(!q["stroke"].is_null()).then(||PaintedPathStroke{width:q["stroke"]["width"].as_f64().unwrap(),cap:serde_json::from_value(q["stroke"]["cap"].clone()).unwrap(),join:serde_json::from_value(q["stroke"]["join"].clone()).unwrap(),dash:serde_json::from_value(q["stroke"]["dash"].clone()).unwrap()})}

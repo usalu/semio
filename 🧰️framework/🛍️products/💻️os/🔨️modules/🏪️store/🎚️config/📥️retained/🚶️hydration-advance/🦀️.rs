@@ -74,7 +74,7 @@ where
             let capacity = semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<semio_framework_os_spr::OpPayload>();
             if child.maximum_capacity_bytes < capacity { return ConfigStoreHydrationStep::Pending(self.progress()); }
             let payload = self.pending_retired_payload.take().expect("decoded original payload retains its custody slot");
-            match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(payload, child) {
+            match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(payload, child) .result {
                 Ok((owner, progress)) => { *self.active = Some(owner); self.last_retirement_progress = progress; return ConfigStoreHydrationStep::Pending(self.progress()); }
                 Err((_, payload)) => { *self.pending_retired_payload = Some(payload); return self.reject(ConfigStoreHydrationDiagnostic::Initialization); }
             }

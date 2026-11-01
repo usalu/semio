@@ -10,8 +10,8 @@ fn native_prepared_root_contract_keeps_execution_and_publication_unproved() {
     let data:serde_json::Value=serde_json::from_str(include_str!("root-read-cases.json")).unwrap();
     assert_eq!(data["laws"].as_array().unwrap().len(),11);
     assert_eq!(data["nativeExecutionProven"],false);
-    assert!(!super::super::IFC4X3_NATIVE_EXPRESS_EXECUTION);
-    assert!(!super::super::IFC4X3_RETAINED_EXPRESS_IMPLEMENTATION);
+    assert!(!super::IFC4X3_NATIVE_EXPRESS_EXECUTION);
+    assert!(!super::IFC4X3_RETAINED_EXPRESS_IMPLEMENTATION);
 }
 static CANONICAL: ExpressExpression = ExpressExpression {
     kind: ExpressExpressionKind::Index,
@@ -206,7 +206,7 @@ fn native_prepared_memo_dependency_stamps_and_compound_results_match_shared_root
         let mut caller=OriginalWorkFixture::with_identity(semio_framework_job::OperationId(949),semio_framework_job::Generation(index as u64+1));
         let(mut overlay,mut receiver)=prepare(&source,&mut caller);
         let env=MachineEnvironment{source:Some(&source),overlay:Some(&overlay),receiver:Some(&receiver),mutations:&[]};
-        let mut machine=RetainedMachine::new(MEMOS[index]);
+        let mut machine=RetainedMachine::new(memos()[index]);
         for _ in 0..2 {
             query_bound(&mut machine,expression,MEMO_BINDINGS[index],&env,&mut caller).unwrap();
             assert_eq!(machine.result_scalar(&env).unwrap().text(),data["cases"][index]["expected"].as_str().unwrap());
@@ -219,13 +219,13 @@ fn native_prepared_memo_dependency_stamps_and_compound_results_match_shared_root
 fn native_prepared_active_derived_cycle_retains_exact_failure_and_original_source() {
     static SELF_DIM:ExpressExpression=ExpressExpression{kind:ExpressExpressionKind::Attribute,name:Some("DIM"),operands:&[ExpressExpression{kind:ExpressExpressionKind::Identifier,name:Some("SELF"),..EMPTY}],..EMPTY};
     static QUERY_DIM:ExpressExpression=ExpressExpression{kind:ExpressExpressionKind::Attribute,name:Some("DIM"),operands:&[ExpressExpression{kind:ExpressExpressionKind::Identifier,name:Some("E4"),..EMPTY}],..EMPTY};
-    static CYCLIC:ExpressProgram=ExpressProgram{derived:&[ExpressRule{owner:"IFCDIRECTION",label:"DIM",expression:&SELF_DIM}],..super::super::PROGRAM};
+    let cyclic:&'static ExpressProgram=Box::leak(Box::new(ExpressProgram{derived:&[ExpressRule{owner:"IFCDIRECTION",label:"DIM",expression:&SELF_DIM}],..*ifc4x3_express_program()}));
     let source=crate::io::parse_ifc4x3_step(include_str!("🧪️vector/source.ifc")).unwrap();
     let before=source.clone();
     let mut caller=OriginalWorkFixture::with_identity(semio_framework_job::OperationId(951),semio_framework_job::Generation(1));
     let(mut overlay,mut receiver)=prepare(&source,&mut caller);
     let env=MachineEnvironment{source:Some(&source),overlay:Some(&overlay),receiver:Some(&receiver),mutations:&[]};
-    let mut machine=RetainedMachine::new(&CYCLIC);
+    let mut machine=RetainedMachine::new(cyclic);
     assert_eq!(query(&mut machine,&QUERY_DIM,&env,&mut caller).unwrap_err().primary.message(),"express.derived-cycle");
     assert_eq!(source,before);
     close(&mut machine,&mut receiver,&mut overlay,&mut caller);

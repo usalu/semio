@@ -226,7 +226,7 @@ where
             };
             if demand.copy_bytes > grant.maximum_copy_bytes || demand.capacity_bytes > grant.maximum_capacity_bytes || demand.release_bytes > grant.maximum_release_bytes || demand.depth > grant.maximum_depth { return Ok(Close::Pending { progress: empty }); }
             let child_grant = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match self.fault.close_step_granted(child_grant) {
+            return match self.fault.close_step_granted(child_grant) .result {
                 Ok(step) => Ok(Close::Pending { progress: step.progress() }),
                 Err(error) => Err(error),
             };
@@ -431,12 +431,12 @@ where
 
 }
 
-impl<P, Mutation> semio_framework_job::InteractiveJob for ArtifactEnvelopeDecodeAuthority<P, Mutation>
+impl<P, Mutation> ArtifactEnvelopeDecodeAuthority<P, Mutation>
 where
     P: Send,
     Mutation: Send,
 {
-    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step_original<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         let grant = cx.retained_grant();
         if cx.should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(None); }
         let before = cx.retained_progress();
@@ -446,15 +446,25 @@ where
             ArtifactEnvelopeDecodeState::Complete => semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None),
             ArtifactEnvelopeDecodeState::Cancelled => semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx),
             ArtifactEnvelopeDecodeState::Fault(diagnostic) => {
-                if !self.fault.advance_initialization(cx)? { return Ok(None); }
-                if !self.fault.append_original(cx, diagnostic.code.as_bytes(), &mut self.fault_cursor)? { return Ok(None); }
-                if !self.fault.seal(cx)? { return Ok(None); }
+                if !matches!(self.fault.advance_initialization(cx).result?,semio_framework_value::RetainedCloneStep::Complete(_)) { return Ok(None); }
+                if !matches!(self.fault.append_original(cx, diagnostic.code.as_bytes(), &mut self.fault_cursor).result?,semio_framework_value::RetainedCloneStep::Complete(_)) { return Ok(None); }
+                if !matches!(self.fault.seal(cx).result?,semio_framework_value::RetainedCloneStep::Complete(_)) { return Ok(None); }
                 semio_framework_job::JobOutcomeBorrow::admit_fault(cx, self.fault.published().expect("sealed original fault remains inside decoder"))
             }
             _ if before == cx.retained_progress() && state == self.state => Ok(None),
             _ => semio_framework_job::JobOutcomeBorrow::admit_yield(cx),
         };
         outcome.map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
+}
+
+impl<P, Mutation> semio_framework_job::InteractiveJob for ArtifactEnvelopeDecodeAuthority<P, Mutation>
+where
+    P: Send,
+    Mutation: Send,
+{
+    fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>, _: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        semio_framework_job::InteractiveJobStep::from_callback(self.step_original(cx))
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, ValueError> {

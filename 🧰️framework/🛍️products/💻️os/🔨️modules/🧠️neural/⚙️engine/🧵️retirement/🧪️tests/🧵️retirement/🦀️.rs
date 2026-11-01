@@ -34,7 +34,7 @@ fn recursive_dictionary_owns_typed_retirement_under_independent_grants() {
                 let (step,a,r)=observe_ownership(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!(progress.retained_capacity_bytes,a);assert_eq!(progress.released_bytes,r);assert!(progress.copied_items<=1);assert!(progress.copied_bytes<=grant.maximum_copy_bytes);assert!(progress.retained_capacity_bytes<=grant.maximum_capacity_bytes);assert!(progress.released_bytes<=grant.maximum_release_bytes);copied+=progress.copied_bytes;released+=progress.released_bytes;born+=progress.retained_capacity_bytes;
                 assert!(progress.copied_items!=0 || matches!(step,RetainedCloneStep::Complete(_)),"exact Neural owner grant blocked on turn {turn}");
             }
-            assert!(owner.terminal_is_empty());assert_eq!(copied,"nestedvalue".len());assert_eq!(released,original_born-original_freed+born);
+            assert!(owner.terminal_is_empty());assert_eq!(copied,0);assert_eq!(released,original_born-original_freed+born);
         }
     }
 }
@@ -56,8 +56,8 @@ fn finite_schema_operator_fields_preserve_typed_work_and_physical_custody() {
         assert!(owner.terminal_is_empty());assert_eq!(copied,expected);assert_eq!(released,original+births);
     }
     for copy in fixture["copyGrants"].as_array().unwrap() {
-        let (schema,a,r)=observe_ownership(||serde_json::from_value::<Schema>(fixture["schema"].clone()).unwrap());assert_eq!(serde_json::to_value(&schema).unwrap(),fixture["schema"]);close(schema,a-r,copy.as_u64().unwrap() as usize,fixture["expected"]["schemaOrderedKeyBytes"].as_u64().unwrap() as usize+fixture["expected"]["schemaBoxedValueTypes"].as_u64().unwrap() as usize*2*size_of::<ValueType>());
-        let (operator,a,r)=observe_ownership(||serde_json::from_value::<OperatorInfo>(fixture["operator"].clone()).unwrap());assert_eq!(serde_json::to_value(&operator).unwrap(),fixture["operator"]);close(operator,a-r,copy.as_u64().unwrap() as usize,fixture["expected"]["operatorOrderedKeyBytes"].as_u64().unwrap() as usize+fixture["expected"]["operatorBoxedValueTypes"].as_u64().unwrap() as usize*2*size_of::<ValueType>());
+        let (schema,a,r)=observe_ownership(||serde_json::from_value::<Schema>(fixture["schema"].clone()).unwrap());assert_eq!(serde_json::to_value(&schema).unwrap(),fixture["schema"]);close(schema,a-r,copy.as_u64().unwrap() as usize,fixture["expected"]["schemaBoxedValueTypes"].as_u64().unwrap() as usize*2*size_of::<ValueType>());
+        let (operator,a,r)=observe_ownership(||serde_json::from_value::<OperatorInfo>(fixture["operator"].clone()).unwrap());assert_eq!(serde_json::to_value(&operator).unwrap(),fixture["operator"]);close(operator,a-r,copy.as_u64().unwrap() as usize,fixture["expected"]["operatorBoxedValueTypes"].as_u64().unwrap() as usize*2*size_of::<ValueType>());
     }
 }
 
@@ -67,7 +67,7 @@ fn original_grant(owner:&ValueRetirement,copy:usize)->RetainedCloneGrant {
 fn reserve_external(owner:&mut ValueRetirement) {
     for _ in 0..8 {
         let bytes=owner.next_reserve_capacity_byte_demand().unwrap();if bytes==0{return;}
-        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:bytes,maximum_release_bytes:0,maximum_depth:1};
+        let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:0,maximum_capacity_bytes:bytes,maximum_release_bytes:0,maximum_depth:owner.next_reserve_depth_demand().unwrap()};
         let (progress,born,freed)=crate::testkit::observe_ownership(||owner.reserve_step(grant).unwrap());
         assert!(progress.fits(grant));assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(born,freed));
     }
@@ -272,12 +272,12 @@ fn body_dependent_birth_uses_the_same_borrowed_body_and_finite_progress() {
     fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand { copy_bytes:usize::from(self.storage.is_none()&&!self.finished), capacity_bytes:if self.storage.is_none()&&!self.finished{self.overhead.checked_add(body).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"fixture body extent overflow"))?}else{0}, release_bytes:self.storage.as_ref().map_or(0,Vec::capacity), depth:usize::from(!self.terminal_is_empty()) })}
         fn close_step(&mut self,grant:RetainedCloneGrant)->TypedStep {
             if grant.maximum_items==0 {return TypedStep::BudgetExhausted;}
-            if self.finished {return TypedStep::Complete;}
+            if self.finished {return TypedStep::Complete(0);}
             if self.storage.is_none() {
                 let bytes=self.overhead+grant.maximum_copy_bytes;
                 if grant.maximum_copy_bytes==0 || bytes>grant.maximum_capacity_bytes {return TypedStep::BudgetExhausted;}
                 let storage=Vec::with_capacity(bytes);assert_eq!(storage.capacity(),bytes);self.storage=Some(storage);
-                TypedStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:1,retained_capacity_bytes:bytes,released_bytes:0})
+                TypedStep::Progress(RetainedCloneProgress {copied_items:1,copied_bytes:1,retained_capacity_bytes:bytes,released_bytes:0},1)
             } else {
                 let bytes=self.storage.as_ref().unwrap().capacity();
                 if bytes>grant.maximum_release_bytes {return TypedStep::BudgetExhausted;}

@@ -1,5 +1,6 @@
 //! 🔁️ Mounted state step: the stepping of the mounted state through the model build, mesh, assembly and solve stages. See [`super`].
 
+use semio_s_fem_payload_turns::NumericalStep;
 use super::*;
 
 //#region 🧰️FixedArena
@@ -21,7 +22,7 @@ impl MountedState {
             }
             Ok(match self.stage {
                 MountedStage::PrepareGraph => self.stage_prepare_graph(cx)?,
-                MountedStage::Graph => match child_end(self.graph.as_mut().expect("graph stage owns graph").step(cx))? {
+                MountedStage::Graph => match child_end(self.graph.as_mut().expect("graph stage owns graph").step_plain(cx))? {
                     ChildEnd::Complete(output) => {
                         self.stage = MountedStage::PrepareDomain;
                         match output {
@@ -76,7 +77,7 @@ impl MountedState {
                     }
                     Err(error) => self.fail(error.to_string().into_bytes()),
                 },
-                MountedStage::Assembly => match child_end(self.assembly.as_mut().expect("assembly stage owns assembly").step(cx))? {
+                MountedStage::Assembly => match child_end(self.assembly.as_mut().expect("assembly stage owns assembly").step_plain(cx))? {
                     ChildEnd::Complete(output) => {
                         self.load_build = Some(MountedLoadBuild::new(self.source));
                         self.stage = MountedStage::BuildLoads;
@@ -247,7 +248,7 @@ impl MountedState {
     /// 🔩️ Runs the `mesh` stage of `step`.
     fn stage_mesh(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
         Ok({
-            match child_end(self.mesh.as_mut().expect("mesh stage owns mesh").step(cx))? {
+            match child_end(self.mesh.as_mut().expect("mesh stage owns mesh").step_plain(cx))? {
                 ChildEnd::Complete(output) => {
                     if let Some(region) = self.snapshot.as_ref().and_then(|snapshot| snapshot.regions.get(self.region_cursor)) {
                         if !self.visual.region_quality.update(&region.id, RegionVisualQuality::Final) {
@@ -367,7 +368,7 @@ impl MountedState {
     /// 🪛️ Runs the `pcg` stage of `step`.
     fn stage_pcg(&mut self, cx: &mut StepContext<'_>) -> Result<JobStep, semio_framework_job::OriginalTurnFailure> {
         Ok({
-            match child_end(self.pcg.as_mut().expect("pcg stage owns pcg").step(cx))? {
+            match child_end(self.pcg.as_mut().expect("pcg stage owns pcg").step_plain(cx))? {
                 ChildEnd::Complete(output) => {
                     if let Some(job) = self.pcg.as_ref() {
                         let (completed, total, residual, tolerance, converged) = job.visual_progress();

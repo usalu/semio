@@ -98,7 +98,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let pending=self.tools.pending_tool_lease_admission.as_mut().unwrap();
         if pending.identity!=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?)||pending.instance!=meta.instance_id||pending.keyed!=keyed{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original tool admission requires its retained receiving lane").into())}
         if !pending.returning{
-            if pending.source.is_none(){let Some(source)=cx.original_source_parent()?.admit_loan(cx)?else{return Ok(None)};*pending.source=Some(source);return Ok(None)}
+            if pending.source.is_none(){cx.original_source_parent()?.admit_loan(&mut *pending.source,cx)?;return Ok(None)}
             pending.source.as_ref().unwrap().validate_context(cx)?;
         }
         if pending.copied&&pending.verb.as_ref().is_some_and(|original|original!=verb){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original tool admission requires its retained verb").into())}

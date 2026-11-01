@@ -1,0 +1,6 @@
+[package]
+name = "semio-s-artifact-stdio-ifc4x3-add2-catalog"
+version = "0.0.0"
+edition = "2021"
+[dependencies]
+semio-s-artifact-stdio-ifc-declarations = { path = "../decl" }

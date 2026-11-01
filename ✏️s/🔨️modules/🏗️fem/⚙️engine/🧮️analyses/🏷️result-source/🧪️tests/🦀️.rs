@@ -20,5 +20,4 @@ fn result_source_identities_are_typed_canonical_and_borrowed() {
     for identity in fixture["invalid"].as_array().expect("invalid") {
         assert!(validate_result_source_identity(identity.as_str().expect("identity")).is_err());
     }
-    println!("[DEBUG] FEM result source identities preserve case/combination namespaces, Unicode and borrowed validation; raw and wrong-kind inputs refuse");
 }

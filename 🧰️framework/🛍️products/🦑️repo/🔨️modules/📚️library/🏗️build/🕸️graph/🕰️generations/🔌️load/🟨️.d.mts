@@ -26,6 +26,7 @@ export interface GenerationHostV1{
  identity():Promise<string>;
  implementationRows():Promise<readonly GenerationRowV1[]>;
  externalDependencies?():Promise<readonly string[]>;
+ preflight?():Promise<void>;
  withShared<T>(body:(store:unknown,control:unknown)=>Promise<T>):Promise<T>;
  withBuilder<T>(body:(store:unknown,control:unknown,claim?:import("../🔐️custody/🟨️.mjs").SliceClaimV1)=>Promise<T>,request?:import("../🟨️.mjs").GenerationPendingV1):Promise<T>;
  /** 🤝️ Prepares the stale projects of a pending refresh together with the commands waiting for the same graph before the exclusive build; optional, never fails the command. */

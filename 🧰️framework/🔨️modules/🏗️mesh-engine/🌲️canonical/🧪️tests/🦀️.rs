@@ -7,9 +7,10 @@ use pack::value::{DslValue,Number,RetirementDemand,retained_clone::{RetainedClon
 fn grant(demand:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes.max(4096),maximum_capacity_bytes:demand.capacity_bytes.max(4096),maximum_release_bytes:demand.release_bytes.max(4096),maximum_depth:demand.depth.max(64)}}
 
 fn canonical<T:Tree+pack::value::retirement::RetireOwned>(root:T)->Vec<u8>{
- let birth=RetainedCloneSource::<T>::owned_constructor_demand::<()>();
- let(mut source,_)=RetainedCloneSource::admit_owned(root,(),grant(RetirementDemand{copy_bytes:RetainedCloneSource::<T>::constructor_copy_bytes(),capacity_bytes:birth.capacity_bytes,depth:birth.depth,..Default::default()})).unwrap_or_else(|(error,_,_)|panic!("mesh canonical source birth: {error}"));
- let projection=source.project_owned(0,|value|value as&dyn Tree,grant(RetirementDemand{copy_bytes:source.borrow().binding_copy_bytes(),depth:1,..Default::default()})).unwrap().0;
+ let mut admission=RetainedCloneSource::admission_owned(root,());let mut admitted=None;
+ for _ in 0..1_048_576{if admission.terminal_is_empty(){break;}let g=grant(admission.next_demand().unwrap());let step=if admission.phase()=="ready"{admission.take_output(&mut admitted,g)}else{admission.advance(g)};step.result.unwrap_or_else(|error|panic!("mesh canonical source birth: {error}"));}
+ assert!(admission.terminal_is_empty());let mut source=admitted.unwrap();
+ let projection=source.project_owned(0,|value|value as&dyn Tree,grant(RetirementDemand{copy_bytes:source.borrow().binding_copy_bytes(),depth:1,..Default::default()})).result.unwrap().0;
  let(mut cursor,_)=ArtifactCanonicalJsonTreeCursor::admit(projection,grant(ArtifactCanonicalJsonTreeCursor::constructor_demand())).unwrap_or_else(|(error,_)|panic!("mesh canonical cursor admission: {error}"));
  let mut output=Vec::new();
  for turn in 0..2_000_000{
@@ -21,7 +22,7 @@ fn canonical<T:Tree+pack::value::retirement::RetireOwned>(root:T)->Vec<u8>{
  for _ in 0..100_000{
   if source.terminal_is_empty(){break;}
   let copy=source.next_close_copy_byte_demand().unwrap();
-  source.close_step(grant(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()})).unwrap();
+  source.close_step(grant(RetirementDemand{copy_bytes:copy,capacity_bytes:source.next_close_capacity_byte_demand(copy).unwrap(),release_bytes:source.next_close_release_byte_demand().unwrap(),depth:source.next_close_depth_demand().unwrap()})).result.unwrap();
  }
  assert!(source.terminal_is_empty());
  output

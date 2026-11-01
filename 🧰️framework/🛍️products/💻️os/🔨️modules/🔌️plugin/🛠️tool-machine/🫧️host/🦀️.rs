@@ -7,6 +7,9 @@ use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalCallerSource
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,SharedUtf8};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::mem::size_of;
+fn built<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce()->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|_|semio_framework_value::RetainedWorkOutcome{result:construct(),work:1})}
+fn built_with<O>(cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<O>,demand:semio_framework_job::OriginalConstructionDemand,construct:impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>)->Result<(O,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>)->Result<bool,semio_framework_job::OriginalTurnFailure>{semio_framework_job::admit_original_construction(cx,output,demand,|control|semio_framework_value::RetainedWorkOutcome{result:construct(control),work:1})}
+fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 #[derive(semio_framework_value::RetireOwned)]
 struct HostOwners<M>{tag:Option<ToolTag>,key:Option<SharedUtf8>,text:Vec<u8>,tool:Option<String>,request:Option<OriginalScrubRequest<M>>,result:Option<ToolStep<M>>}
 pub struct OriginalScrubHost<M:RetireOwned+Send+Sync+'static>{binding:Option<OriginalSourceBinding>,decoder:(u64,u64),caller:Option<OriginalCallerSourceLoan>,writer:Option<Box<OriginalScrubWrite<M>>>,owners:ControlledRetirement<HostOwners<M>>,published:bool,closing:bool,forced_reason:Option<semio_framework_tool_machine::ToolAbortReason>}
@@ -25,14 +28,14 @@ impl<M:RetireOwned+Send+Sync+'static> OriginalScrubHost<M>{
   if !matches!(input,Some(ToolTag::Scrub(_)))||reason.is_none()&&!matches!(input,Some(ToolTag::Scrub(ScrubTag{phase:semio_framework_tool_machine::ScrubPhase::Abort{..},..}))){return Err(fault().into())}
   let d=Self::abort_admission_demands();
   let binding=OriginalSourceBinding::borrow(cx);
-  semio_framework_job::admit_original_construction(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|control|{let decoder=(control.ledger_identity(),control.retirement_recipient_identity().ok_or_else(fault)?);let mut owner=Self::birth(input.take(),None,binding,decoder);owner.forced_reason=reason;Ok((Box::new(owner),receipt(d)))})
+  built_with(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|control|{let decoder=(control.ledger_identity(),control.retirement_recipient_identity().ok_or_else(fault)?);let mut owner=Self::birth(input.take(),None,binding,decoder);owner.forced_reason=reason;Ok((Box::new(owner),receipt(d)))})
 
  }
  pub fn admit_retire(window:&SharedUtf8,output:&mut Option<Box<Self>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   let _=cx.original_source_parent()?;if !<HostOwners<M> as RetireOwned>::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original scrub host payload requires controlled retirement").into())}if output.is_some(){return Err(fault().into())}
   let d=Self::retire_admission_demands();
   let binding=OriginalSourceBinding::borrow(cx);
-  semio_framework_job::admit_original_construction(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|control|{let decoder=(control.ledger_identity(),control.retirement_recipient_identity().ok_or_else(fault)?);Ok((Box::new(Self::birth(None,Some(window.clone()),binding,decoder)),receipt(d)))})
+  built_with(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|control|{let decoder=(control.ledger_identity(),control.retirement_recipient_identity().ok_or_else(fault)?);Ok((Box::new(Self::birth(None,Some(window.clone()),binding,decoder)),receipt(d)))})
 
  }
  fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if !self.binding.is_some_and(|binding|binding.matches(cx)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original scrub host requires its original source").into())}if cx.native_receiving_identity()!=Some(self.decoder){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original scrub host requires its receiving decoder").into())}Ok(())}
@@ -46,7 +49,7 @@ impl<M:RetireOwned+Send+Sync+'static> OriginalScrubHost<M>{
  pub fn advance(&mut self,ledger:&mut semio_framework_tool_machine::ScrubLedger<M>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   self.validate(cx)?;if self.closing||cx.is_cancelled(){return self.close_step(ledger,cx)}
   if self.published{return self.close_step(ledger,cx)}
-  if self.caller.is_none(){self.caller=cx.original_source_parent()?.admit_loan(cx)?;return Ok(false)}
+  if self.caller.is_none(){cx.original_source_parent()?.admit_loan(&mut self.caller,cx)?;return Ok(false)}
   self.caller.as_ref().unwrap().validate_context(cx)?;
   let owners=self.owners.original_mut().ok_or_else(fault)?;
   if owners.request.is_none()&&self.writer.is_none(){
@@ -69,10 +72,10 @@ impl<M:RetireOwned+Send+Sync+'static> OriginalScrubHost<M>{
  }
  pub fn close_step(&mut self,ledger:&mut semio_framework_tool_machine::ScrubLedger<M>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.terminal_is_empty(){return Ok(true)}self.validate(cx)?;
-  if let Some(writer)=self.writer.as_mut(){if writer.terminal_is_empty(){let d=writer.shell_close_demands();semio_framework_job::close_original_retained_step(cx,d,|_|{self.writer.take();Ok(semio_framework_value::RetainedCloneStep::Progress(receipt(d)))})?;}else{cx.with_original_retirement(|cx|writer.close_step(ledger,cx))?;}return Ok(false)}
-  if !self.owners.terminal_is_empty(){let d=self.owners.next_demand(cx.retained_grant().maximum_copy_bytes)?;semio_framework_job::close_original_retained_step(cx,d,|grant|self.owners.step(grant))?;return Ok(false)}
+  if let Some(writer)=self.writer.as_mut(){if writer.terminal_is_empty(){let d=writer.shell_close_demands();retired(cx,d,|_|{self.writer.take();Ok(semio_framework_value::RetainedCloneStep::Progress(receipt(d)))})?;}else{cx.with_original_retirement(|cx|writer.close_step(ledger,cx))?;}return Ok(false)}
+  if !self.owners.terminal_is_empty(){let d=self.owners.next_demand(cx.retained_grant().maximum_copy_bytes)?;retired(cx,d,|grant|self.owners.step(grant))?;return Ok(false)}
   if let Some(caller)=self.caller.as_mut(){caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.caller.take();}return Ok(false)}
-  let d=moved(size_of::<Option<OriginalSourceBinding>>()+size_of::<bool>());semio_framework_job::close_original_retained_step(cx,d,|_|{self.binding=None;self.closing=true;Ok(semio_framework_value::RetainedCloneStep::Complete(receipt(d)))})?;Ok(self.terminal_is_empty())
+  let d=moved(size_of::<Option<OriginalSourceBinding>>()+size_of::<bool>());retired(cx,d,|_|{self.binding=None;self.closing=true;Ok(semio_framework_value::RetainedCloneStep::Complete(receipt(d)))})?;Ok(self.terminal_is_empty())
  }
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.writer.is_none()&&self.caller.is_none()&&self.owners.terminal_is_empty()}
  pub fn shell_close_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Box<Self>>>(),release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
@@ -85,7 +88,7 @@ impl<M:RetireOwned+Send+Sync+'static> OriginalScrubDispatch<M>{
  pub fn admit(ledger:&semio_framework_tool_machine::ScrubLedger<M>,view:Option<&semio_framework::ViewModel>,frozen:bool,output:&mut Option<Box<Self>>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   let _=cx.original_source_parent()?;if output.is_some(){return Err(fault().into())}
   let d=RetirementDemand{copy_bytes:2*size_of::<Self>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()};let binding=OriginalSourceBinding::borrow(cx);let address=ledger as*const _ as usize;let revision=ledger.source_revision();let view=view.map(|view|(view.window_instances.as_ptr()as usize,view.window_instances.len()));
-  semio_framework_job::admit_original_construction(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|control|{let decoder=(control.ledger_identity(),control.retirement_recipient_identity().ok_or_else(fault)?);Ok((Box::new(Self{binding:Some(binding),ledger:address,decoder,view,revision,index:0,roster:0,offset:0,phase:0,frozen,host:None}),receipt(d)))})
+  built_with(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|control|{let decoder=(control.ledger_identity(),control.retirement_recipient_identity().ok_or_else(fault)?);Ok((Box::new(Self{binding:Some(binding),ledger:address,decoder,view,revision,index:0,roster:0,offset:0,phase:0,frozen,host:None}),receipt(d)))})
 
  }
  fn validate(&self,cx:&StepContext<'_>)->Result<(),OriginalTurnFailure>{if !self.binding.is_some_and(|binding|binding.matches(cx)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original scrub dispatch requires its original source").into())}if cx.native_receiving_identity()!=Some(self.decoder){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original scrub dispatch requires its receiving decoder").into())}Ok(())}
@@ -94,7 +97,7 @@ impl<M:RetireOwned+Send+Sync+'static> OriginalScrubDispatch<M>{
   self.validate(cx)?;if self.ledger!=ledger as*const _ as usize{return Err(fault().into())}if self.view!=view.map(|view|(view.window_instances.as_ptr()as usize,view.window_instances.len())){return Err(fault().into())}
   if cx.is_cancelled(){self.close_step(ledger,cx)?;return Ok(false)}
   if let Some(host)=self.host.as_mut(){
-   if host.terminal_is_empty(){let d=OriginalScrubHost::<M>::shell_close_demands();let extra=moved(size_of::<u64>()+size_of::<u8>()+2*size_of::<usize>());let d=RetirementDemand{copy_bytes:d.copy_bytes+extra.copy_bytes,..d};semio_framework_job::close_original_retained_step(cx,d,|_|{self.host.take();self.revision=ledger.source_revision();self.roster=0;self.offset=0;if self.phase==2{self.phase=3}Ok(semio_framework_value::RetainedCloneStep::Progress(receipt(d)))})?;return Ok(false)}
+   if host.terminal_is_empty(){let d=OriginalScrubHost::<M>::shell_close_demands();let extra=moved(size_of::<u64>()+size_of::<u8>()+2*size_of::<usize>());let d=RetirementDemand{copy_bytes:d.copy_bytes+extra.copy_bytes,..d};retired(cx,d,|_|{self.host.take();self.revision=ledger.source_revision();self.roster=0;self.offset=0;if self.phase==2{self.phase=3}Ok(semio_framework_value::RetainedCloneStep::Progress(receipt(d)))})?;return Ok(false)}
    host.advance(ledger,cx)?;return Ok(false)
   }
   let d=moved(64+4*size_of::<usize>()+size_of::<u64>()+size_of::<u8>()+size_of::<Option<bool>>());if !funded(cx,d){return Ok(false)}
@@ -119,8 +122,8 @@ impl<M:RetireOwned+Send+Sync+'static> OriginalScrubDispatch<M>{
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if let Some(host)=self.host.as_ref(){if !host.terminal_is_empty(){return host.close_demands(body)}return Ok(OriginalScrubHost::<M>::shell_close_demands())}Ok(moved(size_of::<Option<OriginalSourceBinding>>()))}
  pub fn close_step(&mut self,ledger:&mut semio_framework_tool_machine::ScrubLedger<M>,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
   if self.terminal_is_empty(){return Ok(true)}self.validate(cx)?;if self.ledger!=ledger as*const _ as usize{return Err(fault().into())}
-  if let Some(host)=self.host.as_mut(){if !host.terminal_is_empty(){cx.with_original_retirement(|cx|host.close_step(ledger,cx))?;return Ok(false)}let d=OriginalScrubHost::<M>::shell_close_demands();semio_framework_job::close_original_retained_step(cx,d,|_|{self.host.take();Ok(semio_framework_value::RetainedCloneStep::Progress(receipt(d)))})?;return Ok(false)}
-  let d=moved(size_of::<Option<OriginalSourceBinding>>());semio_framework_job::close_original_retained_step(cx,d,|_|{self.binding=None;Ok(semio_framework_value::RetainedCloneStep::Complete(receipt(d)))})?;Ok(self.terminal_is_empty())
+  if let Some(host)=self.host.as_mut(){if !host.terminal_is_empty(){cx.with_original_retirement(|cx|host.close_step(ledger,cx))?;return Ok(false)}let d=OriginalScrubHost::<M>::shell_close_demands();retired(cx,d,|_|{self.host.take();Ok(semio_framework_value::RetainedCloneStep::Progress(receipt(d)))})?;return Ok(false)}
+  let d=moved(size_of::<Option<OriginalSourceBinding>>());retired(cx,d,|_|{self.binding=None;Ok(semio_framework_value::RetainedCloneStep::Complete(receipt(d)))})?;Ok(self.terminal_is_empty())
  }
  pub fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.host.is_none()}
  pub fn shell_close_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Option<Box<Self>>>(),release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
@@ -136,11 +139,11 @@ pub fn admit_original_tagged<P,M:RetireOwned+Send+'static,C,CM,R>(machines:&mut 
   if machines.operations.len()>=limit{return Ok(false)}
   if machines.operations.capacity()<limit{
    let old=machines.operations.capacity()*size_of::<(u64,ToolTag)>();let capacity=limit*size_of::<(u64,ToolTag)>();let d=RetirementDemand{copy_bytes:old+2*size_of::<Vec<(u64,ToolTag)>>(),capacity_bytes:capacity,release_bytes:old,depth:1};let mut done=None;
-   semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|_|{machines.operations.try_reserve_exact(limit-machines.operations.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original tool tag registry allocation refused"))?;Ok(((),RetainedCloneProgress{retained_capacity_bytes:machines.operations.capacity()*size_of::<(u64,ToolTag)>(),..receipt(d)}))})?;return Ok(false)
+   built(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},||{machines.operations.try_reserve_exact(limit-machines.operations.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original tool tag registry allocation refused"))?;Ok(((),RetainedCloneProgress{retained_capacity_bytes:machines.operations.capacity()*size_of::<(u64,ToolTag)>(),..receipt(d)}))})?;return Ok(false)
   }
   demand.copy_bytes=demand.copy_bytes.checked_add(2*size_of::<Option<ToolTag>>()+size_of::<(u64,ToolTag)>()).ok_or_else(fault)?;
  }
- semio_framework_job::admit_original_construction(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},|_|{let receiver=build();if let Some(tag)=tag.take(){machines.operations.push((operation,tag));}Ok((receiver,receipt(demand)))})
+ built(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:demand.release_bytes,depth:demand.depth},||{let receiver=build();if let Some(tag)=tag.take(){machines.operations.push((operation,tag));}Ok((receiver,receipt(demand)))})
 }
 
 #[cfg(test)]

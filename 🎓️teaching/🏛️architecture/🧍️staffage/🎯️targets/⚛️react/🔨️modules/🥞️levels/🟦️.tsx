@@ -11,7 +11,7 @@ import { createContext, useCallback, useContext, useEffect, useLayoutEffect, use
 import { LayeredOverview, useMediaQuery, UI_MOBILE_MEDIA_QUERY, UI_TABLET_MEDIA_QUERY, type IconName, type LayeredCardState, type LayeredCell, type LayeredMode, type LayeredPane } from "@semio-tech/ui-react/chrome";
 import { useArchive } from "../🧭️context/🟦️.tsx";
 
-/** 👁️ How a page behind a card is shown: opened full size, or revealed clear while its card is hovered or focused (else blurred behind the glass, inert). */
+/** 👁️ How a page behind a card is shown: opened full size, or revealed clear while its card's explore control is pressed (else blurred behind the glass, inert; hover and focus only center the level). */
 export type PaneView = { readonly opened: boolean; readonly revealed: boolean };
 
 /** 📄️ A page of a level. */

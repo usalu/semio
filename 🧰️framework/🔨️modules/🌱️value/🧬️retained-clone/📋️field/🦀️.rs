@@ -34,7 +34,7 @@ impl<T: RetainedClone> RetainedCloneCursor<T> for RetainedFieldCursor<T> {
      if !self.output_ready(){return RetainedWorkOutcome{result:Ok(None),work:0}}
      let d=match self.take_demand(){Ok(d)=>d,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
      if !retained_clone_grant_admits(grant,d){return RetainedWorkOutcome{result:Ok(None),work:0}}
-     self.child.as_mut().unwrap().take(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})
+     match self.child.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("child absent").into()),work:0}}.take(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})
     }
     fn begin_close(&mut self) -> bool { if self.closing { return false; } self.closing = true; true }
     fn close_started(&self)->bool{self.closing}

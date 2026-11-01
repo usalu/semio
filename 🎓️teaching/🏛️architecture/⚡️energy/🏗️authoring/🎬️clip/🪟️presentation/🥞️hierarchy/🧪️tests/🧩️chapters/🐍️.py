@@ -97,7 +97,7 @@ class RecursiveChapterPacketContract(unittest.TestCase):
         renderer = importlib.import_module(PACKAGE + ".🥞️hierarchy.🖌️render.🐍️")
         hierarchy = importlib.import_module(PACKAGE + ".🥞️hierarchy.🐍️")
         catalog = hierarchy.hierarchy_contract()
-        self.assertEqual(set(renderer.initial_hierarchy()), {"opened_path", "revealed_path", "camera"})
+        self.assertEqual(set(renderer.initial_hierarchy()), {"opened_path", "revealed_path", "pressed", "camera"})
         for index, chapter in enumerate(hierarchy.ordered_chapters()):
             scene = chapter["id"]
             branch = hierarchy.path(scene)
@@ -170,7 +170,7 @@ class RecursiveChapterBrowserContract(unittest.TestCase):
             self.assertEqual(len(result["metadata"]), 5)
             for depth, actual in enumerate(result["metadata"]):
                 with self.subTest(language=language, depth=depth):
-                    self.assertEqual(actual["hierarchy"], {"opened_path": full[:depth], "revealed_path": []})
+                    self.assertEqual(actual["hierarchy"], {"opened_path": full[:depth], "revealed_path": [], "pressed": False})
                     if depth < 4:
                         level = "root" if depth == 0 else full[depth - 1]
                         layer = next(layer for layer in actual["layers"] if layer["id"] == level)
@@ -182,7 +182,6 @@ class RecursiveChapterBrowserContract(unittest.TestCase):
                         self.assertEqual(leaf["title_text"].strip(), hierarchy.chapter(selected)["title"][language])
                         self.assertTrue(leaf["control_in_title_chip"])
                     self.assertEqual(len(actual["footer_ancestors"]), depth)
-        print("[DEBUG] Actual chapter DOM evidence", work, flush=True)
 
 
     def test_actual_choreography_has_exact_adjacent_lca_pixels_and_content_only_endpoint(self):
@@ -223,7 +222,6 @@ class RecursiveChapterBrowserContract(unittest.TestCase):
                                "snapshot": body, "output": target}], settings)
         actual = np.asarray(Image.open(target).convert("RGB"), dtype=np.int16)
         self.assertLessEqual(int(np.abs(actual - color).max()), 1)
-        print("[DEBUG] Actual chapter join evidence", work, flush=True)
 
 
     def capture_uncached_browser_process_endpoint_pixels(self):
@@ -267,7 +265,6 @@ class RecursiveChapterBrowserContract(unittest.TestCase):
             with self.subTest(level=case["level"]):
                 np.testing.assert_array_equal(np.asarray(Image.open(work / "0" / (str(index) + ".png"))),
                                               np.asarray(Image.open(work / "1" / (str(index) + ".png"))))
-        print("[DEBUG] Independent-process chapter endpoint evidence", work, flush=True)
 
     def test_public_boundary_producer_and_consumer_processes_share_exact_pixels(self):
         """🪟 Prove four actual ancestor assets survive fresh Python and browser processes."""
@@ -296,7 +293,6 @@ class RecursiveChapterBrowserContract(unittest.TestCase):
             self.assertEqual(first["sha256"], second["sha256"])
             self.assertEqual(Path(first["path"]).read_bytes(), Path(second["path"]).read_bytes())
             np.testing.assert_array_equal(np.asarray(Image.open(first["path"])), np.asarray(Image.open(second["path"])))
-        print("[DEBUG] Public cross-process boundary evidence", work, flush=True)
 
 
 class ChapterMediaPortContract(unittest.TestCase):
@@ -451,7 +447,6 @@ class ChapterMediaPortContract(unittest.TestCase):
         for index, frame in enumerate(pixels[-case["restore_frames"]:]):
             expected = original[-1] if index == 0 else case["restore_color"]
             self.assertLessEqual(int(np.abs(frame.astype(np.int16) - expected).max()), 2)
-        print("[DEBUG] Finite native encoder evidence", work, flush=True)
 
 
 def load_tests(loader, tests, pattern):

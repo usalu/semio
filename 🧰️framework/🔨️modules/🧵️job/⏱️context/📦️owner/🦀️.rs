@@ -22,7 +22,7 @@ impl StepContextOwner {
     pub fn context<'a>(&self, budget: StepBudget, cancel: CancelToken, now_us: fn() -> Option<u64>, preview_sequence: &'a mut u64,retained_progress:&'a mut RetainedCloneProgress) -> Option<StepContext<'a>> {
         if self.closing { return None; }
         let ledger = self.ledger.as_ref()?;
-        Some(StepContext::with_payload_ledger(ledger.operation, ledger.generation, budget, cancel, now_us, ClockStride::new(), preview_sequence, Arc::clone(ledger),retained_progress))
+        Some(StepContext::with_payload_ledger(budget, cancel, now_us, ClockStride::new(), preview_sequence, Arc::clone(ledger),retained_progress))
     }
 
     pub fn next_close_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(0)}

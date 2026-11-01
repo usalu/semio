@@ -375,6 +375,9 @@ semio_framework_ui_locale::app_labels! {
         input_list_up: native_en "Move item up", native_de "Eintrag nach oben", reuse_en "Move item up", reuse_de "Eintrag nach oben";
         input_list_down: native_en "Move item down", native_de "Eintrag nach unten", reuse_en "Move item down", reuse_de "Eintrag nach unten";
         input_text_too_long: native_en "Edit large text in the graph source", native_de "Langen Text im Quellknoten bearbeiten", reuse_en "Edit large text in the graph source", reuse_de "Langen Text im Quellknoten bearbeiten";
+        form_no_inputs: native_en "No input widgets to generate from.", native_de "Keine Eingabeelemente zum Generieren vorhanden.", reuse_en "No input widgets to generate from.", reuse_de "Keine Eingabeelemente zum Generieren vorhanden.";
+        form_field: native_en "Field", native_de "Feld", reuse_en "Field", reuse_de "Feld";
+        form_no_image: native_en "(no image)", native_de "(kein Bild)", reuse_en "(no image)", reuse_de "(kein Bild)";
         generate_hint: native_en "Add a generation to edit input values.", native_de "Erstelle eine Generation, um Eingabewerte zu bearbeiten.", reuse_en "Add a generation to edit input values.", reuse_de "Erstelle eine Generation, um Eingabewerte zu bearbeiten.";
         preview_hint: native_en "(evaluate a generation to preview output)", native_de "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)", reuse_en "(evaluate a generation to preview output)", reuse_de "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)";
         window_flow: native_en "Flow", native_de "Workflow", reuse_en "Flow", reuse_de "Workflow";

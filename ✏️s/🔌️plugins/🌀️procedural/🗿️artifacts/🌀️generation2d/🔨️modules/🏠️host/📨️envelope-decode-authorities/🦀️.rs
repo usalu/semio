@@ -172,7 +172,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             self.state = Generation2dPackSnapshotState::Closing;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation2d-envelope.snapshot-retirement-fault", error))?;
+        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).result.map_err(|error| diagnostic("generation2d-envelope.snapshot-retirement-fault", error))?;
         if self.retirement.is_none() {
             self.state = Generation2dPackSnapshotState::Complete;
             return Ok(RetainedCloneStep::Complete(step.progress()));
@@ -372,7 +372,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
             self.state = Generation2dMutationDecodeState::Closing;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation2d-envelope.mutation-retirement-fault", error))?;
+        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).result.map_err(|error| diagnostic("generation2d-envelope.mutation-retirement-fault", error))?;
         if self.retirement.is_none() {
             self.state = Generation2dMutationDecodeState::Complete;
             return Ok(RetainedCloneStep::Complete(step.progress()));

@@ -219,6 +219,21 @@
       "source": "struct P{a:u8} struct Q{a:u8} fn f(p:P)->u8{ match p { #[cfg(test)] P{a} | P{a:_} => 1, _ => 2 } }",
       "expected": "struct P{a:u8} struct Q{a:u8} fn f(p:P)->u8{ match p { _ => 2 } }",
       "oracle": true
+    },
+    {
+      "name": "production drops test functions",
+      "cfg": [],
+      "source": "pub fn production() {} #[test] fn proves() { let _ = include_str!(\"fixture.json\"); }",
+      "expected": "pub fn production() {}",
+      "oracle": true
+    },
+    {
+      "name": "test configuration keeps test functions",
+      "cfg": [
+        "test"
+      ],
+      "source": "pub fn production() {} #[test] fn proves() {}",
+      "expected": "pub fn production() {} #[test] fn proves() {}"
     }
   ],
   "closures": [

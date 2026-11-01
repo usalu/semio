@@ -4,7 +4,7 @@ use crate::store::{PackDecodeOptions,PackEncodeOptions,PackError,pack_rt,semio_f
 use semio_framework_diagnostic::{Limits,TextError,TextSpan};
 use semio_framework_dsl_record::{BorrowedRecordSpecProducer,FieldSpec,FieldValue,JoinMode,ParseOptions,RecordLayout,RecordSpec,RecordValue,Shape,SourceMode};
 use semio_framework_value::{DslValue,ToValue,ValueError,ValueRefusalKind};
-use semio_framework_value_native_owned::blocking::receive_blocking;
+use semio_s_artifact_energy_model_snapshot_bridge::{receive_stepped,retire_stepped};
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
 
 /// 📄️ The owned image of the intrinsic Record: the canonical document value under its authored field id.
@@ -18,7 +18,7 @@ impl EnergyModelDocument{
  fn record(snapshot:&EnergyModelSnapshot)->RecordValue{RecordValue{fields:[(Self::FIELD,FieldValue::Value(snapshot.to_value()))].into_iter().collect()}}
  fn receive(record:&RecordValue)->Result<EnergyModelSnapshot,ValueError>{
   match record.fields.get(&Self::FIELD){
-   Some(FieldValue::Value(document))=>receive_blocking(document.clone()),
+   Some(FieldValue::Value(document))=>receive_stepped(document.clone()),
    _=>Err(ValueError::literal(ValueRefusalKind::InvalidValue,"the energy-model record lacks its document value")),
   }
  }
@@ -32,7 +32,7 @@ impl EnergyModelSnapshot{
   DslValue::object([("schema".to_string(),DslValue::String(crate::ENERGY_MODEL_DOCUMENT_SCHEMA.to_string())),("model".to_string(),model.to_value()),("referencedModel".to_string(),DslValue::Null),("weatherLink".to_string(),DslValue::Null)])
  }
  /// 🛬️ Receives one canonical document value into the native persistent owner.
- pub fn from_document(document:DslValue)->Result<Self,ValueError>{receive_blocking(document)}
+ pub fn from_document(document:DslValue)->Result<Self,ValueError>{receive_stepped(document)}
  /// 🏗️ Receives one engine model into the native persistent owner through its canonical document value.
  pub fn from_model(model:&crate::model::Model)->Result<Self,ValueError>{Self::from_document(Self::document_value(model))}
 }
@@ -43,10 +43,13 @@ impl Default for EnergyModelSnapshot{
 }
 
 impl semio_framework_value::FromValue for EnergyModelSnapshot{
- fn from_value(value:DslValue)->Result<Self,ValueError>{receive_blocking(value)}
+ fn from_value(value:DslValue)->Result<Self,ValueError>{receive_stepped(value)}
+ fn retire_decoded(self){let _=retire_stepped(self);}
 }
 
 impl EnergyModelSnapshot{
+ /// ♻️ Retires this native owner in bounded paid steps.
+ pub fn retire(self)->Result<(),ValueError>{retire_stepped(self)}
  /// ❄️ Projects the persistent owner to the plain explicit reference rows through its canonical wire value.
  pub fn to_reference(&self)->Result<crate::reference::EnergyModelSnapshot,ValueError>{
   let model=<crate::model::Model as semio_framework_value::FromValue>::from_value(self.model.to_value())?;

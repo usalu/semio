@@ -72,7 +72,7 @@ impl ReservedJobOutcomes {
     /// ♻️ Retires the previous publication one paid turn at a time inside the wallet of a running step.
     pub fn retire(&mut self, cx: &mut StepContext<'_>) -> Result<(), ValueError> {
         if !self.publication.terminal_is_empty() {
-            let step = self.publication.close_step(cx.retained_grant());
+            let step = self.publication.close_step(cx.retained_grant()).result;
             receive_step(cx, step)?;
         }
         if self.publication.terminal_is_empty() {
@@ -82,22 +82,22 @@ impl ReservedJobOutcomes {
     }
 
     /// ✍️ Advances one paid frontier of the pending outcome and lends it once its original pages are sealed.
-    pub fn advance<'a>(&'a mut self, kind: ReservedOutcomeKind, source: &[u8], cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, ValueError> {
+    pub fn advance<'a>(&'a mut self, kind: ReservedOutcomeKind, source: &[u8], cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         let publication_kind = match kind {
             ReservedOutcomeKind::Preview => JobPublicationKind::Preview,
             ReservedOutcomeKind::Checkpoint { applied_progress } => JobPublicationKind::Checkpoint { applied_progress },
             ReservedOutcomeKind::Fault => JobPublicationKind::Fault,
             ReservedOutcomeKind::Commit => {
                 if !self.commit.is_initialized() {
-                    self.commit.advance_initialization(cx)?;
+                    self.commit.advance_initialization(cx).result?;
                     return Ok(None);
                 }
                 if self.commit_cursor < source.len() {
-                    self.commit.append_original(cx, source, &mut self.commit_cursor)?;
+                    self.commit.append_original(cx, source, &mut self.commit_cursor).result?;
                     return Ok(None);
                 }
                 if self.commit.published().is_none() {
-                    self.commit.seal(cx)?;
+                    self.commit.seal(cx).result?;
                     return Ok(None);
                 }
                 let original = JobOutcomeBorrow::admit_complete(cx, None, self.commit.published())?;
@@ -134,10 +134,10 @@ impl ReservedJobOutcomes {
     /// ♻️ Closes the publication before the commit pages, never both in one turn.
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.publication.terminal_is_empty() {
-            return self.publication.close_step(grant);
+            return self.publication.close_step(grant).result;
         }
         if !self.commit.terminal_is_empty() {
-            let step = self.commit.close_step_granted(grant)?;
+            let step = self.commit.close_step_granted(grant).result?;
             if self.commit.terminal_is_empty() {
                 self.commit_cursor = 0;
                 self.delivered = false;

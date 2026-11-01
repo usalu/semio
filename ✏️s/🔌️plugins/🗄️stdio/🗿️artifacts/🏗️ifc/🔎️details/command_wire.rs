@@ -55,14 +55,17 @@ impl CommandWire{
   if self.error.is_some(){return self.retirement.next_owner_demands::<JsonError>(true,&None,4096);}
   Ok(RetirementDemand{copy_bytes:size_of::<Option<(usize,usize)>>(),depth:1,..Default::default()})
  }
- pub fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  if !self.closing{return Err(invalid("IFC original command close not started"));}if !semio_framework_value::retained_clone::retained_clone_grant_admits(g,self.close_demands()?){return Ok(RetainedCloneStep::Progress(Default::default()));}
+ pub fn close_step(&mut self,g:RetainedCloneGrant)->RetainedWorkOutcome{
+  if !self.closing{return refused(invalid("IFC original command close not started"));}
+  let demand=match self.close_demands(){Ok(demand)=>demand,Err(error)=>return refused(error)};
+  if !semio_framework_value::retained_clone::retained_clone_grant_admits(g,demand){return idle_step(RetainedCloneStep::Progress(Default::default()));}
   if !self.retirement.is_empty(){return self.retirement.step_granted(g);}
-  if let Some(step)=self.retirement.begin_granted(&mut self.output,g)?{return Ok(step);}
-  for value in &mut self.fields{if let Some(step)=self.retirement.begin_granted(value,g)?{return Ok(step);}}
-  for value in [&mut self.body,&mut self.inner,&mut self.root]{if let Some(step)=self.retirement.begin_granted(value,g)?{return Ok(step);}}
-  if let Some(step)=self.retirement.begin_granted(&mut self.parser,g)?{return Ok(step);}if let Some(step)=self.retirement.begin_granted(&mut self.error,g)?{return Ok(step);}
-  self.source=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<(usize,usize)>>(),..Default::default()}))
+  if let Some(turn)=begun(self.retirement.begin_granted(&mut self.output,g)){return turn;}
+  for value in &mut self.fields{if let Some(turn)=begun(self.retirement.begin_granted(value,g)){return turn;}}
+  for value in [&mut self.body,&mut self.inner,&mut self.root]{if let Some(turn)=begun(self.retirement.begin_granted(value,g)){return turn;}}
+  if let Some(turn)=begun(self.retirement.begin_granted(&mut self.parser,g)){return turn;}
+  if let Some(turn)=begun(self.retirement.begin_granted(&mut self.error,g)){return turn;}
+  self.source=None;RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<(usize,usize)>>(),..Default::default()})),work:1}
  }
 }
 #[cfg(test)]#[path="command_tests.rs"]mod tests;

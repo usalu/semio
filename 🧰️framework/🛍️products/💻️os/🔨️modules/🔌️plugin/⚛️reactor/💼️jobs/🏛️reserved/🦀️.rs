@@ -125,7 +125,7 @@ impl FrameworkReservedBoundedJob{
    },
    1=>{
     let length=self.source.as_ref().unwrap().0.len()-self.prefix;
-    let result=semio_framework_job::admit_original_construction(cx,&mut self.output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:length,release_bytes:0,depth:1},|_|{let mut output=Vec::new();output.try_reserve_exact(length).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original reserved job output allocation refused"))?;let capacity=output.capacity();Ok((output,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()}))});
+    let result=semio_framework_job::admit_original_construction(cx,&mut self.output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:0,capacity_bytes:length,release_bytes:0,depth:1},|_|semio_framework_value::RetainedWorkOutcome{work:1,result:(||{let mut output=Vec::new();output.try_reserve_exact(length).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original reserved job output allocation refused"))?;let capacity=output.capacity();Ok((output,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()}))})()});
     if self.output.is_some(){self.phase=2;}result?;Ok(JobStep::Running(None))
    },
    2=>{

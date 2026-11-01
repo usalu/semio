@@ -18,8 +18,8 @@ fn encode(source: &AllocationRecord, encoding: SnapshotEncoding, control: &mut S
 fn decode(payload: &IoPayload, control: &mut SqliteSnapshotControl<'_>,snapshot_decoding_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>) -> Result<AllocationRecord, ValueError> {
     decode_at_binding(payload,control,&Cell::new(false),snapshot_decoding_owner)
 }
-fn drain_decode(owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>){let grant=owner.grant();while owner.native().has_retirement_owner(){owner.native().close_retirement_recipient(grant).unwrap();}}
-fn drain_encode(owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>){let grant=owner.grant();while owner.native().has_retirement_owner(){owner.native().close_retirement_recipient(grant).unwrap();}}
+fn drain_decode(owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>){let grant=owner.grant();while owner.native().has_retirement_owner(){owner.native().close_retirement_recipient(grant).result.unwrap();}}
+fn drain_encode(owner:&mut store::NativeSnapshotEncodeOwner<'_,'_>){let grant=owner.grant();while owner.native().has_retirement_owner(){owner.native().close_retirement_recipient(grant).result.unwrap();}}
 fn drain_phase(phase:SqliteSnapshotPhase,decoding:&mut store::NativeSnapshotDecodeOwner<'_,'_>,encoding:&mut store::NativeSnapshotEncodeOwner<'_,'_>){match phase{SqliteSnapshotPhase::DecodeNative=>drain_decode(decoding),_=>drain_encode(encoding)}}
 fn decode_at_binding(payload:&IoPayload,control:&mut SqliteSnapshotControl<'_>,binding:&Cell<bool>,snapshot_decoding_owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<AllocationRecord,ValueError>{
     store::decode_sqlite_snapshot_record_native(payload, fixture()["envelopeId"].as_str().unwrap(), AllocationRecord::__dsl_spec_producer(), |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {binding.set(true);let result=AllocationRecord::__dsl_from_record_controlled(record,native);binding.set(false);result})(); *snapshot_output = Some(constructed?); Ok(()) }, control,snapshot_decoding_owner)
@@ -45,7 +45,7 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
         assert_eq!(encode(&source, encoding, &mut control,&mut snapshot_encoding_owner).unwrap(), output, "native backing is independent of semantic SQL payload");
     }
 
-drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).result.unwrap();}
 }
 
 #[test]
@@ -68,8 +68,8 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
         assert_eq!(decode(&payload, &mut control,&mut snapshot_decoding_owner).unwrap().literal, source.literal);
     }
 
-drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
-drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).result.unwrap();}
+drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).result.unwrap();}
 
 }
 
@@ -101,8 +101,8 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
         }
     }
 
-drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
-drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).result.unwrap();}
+drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).result.unwrap();}
 }
 
 #[test]
@@ -131,7 +131,7 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
         }
     }
 
-drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).result.unwrap();}
 
-drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).result.unwrap();}
 }

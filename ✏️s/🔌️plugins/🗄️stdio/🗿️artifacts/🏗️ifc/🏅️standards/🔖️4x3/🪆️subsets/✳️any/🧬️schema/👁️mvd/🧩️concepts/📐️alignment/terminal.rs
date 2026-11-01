@@ -2,8 +2,8 @@
 use super::alignment_roles::*;
 use super::native::*;
 use super::concept_types::{IfcConceptDiagnostic, IfcConceptLabel, IfcConceptSource};
-use crate::catalog::query::{Ifc4x3AttributeMetadata, IfcAttributeQueryStatus, IfcAttributeQueryWork};
-use crate::validation::metadata;
+use semio_s_artifact_stdio_ifc4x3_schema::query::{Ifc4x3AttributeMetadata, IfcAttributeQueryStatus, IfcAttributeQueryWork};
+use semio_s_artifact_stdio_ifc4x3_express::metadata;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, retained_clone_grant_admits};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcHeader, IfcSnapshot, IfcValue};

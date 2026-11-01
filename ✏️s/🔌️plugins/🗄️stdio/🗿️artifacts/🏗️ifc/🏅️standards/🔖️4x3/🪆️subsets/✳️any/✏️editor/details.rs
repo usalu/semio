@@ -3,8 +3,7 @@ use crate::catalog::{IfcAttributeDeclaration, IfcCatalog, IfcTypeExpression};
 use semio_framework_ui_locale::Locale;
 use semio_s_artifact_stdio_contract::editing::{SnapshotDetailPathSegment as P, SnapshotDetailPresentation, SnapshotDetailVariant};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcSnapshot, IfcValue};
-#[path = "../../../../../🔎️details/🦀️.rs"]
-mod shared;
+use semio_s_artifact_stdio_ifc_details as shared;
 pub type Ifc4x3DetailsProvider<'a> = shared::IfcDetailsProvider<'a, Ifc4x3DetailsProfile>;
 pub struct Ifc4x3DetailsProfile;
 impl shared::IfcDetailsTypeMetadata for crate::validation::metadata::StaticTypeExpression {

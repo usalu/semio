@@ -40,7 +40,11 @@ impl DslField for Document {
         Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "glTF geometry source requires original owned receiving"))
     }
 }
+impl semio_framework_dsl_record::receiving::owned::scalar_sealed::Sealed for Document {}
 impl OwnedScalar for Document {
+    fn creation_bytes() -> usize {
+        0
+    }
     fn take_source(source: &mut Option<FieldValue>) -> Result<Self, ValueError> {
         if !matches!(source, Some(FieldValue::Record(_))) {
             return Err(invalid("glTF native document is not a declared record"));
@@ -51,6 +55,9 @@ impl OwnedScalar for Document {
 }
 impl DslOwnedReceivingField for Document {
     type Cursor = ScalarReceiving<Self>;
+    fn receiving_cursor() -> Self::Cursor {
+        Default::default()
+    }
 }
 impl semio_framework_dsl_record::DslReceivingField for Document {
     fn receive_value(_: &FieldValue, _: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
@@ -62,7 +69,11 @@ enum Form {
     Json,
     Glb,
 }
+impl semio_framework_dsl_record::receiving::owned::scalar_sealed::Sealed for Form {}
 impl OwnedScalar for Form {
+    fn creation_bytes() -> usize {
+        size_of::<Self>()
+    }
     fn take_source(source: &mut Option<FieldValue>) -> Result<Self, ValueError> {
         let out = match source {
             Some(FieldValue::Enum(0)) => Self::Json,
@@ -75,6 +86,9 @@ impl OwnedScalar for Form {
 }
 impl DslOwnedReceivingField for Form {
     type Cursor = ScalarReceiving<Self>;
+    fn receiving_cursor() -> Self::Cursor {
+        Default::default()
+    }
 }
 impl semio_framework_dsl_record::DslReceivingField for Form {
     fn receive_value(value: &FieldValue, owner: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {

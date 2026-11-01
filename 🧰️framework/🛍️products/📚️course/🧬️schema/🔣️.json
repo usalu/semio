@@ -3662,6 +3662,9 @@
             "pointer"
           ]
         },
+        "pressed": {
+          "type": "boolean"
+        },
         "leaderboard": {
           "$ref": "#/$defs/Leaderboard"
         },

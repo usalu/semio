@@ -53,7 +53,7 @@ impl<P,Mu> ErasedSnapshotRetirement for PreparedHistoryReadRetirement<P,Mu> wher
         self.closing=true;
         let owner=self.owner.as_mut().unwrap();
         if owner.terminal_is_empty(){let released_bytes=size_of::<ArtifactHistoryReadRetirement<P,Mu>>();drop(self.owner.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}))}
-        let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.close_step(child)?;let step=admit_retained_clone_close(child,step,owner.terminal_is_empty(),"prepared original history frame")?;Ok(RetainedCloneStep::Progress(step.progress()))
+        let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.close_step(child).result?;let step=admit_retained_clone_close(child,step,owner.terminal_is_empty(),"prepared original history frame")?;Ok(RetainedCloneStep::Progress(step.progress()))
     })(); let work = u64::from(result.as_ref().is_ok_and(|step| step.progress() != Default::default())); semio_framework_value::RetainedWorkOutcome { result, work } }
     fn next_copy_byte_demand(&self)->Result<usize,ValueError>{self.owner.as_ref().map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(0)}else{owner.next_copy_byte_demand()})}
     fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{self.owner.as_ref().map_or(Ok(0),|owner|if owner.terminal_is_empty(){Ok(0)}else{owner.next_capacity_byte_demand(body)})}

@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["dep:serde"]
+testkit = ["dep:serde","dep:semio-framework-trace"]
 
 [dependencies]
 semio-framework-job.workspace = true
@@ -36,9 +36,11 @@ semio-framework-value-persistent = { path = "../../../../../../../../🔨️modu
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "../../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"], optional = true }
+semio-framework-trace = { workspace = true, optional = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+semio-framework-trace = { workspace = true }

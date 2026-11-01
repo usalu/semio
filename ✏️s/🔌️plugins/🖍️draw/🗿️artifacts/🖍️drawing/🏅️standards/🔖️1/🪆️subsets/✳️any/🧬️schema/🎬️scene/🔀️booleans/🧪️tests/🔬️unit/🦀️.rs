@@ -3,7 +3,7 @@
 fn boolean_wallet()->boolean_funding::Wallet{let data:serde_json::Value=serde_json::from_str(include_str!("../../🎟️work/📐️.json")).unwrap();let s=&data["stock"];boolean_funding::Wallet::from_grant(semio_framework_value::RetainedCloneGrant{maximum_items:s["items"].as_u64().unwrap()as usize,maximum_copy_bytes:s["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:s["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:s["release"].as_u64().unwrap()as usize,maximum_depth:s["depth"].as_u64().unwrap()as usize},data["maxTurns"].as_u64().unwrap()as usize)}
 fn turn(job:&mut DocumentBooleanJob,bank:&mut boolean_funding::Wallet,items:usize)->Result<DocumentBooleanProgress,DocumentSceneError>{bank.turn(items,|work|job.advance(items,work))}
 fn until_error(job:&mut DocumentBooleanJob,bank:&mut boolean_funding::Wallet)->DocumentSceneError{for _ in 0..2000000{match turn(job,bank,1){Err(error)=>return error,Ok(p)=>assert!(!p.done)}}panic!("finite Boolean observation bound exhausted");}
-#[allow(unused_imports)] use semio_s_artifact_draw_drawing_scene::{booleans::*,identity::*,paint::*,picking::*,placement::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*};
+#[allow(unused_imports)] use {semio_s_artifact_draw_drawing_scene::{booleans::*,identity::*,preparation::*,raster::*,retirement::*,text::*,trace::*,view::*},semio_s_artifact_draw_drawing_scene_paint::{*,picking::*,placement::*}};
 #[allow(unused_imports)] use semio_s_artifact_draw_drawing_model::fill_rule::FillRule;
 
 use semio_framework_test_fixtures::fixture_text;

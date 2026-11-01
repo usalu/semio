@@ -108,6 +108,7 @@ interface FollowContextValue {
   readonly task?: string;
   readonly onCamera: (camera: PresencePresentation["camera"]) => void;
   readonly onRevealed: (reveal: string | undefined, source?: "focus" | "pointer") => void;
+  readonly onPressed?: (pressed: boolean) => void;
   readonly onSubmission: (submission: PresencePresentation["submission"]) => void;
   readonly onSort: (sort: PresencePresentation["sort"]) => void;
   readonly onTaskPage: (page: number | undefined) => void;

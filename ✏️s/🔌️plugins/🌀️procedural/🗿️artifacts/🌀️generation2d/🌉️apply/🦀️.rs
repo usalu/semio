@@ -46,7 +46,7 @@ pub(crate) fn generation2d_retire_displaced_cold(value: Generation2dReplayDispla
     while !owner.terminal_is_empty() {
         let copy = owner.next_copy_byte_demand().expect("cold displaced copy demand").max(GENERATION2D_OWNER_BYTES);
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).expect("cold displaced capacity demand"), maximum_release_bytes: owner.next_release_byte_demand().expect("cold displaced release demand"), maximum_depth: owner.next_depth_demand().expect("cold displaced depth demand").max(1) };
-        owner.close_step(grant).expect("cold displaced replay close");
+        owner.close_step(grant).result.expect("cold displaced replay close");
     }
 }
 

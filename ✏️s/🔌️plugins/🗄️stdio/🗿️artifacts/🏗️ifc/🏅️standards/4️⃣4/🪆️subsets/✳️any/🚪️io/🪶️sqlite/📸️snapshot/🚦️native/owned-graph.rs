@@ -2,8 +2,8 @@
 use super::{Frame, IfcComplexType, IfcEntity, IfcHeader, IfcSnapshot, IfcTypedValue, IfcValue};
 use semio_framework_dsl_record::receiving::owned::{OwnedSlot, funds, metadata, receipt};
 use semio_framework_value::{
-    RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetireOwned, RetirementDemand, ValueError, ValueRefusalKind,
-    retirement::{RetirementCursor, RetirementStep},
+    RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetainedWorkOutcome, RetireOwned, RetirementDemand, ValueError, ValueRefusalKind,
+    retirement::{RetireOwned as RetireOwnedTrait, RetirementCursor, RetirementStep},
 };
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::size_of;
@@ -400,35 +400,39 @@ impl GraphReceiving {
         }
         Ok(metadata::<u8>())
     }
-    pub(super) fn close(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        let demand = self.close_demands(grant.maximum_copy_bytes)?;
+    pub(super) fn close(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome<RetainedCloneStep> {
+        let demand = match self.close_demands(grant.maximum_copy_bytes) {
+            Ok(demand) => demand,
+            Err(error) => return RetainedWorkOutcome { result: Err(error), work: 0 },
+        };
         if !funds(grant, demand) {
-            return Ok(RetainedCloneStep::Progress(Default::default()));
+            return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 };
         }
         self.closing = true;
-        let progress = if !self.output.terminal_is_empty() {
-            self.output.close_step(grant)?
+        let turn = if !self.output.terminal_is_empty() {
+            self.output.close_step(grant)
         } else if !self.pending.terminal_is_empty() {
-            self.pending.close_step(grant)?
+            self.pending.close_step(grant)
         } else if !self.complex.terminal_is_empty() {
-            self.complex.close_step(grant)?
+            self.complex.close_step(grant)
         } else if !self.entity.terminal_is_empty() {
-            self.entity.close_step(grant)?
+            self.entity.close_step(grant)
         } else if !self.values.terminal_is_empty() {
-            self.values.close_step(grant)?
+            self.values.close_step(grant)
         } else if !self.frame.terminal_is_empty() {
-            self.frame.close_step(grant)?
+            self.frame.close_step(grant)
         } else {
             self.closed = true;
-            receipt(demand)
+            RetainedWorkOutcome { result: Ok(receipt(demand)), work: 1 }
         };
-        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+        let complete = self.terminal_is_empty();
+        RetainedWorkOutcome { work: turn.work, result: turn.result.map(|progress| if complete { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) }) }
     }
     pub(super) fn terminal_is_empty(&self) -> bool {
         self.closed && self.output.terminal_is_empty() && self.pending.terminal_is_empty() && self.complex.terminal_is_empty() && self.entity.terminal_is_empty() && self.values.terminal_is_empty() && self.frame.terminal_is_empty()
     }
 }
-impl RetireOwned for GraphReceiving {
+impl RetireOwnedTrait for GraphReceiving {
     fn retirement(mut self) -> Box<dyn RetirementCursor> {
         self.closing = true;
         Box::new(self)
@@ -445,9 +449,10 @@ impl RetirementCursor for GraphReceiving {
         self.close_demands(body)
     }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
-        match self.close(grant) {
-            Ok(step) => RetirementStep::Progress(step.progress()),
-            Err(error) => RetirementStep::Failure(error),
+        let turn = self.close(grant);
+        match turn.result {
+            Ok(step) => RetirementStep::Progress(step.progress(), turn.work),
+            Err(error) => RetirementStep::Failure(error, turn.work),
         }
     }
     fn terminal_is_empty(&self) -> bool {

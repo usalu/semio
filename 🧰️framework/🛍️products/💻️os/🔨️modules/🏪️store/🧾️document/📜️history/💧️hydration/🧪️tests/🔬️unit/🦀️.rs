@@ -58,7 +58,7 @@ fn persisted_hydration_release_store_entry_refuses_foreign_target_without_consum
         if hydration.terminal_is_empty() { break; }
         let demand = quoted(&hydration, semio_framework_os_store_owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES);
         assert!(demand.copy_bytes.max(demand.capacity_bytes).max(demand.release_bytes) <= semio_framework_os_store_owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES);
-        hydration.close_step(semio_framework_value::testing::physical_test_close_grant()).unwrap();
+        hydration.close_step(semio_framework_value::testing::physical_test_close_grant()).result.unwrap();
     }
     assert!(hydration.terminal_is_empty());
 }
@@ -88,7 +88,7 @@ fn persisted_hydration_release_fold_caller_funds_exact_cleanup_without_copy_fuel
             let mut owner = WholeAllocation { owner: Some(vec![42; extent]) };
             let grant = hydration_fold_byte_grant(logical, owner.next_release_byte_demand().unwrap()).unwrap();
             assert_eq!(grant, logical.max(extent));
-            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(release_grant(grant)).unwrap());
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(release_grant(grant)).result.unwrap());
             assert_eq!(step, RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, released_bytes: extent, ..Default::default() }));
             assert_eq!((allocated, released), (0, extent));
             assert_eq!(hydration_fold_byte_grant(logical, 0), Some(logical));
@@ -131,10 +131,10 @@ struct AllocationProbe {
 struct UnitFactory;
 impl semio_framework_value::ArtifactOwnedValueRetirementFactory<()> for UnitFactory {
     fn retirement_birth_bytes(&self, _: &()) -> usize { std::mem::size_of::<WholeAllocation>() }
-    fn retire_owned(&self, value: (), grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, ())> {
+    fn retire_owned(&self, value: (), grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, ())> {
         let birth = std::mem::size_of::<WholeAllocation>();
-        if grant.maximum_items == 0 || grant.maximum_capacity_bytes < birth { return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit, "unit retirement birth is unfunded"), value)); }
-        Ok((Box::new(WholeAllocation { owner: None }), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: birth, ..Default::default() }))
+        if grant.maximum_items == 0 || grant.maximum_capacity_bytes < birth { return semio_framework_value::RetainedWorkOutcome { result: Err((ValueError::literal(ValueRefusalKind::OwnershipLimit, "unit retirement birth is unfunded"), value)), work: 0 }; }
+        semio_framework_value::RetainedWorkOutcome { result: Ok((Box::new(WholeAllocation { owner: None }), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: birth, ..Default::default() })), work: 1 }
     }
 }
 
@@ -253,7 +253,7 @@ fn persisted_hydration_release_pages_are_independent_of_step_fuel() {
         assert_eq!(fuel - cx.fuel_remaining(), u64::from(released != 0));
         drop(reader);
         let active_owner = active.as_mut().unwrap();
-        while !matches!(active_owner.close_step(release_grant(bytes)).unwrap(), RetainedCloneStep::Complete(_)) {}
+        while !matches!(active_owner.close_step(release_grant(bytes)).result.unwrap(), RetainedCloneStep::Complete(_)) {}
         assert!(active_owner.terminal_is_empty());
         active.take();
     }
@@ -269,7 +269,7 @@ fn member_hydration_ready_auxiliary_retains_empty_capacity_until_paid_close() {
     let extent = fixture["readyAuxiliaryCapacity"].as_u64().unwrap() as usize;
     let original_text=String::with_capacity(extent);
     let (admitted,source_allocated,source_released)=semio_framework_trace_memory_testing::observe_backing(||semio_framework_value::SharedUtf8::admit(original_text,grant));
-    let (actor,source_receipt)=admitted.unwrap_or_else(|_|panic!("original actor frame admission"));
+    let (actor,source_receipt)=admitted.result.unwrap_or_else(|_|panic!("original actor frame admission"));
     assert!(source_receipt.fits(grant));assert_eq!((source_allocated,source_released),(source_receipt.retained_capacity_bytes,0));
     let original_owned_bytes=extent+source_allocated;
     let mut owner = RetainedPersistedDocumentHydration::<Snapshot, Mutation> {
@@ -293,14 +293,14 @@ fn member_hydration_ready_auxiliary_retains_empty_capacity_until_paid_close() {
     assert!(!owner.terminal_is_empty());
     let original = owner.actor.0.as_ptr();
     for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_capacity_bytes: 0, ..grant }] {
-        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denied).unwrap());
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denied).result.unwrap());
         assert_eq!(step.progress(), RetainedCloneProgress::default());
         assert_eq!((allocated, released), (0, 0));
         assert_eq!(owner.actor.0.as_ptr(), original);
         assert!(owner.active.is_none());
         assert!(!owner.terminal_is_empty());
     }
-    let (birth, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant).unwrap());
+    let (birth, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant).result.unwrap());
     assert!(birth.progress().fits(grant));
     assert_eq!(birth.progress().retained_capacity_bytes, allocated);
     assert!(allocated > 0);
@@ -311,7 +311,7 @@ fn member_hydration_ready_auxiliary_retains_empty_capacity_until_paid_close() {
     let mut total_released = released;
     for _ in 0..64 {
         if owner.terminal_is_empty() { break; }
-        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant).unwrap());
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant).result.unwrap());
         assert!(step.progress().fits(grant));
         assert_eq!(step.progress().retained_capacity_bytes, allocated);
         assert_eq!(step.progress().released_bytes, released);
@@ -334,7 +334,7 @@ fn funded_verified_genesis_preserves_original_refusal_and_every_shared_backing_r
         let mut born = 0;
         for _ in 0..64 {
             if snapshot.terminal_is_empty() && pack.terminal_is_empty() { break; }
-            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| if !snapshot.terminal_is_empty() { snapshot.close_step(policy).unwrap() } else { pack.close_step(policy).unwrap() });
+            let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| if !snapshot.terminal_is_empty() { snapshot.close_step(policy).result.unwrap() } else { pack.close_step(policy).result.unwrap() });
             assert!(step.progress().fits(policy));
             assert_eq!((allocated, released), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
             born += allocated; freed += released;
@@ -437,10 +437,10 @@ fn message_ledger_phased_birth_cancellation_preserves_exact_original_pages() {
             let demand = retirement.next_release_byte_demand().unwrap();
             assert!(demand <= policy.maximum_release_bytes);
             if demand > 0 {
-                let (denied, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| retirement.close_step(RetainedCloneGrant { maximum_release_bytes: 0, ..policy }).unwrap());
+                let (denied, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| retirement.close_step(RetainedCloneGrant { maximum_release_bytes: 0, ..policy }).result.unwrap());
                 assert_eq!((denied.progress(), born, freed), (RetainedCloneProgress::default(), 0, 0));
             }
-            let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| retirement.close_step(policy).unwrap());
+            let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| retirement.close_step(policy).result.unwrap());
             assert!(step.progress().fits(policy));
             assert_eq!((born, freed), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
             assert_eq!(born, 0); freed_total += freed;
@@ -497,7 +497,7 @@ use semio_framework_value::ArtifactOwnedValueRetirementFactory;
         let mut freed_total = 0;
         for _ in 0..1024 {
             if owner.terminal_is_empty() { break; }
-            let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(policy).unwrap());
+            let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(policy).result.unwrap());
             assert!(step.progress().fits(policy)); assert_eq!((born, freed), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
             all_born += born; freed_total += freed;
         }

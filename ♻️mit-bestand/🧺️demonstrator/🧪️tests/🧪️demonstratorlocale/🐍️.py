@@ -61,9 +61,21 @@ class DemonstratorLocale(unittest.TestCase):
             if key.endswith(".label.beginner"):
                 self.assertIn(key[: -len("beginner")] + "normal", keys, key)
 
-    def test_locked_locale_is_declared_on_the_document(self):
-        self.assertIn(self.catalog["lockedLocale"], LOCALES)
-        self.assertIn(f'<html lang="{self.catalog["lockedLocale"]}">', read(CASES["html"]))
+    def test_no_locale_is_locked_and_none_is_declared_statically(self):
+        self.assertNotIn("lockedLocale", self.catalog)
+        html = read(CASES["html"])
+        free = CASES["lockFreeSources"]
+        self.assertIsNone(re.search(free["html"]["forbidden"], html))
+        self.assertIn(free["html"]["required"], html)
+        for path in free["paths"]:
+            for rule in free["forbidden"]:
+                found = [match.group(0) for match in re.finditer(rule["pattern"], read(path))]
+                self.assertEqual(found, [], f"{path} {rule['id']}")
+
+    def test_viewer_language_is_the_first_supported_candidate_otherwise_ask(self):
+        for row in CASES["localeResolution"]:
+            expected = next((tag.lower().split("-")[0] for tag in row["candidates"] if tag and tag.lower().split("-")[0] in LOCALES), None)
+            self.assertEqual(expected, row["expected"], row["id"])
 
     def test_components_hold_no_hardcoded_literal_or_locale_ternary(self):
         for path in CASES["componentSources"]:

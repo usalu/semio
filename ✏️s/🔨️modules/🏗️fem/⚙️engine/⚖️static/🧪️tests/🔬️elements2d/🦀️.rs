@@ -342,5 +342,4 @@ fn mounted_load_rows_match_independent_quadrature_and_consistent_mass() {
         assert!((triangle.mounted_load_row(&positions, row, 100.0, gravity).unwrap() - expected).abs() < 1e-9);
     }
     assert_eq!(triangle.mounted_load_row(&positions, 6, 100.0, gravity), None);
-    println!("[DEBUG] Fixed mounted 2D load rows match independent NumPy integration and consistent batch mass");
 }

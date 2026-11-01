@@ -47,7 +47,7 @@ fn member(value: &serde_json::Value) -> DurableOwnedGroupMemberV1 {
 }
 
 fn prepared_outcome(role: &str, recovery_schema: &str, generation: u64, base_revision: [u8; 32], ordinal: u64) -> (ArtifactStoreOneItemPrepared<DslValue, String>, DurableStorePreparedOutcomeV1) {
-    let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{role}"), semio_framework_value::testing::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0;
+    let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{role}"), semio_framework_value::testing::physical_test_close_grant()).result.unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0;
     let next_clock = HybridLogicalTimestamp { actor: ordinal, physical_ms: 1_000 + ordinal, logical: ordinal + 1 };
     let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
         semio_framework_job::OperationId(100 + ordinal),
@@ -132,7 +132,7 @@ fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u6
 }
 
 fn store_prepared_with_started_at(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u64, next: i32, started_at: Option<String>,invalid_dependency:Option<&str>,valid_dependencies:usize) -> ArtifactStoreOneItemPrepared<DemoSnapshot, DemoMutation> {
-let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{ordinal}"), semio_framework_value::testing::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0;
+let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{ordinal}"), semio_framework_value::testing::physical_test_close_grant()).result.unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0;
     let next_clock = HybridLogicalTimestamp { actor: ordinal, physical_ms: 2_000 + ordinal, logical: ordinal + 1 };
     let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
         semio_framework_job::OperationId(200 + ordinal),
@@ -213,7 +213,7 @@ async fn assert_erased_snapshot_authority(store: &mut ArtifactStore<DemoSnapshot
     let (retirement, _) = semio_framework_os_store_space_member::lifted_store::SpaceMember::retire_snapshot_read_erased(store, &mut read, birth).unwrap_or_else(|_| panic!("erased group read returns to its exact Store"));
     let mut retirement = retirement.expect("erased group read retirement is born under its funded grant");
     for _ in 0..4096 {
-        if matches!(retirement.close_step(semio_framework_value::testing::physical_test_close_grant()).expect("erased group read retirement remains infallible"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+        if matches!(retirement.close_step(semio_framework_value::testing::physical_test_close_grant()).result.expect("erased group read retirement remains infallible"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
             assert!(retirement.terminal_is_empty());
             return;
         }

@@ -30,7 +30,7 @@ impl ToolLatestWinsKeyCopy {
         use semio_framework_value_ordered::ordered::SharedOwner;
         if self.part<=4||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<SharedOwner::<String>::allocation_bytes(){return Ok(None);}
         let Some(key)=self.key.take()else{return Ok(None)};
-        match SharedOwner::admit(key,grant){Ok(value)=>Ok(Some(value)),Err((error,key))=>{self.key=Some(key);Err(error)}}
+        match SharedOwner::admit(key,grant).result {Ok(value)=>Ok(Some(value)),Err((error,key))=>{self.key=Some(key);Err(error)}}
     }
     pub fn retirement_demands(&self)->RetirementDemand{RetirementDemand{release_bytes:self.key.as_ref().map_or(0,String::capacity),depth:usize::from(self.key.is_some()),..Default::default()}}
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{

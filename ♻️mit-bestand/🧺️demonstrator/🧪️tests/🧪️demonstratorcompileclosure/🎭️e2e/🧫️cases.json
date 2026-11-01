@@ -16,6 +16,7 @@
   },
   "command": "repo ./🔨️modules/🧪️e2e/📜️script.ts test",
   "dataReads": [
+    "{projectRoot}/🔨️modules/🌐️locale/🔣️.json",
     "{projectRoot}/🪧️brand.ts",
     "{projectRoot}/🧪️tests/🎭️acceptance/🧬️curation/🧫️cases.json",
     "{projectRoot}/🧪️tests/🎭️acceptance/🧬️simulation/🧫️cases.json",

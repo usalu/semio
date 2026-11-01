@@ -398,7 +398,7 @@ impl<P: Send + Sync + 'static, M: Send + 'static> ArtifactStoreOneItemSealer<P, 
             };
         }
         if let Some(post) = self.post.take() {
-            return match self.snapshot_retirement.as_ref().expect("original snapshot factory").retire(post, child).result {
+            return match self.snapshot_retirement.as_ref().ok_or_else(||ValueError::invariant("original snapshot factory"))?.retire(post, child).result {
                 Ok((active, progress)) => { self.active_retirement = Some(active); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical sealer constructor changed its receipt")); } Ok(RetainedCloneStep::Progress(progress)) },
                 Err((error, original)) => { self.post = Some(original); Err(error) },
             };

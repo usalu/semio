@@ -156,13 +156,13 @@ impl store::MemberStoreVisitor for ToolRunMemberFold<'_,'_> {
         let mut deadline=||semio_framework_job::default_now_us().is_none_or(|now|now>=self.deadline_us);
         if state.rebase_pending{if let Some(owner)=state.preparation.as_mut(){owner.cancel();}}
         if let Some(owner)=state.preparation.as_mut(){
-            if owner.is_closing(){let step=owner.close_step(self.grant).map_err(ToolRunMemberFoldRefusal::Native)?;if owner.terminal_is_empty(){drop(state.preparation.take());}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
+            if owner.is_closing(){let step=owner.close_step(self.grant).result.map_err(ToolRunMemberFoldRefusal::Native)?;if owner.terminal_is_empty(){drop(state.preparation.take());}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
         }
         if state.operation_consumed||state.rebase_pending{
-            if let Some(input)=state.operation_input.as_mut(){let step=input.close_step(self.grant).map_err(ToolRunMemberFoldRefusal::Native)?;if input.terminal_is_empty(){state.operation_input=None;}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
+            if let Some(input)=state.operation_input.as_mut(){let step=input.close_step(self.grant).result.map_err(ToolRunMemberFoldRefusal::Native)?;if input.terminal_is_empty(){state.operation_input=None;}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
             if let Some(source)=state.operation_source.as_mut(){source.begin_close();let step=source.close_step(self.grant).map_err(ToolRunMemberFoldRefusal::Native)?;if source.terminal_is_empty(){state.operation_source=None;}return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
         }
-        if state.operation_retirement.is_some(){let step=semio_framework_value::close_factory_ticket(&mut state.operation_retirement,self.grant).map_err(ToolRunMemberFoldRefusal::Native)?;return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
+        if state.operation_retirement.is_some(){let step=semio_framework_value::close_factory_ticket(&mut state.operation_retirement,self.grant).result.map_err(ToolRunMemberFoldRefusal::Native)?;return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:step.progress(),conflicts:0,read:None});}
         if state.operation.is_some()&&(state.operation_consumed||state.rebase_pending){let p=store.retire_owned_mutation(&mut state.operation,self.grant).map_err(ToolRunMemberFoldRefusal::Native)?.map_or(idle,|(owner,p)|{state.operation_retirement=Some(owner);p});return Ok(ToolRunMemberFolded{shown:self.shown,pending:true,progress:p,conflicts:0,read:None});}
         let mut shown=self.shown;
         if state.rebase_pending{
@@ -211,7 +211,7 @@ pub(super) fn close_tool_erased_retirement(owner:&mut Option<Box<dyn store::Eras
  if !tool_grant_funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
  let current=owner.as_mut().expect("tool retained owner admitted in place");
  if current.terminal_is_empty(){drop(owner.take());return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}));}
- let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=current.close_step(child)?;
+ let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=current.close_step(child).result?;
  let step=admit_retained_clone_close(child,step,current.terminal_is_empty(),"tool original retirement")?;
  Ok(RetainedCloneStep::Progress(step.progress()))
 }
@@ -364,12 +364,12 @@ impl store::MemberStoreVisitor for ToolRunMemberRetire<'_>{
     {
         if self.grant.maximum_items==0{return Ok((None,Default::default()));}
         let state=self.owners.as_any_mut().downcast_mut::<ToolRunMemberState<P,Mu>>().ok_or_else(||plugin_sdk_fault("member alias retirement owns another exact Store type"))?;
-        if let Some(owner)=state.preparation.as_mut(){if self.everything{owner.cancel();}if owner.is_closing(){let step=owner.close_step(self.grant).map_err(ValueError::into_fault)?;if owner.terminal_is_empty(){drop(state.preparation.take());}return Ok((None,step.progress()));}}
+        if let Some(owner)=state.preparation.as_mut(){if self.everything{owner.cancel();}if owner.is_closing(){let step=owner.close_step(self.grant).result.map_err(ValueError::into_fault)?;if owner.terminal_is_empty(){drop(state.preparation.take());}return Ok((None,step.progress()));}}
         if self.everything||state.operation_consumed{
-            if let Some(input)=state.operation_input.as_mut(){let step=input.close_step(self.grant).map_err(ValueError::into_fault)?;if input.terminal_is_empty(){state.operation_input=None;}return Ok((None,step.progress()));}
+            if let Some(input)=state.operation_input.as_mut(){let step=input.close_step(self.grant).result.map_err(ValueError::into_fault)?;if input.terminal_is_empty(){state.operation_input=None;}return Ok((None,step.progress()));}
             if let Some(source)=state.operation_source.as_mut(){source.begin_close();let step=source.close_step(self.grant).map_err(ValueError::into_fault)?;if source.terminal_is_empty(){state.operation_source=None;}return Ok((None,step.progress()));}
         }
-        if state.operation_retirement.is_some(){return semio_framework_value::close_factory_ticket(&mut state.operation_retirement,self.grant).map(|step|(None,step.progress())).map_err(ValueError::into_fault);}
+        if state.operation_retirement.is_some(){return semio_framework_value::close_factory_ticket(&mut state.operation_retirement,self.grant).result.map(|step|(None,step.progress())).map_err(ValueError::into_fault);}
         if state.operation.is_some()&&(self.everything||state.operation_consumed){return Ok(store.retire_owned_mutation(&mut state.operation,self.grant).map_err(ValueError::into_fault)?.map_or((None,Default::default()),|(frame,p)|(Some(frame),p)));}
         if state.pending_alias.is_some(){return Ok(store.retire_snapshot_alias(&mut state.pending_alias,self.grant).map_err(FaultFrom::into_fault)?.map_or((None,Default::default()),|(owner,progress)|(Some(owner),progress)));}
         let copy=2*size_of::<Option<Arc<P>>>();

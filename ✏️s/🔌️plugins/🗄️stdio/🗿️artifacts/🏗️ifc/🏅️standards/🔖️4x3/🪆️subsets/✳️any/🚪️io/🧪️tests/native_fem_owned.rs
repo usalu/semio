@@ -28,7 +28,7 @@ fn ready<T>(future: impl std::future::Future<Output = T>) -> T {
         std::task::Poll::Pending => panic!("native exchange route unexpectedly yielded without an asynchronous dependency"),
     }
 }
-fn retire<T: semio_framework_value::RetireOwned>(value: T) {
+fn retire<T: semio_framework_value::retirement::RetireOwned>(value: T) {
     let mut close = semio_framework_value::retirement::controlled::ControlledRetirement::new(value).ok().unwrap();
     for _ in 0..1_000_000 {
         if close.terminal_is_empty() {

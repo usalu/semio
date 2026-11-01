@@ -20,14 +20,14 @@ pub fn decode_presence_json<P: semio_framework_value_native_owned::native_decodi
     let text=std::str::from_utf8(bytes).map_err(|_|ValueError::literal(ValueRefusalKind::InvalidValue,"presence pack is not UTF-8 JSON"))?;
     owner.receive::<Receiving<P>,P>(|slot,native,body|{
         admit_inline::<Receiving<P>>(body)?;*slot=Some((JsonGrammarCursor::new(JsonMemberPolicy::Reject),None,None,None,(None,None)));record_inline::<Receiving<P>>(body)?;
-        let(cursor,tree,refusal,receiving,(_,typed))=slot.as_mut().unwrap();
+        let(cursor,tree,refusal,receiving,(_,typed))=slot.as_mut().ok_or_else(||ValueError::invariant("slot absent"))?;
         loop{
             let demand=match cursor.normal_step_demands(text){Ok(demand)=>demand,Err(JsonError::Native(error))=>return Err(error),Err(error)=>{let kind=error.kind();*refusal=Some(error);return Err(ValueError::literal(kind,"presence JSON source was refused"))}};
             admit_turn(body,demand)?;let grant=body.remaining_grant();let result=cursor.step(text,grant.maximum_items.min(TURN_UNITS),native,grant);let performed=cursor.normal_step_progress();
             let ready=match result{Ok(Some(value))=>{*tree=Some(value);Ok(true)},Ok(None)=>Ok(false),Err(JsonError::Native(error))=>Err(error),Err(error)=>{let kind=error.kind();*refusal=Some(error);Err(ValueError::literal(kind,"presence JSON grammar refused the original pack"))}};body.record_progress(performed)?;
             if ready?{break;}if performed==RetainedCloneProgress::default(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"presence JSON parser has no funded frontier"));}
         }
-        let mut admission=Source::admission_owned(tree.take().unwrap(),());let mut original=None;
+        let mut admission=Source::admission_owned(tree.take().ok_or_else(||ValueError::invariant("tree absent"))?,());let mut original=None;
         let admitted=(||->Result<(),ValueError>{
             while admission.phase()!="ready"{admit_turn(body,admission.next_demand()?)?;let step=admission.advance(body.remaining_grant()).result?;body.record_progress(step.progress())?;}
             admit_turn(body,admission.next_demand()?)?;let step=admission.take_output(&mut original,body.remaining_grant()).result?;body.record_progress(step.progress())?;Ok(())
@@ -44,7 +44,7 @@ pub fn decode_presence_json<P: semio_framework_value_native_owned::native_decodi
         }
         while !admission.terminal_is_empty(){admit_turn(body,admission.next_return_demand()?)?;let step=admission.return_inputs(&mut None,body.remaining_grant()).result?;body.record_progress(step.progress())?;}
         let source=original.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"presence source admission produced no original"))?;
-        *receiving=Some(NativeReceivingOriginal::<DslValue,P>::new(source));let frame=receiving.as_mut().unwrap();
+        *receiving=Some(NativeReceivingOriginal::<DslValue,P>::new(source));let frame=receiving.as_mut().ok_or_else(||ValueError::invariant("receiving absent"))?;
         while !frame.output_ready(){let logical_body=body.remaining_grant().maximum_copy_bytes;admit_turn(body,frame.demands(logical_body)?)?;let grant=body.remaining_grant();let limit=ceiling(native.owned_bytes(),body)?;let turn=native.scoped_maximum::<_,ValueError>(limit,|native|Ok(frame.advance(native,logical_body,grant)))?;match turn.result{Ok(step)=>body.record_progress(step.progress())?,Err(error)=>{body.record_progress(error.retained_progress())?;let refusal=error.primary.or(error.quote_refusal).or(error.allocation_refusal).unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"presence original receiving was refused"));return Err(refusal);}}}
         admit_turn(body,frame.take_demand()?)?;let(value,progress)=frame.take(body.remaining_grant()).result?.ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"funded presence receiving take refused"))?;*typed=Some(value);body.record_progress(progress)?;
         frame.begin_close();while !frame.terminal_is_empty(){admit_turn(body,frame.close_demands(body.remaining_grant().maximum_copy_bytes)?)?;match frame.close_step(body.remaining_grant()).result{Ok(step)=>body.record_progress(step.progress())?,Err(error)=>{body.record_progress(error.retained_progress())?;return Err(error);}}}

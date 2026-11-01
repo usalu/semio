@@ -14,8 +14,8 @@ fn artifact_store_resident_paged_source_preserves_original_pages_order_and_funde
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["pagedSource"];let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();let values:Vec<String>=law["values"].as_array().unwrap().iter().map(|value|value.as_str().unwrap().to_owned()).collect();
     for prefix in law["prefixes"].as_array().unwrap(){let prefix=prefix.as_u64().unwrap()as usize;let mut pages=semio_framework_value_persistent::list::PagedList::<String,{usize::MAX}>::with_payload_page_bytes(law["pageItems"].as_u64().unwrap()as usize*size_of::<String>()).unwrap();for value in &values{pages.push(value.clone());}let pointers:Vec<_>=pages.iter().map(|value|value.as_ptr()).collect();let backing=pages.allocated_bytes();let initial=backing+pages.iter().map(String::capacity).sum::<usize>();let mut published=Vec::with_capacity(prefix);let initial=initial+published.capacity()*size_of::<String>();let(mut owner,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||PagedSourceIterator::new(pages,String::new));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
         for index in 0..prefix{let mut receiving=None;for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_next_into(&mut receiving,denied));assert_eq!(result.unwrap(),Some(Default::default()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(receiving.is_none());assert_eq!(owner.peek().unwrap().as_ptr(),pointers[index]);assert_eq!(owner.backing_bytes(),backing);}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.take_next_into(&mut receiving,grant));let progress=result.unwrap().unwrap();assert_eq!(progress.copied_items,1);assert!(progress.copied_bytes>=size_of::<String>());assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(receiving.as_ref().unwrap(),&values[index]);assert_eq!(receiving.as_ref().unwrap().as_ptr(),pointers[index]);assert_eq!(owner.backing_bytes(),backing);published.push(receiving.take().unwrap());}
-        assert_eq!(published,values[..prefix]);let(complete,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.publication_complete());assert_eq!(complete,prefix==values.len());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(Default::default()).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.backing_bytes(),backing);let(mut born,mut released)=(0,0);
-        for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let demand=owner.demands(grant.maximum_copy_bytes).unwrap();for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant}]{if denied.maximum_items!=0&&(demand.copy_bytes==0&&denied.maximum_copy_bytes!=grant.maximum_copy_bytes||demand.capacity_bytes==0&&denied.maximum_capacity_bytes!=grant.maximum_capacity_bytes||demand.release_bytes==0&&denied.maximum_release_bytes!=grant.maximum_release_bytes){continue}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied));if denied.maximum_depth<demand.depth&&denied.maximum_items>0{assert_eq!(result.unwrap_err().kind,semio_framework_value::ValueRefusalKind::DepthLimit)}else{assert_eq!(result.unwrap().progress(),Default::default())}assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.demands(grant.maximum_copy_bytes).unwrap(),demand);}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(owner.publication_complete());}
+        assert_eq!(published,values[..prefix]);let(complete,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.publication_complete());assert_eq!(complete,prefix==values.len());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(Default::default()).result.unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.backing_bytes(),backing);let(mut born,mut released)=(0,0);
+        for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if owner.terminal_is_empty(){break}let demand=owner.demands(grant.maximum_copy_bytes).unwrap();for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:demand.copy_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_capacity_bytes:demand.capacity_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_release_bytes:demand.release_bytes.saturating_sub(1),..grant},RetainedCloneGrant{maximum_depth:demand.depth.saturating_sub(1),..grant}]{if denied.maximum_items!=0&&(demand.copy_bytes==0&&denied.maximum_copy_bytes!=grant.maximum_copy_bytes||demand.capacity_bytes==0&&denied.maximum_capacity_bytes!=grant.maximum_capacity_bytes||demand.release_bytes==0&&denied.maximum_release_bytes!=grant.maximum_release_bytes){continue}let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(denied).result);if denied.maximum_depth<demand.depth&&denied.maximum_items>0{assert_eq!(result.unwrap_err().kind,semio_framework_value::ValueRefusalKind::DepthLimit)}else{assert_eq!(result.unwrap().progress(),Default::default())}assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(owner.demands(grant.maximum_copy_bytes).unwrap(),demand);}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant).result.unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;assert!(owner.publication_complete());}
         assert!(owner.terminal_is_empty());let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let(mut retirement,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value::retirement::controlled::ControlledRetirement::new(published).ok().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if retirement.terminal_is_empty(){break}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||retirement.step(grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));born+=heap.requested_bytes;released+=heap.released_bytes;}assert!(retirement.terminal_is_empty());assert_eq!(born+initial,released);
     }
 }
@@ -95,16 +95,16 @@ fn artifact_store_resident_detached_dag_forwards_exact_backing_then_cursor_termi
             let depth = retirement.next_depth_demand().unwrap();
             assert!(release <= maximum);
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: depth };
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| retirement.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }));
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| retirement.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }).result);
             assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             if release != 0 {
-                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| retirement.close_step(RetainedCloneGrant { maximum_release_bytes: release - 1, ..grant }));
+                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| retirement.close_step(RetainedCloneGrant { maximum_release_bytes: release - 1, ..grant }).result);
                 assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 assert_eq!(retirement.next_release_byte_demand().unwrap(), release);
             }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| retirement.close_step(grant));
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| retirement.close_step(grant).result);
             let progress = step.unwrap().progress();
             assert!(progress.fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -233,7 +233,7 @@ fn artifact_store_resident_consumed_envelope_keeps_catalog_until_exact_terminal_
         let demand = artifact_retirement_box_demands(owner.as_ref().unwrap(), 0).unwrap();
         assert!(demand.copy_bytes.max(demand.capacity_bytes).max(demand.release_bytes) <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize);
         let grant = demand_grant(demand);
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| artifact_retirement_box_close_step(&mut owner, grant));
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| artifact_retirement_box_close_step(&mut owner, grant).result);
         let progress = step.unwrap().progress();
         assert!(progress.fits(grant));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -256,12 +256,12 @@ fn artifact_store_resident_metadata_string_reports_whole_physical_allocation_onl
             let release = owner.next_release_byte_demand().unwrap();
             let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: owner.next_capacity_byte_demand(1).unwrap(), maximum_release_bytes: release, maximum_depth: owner.next_depth_demand().unwrap() };
             for denied_grant in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (release != 0).then(|| RetainedCloneGrant { maximum_release_bytes: release - 1, ..grant })].into_iter().flatten() {
-                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(denied_grant));
+                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(denied_grant).result);
                 assert_eq!(step.unwrap(), denied());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 assert_eq!(owner.next_release_byte_demand().unwrap(), release);
             }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant));
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant).result);
             let progress = step.unwrap().progress();
             assert!(progress.fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -293,7 +293,7 @@ fn artifact_store_resident_metadata_wrappers_forward_exact_original_string_exten
     let original = Arc::as_ptr(&view);
     let mut cursor = ArtifactStoreCursorRetirement::new(cursor);
     let zero = RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 };
-    let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close_step(zero).unwrap());
+    let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close_step(zero).result.unwrap());
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert_eq!(cursor.owner.original().unwrap().group_visibility().unwrap() as *const _, original);
     drop((view, visibility));
@@ -313,12 +313,12 @@ fn artifact_store_resident_metadata_wrappers_forward_exact_original_string_exten
             if demand.capacity_bytes != 0 { denials.push(RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant }); }
             if demand.release_bytes != 0 { denials.push(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }); }
             for denied in denials {
-                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value::close_factory_ticket(&mut slot, denied));
+                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value::close_factory_ticket(&mut slot, denied).result);
                 assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 assert_eq!(semio_framework_value::factory_ticket_demands(slot.as_ref().unwrap(), 1).unwrap(), demand);
             }
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value::close_factory_ticket(&mut slot, grant));
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value::close_factory_ticket(&mut slot, grant).result);
             let progress = step.unwrap().progress();
             assert!(progress.fits(grant));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -341,7 +341,7 @@ fn artifact_store_string_history_full_grant_reports_original_physical_heap() {
     let original = values.last().unwrap().as_ptr();
     let mut owner = ArtifactStoreStringVectorRetirement::new(values);
     let zero = RetainedCloneGrant { maximum_items: 0, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 0 };
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(zero));
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(zero).result);
     assert_eq!(step.unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert_eq!(owner.values.as_ref().unwrap().last().unwrap().as_ptr(), original);
@@ -352,12 +352,12 @@ fn artifact_store_string_history_full_grant_reports_original_physical_heap() {
         let release = owner.next_release_byte_demand().unwrap();
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap(), maximum_release_bytes: release, maximum_depth: owner.next_depth_demand().unwrap() };
         if release != 0 {
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(RetainedCloneGrant { maximum_release_bytes: release - 1, ..grant }));
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(RetainedCloneGrant { maximum_release_bytes: release - 1, ..grant }).result);
             assert_eq!(step.unwrap(), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert_eq!(owner.next_release_byte_demand().unwrap(), release);
         }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant));
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant).result);
         let step = step.unwrap();
         let progress = step.progress();
         assert!(progress.fits(grant));
@@ -400,16 +400,16 @@ fn artifact_store_original_source_iterator_reports_original_whole_backing_after_
         let demand = owner.demands(law["maximumCopyBytes"].as_u64().unwrap() as usize).unwrap();
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
         let denied_grant = RetainedCloneGrant { maximum_items: 0, ..grant };
-        let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(denied_grant));
+        let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(denied_grant).result);
         assert_eq!(denied.unwrap().progress(), RetainedCloneProgress::default());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(owner.demands(grant.maximum_copy_bytes).unwrap(), demand);
         if demand.release_bytes != 0 {
-            let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }));
+            let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }).result);
             assert_eq!(denied.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant));
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant).result);
         let step = step.unwrap();
         assert!(step.progress().fits(grant));
         assert_eq!(step.progress().retained_capacity_bytes, heap.requested_bytes);

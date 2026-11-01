@@ -106,7 +106,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             let mut demand=MountedTypedCommandFullOperation::<A>::original_emission_birth_demands();
             demand.capacity_bytes+=page_bytes;demand.copy_bytes+=message.len()+2*size_of::<TypedOperationResultPage>();
             let mut output=None;
-            let admitted=semio_framework_job::admit_original_construction(cx,&mut output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:0,depth:demand.depth},|_|{
+            let admitted=semio_framework_job::admit_original_construction(cx,&mut output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:demand.copy_bytes,capacity_bytes:demand.capacity_bytes,release_bytes:0,depth:demand.depth},|_|{let result=(||{
             let mut mounted=Box::write(Box::<MountedTypedCommandFullOperation<A>>::new_uninit(),MountedTypedCommandFullOperation::<A>{
                 verb:String::new(),
                 meta: pending.meta.take().expect("cancelled admission retains original metadata"),
@@ -171,7 +171,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             });
             let mut bytes=Vec::with_capacity(page_bytes);bytes.extend_from_slice(message);
             mounted.queue_page(TypedOperationResultPage::from_original(mounted.next_token(),TypedOperationResultLane::Fault,bytes,message.len())).expect("fixed original fault page fits empty mounted slot");
-            Ok((mounted,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))})?;
+            Ok((mounted,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
             if !admitted{self.tools.latest_wins_commands.insert_admitted(operation_id,pending);return Ok(())}
             self.tools.tool_operations.insert_admitted(operation_id,output.unwrap());
             self.tools.typed_operation_reservations[operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;

@@ -1,0 +1,20 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-energy-model-snapshot-bridge"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy model snapshot: bounded funded step loops from a value to its native owner and its paid retirement"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }

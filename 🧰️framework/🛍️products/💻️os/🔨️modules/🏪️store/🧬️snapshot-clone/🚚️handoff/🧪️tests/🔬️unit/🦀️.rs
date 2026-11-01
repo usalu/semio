@@ -24,13 +24,10 @@ fn partial_paged_cursor_is_transferred_and_closed_under_driver_grants() {
     let maximum_bytes = handoff["closeGrant"]["maximumBytes"].as_u64().expect("handoff maximum bytes") as usize;
     let source = source(entries);
     let capacity = RetainedCloneSource::<PagedList<String, 64>>::constructor_capacity_bytes::<()>();
-    let birth = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: RetainedCloneSource::<PagedList<String, 64>>::constructor_copy_bytes(), maximum_capacity_bytes: capacity, maximum_depth: 1, ..Default::default() };
-    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| RetainedCloneSource::admit_owned(source, (), birth));
-    let (mut retained, receipt) = result.unwrap_or_else(|_| panic!("handoff original source admission"));
-    assert!(receipt.fits(birth));
+    let ((mut retained, _, _), heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value::testing::admit_owned_source(source, ()));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (capacity, 0));
     let mut cursor = PagedList::<String, 64>::retained_clone_cursor();
-    let step = cursor.advance(retained.borrow(), 4096, RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_depth: 16, maximum_release_bytes: 4096 }).expect("partial retained cursor progresses");
+    let step = cursor.advance(retained.borrow(), 4096, RetainedCloneGrant { maximum_items: 4, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_depth: 16, maximum_release_bytes: 4096 }).result.expect("partial retained cursor progresses");
     assert!(matches!(step, RetainedCloneStep::Progress(_)));
 
     let mut handoff = RetainedCloneCursorHandoff::<PagedList<String, 64>>::new(cursor);
@@ -42,7 +39,7 @@ fn partial_paged_cursor_is_transferred_and_closed_under_driver_grants() {
         let capacity = handoff.next_capacity_byte_demand(copy).unwrap();
         assert!(copy + capacity <= maximum_bytes);
         let grant = RetainedCloneGrant { maximum_items, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: handoff.next_release_byte_demand().unwrap(), maximum_depth: handoff.next_depth_demand().unwrap() };
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| handoff.close_step(grant).expect("handoff close respects its grant"));
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| handoff.close_step(grant).result.expect("handoff close respects its grant"));
         assert!(step.progress().fits(grant));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
         if matches!(step, RetainedCloneStep::Complete(_)) { break; }
@@ -55,7 +52,7 @@ fn partial_paged_cursor_is_transferred_and_closed_under_driver_grants() {
         let capacity = retained.next_close_capacity_byte_demand(copy).unwrap();
         assert!(copy + capacity <= maximum_bytes);
         let grant = RetainedCloneGrant { maximum_items, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: retained.next_close_release_byte_demand().unwrap(), maximum_depth: retained.next_close_depth_demand().unwrap() };
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| retained.close_step(grant).unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| retained.close_step(grant).result.unwrap());
         assert!(step.progress().fits(grant));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
     }

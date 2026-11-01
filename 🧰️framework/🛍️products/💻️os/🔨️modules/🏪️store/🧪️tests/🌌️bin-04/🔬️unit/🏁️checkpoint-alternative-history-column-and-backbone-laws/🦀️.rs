@@ -186,8 +186,8 @@ async fn sample_envelope_for_backbone_test() -> semio_framework_os_spr::Mutation
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: vec![1, 2, 3] },
-        inverse: semio_framework_os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
+        diff: semio_framework_os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&vec![1, 2, 3]).unwrap() },
+        inverse: semio_framework_os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&Vec::new()).unwrap() },
         timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 },
         transaction: None,
         verb: None,
@@ -232,7 +232,7 @@ async fn backbone_retirement_blocks_for_live_peer_then_drains_one_owned_message_
         let grant = RetainedCloneGrant { maximum_copy_bytes: 17, maximum_capacity_bytes: 0, ..physical_test_close_grant() };
         assert!(retirement.next_release_byte_demand().expect("original backing release demand") <= grant.maximum_release_bytes);
         assert!(retirement.next_depth_demand().expect("original backing depth demand") <= grant.maximum_depth);
-        match retirement.close_step(grant).expect("bounded pre-peer close") {
+        match retirement.close_step(grant).result.expect("bounded pre-peer close") {
             semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == RetainedCloneProgress::default() => {
                 observed_blocked = true;
                 break;
@@ -248,7 +248,7 @@ async fn backbone_retirement_blocks_for_live_peer_then_drains_one_owned_message_
         let grant = RetainedCloneGrant { maximum_copy_bytes: 17, maximum_capacity_bytes: 0, ..physical_test_close_grant() };
         assert!(retirement.next_release_byte_demand().expect("original backing release demand") <= grant.maximum_release_bytes);
         assert!(retirement.next_depth_demand().expect("original backing depth demand") <= grant.maximum_depth);
-        match retirement.close_step(grant).expect("bounded post-peer close") {
+        match retirement.close_step(grant).result.expect("bounded post-peer close") {
             semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => { assert!(progress.fits(grant)); assert!(progress != RetainedCloneProgress::default(), "no external queue owner remains after peer close"); },
             semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(retirement.terminal_is_empty()); },
         }

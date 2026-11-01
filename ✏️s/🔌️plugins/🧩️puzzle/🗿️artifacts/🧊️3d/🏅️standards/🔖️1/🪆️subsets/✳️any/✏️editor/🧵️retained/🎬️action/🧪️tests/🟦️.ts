@@ -20,7 +20,6 @@ test("Puzzle3D borrowed focus preserves independent Set membership", async () =>
     expect(source).toContain("scope.admit_owner(Self::original_birth_demands()?)?");
     expect(source).toContain("retained_capacity_bytes: capacity");
   }
-  console.log("[DEBUG] Puzzle3D original construction buffers=8 borrowed selection cases=5 independent Set/mathjs agree");
 });
 
 test("Puzzle original fixture keeps one finite stock through work and close", async () => {
@@ -36,7 +35,6 @@ test("Puzzle original fixture keeps one finite stock through work and close", as
   expect(source).toContain("cx.with_original_work_loan(budget.fuel, budget.deadline_us");
   expect(source).not.toContain("narrow_original_work_budget");
   expect(source).toContain("source: RetainedCloneGrant, clock: fn() -> Option<u64>, deadline: u64, fuel: u64");
-  console.log("[DEBUG] Puzzle original fixture stock is finite and cumulative; independent mathjs receipts preserve separate currencies");
 });
 
 
@@ -52,5 +50,4 @@ test("Puzzle native app and brush fixtures preserve original close custody", asy
   expect(brush).toContain("cx.with_original_work_loan(fuel, deadline");
   expect(brush).not.toContain("StepContext::new");
   expect(brush).not.toContain("narrow_original_work_budget");
-  console.log("[DEBUG] Puzzle native app retains refused close custody; brush source borrows work budget without replacing original currencies");
 });

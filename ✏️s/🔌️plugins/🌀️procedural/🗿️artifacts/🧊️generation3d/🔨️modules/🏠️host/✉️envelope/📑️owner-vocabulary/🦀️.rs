@@ -15,7 +15,7 @@ pub(super) struct Generation3dMutationWidgetOwner {
 }
 
 #[derive(Default)]
-struct Generation3dMutationSynapseOwner {
+pub(super) struct Generation3dMutationSynapseOwner {
     pub(super) id: String,
     pub(super) from: String,
     pub(super) to: String,

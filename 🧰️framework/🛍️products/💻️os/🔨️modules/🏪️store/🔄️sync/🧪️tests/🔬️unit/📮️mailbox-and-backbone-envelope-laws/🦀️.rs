@@ -24,8 +24,8 @@ fn document_backbone_envelope(id: &str, document_id: &str) -> MutationEnvelope {
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: vec![1] },
-        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: vec![2] },
+        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&vec![1]).unwrap() },
+        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&vec![2]).unwrap() },
         timestamp: semio_framework_os_spr::HybridLogicalTimestamp { actor: 3, physical_ms: 9_007_199_254_740_992, logical: 5 },
         transaction: None, verb: None, line: None,
     }

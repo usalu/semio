@@ -132,7 +132,7 @@ where
 {
     fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.retirement_demands(body)}
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome { let result = (|| -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
         use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::admit_retained_clone_close};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
@@ -141,7 +141,7 @@ where
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "member-open exceeds admitted original owner depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.reject(MemberOpenDiagnostic::Cancelled);
-        if self.active.is_some() { return semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         let owners = self.owners.as_ref().expect("member-open retains original catalog");
         if let Some(runtime) = self.runtime.as_mut() {
@@ -164,13 +164,13 @@ where
             };
         }
         if let Some(initial) = self.initial.take() {
-            return match owners.initial_snapshot_retirement.retire_owned(initial, child) {
+            return match owners.initial_snapshot_retirement.retire_owned(initial, child).result {
                 Ok((owner, progress)) => { *self.active = Some(owner); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "member-open initial factory changed its constructor receipt")); } Ok(RetainedCloneStep::Progress(progress)) }
                 Err((error, initial)) => { *self.initial = Some(initial); Err(error) }
             };
         }
         if let Some(history) = self.history.take() {
-            return match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(history, child) {
+            return match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(history, child) .result {
                 Ok((owner, progress)) => { *self.active = Some(owner); Ok(RetainedCloneStep::Progress(progress)) }
                 Err((error, history)) => { *self.history = Some(history); Err(error) }
             };

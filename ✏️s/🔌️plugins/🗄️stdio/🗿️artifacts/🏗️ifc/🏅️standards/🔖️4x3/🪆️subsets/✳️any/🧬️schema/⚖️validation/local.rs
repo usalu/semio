@@ -1,8 +1,8 @@
 //! 🪪️ Original strict type repair owns local rule receiving and retirement before publication.
-use super::{machine::{MachineEnvironment, RetainedMachine}, overlay::PopulationOverlay, receive::PopulationReceiver, retained::*};
-use crate::details::{IfcCandidateRules, IfcCandidateRuleStep, IfcTypeCandidate};
+use super::{machine::{MachineEnvironment, RetainedMachine}, overlay::PopulationOverlay, receive::PopulationReceiver, retained::*, NewMachine};
+use semio_s_artifact_stdio_ifc_details::{IfcCandidateRules, IfcCandidateRuleStep, IfcTypeCandidate};
 use semio_framework_job::{OriginalSourceBinding, OriginalTurnFailure, StepContext};
-use semio_framework_value::{RetirementDemand, ValueError};
+use semio_framework_value::{RetainedWorkOutcome, RetirementDemand, ValueError};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use std::mem::size_of;
 #[derive(Clone, Copy)]
@@ -14,7 +14,6 @@ struct Binding {
     length: usize,
     position: usize,
 }
-#[derive(Default)]
 pub struct NativeCandidateRules {
     binding: Option<Binding>,
     phase: u8,
@@ -22,6 +21,11 @@ pub struct NativeCandidateRules {
     overlay: PopulationOverlay,
     receiver: PopulationReceiver,
     machine: RetainedMachine,
+}
+impl Default for NativeCandidateRules {
+    fn default() -> Self {
+        Self { binding: None, phase: 0, closing: false, overlay: Default::default(), receiver: Default::default(), machine: RetainedMachine::new(super::ifc4x3_express_program()) }
+    }
 }
 impl NativeCandidateRules {
     fn metadata() -> RetirementDemand { fixed(4 * size_of::<Option<Binding>>() + 4 * size_of::<u8>() + 4 * size_of::<bool>()) }
@@ -83,9 +87,8 @@ impl IfcCandidateRules for NativeCandidateRules {
                 else {
                     let demand = self.close_demands(4096)?;
                     cx.with_original_retirement(|cx| semio_framework_job::close_original_retained_step(cx, demand, |loan| {
-                        if !self.machine.terminal_is_empty() { return self.machine.close_step(loan); }
-                        if !self.receiver.terminal_is_empty() { return self.receiver.close_step(loan); }
-                        self.overlay.close_step(loan)
+                        let result = if !self.machine.terminal_is_empty() { self.machine.close_step(loan) } else if !self.receiver.terminal_is_empty() { self.receiver.close_step(loan) } else { self.overlay.close_step(loan) };
+                        RetainedWorkOutcome { result, work: 1 }
                     }))?;
                     false
                 }
@@ -112,7 +115,12 @@ impl IfcCandidateRules for NativeCandidateRules {
         if !self.overlay.terminal_is_empty() { return self.overlay.close_demands(body); }
         Ok(Self::metadata())
     }
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+        RetainedWorkOutcome { result: self.close_step_result(grant), work: 1 }
+    }
+}
+impl NativeCandidateRules {
+    fn close_step_result(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if !self.closing { return Err(refusal("express.local-not-closing")); }
         if !self.machine.terminal_is_empty() { return self.machine.close_step(grant); }
         if !self.receiver.terminal_is_empty() { return self.receiver.close_step(grant); }

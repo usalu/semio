@@ -1,6 +1,9 @@
 //! 🧱️ Document model of the flow snapshot: the serde defaults, the layout, artifact, GUI, channel, camera, synapse and widget records and the host components. See [`super`].
 
 use super::*;
+use semio_framework_value::{retained_clone::retained_clone_grant_admits, RetainedCloneGrant, RetainedCloneStep, RetainedWorkOutcome, RetirementDemand};
+use semio_framework_value_native_owned::native_decoding::owned::{tree as native_tree, NativeDefault, NativeDefaultValue, NativeDefaultValueCursor};
+use std::mem::size_of;
 
 // #region 🔖️Document
 pub(super) fn default_slider_value() -> f64 {
@@ -168,13 +171,19 @@ pub struct CameraJson {
 }
 
 /// 📷️ A record that omits its camera receives the identity camera: origin at the centre and unit zoom.
-impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for CameraJson {
-    fn native_default_demand() -> semio_framework_value::RetirementDemand { semio_framework_value_native_owned::native_decoding::owned::tree::fixed(2 * std::mem::size_of::<Self>()) }
-    fn native_default(grant: semio_framework_value::RetainedCloneGrant) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
-        let demand = Self::native_default_demand();
-        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Err(semio_framework_value_native_owned::native_decoding::owned::tree::invalid()); }
-        Ok((Self { x: 0.0, y: 0.0, zoom: 1.0 }, semio_framework_value_native_owned::native_decoding::owned::tree::receipt(demand)))
+impl NativeDefaultValue for CameraJson {
+    fn default_demand() -> RetirementDemand { native_tree::fixed(2 * size_of::<Self>()) }
+    fn admit_default(output: &mut Option<Self>, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+        if output.is_some() { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }; }
+        let demand = <Self as NativeDefaultValue>::default_demand();
+        if !retained_clone_grant_admits(grant, demand) { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }; }
+        *output = Some(Self { x: 0.0, y: 0.0, zoom: 1.0 });
+        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(native_tree::receipt(demand))), work: 1 }
     }
+}
+impl NativeDefault for CameraJson {
+    type Cursor = NativeDefaultValueCursor<Self>;
+    fn default_cursor() -> Self::Cursor { NativeDefaultValueCursor::new() }
 }
 
 fn default_from_port() -> String {
@@ -337,12 +346,18 @@ impl semio_framework_dsl_record::DslField for FlowUi {
     fn retire_decoded(self) { semio_framework_value::FromValue::retire_decoded(self) }
 }
 
-impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for FlowUi {
-    fn native_default_demand() -> semio_framework_value::RetirementDemand { semio_framework_value_native_owned::native_decoding::owned::tree::fixed(2 * std::mem::size_of::<Self>()) }
-    fn native_default(grant: semio_framework_value::RetainedCloneGrant) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
-        let demand = Self::native_default_demand();
-        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Err(semio_framework_value_native_owned::native_decoding::owned::tree::invalid()); }
-        Ok((Self::default(), semio_framework_value_native_owned::native_decoding::owned::tree::receipt(demand)))
+impl NativeDefaultValue for FlowUi {
+    fn default_demand() -> RetirementDemand { native_tree::fixed(2 * size_of::<Self>()) }
+    fn admit_default(output: &mut Option<Self>, grant: RetainedCloneGrant) -> RetainedWorkOutcome {
+        if output.is_some() { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(Default::default())), work: 0 }; }
+        let demand = <Self as NativeDefaultValue>::default_demand();
+        if !retained_clone_grant_admits(grant, demand) { return RetainedWorkOutcome { result: Ok(RetainedCloneStep::Progress(Default::default())), work: 0 }; }
+        *output = Some(Self::default());
+        RetainedWorkOutcome { result: Ok(RetainedCloneStep::Complete(native_tree::receipt(demand))), work: 1 }
     }
+}
+impl NativeDefault for FlowUi {
+    type Cursor = NativeDefaultValueCursor<Self>;
+    fn default_cursor() -> Self::Cursor { NativeDefaultValueCursor::new() }
 }
 // #endregion 🔖️Document

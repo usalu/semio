@@ -43,7 +43,7 @@ impl RetirementQueue {
     pub fn admit_typed_retirement<T:ErasedSnapshotRetirement+'static>(&mut self,original:&mut Option<Box<T>>,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<RetainedCloneProgress>,ValueError>{let mut work=0;let result=(||{
         if original.is_none()||grant.maximum_items==0||grant.maximum_depth<self.frames.len()+1{return Ok(None)}
         if !self.has_reserved_slot(){return Err(refusal(ValueRefusalKind::OwnershipLimit,"original typed retirement requires its reserved queue slot"))}
-        work=1;assert!(self.frames.push_reserved(original.take().unwrap()).is_ok(),"original typed queue reserved slot disappeared");Ok(Some(RetainedCloneProgress{copied_items:1,..Default::default()}))
+        work=1;assert!(self.frames.push_reserved(original.take().ok_or_else(||ValueError::invariant("original absent"))?).is_ok(),"original typed queue reserved slot disappeared");Ok(Some(RetainedCloneProgress{copied_items:1,..Default::default()}))
     })();RetainedWorkOutcome{result,work}}
     /// 🔏️ Transfers an original admitted frame into reserved custody without allocating another shell.
     pub fn admit_retirement(&mut self,owner:Box<dyn ErasedSnapshotRetirement>,grant:RetainedCloneGrant)->RetainedWorkOutcome<RetainedCloneProgress,(ValueError,Box<dyn ErasedSnapshotRetirement>)> {let mut work=0;let result=(||{

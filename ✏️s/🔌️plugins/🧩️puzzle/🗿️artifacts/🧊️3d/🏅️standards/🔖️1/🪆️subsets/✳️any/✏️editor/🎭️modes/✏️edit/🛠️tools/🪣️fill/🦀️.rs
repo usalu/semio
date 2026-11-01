@@ -296,15 +296,16 @@ impl ToolRunRetargetableJob<Puzzle3dConfig> for Puzzle3dFillToolRunJob {
     }
 }
 
-impl Puzzle3dFillToolRunJob {
-    /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, context: &mut StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+impl InteractiveJob for Puzzle3dFillToolRunJob {
+    /// 🪜️ Prepares on the first turns, then hands the claimed turn to the running or revalidating child.
+    fn step<'a>(&'a mut self, context: &mut StepContext<'_>, claim: &mut semio_framework_job::OriginalJobReturnClaim<'_>) -> semio_framework_job::InteractiveJobStep<'a> {
+        use semio_framework_job::InteractiveJobStep;
         while let FillToolRunPhase::Preparing(preparation) = &mut self.phase {
             if context.is_cancelled() {
-                return semio_framework_job::JobOutcomeBorrow::admit_cancelled(context).map_err(semio_framework_job::OriginalTurnFailure::from);
+                return InteractiveJobStep::from_callback(semio_framework_job::JobOutcomeBorrow::admit_cancelled(context).map_err(semio_framework_job::OriginalTurnFailure::from));
             }
             if context.deadline_exceeded() {
-                return semio_framework_job::JobOutcomeBorrow::admit_yield(context).map_err(semio_framework_job::OriginalTurnFailure::from);
+                return InteractiveJobStep::from_callback(semio_framework_job::JobOutcomeBorrow::admit_yield(context).map_err(semio_framework_job::OriginalTurnFailure::from));
             }
             if !Self::prepare_one(preparation) {
                 continue;
@@ -313,15 +314,11 @@ impl Puzzle3dFillToolRunJob {
             self.phase = Self::start(*preparation);
         }
         match &mut self.phase {
-            FillToolRunPhase::Run(job) => job.step(context),
-            FillToolRunPhase::Revalidate(job) => job.step(context),
-            FillToolRunPhase::Preparing(_) | FillToolRunPhase::Closed => semio_framework_job::JobOutcomeBorrow::admit_cancelled(context).map_err(semio_framework_job::OriginalTurnFailure::from),
+            FillToolRunPhase::Run(job) => job.step(context, claim),
+            FillToolRunPhase::Revalidate(job) => job.step(context, claim),
+            FillToolRunPhase::Preparing(_) | FillToolRunPhase::Closed => InteractiveJobStep::from_callback(semio_framework_job::JobOutcomeBorrow::admit_cancelled(context).map_err(semio_framework_job::OriginalTurnFailure::from)),
         }
     }
-}
-
-impl InteractiveJob for Puzzle3dFillToolRunJob {
-    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match &self.phase {

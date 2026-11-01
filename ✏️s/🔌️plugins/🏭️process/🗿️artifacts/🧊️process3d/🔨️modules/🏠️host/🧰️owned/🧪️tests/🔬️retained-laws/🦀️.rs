@@ -18,7 +18,7 @@ fn every_mutation() -> Vec<Process3dMutation> {
 /// ♻️ Admits one original value to the neutral retained-owner retirement and returns the boxed owner.
 fn admitted<T: semio_framework_value::retirement::RetireOwned>(value: T) -> Box<dyn store::ErasedSnapshotRetirement> {
     let birth = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(), maximum_depth: 2, ..Default::default() };
-    match semio_framework_value::retirement::admit_owned_retirement(value, birth) {
+    match semio_framework_value::retirement::admit_owned_retirement(value, birth).result {
         Ok((owner, _)) => owner,
         Err((error, _value)) => panic!("retirement admission refused its own quote: {error}"),
     }
@@ -36,7 +36,7 @@ fn close_to_empty(mut owner: Box<dyn store::ErasedSnapshotRetirement>) -> usize 
     while !owner.terminal_is_empty() {
         let quote = owner.next_demand(PROCESS3D_MAXIMUM_DOMAIN_BYTES).expect("the owner quotes its next turn");
         assert!(quote.release_bytes <= PROCESS3D_MAXIMUM_DOMAIN_BYTES, "a quoted release stays inside the admitted domain bytes");
-        let progress = owner.close_step(grant_of(&quote)).expect("the owner closes within its quoted grant").progress();
+        let progress = owner.close_step(grant_of(&quote)).result.expect("the owner closes within its quoted grant").progress();
         assert!(progress.released_bytes <= quote.release_bytes);
         released += progress.released_bytes;
         turns += 1;
@@ -498,7 +498,7 @@ fn retained_owner_demand_distinguishes_structural_work_from_exact_string_allocat
         assert_eq!(value.capacity(), extent);
         let mut owner = admitted(value);
         let quote = owner.next_demand(PROCESS3D_MAXIMUM_DOMAIN_BYTES).expect("the owner quotes its next turn");
-        let step = owner.close_step(RetainedCloneGrant { maximum_release_bytes: caller, ..grant_of(&quote) });
+        let step = owner.close_step(RetainedCloneGrant { maximum_release_bytes: caller, ..grant_of(&quote) }).result;
         let reported = match &step { Ok(step) => step.progress().released_bytes, Err(_) => 0 };
         let retained = !owner.terminal_is_empty();
         let retained_quote = owner.next_demand(PROCESS3D_MAXIMUM_DOMAIN_BYTES).map(|quote| quote.release_bytes).unwrap_or(usize::MAX);

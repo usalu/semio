@@ -78,10 +78,10 @@ impl store::ArtifactPackReceiving for Fem2dSnapshot{
    let body=store::semio_format::unwrap_binary_controlled(bytes,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1,original.native())?;
    *slot=Some(original.receive_nested::<RetainedRecordReceiving,RecordValue>(|cursor,original|{
     let grant=original.remaining_grant();
-    let Some((receiving,progress))=RetainedRecordReceiving::admit_document(body,(0,body.len()),<Fem2dSnapshotValue as BorrowedDslRecord>::RECORD,protocol::PackLimits::default(),grant)? else{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original FEM pack grant cannot admit its receiving parser"));};
+    let Some((receiving,progress))=RetainedRecordReceiving::admit_document(body,(0,body.len()),<Fem2dSnapshotValue as BorrowedDslRecord>::RECORD,protocol::PackLimits::default(),grant).result? else{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original FEM pack grant cannot admit its receiving parser"));};
     *cursor=Some(receiving);original.record_progress(progress)?;
     original.drive_cursor(cursor,|cursor,native,grant|{
-     if cursor.is_ready(){let mut out=None;match cursor.take_into(&mut out,grant){Ok(p)=>(Ok(out),p),Err(e)=>{let p=e.retained_progress();(Err(e),p)}}}else{match cursor.step(body,native,grant){Ok(p)=>(Ok(None),p),Err(e)=>{let p=e.retained_progress();(Err(e),p)}}}
+     if cursor.is_ready(){let mut out=None;match cursor.take_into(&mut out,grant).result{Ok(p)=>(Ok(out),p),Err(e)=>{let p=e.retained_progress();(Err(e),p)}}}else{match cursor.step(body,native,grant).result{Ok(p)=>(Ok(None),p),Err(e)=>{let p=e.retained_progress();(Err(e.primary.or(e.quote_refusal).or(e.allocation_refusal).unwrap_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original native construction refused"))),p)}}}
     })
    })?);
    Self::receive_exchange_record(slot.as_ref().unwrap(),original)

@@ -12,7 +12,7 @@ use semio_framework_value::{ValueError, ValueRefusalKind};
 pub struct TxtIntoIfc4x3Native;
 impl Deserializer<IfcSnapshot> for TxtIntoIfc4x3Native {
     const FROM: semio_framework_artifact_reference::Dialect = TXT_DIALECT;
-    const FIDELITY: IoFidelity = IoFidelity::Lossless;
+    const FIDELITY: IoFidelity = IoFidelity::Exact;
     async fn deserialize(input: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IfcSnapshot> {
         let IoPayload::Binary(bytes) = input else {
             return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvalidValue, "STEP import requires the actual native UTF-8 artifact Pack")));

@@ -62,20 +62,28 @@ pub struct SetGraphParameterRetirement {
     index: usize,
 }
 
-impl crate::os_store::ErasedSnapshotRetirement for SetGraphParameterRetirement {
-    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {release_bytes:self.bytes.get(self.index).and_then(Option::as_ref).map_or(0,Vec::capacity),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+impl SetGraphParameterRetirement {
+    fn release_one(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();
-        if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
+        if crate::os_store::ErasedSnapshotRetirement::terminal_is_empty(self) { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
         if grant.maximum_depth < 1 { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "intent retirement exceeds admitted depth")); }
-        let released_bytes = self.next_release_byte_demand()?;
+        let released_bytes = crate::os_store::ErasedSnapshotRetirement::next_release_byte_demand(self)?;
         if released_bytes > grant.maximum_release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         drop(self.bytes[self.index].take());
         self.index += 1;
         let progress = RetainedCloneProgress { copied_items: 1, released_bytes, ..empty };
-        Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+        Ok(if crate::os_store::ErasedSnapshotRetirement::terminal_is_empty(self) { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
+    }
+}
+
+impl crate::os_store::ErasedSnapshotRetirement for SetGraphParameterRetirement {
+    fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand {release_bytes:self.bytes.get(self.index).and_then(Option::as_ref).map_or(0,Vec::capacity),depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
+        let result = self.release_one(grant);
+        let work = u64::from(matches!(&result, Ok(step) if step.progress().copied_items != 0));
+        semio_framework_value::RetainedWorkOutcome { result, work }
     }
     fn next_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }
     fn next_capacity_byte_demand(&self, _copy: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(0) }

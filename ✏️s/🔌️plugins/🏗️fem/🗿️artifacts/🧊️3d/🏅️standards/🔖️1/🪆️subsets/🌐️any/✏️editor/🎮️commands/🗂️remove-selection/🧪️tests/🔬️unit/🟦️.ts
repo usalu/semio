@@ -17,5 +17,4 @@ export function testFem3dRemovalOracle(): void {
   const empty = applyPatch(structuredClone(loads), mutations, true).newDocument;
   assert.deepEqual(empty, Object.fromEntries(Object.entries(vector.snapshot).map(([key, value]) => [key, key === "analysis" ? value : []])));
   assert.equal(vector.orderedKinds.length, new Set(vector.selection.filter((id: string) => id !== "scope:1:4:node7:missing")).size);
-  console.log("[DEBUG] FEM3d removal vector agrees with JSON Patch for loads, nine granularities and dependency order");
 }

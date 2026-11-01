@@ -17,5 +17,4 @@ fn retained_weight_dictionary_preserves_authored_wire_cases() {
             assert!((value.as_f64().unwrap() - row["expected"][id].as_f64().unwrap()).abs() < 1e-12);
         }
     }
-    println!("[DEBUG] Puzzle5D native retained weight dictionary matches six shared wire vectors");
 }

@@ -116,9 +116,13 @@ export function uiTailwindBuildPlugins(options: Readonly<{ sourceBase?: string }
   });
 }
 
-/** ⚛️ React's temporary build adapter behind the UI package that declares it. */
-export function uiReactBuildPlugin(): OwnedBuildPlugin {
-  return react() as unknown as OwnedBuildPlugin;
+/** 🪞️ The packages that must resolve to exactly one physical copy in every React host bundle, so a cross-scope import can never mount a second React and break hooks. */
+export const UI_REACT_SINGLETON_PACKAGES: readonly string[] = ["react", "react-dom"];
+
+/** ⚛️ React's temporary build adapter behind the UI package that declares it, plus the dedupe of {@link UI_REACT_SINGLETON_PACKAGES} that no host config may forget. */
+export function uiReactBuildPlugin(): OwnedBuildPlugin[] {
+  const singleton: OwnedBuildPlugin = { name: "semio:react-singleton", config: () => ({ resolve: { dedupe: UI_REACT_SINGLETON_PACKAGES } }) };
+  return [...(react() as unknown as OwnedBuildPlugin[]), singleton];
 }
 
 /** 🧪️ Defines a test/build config without exporting Vitest or Vite types. */

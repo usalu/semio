@@ -46,11 +46,11 @@ fn bounded_value_retirement_preserves_original_owner_and_physical_receipts_under
                 let grant = physical_test_close_grant();
                 for refusal in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (copy < demand.copy_bytes).then(|| RetainedCloneGrant { maximum_copy_bytes: copy, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant })].into_iter().flatten() {
                     let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| artifact_retirement_box_close_step(&mut slot, refusal));
-                    assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
+                    assert_eq!(step.result.unwrap().progress(), RetainedCloneProgress::default());
                     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 }
                 let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| artifact_retirement_box_close_step(&mut slot, grant));
-                let progress = step.unwrap().progress();
+                let progress = step.result.unwrap().progress();
                 assert!(progress.fits(grant));
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
                 born += progress.retained_capacity_bytes;
@@ -106,11 +106,11 @@ fn original_vcs_retirement_preserves_real_history_visibility_genesis_and_full_ph
             let grant = physical_test_close_grant();
             for denial in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }), (demand.capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant })].into_iter().flatten() {
                 let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denial));
-                assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
+                assert_eq!(step.result.unwrap().progress(), RetainedCloneProgress::default());
                 assert_eq!((allocated, released), (0, 0));
             }
             let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant));
-            let progress = step.unwrap().progress();
+            let progress = step.result.unwrap().progress();
             assert!(progress.fits(grant));
             assert_eq!((allocated, released), (progress.retained_capacity_bytes, progress.released_bytes));
             during += allocated;
@@ -220,11 +220,11 @@ fn original_sparse_lane_authority_matches_sorted_oracle_and_retains_original_phy
             let grant = physical_test_close_grant();
             for denial in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (cursor.next_release_byte_demand().unwrap() != 0).then(|| RetainedCloneGrant { maximum_release_bytes: cursor.next_release_byte_demand().unwrap() - 1, ..grant })].into_iter().flatten() {
                 let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| cursor.close_step(denial));
-                assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
+                assert_eq!(step.result.unwrap().progress(), RetainedCloneProgress::default());
                 assert_eq!((allocated, released), (0, 0));
             }
             let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| cursor.close_step(grant));
-            let progress = step.unwrap().progress();
+            let progress = step.result.unwrap().progress();
             assert!(progress.fits(grant));
             assert_eq!((allocated, released), (progress.retained_capacity_bytes, progress.released_bytes));
             born += allocated;
@@ -362,13 +362,13 @@ fn original_retained_member_open_close_conserves_supplied_birth_and_physical_rel
         let original_capacity_demand=owner.next_capacity_byte_demand(copy).unwrap();
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (owner.next_release_byte_demand().unwrap() != 0).then(|| RetainedCloneGrant { maximum_release_bytes: owner.next_release_byte_demand().unwrap() - 1, ..grant }), (owner.next_capacity_byte_demand(copy).unwrap() != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap() - 1, ..grant })].into_iter().flatten() {
             let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denied));
-            assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
+            assert_eq!(step.result.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
             assert_eq!(owner.next_release_byte_demand().unwrap(),original_release_demand);
             assert_eq!(owner.next_capacity_byte_demand(copy).unwrap(),original_capacity_demand);
         }
         let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant));
-        let step = step.unwrap();
+        let step = step.result.unwrap();
         let progress = step.progress();
         assert!(progress.fits(grant));
         assert_eq!((allocated, released), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -404,12 +404,12 @@ fn original_operation_rows_close_conserves_last_factory_and_retired_string_owner
         let grant = physical_test_close_grant();
         for denied in [Some(RetainedCloneGrant { maximum_items: 0, ..grant }), (demand.release_bytes != 0).then(|| RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }), (demand.capacity_bytes != 0).then(|| RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant })].into_iter().flatten() {
             let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(denied));
-            assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
+            assert_eq!(step.result.unwrap().progress(), RetainedCloneProgress::default());
             assert_eq!((allocated, released), (0, 0));
             assert_eq!(owner.demands(copy).unwrap(), demand);
         }
         let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant));
-        let step = step.unwrap();
+        let step = step.result.unwrap();
         let progress = step.progress();
         assert!(progress.fits(grant));
         assert_eq!((allocated, released), (progress.retained_capacity_bytes, progress.released_bytes));

@@ -16,12 +16,12 @@ impl<T:NativeIntrinsicRecord>NativeIntrinsicReceiving<T>{
   let d=match self.demands(input,body){Ok(d)=>d,Err(e)=>return RetainedWorkOutcome{result:Err(e.into()),work:0}};if !funds(g,d){return RetainedWorkOutcome{result:Ok(Default::default()),work:0}}
   match self.phase{
    0 if !self.shape.is_ready()=>{let Some(FieldValue::Record(record))=input.as_ref()else{return RetainedWorkOutcome{result:Err(invalid().into()),work:0}};let result=self.shape.step(record,&[(T::INTRINSIC_FIELD_ID,true)],native,g);return RetainedWorkOutcome{result:result.map_err(Into::into),work:self.shape.last_turn_work()}},
-   3 if self.admission.as_ref().is_some_and(|a|a.phase()!="ready")=>{let turn=self.admission.as_mut().unwrap().advance(g);return physical(native.receive_retained_work(g,turn))},
-   4=>{let turn=self.admission.as_mut().unwrap().take_output(&mut self.source,g);return physical(native.receive_retained_work(g,turn))},
+   3 if self.admission.as_ref().is_some_and(|a|a.phase()!="ready")=>{let turn=match self.admission.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("admission absent").into()),work:0}}.advance(g);return physical(native.receive_retained_work(g,turn))},
+   4=>{let turn=match self.admission.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("admission absent").into()),work:0}}.take_output(&mut self.source,g);return physical(native.receive_retained_work(g,turn))},
    6=>{if let Err(e)=storage::capacity(native,d.capacity_bytes){return RetainedWorkOutcome{result:Err(e.into()),work:0}}let turn=self.receiver.reserve(g);return physical(native.receive_retained_work(g,turn))},
-   7=>{if let Err(e)=native.checkpoint(){return RetainedWorkOutcome{result:Err(e.into()),work:0}}let mut header=Some(NativeReceivingOriginal::new(self.source.take().unwrap()));return normal(physical(self.receiver.put_from(&mut header,g)))},
-   8 if !self.receiver.get().unwrap().output_ready()=>return physical(self.receiver.get_mut().unwrap().advance(native,body,child_grant(g))),
-   9=>{let turn=self.receiver.get_mut().unwrap().take(child_grant(g));let result=turn.result.map(|out|if let Some((value,p))=out{*self.output.value=Some(value);p}else{Default::default()});return RetainedWorkOutcome{result:result.map_err(Into::into),work:turn.work}},
+   7=>{if let Err(e)=native.checkpoint(){return RetainedWorkOutcome{result:Err(e.into()),work:0}}let mut header=Some(NativeReceivingOriginal::new(match self.source.take(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("source absent").into()),work:0}}));return normal(physical(self.receiver.put_from(&mut header,g)))},
+   8 if !match self.receiver.get(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("get target absent").into()),work:0}}.output_ready()=>return physical(match self.receiver.get_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("get_mut target absent").into()),work:0}}.advance(native,body,child_grant(g))),
+   9=>{let turn=match self.receiver.get_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("get_mut target absent").into()),work:0}}.take(child_grant(g));let result=turn.result.map(|out|if let Some((value,p))=out{*self.output.value=Some(value);p}else{Default::default()});return RetainedWorkOutcome{result:result.map_err(Into::into),work:turn.work}},
    11 if !self.receiver.terminal_is_empty()||self.retired.is_some()=>return post_child_close(self.close_receiver(g),native,g),
    12 if !self.record.terminal_is_empty()=>return close_source(&mut self.record,native,g),_=>{}
   }
@@ -45,10 +45,10 @@ impl<T:NativeIntrinsicRecord>NativeIntrinsicReceiving<T>{
 impl<T:NativeIntrinsicRecord>OwnedFieldReceiving<T>for NativeIntrinsicReceiving<T>{
  fn demands(&self,input:&Option<FieldValue>,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.failed{return Err(invariant())}match self.phase{
   0=>{if !matches!(input,Some(FieldValue::Record(_))){return Err(invalid())}Ok(metadata::<()>())},
-  3 if self.admission.as_ref().is_some_and(|a|a.phase()!="ready")=>self.admission.as_ref().unwrap().next_demand(),
+  3 if self.admission.as_ref().is_some_and(|a|a.phase()!="ready")=>self.admission.as_ref().ok_or_else(||ValueError::invariant("admission absent"))?.next_demand(),
   4 if self.source.is_none()=>Ok(metadata::<()>()),
   6 if !self.receiver.reserved()=>Ok(NativeOwnedStorage::<NativeReceivingOriginal<DslValue,T>>::reserve_demand()),
-  8 if !self.receiver.get().ok_or_else(invariant)?.output_ready()=>self.receiver.get().unwrap().demands(body).and_then(nested),
+  8 if !self.receiver.get().ok_or_else(invariant)?.output_ready()=>self.receiver.get().ok_or_else(||ValueError::invariant("get target absent"))?.demands(body).and_then(nested),
   9 if self.output.value.is_none()=>self.receiver.get().ok_or_else(invariant)?.take_demand().and_then(nested),
   11 if !self.receiver.terminal_is_empty()||self.retired.is_some()=>self.receiver_close_demand(body),
   12 if !self.record.terminal_is_empty()=>self.record.close_demands(body),13=>Ok(Default::default()),_=>Ok(metadata::<()>())}}

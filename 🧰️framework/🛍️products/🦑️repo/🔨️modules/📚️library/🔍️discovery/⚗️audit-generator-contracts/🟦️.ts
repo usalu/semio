@@ -113,7 +113,7 @@ export function auditGeneratorContracts(audit: TaxonomyAudit): void {
         if (!input.workspaceImports || typeof input.workspaceImports !== "object" || Array.isArray(input.workspaceImports)) problems.push(`generatorContracts[${JSON.stringify(id)}].inputDiscovery.workspaceImports must be an object.`);
         else for (const [name, binding] of Object.entries(input.workspaceImports)) {
           exactKeys(binding, ["manifestPath", "entryPath"], `generatorContracts[${JSON.stringify(id)}].inputDiscovery.workspaceImports[${JSON.stringify(name)}]`);
-          if (!/^@[a-z0-9-]+\/[a-z0-9-]+$/u.test(name)) problems.push(`generatorContracts[${JSON.stringify(id)}].inputDiscovery workspace import must be an exact package name.`);
+          if (!/^@[a-z0-9-]+\/[a-z0-9-]+(?:\/[a-z0-9][a-z0-9.-]*)*$/u.test(name)) problems.push(`generatorContracts[${JSON.stringify(id)}].inputDiscovery workspace import must be an exact package name or package subpath.`);
           for (const path of [binding.manifestPath, binding.entryPath]) if (!workspacePath(path, `generatorContracts[${JSON.stringify(id)}].inputDiscovery workspace binding`) || exactTouchesOpaque(path)) problems.push(`generatorContracts[${JSON.stringify(id)}].inputDiscovery workspace binding crosses an opaque boundary.`);
         }
       }

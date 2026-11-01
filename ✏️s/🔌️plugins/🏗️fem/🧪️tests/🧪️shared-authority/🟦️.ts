@@ -20,13 +20,11 @@ test("shared FEM result modes project eigenvectors and the declared physical uni
       expect(actual, row.id).toBeCloseTo(oracle!, 12);
     }
   }
-  console.log("[DEBUG] FEM result projection five vectors agree with independent Decimal square-root/unit conversion");
 });
 
 test("FEM color projection shares the framework color-string corpus", () => {
   const assertions = colorInputSelfTests();
   expect(assertions).toBeGreaterThan(0);
-  console.log("[DEBUG] FEM shared color-input/color-string assertions=" + assertions);
 });
 
 test("shared retained index sorting agrees with the portable independent order oracle", async () => {

@@ -59,12 +59,12 @@ fn vcs_retirement_propagates_nested_physical_allocation_demand() {
         let demand = owner.next_release_byte_demand().unwrap();
         let caller = row["callerBytes"].as_u64().unwrap() as usize;
         let caller_grant = RetainedCloneGrant { maximum_release_bytes: caller, maximum_capacity_bytes: admission, ..physical_test_close_grant() };
-        let (caller_step, _, caller_released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(caller_grant).unwrap());
+        let (caller_step, _, caller_released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(caller_grant).result.unwrap());
         let caller_expected = row["releasedBytes"].as_u64().unwrap() as usize;
         let mut progress = vec![(caller_step, caller_released)];
-        for _ in 0..512 { if owner.terminal_is_empty() { break; } let grant=RetainedCloneGrant { maximum_capacity_bytes:admission,maximum_release_bytes:admission,..physical_test_close_grant() };let (step, _, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));progress.push((step, released)); }
+        for _ in 0..512 { if owner.terminal_is_empty() { break; } let grant=RetainedCloneGrant { maximum_capacity_bytes:admission,maximum_release_bytes:admission,..physical_test_close_grant() };let (step, _, released) = semio_framework_trace_memory_testing::observe_backing(|| owner.close_step(grant).result.unwrap());assert!(step.progress().fits(grant));progress.push((step, released)); }
         let terminal = owner.terminal_is_empty();
-        for _ in 0..1024 { if owner.terminal_is_empty() { break; } owner.close_step(RetainedCloneGrant { maximum_capacity_bytes:admission,maximum_release_bytes:admission,..physical_test_close_grant() }).unwrap(); }
+        for _ in 0..1024 { if owner.terminal_is_empty() { break; } owner.close_step(RetainedCloneGrant { maximum_capacity_bytes:admission,maximum_release_bytes:admission,..physical_test_close_grant() }).result.unwrap(); }
         assert!(owner.terminal_is_empty());
         let exact_accounting = progress.iter().all(|(step, actual)| step.progress().released_bytes == *actual);
         if demand != extent || !terminal || !exact_accounting || caller_released != caller_expected { failures.push((extent, demand, terminal, exact_accounting)); }
@@ -242,15 +242,15 @@ fn close_step(&mut self, _: RetainedCloneGrant) -> semio_framework_value::Retain
             for _ in 0..64 {
                 if owner.next_release_byte_demand().unwrap()==N { found=true;break; }
                 assert!(!owner.terminal_is_empty(),"real original owner must reach its actual terminal child frame");
-                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
+                let (step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant).result.unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
             }
             assert!(found,"actual {name} reaches original {N}-byte terminal child frame");
             let demand=owner.next_release_byte_demand().unwrap();let caller=row["callerBytes"].as_u64().unwrap() as usize;
-            let (step,allocated,actual)=semio_framework_trace_memory_testing::observe_backing(||owner.close_step(RetainedCloneGrant {maximum_release_bytes: caller,..grant}).unwrap());
+            let (step,allocated,actual)=semio_framework_trace_memory_testing::observe_backing(||owner.close_step(RetainedCloneGrant {maximum_release_bytes: caller,..grant}).result.unwrap());
             let reported=step.progress().released_bytes;let expected=row["releasedBytes"].as_u64().unwrap() as usize;
             assert_eq!(allocated,0);assert!(step.progress().fits(RetainedCloneGrant {maximum_release_bytes:caller,..grant}));
             if expected==0 { assert_eq!(owner.as_ref() as *const dyn ErasedSnapshotRetirement as *const (),original);assert_eq!(owner.next_release_byte_demand().unwrap(),N); }
-            for _ in 0..64 {if owner.terminal_is_empty(){break;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant).unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
+            for _ in 0..64 {if owner.terminal_is_empty(){break;}let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.close_step(grant).result.unwrap());assert!(step.progress().fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));}
             assert!(owner.terminal_is_empty());let shell=std::mem::size_of_val(owner.as_ref());assert!(grant.maximum_release_bytes>=shell);
             let (_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,shell));
             if demand!=N||actual!=expected||reported!=actual {failures.push((name.into(),demand,actual,reported));}

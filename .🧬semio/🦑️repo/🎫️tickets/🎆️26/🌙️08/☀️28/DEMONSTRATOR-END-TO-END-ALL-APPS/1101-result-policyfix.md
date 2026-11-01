@@ -1,0 +1,213 @@
+STATUS: NOT GREEN. Gate run `gatepf-6` (`C/🗑️generated/1101/gatepf-6.txt`, rc 1) fails only in `semio-framework-os-store-replay` (27 errors in `🔁️replay/🧬️supersession`, `🛑️cancel`, `📥️lifted/🔗️read`: work-accounting API port, not a rewrite fault). Everything else in the gate compiled. No `framework-green` marker written. Unwrap sweep DEFERRED.
+
+# 1101 result: policyfix
+
+## Done (edited, unverified)
+- `[DEBUG]` (11 audited lines): all removed. Authorizer read failure is now a non-enumerable `lineage` property on the thrown error (test asserts on it); request-runtime test script lost its debug timer/progress prints; `turn<99999` asserts renamed to plain messages.
+- `#[allow]`: `job/⏱️context` `with_payload_ledger` now 7 args (operation and generation come from the ledger), caller-less `step_context_with_payload_ledger` deleted; hub stdio composition template no longer emits `#![allow(async_fn_in_trait)]`.
+- `grow/🟦️.ts`: `language` is required, `??"en"` gone; 16 test calls pass `language:"en"` explicitly.
+- Shim review: kerning `legacy*` renamed to `kernTable*` (TrueType kern table is a real format variant, not a shim); `mode:"legacy"` vector renamed `stale-version` (it is a rejection vector); "generated migration join" doc reworded.
+- Unwrap/expect/panic: automated typed-failure rewrite, tools in `C/1101-tools/policyfix/` (`optq.py`, `optq2.py`, `failins.py`). New `ValueError::invariant(&'static str)` in `value/🎟️control/🧬️contract`.
+
+## Unwrap sweep: DEFERRED
+The automated rewrite touched the files listed below (`ValueError::invariant`, `Invalid("..absent")`, `ok_or("..")`, `failure.insert`). Known faults repaired by hand: option-cursor and paged-list (`?` in a `project` closure, restored `.expect`), original-vector `take_front`, six `unwrap_or_else(|_|return Err(..))` turned into `map_err(..)?`, pixels plan mask closure, snapshot-clone authority, named index directory check, array project. Sites that need a signature change (closures returning references) stay as `.expect` and are deferred. The rows not yet converted remain in `C/🗑️generated/1101/aud-policy-unwrap-rows.txt`.
+
+### Files rewritten
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📥️tessellation/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/⚙️engine/🧱️material/🩹️patch/🦀️.rs`
+- `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🕸️canvas/🫧️transient/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎥️media-export-job-and-factories/🦀️.rs`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️patch-page/🖼️drawing/📖️source/🦀️.rs`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️export-tool-job/🧵️retained/🦀️.rs`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🧬️geometry-media-and-owners/🦀️.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/♻️mutate-rewrite-1/🪆️owner/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/🪟️details/field_edit.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧵️prepare/🔺️tessellation/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔮️oracles/🦀️.rs`
+- `✏️s/🔨️modules/🏗️fem/⚙️engine/🕸️mesh/🕹️mesh-job-run/🦀️.rs`
+- `🧰️framework/🔨️modules/⏯️tool-run/👥️entities/📸️version/🦀️.rs`
+- `🧰️framework/🔨️modules/⏯️tool-run/👥️entities/🧾️provenance/🦀️.rs`
+- `🧰️framework/🔨️modules/⏯️tool-run/📊️progress/🪟️presentation/🧬️update/🦀️.rs`
+- `🧰️framework/🔨️modules/⏯️tool-run/📨️payload/🌊️stream/🧳️update/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📇️catalog/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🤝️kerning/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️outline/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↔️bidi/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/↩️line-break/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️cluster/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🧵️normalize/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🏷️class/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📇️face/🧵️scalar/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/📍️mark/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🔗️ligature/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧩️context/🪄️apply/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🧵️layout/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🪄️substitute/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/🔀️booleans/🛤️paths/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/🔀️booleans/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/🔍️trace/🦀️.rs`
+- `🧰️framework/🔨️modules/◻️2d/🛤️path/🖊️stroke/🦀️.rs`
+- `🧰️framework/🔨️modules/⚠️diagnostic/🧬️retirement/🎟️params/🦀️.rs`
+- `🧰️framework/🔨️modules/⚠️diagnostic/🧬️retirement/🎯️scope/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/⚖️result/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️boxed/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️owned/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🚼️construction/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️original-vector/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/📋️queue/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🏭️factory/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/📦️original/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️arc-custody/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/📽️projection/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/✨️derive/🛬️receive/🔀️enum/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/🎚️record/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🌳️tree/🟰️equal/📋️sequence/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🎮️splice/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📥️build/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/🧳️read/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🌳️root/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/📇️index/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/🔑️named/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📋️list/🪢️concat/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📝️shared-utf8/🎟️native/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📝️text/📦️paged/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📣️publication/🌳️root/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📦️paged/🎮️append/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🔗️read/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔗️immutable-alias/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️work/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🗂️ordered/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛫️encode/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/♻️retirement/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/📦️backing/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🏭️construction/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🔢️unit/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔀️variant/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🔢️array/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🌳️value/🧱️bulk/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📋️list/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/👯️pair/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/📦️slot/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🔢️array/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📥️default/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/📋️prefix/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️storage/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔄️map/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🔗️sealed-shared-receiver/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/📦️storage/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧩️record/🔎️schema/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/🧳️original/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/♻️close/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📋️field/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/♻️retirement/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/🎟️admission/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🔗️source/📦️packages/🦀️rust/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/➖️remove/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🎟️lease/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🔎️lookup-cursor/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📚️vec-cursor/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📜️clone-and-cursor-traits/🦀️.rs`
+- `🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/🔤️string-cursor/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🌱️value/🛬️decode/🫴️receiving/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧳️receiving/🦀️.rs`
+- `🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/🧵️operation/🦀️.rs`
+- `🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🦀️.rs`
+- `🧰️framework/🔨️modules/🎭️actor/🖼️wire-turn/⚠️diagnostic/🦀️.rs`
+- `🧰️framework/🔨️modules/🏗️mesh-engine/🌲️canonical/📥️decode/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/📦️bytes/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/⚙️codec/🛬️retained/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/♻️retirement/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️prepared/♻️retirement/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🪡️field/🟰️change/🎚️record/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧵️canonical/🪪️identity/🦀️.rs`
+- `🧰️framework/🔨️modules/📡️replication/🚪️io/📝️text/🧵️canonical/🔏️seal/🦀️.rs`
+- `🧰️framework/🔨️modules/🔲️pixels/🎨️sampling/↗️affine/🦀️.rs`
+- `🧰️framework/🔨️modules/🔲️pixels/🖊️coverage/🦀️.rs`
+- `🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🗂️layers/📋️plan/🦀️.rs`
+- `🧰️framework/🔨️modules/🔲️pixels/🧩️compositing/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📥️owned/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🌳️intrinsic/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🎁️wrapping/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/📋️vector/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/📦️storage/🦀️.rs`
+- `🧰️framework/🔨️modules/🗣️dsl/🧬️schema/🫴️receiving/📥️owned/🧬️contract/🦀️.rs`
+- `🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/🦀️.rs`
+- `🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/🗃️resident/🦀️.rs`
+- `🧰️framework/🔨️modules/🛠️tool-machine/🔗️read/📤️transfer/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/⏱️context/⏸️park/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/👶️child/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/⏱️context/🎟️source/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🎟️place/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/♻️retirement/📄️payload/🧱️payload-owner/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/⚠️failure/📦️domain/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/🚪️admission/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️session-admission/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️origin/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/🎟️source/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/⏸️continuation/📦️capsule/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/👷️worker/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/⛽️staged/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📦️builder/🦀️.rs`
+- `🧰️framework/🔨️modules/🧵️job/📬️outcome/📮️return/📦️bytes/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🧬️schema/🖼️presentation/🗂️expanded/🛬️receive/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🔌️dag-input-cursor-and-field-helpers/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/📥️lifted/🧵️canonical-edit/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/📸️snapshot/🔤️json/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/🏁️publication/↩️inverse/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/🏁️publication/✏️supersession/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️prepared/♻️retirement/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/🛬️receiving/🪜️cursor/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🕰️history/🏁️replay/checkpoint.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/🧳️receiving/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📥️lifted/🗄️durable-group/🏗️staged-root-retirement-and-commit-phases/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️snapshot-clone/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🎯️common/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧳️original/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧳️replacement/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/💡️inference/🎟️source/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/⚔️conflict/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📜️history/🛬️decode/🔀️transition/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧊️renderer/🚪️native-io/🎟️invocation/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🎞️tick/🎮️operations/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/📨️pending/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🚪️session/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📥️staging/⌨️typing/🎟️original/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📥️retained/📦️typed-pack-load/🛬️native/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗄️store-owners/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🫴️receiving/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📖️buffer/read.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🚪️native-io/📮️path-return/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/🧮️compute/🎟️invocation/📋️parameters/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🌱️cache/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📥️input/🦀️.rs`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧵️retirement/🦀️.rs`
+
+## Gate repairs (runs gatepf-1..6)
+- derive templates (`value/✨️derive/📽️projection`, `dsl/…/✨️derive/📥️owned`): `ValueError::invariant` now qualified through the macro path.
+- `job` continuation/origin, capsule, `context/🎟️source`, `child`; `mesh-engine/🌲️canonical/📥️decode`: `?` inside outcome closures restored to `.expect` (DEFERRED, needs outcome-returning signature).
+- `tool-machine/⌨️typing/🦀️.rs`: removed duplicate trailing `mod resident` block; `advance_retained_read`, `retain_original_read`, `return_retained_read` now return `RetainedWorkOutcome` (match the trait); `✍️edit` construction closure returns `RetainedWorkOutcome{work,result}`.
+- Other codemod faults: see list above.
+
+## Blocker
+`semio-framework-os-store-replay` still uses the old Result-returning step API (`close_step_controlled`, `NativeConstructionStepOutcome` without `work`, `admit_original_domain_failure` with `Option<TransitionFailure>`, `?` on `RetainedWorkOutcome`). It needs the same port as `replay-operation` (lane replay). Not touched by me.
+
+## Deferred / not done
+- All remaining unwrap/expect/panic rows (about 180 non-test rows) and the `[DEBUG]` lines outside the 11 audited ones (299 occurrences in 190 files, mostly FEM2d `eprintln!` in tests).
+- Owner decisions: `lockedLocale: "de"` untouched; generation3d `sun()` silently defaults on malformed `sun_json` (needs typed field); `InteractiveJobClassification::Migrated` naming; other generated hub compositions still carry `#![allow(async_fn_in_trait)]`.

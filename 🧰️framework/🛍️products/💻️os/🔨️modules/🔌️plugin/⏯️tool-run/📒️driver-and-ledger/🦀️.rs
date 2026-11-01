@@ -9,6 +9,7 @@ use std::collections::BTreeSet;
 use semio_framework_os_kernel::os_store::ArtifactStore;
 use semio_framework::Fault;
 use semio_framework_plugin_decl_views::child_view::ChildContentView;
+fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
 //#region 🔖️Ledger
 /// 📬️ What one applied tick changed.
@@ -496,22 +497,22 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         if !tool_grant_funds(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         if let Some(entry)=self.entry_retirement.as_mut(){
             if !entry.terminal_is_empty(){return entry.step(store,cx).map(Some)}
-            let step=semio_framework_job::close_original_retained_step(cx,demand,|_|{self.entry_retirement=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))})?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))
+            let step=retired(cx,demand,|_|{self.entry_retirement=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))})?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))
         }
         if self.retiring_entries.is_some()||self.closing&&!self.entries.is_empty(){
-            let step=semio_framework_job::close_original_retained_step(cx,demand,|_|{
+            let step=retired(cx,demand,|_|{
                 let original=if let Some(mut entry)=self.retiring_entries.take(){self.retiring_entries=entry.retired_next.take();entry}else{self.entries.pop().unwrap()};
                 self.entry_retirement=Some(ToolRunEntryRetirement::capture(original));
                 Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,released_bytes:demand.release_bytes,..Default::default()}))
             })?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))
         }
-        if let Some(entry)=self.entries.iter_mut().find(|entry|entry.native.close_requested()){let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|entry.native.close_step(grant))?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))}
+        if let Some(entry)=self.entries.iter_mut().find(|entry|entry.native.close_requested()){let step=retired(cx,demand,|grant|entry.native.close_step(grant))?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))}
         if let Some(job)=self.retired_jobs.last_mut(){
-            if job.terminal_is_empty(){let released_bytes=job.scaffold_release_bytes();let step=semio_framework_job::close_original_retained_step(cx,demand,|_|{drop(self.retired_jobs.pop());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()}))})?;return Ok(Some(RetainedCloneStep::Progress(step.progress())));}
+            if job.terminal_is_empty(){let released_bytes=job.scaffold_release_bytes();let step=retired(cx,demand,|_|{drop(self.retired_jobs.pop());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()}))})?;return Ok(Some(RetainedCloneStep::Progress(step.progress())));}
             return job.close_step(cx).map(Some);
         }
         if self.terminal_is_empty(){return Ok(None)}
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
+        let step=retired(cx,demand,|grant|{
         if let Some(publication)=self.retired_publications.last_mut(){
             if publication.terminal_is_empty(){drop(self.retired_publications.pop());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
             publication.begin_close();let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};let step=publication.close_step(child)?;

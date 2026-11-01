@@ -1,6 +1,7 @@
 //! 🔌️ Extension invocation and command ingress of the reactor turn: the retained extension invocation with its receive and advance steps and the retained command ingress with its owner cursor, retirement, park and close steps. See [`super`].
 
 use super::*;
+fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 
 #[doc(hidden)]
 pub struct RetainedExtensionInvocation{
@@ -25,7 +26,7 @@ impl RetainedExtensionInvocation{
         if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
         if let Some(closing)=self.refused_output.as_mut(){
             if closing.terminal_is_empty(){cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.refused_output=None;return Ok(None)}
-            semio_framework_job::close_original_retained_step(cx,closing.selected_demand(grant.maximum_copy_bytes)?,|loan|closing.step(loan))?;
+            retired(cx,closing.selected_demand(grant.maximum_copy_bytes)?,|loan|closing.step(loan))?;
             return Ok(None)
         }
         if let Some(failure)=self.failure.as_mut(){
@@ -33,7 +34,7 @@ impl RetainedExtensionInvocation{
             return Ok(None)
         }
         if let Some(closing)=self.closing.as_mut(){
-            if !closing.terminal_is_empty(){semio_framework_job::close_original_retained_step(cx,closing.selected_demand(grant.maximum_copy_bytes)?,|loan|closing.step(loan))?;return Ok(None)}
+            if !closing.terminal_is_empty(){retired(cx,closing.selected_demand(grant.maximum_copy_bytes)?,|loan|closing.step(loan))?;return Ok(None)}
             cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.closing=None;return Ok(self.result.take())
         }
         if self.result.is_some(){cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.begin_source_close();return Ok(None)}

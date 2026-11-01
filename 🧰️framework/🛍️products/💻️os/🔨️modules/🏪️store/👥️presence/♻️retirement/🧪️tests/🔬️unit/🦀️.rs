@@ -225,7 +225,7 @@ fn retained_presence_local_capture_cancel_closes_mounted_worker_while_store_rema
     let mut cancel_released = 0;
     for _ in 0..64 {
         if original_cancel.terminal_is_empty() { break; }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original_cancel.close_step(CLOSE_GRANT).unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| original_cancel.close_step(CLOSE_GRANT).result.unwrap());
         assert!(step.progress().fits(CLOSE_GRANT));
         assert_eq!((step.progress().retained_capacity_bytes, step.progress().released_bytes), (heap.requested_bytes, heap.released_bytes));
         cancel_released += heap.released_bytes;

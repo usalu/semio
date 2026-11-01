@@ -188,7 +188,7 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
     crate::artifact_app_laws::ensure_fixture_cancellation_issuer(app,cx)?;
     retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
     while app.has_pending_typed_operations() || !app.maintenance_terminal_is_empty() {
-        if cx.should_yield()||turns>=maximum_turns{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement exhausted its caller opportunity").into())}turns+=1;
+        if cx.should_yield()||turns>=maximum_turns{return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::WorkLimit,format!("[DEBUG] original fixture settlement exhausted its caller opportunity: turns={turns}/{maximum_turns} yield={} fuel={} pending={} runnable={} maint_empty={} grant={:?}",cx.should_yield(),cx.fuel_remaining(),app.has_pending_typed_operations(),app.has_runnable_typed_operations(),app.maintenance_terminal_is_empty(),cx.retained_grant())).into())}turns+=1;semio_framework_job::testkit::renew_payload_page_grant(cx);
         if !app.has_runnable_typed_operations() {
             let grant = mounted_policy.maintenance;
             let demand = app.maintenance_retirement_demands(grant.maximum_copy_bytes)?;

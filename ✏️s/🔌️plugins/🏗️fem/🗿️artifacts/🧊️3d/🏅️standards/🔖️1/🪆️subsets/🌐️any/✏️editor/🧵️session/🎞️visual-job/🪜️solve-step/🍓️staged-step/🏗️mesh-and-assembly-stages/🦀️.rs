@@ -1,5 +1,6 @@
 //! 🏗️ Mesh and assembly stages: the field count, assembly mounting and build, the assembly steps, the modal mass and the equation map of the staged numerical step. See [`super`].
 
+use semio_s_fem_payload_turns::NumericalStep;
 use super::*;
 
 impl Fem3dNumericalChild {
@@ -41,7 +42,7 @@ impl Fem3dNumericalChild {
 
     /// 🔩 Steps the assembly child to its end.
     pub(super) fn step_assembly(&mut self, context: &mut StepContext<'_>) -> Result<bool, Fem3dNumericalFailure> {
-        let end = child_end(self.assembly.as_mut().ok_or_else(|| b"fem3d.numerical-assembly".to_vec())?.step(context))?;
+        let end = child_end(self.assembly.as_mut().ok_or_else(|| b"fem3d.numerical-assembly".to_vec())?.step_plain(context))?;
         if self.observe_child_end(end)? {
             self.node_cursor = 0;
             self.dof_cursor = 0;

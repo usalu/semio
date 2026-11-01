@@ -21,7 +21,7 @@ impl<T: RetainedClone> Default for OptionCursor<T> {
 
 impl<T: RetainedClone> RetainedCloneCursor<Option<T>> for OptionCursor<T> {
     fn output_ready(&self)->bool{!self.closing&&!self.spent&&self.output.is_some()}
-    fn advance_demands(&self,source:RetainedCloneRef<'_,Option<T>>,body:usize)->Result<RetirementDemand,ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"optional original clone is closing or spent"))}if self.output.is_some()||source.get().is_none(){return Ok(RetirementDemand{depth:1,..Default::default()})}if self.child_value.is_some(){let mut demand=clone_cursor_close_demand::<T>(&self.child,body)?;demand.depth=demand.depth.max(1);return Ok(demand)}if self.child.output_ready(){return self.child.take_demand()}self.child.advance_demands(source.project(1,|value|value.as_ref().unwrap()),body)}
+    fn advance_demands(&self,source:RetainedCloneRef<'_,Option<T>>,body:usize)->Result<RetirementDemand,ValueError>{if let Some(demand)=source.binding_demand(&self.source)?{return Ok(demand)}if self.closing||self.spent{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"optional original clone is closing or spent"))}if self.output.is_some()||source.get().is_none(){return Ok(RetirementDemand{depth:1,..Default::default()})}if self.child_value.is_some(){let mut demand=clone_cursor_close_demand::<T>(&self.child,body)?;demand.depth=demand.depth.max(1);return Ok(demand)}if self.child.output_ready(){return self.child.take_demand()}self.child.advance_demands(source.try_project(1,|value|value.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained optional child is absent")))?,body)}
 
     fn advance(&mut self, source: RetainedCloneRef<'_, Option<T>>, body: usize, grant: RetainedCloneGrant) ->RetainedWorkOutcome{let mut work=0;let result=(||{
         if self.closing {
@@ -64,7 +64,7 @@ impl<T: RetainedClone> RetainedCloneCursor<Option<T>> for OptionCursor<T> {
                  let turn=self.child.take(grant);work+=turn.work;let Some((value,p))=turn.result?else{return Ok(RetainedCloneStep::Progress(Default::default()))};self.child_value=Some(value);self.child.begin_close();self.child_closing=true;
                  return Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant,p,"optional child output handoff")?))
                 }
-                let turn=self.child.advance(source.project(1,|value|value.as_ref().expect("validated retained optional child")),body,grant);work+=turn.work;
+                let turn=self.child.advance(source.try_project(1,|value|value.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"retained optional child is absent")))?,body,grant);work+=turn.work;
                 Ok(RetainedCloneStep::Progress(admit_retained_clone_progress(grant,turn.result?.progress(),"retained optional child")?))
             }
         }

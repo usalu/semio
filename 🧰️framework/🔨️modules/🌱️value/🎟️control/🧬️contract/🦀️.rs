@@ -109,6 +109,8 @@ impl ValueError {
     pub fn new(kind: ValueRefusalKind, message: impl Into<String>) -> Self { Self { kind, message: std::borrow::Cow::Owned(message.into()), retained_progress: Default::default() } }
     /// 🧱️ Returns immutable refusal prose without spending denied allocation credit.
     pub const fn literal(kind: ValueRefusalKind, message: &'static str) -> Self { Self { kind, message: std::borrow::Cow::Borrowed(message), retained_progress: crate::RetainedCloneProgress { copied_items: 0, copied_bytes: 0, retained_capacity_bytes: 0, released_bytes: 0 } } }
+    /// 🧷️ Refuses a state machine whose own phase promised a payload that is absent, without spending credit.
+    pub const fn invariant(message: &'static str) -> Self { Self::literal(ValueRefusalKind::InvariantViolated, message) }
     /// 🧾️ Borrows actual retained effects carried by the original failed turn.
     pub fn retained_progress(&self) -> crate::RetainedCloneProgress { self.retained_progress }
     /// 📥️ Attaches the original producer receipt before its failure leaves custody.

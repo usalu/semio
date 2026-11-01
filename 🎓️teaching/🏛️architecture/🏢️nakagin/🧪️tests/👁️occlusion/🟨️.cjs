@@ -23,4 +23,3 @@ for(const change of [value=>delete value.overlap_candidates,value=>value.overlap
 for(const change of [value=>delete value.refinement_progress,value=>value.refinement_progress.phase='silent']){
  const invalid=structuredClone(cases);change(invalid);assert.equal(validate(invalid),false);
 }
-console.log('[DEBUG] Coverage/bounds, sparse overlap and SCC progress controls accepted; fourteen malformed contracts rejected.');

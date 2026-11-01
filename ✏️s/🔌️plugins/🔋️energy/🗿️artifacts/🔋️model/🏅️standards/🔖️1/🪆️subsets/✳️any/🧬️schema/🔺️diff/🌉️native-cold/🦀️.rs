@@ -21,7 +21,7 @@ impl ColdMutationDiff<Native> for ReferenceEnergyModelDiff {
         <Self as ColdMutationDiff<EnergyModelSnapshot>>::apply(self, &mut reference, capability)?;
         let next = Native::from_reference(&reference).map_err(refuse)?;
         let displaced = std::mem::replace(base, next);
-        let _ = semio_framework_value_native_owned::blocking::retire(displaced);
+        displaced.retire().map_err(refuse)?;
         Ok(())
     }
 }

@@ -4,7 +4,7 @@ mod text;
 #[path="../💾️binary/📸️snapshot/🦀️.rs"]
 mod binary;
 pub use text::ArtifactDsl;
-pub use binary::{ArtifactPack,ArtifactPackMetadata};
+pub use binary::{ArtifactPack,ArtifactPackMetadata,BorrowedRecordSpecProducer};
 
 #[path="🫴️native/🦀️.rs"]
 mod native;

@@ -33,7 +33,6 @@ function testFemDocumentAdmission(): void {
     applyPatch(native, [{ op: "replace", path: pointer, value: BigInt(value) }], true, true);
   }
   assert.deepEqual(parse(native), native);
-  console.log(`[DEBUG] FEM2d document admission: ${row.nativeWords.length} binary64 oracle words, ${row.nativeCounts.length} integer counts`);
   for (const field of row.foreignFields) {
     const candidate = { ...structuredClone(row.document), [field.key]: field.value };
     assert(!validate(candidate), field.key);

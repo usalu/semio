@@ -1,6 +1,6 @@
 //! 📤️ Entry borrows its whole original failure while bounded Pack windows become paid fault pages.
 use semio_framework_job::OriginalDomainProjection;
-use semio_framework_job::{OriginalTurnFailure, StepContext, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView};
+use semio_framework_job::{receive_original_retained_work, OriginalTurnFailure, StepContext, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeView};
 use semio_framework_job_payload::{RetainedPayloadBuilder, JobPayloadStream};
 use semio_framework_os_kernel::record::BorrowedProjectedPackCursor;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
@@ -24,14 +24,14 @@ impl RetainedOriginalFailurePublication{
   Ok(RetirementDemand{depth:2,..Default::default()})
  }
  /// 🪙️ Every encoding, copy, page, seal and descriptor action consumes the same original context once.
- pub(super) fn advance<'a>(&'a mut self,original:&OriginalTurnFailure,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{
+ pub(super) fn advance<'a>(&'a mut self,original:&OriginalTurnFailure,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,OriginalTurnFailure>{
   let demand=self.advance_demands(original,cx)?;if self.delivered||cx.should_yield()||!Self::permits(cx.retained_grant(),demand){return Ok(None)}let grant=cx.retained_grant();cx.consume_fuel(1);
   if self.binding.is_none(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.binding=Some(Self::identity(original,cx));return Ok(None)}
-  if !self.builder.is_initialized(){self.builder.advance_initialization(cx)?;return Ok(None)}
-  if self.offset<self.length{self.builder.append_original(cx,&self.buffer[..self.length],&mut self.offset)?;return Ok(None)}
+  if !self.builder.is_initialized(){let turn=self.builder.advance_initialization(cx);receive_original_retained_work(cx,turn)?;return Ok(None)}
+  if self.offset<self.length{let turn=self.builder.append_original(cx,&self.buffer[..self.length],&mut self.offset);receive_original_retained_work(cx,turn)?;return Ok(None)}
   if self.length>0{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;self.length=0;self.offset=0;return Ok(None)}
-  if !self.cursor.is_complete(){let result=self.cursor.advance_intrinsic(original,1,&mut self.buffer,RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});match result{Ok(step)=>{self.length=step.written_bytes;cx.consume_retained(step.progress)?},Err(error)=>{self.length=error.written_bytes;let _=cx.consume_retained(error.reason.retained_progress());return Err(error.reason)}}return Ok(None)}
-  if self.builder.published().is_none(){self.builder.seal(cx)?;return Ok(None)}let outcome=JobOutcomeBorrow::admit_fault(cx,self.builder.published().ok_or_else(Self::invalid)?)?;if outcome.is_some(){self.delivered=true}Ok(outcome)
+  if !self.cursor.is_complete(){let result=self.cursor.advance_intrinsic(original,1,&mut self.buffer,RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant});match result{Ok(step)=>{self.length=step.written_bytes;cx.consume_retained(step.progress)?},Err(error)=>{self.length=error.written_bytes;let _=cx.consume_retained(error.reason.retained_progress());return Err(error.reason.into())}}return Ok(None)}
+  if self.builder.published().is_none(){let turn=self.builder.seal(cx);receive_original_retained_work(cx,turn)?;return Ok(None)}let outcome=JobOutcomeBorrow::admit_fault(cx,self.builder.published().ok_or_else(Self::invalid)?)?;if outcome.is_some(){self.delivered=true}Ok(outcome)
  }
  pub(super) fn borrow_outcome<'a>(&'a self,descriptor:&'a JobOutcomeDescriptor)->Result<JobOutcomeView<'a>,ValueError>{if !self.delivered||self.closing{return Err(Self::invalid())}descriptor.fault(self.builder.published().ok_or_else(Self::invalid)?)}
  pub(super) fn retirement_demands(&self)->Result<RetirementDemand,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}if !self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}if !self.cursor.terminal_is_empty(){return Self::nested(self.cursor.retirement_demands()?)}if !self.builder.terminal_is_empty(){return Self::nested(self.builder.retirement_demands()?)}Ok(RetirementDemand{depth:1,..Default::default()})}
@@ -39,7 +39,7 @@ impl RetainedOriginalFailurePublication{
  pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.retirement_demands()?;if !Self::permits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}
   if !self.closing{self.closing=true;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-  if !self.cursor.terminal_is_empty(){return self.cursor.close(child).map(|step|RetainedCloneStep::Progress(step.progress)).map_err(|error|error.reason)}if !self.builder.terminal_is_empty(){return self.builder.close_step_granted(child).map(|step|RetainedCloneStep::Progress(step.progress()))}
+  if !self.cursor.terminal_is_empty(){return self.cursor.close(child).map(|step|RetainedCloneStep::Progress(step.progress)).map_err(|error|error.reason)}if !self.builder.terminal_is_empty(){return self.builder.close_step_granted(child).result.map(|step|RetainedCloneStep::Progress(step.progress()))}
   self.binding=None;self.length=0;self.offset=0;self.delivered=false;self.closing=false;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))
  }
 }

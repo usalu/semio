@@ -45,7 +45,7 @@ fn decode_with(bytes: &[u8], fixture: &serde_json::Value, grant: semio_framework
     let progress = owner.progress();
     drop(owner);
     alive.set(true);
-    let ((), closure) = observe(|| { for _ in 0..100_000 { if !native.has_retirement_owner() { return } native.admit_turn_capacity(CLOSE_GRANT.maximum_capacity_bytes).unwrap(); native.close_retirement_recipient(CLOSE_GRANT).unwrap(); } panic!("retirement did not terminate") });
+    let ((), closure) = observe(|| { for _ in 0..100_000 { if !native.has_retirement_owner() { return } native.admit_turn_capacity(CLOSE_GRANT.maximum_capacity_bytes).unwrap(); native.close_retirement_recipient(CLOSE_GRANT).result.unwrap(); } panic!("retirement did not terminate") });
     Observed { result, progress, heap, closure }
 }
 
@@ -60,7 +60,7 @@ fn encode_with(value: &FixturePresence, fixture: &serde_json::Value, grant: semi
     let progress = owner.progress();
     drop(owner);
     alive.set(true);
-    let ((), closure) = observe(|| { for _ in 0..100_000 { if !native.has_retirement_owner() { return } native.admit_turn_capacity(CLOSE_GRANT.maximum_capacity_bytes).unwrap(); native.close_retirement_recipient(CLOSE_GRANT).unwrap(); } panic!("retirement did not terminate") });
+    let ((), closure) = observe(|| { for _ in 0..100_000 { if !native.has_retirement_owner() { return } native.admit_turn_capacity(CLOSE_GRANT.maximum_capacity_bytes).unwrap(); native.close_retirement_recipient(CLOSE_GRANT).result.unwrap(); } panic!("retirement did not terminate") });
     Observed { result, progress, heap, closure }
 }
 

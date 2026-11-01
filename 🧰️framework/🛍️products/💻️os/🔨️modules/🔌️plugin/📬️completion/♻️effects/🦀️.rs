@@ -11,7 +11,7 @@ struct Unsupported{original:ManuallyDrop<Effect>}
 impl RetirementCursor for Unsupported{
  fn next_demand(&self,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let _=maximum_body_bytes;Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original effect has no exact completion retirement facet"))}
 
- fn close_step(&mut self,_grant:RetainedCloneGrant)->RetirementStep{RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original effect has no exact completion retirement facet"))}
+ fn close_step(&mut self,_grant:RetainedCloneGrant)->RetirementStep{RetirementStep::Failure(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original effect has no exact completion retirement facet"),0)}
  fn terminal_is_empty(&self)->bool{false}
  fn next_birth_bytes(&self,_copy:usize)->Option<usize>{None}
 }

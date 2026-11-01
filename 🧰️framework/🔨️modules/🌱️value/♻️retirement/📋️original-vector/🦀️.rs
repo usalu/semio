@@ -17,7 +17,7 @@ impl<T:RetireOwned> OriginalVectorCursor<T>{
  /// 🧲️ Quotes the native payload transfer and iterator-position update before returning an item.
  pub fn next_take_demand(&self)->RetirementDemand{if self.closing||self.active.is_some()||self.remaining().is_empty(){return Default::default();}RetirementDemand{depth:1,..Default::default()}}
  /// 🤝️ Returns the exact next native owner only under the unchanged independent caller grant.
- pub fn take_front(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>{if self.closing||self.active.is_some()||self.remaining().is_empty(){return RetainedWorkOutcome{result:Ok(None),work:0}}let d=self.next_take_demand();if !permits(d,grant){return RetainedWorkOutcome{result:Ok(None),work:0}}let value=self.original.as_mut().expect("original vector remains resident").next().expect("original vector has its quoted next row");RetainedWorkOutcome{result:Ok(Some((value,RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1}}
+ pub fn take_front(&mut self,grant:RetainedCloneGrant)->RetainedWorkOutcome<Option<(T,RetainedCloneProgress)>>{if self.closing||self.active.is_some()||self.remaining().is_empty(){return RetainedWorkOutcome{result:Ok(None),work:0}}let d=self.next_take_demand();if !permits(d,grant){return RetainedWorkOutcome{result:Ok(None),work:0}}let Some(original)=self.original.as_mut()else{return RetainedWorkOutcome{result:Err(ValueError::invariant("original vector remains resident").into()),work:0}};let Some(value)=original.next()else{return RetainedWorkOutcome{result:Err(ValueError::invariant("original vector has its quoted next row").into()),work:0}};RetainedWorkOutcome{result:Ok(Some((value,RetainedCloneProgress{copied_items:1,..Default::default()}))),work:1}}
  /// 🛑️ Switches to original payload closure while retaining the same vector allocation.
  pub fn begin_close(&mut self){self.closing=true;}
  /// 👁️ Reports whether the original close election has already been retained.
@@ -45,7 +45,7 @@ impl<T:RetireOwned> OriginalVectorCursor<T>{
     work=1;match ControlledRetirement::new(original){Ok(active)=>{*self.active=Some(active)},Err((error,original))=>{*self.pending=Some(original);return Err(error)}}
     RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}
    }else if !self.remaining().is_empty(){
-    *self.pending=self.original.as_mut().unwrap().next();work=1;
+    *self.pending=self.original.as_mut().ok_or_else(||ValueError::invariant("original absent"))?.next();work=1;
     RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}
    }else{
     self.original.take();self.backing_bytes=0;work=1;

@@ -54,7 +54,7 @@ impl<W: RetireOwned> OriginalRenderWork<W> {
             cx.consume_fuel(1);
             return Ok(Some(true));
         }
-        semio_framework_job::close_original_retained_step(cx, demand, |grant| owner.step(grant))?;
+        semio_framework_job::close_original_retained_step(cx, demand, |grant| {let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
         Ok(Some(false))
     }
 }

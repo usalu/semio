@@ -1,5 +1,6 @@
 //! 🔌️ The assembled plugin program and its app instances.
 #![allow(async_fn_in_trait)]
+fn retired(cx:&mut semio_framework_job::StepContext<'_>,demand:semio_framework_value::RetirementDemand,advance:impl FnOnce(semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{semio_framework_job::close_original_retained_step(cx,demand,|grant|semio_framework_value::RetainedWorkOutcome{result:advance(grant),work:1})}
 extern crate semio_framework_os_kernel as store;
 
 #[doc(hidden)]
@@ -283,9 +284,9 @@ impl<PA: PluginApp> Plugin<PA> {
     /// ♻️ Program teardown waits for mounted definition readers before retiring the original declaration graph.
     pub fn close_original_definitions(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let Some(factory)=self.apps.values_mut().find(|factory|factory.registration.is_some()||!factory.definition.terminal_is_empty())else{return Ok(true)};
-        if let Some(registration)=factory.registration.as_mut(){if !registration.terminal_is_empty(){cx.with_original_retirement(|cx|registration.close_step(cx))?;return Ok(false)}let d=registration.boxed_release_demands();cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,d,|_|{factory.registration=None;Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}))?;return Ok(false)}
+        if let Some(registration)=factory.registration.as_mut(){if !registration.terminal_is_empty(){cx.with_original_retirement(|cx|registration.close_step(cx))?;return Ok(false)}let d=registration.boxed_release_demands();cx.with_original_retirement(|cx|retired(cx,d,|_|{factory.registration=None;Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}))?;return Ok(false)}
         let demand=factory.definition.close_demands(cx.retained_grant().maximum_copy_bytes)?;
-        cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,demand,|grant|factory.definition.close_step(grant)))?;
+        cx.with_original_retirement(|cx|retired(cx,demand,|grant|factory.definition.close_step(grant)))?;
         Ok(false)
     }
     /// 🕳️ Every native definition source was returned and retired before program disposal.

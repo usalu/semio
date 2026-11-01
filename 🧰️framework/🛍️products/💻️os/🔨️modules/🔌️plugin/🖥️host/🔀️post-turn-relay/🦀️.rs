@@ -35,13 +35,13 @@ use cold_relay_job::GuestColdRelayJob;
 #[path = "🔬️lifecycle-probe-and-refused-source/🦀️.rs"]
 mod lifecycle_probe_and_refused_source;
 use lifecycle_probe_and_refused_source::{
-    GuestRelayLifecycleProbeControl, GuestRelayLifecycleProbeJob, GuestRelayRefusedSource,
+    GuestRelayLifecycleProbeControl, GuestRelayLifecycleProbeJob,
 };
 
 #[path = "🧾️mounted-session-types-and-registry-struct/🦀️.rs"]
 mod mounted_session_types_and_registry_struct;
 use mounted_session_types_and_registry_struct::{
-    admit_guest_relay_session, GuestRelayMountedClose, GuestRelayMountedLifecycle,
+    close_relay_session, GuestRelayAdmission, GuestRelayMountedClose, GuestRelayMountedLifecycle,
     GuestRelayMountedOutput, GuestRelayMountedOwner, GuestRelayMountedRegistry,
     GuestRelayMountedSession, GuestRelayMountedSlot, GuestRelayMountedTerminal,
     GuestRelayOutcomeKind, GuestRelayOutcomeStage, GuestRelayWakeCustody, GUEST_RELAY_MOUNTED_SLOTS,

@@ -161,7 +161,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
         if self.retirement.is_none() {
             if let Some(value) = self.value.take() {
                 let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-                return match semio_framework_value::retirement::admit_owned_retirement(value, child) {
+                return match semio_framework_value::retirement::admit_owned_retirement(value, child).result {
                     Ok((owner, progress)) => {
                         *self.retirement = Some(owner);
                         self.state = Process3dSnapshotDecodeState::Closing;
@@ -179,7 +179,7 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthorit
             self.state = Process3dSnapshotDecodeState::Complete;
             return Ok(RetainedCloneStep::Complete(empty));
         }
-        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| self.diagnostic("process3d-envelope.snapshot-retirement-fault", 0).with_native(error))?;
+        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).result.map_err(|error| self.diagnostic("process3d-envelope.snapshot-retirement-fault", 0).with_native(error))?;
         if self.retirement.is_none() {
             self.state = Process3dSnapshotDecodeState::Complete;
         }

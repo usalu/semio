@@ -201,7 +201,7 @@ fn diagnostic(error: RetainedSprDiagnostic) -> MemberOpenDiagnostic {
 }
 
 fn close_request(request: &mut ManuallyDrop<Option<MemberOpenRequest>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    semio_framework_os_store_read::retirement_owner_close(request, grant)
+    semio_framework_os_store_read::retirement_owner_close(request, grant).result
 }
 
 impl ErasedSnapshotRetirement for MemberHistoryVerification {

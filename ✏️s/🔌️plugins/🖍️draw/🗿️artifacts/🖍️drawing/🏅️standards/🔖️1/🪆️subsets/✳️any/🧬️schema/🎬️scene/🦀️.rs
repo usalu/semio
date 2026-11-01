@@ -197,12 +197,6 @@ fn resolve_trace_layer_segments(doc: &DrawingSnapshot, trace: &DrawingTraceBody)
 pub mod booleans;
 #[path = "🪪️identity/🦀️.rs"]
 pub mod identity;
-#[path = "🎨️paint/🦀️.rs"]
-pub mod paint;
-#[path = "../🧮️geometry/🎯️picking/🎨️paint/🦀️.rs"]
-pub mod picking;
-#[path = "📍️placement/🦀️.rs"]
-pub mod placement;
 #[path = "📋️prepare/🦀️.rs"]
 pub mod preparation;
 #[path = "📷️raster/🦀️.rs"]

@@ -205,7 +205,7 @@ where
 
     pub fn drive_active(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, ConfigStoreHydrationDiagnostic> {
         if self.active.is_none() { return Ok(None); }
-        semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| Some(step.progress())).map_err(|_| ConfigStoreHydrationDiagnostic::Initialization)
+        semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).result.map(|step| Some(step.progress())).map_err(|_| ConfigStoreHydrationDiagnostic::Initialization)
     }
 
     pub(super) fn admit_input<T: semio_framework_value::retirement::RetireOwned>(source: &mut Option<T>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress)>, ValueError> {
@@ -215,7 +215,7 @@ where
         if grant.maximum_capacity_bytes < capacity { return Ok(None); }
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
         let value = source.take().expect("observed original config input");
-        match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, child) {
+        match semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, child) .result {
             Ok((owner, progress)) => Ok(Some((owner, progress))),
             Err((error, value)) => { *source = Some(value); Err(error) }
         }
@@ -229,7 +229,7 @@ where
         if grant.maximum_items == 0 { return Ok((false, Default::default())); }
         if grant.maximum_depth < depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "config source depth refused")); }
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = owner.close_step(child)?;
+        let step = owner.close_step(child).result?;
         let terminal = owner.terminal_is_empty();
         semio_framework_value::retained_clone::admit_retained_clone_close(child, step, terminal, "config original source iterator")?;
         if terminal { drop(source.take()); }

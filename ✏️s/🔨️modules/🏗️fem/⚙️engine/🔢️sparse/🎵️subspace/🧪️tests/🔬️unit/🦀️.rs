@@ -696,5 +696,4 @@ fn subspace_shape_admission_matches_exact_paged_layout_arithmetic() {
     }
     assert!(!SubspaceIterationJob::admits_shape(usize::MAX, 1));
     assert!(!SubspaceIterationJob::admits_shape(1, usize::MAX));
-    println!("[DEBUG] {} logical spectral layouts match {}-bit owner indices and checked arithmetic; multi-page models admit and overflow refuses before construction", law["cases"].as_array().unwrap().len(), usize::BITS);
 }

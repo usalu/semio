@@ -36,7 +36,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         }
     }
 
-    pub fn media_submission_refusal_terminal_is_empty(&self)->bool{self.media_download_preparation.is_none()&&self.media_export_preparation.is_none()&&self.media_submission_refusal.is_none()&&self.media_submission_refusal_retirement.is_none()&&self.media_submission_refusal_identity.is_none()}
+    pub fn media_submission_refusal_terminal_is_empty(&self)->bool{self.media_download_preparation.is_none()&&self.media_export_preparation.is_none()&&self.media_submission_refusal.is_none()&&self.media_submission_refusal_place.is_none()&&self.media_submission_refusal_retirement.is_none()&&self.media_submission_refusal_identity.is_none()}
 
     pub fn media_submission_refusal_demands(&self, stores:&InstanceStores<A>,tools: &ToolOperations<A>,body:usize)->Result<RetirementDemand,ValueError>{
         use semio_framework_value::retirement::RetireOwned;
@@ -51,6 +51,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
             return Ok(RetirementDemand{copy_bytes:size_of::<MediaExportPreparation<A>>(),depth:1,..Default::default()})
         }
         if let Some(owner)=self.media_submission_refusal_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of_val(&*self.media_submission_refusal_retirement),depth:1,..Default::default()})}else{owner.selected_demand(body)}}
+        if let Some(place)=self.media_submission_refusal_place.as_ref(){return place.retirement_demands(body)}
         if self.media_submission_refusal.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         Ok(Default::default())
     }
@@ -77,9 +78,10 @@ impl<A: ArtifactApp> MediaTransfers<A> {
             }
             if let Some(owner)=self.media_submission_refusal_retirement.as_mut(){
                 if owner.terminal_is_empty(){drop(self.media_submission_refusal_retirement.take());self.media_submission_refusal_identity=None;return Ok((PluginLifecycleStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),true))}
-                let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|owner.step(grant))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
+                let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{let result=owner.step(grant);semio_framework_value::RetainedWorkOutcome{result,work:1}})?;return Ok((PluginLifecycleStep::Progress(step.progress()),false));
             }
-            if let Some(source)=self.media_submission_refusal.take(){
+            if let Some(place)=self.media_submission_refusal_place.as_mut(){if place.terminal_is_empty(){*self.media_submission_refusal_place=None;return Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),false))}let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|place.close_step(grant))?;return Ok((PluginLifecycleStep::Progress(step.progress()),false))}
+        if let Some(source)=self.media_submission_refusal.take(){
                 match semio_framework_value::retirement::controlled::ControlledRetirement::new(source){Ok(owner)=>{*self.media_submission_refusal_retirement=Some(owner);Ok((PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}),false))},Err((failure,source))=>{*self.media_submission_refusal=Some(source);Err(failure.into())}}
             }else{self.media_submission_refusal_identity=None;Ok((PluginLifecycleStep::Complete(Default::default()),true))}
         })
@@ -91,9 +93,9 @@ impl<A: ArtifactApp> MediaTransfers<A> {
     }
 
     pub fn receive_media_submission_refusal(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        if self.media_submission_refusal.is_none(){return Ok(false)}
+        if self.media_submission_refusal.is_none()&&self.media_submission_refusal_place.is_none(){return Ok(false)}
         if self.media_submission_refusal_identity!=Some((cx.operation(),cx.generation())){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending media domain requires its unchanged initiating source identity").into())}
-        if let Some(failure)=semio_framework_job::admit_original_domain_failure(&mut self.media_submission_refusal,cx)?{self.media_submission_refusal_identity=None;return Err(failure)}
+        if let Some(failure)=semio_framework_plugin_instance_jobs::jobs_components::admit_pending_domain_failure(&mut *self.media_submission_refusal,&mut *self.media_submission_refusal_place,cx)?{self.media_submission_refusal_identity=None;return Err(failure)}
         Ok(true)
     }
 
@@ -218,8 +220,8 @@ impl<A: ArtifactApp> MediaTransfers<A> {
             }
             if rejected.admission_pending()&&!cx.is_cancelled()&&!active.lease.as_ref().expect("live media lease").token.is_cancelled_now(){
                 let config=semio_framework_job_worker_authority::BatchDriveConfig{retained:grant,site:"plugin_media_export_submission",stage:semio_framework_job::InteractiveStage::InteractiveStep,fuel_per_step:cx.fuel_remaining(),step_budget_us:0};
-                let result=rejected.admit_pending(config,cx);
-                match result{Ok(Some(session))=>{active.session=Some(session);drop(active.session_rejected.take());},Ok(None)=>{},Err(failure)=>{self.media_exports.insert_admitted(operation_id,active);return Err(failure.into());}}
+                let mut session=None;let result=rejected.admit_pending(config,&mut session,cx);
+                match result{Ok(true)=>{active.session=session;drop(active.session_rejected.take());},Ok(false)=>{},Err(failure)=>{self.media_exports.insert_admitted(operation_id,active);return Err(failure.into());}}
             }else{
                 let demand=rejected.retirement_demands(grant.maximum_copy_bytes)?;
                 let result=semio_framework_plugin_document_media::original_rejection_lifecycle(cx,demand,grant,"media rejection awaits its original worker",|cx|{let step=rejected.close_step(cx)?;Ok((step,rejected.terminal_is_empty()))});

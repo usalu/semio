@@ -1,5 +1,5 @@
 //! 🧭️ Shared bounded native MVD cursors borrow the original retained graph and static declarations.
-use crate::validation::metadata;
+use semio_s_artifact_stdio_ifc4x3_express::metadata;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::{IfcEntity, IfcSnapshot, IfcValue};
 use std::mem::size_of;

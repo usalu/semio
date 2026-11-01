@@ -151,6 +151,5 @@ fn continuum_static_modal_and_buckling_match_scikit_fem_and_scipy() {
             }
         }
         assert_response(&actual, &expected[name]["answer"], &expected[name]["scales"], "");
-        eprintln!("[DEBUG] continuum static/modal/buckling independent reference matched for {name}");
     }
 }

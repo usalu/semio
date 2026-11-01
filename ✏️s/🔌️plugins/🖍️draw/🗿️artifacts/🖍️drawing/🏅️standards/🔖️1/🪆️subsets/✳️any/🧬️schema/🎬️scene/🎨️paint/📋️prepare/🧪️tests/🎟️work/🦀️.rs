@@ -1,5 +1,5 @@
 //! 🎟️ Actual painted-scene storage is denied before effects and closes under the same finite original.
-use semio_s_artifact_draw_drawing_scene::{preparation::{DocumentScenePlan,DocumentSceneNode,DocumentSceneContent},paint::scene::*};
+use {semio_s_artifact_draw_drawing_scene::preparation::{DocumentScenePlan,DocumentSceneNode,DocumentSceneContent},semio_s_artifact_draw_drawing_scene_paint::scene::*};
 use semio_framework_value_persistent::work::RetainedWorkLedger;
 use semio_framework_value::{RetainedCloneGrant,RetirementDemand};
 use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OriginalTurnFailure,OperationId,Generation,close_original_retained_step};

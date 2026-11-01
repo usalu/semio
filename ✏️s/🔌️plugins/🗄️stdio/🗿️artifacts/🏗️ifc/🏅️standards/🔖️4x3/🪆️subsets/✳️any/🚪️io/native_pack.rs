@@ -17,7 +17,7 @@ fn publish_header(control: &mut IoRunControl<'_, '_>) -> Result<(), ValueError> 
     owner.record_progress(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() })
 }
 /// 📤 Direct native IFC Packs enter through their source-owned original parser and close before route publication.
-pub(super) fn serializer<T: Serializer<IfcSnapshot>>() -> IoEntry {
+pub fn serializer<T: Serializer<IfcSnapshot>>() -> IoEntry {
     fn run<T: Serializer<IfcSnapshot>>(input: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let IoPayload::Binary(bytes) = input else {
             return Err(invalid("IFC route requires its declared binary native Pack"));
@@ -32,7 +32,7 @@ pub(super) fn serializer<T: Serializer<IfcSnapshot>>() -> IoEntry {
     IoEntry { owned_serializer: T::OWNED_FACTORY, from: crate::io::IFC4X3_DIALECT, into: T::INTO, fidelity: T::FIDELITY, direction: IoEntryDirection::Export, sniff: None, run: run::<T> }
 }
 /// 📥 Foreign imports retain the actual IFC graph and diagnostics until the sole final native Pack is encoded and its scratch closes.
-pub(super) fn deserializer<T: Deserializer<IfcSnapshot>>() -> IoEntry {
+pub fn deserializer<T: Deserializer<IfcSnapshot>>() -> IoEntry {
     fn sniff<T: Deserializer<IfcSnapshot>>(input: &IoPayload) -> semio_framework_os_kernel::io::io_schema::Confidence {
         semio_framework_async::poll::resolve_ready(T::sniff(input))
     }

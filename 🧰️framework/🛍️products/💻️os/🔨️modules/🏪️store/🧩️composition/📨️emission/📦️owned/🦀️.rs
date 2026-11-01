@@ -9,7 +9,7 @@ use semio_framework_os_store_one_item_publication::lifted_member_owned_batch::{B
 
 
 fn admit_batch_retirement<T: RetireOwned>(values: T, grant: RetainedCloneGrant) -> BatchAdmission<T> {
-    semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(values, grant).map(|(owner, progress)| (owner as Box<dyn BatchRetirement>, progress))
+    semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(values, grant).result.map(|(owner, progress)| (owner as Box<dyn BatchRetirement>, progress))
 }
 
 trait BatchOwner: Send {

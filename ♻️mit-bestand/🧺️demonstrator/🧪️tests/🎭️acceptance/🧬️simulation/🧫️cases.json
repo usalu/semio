@@ -14,7 +14,7 @@
     "paneId": "statik",
     "panelTabId": "fem3d.panel.results",
     "panelCategoryId": "framework.category.display",
-    "caption": "Case: dead",
+    "caption": "^(Case|Lastfall): dead$",
     "phase": 0.1,
     "initialScale": 300,
     "changedScale": 600,

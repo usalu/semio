@@ -36,9 +36,9 @@ impl<M:Sync+'static> OriginalReplacementReceiving<M>{
    if admission.phase()=="ready"{let step=admission.take_output(&mut self.source,grant).result?;if admission.terminal_is_empty(){self.admission=None;}return Ok(step.progress())}
    let p=admission.advance(grant).result?.progress();control.charge(p.retained_capacity_bytes)?;return Ok(p)
   }
-  if self.wire.is_none()&&self.receiver.is_none(){let(wire,p)=self.source.as_ref().unwrap().retain_original(grant).result?;self.wire=Some(wire);return Ok(p)}
+  if self.wire.is_none()&&self.receiver.is_none(){let(wire,p)=self.source.as_ref().ok_or_else(||ValueError::invariant("source absent"))?.retain_original(grant).result?;self.wire=Some(wire);return Ok(p)}
   if self.receiver.is_none(){return (codec.original_receiving.as_ref().unwrap().admit)(&mut self.wire,&mut self.receiver,factory,control,grant)}
-  let receiver=self.receiver.as_mut().unwrap();if receiver.ready(){if let Some((input,p))=receiver.take(grant).result?{self.input=Some(input);return Ok(p)}return Ok(Default::default())}receiver.advance(control,grant.maximum_copy_bytes,grant).result.map(|step|step.progress())
+  let receiver=self.receiver.as_mut().ok_or_else(||ValueError::invariant("receiver absent"))?;if receiver.ready(){if let Some((input,p))=receiver.take(grant).result?{self.input=Some(input);return Ok(p)}return Ok(Default::default())}receiver.advance(control,grant.maximum_copy_bytes,grant).result.map(|step|step.progress())
  }
  /// 🤝️ Transfers only the original typed projection after authenticating the same decoder and input recipient.
  pub fn take_input_native(&mut self,output:&mut Option<RetainedOwnedProjection<M>>,control:&NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{if self.binding.is_some_and(|(ledger,recipient,_)|ledger!=control.ledger_identity()||Some(recipient)!=control.retirement_recipient_identity()){return Err(invalid())}if output.is_some(){return Err(invalid())}let d=header::<Option<RetainedOwnedProjection<M>>>();if self.input.is_none()||!permits(grant,d){return Ok(Default::default())}*output=self.input.take();Ok(progress(d))}

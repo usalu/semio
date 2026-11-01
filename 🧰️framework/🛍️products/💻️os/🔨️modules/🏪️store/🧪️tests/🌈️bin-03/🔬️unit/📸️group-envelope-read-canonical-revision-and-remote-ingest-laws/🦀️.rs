@@ -49,7 +49,7 @@ fn drive_retirement_within(owner: &mut dyn ErasedSnapshotRetirement, grant: Reta
     for _ in 0..4096 {
         if owner.terminal_is_empty() { return; }
         owner.next_copy_byte_demand().expect("fallible current copy frontier");owner.next_capacity_byte_demand(grant.maximum_copy_bytes).expect("fallible current capacity frontier");owner.next_release_byte_demand().expect("fallible current release frontier");owner.next_depth_demand().expect("fallible current depth frontier");
-        let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||owner.close_step(grant).expect("supplied retirement turn"));
+        let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||owner.close_step(grant).result.expect("supplied retirement turn"));
         assert!(step.progress().fits(grant));assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));
         if matches!(step,RetainedCloneStep::Complete(_)) { assert!(owner.terminal_is_empty());return; }
     }

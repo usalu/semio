@@ -76,7 +76,6 @@ fn inverse_of_the_refused_mutation() {
     }
     assert_eq!(snapshot, expected_after());
     assert_eq!(snapshot, base);
-    println!("[DEBUG] FEM2d refused fixture retains its snapshot with an empty aggregate inverse");
 }
 
 /// 🎯️ The declared rejection — status, code and path — is exactly what the diff builder emits.

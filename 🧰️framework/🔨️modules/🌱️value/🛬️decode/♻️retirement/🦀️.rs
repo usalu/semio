@@ -22,14 +22,14 @@ impl<'operation,'decode> NativeRetirementDecodeControl<'operation,'decode>{
  pub fn close_retirement_recipient(&mut self,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{
   let d=match self.retirement_demands(grant.maximum_copy_bytes){Ok(d)=>d,Err(error)=>return crate::RetainedWorkOutcome{result:Err(error),work:0}};
   if !retained_clone_grant_admits(grant,d){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(Default::default())),work:0}}
-  if self.original.retirement.as_ref().unwrap().terminal_is_empty(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
-  if self.original.retirement.as_ref().unwrap().owner.as_ref().is_some_and(|owner|owner.requires_original_control()){
-   let mut owner=self.original.retirement.as_mut().unwrap().owner.take();
+  if match self.original.retirement.as_ref(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("retirement absent").into()),work:0}}.terminal_is_empty(){return crate::RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(Default::default())),work:0}}
+  if match self.original.retirement.as_ref(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("retirement absent").into()),work:0}}.owner.as_ref().is_some_and(|owner|owner.requires_original_control()){
+   let mut owner=match self.original.retirement.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("retirement absent").into()),work:0}}.owner.take();
    let turn=semio_framework_value_retirement::close_factory_ticket_controlled(&mut owner,grant,self);
-   *self.original.retirement.as_mut().unwrap().owner=owner;turn
+   *match self.original.retirement.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("retirement absent").into()),work:0}}.owner=owner;turn
   }else{
    if let Err(error)=self.charge(d.capacity_bytes){return crate::RetainedWorkOutcome{result:Err(error),work:0}}
-   self.original.retirement.as_mut().unwrap().close_step(grant)
+   match self.original.retirement.as_mut(){Some(v)=>v,None=>return crate::RetainedWorkOutcome{result:Err(ValueError::invariant("retirement absent").into()),work:0}}.close_step(grant)
   }
  }
 

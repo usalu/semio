@@ -41,7 +41,6 @@ fn fem3d_results_retained_pages_route_only_matching_completed_sources() {
         let retained = row["retainedSource"].as_bool().unwrap().then_some(1);
         let actual = select_result_shell(current, retained);
         assert_eq!(serde_json::to_value(actual).unwrap(), row["expected"], "{}", row["id"]);
-        eprintln!("[DEBUG] FEM3D retained result {} shell={actual:?}", row["id"]);
     }
     let mut old = Fem3dSnapshot::default();
     old.load_cases = vec![semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase { id: "first".into(), name: "First".into(), loads: vec![], self_weight: false }, semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemLoadCase { id: "second".into(), name: "Second".into(), loads: vec![], self_weight: false }];
@@ -81,7 +80,6 @@ fn fem3d_retained_results_close_uses_original_retirement_and_preserves_foreign_a
     assert_eq!(registry.retiring_app[3], app_instance_id);
     assert!(registry.retire_retained_results(app_instance_id, slot));
     assert_eq!(registry.retiring_count[slot], 1);
-    eprintln!("[DEBUG] FEM3D original result shell=3 retired exactly once; colliding foreign app preserves its owner");
 }
 
 #[test]
@@ -155,7 +153,6 @@ fn fem3d_exact_app_leases_keep_colliding_jobs_and_close_isolated() {
         assert!(terminal_is_empty(app));
         live.retain(|id| *id != app);
         for &foreign in &live { assert_eq!(current_identity(foreign), Some(recovery_identity(foreign, u64::from(foreign)))); assert!(!terminal_is_empty(foreign)); }
-        eprintln!("[DEBUG] FEM3D exact app lease closed={app} foreign original jobs={live:?}");
     }
 }
 
@@ -186,7 +183,6 @@ async fn fem3d_request_families_share_identical_panes_and_preserve_physical_sour
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: SESSION_CLOSE_COPY_BYTES, maximum_release_bytes: SESSION_CLOSE_RELEASE_BYTES, maximum_depth: SESSION_CLOSE_DEPTH, ..PAGE_GRANT };
     for _ in 0..512 { if terminal_is_empty(identity.app_instance_id) { break; } close_step(identity.app_instance_id, grant); }
     assert!(terminal_is_empty(identity.app_instance_id));
-    eprintln!("[DEBUG] FEM3D six independent physical request families, shared pane reference, reordered source, fair pending preflight and final exact request/app closure");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -204,7 +200,6 @@ async fn fem3d_wide_physical_request_and_window_text_use_shared_granted_custody(
     MOUNTED.with(|registry| { let registry = registry.borrow(); let owner = registry.requests.binding(identity.app_instance_id, fixture_consumer(&window_owners, &window)).unwrap(); assert!(registry.requests.ready(owner)); assert_eq!(registry.requests.request_name(owner), Some(source.as_str())); assert_eq!(resolve_request(&registry, &doc, owner), Some(request)); let index = registry.requests.consumer_index(identity.app_instance_id, fixture_consumer(&window_owners, &window)).unwrap(); assert_eq!(registry.requests.consumer_name(index), Some(window.as_str())); });
     for _ in 0..128 { if terminal_is_empty(identity.app_instance_id) { break; } close_step(identity.app_instance_id, grant); }
     assert!(terminal_is_empty(identity.app_instance_id)); assert_eq!(doc.load_cases[0].id, source);
-    eprintln!("[DEBUG] FEM3D shared granted source{} / window{} original text ownership, zero-item refusal and funded terminal closure", source.len(), window.len());
 }
 
 #[test]
@@ -229,7 +224,6 @@ fn fem3d_original_fault_and_cancel_terminal_receipts_prevent_implicit_resubmit()
         assert!(admitted, "a new exact canonical source may reopen after terminal outcome");
         for _ in 0..512 { if terminal_is_empty(identity.app_instance_id) { break; } close_step(identity.app_instance_id, grant); }
         assert!(terminal_is_empty(identity.app_instance_id));
-        eprintln!("[DEBUG] FEM3D original {kind} retained exact source terminal through worker retirement, no same-version resubmit, canonical change reopened and terminal custody returned");
     }
 }
 
@@ -588,7 +582,6 @@ fn fem3d_production_numerical_child_solves_the_demo_with_paged_owner_backing() {
             break;
         }
     }
-    eprintln!("[DEBUG] FEM3D paged demo terminal={terminal}, failure={failure:?}, ready={}, closed={}", fields.ready(), child.terminal_is_empty());
     assert!(child.terminal_is_empty(), "the demo releases every numerical owner");
     assert!(failure.is_none(), "paged demo failed at {failure:?}");
     assert!(terminal && fields.ready(), "the mounted demo reaches a validated numerical publication");
@@ -615,7 +608,6 @@ fn fem3d_production_numerical_child_solves_the_demo_with_paged_owner_backing() {
     }
     let slab_reaction: f64 = doc.nodes.iter().enumerate().filter(|(_, node)| node.id.starts_with("sc")).map(|(index, _)| fields.scalar(index).unwrap().reaction[2]).sum();
     assert!((slab_reaction - oracle["slab"]["verticalReactionSum"].as_f64().unwrap()).abs() <= 1e-3);
-    eprintln!("[DEBUG] FEM3D paged demo matched independent NumPy frame gravity displacement/reaction and slab equilibrium={slab_reaction}");
     let expected_stress = semio_s_artifact_fem_3d_engine::fem3d_engine::mesh_preview::fem3d_nodal_von_mises_of(&doc, expected).unwrap();
     for (index, node) in analysis_nodes.iter().enumerate() {
         if let Some(expected) = expected_stress.get(&node.id) { assert!((stress[index].unwrap() - expected).abs() < 1e-5 * expected.abs().max(1.0), "demo stress {}", node.id); }
@@ -890,7 +882,6 @@ fn fem3d_mounted_selected_sources_match_pynite_and_case_order_is_irrelevant() {
             let moment = child.full_reactions[0][5];
             let rotation = child.equations[1][5].and_then(|equation| child.pcg.as_ref()?.visual_scalar(equation)).map(|scalar| scalar.displacement);
             for _ in 0..200_000 { if child.close_step(release_grant(WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY)).0 { break; } }
-            eprintln!("[DEBUG] FEM3D source {identity} order={order} complete={complete} tip={tip:?} reaction={reaction:?} fault={fault:?}");
             assert!(child.terminal_is_empty() && fault.is_none() && complete && fields.ready());
             let factor = row["factor"].as_f64().unwrap();
             assert!((tip.unwrap() - factor * corpus["expected"]["tipTy"].as_f64().unwrap()).abs() < 1e-9);
@@ -926,7 +917,6 @@ fn fem3d_source_preflight_rejects_ambiguous_missing_nonfinite_and_excess_sources
         for _ in 0..20_000 {
             match preflight.step_one(&doc) { Err(()) => { rejected = true; break; }, Ok(true) => break, Ok(false) => {} }
         }
-        eprintln!("[DEBUG] FEM3D source admission {refusal}: rejected={rejected}");
         assert!(rejected && preflight.credit().is_err());
     }
 }

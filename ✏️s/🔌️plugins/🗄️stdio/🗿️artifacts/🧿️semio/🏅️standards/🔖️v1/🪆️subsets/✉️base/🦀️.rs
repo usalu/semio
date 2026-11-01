@@ -92,7 +92,7 @@ macro_rules! semio_snapshot_retirement {
                 &self,
                 snapshot: ::std::sync::Arc<$snapshot>,
                 grant: ::semio_framework_value::retained_clone::RetainedCloneGrant,
-            ) -> Result<(Box<dyn ::semio_framework_os_kernel::ErasedSnapshotRetirement>, ::semio_framework_value::retained_clone::RetainedCloneProgress), (::semio_framework_value::ValueError, ::std::sync::Arc<$snapshot>)> {
+            ) -> ::semio_framework_value::RetainedWorkOutcome<(Box<dyn ::semio_framework_os_kernel::ErasedSnapshotRetirement>, ::semio_framework_value::retained_clone::RetainedCloneProgress), (::semio_framework_value::ValueError, ::std::sync::Arc<$snapshot>)> {
                 ::semio_framework_value::retirement::arc_custody::admit_shared_retirement(snapshot, grant, true)
             }
         }
@@ -112,18 +112,27 @@ impl<P,M> SemioMemberStoreProducer<P,M> {pub const fn new()->Self{Self(::std::ma
 #[macro_export]
 macro_rules! semio_native_default {
     ($($owner:ty),+ $(,)?) => {$(
-        impl ::semio_framework_value_native_owned::native_decoding::owned::NativeDefault for $owner {
-            fn native_default_demand() -> ::semio_framework_value::RetirementDemand {
+        impl ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue for $owner {
+            fn default_demand() -> ::semio_framework_value::RetirementDemand {
                 ::semio_framework_value_native_owned::native_decoding::owned::tree::fixed(2 * ::std::mem::size_of::<Self>())
             }
 
-            fn native_default(grant: ::semio_framework_value::RetainedCloneGrant) -> Result<(Self, ::semio_framework_value::RetainedCloneProgress), ::semio_framework_value::ValueError> {
-                let demand = <Self as ::semio_framework_value_native_owned::native_decoding::owned::NativeDefault>::native_default_demand();
-                if !::semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
-                    return Err(::semio_framework_value_native_owned::native_decoding::owned::tree::invalid());
+            fn admit_default(output: &mut Option<Self>, grant: ::semio_framework_value::RetainedCloneGrant) -> ::semio_framework_value::RetainedWorkOutcome {
+                if output.is_some() {
+                    return ::semio_framework_value::RetainedWorkOutcome { result: Ok(::semio_framework_value::RetainedCloneStep::Complete(Default::default())), work: 0 };
                 }
-                Ok((<Self as ::std::default::Default>::default(), ::semio_framework_value_native_owned::native_decoding::owned::tree::receipt(demand)))
+                let demand = <Self as ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue>::default_demand();
+                if !::semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+                    return ::semio_framework_value::RetainedWorkOutcome { result: Ok(::semio_framework_value::RetainedCloneStep::Progress(Default::default())), work: 0 };
+                }
+                *output = Some(<Self as ::std::default::Default>::default());
+                ::semio_framework_value::RetainedWorkOutcome { result: Ok(::semio_framework_value::RetainedCloneStep::Complete(::semio_framework_value_native_owned::native_decoding::owned::tree::receipt(demand))), work: 1 }
             }
+        }
+
+        impl ::semio_framework_value_native_owned::native_decoding::owned::NativeDefault for $owner {
+            type Cursor = ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValueCursor<Self>;
+            fn default_cursor() -> Self::Cursor { ::semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValueCursor::new() }
         }
     )+};
 }

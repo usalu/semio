@@ -18,5 +18,4 @@ fn fixed_dof_boundary_matches_neutral_canonical_sets(){
   assert_eq!(result.is_ok(),row.canonical,"{} helper",row.id);assert_eq!(support.is_ok(),row.canonical,"{} support field",row.id);
   if let Ok(fixed)=result{assert!(FemDof::canonical(&fixed));assert_eq!(support.unwrap().fixed,fixed,"{} model field",row.id);retire_fixed_dofs(fixed);}
  }
- println!("[DEBUG] Actual model cold restraint helper and support field match73shared canonical boundaries");
 }

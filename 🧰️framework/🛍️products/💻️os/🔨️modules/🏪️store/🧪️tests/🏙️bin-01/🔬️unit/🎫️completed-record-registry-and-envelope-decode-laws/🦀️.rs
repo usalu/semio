@@ -205,7 +205,7 @@ fn cancelled_and_rejected_envelope_decodes_close_one_exact_owner_per_grant() {
     let mut detached = None;
     while !rejected.terminal_is_empty() {
         drive_test_envelope_field_return(&registry, &mut detached);
-        let step = rejected.close_step(envelope_field_close_grant()).expect("retained decode rejection closes");
+        let step = rejected.close_step(envelope_field_close_grant()).result.expect("retained decode rejection closes");
         assert!(step.progress().fits(envelope_field_close_grant()));
         close_turns += 1;
         assert!(close_turns < 256);
@@ -229,14 +229,14 @@ fn artifact_envelope_public_rejection_preserves_record_lease_ticket_double_retur
     assert_eq!(Arc::as_ptr(&rejected.field_registry), registry_identity);
     assert_eq!(rejected.diagnostic, diagnostic);
     assert!(!registry.ticket_reclaimed(field_ticket));
-    assert_eq!(rejected.close_step(RetainedCloneGrant::default()), Ok(RetainedCloneStep::Progress(Default::default())));
+    assert_eq!(rejected.close_step(RetainedCloneGrant::default()).result, Ok(RetainedCloneStep::Progress(Default::default())));
     assert_eq!(rejected.record.as_ref().map(|record| record.decode_pages().slot_address()), Some(record_identity));
     assert_eq!(rejected.fields.as_ref().map(ArtifactEnvelopeFieldDecoderLease::ticket), Some(field_ticket));
 
     let mut detached = None;
     for _ in 0..256 {
         drive_test_envelope_field_return(&registry, &mut detached);
-        let step = rejected.close_step(envelope_field_close_grant()).expect("public rejection closes one exact owner");
+        let step = rejected.close_step(envelope_field_close_grant()).result.expect("public rejection closes one exact owner");
         assert!(step.progress().fits(envelope_field_close_grant()));
         if rejected.terminal_is_empty() {
             break;

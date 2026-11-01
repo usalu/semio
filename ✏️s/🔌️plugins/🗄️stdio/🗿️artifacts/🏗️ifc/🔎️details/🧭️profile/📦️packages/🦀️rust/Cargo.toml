@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-artifact-stdio-ifc-details-profile"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Declaration roles, type metadata and local-rule candidates every IFC details layer shares."
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin = { workspace = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-job = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-ifc-declarations = { workspace = true }
+semio-s-artifact-stdio-ifc-4-model = { workspace = true }
+semio-s-artifact-stdio-ifc-4-mutations = { workspace = true }
+
+[features]
+testkit = []

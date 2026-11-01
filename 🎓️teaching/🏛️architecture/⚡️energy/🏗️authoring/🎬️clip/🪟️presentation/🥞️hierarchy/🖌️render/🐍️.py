@@ -27,7 +27,7 @@ def _camera(point):
 
 def initial_hierarchy():
     """🌱 Return the common root boundary camera and empty opened path."""
-    return {"opened_path": [], "revealed_path": [],
+    return {"opened_path": [], "revealed_path": [], "pressed": False,
             "camera": _camera(_core.interaction_contract()["timeline"]["park"])}
 
 
@@ -158,7 +158,7 @@ def choreography(video_id, phase, t, controls):
         point = list(initial)
     if t == 1:
         point = list(terminal)
-    hierarchy = {"opened_path": list(opened), "revealed_path": revealed, "camera": _camera(point)}
+    hierarchy = {"opened_path": list(opened), "revealed_path": revealed, "pressed": bool(revealed) and pressed, "camera": _camera(point)}
     return {"phase": phase, "t": t, "seconds": elapsed, "navigation_seconds": seconds,
         "content_camera": content_camera, "stage": stage, "point": point, "pressed": pressed,
         "hierarchy": hierarchy, "fullscreen": video_id if len(opened) == 4 else None,
@@ -240,7 +240,7 @@ def frame_batch(requests, settings, *, session=None):
         pressed = timeline["pressed"] if request.get("pressed") is None else bool(request["pressed"])
         timeline["pressed"] = pressed
         boundary = timeline["seconds"] is None or timeline["phase"] == "focus" and timeline["t"] == 0 or timeline["phase"] == "restore" and timeline["t"] == 1
-        canonical = (boundary and len(timeline["hierarchy"]["opened_path"]) < 4 and not timeline["hierarchy"]["revealed_path"]
+        canonical = (boundary and len(timeline["hierarchy"]["opened_path"]) < 4 and not timeline["hierarchy"]["revealed_path"] and not timeline["hierarchy"]["pressed"]
                      and point == _core.interaction_contract()["timeline"]["park"])
         elapsed = request.get("transition_elapsed")
         if elapsed is None:

@@ -532,8 +532,8 @@ impl Fem3dPlayApp {
             window_results::FEM3D_BODY_RESULTS => {
                 let window = window_results::config::effective(&window_results::config::current(cfg), clock.as_ref());
                 match preview {
-                    Some(preview) => window_results::render_pending(preview, &window, &interaction, doc.render_operation(), cfg.window.map(|window| window.authority()), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive),
-                    None => window_results::render(doc.snapshot, &window, &interaction, doc.render_operation(), cfg.window.map(|window| window.authority()), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive),
+                    Some(preview) => window_results::render_pending(preview, &window, &interaction, doc.render_operation(), cfg.window.map(|window| window.authority()), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive, labels),
+                    None => window_results::render(doc.snapshot, &window, &interaction, doc.render_operation(), cfg.window.map(|window| window.authority()), &semio_s_artifact_fem_3d_editor_session::editor::fem3d::session::Fem3dMountedLive, labels),
                 }
             }
             artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, &interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY)),

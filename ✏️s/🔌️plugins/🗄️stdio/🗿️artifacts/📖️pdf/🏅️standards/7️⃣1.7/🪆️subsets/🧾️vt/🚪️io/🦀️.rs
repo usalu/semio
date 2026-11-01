@@ -89,7 +89,8 @@ use semio_framework_diagnostic::TextSpan;
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-pub use semio_s_artifact_stdio_pdf_testkit::standards::v1_7::subsets::vt::io::binary;
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
 
 pub use semio_s_artifact_stdio_pdf_tests_2::standards::v1_7::subsets::vt::io::text;
 

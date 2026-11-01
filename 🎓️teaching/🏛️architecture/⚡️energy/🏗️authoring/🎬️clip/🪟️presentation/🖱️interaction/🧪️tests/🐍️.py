@@ -562,6 +562,7 @@ class CursorNativeFrameTest(unittest.TestCase):
             state = hover["timeline"]["hierarchy"]
             self.assertEqual(state["opened_path"], branch[:depth])
             self.assertEqual(state["revealed_path"], branch[:depth + 1])
+            self.assertFalse(state["pressed"])
             layer = next(layer for layer in hover["browser"]["layers"] if layer["id"] == (branch[depth - 1] if depth else "root"))
             pane = next(pane for pane in layer["panes"] if pane["id"] == branch[depth])
             self.assertTrue(pane["inert"])

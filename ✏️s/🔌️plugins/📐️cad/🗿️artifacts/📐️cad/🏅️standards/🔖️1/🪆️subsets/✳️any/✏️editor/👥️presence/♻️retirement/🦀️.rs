@@ -1,7 +1,7 @@
 //! 🧹️ Exact CAD presence ownership retirement, including variable-length engagement identifiers.
 
 use super::{CadPresence, CadPresenceMutation};
-use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, ValueError};
+use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedWorkOutcome, ValueError};
 use std::sync::Arc;
 
 //#region 🧹️SnapshotRetirement
@@ -11,7 +11,7 @@ pub struct CadPresenceRetirementFactory;
 impl store::SnapshotRetirementFactory<CadPresence> for CadPresenceRetirementFactory {
     fn retirement_birth_bytes(&self, _snapshot: &Arc<CadPresence>) -> usize { semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<CadPresence>() }
 
-    fn retire(&self, source: Arc<CadPresence>, grant: RetainedCloneGrant) -> Result<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<CadPresence>)> {
+    fn retire(&self, source: Arc<CadPresence>, grant: RetainedCloneGrant) -> RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Arc<CadPresence>)> {
         semio_framework_value::retirement::arc_custody::admit_shared_retirement(source, grant, true)
     }
 }

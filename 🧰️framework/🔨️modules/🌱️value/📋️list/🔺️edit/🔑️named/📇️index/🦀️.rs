@@ -22,12 +22,12 @@ impl AdmittedNamedKeyIndex{
  pub fn project_demand(&self,source:&impl NamedRankedSource)->Result<RetirementDemand,ValueError>{self.check_source(source)?;Ok(fixed(size_of::<Self>()*2+source.original().binding_copy_bytes()+size_of::<SealedShared<Vec<usize>>>()))}
  pub fn project(&self,source:&impl NamedRankedSource,output:&mut Option<Self>,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome{let mut work=0;let result=(||{
   let d=self.project_demand(source)?;
-  if let Some(owner)=output.as_ref(){if owner.closing||owner.len!=self.len||owner.projection!=self.projection||!source.original().check_binding(&owner.original)?||owner.directory.as_ref().is_some_and(|directory|directory.identity()!=self.directory.as_ref().unwrap().identity()){return Err(invalid())}if owner.ready(){return Ok(RetainedCloneStep::Complete(Default::default()))}}
+  if let Some(owner)=output.as_ref(){if owner.closing||owner.len!=self.len||owner.projection!=self.projection||!source.original().check_binding(&owner.original)?||match(owner.directory.as_ref(),self.directory.as_ref()){(Some(owned),Some(own))=>owned.identity()!=own.identity(),(Some(_),None)=>true,_=>false}{return Err(invalid())}if owner.ready(){return Ok(RetainedCloneStep::Complete(Default::default()))}}
   if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
   if output.is_none(){*output=Some(Self{original:ManuallyDrop::new(None),directory:ManuallyDrop::new(None),retirement:Default::default(),len:self.len,projection:self.projection,closing:false});work+=1;}
-  let owner=output.as_mut().unwrap();
+  let owner=output.as_mut().ok_or_else(||ValueError::invariant("output absent"))?;
   if owner.original.is_none(){let _=take_work!(work,source.original().bind(&mut owner.original,grant)).ok_or_else(invalid)?;return Ok(RetainedCloneStep::Progress(paid(d)))}
-  let(directory,_)=take_work!(work,self.directory.as_ref().unwrap().try_duplicate(grant));*owner.directory=Some(directory);
+  let(directory,_)=take_work!(work,self.directory.as_ref().ok_or_else(||ValueError::invariant("directory absent"))?.try_duplicate(grant));*owner.directory=Some(directory);
   Ok(RetainedCloneStep::Complete(paid(d)))
  })();crate::RetainedWorkOutcome{result,work}}
  pub fn begin_close(&mut self){self.closing=true;}
@@ -71,9 +71,9 @@ impl NamedKeyIndexPreparation{
  pub fn advance(&mut self,source:&impl NamedRankedSource,grant:RetainedCloneGrant)->crate::RetainedWorkOutcome<NamedEditStep>{let mut work=0;let result=(||{let d=self.demand(source,grant.maximum_copy_bytes)?;if self.phase==6{return Ok(NamedEditStep::Admitted(Default::default()))}if !retained_clone_grant_admits(grant,d){return Ok(NamedEditStep::Progress(Default::default()));}let mut p=paid(d);match self.phase{
   0=>{take_work!(work,source.original().bind(&mut self.original,grant)).ok_or_else(invalid)?;self.projection=source.key_projection();self.phase=1;work+=1;},
   1=>{work+=1;self.plan=Some(NamedEditPlan::new(AdmissionSource{source}.shape()));self.phase=2;},
-  2=>{let step=take_work!(work,self.plan.as_mut().unwrap().advance(&AdmissionSource{source},grant));p=step.progress();match step{NamedEditStep::Admitted(_)=>{self.phase=3;work+=1;},NamedEditStep::Refused(fault,_)=>{self.fault=Some(fault);work+=1;return Ok(NamedEditStep::Refused(fault,p));},_=>{}}},
-  3=>{*self.order=Some(take_work!(work,self.plan.as_mut().unwrap().take_base_order(grant)).ok_or_else(invalid)?.0);self.plan.as_mut().unwrap().begin_close();self.phase=4;work+=1;},
-  4=>{if self.plan.as_ref().unwrap().terminal_is_empty(){self.plan=None;self.phase=5;work+=1;}else{p=take_work!(work,self.plan.as_mut().unwrap().close_step(grant)).progress();}},
+  2=>{let step=take_work!(work,self.plan.as_mut().ok_or_else(||ValueError::invariant("plan absent"))?.advance(&AdmissionSource{source},grant));p=step.progress();match step{NamedEditStep::Admitted(_)=>{self.phase=3;work+=1;},NamedEditStep::Refused(fault,_)=>{self.fault=Some(fault);work+=1;return Ok(NamedEditStep::Refused(fault,p));},_=>{}}},
+  3=>{*self.order=Some(take_work!(work,self.plan.as_mut().ok_or_else(||ValueError::invariant("plan absent"))?.take_base_order(grant)).ok_or_else(invalid)?.0);self.plan.as_mut().ok_or_else(||ValueError::invariant("plan absent"))?.begin_close();self.phase=4;work+=1;},
+  4=>{if self.plan.as_ref().ok_or_else(||ValueError::invariant("plan absent"))?.terminal_is_empty(){self.plan=None;self.phase=5;work+=1;}else{p=take_work!(work,self.plan.as_mut().ok_or_else(||ValueError::invariant("plan absent"))?.close_step(grant)).progress();}},
   5=>{let rows=self.order.take().ok_or_else(invalid)?;work+=1;let turn=SealedShared::admit(rows,SharedIssuer::owned(),grant);work+=turn.work;match turn.result{Ok((directory,birth))=>{*self.directory=Some(directory);p.retained_capacity_bytes=birth.retained_capacity_bytes;self.phase=6;},Err((e,rows))=>{*self.order=Some(rows);work+=1;return Err(e);}}},
   6=>return Ok(NamedEditStep::Admitted(Default::default())),_=>return Err(invalid()),
  }Ok(if self.phase==6{NamedEditStep::Admitted(p)}else{NamedEditStep::Progress(p)})})();crate::RetainedWorkOutcome{result,work}}

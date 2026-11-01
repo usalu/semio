@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["dep:serde", "semio-s-artifact-draw-drawing-geometry/testkit", "semio-s-artifact-draw-drawing-model/testkit", "semio-s-artifact-draw-drawing-mutations/testkit", "semio-s-artifact-draw-drawing-scene/testkit", "semio-s-artifact-draw-drawing-structure/testkit"]
+testkit = ["dep:serde", "semio-s-artifact-draw-drawing-geometry/testkit", "semio-s-artifact-draw-drawing-model/testkit", "semio-s-artifact-draw-drawing-mutations/testkit", "semio-s-artifact-draw-drawing-scene/testkit", "semio-s-artifact-draw-drawing-scene-paint/testkit", "semio-s-artifact-draw-drawing-structure/testkit"]
 
 [dependencies]
 semio-framework-job-registry = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }
@@ -47,6 +47,7 @@ semio-s-artifact-draw-drawing-io = { workspace = true }
 semio-s-artifact-draw-drawing-model = { workspace = true }
 semio-s-artifact-draw-drawing-mutations = { workspace = true }
 semio-s-artifact-draw-drawing-scene = { workspace = true }
+semio-s-artifact-draw-drawing-scene-paint = { workspace = true }
 semio-s-artifact-draw-drawing-structure = { workspace = true }
 serde = { workspace = true, optional = true }
 semio-framework-pack = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
@@ -63,4 +64,5 @@ semio-s-artifact-draw-drawing-geometry = { workspace = true, features = ["testki
 semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-mutations = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-scene = { workspace = true, features = ["testkit"] }
+semio-s-artifact-draw-drawing-scene-paint = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-structure = { workspace = true, features = ["testkit"] }

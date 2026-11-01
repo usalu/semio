@@ -1,15 +1,12 @@
 /// 🧭 Each expression continuation schedules children instead of recursively evaluating semantic work.
 impl RetainedMachine {
-    fn execute(&mut self, frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn execute(&mut self, frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         match frame.kind {
             Kind::Eval => {
                 self.push(Frame::new(Kind::RootRead, frame.scope, frame.depth))?;
                 self.push(Frame { kind: Kind::EvalInner, ..frame })
             }
             Kind::EvalInner => self.expression(frame, env),
-            Kind::RootRead => self.root_read(frame, env),
-            Kind::Dependency => self.dependency(frame),
-            Kind::PreparedQuery => self.prepared_query(frame, env),
             Kind::Lookup => self.lookup(frame, env),
             Kind::Unary => self.unary(frame, env),
             Kind::BinaryLeft | Kind::BinaryRight | Kind::Equal | Kind::EqualSequence | Kind::Contains | Kind::AggregateBinary | Kind::Match | Kind::TextCompare | Kind::CompareResult => self.operation(frame, env),
@@ -19,14 +16,10 @@ impl RetainedMachine {
             Kind::TextCopy => self.text_copy(frame, env),
             Kind::CallArgs | Kind::Call | Kind::Function | Kind::Declare | Kind::Coerce | Kind::Body | Kind::Statement | Kind::Assign | Kind::Case | Kind::Repeat => self.statement(frame, env),
             Kind::Attribute | Kind::TypeOf | Kind::UsedIn => self.population_operation(frame, env),
-            Kind::Header => self.header(frame, env),
-            Kind::Normalize => self.normalize(frame, env),
-            Kind::Domain => self.domain(frame, env),
-            Kind::Select => self.select_domain(frame, env),
-            Kind::Population | Kind::TypeRules | Kind::Bound | Kind::InverseRule | Kind::UniqueRule | Kind::Global | Kind::Record | Kind::AggregateUnique => self.population_rules(frame, env),
+            Kind::RootRead | Kind::Dependency | Kind::PreparedQuery | Kind::Header | Kind::Normalize | Kind::Domain | Kind::Select | Kind::Population | Kind::TypeRules | Kind::Bound | Kind::InverseRule | Kind::UniqueRule | Kind::Global | Kind::Record | Kind::AggregateUnique => (self.foreign)(self, frame, env),
         }
     }
-    fn expression(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn expression(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let expression = frame.expression.ok_or_else(|| refusal("express.ast"))?;
         if expression.name.is_some_and(|name| name.len() > 1024) || expression.operator.is_some_and(|operator| operator.len() > 16) {
             return Err(refusal("express.ast-budget"));
@@ -105,7 +98,7 @@ impl RetainedMachine {
         let _ = env;
         Ok(())
     }
-    fn lookup(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn lookup(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         if frame.stage < 2 {
             if frame.position != NONE {
                 let binding = self.store().bindings[frame.position];
@@ -154,7 +147,7 @@ impl RetainedMachine {
             self.result(Value::Enum(Text::Static(name)));
             return Ok(());
         }
-        if let Some(declaration) = metadata::TYPES.get(frame.position) {
+        if let Some(declaration) = metadata::types().get(frame.position) {
             if declaration.kind == "enum" {
                 if let Some(member) = declaration.members.get(frame.b) {
                     if *member == name {
@@ -171,7 +164,7 @@ impl RetainedMachine {
         }
         Err(refusal("express.unbound"))
     }
-    fn unary(&mut self, frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn unary(&mut self, frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let value = self.pop()?;
         let raw = self.raw(value, env)?;
         match frame.expression.and_then(|expression| expression.operator).unwrap_or("") {
@@ -194,7 +187,7 @@ impl RetainedMachine {
         }
         Ok(())
     }
-    fn aggregate_expression(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn aggregate_expression(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let expression = frame.expression.ok_or_else(|| refusal("express.ast"))?;
         if matches!(frame.kind, Kind::AggregateRepeat) {
             if frame.i > 0 {
@@ -241,7 +234,7 @@ impl RetainedMachine {
         }
         Ok(())
     }
-    fn query(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn query(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let expression = frame.expression.ok_or_else(|| refusal("express.ast"))?;
         match frame.stage {
             0 => {
@@ -284,7 +277,7 @@ impl RetainedMachine {
         }
         Ok(())
     }
-    fn index_slice(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn index_slice(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         let expression = frame.expression.ok_or_else(|| refusal("express.ast"))?;
         if frame.stage == 100 {
             frame.stage = 101;
@@ -416,7 +409,7 @@ impl RetainedMachine {
         }
         Ok(())
     }
-    fn text_copy(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn text_copy(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         if frame.stage == 0 {
             let length = usize::try_from(frame.i).map_err(|_| refusal("express.text-budget"))?;
             if length > MAXIMUM_NODES {

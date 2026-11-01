@@ -35,6 +35,9 @@
 #[path="🧮️compute/🎟️invocation/📋️parameters/🦀️.rs"]
 mod original_compute_parameters;
 pub use original_compute_parameters::ComputeJobParamsPreparation;
+#[path="🧮️compute/🎟️original-caller/🦀️.rs"]
+mod original_compute_caller;
+pub use original_compute_caller::ComputeOriginalCaller;
 //#endregion 🧮️ComputePool
 
 #[path = "🚂️host-runtime/🦀️.rs"]

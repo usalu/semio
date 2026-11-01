@@ -58,7 +58,7 @@ pub(super) fn retire(owner: &mut dyn RequestRetirementCensus, payload_grant: usi
         assert!(owner.next_copy_byte_demand().unwrap() <= grant.maximum_copy_bytes);
         assert!(grant.maximum_release_bytes <= super::member_open_tests::retirement_admission());
         let before = owner.request().map(super::member_open_tests::request_logical_retained_bytes);
-        let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant).unwrap());
+        let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant).result.unwrap());
         if let Some(before) = before { logical += before - owner.request().map_or(0, super::member_open_tests::request_logical_retained_bytes); }
         match step {
             RetainedCloneStep::Progress(progress) => {

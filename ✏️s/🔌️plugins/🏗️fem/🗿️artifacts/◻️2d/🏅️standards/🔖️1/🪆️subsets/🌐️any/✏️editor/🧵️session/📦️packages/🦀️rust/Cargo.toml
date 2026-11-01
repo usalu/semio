@@ -25,6 +25,7 @@ semio-s-fem-app-surface = { path = "../../../../../../../../../../⚙️engine/�
 semio-s-artifact-fem-2d-results-state = { path = "../../../🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-s-fem-payload-turns = { path = "../../../../../../../../../../../../🔨️modules/🏗️fem/⚙️engine/📮️payload-turns/📦️packages/🦀️rust" }
 semio-framework-job-payload = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }

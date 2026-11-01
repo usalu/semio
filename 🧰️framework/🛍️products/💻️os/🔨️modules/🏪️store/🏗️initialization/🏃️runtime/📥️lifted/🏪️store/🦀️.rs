@@ -276,7 +276,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     }
 
     pub fn settle_current_retirement_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        artifact_retirement_box_close_step(&mut self.close_active, grant)
+        artifact_retirement_box_close_step(&mut self.close_active, grant).result
     }
 
     /// ✏️ Installs the effective supersessions the initializer folds the applied edits with; the adopted store keeps

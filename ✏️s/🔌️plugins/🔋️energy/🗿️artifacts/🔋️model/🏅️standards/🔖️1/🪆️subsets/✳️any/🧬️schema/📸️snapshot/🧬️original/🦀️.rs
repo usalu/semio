@@ -29,7 +29,7 @@ impl semio_framework_value_snapshot_projection::snapshot_projection::ImmutableRo
   if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(None);}
   let child=semio_framework_value::RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-demand.copy_bytes,..grant};
   let s=original.get();let m=&s.model;
-  macro_rules! alias{($field:expr)=>{$field.try_duplicate(child)?.0}}
+  macro_rules! alias{($field:expr)=>{$field.try_duplicate(child).result?.0}}
   let root=Self{schema:alias!(s.schema),model:EnergyModelState{identity:alias!(m.identity),geometry:alias!(m.geometry),materials:alias!(m.materials),loads:alias!(m.loads),controls:alias!(m.controls),systems:alias!(m.systems),generation:alias!(m.generation),outputs:alias!(m.outputs)},referenced_model:alias!(s.referenced_model),weather_link:alias!(s.weather_link)};
   Ok(Some((root,semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
   })();

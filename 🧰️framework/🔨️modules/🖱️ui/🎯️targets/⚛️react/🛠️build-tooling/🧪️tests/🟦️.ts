@@ -3,14 +3,16 @@ import { expect, mock, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
+type ReactRow = { singletonPackages: string[]; hostDedupe: string[][] };
 type Case = { id: string; sourceBase: string | null; viteRoot: string; expectedRoot: string; expectedOtherKeysKept: string[] };
-const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("./🔣️.json", import.meta.url)), "utf8")) as { schemaVersion: number; cases: Case[] };
+const fixture = JSON.parse(readFileSync(fileURLToPath(new URL("./🔣️.json", import.meta.url)), "utf8")) as { schemaVersion: number; cases: Case[]; react: ReactRow };
 const received: Record<string, unknown>[] = [];
 
 mock.module("@tailwindcss/vite", () => ({
   default: () => [{ name: "@tailwindcss/vite:scan", configResolved(config: Record<string, unknown>) { received.push(config); } }, { name: "@tailwindcss/vite:generate" }],
 }));
-const { uiTailwindBuildPlugins } = await import("../🟦️.ts");
+const { uiTailwindBuildPlugins, uiReactBuildPlugin } = await import("../🟦️.ts");
+const { resolveConfig } = await import("vite");
 
 test("the narrowed source base replaces only the root seen by the Tailwind scan hook", async () => {
   expect(fixture.schemaVersion).toBe(1);
@@ -24,5 +26,13 @@ test("the narrowed source base replaces only the root seen by the Tailwind scan 
     expect(received[0]!.root, row.id).toBe(row.expectedRoot);
     for (const key of row.expectedOtherKeysKept) expect(received[0]![key], `${row.id} ${key}`).toBe(config[key as keyof typeof config]);
     expect(config.root, `${row.id} caller config untouched`).toBe(row.viteRoot);
+  }
+});
+
+test("every React host config resolves one React: Vite's own config resolution merges the singleton dedupe into any host dedupe", async () => {
+  for (const hostDedupe of fixture.react.hostDedupe) {
+    const resolved = await resolveConfig({ configFile: false, logLevel: "silent", plugins: uiReactBuildPlugin() as never, resolve: { dedupe: hostDedupe } }, "serve");
+    for (const name of fixture.react.singletonPackages) expect(resolved.resolve.dedupe, `${hostDedupe.join()} ${name}`).toContain(name);
+    for (const name of hostDedupe) expect(resolved.resolve.dedupe, `${hostDedupe.join()} ${name} kept`).toContain(name);
   }
 });

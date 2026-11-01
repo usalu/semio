@@ -246,32 +246,32 @@ impl EnergySimulationRunJob {
     fn census_one(&mut self,cx:&mut StepContext<'_>)->Result<EnergyRunGrant,semio_framework_job::OriginalTurnFailure>{
         let Some(snapshot)=self.snapshot.as_ref()else{return Ok(self.refuse(EnergySimulationRunReason::CaptureRejected,&[]))};
         let view=snapshot.model.read();let copied=size_of::<CaptureCensus>()+size_of_val(&view);let mut complete=None;
-        semio_framework_job::admit_original_construction(cx,&mut complete,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copied,capacity_bytes:0,release_bytes:0,depth:1},|_|{let ready=self.census.step_one(&view).map_err(|message|ValueError::literal(ValueRefusalKind::OwnershipLimit,message))?;Ok((ready,RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))})?;
+        semio_framework_job::admit_original_construction(cx,&mut complete,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copied,capacity_bytes:0,release_bytes:0,depth:1},|_|crate::sim_retirement::energy_construct((||{let ready=self.census.step_one(&view).map_err(|message|ValueError::literal(ValueRefusalKind::OwnershipLimit,message))?;Ok((ready,RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))})()))?;
         if complete==Some(true){self.phase=EnergyRunPhase::Capture;}
         Ok(EnergyRunGrant::Continue)
     }
 
     fn capture_one(&mut self,cx:&mut StepContext<'_>)->Result<EnergyRunGrant,semio_framework_job::OriginalTurnFailure>{
-        if self.capture.is_none(){let copied=size_of::<ModelCapture>()*2;semio_framework_job::admit_original_construction(cx,&mut self.capture,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copied,capacity_bytes:0,release_bytes:0,depth:1},|_|Ok((ModelCapture::new(),RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()})))?;return Ok(EnergyRunGrant::Continue)}
+        if self.capture.is_none(){let copied=size_of::<ModelCapture>()*2;semio_framework_job::admit_original_construction(cx,&mut self.capture,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copied,capacity_bytes:0,release_bytes:0,depth:1},|_|crate::sim_retirement::energy_construct((||Ok((ModelCapture::new(),RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()})))()))?;return Ok(EnergyRunGrant::Continue)}
         let Some(snapshot)=self.snapshot.as_ref()else{return Ok(self.refuse(EnergySimulationRunReason::CaptureRejected,&[]))};
         if self.capture.as_mut().unwrap().step_original(&snapshot.model.read(),cx)?==Some(true){self.phase=EnergyRunPhase::Admit;}
         Ok(EnergyRunGrant::Continue)
     }
 
     fn admit(&mut self,cx:&mut StepContext<'_>)->Result<EnergyRunGrant,semio_framework_job::OriginalTurnFailure>{
-        if self.admission_stage==0{let copied=size_of::<ModelCapture>()+size_of::<crate::model::Model>();let mut moved=None;semio_framework_job::admit_original_construction(cx,&mut moved,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copied,capacity_bytes:0,release_bytes:0,depth:1},|_|{self.admission_model=Some(self.capture.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original Energy capture is absent at numerical admission"))?.finish());self.admission_stage=1;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))})?;return Ok(EnergyRunGrant::Continue)}
-        if self.admission_stage==1{let copied=size_of::<crate::schedule::ScheduleSet>()+2*size_of::<ControlledRetirement<crate::schedule::ScheduleSet>>();let mut moved=None;semio_framework_job::admit_original_construction(cx,&mut moved,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copied,capacity_bytes:0,release_bytes:0,depth:1},|_|{let original=std::mem::take(&mut self.template.as_mut().unwrap().schedules);self.schedules_close=Some(ControlledRetirement::new(original).map_err(|(error,original)|{self.template.as_mut().unwrap().schedules=original;error})?);self.admission_stage=2;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))})?;return Ok(EnergyRunGrant::Continue)}
-        if self.admission_stage==2{if self.schedules_close.as_ref().unwrap().terminal_is_empty(){let d=RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<crate::schedule::ScheduleSet>>>(),depth:1,..Default::default()};semio_framework_job::close_original_retained_step(cx,d,|_|{self.schedules_close=None;self.admission_stage=3;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;}else{let close=self.schedules_close.as_mut().unwrap();let d=close.selected_demand(4096)?;semio_framework_job::close_original_retained_step(cx,d,|g|close.step(g))?;}return Ok(EnergyRunGrant::Continue)}
-        if self.admission_stage==3{let copied=2*size_of::<crate::schedule::ScheduleSet>()+std::mem::size_of_val(&self.admission_model.as_ref().unwrap().run_period);let mut moved=None;semio_framework_job::admit_original_construction(cx,&mut moved,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copied,capacity_bytes:0,release_bytes:0,depth:1},|_|{let model=self.admission_model.as_mut().unwrap();let config=self.template.as_mut().unwrap();config.run_period_year=model.run_period.year;config.run_period_start_month=model.run_period.start_month;config.run_period_start_day=model.run_period.start_day;config.run_period_end_month=model.run_period.end_month;config.run_period_end_day=model.run_period.end_day;config.schedules=std::mem::take(&mut model.schedules);self.admission_stage=4;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))})?;return Ok(EnergyRunGrant::Continue)}
+        if self.admission_stage==0{let copied=size_of::<ModelCapture>()+size_of::<crate::model::Model>();let mut moved=None;semio_framework_job::admit_original_construction(cx,&mut moved,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copied,capacity_bytes:0,release_bytes:0,depth:1},|_|crate::sim_retirement::energy_construct((||{self.admission_model=Some(self.capture.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original Energy capture is absent at numerical admission"))?.finish());self.admission_stage=1;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))})()))?;return Ok(EnergyRunGrant::Continue)}
+        if self.admission_stage==1{let copied=size_of::<crate::schedule::ScheduleSet>()+2*size_of::<ControlledRetirement<crate::schedule::ScheduleSet>>();let mut moved=None;semio_framework_job::admit_original_construction(cx,&mut moved,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copied,capacity_bytes:0,release_bytes:0,depth:1},|_|crate::sim_retirement::energy_construct((||{let original=std::mem::take(&mut self.template.as_mut().unwrap().schedules);self.schedules_close=Some(ControlledRetirement::new(original).map_err(|(error,original)|{self.template.as_mut().unwrap().schedules=original;error})?);self.admission_stage=2;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))})()))?;return Ok(EnergyRunGrant::Continue)}
+        if self.admission_stage==2{if self.schedules_close.as_ref().unwrap().terminal_is_empty(){let d=RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<crate::schedule::ScheduleSet>>>(),depth:1,..Default::default()};crate::sim_retirement::energy_retained_step(cx,d,|_|{self.schedules_close=None;self.admission_stage=3;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;}else{let close=self.schedules_close.as_mut().unwrap();let d=close.selected_demand(4096)?;crate::sim_retirement::energy_retained_step(cx,d,|g|close.step(g))?;}return Ok(EnergyRunGrant::Continue)}
+        if self.admission_stage==3{let copied=2*size_of::<crate::schedule::ScheduleSet>()+std::mem::size_of_val(&self.admission_model.as_ref().unwrap().run_period);let mut moved=None;semio_framework_job::admit_original_construction(cx,&mut moved,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:copied,capacity_bytes:0,release_bytes:0,depth:1},|_|crate::sim_retirement::energy_construct((||{let model=self.admission_model.as_mut().unwrap();let config=self.template.as_mut().unwrap();config.run_period_year=model.run_period.year;config.run_period_start_month=model.run_period.start_month;config.run_period_start_day=model.run_period.start_day;config.run_period_end_month=model.run_period.end_month;config.run_period_end_day=model.run_period.end_day;config.schedules=std::mem::take(&mut model.schedules);self.admission_stage=4;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))})()))?;return Ok(EnergyRunGrant::Continue)}
         let base=u64::from_be_bytes(self.identity.base_revision[..8].try_into().unwrap());let operation=semio_framework_job::Operation::new(cx.operation(),semio_framework_job::RevisionId(base),cx.generation(),self.identity.id.run^base);
         if self.admission_stage==4{if EnergyJobAdmission::begin(operation,EnergyNumericalBounds::default(),&mut self.admission_model,&mut self.template,&mut self.admission,cx)?{self.admission_stage=5;}return Ok(EnergyRunGrant::Continue)}
         if self.admission_stage==5{let admission=self.admission.as_mut().unwrap();if admission.step(cx)?{if admission.rejection().is_some(){return Ok(self.refuse(EnergySimulationRunReason::AdmissionRejected,&[]))}self.admission_stage=6;}return Ok(EnergyRunGrant::Continue)}
         if self.admission_stage==6{if self.admission.as_mut().unwrap().take(&mut self.numerical,cx)?{self.admission_stage=7;}return Ok(EnergyRunGrant::Continue)}
-        let copied=size_of::<Option<EnergyJobAdmission>>();semio_framework_job::close_original_retained_step(cx,RetirementDemand{copy_bytes:copied,depth:1,..Default::default()},|_|{assert!(self.admission.as_ref().unwrap().terminal_is_empty());self.admission=None;self.phase=EnergyRunPhase::Simulate;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))})?;Ok(EnergyRunGrant::Continue)
+        let copied=size_of::<Option<EnergyJobAdmission>>();crate::sim_retirement::energy_retained_step(cx,RetirementDemand{copy_bytes:copied,depth:1,..Default::default()},|_|{assert!(self.admission.as_ref().unwrap().terminal_is_empty());self.admission=None;self.phase=EnergyRunPhase::Simulate;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copied,..Default::default()}))})?;Ok(EnergyRunGrant::Continue)
     }
 
     /// 🦶️ Lends the actual original work and retained stock to the numerical child until its next timestep.
-    fn simulate(&mut self, cx: &mut StepContext<'_>) -> Result<EnergyRunGrant, semio_framework_job::OriginalTurnFailure> {
+    fn simulate(&mut self, cx: &mut StepContext<'_>, claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>) -> Result<EnergyRunGrant, semio_framework_job::OriginalTurnFailure> {
         let Self { numerical, checkpoint, cursor, writer, phase, .. } = self;
         let Some(job) = numerical.as_mut() else { return Ok(EnergyRunGrant::Settled(EnergyRunSettled::Fault)) };
         if checkpoint.is_some() {
@@ -288,13 +288,16 @@ impl EnergySimulationRunJob {
             let deadline = cx.deadline_us();
             let fuel = cx.fuel_remaining().min(semio_framework_job::INTERACTIVE_LANE_FUEL);
             let seen = cx.with_original_work_loan(fuel, deadline, |cx| cx.with_retained_loan(grant, |cx| {
-                Ok(match InteractiveJob::step(job, cx)? {
-                    None | Some(JobOutcomeBorrow::Yield { .. }) => EnergyChildSeen::Yield,
-                    Some(JobOutcomeBorrow::PreviewReady { .. }) => EnergyChildSeen::Preview,
-                    Some(JobOutcomeBorrow::CheckpointReady { .. }) => EnergyChildSeen::Checkpoint,
-                    Some(JobOutcomeBorrow::Complete { .. }) => EnergyChildSeen::Complete,
-                    Some(JobOutcomeBorrow::Fault { .. }) => EnergyChildSeen::Fault,
-                    Some(JobOutcomeBorrow::Cancelled { .. }) => EnergyChildSeen::Cancelled,
+                Ok(match InteractiveJob::step(job, cx, claim) {
+                    semio_framework_job::InteractiveJobStep::Continuation(failure) => return Err(failure),
+                    semio_framework_job::InteractiveJobStep::Outcome(outcome) => match outcome {
+                        None | Some(JobOutcomeBorrow::Yield { .. }) => EnergyChildSeen::Yield,
+                        Some(JobOutcomeBorrow::PreviewReady { .. }) => EnergyChildSeen::Preview,
+                        Some(JobOutcomeBorrow::CheckpointReady { .. }) => EnergyChildSeen::Checkpoint,
+                        Some(JobOutcomeBorrow::Complete { .. }) => EnergyChildSeen::Complete,
+                        Some(JobOutcomeBorrow::Fault { .. }) => EnergyChildSeen::Fault,
+                        Some(JobOutcomeBorrow::Cancelled { .. }) => EnergyChildSeen::Cancelled,
+                    },
                 })
             }))?;
             let settled = match seen {
@@ -324,7 +327,7 @@ impl EnergySimulationRunJob {
     }
 
     /// 🧭️ Decides this call: pay back nothing, keep delivering a staged tick, lend a settled outcome, or compute and stage the next tick.
-    fn next_action(&mut self, cx: &mut StepContext<'_>) -> Result<EnergyRunAction, semio_framework_job::OriginalTurnFailure> {
+    fn next_action(&mut self, cx: &mut StepContext<'_>, claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>) -> Result<EnergyRunAction, semio_framework_job::OriginalTurnFailure> {
         if self.closing || cx.is_cancelled() {
             return Ok(EnergyRunAction::Cancelled);
         }
@@ -358,7 +361,7 @@ impl EnergySimulationRunJob {
                 EnergyRunPhase::Census => self.census_one(cx)?,
                 EnergyRunPhase::Capture => self.capture_one(cx)?,
                 EnergyRunPhase::Admit => self.admit(cx)?,
-                EnergyRunPhase::Simulate => self.simulate(cx)?,
+                EnergyRunPhase::Simulate => self.simulate(cx, claim)?,
                 EnergyRunPhase::Settled => EnergyRunGrant::Continue,
             };
             match grant {
@@ -411,7 +414,7 @@ impl EnergySimulationRunJob {
         if self.writer.is_none()&&!self.closing&&!cx.is_cancelled(){if let Some(writer)=publication.admit_successor(cx)?{self.writer=Some(writer);}return Ok(None);}
         if !self.closing&&!cx.is_cancelled()&&publication.has_more_ranges(self.numerical.as_ref().and_then(|job|job.per_surface_energy()))?{publication.advance_range(&mut self.writer,cx)?;return Ok(None);}
         let demand=publication.retirement_demands()?;
-        semio_framework_job::close_original_retained_step(cx,demand,|grant|{
+        crate::sim_retirement::energy_retained_step(cx,demand,|grant|{
             let progress=self.publication.as_mut().expect("original delivered Energy tick remains retained").close_step(grant)?.progress();
             if self.publication.as_ref().is_some_and(|publication|publication.terminal_is_empty()){self.publication=None;}
             Ok(RetainedCloneStep::Progress(progress))
@@ -467,7 +470,7 @@ enum EnergyChildSeen {
 fn acknowledge_checkpoint(job: &mut EnergyJob, checkpoint: &mut Option<sim_wire::EnergyWireLease>, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     let demand = checkpoint_demands(checkpoint)?;
     let generation = cx.generation();
-    semio_framework_job::close_original_retained_step(cx, demand, |grant| {
+    crate::sim_retirement::energy_retained_step(cx, demand, |grant| {
         if checkpoint.as_ref().is_some_and(|lease| !lease.packet().terminal_is_empty()) {
             return checkpoint.as_mut().expect("original numerical checkpoint").packet_mut().close_step(grant);
         }
@@ -491,11 +494,11 @@ fn checkpoint_demands(checkpoint: &Option<sim_wire::EnergyWireLease>) -> Result<
 }
 
 impl EnergySimulationRunJob {
-    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+    fn step_value<'a>(&'a mut self, cx: &mut StepContext<'_>, claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.publication.as_ref().is_some_and(|publication| publication.delivered) {
             return self.retire_delivered(cx);
         }
-        match self.next_action(cx)? {
+        match self.next_action(cx, claim)? {
             EnergyRunAction::Yield => Ok(None),
             EnergyRunAction::Cancelled => JobOutcomeBorrow::admit_cancelled(cx).map_err(Into::into),
             EnergyRunAction::Publish => {let table=self.numerical.as_ref().and_then(|job|job.per_surface_energy());self.publication.as_mut().expect("a staged tick publication").poll(cx,table).map_err(Into::into)},
@@ -525,7 +528,7 @@ impl EnergySimulationRunJob {
 }
 
 impl InteractiveJob for EnergySimulationRunJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,claim:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx,claim).map_err(semio_framework_job::OriginalTurnFailure::from))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
         match descriptor.kind() {
@@ -553,7 +556,7 @@ impl InteractiveJob for EnergySimulationRunJob {
         if let Some(source)=self.linked_weather.as_mut(){
             if !source.terminal_is_empty(){return source.close_step(cx).map(|progress|InteractiveJobCloseStep::Pending{progress});}
             let demand=self.close_demands()?;
-            return semio_framework_job::close_original_retained_step(cx,demand,|_|{self.linked_weather=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))});
+            return crate::sim_retirement::energy_retained_step(cx,demand,|_|{self.linked_weather=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))});
         }
         if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:Default::default()})}
         if self.checkpoint.is_some() {
@@ -570,7 +573,7 @@ impl InteractiveJob for EnergySimulationRunJob {
         }
         if self.publication.is_none()&&self.writer_close.is_none()&&self.writer.is_none()&&self.numerical.is_none(){if let Some(admission)=self.admission.as_mut(){if !admission.terminal_is_empty(){return admission.close_step(cx)}}}
         let demand=self.close_demands()?;
-        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{
+        let step=crate::sim_retirement::energy_retained_step(cx,demand,|grant|{
             let one=RetainedCloneProgress{copied_items:1,..Default::default()};
             let progress=if let Some(publication)=self.publication.as_mut(){
                 let progress=publication.close_step(grant)?.progress();

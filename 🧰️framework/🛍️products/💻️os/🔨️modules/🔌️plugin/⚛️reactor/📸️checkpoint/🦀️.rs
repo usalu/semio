@@ -108,7 +108,7 @@ pub fn admit_restored_actor(source:&mut Option<String>,original:&mut semio_frame
     original.native().checkpoint()?;
     original.native().charge(demand.capacity_bytes)?;
     let text=source.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"restored actor lost original decoded text"))?;
-    match SharedUtf8::admit(text,grant){
+    match SharedUtf8::admit(text,grant).result{
         Ok((text,progress))=>{original.record_progress(progress)?;Ok(protocol::ActorId(text))}
         Err((error,text))=>{*source=Some(text);Err(error)}
     }

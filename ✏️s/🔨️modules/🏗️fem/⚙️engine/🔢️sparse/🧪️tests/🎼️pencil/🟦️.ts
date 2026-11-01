@@ -14,5 +14,4 @@ export function verifySymmetricPencilOracle(): void {
     assert.deepEqual([first.ptr, first.index, first.values], [row.kColptr, row.kRows, row.kValues], row.id);
     assert.deepEqual([second.ptr, second.index, second.values], [row.bIndptr, row.bIndices, row.bValues], row.id);
   }
-  console.log("[DEBUG] three signed symmetric pencils match independent mathjs compressed matrices, including zero diagonal and order65");
 }

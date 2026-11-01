@@ -33,5 +33,4 @@ fn enclosure_exchange_matches_portable_radiosity_without_emissivity_or_size_floo
   }
   total_turns+=turns;
  }
- eprintln!("[DEBUG] retained enclosure exchange original spans matched 15 independent Mathjs cases across {total_turns} scalar turns");
 }

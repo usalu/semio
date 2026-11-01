@@ -293,19 +293,19 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
         }
         if let Some(value) = self.target.value.take() {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            return match self.mutation_factory.as_ref().expect("mutation target retains original factory").retire_owned(value, child) {
+            return match self.mutation_factory.as_ref().expect("mutation target retains original factory").retire_owned(value, child).result {
                 Ok((owner, progress)) => { *self.retirement = Some(owner); if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(diagnostic.with_progress(progress)); } Ok(RetainedCloneStep::Progress(progress)) }
                 Err((error, value)) => { *self.target.value = Some(value); Err(diagnostic.with_native(error)) }
             };
         }
-        if self.retirement.is_some() { return artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (diagnostic).with_native(error)); }
+        if self.retirement.is_some() { return artifact_retirement_box_close_step(&mut self.retirement, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| (diagnostic).with_native(error)); }
         if let Some(values) = self.values.take() {
             *self.rows_retirement = Some(ArtifactStoreOperationRowsRetirement::new(values, self.mutation_factory.as_ref().expect("original operation rows retain their factory").clone()));
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty }));
         }
         if let Some(owner) = self.rows_retirement.as_mut() {
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = owner.close_step(child).map_err(|error| (diagnostic).with_native(error))?;
+            let step = owner.close_step(child).result.map_err(|error| (diagnostic).with_native(error))?;
             admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original SPR row owner").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
             if owner.terminal_is_empty() { drop(self.rows_retirement.take()); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
@@ -323,7 +323,7 @@ impl<P, Mutation: Send + 'static> ArtifactOwnedSprMutationArrayAuthority<P, Muta
         if let Some(slot) = self.factories_close.iter_mut().find(|slot| slot.is_some()) {
             let owner = slot.as_mut().expect("observed original mutation factory");
             let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-            let step = owner.step(child).map_err(|error| (diagnostic).with_native(error))?;
+            let step = owner.step(child).result.map_err(|error| (diagnostic).with_native(error))?;
             admit_retained_clone_close(child, step, owner.terminal_is_empty(), "original SPR mutation factory").map_err(|error| (diagnostic).with_native(error).with_progress(step.progress()))?;
             if owner.terminal_is_empty() { drop(slot.take()); }
             self.taken = self.factories_close.iter().all(Option::is_none);

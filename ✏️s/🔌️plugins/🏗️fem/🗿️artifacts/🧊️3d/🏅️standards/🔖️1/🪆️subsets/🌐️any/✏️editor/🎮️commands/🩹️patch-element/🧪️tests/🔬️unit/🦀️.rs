@@ -62,5 +62,4 @@ fn sibling_field_commands_and_inverse_preserve_concurrent_intent(){
     let mut sum=first_diff.clone();protocol::ColdMutationDiff::absorb(&mut sum,second_diff);
     assert_eq!(protocol::apply_diff_cold(&sum,&base).unwrap(),combined);
     assert_eq!(protocol::apply_diff_cold(&protocol::DiffAlgebra::inverse(&sum,&base),&combined).unwrap(),base);
-    eprintln!("[DEBUG] element same-base inspector fields and sparse inverse preserve concurrent sibling intent");
 }

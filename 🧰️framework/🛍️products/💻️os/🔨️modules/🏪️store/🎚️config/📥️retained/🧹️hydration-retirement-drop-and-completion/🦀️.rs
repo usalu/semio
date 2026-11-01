@@ -84,9 +84,9 @@ where
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         self.request_cancel();
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active.is_some() { return semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return semio_framework_os_store_read::artifact_retirement_box_close_step(&mut self.active, grant).result.map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(owner) = self.fold_job.as_mut() {
-            let step = owner.close_step(child)?;
+            let step = owner.close_step(child).result?;
             let terminal = owner.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "original config fold")?;
             if terminal { drop(self.fold_job.take()); }
@@ -95,7 +95,7 @@ where
         macro_rules! controlled {
             ($field:ident) => {
                 if let Some(value) = self.$field.take() {
-                    match admit_typed_controlled_retirement(value, child) {
+                    match admit_typed_controlled_retirement(value, child) .result {
                         Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
                         Err((error, value)) => { *self.$field = Some(value); return Err(error); }
                     }
@@ -107,28 +107,28 @@ where
         controlled!(fold);
         controlled!(fold_auxiliary);
         if let Some(owner) = self.source_edits.as_mut() {
-            let step = owner.close_step(child)?;
+            let step = owner.close_step(child).result?;
             let terminal = owner.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "original config source_edits")?;
             if terminal { drop(self.source_edits.take()); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(owner) = self.source_forwards.as_mut() {
-            let step = owner.close_step(child)?;
+            let step = owner.close_step(child).result?;
             let terminal = owner.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "original config source_forwards")?;
             if terminal { drop(self.source_forwards.take()); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(owner) = self.source_inverse.as_mut() {
-            let step = owner.close_step(child)?;
+            let step = owner.close_step(child).result?;
             let terminal = owner.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "original config source_inverse")?;
             if terminal { drop(self.source_inverse.take()); }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(owner) = self.source_metadata.as_mut() {
-            let step = owner.close_step(child)?;
+            let step = owner.close_step(child).result?;
             let terminal = owner.terminal_is_empty();
             admit_retained_clone_close(child, step, terminal, "original config source_metadata")?;
             if terminal { drop(self.source_metadata.take()); }
@@ -158,7 +158,7 @@ where
             controlled!(expected_id);
             if self.actor.0.has_owner() {
                 let original = std::mem::take(&mut self.actor.0);
-                match admit_typed_controlled_retirement(original, child) {
+                match admit_typed_controlled_retirement(original, child) .result {
                     Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
                     Err((error, original)) => { self.actor.0 = original; return Err(error); }
                 }
@@ -240,7 +240,7 @@ where
         controlled!(expected_id);
         if self.actor.0.has_owner() {
             let value = std::mem::take(&mut self.actor.0);
-            match admit_typed_controlled_retirement(value, child) {
+            match admit_typed_controlled_retirement(value, child) .result {
                 Ok((owner, progress)) => { *self.active = Some(owner); return Ok(RetainedCloneStep::Progress(progress)); }
                 Err((error, value)) => { self.actor.0 = value; return Err(error); }
             }

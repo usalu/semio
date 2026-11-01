@@ -10,14 +10,14 @@ pub struct EvaluationInputPreparation {
     pub writer:Option<semio_framework_pack_json::JsonWriteCursor<DslValue>>,pub(super) encoding:Option<semio_framework_value::native_encoding::NativeEncodeContinuation>,pub(super) decoding:Option<semio_framework_value_native_owned::native_decoding::NativeDecodeContinuation>,
     pub binding:Option<neural_engine::retirement::RetainedDictionaryInput>,pub(super) dictionary:Option<Dictionary>,
     canonical_input:Option<String>,canonical_dependency:Option<String>,pub(super) identity:Option<String>,
-    pub(super) retirement:neural_engine::ValueRetirement,pub(super) stage:u8,pub(super) units:usize,pub(super) cancelled:bool,closing_fields:u16,fault_member:Option<String>,pub(super) normal_progress:RetainedCloneProgress,
+    pub(super) retirement:neural_engine::ValueRetirement,pub(super) stage:u8,pub(super) units:usize,pub(super) cancelled:bool,closing_fields:u16,fault_member:Option<String>,pub(super) normal_progress:RetainedCloneProgress,work:u64,
     pub(super) active:std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }
 
 impl EvaluationInputPreparation {
     /// 🌱️ Takes one initial request's source allocation without scanning or copying its payload.
     pub fn new(input:String,dependency:String,operator:String,version:String)->Self {
-        Self {input:Some(input),dependency:Some(dependency),operator:Some(operator),version:Some(version),parser:Some(semio_framework_pack_json::JsonParseCursor::new(semio_framework_pack_json::JsonMemberPolicy::Reject)),projection:None,writer:None,encoding:None,decoding:None,binding:None,dictionary:None,canonical_input:None,canonical_dependency:None,identity:None,active:std::mem::ManuallyDrop::new(None),retirement:Default::default(),stage:0,units:0,cancelled:false,closing_fields:0,fault_member:None,normal_progress:Default::default()}
+        Self {input:Some(input),dependency:Some(dependency),operator:Some(operator),version:Some(version),parser:Some(semio_framework_pack_json::JsonParseCursor::new(semio_framework_pack_json::JsonMemberPolicy::Reject)),projection:None,writer:None,encoding:None,decoding:None,binding:None,dictionary:None,canonical_input:None,canonical_dependency:None,identity:None,active:std::mem::ManuallyDrop::new(None),retirement:Default::default(),stage:0,units:0,cancelled:false,closing_fields:0,fault_member:None,normal_progress:Default::default(),work:0}
     }
     /// 🪪️ Exposes the still-owned source allocation for ownership laws.
     pub fn source_ptr(&self)->Option<*const u8> {self.input.as_ref().map(|source|source.as_ptr())}
@@ -35,14 +35,14 @@ impl EvaluationInputPreparation {
     pub(super) fn close_intermediate(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
         if grant.maximum_items==0{return Ok(Default::default());}
         if !self.retirement.terminal_is_empty(){return self.retirement.close_step(grant).map(|step|step.progress());}
-        if self.active.is_some(){return evaluation_child_close(&mut self.active,grant).map(|step|step.progress());}
+        if self.active.is_some(){return evaluation_child_close(&mut self.active,grant,&mut self.work).map(|step|step.progress());}
         if self.closing_fields==0{return Ok(Default::default());}
         if grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation intermediate handoff requires admitted depth"));}
         let field=self.closing_fields&self.closing_fields.wrapping_neg();
         let progress=match field{
-            1=>evaluation_admit_original(&mut self.parser,&mut self.active,grant)?.progress(),
-            2=>evaluation_admit_original(&mut self.projection,&mut self.active,grant)?.progress(),
-            4=>evaluation_admit_original(&mut self.writer,&mut self.active,grant)?.progress(),
+            1=>evaluation_admit_original(&mut self.parser,&mut self.active,grant,&mut self.work)?.progress(),
+            2=>evaluation_admit_original(&mut self.projection,&mut self.active,grant,&mut self.work)?.progress(),
+            4=>evaluation_admit_original(&mut self.writer,&mut self.active,grant,&mut self.work)?.progress(),
             8|16|128=>{
                 let source=match field{8=>&mut self.input,16=>&mut self.dependency,_=>&mut self.fault_member};let value=source.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"evaluation intermediate source lost its field"))?;
                 match self.retirement.text(value,grant){Ok(progress)=>progress,Err((error,value))=>{*source=Some(value);return Err(error);}}
@@ -56,6 +56,7 @@ impl EvaluationInputPreparation {
         Ok(progress)
     }
     /// ⏱️ Advances the original codec authority or one separately granted physical cleanup turn.
+    pub fn take_work(&mut self)->u64{std::mem::take(&mut self.work)}
     pub fn normal_step_progress(&self)->RetainedCloneProgress {self.normal_progress}
     pub fn step(&mut self,maximum_units:usize,maximum_bytes:usize,grant:RetainedCloneGrant)->Result<(Option<(Dictionary,String)>,RetainedCloneProgress),EvaluationFailure>{
         self.normal_progress=Default::default();let result=self.step_original(maximum_units,maximum_bytes,grant);if let Ok((_,progress))=&result {self.normal_progress=*progress;}result
@@ -136,16 +137,16 @@ impl EvaluationInputPreparation {
         let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation input close exceeds supplied depth"));}
         if !self.retirement.terminal_is_empty(){let step=self.retirement.close_step(grant)?;return self.admit_close(grant,step);}
-        if self.active.is_some(){let step=evaluation_child_close(&mut self.active,grant)?;return self.admit_close(grant,step);}
+        if self.active.is_some(){let step=evaluation_child_close(&mut self.active,grant,&mut self.work)?;return self.admit_close(grant,step);}
         if let Some(binding)=&mut self.binding {
             let step=binding.close_step(grant)?;
             let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,binding.terminal_is_empty(),"evaluation input binding")?;
             if binding.terminal_is_empty(){self.binding=None;}
             return self.admit_close(grant,step);
         }
-        if self.parser.is_some(){return evaluation_admit_original(&mut self.parser,&mut self.active,grant);}
-        if self.projection.is_some(){return evaluation_admit_original(&mut self.projection,&mut self.active,grant);}
-        if self.writer.is_some(){return evaluation_admit_original(&mut self.writer,&mut self.active,grant);}
+        if self.parser.is_some(){return evaluation_admit_original(&mut self.parser,&mut self.active,grant,&mut self.work);}
+        if self.projection.is_some(){return evaluation_admit_original(&mut self.projection,&mut self.active,grant,&mut self.work);}
+        if self.writer.is_some(){return evaluation_admit_original(&mut self.writer,&mut self.active,grant,&mut self.work);}
         if self.encoding.is_some()||self.decoding.is_some(){
             if self.encoding.is_some(){self.encoding=None;}else{self.decoding=None;}
             return self.admit_close(grant,RetainedCloneStep::Progress(RetainedCloneProgress {copied_items:1,..empty}));
@@ -175,7 +176,7 @@ impl semio_framework_value::retirement::RetirementCursor for EvaluationInputReti
         fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.0.retirement_demands(body) }
 fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep {
         use semio_framework_value::retirement::RetirementStep;
-        match self.0.close_step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}
+        match self.0.close_step(grant){Err(error)=>RetirementStep::Failure(error,0),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>RetirementStep::Complete(0),Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress,1)}
     }
     fn terminal_is_empty(&self)->bool {self.0.terminal_is_empty()}
     fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands(0)?.copy_bytes)}

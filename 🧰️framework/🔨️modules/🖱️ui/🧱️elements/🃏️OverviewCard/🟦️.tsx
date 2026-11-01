@@ -128,7 +128,7 @@ export function OverviewCard(props: OverviewCardProps): React.ReactElement {
 export const overviewCardChipClass = cn(windowChromeTitleChipClass, "inline-flex items-center gap-single px-single text-xs font-medium");
 
 /** 🏷️ A footer chip that only labels the card's own action (the whole card is the button): muted text and an optional icon
- * that follow the card's hover. The pointer zooms the page behind the card only while it is over this chip. */
+ * that follow the card's hover. Hovering this chip only centers the level on the card; pressing it turns the page behind the card clear. */
 export function OverviewCardOpenChip({ slot, children, icon }: { readonly slot: string; readonly children: React.ReactNode; readonly icon?: React.ReactNode }): React.ReactElement {
   return (
     <div data-slot={`${slot}-open-chip`} data-layered-zoom="" className={windowChromeTitleChipClass}>
@@ -146,8 +146,8 @@ export interface OverviewCardActionProps extends React.ButtonHTMLAttributes<HTML
 }
 
 /** 🖱️ A real button in a card's footer chip, at least 24 px tall (WCAG 2.2 target size): the primary action reads in the
- * foreground colour with a chevron that nudges on hover, a secondary one reads muted until hovered. The pointer zooms
- * the page behind the card only while it is over the primary action. */
+ * foreground colour with a chevron that nudges on hover, a secondary one reads muted until hovered. Hovering the primary action
+ * only centers the level on the card; pressing it turns the page behind the card clear. */
 export const OverviewCardAction = React.forwardRef<HTMLButtonElement, OverviewCardActionProps>(({ primary = false, className, children, style, type, ...rest }, ref) => (
   <button
     ref={ref}

@@ -23,7 +23,7 @@ impl FlowSnapshotRetirement{
  }
 }
 impl RetirementCursor for FlowSnapshotRetirement{
- fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.step(grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(p))if p==Default::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(p)|RetainedCloneStep::Complete(p))=>RetirementStep::Progress(p)}}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{match self.step(grant){Err(error)=>RetirementStep::Failure(error,0),Ok(RetainedCloneStep::Complete(p))if p==Default::default()=>RetirementStep::Complete(0),Ok(RetainedCloneStep::Progress(p)|RetainedCloneStep::Complete(p))=>RetirementStep::Progress(p,1)}}
  fn terminal_is_empty(&self)->bool{self.source.is_none()&&self.owners.is_none()}
  fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.demands(0)?.copy_bytes)}
  fn next_birth_bytes(&self,copy:usize)->Option<usize>{self.demands(copy).ok().map(|d|d.capacity_bytes)}
@@ -43,9 +43,9 @@ impl Drop for FlowSnapshotRetirement{fn drop(&mut self){assert!(std::thread::pan
 pub struct SnapshotRetirementFactory;
 impl store::SnapshotRetirementFactory<FlowSnapshot> for SnapshotRetirementFactory{
  fn retirement_birth_bytes(&self,_source:&Arc<FlowSnapshot>)->usize{semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<FlowSnapshot>()}
- fn retire(&self,source:Arc<FlowSnapshot>,grant:RetainedCloneGrant)->Result<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<FlowSnapshot>)>{semio_framework_value::retirement::arc_custody::admit_shared_retirement(source,grant,true)}
+ fn retire(&self,source:Arc<FlowSnapshot>,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,Arc<FlowSnapshot>)>{semio_framework_value::retirement::arc_custody::admit_shared_retirement(source,grant,true)}
 }
 impl store::ArtifactOwnedValueRetirementFactory<FlowSnapshot> for SnapshotRetirementFactory{
  fn retirement_birth_bytes(&self,_source:&FlowSnapshot)->usize{semio_framework_value::retirement::controlled::controlled_retirement_birth_bytes::<FlowSnapshot>()}
- fn retire_owned(&self,source:FlowSnapshot,grant:RetainedCloneGrant)->Result<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,FlowSnapshot)>{semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(source,grant).map(|(owner,p)|(owner as Box<dyn store::ErasedSnapshotRetirement>,p))}
+ fn retire_owned(&self,source:FlowSnapshot,grant:RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome<(Box<dyn store::ErasedSnapshotRetirement>,RetainedCloneProgress),(ValueError,FlowSnapshot)>{let turn=semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(source,grant);semio_framework_value::RetainedWorkOutcome{result:turn.result.map(|(owner,p)|(owner as Box<dyn store::ErasedSnapshotRetirement>,p)),work:turn.work}}
 }

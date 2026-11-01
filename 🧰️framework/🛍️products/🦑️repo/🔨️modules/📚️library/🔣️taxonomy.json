@@ -30759,9 +30759,17 @@
             "manifestPath": "🧰️framework/📦️packages/🟦️typescript/package.json",
             "entryPath": "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"
           },
+          "@semio-tech/framework-pack-json-ts/members": {
+            "manifestPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🟦️typescript/🧩️members/🟦️.ts"
+          },
           "@semio-tech/framework-replication": {
             "manifestPath": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/package.json",
             "entryPath": "🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/🟦️.ts"
+          },
+          "@semio-tech/pack-json-decode-ts": {
+            "manifestPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript/package.json",
+            "entryPath": "🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript/🟦️.ts"
           },
           "@semio-tech/schema-validator-ts": {
             "manifestPath": "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/package.json",

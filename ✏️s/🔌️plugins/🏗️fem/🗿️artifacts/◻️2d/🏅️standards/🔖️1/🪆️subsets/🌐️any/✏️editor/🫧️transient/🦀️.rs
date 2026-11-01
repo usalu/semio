@@ -127,7 +127,7 @@ impl semio_framework_value_snapshot_projection::SnapshotProjection for FemGumbal
     type Output = Self;
     type Projection = semio_framework_value_snapshot_projection::snapshot_projection::OwnedFieldProjection<Self>;
     fn projection_birth_demand() -> semio_framework_value::RetirementDemand { Self::Projection::birth_demand() }
-    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_value::ValueError> { Self::Projection::begin(grant) }
+    fn begin_projection(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome<(Self::Projection, semio_framework_value::retained_clone::RetainedCloneProgress)> { Self::Projection::begin(grant) }
 }
 
 //#region 🔖️Mutation

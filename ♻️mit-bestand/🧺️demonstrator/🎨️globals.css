@@ -3,7 +3,8 @@
 
 /* 🃏️ The shared overview card owns its transparent stack and its hover outline; the demonstrator adds per-paragraph
  * emphasis and a title chip that answers any hover over the card. */
-[data-overview-card] [data-slot="introduction-body-paragraph"]:hover {
+[data-overview-card] [data-slot="introduction-body-paragraph"]:hover,
+[data-overview-card]:is(:focus-visible, :has(:focus-visible)) [data-slot="introduction-body-paragraph"] {
   color: var(--border-emphasized-color);
   transition: color 120ms ease;
 }
@@ -11,7 +12,9 @@
 [data-overview-card]:is(
   :has([data-slot="window-chrome-body"]:hover),
   :has([data-slot="window-chrome-gap"]:hover),
-  :has([data-slot="demonstrator-pane-card-title-chip"]:hover)
+  :has([data-slot="demonstrator-pane-card-title-chip"]:hover),
+  :focus-visible,
+  :has(:focus-visible)
 ) [data-slot="demonstrator-pane-card-title-chip"]:not([data-handle-hovered="true"]) {
   color: var(--border-emphasized-color);
   transition: color 120ms ease;

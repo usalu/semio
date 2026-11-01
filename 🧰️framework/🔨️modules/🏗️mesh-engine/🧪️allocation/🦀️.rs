@@ -8,10 +8,10 @@ pub(crate) fn observe_retirement_allocations<T>(operation: impl FnOnce() -> T) -
     (result, events)
 }
 unsafe impl std::alloc::GlobalAlloc for ObservedAllocator {
-    unsafe fn alloc(&self,layout:std::alloc::Layout)->*mut u8{let pointer=unsafe{std::alloc::GlobalAlloc::alloc(&std::alloc::System,layout)};if !pointer.is_null(){retirement_allocation_event(layout.size(),0);}pointer}
-    unsafe fn alloc_zeroed(&self,layout:std::alloc::Layout)->*mut u8{let pointer=unsafe{std::alloc::GlobalAlloc::alloc_zeroed(&std::alloc::System,layout)};if !pointer.is_null(){retirement_allocation_event(layout.size(),0);}pointer}
-    unsafe fn realloc(&self,pointer:*mut u8,layout:std::alloc::Layout,size:usize)->*mut u8{let grown=unsafe{std::alloc::GlobalAlloc::realloc(&std::alloc::System,pointer,layout,size)};if !grown.is_null(){retirement_allocation_event(size,layout.size());}grown}
-    unsafe fn dealloc(&self,pointer:*mut u8,layout:std::alloc::Layout){retirement_allocation_event(0,layout.size());unsafe{std::alloc::GlobalAlloc::dealloc(&std::alloc::System,pointer,layout)}}
+    unsafe fn alloc(&self,layout:std::alloc::Layout)->*mut u8{let pointer=unsafe{std::alloc::GlobalAlloc::alloc(&semio_framework_trace::HeapWitness,layout)};if !pointer.is_null(){retirement_allocation_event(layout.size(),0);}pointer}
+    unsafe fn alloc_zeroed(&self,layout:std::alloc::Layout)->*mut u8{let pointer=unsafe{std::alloc::GlobalAlloc::alloc_zeroed(&semio_framework_trace::HeapWitness,layout)};if !pointer.is_null(){retirement_allocation_event(layout.size(),0);}pointer}
+    unsafe fn realloc(&self,pointer:*mut u8,layout:std::alloc::Layout,size:usize)->*mut u8{let grown=unsafe{std::alloc::GlobalAlloc::realloc(&semio_framework_trace::HeapWitness,pointer,layout,size)};if !grown.is_null(){retirement_allocation_event(size,layout.size());}grown}
+    unsafe fn dealloc(&self,pointer:*mut u8,layout:std::alloc::Layout){retirement_allocation_event(0,layout.size());unsafe{std::alloc::GlobalAlloc::dealloc(&semio_framework_trace::HeapWitness,pointer,layout)}}
 }
 #[global_allocator]
 static OBSERVED_ALLOCATOR:ObservedAllocator=ObservedAllocator;

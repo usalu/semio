@@ -10,6 +10,7 @@ description = "Original Energy model genesis and installed native Store authorit
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-plugin-energy-engine-sim-retirement = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-plugin-ownership = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }

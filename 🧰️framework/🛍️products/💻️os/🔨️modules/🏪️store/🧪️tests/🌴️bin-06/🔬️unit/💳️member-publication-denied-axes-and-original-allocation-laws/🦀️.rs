@@ -70,11 +70,11 @@ fn current_box_retirement_preserves_denied_owner_and_exact_physical_shell() {
     let current_depth = artifact_retirement_box_demands(slot.as_ref().unwrap(), 1).unwrap().depth;
     for depth in [0, 1, current_depth - 1] {
         let (result, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| artifact_retirement_box_close_step(&mut slot, RetainedCloneGrant { maximum_items: 1, maximum_depth: depth, maximum_release_bytes: 4096, ..Default::default() }));
-        assert_eq!(result.unwrap_err().kind, semio_framework_value::ValueRefusalKind::DepthLimit);
+        assert_eq!(result.result.unwrap_err().kind, semio_framework_value::ValueRefusalKind::DepthLimit);
         assert_eq!((requested, released), (0, 0));
         assert_eq!(slot.as_ref().unwrap().as_ref() as *const dyn ErasedSnapshotRetirement as *const (), address);
     }
-    let (step, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| artifact_retirement_box_close_step(&mut slot, RetainedCloneGrant::default()).unwrap());
+    let (step, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| artifact_retirement_box_close_step(&mut slot, RetainedCloneGrant::default()).result.unwrap());
     assert_eq!(step, RetainedCloneStep::Progress(RetainedCloneProgress::default()));
     assert_eq!((requested, released), (0, 0));
     let mut freed = 0;
@@ -84,7 +84,7 @@ fn current_box_retirement_preserves_denied_owner_and_exact_physical_shell() {
         let grant = policy;
         let terminal_before = owner.terminal_is_empty();
         let shell = std::mem::size_of_val(owner.as_ref());
-        let (step, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| artifact_retirement_box_close_step(&mut slot, grant).unwrap());
+        let (step, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| artifact_retirement_box_close_step(&mut slot, grant).result.unwrap());
         assert!(step.progress().fits(grant));
         assert_eq!(step.progress().retained_capacity_bytes, requested);
         assert_eq!(step.progress().released_bytes, released);
@@ -124,7 +124,7 @@ fn artifact_store_group_visibility_retires_original_noncopy_atomic_with_exact_fr
         for _ in 0..8 {
             let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| cursor.close_step(grant));
             assert_eq!((allocated, released), (0, 0));
-            match step { RetirementStep::ProcessedBytes(bytes) => { assert!(bytes <= 1); copied += bytes; }, RetirementStep::Complete => break, _ => panic!("atomic-only owner has no hidden heap work") }
+            match step { RetirementStep::ProcessedBytes(bytes) => { assert!(bytes <= 1); copied += bytes; }, RetirementStep::Complete(_) => break, _ => panic!("atomic-only owner has no hidden heap work") }
         }
         assert_eq!(copied, std::mem::size_of::<semio_framework_os_vcs::ArtifactGroupVisibility>());
         assert!(cursor.terminal_is_empty());
@@ -155,7 +155,7 @@ fn current_typed_option_birth_retains_exact_original_and_paid_shell() {
         assert_eq!(pending.as_ref().unwrap().capacity(), 4096);
         assert!(active.is_none());
     }
-    let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| artifact_retirement_admit_owned(&mut pending, &mut active, paid).unwrap());
+    let (step, born, freed) = semio_framework_trace_memory_testing::observe_backing(|| artifact_retirement_admit_owned(&mut pending, &mut active, paid).result.unwrap());
     assert_eq!(step.progress().retained_capacity_bytes, born);
     assert_eq!(born, demand.capacity_bytes);
     assert_eq!(freed, 0);
@@ -165,7 +165,7 @@ fn current_typed_option_birth_retains_exact_original_and_paid_shell() {
     for _ in 0..128 {
         let Some(owner) = active.as_ref() else { break; };
         let grant = physical_test_close_grant();
-        let (step, turn_born, turn_freed) = semio_framework_trace_memory_testing::observe_backing(|| artifact_retirement_box_close_step(&mut active, grant).unwrap());
+        let (step, turn_born, turn_freed) = semio_framework_trace_memory_testing::observe_backing(|| artifact_retirement_box_close_step(&mut active, grant).result.unwrap());
         assert_eq!(step.progress().retained_capacity_bytes, turn_born);
         assert_eq!(step.progress().released_bytes, turn_freed);
         assert!(matches!(step, RetainedCloneStep::Progress(_) | RetainedCloneStep::Complete(_)));

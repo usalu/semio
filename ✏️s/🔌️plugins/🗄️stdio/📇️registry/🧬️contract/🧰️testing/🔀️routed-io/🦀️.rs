@@ -19,7 +19,7 @@ pub fn with_sqlite_recipient<T>(limits: SqliteDatabaseLimits, accept: &mut dyn F
         operation(&mut control)
     };
     while !recipient.terminal_is_empty() {
-        recipient.close_step(grant).expect("original SQLite recipient closes");
+        recipient.close_step(grant).result.expect("original SQLite recipient closes");
     }
     result
 }
@@ -49,7 +49,7 @@ fn close_original(native: &mut IoRunControl<'_, '_>) {
         let mut owner = native.snapshot_decode().expect("original decode direction");
         while owner.native().has_retirement_owner() {
             let grant = owner.remaining_grant();
-            let result = owner.native().close_retirement_recipient(grant);
+            let result = owner.native().close_retirement_recipient(grant).result;
             let progress = match &result {
                 Ok(step) => step.progress(),
                 Err(error) => error.retained_progress(),
@@ -61,7 +61,7 @@ fn close_original(native: &mut IoRunControl<'_, '_>) {
     let mut owner = native.snapshot_encode().expect("original encode direction");
     while owner.native().has_retirement_owner() {
         let grant = owner.remaining_grant();
-        let result = owner.native().close_retirement_recipient(grant);
+        let result = owner.native().close_retirement_recipient(grant).result;
         let progress = match &result {
             Ok(step) => step.progress(),
             Err(error) => error.retained_progress(),

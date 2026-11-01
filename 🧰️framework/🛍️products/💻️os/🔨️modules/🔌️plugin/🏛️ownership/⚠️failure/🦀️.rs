@@ -34,7 +34,7 @@ pub fn original_lifecycle_grant(cx:&StepContext<'_>,loan:RetainedCloneGrant)->Re
 
 /// 🧮️ Subtracts already posted child effects from the same original producer's full receipt.
 pub fn original_lifecycle_unposted(progress:RetainedCloneProgress,before:RetainedCloneProgress,after:RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{
- let difference=|whole:usize,earlier:usize,later:usize|later.checked_sub(earlier).and_then(|posted|whole.checked_sub(posted)).ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original lifecycle child receipt differs from its whole producer receipt").with_retained_progress(progress));
+ let difference=|whole:usize,earlier:usize,later:usize|later.checked_sub(earlier).and_then(|posted|whole.checked_sub(posted)).ok_or_else(||ValueError::new(ValueRefusalKind::InvariantViolated,format!("[DEBUG] original lifecycle child receipt differs from its whole producer receipt: whole={progress:?} before={before:?} after={after:?}")).with_retained_progress(progress));
  Ok(RetainedCloneProgress{copied_items:difference(progress.copied_items,before.copied_items,after.copied_items)?,copied_bytes:difference(progress.copied_bytes,before.copied_bytes,after.copied_bytes)?,retained_capacity_bytes:difference(progress.retained_capacity_bytes,before.retained_capacity_bytes,after.retained_capacity_bytes)?,released_bytes:difference(progress.released_bytes,before.released_bytes,after.released_bytes)?})
 }
 

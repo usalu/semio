@@ -62,6 +62,4 @@ export function verifySolarPvOracle(schemas: SolarPvMutationSchemas): void {
   assert(!constant({mutation:"changePvSystemFaimanHeatLossConstant",id:900,newFaimanHeatLossConstantWM2k:Infinity}));
   assert(!wind({mutation:"changePvSystemFaimanHeatLossWind",id:900,newFaimanHeatLossWindWSM3k:-1}));
   assert(!mounting({mutation:"changePvSystemMounting",id:900,newMounting:"Roof"}));
-  console.log(`[DEBUG] ${fixture.cases.length * 5 + 5} authored PV semantic payloads match independent Ajv admission and physical refusal`);
-  console.log(`[DEBUG] ${fixture.cases.length} PV plane cases match independent mathjs matrix/vector irradiance, Faiman temperature and clipped authored-efficiency power`);
 }

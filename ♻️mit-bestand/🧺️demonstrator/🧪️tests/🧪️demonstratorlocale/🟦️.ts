@@ -3,7 +3,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import cases from "./🧫️cases.json" with { type: "json" };
-import { DEMONSTRATOR_LOCKED_LOCALE, demonstratorFormat, demonstratorText, demonstratorTranslationTree, type DemonstratorTextKey } from "../../🔨️modules/🌐️locale/🟦️.ts";
+import { DEMONSTRATOR_LOCALES, demonstratorFormat, demonstratorText, demonstratorTranslationTree, resolveDemonstratorLocale, type DemonstratorTextKey } from "../../🔨️modules/🌐️locale/🟦️.ts";
 
 const LOCALES = ["en", "de"] as const;
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..");
@@ -21,7 +21,7 @@ function* walk(directory: string, skip: readonly string[]): Generator<string> {
 /** 🌐️ Every user-visible text of the demonstrator closure exists in English AND German: the page's own catalog, the composed plugin manifests of the eight panes, the framework fault notices, and the plugin sources' localized labels. Language-agnostic twin: `🐍️.py`, driven by the same `🧫️cases.json`. */
 export async function registerDemonstratorLocaleTests(vitest: NonNullable<ImportMeta["vitest"]>): Promise<void> {
   const { describe, expect, it } = vitest;
-  const catalog = readJson(cases.catalog) as { lockedLocale: string; locales: string[]; texts: Record<string, Record<string, string>> };
+  const catalog = readJson(cases.catalog) as { locales: string[]; texts: Record<string, Record<string, string>> };
 
   describe("demonstrator page catalog", () => {
     it("satisfies its schema of record (Ajv oracle) and refuses a row without a German cell", () => {
@@ -60,12 +60,27 @@ export async function registerDemonstratorLocaleTests(vitest: NonNullable<Import
       expect(demonstratorFormat("demonstrator.footer.newTab", "de", { name: "X" })).toBe("X (öffnet in einem neuen Tab)");
       for (const key of Object.keys(catalog.texts) as DemonstratorTextKey[]) expect(demonstratorText(key, "de")).toBe(catalog.texts[key]!.de);
     });
+
+    it("refuses a placeholder without a value instead of printing nothing", () => {
+      expect(() => demonstratorFormat("demonstrator.footer.newTab", "en", {})).toThrow(/lacks the placeholder value name/);
+    });
   });
 
   describe("demonstrator page chrome", () => {
-    it("locks one locale and declares it on the document", () => {
-      expect(DEMONSTRATOR_LOCKED_LOCALE).toBe(catalog.lockedLocale);
-      expect(read(cases.html)).toContain(`<html lang="${catalog.lockedLocale}">`);
+    it("ships English first and German second and locks neither", () => {
+      expect([...DEMONSTRATOR_LOCALES]).toEqual([...LOCALES]);
+      expect(Object.keys(catalog)).not.toContain("lockedLocale");
+    });
+
+    it("resolves the viewer's language from the first supported candidate and otherwise asks", () => {
+      for (const row of cases.localeResolution) expect(resolveDemonstratorLocale(row.candidates), row.id).toBe(row.expected ?? undefined);
+    });
+
+    it("declares no language statically on the document and sets none in any source", () => {
+      const html = read(cases.html);
+      expect(new RegExp(cases.lockFreeSources.html.forbidden).test(html)).toBe(false);
+      expect(html).toContain(cases.lockFreeSources.html.required);
+      for (const path of cases.lockFreeSources.paths) for (const rule of cases.lockFreeSources.forbidden) expect([...read(path).matchAll(new RegExp(rule.pattern, "g"))].map((match) => match[0]), `${path} ${rule.id}`).toEqual([]);
     });
 
     it("holds no hard-coded user-facing literal or locale ternary in its components", () => {

@@ -1,5 +1,11 @@
 use semio_s_artifact_stdio_ifc_declarations::IfcCatalog;
-pub fn build_catalog()->IfcCatalog{
+use std::sync::OnceLock;
+static CATALOG:OnceLock<IfcCatalog>=OnceLock::new();
+/// 📖 Resolve the complete retained catalog once, without a runtime parser or external dependency.
+pub fn catalog()->&'static IfcCatalog{CATALOG.get_or_init(build_catalog)}
+/// 🧊 Borrow the catalog only when it already exists, so a retained request never causes cold heap construction.
+pub fn cached_catalog()->Option<&'static IfcCatalog>{CATALOG.get()}
+fn build_catalog()->IfcCatalog{
 let mut entities=std::collections::BTreeMap::new();
 let mut types=std::collections::BTreeMap::new();
 let mut functions=std::collections::BTreeMap::new();

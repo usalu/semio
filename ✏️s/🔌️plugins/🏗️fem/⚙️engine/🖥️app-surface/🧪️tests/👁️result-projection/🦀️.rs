@@ -12,5 +12,4 @@ fn result_projection_uses_eigenvectors_and_correct_units_for_both_eigenmodes() {
             None => assert_eq!(actual, None),
         }
     }
-    eprintln!("[DEBUG] FEM result projection five portable cases distinguish static displacement, modal frequency and buckling load multiplier");
 }

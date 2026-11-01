@@ -16,7 +16,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 const CHILD_OPERATION_ENCODE_QUOTE_BYTES:usize=2_048;
 type ChildEncode<M>=fn(&M)->Result<(Vec<u8>,LocalizedLabel),::protocol::ProtocolError>;
 
-type BuiltinAdmit<M>=fn(&mut Option<M>,&mut Option<Box<dyn ErasedSnapshotRetirement>>,RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+type BuiltinAdmit<M>=fn(&mut Option<M>,&mut Option<Box<dyn ErasedSnapshotRetirement>>,RetainedCloneGrant)->semio_framework_value::RetainedWorkOutcome;
 type BuiltinDemand<M>=fn(&Option<M>)->Result<RetirementDemand,ValueError>;
 
 include!("♻️retirement/🦀️.rs");
@@ -264,7 +264,7 @@ where M:Send+'static {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}));
         }
         if self.retirement.is_some(){
-            return match store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant){
+            return match store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant).result {
                 Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),
                 Err(error)=>{let fault=retirement_refusal_fault(&error);*self.close_refusal=Some(error);Err(fault)}
             };
@@ -272,10 +272,10 @@ where M:Send+'static {
         if self.current.is_some(){
             let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
             let outcome=match self.retire_builtin{
-                Some((admit,_))=>admit(&mut self.current,&mut self.retirement,grant),
+                Some((admit,_))=>admit(&mut self.current,&mut self.retirement,grant).result,
                 None=>{
                     let operation=self.current.take().expect("observed current operation");
-                    match self.factory.as_ref().expect("nonterminal owned mutation retains its exact retirement factory").retire_owned(operation,child){
+                    match self.factory.as_ref().expect("nonterminal owned mutation retains its exact retirement factory").retire_owned(operation,child).result {
                         Ok((box_,progress))=>{
                             *self.retirement=Some(box_);
                             if !progress.fits(child)||progress.retained_capacity_bytes!=demand.capacity_bytes{Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"owned mutation constructor changed its receipt"))}else{Ok(RetainedCloneStep::Progress(progress))}
@@ -479,7 +479,7 @@ where M:Send+'static {
             return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));
         }
         if let Some(factory)=self.closing_factory.as_mut(){
-            let step=factory.step(grant).map_err(value_fault)?;
+            let step=factory.step(grant).result.map_err(value_fault)?;
             semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,factory.terminal_is_empty(),"original child preparation factory").map_err(value_fault)?;
             if factory.terminal_is_empty(){drop(self.closing_factory.take());}
             return Ok(PluginLifecycleStep::Progress(step.progress()));

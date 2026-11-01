@@ -28,6 +28,8 @@ pack = { path = "../../../🎒️pack/📦️packages/🦀️rust", package = "s
 semio-framework-io-base64 = { path = "../../../🚪️io/🔤️base64/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { workspace = true }
 semio-framework-mesh-component-references = { path = "../../🎯️component-references/📦️packages/🦀️rust", features = ["testkit"] }
 protocol = { package = "semio-framework-replication", path = "../../../📡️replication/📦️packages/🦀️rust" }
 # 🔬️ `MeshData` now has its own first-party `ToValue`/`FromValue` codec (ticket 26/09/01/

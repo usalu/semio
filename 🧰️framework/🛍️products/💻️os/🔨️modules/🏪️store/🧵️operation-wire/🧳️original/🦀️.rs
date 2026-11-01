@@ -75,7 +75,7 @@ impl<M:Sync> ArtifactOriginalOperationBytes<M>{
             1=>{let step=self.cursor.close(child).map_err(|error|error.reason)?;if step.complete{self.phase=2}progress(step)},
             2 if self.paged=>{self.phase=3;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}},
             2=>{let step=self.output.prepare_contiguous(child)?;if matches!(step,RetainedCloneStep::Complete(_)){self.phase=3}step.progress()},
-            3 if self.original.as_ref().is_some_and(|owner|!owner.terminal_is_empty())=>self.original.as_mut().unwrap().close_step(child).result?.progress(),
+            3 if self.original.as_ref().is_some_and(|owner|!owner.terminal_is_empty())=>self.original.as_mut().ok_or_else(||ValueError::invariant("original absent"))?.close_step(child).result?.progress(),
             3=>{self.original.take();self.phase=4;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<RetainedOwnedProjection<M>>>(),..Default::default()}},
             4=>{self.phase=5;RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}},
             _=>return Err(invalid()),

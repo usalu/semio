@@ -4,7 +4,7 @@ use semio_s_artifact_draw_drawing_scene::identity::SceneIdentity;
 use semio_s_artifact_draw_drawing_scene::identity::admission::{scene_admission, SceneAdmissionStatus};
 use semio_s_artifact_draw_drawing_scene::preparation::{DocumentVectorJob, DocumentVectorRetirement, DocumentSceneLimits, DocumentAlgorithmLimits};
 use semio_s_artifact_draw_drawing_scene::retirement::ScenePlanCloseJob;
-use semio_s_artifact_draw_drawing_scene::paint::scene::{ScenePaintJob, ScenePaintRetirement, PreparedScene, PreparedSceneCloseJob, PaintedSceneLimits};
+use semio_s_artifact_draw_drawing_scene_paint::scene::{ScenePaintJob, ScenePaintRetirement, PreparedScene, PreparedSceneCloseJob, PaintedSceneLimits};
 use semio_framework::kernel::{Effect,JobPlacement};
 use semio_framework_plugin::{AppRenderOperationContext,ArtifactView,Fault,PluginLifecycleStep};
 use semio_framework_plugin::reactor::jobs::{BoundedJob,BoundedJobFactory,IoRunControl,JobStep,SqliteSnapshotControl};
@@ -133,7 +133,7 @@ pub fn with_visual<R>(render:Option<AppRenderOperationContext>,build:impl FnOnce
 /// 🎯️ Borrow geometry only while every captured source lane matches the mounted live revision.
 pub struct MountedSceneQuery<'a>{pub scene:&'a PreparedScene,pub source:SceneIdentity,pub build:u64}
 impl MountedSceneQuery<'_>{
- pub fn stamp(&self,entry:usize)->Option<semio_s_artifact_draw_drawing_scene::paint::PreparedRegionStamp>{(entry<self.scene.geometry.len()).then_some(semio_s_artifact_draw_drawing_scene::paint::PreparedRegionStamp{source:self.source,build:self.build,entry,flatness:self.scene.flatness})}
+ pub fn stamp(&self,entry:usize)->Option<semio_s_artifact_draw_drawing_scene_paint::PreparedRegionStamp>{(entry<self.scene.geometry.len()).then_some(semio_s_artifact_draw_drawing_scene_paint::PreparedRegionStamp{source:self.source,build:self.build,entry,flatness:self.scene.flatness})}
 }
 /// 🔐️ A short borrow supplies the actual complete cache and its exact source/build authority.
 pub fn with_query<R>(captured:SceneIdentity,query:impl FnOnce(SceneAdmissionStatus,Option<MountedSceneQuery<'_>>)->R)->R{

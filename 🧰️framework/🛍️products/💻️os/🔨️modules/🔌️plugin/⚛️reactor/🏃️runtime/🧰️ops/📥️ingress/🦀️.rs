@@ -138,6 +138,7 @@ use crate::ops_ingress::original_manifest_receiving::OriginalManifestCommandRece
 /// 🧪️ Qualifies the canonical receiving body without mounting unrelated app fixture suites.
 pub fn original_manifest_receiving_law(){original_manifest_receiving::tests::original_manifest_fields_keep_paid_source_and_denied_transfer()}
 
+fn admit_place<T:semio_framework_job::OriginalDomainFailure>(place:&mut semio_framework_job::OriginalDomainReservation<T>,pending:&mut Option<T>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::OriginalTurnFailure>,semio_framework_job::OriginalTurnFailure>{if !place.ready(){place.prepare(cx)?;return Ok(None)}if !place.pending(){place.with_body(cx,|_,slot|{*slot=pending.take();Ok(())})?;}semio_framework_job::admit_original_domain_failure(place,cx)}
 pub enum PluginCommandIngress {
     Encoded(semio_framework::kernel::PagedCommand),
     Decoding(protocol::PagedAppCommandDecodeCursor),
@@ -177,12 +178,12 @@ impl PluginCommandIngress {
     pub fn advance_original(self,moves:usize,cx:&mut semio_framework_job::StepContext<'_>)->PluginCommandIngressStep{
         if let Self::FailedDecoded{mut owner,mut failure,identity,mut close_failure,mut compound,mut raw_media}=self{
             if identity!=(cx.operation(),cx.generation())||cx.should_yield(){return PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})}
-            if raw_media.is_some(){
-                match semio_framework_job::admit_original_domain_failure(&mut raw_media,cx){Ok(Some(original))=>failure=Some(original),Ok(None)=>{},Err(refusal)=>close_failure=Some(refusal)}
+            if raw_media.is_some()||!owner.media_place.terminal_is_empty(){
+                match admit_place(&mut owner.media_place,&mut raw_media,cx){Ok(Some(original))=>failure=Some(original),Ok(None)=>{},Err(refusal)=>close_failure=Some(refusal)}
                 return PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})
             }
-            if compound.is_some(){
-                match semio_framework_job::admit_original_domain_failure(&mut compound,cx){Ok(Some(original))=>failure=Some(original),Ok(None)=>{},Err(refusal)=>close_failure=Some(refusal)}
+            if compound.is_some()||!owner.compound_place.terminal_is_empty(){
+                match admit_place(&mut owner.compound_place,&mut compound,cx){Ok(Some(original))=>failure=Some(original),Ok(None)=>{},Err(refusal)=>close_failure=Some(refusal)}
                 return PluginCommandIngressStep::Pending(Self::FailedDecoded{owner,failure,identity,close_failure,compound,raw_media})
             }
             let grant=cx.retained_grant();

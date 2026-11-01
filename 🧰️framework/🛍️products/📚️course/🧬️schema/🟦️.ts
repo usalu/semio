@@ -605,6 +605,7 @@ export type PresencePresentation = {
   readonly layout?: { readonly grid: "desktop" | "tablet"; readonly mode: "strip" | "swipe" };
   readonly reveal?: string;
   readonly revealedBy?: "focus" | "pointer";
+  readonly pressed?: boolean;
   readonly taskPage?: number;
   readonly viewport?: PresencePoint;
   readonly camera?: PresencePoint;

@@ -282,7 +282,7 @@ fn member_open_request_original_identity_capacity_is_indivisible_even_when_empty
         let mut actor=String::with_capacity(capacity);actor.push_str(row["text"].as_str().unwrap());
         let pointer=actor.as_ptr();let text_bytes=actor.len();
         let (admitted,events)=semio_framework_trace::observe_heap_allocations_on_this_thread(||semio_framework_value::SharedUtf8::admit(actor,setup));
-        let (actor,birth)=admitted.unwrap_or_else(|(error,_)|panic!("funded original actor: {error}"));
+        let (actor,birth)=admitted.result.unwrap_or_else(|(error,_)|panic!("funded original actor: {error}"));
         assert!(birth.fits(setup));assert_eq!((events.requested_bytes,events.released_bytes),(birth.retained_capacity_bytes,0));
         assert_eq!(actor.as_ptr(),pointer);
         let lease=semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<String>();
@@ -382,7 +382,7 @@ fn member_input_buffer_birth_and_retirement_preserve_actual_system_and_original_
     let mut active=None;let mut allocated=capacity;let mut released=0;
     for turn in 0..32{
         let (step,heap)=observe_heap_allocations_on_this_thread(||if active.is_some(){semio_framework_os_store_read::artifact_retirement_box_close_step(&mut active,policy)}else{semio_framework_os_store_read::artifact_retirement_admit_owned(&mut original,&mut active,policy)});
-        let progress=step.unwrap().progress();assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);
+        let progress=step.result.unwrap().progress();assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);
         allocated+=heap.requested_bytes;released+=heap.released_bytes;
         if original.is_none()&&active.is_none(){break;}
         assert!(progress.copied_items>0||progress.copied_bytes>0||progress.retained_capacity_bytes>0||progress.released_bytes>0);assert!(turn+1<32);

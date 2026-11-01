@@ -458,7 +458,7 @@ pub fn plugin_grant_funds(demand: RetirementDemand, grant: RetainedCloneGrant) -
 
 /// 📬️ Forwards the original grant once and validates the actual owner receipt and terminal witness.
 pub fn runtime_lifecycle_step(demand: RetirementDemand, grant: RetainedCloneGrant, owner: impl FnOnce(RetainedCloneGrant)->Result<(PluginLifecycleStep,bool),Fault>)->Result<PluginLifecycleStep,Fault> {
-    semio_framework_value::advance_retirement_turn(demand,grant,owner).map_err(|error|match error{semio_framework_value::RetirementTurnError::Owner(fault)=>fault,semio_framework_value::RetirementTurnError::Receipt(error)=>Fault::from(error.into_message())})
+    semio_framework_value::advance_retirement_turn(demand,grant,|grant|semio_framework_value::RetainedWorkOutcome{result:owner(grant),work:1}).result.map_err(|error|match error{semio_framework_value::RetirementTurnError::Owner(fault)=>fault,semio_framework_value::RetirementTurnError::Receipt(error)=>Fault::from(error.into_message())})
 }
 
 /// 🧮️ Intersects the authored policy with the original caller's remaining physical authority.

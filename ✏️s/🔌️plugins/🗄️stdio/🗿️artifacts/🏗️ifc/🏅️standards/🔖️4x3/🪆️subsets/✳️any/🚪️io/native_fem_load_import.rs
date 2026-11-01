@@ -11,7 +11,7 @@ pub(super) struct State {
     force_checked: bool,
     torque_checked: bool,
 }
-fn visit<O: RetireOwned + 'static>(
+fn visit<O: semio_framework_value::retirement::RetireOwned + 'static>(
     graph: &Graph<'_>,
     id: u64,
     name: &'static str,

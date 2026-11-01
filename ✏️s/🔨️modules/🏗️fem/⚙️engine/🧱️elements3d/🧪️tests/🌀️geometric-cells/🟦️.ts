@@ -75,5 +75,4 @@ export function verifyGeometricCellOracle(): void {
     const side = Math.sqrt(expected.length);
     for (let i = 0; i < side; i++) for (let j = 0; j < side; j++) assert(Math.abs(expected[i * side + j]! - expected[j * side + i]!) <= fixture.tolerance * Math.max(1, Math.abs(expected[i * side + j]!)), `${row.id} symmetry`);
   }
-  console.log(`[DEBUG] ${fixture.cases.length} geometric states and ${fixture.cases.reduce((count, row) => count + row.matrix.length, 0)} cells match independent mathjs matrix contraction and Hermite quadrature`);
 }

@@ -32,16 +32,28 @@ impl Default for Generation3dPreviewCamera {
     }
 }
 
-impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for Generation3dPreviewCamera {
-    fn native_default_demand() -> semio_framework_value::RetirementDemand {
+impl semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue for Generation3dPreviewCamera {
+    fn default_demand() -> semio_framework_value::RetirementDemand {
         semio_framework_value::RetirementDemand { copy_bytes: 2 * std::mem::size_of::<Self>(), depth: 1, ..Default::default() }
     }
-    fn native_default(grant: semio_framework_value::RetainedCloneGrant) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
-        let demand = <Self as semio_framework_value_native_owned::native_decoding::owned::NativeDefault>::native_default_demand();
-        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
-            return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "a native camera default requires its physical birth grant"));
+    fn admit_default(output: &mut Option<Self>, grant: semio_framework_value::RetainedCloneGrant) -> semio_framework_value::RetainedWorkOutcome {
+        if output.is_some() {
+            return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_value::RetainedCloneStep::Complete(Default::default())), work: 0 };
         }
-        Ok((Self::default(), semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
+        let demand = <Self as semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValue>::default_demand();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+            return semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_value::RetainedCloneStep::Progress(Default::default())), work: 0 };
+        }
+        *output = Some(Self::default());
+        let progress = semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() };
+        semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_value::RetainedCloneStep::Complete(progress)), work: 1 }
+    }
+}
+
+impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for Generation3dPreviewCamera {
+    type Cursor = semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValueCursor<Self>;
+    fn default_cursor() -> Self::Cursor {
+        semio_framework_value_native_owned::native_decoding::owned::NativeDefaultValueCursor::new()
     }
 }
 

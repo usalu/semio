@@ -27,11 +27,11 @@ fn backbone_retirement_preserves_original_empty_capacities_and_exact_release() {
         let mut pauses = vec![RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_depth: 0, ..grant }];
         if demand.release_bytes > 0 { pauses.push(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }); }
         for pause in pauses {
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(pause).unwrap());
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(pause).result.unwrap());
             assert_eq!(step.progress(), RetainedCloneProgress::default());
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant).unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_step(grant).result.unwrap());
         assert!(step.progress().fits(grant));
         assert_eq!(heap.requested_bytes, step.progress().retained_capacity_bytes);
         assert_eq!(heap.released_bytes, step.progress().released_bytes);

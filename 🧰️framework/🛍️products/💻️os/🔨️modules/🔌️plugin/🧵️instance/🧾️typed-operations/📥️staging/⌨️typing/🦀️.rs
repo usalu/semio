@@ -27,11 +27,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     const CODE:&str="timeTravel.frozen";const MESSAGE:&str="a history edit freezes this original document press";
                     let mut d=Host::<A>::shell_close_demands();d.copy_bytes+=CODE.len()+MESSAGE.len()+2*std::mem::size_of::<Fault>()+std::mem::size_of::<u64>()+std::mem::size_of::<bool>();d.capacity_bytes=CODE.len()+MESSAGE.len()+std::mem::size_of::<semio_framework::FaultScope>();
                     let mut fault=None;
-                    semio_framework_job::admit_original_construction(cx,&mut fault,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|_|{self.tools.original_scrub_dispatch.take();self.as_render().follow_tool_machines(true);Ok((Fault::new(FaultOrigin::Framework,FaultCode::new(CODE),MESSAGE),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}))})?;
+                    semio_framework_job::admit_original_construction(cx,&mut fault,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth},|_|{let result=(||{self.tools.original_scrub_dispatch.take();self.as_render().follow_tool_machines(true);Ok((Fault::new(FaultOrigin::Framework,FaultCode::new(CODE),MESSAGE),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
                     return if let Some(fault)=fault{Err(fault.into())}else{Ok(None)}
                 }
                 let mut demand=Host::<A>::shell_close_demands();demand.copy_bytes+=std::mem::size_of::<u64>()+std::mem::size_of::<bool>();let mut received=false;
-                semio_framework_job::close_original_retained_step(cx,demand,|_|{self.tools.original_scrub_dispatch.take();self.as_render().follow_tool_machines(true);received=true;Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))})?;
+                semio_framework_job::close_original_retained_step(cx,demand,|_|{let result=(||{self.tools.original_scrub_dispatch.take();self.as_render().follow_tool_machines(true);received=true;Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
                 return Ok(if received{*decision}else{None})
             }
         }else if decision.is_some(){return Ok(*decision)}
@@ -109,7 +109,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             8=>{
                 if !typing.close_receipt(cx)?{return Ok(false)}
                 let bytes=std::mem::size_of::<u8>()+std::mem::size_of::<u64>()+std::mem::size_of::<bool>();let mut done=None;
-                admit_original_construction(cx,&mut done,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{self.as_render().follow_tool_machines(true);typing.phase=1;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))})?;
+                admit_original_construction(cx,&mut done,OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{let result=(||{self.as_render().follow_tool_machines(true);typing.phase=1;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))})();semio_framework_value::RetainedWorkOutcome{result,work:1}})?;
             },
             9=>return Ok(true),
             _=>return Err(invalid().into())

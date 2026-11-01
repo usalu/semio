@@ -34,6 +34,7 @@ use semio_s_fem_sparse_ldlt::LdltFactor;
 use semio_framework_value_paged_list::list::PagedList;
 use semio_framework_job::InteractiveJob;
 use semio_framework_job::InteractiveJobStep;
+use semio_s_fem_payload_turns::NumericalBytesPublication;
 use semio_s_fem_payload_turns::NumericalStep;
 use semio_framework_job::OriginalJobReturnClaim;
 use semio_framework_job::InteractiveJobCloseStep;
@@ -134,16 +135,21 @@ pub struct FemJobGraph {
     operation: Operation,
     state: FemGraphCheckpoint,
     desk: NumericalOutcomeDesk,
+    publication: Option<(FemPublicationKind, NumericalBytesPublication)>,
 }
+
+/// 🏷️ Which finished byte string the pending publication delivers to the caller.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum FemPublicationKind { Checkpoint, Preview, Complete }
 
 impl FemJobGraph {
     pub fn new(operation: Operation, plans: Vec<FemStagePlan>, units_per_step: u64) -> Self {
         assert!(units_per_step > 0, "fem graph batch must contain work");
-        Self { operation, state: FemGraphCheckpoint { plans, stage_cursor: 0, unit_cursor: 0, completed_units: 0, units_per_step, checkpoint_due: false }, desk: NumericalOutcomeDesk::default() }
+        Self { operation, state: FemGraphCheckpoint { plans, stage_cursor: 0, unit_cursor: 0, completed_units: 0, units_per_step, checkpoint_due: false }, desk: NumericalOutcomeDesk::default(), publication: None }
     }
 
     pub fn from_checkpoint(operation: Operation, bytes: &[u8]) -> Result<Self, String> {
-        Ok(Self { operation, state: decode_value(bytes)?, desk: NumericalOutcomeDesk::default() })
+        Ok(Self { operation, state: decode_value(bytes)?, desk: NumericalOutcomeDesk::default(), publication: None })
     }
 
     pub fn checkpoint_bytes(&self) -> Vec<u8> {
@@ -189,21 +195,30 @@ impl FemJobGraph {
         if context.operation() != self.operation.operation || context.generation() != self.operation.generation {
             return NumericalRun::Fault;
         }
-        if self.state.checkpoint_due {
-            self.state.checkpoint_due = false;
-            let bytes = self.checkpoint_bytes();
-            return match context.payload_from_bytes(JobPayloadStream::CheckpointState, &bytes) {
-                Ok(state) => self.desk.lend_checkpoint(state, self.state.completed_units),
+        if let Some((kind, publication)) = self.publication.as_mut() {
+            let kind = *kind;
+            return match publication.advance(&mut self.desk.lent, context) {
+                Ok(false) => NumericalRun::Yield,
+                Ok(true) => {
+                    self.publication = None;
+                    let Some(payload) = self.desk.lent.take() else { return NumericalRun::Fault };
+                    match kind {
+                        FemPublicationKind::Checkpoint => self.desk.lend_checkpoint(payload, self.state.completed_units),
+                        FemPublicationKind::Preview => self.desk.lend_preview(payload),
+                        FemPublicationKind::Complete => self.desk.lend_complete(payload),
+                    }
+                }
                 Err(_) => NumericalRun::Fault,
             };
         }
+        if self.state.checkpoint_due {
+            self.state.checkpoint_due = false;
+            self.publication = Some((FemPublicationKind::Checkpoint, NumericalBytesPublication::new(JobPayloadStream::CheckpointState, self.checkpoint_bytes())));
+            return NumericalRun::Yield;
+        }
         if self.state.stage_cursor == self.state.plans.len() {
-            let progress = self.progress();
-            let bytes = encode_value(&progress);
-            return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
-                Ok(output) => self.desk.lend_complete(output),
-                Err(_) => NumericalRun::Fault,
-            };
+            self.publication = Some((FemPublicationKind::Complete, NumericalBytesPublication::new(JobPayloadStream::CommitOutput, encode_value(&self.progress()))));
+            return NumericalRun::Yield;
         }
         let stage = self.state.plans[self.state.stage_cursor].stage;
         context.set_stage(stage.label());
@@ -228,23 +243,16 @@ impl FemJobGraph {
                 return NumericalRun::Cancelled;
             }
         }
-        if self.state.stage_cursor == self.state.plans.len() {
-            let progress = self.progress();
-            let bytes = encode_value(&progress);
-            return match context.payload_from_bytes(JobPayloadStream::CommitOutput, &bytes) {
-                Ok(output) => self.desk.lend_complete(output),
-                Err(_) => NumericalRun::Fault,
-            };
-        }
-        let bytes = encode_value(&self.progress());
-        match context.payload_from_bytes(JobPayloadStream::Preview, &bytes) {
-            Ok(preview) => self.desk.lend_preview(preview),
-            Err(_) => NumericalRun::Fault,
-        }
+        let (kind, stream) = if self.state.stage_cursor == self.state.plans.len() { (FemPublicationKind::Complete, JobPayloadStream::CommitOutput) } else { (FemPublicationKind::Preview, JobPayloadStream::Preview) };
+        self.publication = Some((kind, NumericalBytesPublication::new(stream, encode_value(&self.progress()))));
+        NumericalRun::Yield
     }
 
     fn close_frontier(&self) -> Result<Option<RetirementDemand>, ValueError> {
-        self.desk.retirement_demands().transpose()
+        if let Some(demand) = self.desk.retirement_demands() {
+            return demand.map(Some);
+        }
+        self.publication.as_ref().and_then(|(_, publication)| publication.close_demand()).transpose()
     }
 
     fn close_demand(&self) -> Result<RetirementDemand, ValueError> {
@@ -281,7 +289,7 @@ impl InteractiveJob for FemJobGraph {
     fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(self.close_demand()?.depth) }
 
     fn terminal_is_empty(&self) -> bool {
-        self.desk.terminal_is_empty() && self.state.plans.is_empty() && self.state.plans.capacity() == 0
+        self.desk.terminal_is_empty() && self.publication.is_none() && self.state.plans.is_empty() && self.state.plans.capacity() == 0
     }
 }
 
@@ -310,9 +318,18 @@ impl FemJobGraph {
         if !numerical_close_gate(grant, frontier) {
             return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
-        let step = match self.desk.close_step(grant) {
-            Some(step) => step?,
-            None => numerical_ladder_turn(self.close_retained_step(grant.maximum_release_bytes)),
+        let step = if let Some(step) = self.desk.close_step(grant) {
+            step?
+        } else if let Some(step) = self.publication.as_mut().and_then(|(_, publication)| publication.close_step(grant)) {
+            let step = step?;
+            if self.publication.as_ref().is_some_and(|(_, publication)| publication.close_demand().is_none()) {
+                self.publication = None;
+            }
+            step
+        } else if self.publication.take().is_some() {
+            InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }
+        } else {
+            numerical_ladder_turn(self.close_retained_step(grant.maximum_release_bytes))
         };
         step.admit(grant, self.terminal_is_empty())
     }

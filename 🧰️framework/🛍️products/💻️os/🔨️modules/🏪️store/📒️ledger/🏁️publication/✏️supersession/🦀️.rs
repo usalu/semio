@@ -23,7 +23,7 @@ impl OriginalReplaySupersessions{
   0=>{let Some(((id,replacement),moved))=drafts.take_first(grant)?else{return Ok(Default::default())};*self.row=Some((id,EffectiveSupersession{transition_id:String::new(),actor:Default::default(),timestamp:event.timestamp,scope:None,replacement}));self.phase=1;p=moved;},
   1=>{self.row.as_mut().unwrap().1.transition_id.try_reserve_exact(event.mutation_id.0.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"replay transition identity reservation failed"))?;self.phase=2;},
   2=>{let text=&mut self.row.as_mut().unwrap().1.transition_id;if text.len()==event.mutation_id.0.len(){self.phase=3;}else{append(text,&event.mutation_id.0);}},
-  3=>{self.row.as_mut().unwrap().1.actor=event.actor.0.admit_clone(grant).result?.0;self.phase=4;},
+  3=>{self.row.as_mut().ok_or_else(||ValueError::invariant("row absent"))?.1.actor=event.actor.0.admit_clone(grant).result?.0;self.phase=4;},
   4=>{if let Some(scope)=scope{let mut text=String::new();text.try_reserve_exact(scope.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"replay alternative identity reservation failed"))?;self.row.as_mut().unwrap().1.scope=Some(text);self.phase=5;}else{self.phase=7;}},
   5=>{let text=self.row.as_mut().unwrap().1.scope.as_mut().unwrap();let original=scope.ok_or_else(||invalid("replay effective overlay original scope disappeared"))?;if text.len()==original.len(){self.phase=7;}else{append(text,original);}},
   7 if d.capacity_bytes!=0=>{p=map.reserve_insert_step(&self.row.as_ref().unwrap().0,grant).map_err(|(error,p)|error.with_retained_progress(p))?;},

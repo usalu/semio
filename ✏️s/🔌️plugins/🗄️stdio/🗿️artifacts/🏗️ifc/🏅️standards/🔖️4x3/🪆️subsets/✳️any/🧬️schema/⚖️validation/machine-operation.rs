@@ -1,4 +1,4 @@
-fn logical_and(a: Logical, b: Logical) -> Logical {
+pub fn logical_and(a: Logical, b: Logical) -> Logical {
     if a == Logical::False || b == Logical::False {
         Logical::False
     } else if a == Logical::True && b == Logical::True {
@@ -7,7 +7,7 @@ fn logical_and(a: Logical, b: Logical) -> Logical {
         Logical::Unknown
     }
 }
-fn logical_or(a: Logical, b: Logical) -> Logical {
+pub fn logical_or(a: Logical, b: Logical) -> Logical {
     if a == Logical::True || b == Logical::True {
         Logical::True
     } else if a == Logical::False && b == Logical::False {
@@ -16,17 +16,17 @@ fn logical_or(a: Logical, b: Logical) -> Logical {
         Logical::Unknown
     }
 }
-fn inverse(value: Logical) -> Logical {
+pub fn inverse(value: Logical) -> Logical {
     match value {
         Logical::True => Logical::False,
         Logical::False => Logical::True,
         _ => Logical::Unknown,
     }
 }
-fn boolean(value: bool) -> Value {
+pub fn boolean(value: bool) -> Value {
     Value::Logical(if value { Logical::True } else { Logical::False })
 }
-fn number(raw: Raw) -> Result<f64, ValueError> {
+pub fn number(raw: Raw) -> Result<f64, ValueError> {
     match raw {
         Raw::Real(value) if value.is_finite() => Ok(value),
         Raw::Integer(integer) => {
@@ -39,7 +39,7 @@ fn number(raw: Raw) -> Result<f64, ValueError> {
         _ => Err(refusal("express.numeric-operand")),
     }
 }
-fn numeric_order(left: Raw, right: Raw) -> Result<Ordering, ValueError> {
+pub fn numeric_order(left: Raw, right: Raw) -> Result<Ordering, ValueError> {
     match (left, right) {
         (Raw::Integer(a), Raw::Integer(b)) => Ok(a.cmp(&b)),
         (Raw::Real(a), Raw::Real(b)) => a.partial_cmp(&b).ok_or_else(|| refusal("express.numeric-overflow")),
@@ -70,7 +70,7 @@ fn numeric_order(left: Raw, right: Raw) -> Result<Ordering, ValueError> {
 }
 /// ⚖️ Equality, matching and aggregate work are explicit resumable operations, including each uncertain matching edge.
 impl RetainedMachine {
-    fn binary(&mut self, operator: &'static str, left: Handle, right: Handle, scope: usize, depth: usize, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn binary(&mut self, operator: &'static str, left: Handle, right: Handle, scope: usize, depth: usize, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         if !["AND", "OR", "XOR", "=", "<>", ":=:", ":<>:", "IN", "||", "+", "-", "*", "/", "**", "DIV", "MOD", "<", "<=", ">", ">="].contains(&operator) {
             return Err(refusal("express.unsupported-operator"));
         }
@@ -179,7 +179,7 @@ impl RetainedMachine {
         self.result(Value::Real(value));
         Ok(())
     }
-    fn operation(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn operation(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         match frame.kind {
             Kind::BinaryLeft => {
                 frame.a = self.pop()?;
@@ -306,7 +306,7 @@ impl RetainedMachine {
             _ => Err(refusal("express.runtime-operation")),
         }
     }
-    fn equal(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn equal(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         if frame.stage == 0 && (matches!(self.raw(frame.a, env)?, Raw::Entity(_)) || matches!(self.raw(frame.b, env)?, Raw::Entity(_))) {
             frame.stage = 1;
             self.push(frame)?;
@@ -367,7 +367,7 @@ impl RetainedMachine {
         self.result(value);
         Ok(())
     }
-    fn matching(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn matching(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         if frame.stage == 0 {
             let (Raw::Aggregate { cursor, length: left, .. }, Raw::Aggregate { cursor: other, length: right, .. }) = (self.raw(frame.a, env)?, self.raw(frame.b, env)?) else { return Err(refusal("express.aggregate-operand")) };
             if left > right {
@@ -530,7 +530,7 @@ impl RetainedMachine {
         }
     }
 
-    fn aggregate_binary(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
+    pub fn aggregate_binary(&mut self, mut frame: Frame, env: &MachineEnvironment<'_>) -> Result<(), ValueError> {
         if frame.stage == 0 {
             let a = self.raw(frame.a, env)?;
             let b = self.raw(frame.b, env)?;

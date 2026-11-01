@@ -104,7 +104,7 @@ impl<P:Send+Sync+'static,M:Send+'static> DurableStorePreparedOwnerV1<P,M>{
         }
         if let Some(owner)=self.previous_authority.as_mut(){
             if owner.terminal_is_empty(){let copy=size_of::<canonical_edit::ArtifactStoreOneItemAuthorityRetirement>();if permits(grant,copy,0,0){self.previous_authority=None;self.retirement_progress=RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()};}}
-            else{let demand=owner.next_demand(grant.maximum_copy_bytes).map_err(error)?;if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=owner.close_step(grant).map_err(error)?.progress();}}
+            else{let demand=owner.next_demand(grant.maximum_copy_bytes).map_err(error)?;if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=owner.close_step(grant).result.map_err(error)?.progress();}}
             return Ok((false,self.retirement_progress));
         }
         if let Some(owner)=self.discarded_pack.as_mut(){
@@ -122,12 +122,12 @@ impl<P:Send+Sync+'static,M:Send+'static> DurableStorePreparedOwnerV1<P,M>{
         if !empty||receipt!=Default::default(){return Ok(false);}
         if let Some(owner)=self.original_retirement.as_mut(){
             if owner.terminal_is_empty(){let release=size_of::<ArtifactStorePreparedRetirement<P,M>>();if permits(grant,size_of::<Option<Box<ArtifactStorePreparedRetirement<P,M>>>>(),0,release){self.original_retirement=None;self.retirement_progress=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<Box<ArtifactStorePreparedRetirement<P,M>>>>(),released_bytes:release,..Default::default()};}}
-            else{let demand=owner.next_demand(grant.maximum_copy_bytes).map_err(error)?;if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=owner.close_step(grant).map_err(error)?.progress();}}
+            else{let demand=owner.next_demand(grant.maximum_copy_bytes).map_err(error)?;if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=owner.close_step(grant).result.map_err(error)?.progress();}}
             return Ok(false);
         }
         if let Some(owner)=self.issuer_retirement.as_mut(){
             let demand=owner.demands(grant.maximum_copy_bytes).map_err(error)?;
-            if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=owner.step(grant).map_err(error)?.progress();if owner.terminal_is_empty(){self.issuer_retirement=None;}}
+            if demand.depth<=grant.maximum_depth&&permits(grant,demand.copy_bytes,demand.capacity_bytes,demand.release_bytes){self.retirement_progress=owner.step(grant).result.map_err(error)?.progress();if owner.terminal_is_empty(){self.issuer_retirement=None;}}
             return Ok(false);
         }
         let copy=size_of::<Self>()+size_of::<DurablePlanningOutputV1>()+size_of::<canonical_edit::ArtifactStoreOneItemAuthorityRetirement>();

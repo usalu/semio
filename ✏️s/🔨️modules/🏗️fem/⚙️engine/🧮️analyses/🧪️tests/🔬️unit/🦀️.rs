@@ -51,5 +51,4 @@ fn result_source_namespaces_preserve_same_named_case_and_combination() {
         let actual = result.displacements.iter().find(|row| row.node_id == "b").expect("tip").values[Dof::Ty.index()];
         assert!((actual - fixture["expected"][expected].as_f64().expect("oracle")).abs() < 1e-12);
     }
-    println!("[DEBUG] FEM physical solver returns two independent same-named typed result sources and their exact scaled displacement");
 }

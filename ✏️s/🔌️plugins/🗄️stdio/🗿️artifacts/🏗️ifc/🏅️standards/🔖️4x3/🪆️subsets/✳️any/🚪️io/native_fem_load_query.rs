@@ -32,7 +32,7 @@ pub(super) fn receive(source: &IfcSnapshot, row: usize, component: Component, ep
         }
     })
 }
-pub(super) fn with_attribute<O:RetireOwned+'static>(source:&IfcSnapshot,row:usize,name:&'static str,declared:&'static str,epoch:u64,owner:&mut Owner<'_,'_>,visit:impl for<'v> FnOnce(Option<&'v IfcValue>,&mut Owner<'_,'_>)->Result<O,ValueError>)->Result<O,ValueError>{
+pub(super) fn with_attribute<O:semio_framework_value::retirement::RetireOwned+'static>(source:&IfcSnapshot,row:usize,name:&'static str,declared:&'static str,epoch:u64,owner:&mut Owner<'_,'_>,visit:impl for<'v> FnOnce(Option<&'v IfcValue>,&mut Owner<'_,'_>)->Result<O,ValueError>)->Result<O,ValueError>{
     with_ifc4x3_native_attribute(source, row, name, Some(declared), epoch, owner, |found, original| {
         work(original, size_of::<Option<&IfcValue>>())?;
         match found.status {

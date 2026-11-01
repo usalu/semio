@@ -112,7 +112,7 @@ impl FidelityState {
                 *raster = Some(PdfRaster { width: image.width, height: image.height, resource: None, rgba: image.pixels });
                 return Ok(false);
             }
-        } else { let (_, receipt) = decoder.advance(proxy, grant).map_err(|error| error.to_string())?; context.consume_retained(receipt).map_err(|error| error.to_string())?; }
+        } else { if decoder.next_depth_demand().map_err(|error| error.to_string())? > grant.maximum_depth { return Err("layout-export-image-depth-grant".into()); } let (_, receipt) = decoder.advance(proxy, grant).map_err(|error| error.to_string())?; context.consume_retained(receipt).map_err(|error| error.to_string())?; }
         Ok(false)
     }
     pub fn prepare_one(&mut self, items: &PlanItems, text: Option<&ExportTextState>, drawing:Option<&DrawingCompositionState>,work:&mut FontWorkLedger) -> Result<(), String> {

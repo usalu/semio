@@ -166,7 +166,7 @@ impl<T:RetireOwned+Sync> ReadLease<T> {
     pub fn demands(&self,body:usize)->Result<RetirementDemand,ValueError> {
         if self.terminal_is_empty(){return Ok(Default::default())}
         if self.owner.is_some()||self.closing.is_none(){return Ok(RetirementDemand{depth:1,..Default::default()})}
-        let close=self.closing.as_ref().unwrap();if close.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{close.next_demand(body)}
+        let close=self.closing.as_ref().ok_or_else(||ValueError::invariant("closing absent"))?;if close.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{close.next_demand(body)}
     }
 }
 impl<T:RetireOwned+Sync> ErasedSnapshotRetirement for ReadLease<T> {
@@ -177,13 +177,13 @@ impl<T:RetireOwned+Sync> ErasedSnapshotRetirement for ReadLease<T> {
         let demand=match self.demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
         if grant.maximum_depth<demand.depth{return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::DepthLimit,"read closure exceeds admitted depth")),work:0}}
         if self.owner.is_some(){
-            let registry=self.registry.as_ref().unwrap();let mut state=match registry.state.try_lock(){Ok(state)=>state,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
+            let registry=match self.registry.as_ref(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("registry absent").into()),work:0}};let mut state=match registry.state.try_lock(){Ok(state)=>state,Err(error)=>return RetainedWorkOutcome{result:Err(error),work:0}};
             if !state.contains(self.id){return RetainedWorkOutcome{result:Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"read generation lost original registered root")),work:0}}
-            let slot=state.slots.as_mut().unwrap()[self.id.index as usize].as_mut().unwrap();assert!(Arc::ptr_eq(&slot.owner,self.owner.as_ref().unwrap()));drop(self.owner.take());slot.returned=true;registry.returned.fetch_add(1,Ordering::AcqRel);
+            let slot=match state.slots.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("slots absent").into()),work:0}}[self.id.index as usize].as_mut().unwrap();assert!(Arc::ptr_eq(&slot.owner,match self.owner.as_ref(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("owner absent").into()),work:0}}));drop(self.owner.take());slot.returned=true;registry.returned.fetch_add(1,Ordering::AcqRel);
             return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}
         }
-        if self.closing.is_none(){*self.closing=Some(SharedControlledRetirement::lease(self.registry.take().unwrap()));return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
-        let close=self.closing.as_mut().unwrap();if close.terminal_is_empty(){self.closing.take();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+        if self.closing.is_none(){*self.closing=Some(SharedControlledRetirement::lease(match self.registry.take(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("registry absent").into()),work:0}}));return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
+        let close=match self.closing.as_mut(){Some(v)=>v,None=>return RetainedWorkOutcome{result:Err(ValueError::invariant("closing absent").into()),work:0}};if close.terminal_is_empty(){self.closing.take();return RetainedWorkOutcome{result:Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})),work:1}}
         let result=close.step(grant);RetainedWorkOutcome{result,work:close.last_turn_work()}
     }
     fn terminal_is_empty(&self)->bool {self.owner.is_none()&&self.registry.is_none()&&self.closing.is_none()}

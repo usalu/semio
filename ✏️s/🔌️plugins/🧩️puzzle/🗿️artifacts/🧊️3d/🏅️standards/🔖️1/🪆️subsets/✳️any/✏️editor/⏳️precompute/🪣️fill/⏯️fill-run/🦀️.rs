@@ -654,7 +654,7 @@ impl FillRunJob {
 }
 
 impl InteractiveJob for FillRunJob {
-    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(cx).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(cx))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         self.outbox.borrow_outcome(descriptor)
@@ -693,7 +693,7 @@ impl InteractiveJob for FillRunJob {
                     live_record: self.live_record.take(),
                 });
                 self.close_started = true;
-                Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }))
+                semio_framework_value::RetainedWorkOutcome { result: Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })), work: 1 }
             });
         }
         self.close_owners.close_step(cx)

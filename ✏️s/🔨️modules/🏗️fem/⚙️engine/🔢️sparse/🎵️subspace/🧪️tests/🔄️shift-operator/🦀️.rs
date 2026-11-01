@@ -48,6 +48,5 @@ fn shift_operator_image_matches_the_independent_numpy_corpus() {
                 }
             }
         }
-        println!("[DEBUG] {name}: shifted operator image after {steps} bounded steps equals NumPy");
     }
 }

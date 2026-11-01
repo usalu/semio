@@ -112,7 +112,7 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for PresencePeerRejectio
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() }));
         }
         if let Some(original_arc) = self.original_arc.take() {
-            return match self.factory.as_ref().expect("original presence factory").retire(original_arc, child) {
+            return match self.factory.as_ref().expect("original presence factory").retire(original_arc, child).result {
                 Ok((active, progress)) => {
                     if !progress.fits(child) || progress.retained_capacity_bytes != demand.capacity_bytes { *self.active = Some(active); return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "presence rejection constructor changed its declared receipt")); }
                     *self.active = Some(active);
@@ -127,7 +127,7 @@ impl<P: Send + Sync + 'static> ErasedSnapshotRetirement for PresencePeerRejectio
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() }));
         }
         if let Some(factory) = self.factory_close.as_mut() {
-            let step = factory.step(child)?;
+            let step = factory.step(child).result?;
             let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "presence rejection factory")?;
             if factory.terminal_is_empty() { self.factory_close = None; }
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) });

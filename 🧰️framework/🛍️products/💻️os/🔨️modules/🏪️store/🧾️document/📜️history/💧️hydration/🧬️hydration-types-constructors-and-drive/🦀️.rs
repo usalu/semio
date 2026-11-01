@@ -29,7 +29,7 @@ pub fn drive_hydration_retirement(active: &mut Option<Box<dyn ErasedSnapshotReti
     if active.is_none() { return Ok(false); }
     if cx.is_cancelled() || cx.should_yield() { return Ok(true); }
     let grant = RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-    let step = semio_framework_os_store_read::artifact_retirement_box_close_step(active, grant).map_err(|_| MemberOpenDiagnostic::Initialization)?;
+    let step = semio_framework_os_store_read::artifact_retirement_box_close_step(active, grant).result.map_err(|_| MemberOpenDiagnostic::Initialization)?;
     let progress = step.progress();
     semio_framework_os_store_member_open::record_member_step(cx, progress)?;
     Ok(true)
@@ -341,7 +341,7 @@ where
 
     pub(super) fn admit_active<T: semio_framework_value::retirement::RetireOwned>(&mut self, value: T, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> Result<(), MemberOpenDiagnostic> {
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let (owner, progress) = semio_framework_value::retirement::admit_owned_retirement(value, child).map_err(|_| MemberOpenDiagnostic::Initialization)?;
+        let (owner, progress) = semio_framework_value::retirement::admit_owned_retirement(value, child).result.map_err(|_| MemberOpenDiagnostic::Initialization)?;
         *self.active = Some(owner);
         semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "hydration owned retirement").map_err(|_| MemberOpenDiagnostic::Initialization)?;
         semio_framework_os_store_member_open::record_member_step(cx, progress)?;

@@ -82,7 +82,7 @@ impl MemberHistoryReceiving {
   if grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedHistorySourceStep::Blocked)}
   let decoder=&mut self.decoder;let admitted=&mut self.admitted;let demand=&mut self.demand;let range=self.range;let limits=self.limits;
   let(result,issued)=with_original_control(&mut self.receipt,&mut self.recipient,self.maximum,cx,false,|control|{
-   if control.has_retirement_owner(){let raw=control.close_retirement_recipient(grant);let progress=match &raw{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};return(raw.map(|_|RetainedHistorySourceStep::Progress).map_err(Into::into),Some((grant,progress)))}
+   if control.has_retirement_owner(){let raw=control.close_retirement_recipient(grant);let progress=match &raw.result {Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};return(raw.result.map(|_|RetainedHistorySourceStep::Progress).map_err(Into::into),Some((grant,progress)))}
    let result=if !*admitted{match RetainedHistorySourceDecode::admit(source,range,limits,true,control,grant){Ok(Some(owner))=>{**decoder=Some(owner);*admitted=true;Ok(RetainedHistorySourceStep::Progress)},Ok(None)=>Ok(RetainedHistorySourceStep::Blocked),Err(error)=>Err(error)}}else if let Some(owner)=decoder.as_mut(){if owner.terminal_is_empty(){decoder.take();Ok(RetainedHistorySourceStep::Closed)}else if owner.is_ready(){owner.take_ready_into(history,grant).map(|ready|if ready{RetainedHistorySourceStep::Ready}else{RetainedHistorySourceStep::Blocked})}else{owner.step(source,control,grant)}}else{Ok(RetainedHistorySourceStep::Ready)};
    let issued=decoder.as_mut().and_then(|owner|owner.take_receipt());
    if let Some(owner)=decoder.as_ref(){if let Ok(next)=owner.demands(source,control,grant.maximum_copy_bytes){*demand=next}}
@@ -102,8 +102,8 @@ impl MemberHistoryReceiving {
   if grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()))}
   if self.active.is_some()||self.fault.is_some()||self.inner_fault.is_some()||self.decoder.is_none()&&self.partial.is_some(){
    let active=&mut self.active;let fault=&mut self.fault;let inner_fault=&mut self.inner_fault;let partial=&mut self.partial;
-   let raw=with_original_control(&mut self.receipt,&mut self.recipient,self.maximum,cx,true,|control|{control.charge(demand.capacity_bytes)?;if active.is_some(){semio_framework_os_store_read::artifact_retirement_box_close_step(active,grant)}else if fault.is_some(){semio_framework_os_store_read::artifact_retirement_admit_owned(fault,active,grant)}else if inner_fault.is_some(){semio_framework_os_store_read::artifact_retirement_admit_owned(inner_fault,active,grant)}else{semio_framework_os_store_read::artifact_retirement_admit_owned(partial,active,grant)}})?;
-   return crate::receive_member_close(cx,raw)
+   let raw=with_original_control(&mut self.receipt,&mut self.recipient,self.maximum,cx,true,|control|{if let Err(error)=control.charge(demand.capacity_bytes){return semio_framework_value::RetainedWorkOutcome{result:Err(error),work:0}}if active.is_some(){semio_framework_os_store_read::artifact_retirement_box_close_step(active,grant)}else if fault.is_some(){semio_framework_os_store_read::artifact_retirement_admit_owned(fault,active,grant)}else if inner_fault.is_some(){semio_framework_os_store_read::artifact_retirement_admit_owned(inner_fault,active,grant)}else{semio_framework_os_store_read::artifact_retirement_admit_owned(partial,active,grant)}})?;
+   return crate::receive_member_close(cx,raw.result)
   }
   if self.decoder.is_some(){
    let decoder=&mut self.decoder;let partial=&mut self.partial;let fault=&mut self.inner_fault;let demand=&mut self.demand;
@@ -119,7 +119,7 @@ impl MemberHistoryReceiving {
    if self.decoder.as_ref().is_some_and(|owner|owner.terminal_is_empty()){self.decoder.take();if issued.is_none(){return crate::receive_member_close(cx,Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})))}}
    return Ok(RetainedCloneStep::Progress(progress))
   }
-  if !self.recipient.terminal_is_empty(){let raw=with_original_control(&mut self.receipt,&mut self.recipient,self.maximum,cx,true,|control|control.close_retirement_recipient(grant))?;return crate::receive_member_close(cx,raw)}
+  if !self.recipient.terminal_is_empty(){let raw=with_original_control(&mut self.receipt,&mut self.recipient,self.maximum,cx,true,|control|control.close_retirement_recipient(grant))?;return crate::receive_member_close(cx,raw.result)}
   self.receipt.take();self.closed=true;
   crate::receive_member_close(cx,Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()})))
  }

@@ -136,8 +136,8 @@ let mut snapshot_encoding_progress=|_|snapshot_original_live.get();let mut snaps
         RETIREMENTS.with(|count| assert_eq!(count.get() as u64, case["retirements"].as_u64().unwrap(), "{}", case["id"]));
     }
 
-drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
-drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).unwrap();}
+drop(snapshot_decoding_owner);while snapshot_decoding_native.has_retirement_owner(){snapshot_decoding_native.close_retirement_recipient(snapshot_caller_grant).result.unwrap();}
+drop(snapshot_encoding_owner);while snapshot_encoding_native.has_retirement_owner(){snapshot_encoding_native.close_retirement_recipient(snapshot_caller_grant).result.unwrap();}
 }
 
 #[test]
@@ -155,13 +155,13 @@ fn sqlite_snapshot_codec_original_input_and_retained_result_have_exact_custody()
   assert!(result.is_err());assert_eq!(born,owner.progress().retained_capacity_bytes,"{} actual frame and producer births",case["id"]);assert_eq!(released,owner.progress().released_bytes,"{} actual receiving releases",case["id"]);
   assert_eq!(input.is_some(),case["callerRetainsDatabase"].as_bool().unwrap());if let Some(database)=input.as_ref(){assert_eq!(database.tables.as_ptr(),pointer)}
   drop(owner);assert_eq!(native.has_retirement_owner(),case["recipientOccupied"].as_bool().unwrap());
-  if native.has_retirement_owner(){let (_,denied_birth,denied_release)=semio_framework_trace_memory_testing::observe_backing(||native.close_retirement_recipient(semio_framework_value::RetainedCloneGrant{maximum_items:0,..full}).unwrap());assert_eq!((denied_birth,denied_release),(0,0));assert!(native.has_retirement_owner());while native.has_retirement_owner(){let(step,born,released)=semio_framework_trace_memory_testing::observe_backing(||native.close_retirement_recipient(full).unwrap());let progress=step.progress();assert_eq!(born,progress.retained_capacity_bytes);assert_eq!(released,progress.released_bytes);assert_ne!(progress,Default::default());}}
+  if native.has_retirement_owner(){let (_,denied_birth,denied_release)=semio_framework_trace_memory_testing::observe_backing(||native.close_retirement_recipient(semio_framework_value::RetainedCloneGrant{maximum_items:0,..full}).result.unwrap());assert_eq!((denied_birth,denied_release),(0,0));assert!(native.has_retirement_owner());while native.has_retirement_owner(){let(step,born,released)=semio_framework_trace_memory_testing::observe_backing(||native.close_retirement_recipient(full).result.unwrap());let progress=step.progress();assert_eq!(born,progress.retained_capacity_bytes);assert_eq!(released,progress.released_bytes);assert_ne!(progress,Default::default());}}
  }
  let case=fixture["custodyCases"].as_array().unwrap().iter().find(|case|case["id"]=="export-refused-release").unwrap();
  let mut callback=|_|true;let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut native=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(policy["original"]["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut callback);native.install_retirement_recipient(&mut recipient).unwrap();
  let mut sql_observer=|_|true;let mut control=SqliteSnapshotControl::new(&mut sql_observer,Default::default());let mut owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut native,semio_framework_value::RetainedCloneGrant{maximum_release_bytes:case["maximumReleaseBytes"].as_u64().unwrap()as usize,..full});let payload=crate::io_schema::IoPayload::Text("7".into());
  let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||(codec.export)("fixture.retained/v1",&dialect,&payload,&mut control,&mut owner));assert!(result.is_err());assert_eq!(born,owner.progress().retained_capacity_bytes);assert_eq!(released,owner.progress().released_bytes);drop(owner);assert!(native.has_retirement_owner());
- while native.has_retirement_owner(){let(step,born,released)=semio_framework_trace_memory_testing::observe_backing(||native.close_retirement_recipient(full).unwrap());assert_eq!(born,step.progress().retained_capacity_bytes);assert_eq!(released,step.progress().released_bytes);assert_ne!(step.progress(),Default::default());}
+ while native.has_retirement_owner(){let(step,born,released)=semio_framework_trace_memory_testing::observe_backing(||native.close_retirement_recipient(full).result.unwrap());assert_eq!(born,step.progress().retained_capacity_bytes);assert_eq!(released,step.progress().released_bytes);assert_ne!(step.progress(),Default::default());}
  let case=fixture["custodyCases"].as_array().unwrap().iter().find(|case|case["id"]=="original-semantic-error").unwrap();let dialect=semio_framework_artifact_reference::ArtifactDialect{subset:case["subset"].as_str().unwrap().into(),..dialect};let mut owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut native,full);
  let error=(codec.export)("fixture.retained/v1",&dialect,&payload,&mut control,&mut owner).unwrap_err();assert_eq!(error.cause.message,case["cause"].as_str().unwrap());assert!(matches!(error.cause.message,std::borrow::Cow::Borrowed("declared semantic owner refusal")));drop(owner);assert!(!native.has_retirement_owner());
 }
@@ -235,14 +235,14 @@ fn sqlite_snapshot_codec_default_receiving_runs_authored_models_into_the_operati
   let events=std::cell::Cell::new(0);let mut sql_callback=|_|{let event=events.get();events.set(event+1);event!=stop};let mut decode_callback=|_|true;let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut decode=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(maximum,&mut decode_callback);decode.install_retirement_recipient(&mut recipient).unwrap();
   let mut control=SqliteSnapshotControl::new(&mut sql_callback,Default::default());let mut workspace=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let result=control.with_workspace_recipient(&mut workspace,|control|{let mut owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut decode,grant);AuthoredSnapshot{value:7}.to_sqlite_database_receiving(control,&mut owner)});while !semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(&workspace){semio_framework_value::ErasedSnapshotRetirement::close_step(&mut workspace,grant).unwrap();}
   if stop==usize::MAX{assert_eq!(result.unwrap(),value_database(7));}else{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled,"stop={stop}");}
-  while decode.has_retirement_owner(){decode.close_retirement_recipient(grant).unwrap();}
+  while decode.has_retirement_owner(){decode.close_retirement_recipient(grant).result.unwrap();}
  }
  let database=value_database(7);
  for stop in[usize::MAX,0,1,2]{
   let events=std::cell::Cell::new(0);let mut sql_callback=|_|{let event=events.get();events.set(event+1);event!=stop};let mut encode_callback=|_|true;let mut recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut encode=semio_framework_value::NativeEncodeControl::new(maximum,&mut encode_callback);encode.install_retirement_recipient(&mut recipient).unwrap();
   let mut control=SqliteSnapshotControl::new(&mut sql_callback,Default::default());let mut workspace=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let result=control.with_workspace_recipient(&mut workspace,|control|{let mut owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut encode,grant);AuthoredSnapshot::from_sqlite_database_receiving(&database,control,&mut owner)});while !semio_framework_value::ErasedSnapshotRetirement::terminal_is_empty(&workspace){semio_framework_value::ErasedSnapshotRetirement::close_step(&mut workspace,grant).unwrap();}
   if stop==usize::MAX{assert_eq!(result.unwrap(),AuthoredSnapshot{value:7});}else{assert_eq!(result.unwrap_err().kind,ValueRefusalKind::Canceled,"stop={stop}");}
-  while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).unwrap();}
+  while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).result.unwrap();}
  }
 }
 
@@ -257,7 +257,7 @@ fn sqlite_snapshot_codec_default_receiving_validators_apply_the_authored_subset_
   let mut control=SqliteSnapshotControl::new(&mut sql_callback,Default::default());
   {let mut owner=crate::os_store::NativeSnapshotDecodeOwner::new(&mut decode,grant);assert_eq!(AuthoredValidator.validate_sqlite_snapshot_subset_decoding(&dialect,&database,&mut control,&mut owner).is_ok(),accepted,"decode {subset} live={live}");}
   {let mut owner=crate::os_store::NativeSnapshotEncodeOwner::new(&mut encode,grant);assert_eq!(AuthoredValidator.validate_sqlite_snapshot_subset_encoding(&dialect,&database,&mut control,&mut owner).is_ok(),accepted,"encode {subset} live={live}");}
-  while decode.has_retirement_owner(){decode.close_retirement_recipient(grant).unwrap();}while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).unwrap();}
+  while decode.has_retirement_owner(){decode.close_retirement_recipient(grant).result.unwrap();}while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).result.unwrap();}
  }
 }
 
@@ -291,7 +291,7 @@ fn sqlite_snapshot_codec_default_receiving_validators_allocate_only_through_the_
    assert_eq!(result.is_ok(),case["accepted"].as_bool().unwrap(),"{id} decoding={decoding}: {:?}",result.as_ref().err().map(|error|&error.cause));
    if let Err(error)=&result{assert_eq!(Some(error.cause.kind.as_str()),case["kind"].as_str(),"{id} decoding={decoding}")}
    assert_eq!(control.allocation_bytes(),case["chargedBytes"].as_u64().unwrap()as usize,"{id} decoding={decoding}");
-   while decode.has_retirement_owner(){decode.close_retirement_recipient(grant).unwrap();}while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).unwrap();}
+   while decode.has_retirement_owner(){decode.close_retirement_recipient(grant).result.unwrap();}while encode.has_retirement_owner(){encode.close_retirement_recipient(grant).result.unwrap();}
   }
  }
 }
@@ -310,6 +310,6 @@ fn sqlite_snapshot_codec_relocation_retains_every_original_across_partial_moves(
    for(actual,expected)in[(&frame.original,&case["original"]),(&frame.replacement,&case["replacement"]) ]{let expected=expected.as_array().unwrap();assert_eq!(actual.len(),expected.len(),"{}",case["id"]);for(actual,expected)in actual.iter().zip(expected){assert_eq!(actual.value,expected.as_i64().unwrap(),"{}",case["id"]);assert!(!actual.retired)}}result
   }));
   assert!(result.is_err());assert_eq!(completed.get(),case["completed"].as_bool().unwrap());assert!(input.is_none());assert_eq!(born,owner.progress().retained_capacity_bytes);assert_eq!(released,owner.progress().released_bytes);assert_eq!(released,0);drop(owner);assert!(native.has_retirement_owner());
-  while native.has_retirement_owner(){let(step,born,released)=semio_framework_trace_memory_testing::observe_backing(||native.close_retirement_recipient(full).unwrap());assert_eq!(born,step.progress().retained_capacity_bytes);assert_eq!(released,step.progress().released_bytes);assert_ne!(step.progress(),Default::default());}RETIREMENTS.with(|count|assert_eq!(count.get(),values.len()));
+  while native.has_retirement_owner(){let(step,born,released)=semio_framework_trace_memory_testing::observe_backing(||native.close_retirement_recipient(full).result.unwrap());assert_eq!(born,step.progress().retained_capacity_bytes);assert_eq!(released,step.progress().released_bytes);assert_ne!(step.progress(),Default::default());}RETIREMENTS.with(|count|assert_eq!(count.get(),values.len()));
  }
 }

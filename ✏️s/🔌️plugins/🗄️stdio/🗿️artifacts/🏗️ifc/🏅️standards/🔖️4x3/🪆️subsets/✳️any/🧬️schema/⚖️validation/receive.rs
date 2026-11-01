@@ -358,9 +358,9 @@ impl PopulationReceiver {
             return Err(refusal("express.receive-not-closing"));
         }
         if self.arena.is_some() {
-            self.retirement.begin_granted(&mut self.arena, grant)?.ok_or_else(|| refusal("express.receive-close-owner"))
+            self.retirement.begin_granted(&mut self.arena, grant).result?.ok_or_else(|| refusal("express.receive-close-owner"))
         } else if !self.retirement.is_empty() {
-            self.retirement.step_granted(grant)
+            self.retirement.step_granted(grant).result
         } else {
             Ok(RetainedCloneStep::Complete(Default::default()))
         }

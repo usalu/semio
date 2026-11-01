@@ -74,7 +74,7 @@ pub fn evaluation_retirement_demands(owner:&neural_engine::SharedRegistry,copy:u
 }
 
 /// 🧹️ Advances the same map under every independently supplied physical credit.
-pub fn retire_cancelled_evaluations_close_step(owner:&neural_engine::SharedRegistry,grant:RetainedCloneGrant)->Result<RetainedCloneStep,EvaluationFailure>{
+pub fn retire_cancelled_evaluations_close_step(owner:&neural_engine::SharedRegistry,grant:RetainedCloneGrant,work:&mut u64)->Result<RetainedCloneStep,EvaluationFailure>{
     let empty=RetainedCloneProgress::default();
     let mut registry=evaluation_jobs().lock().map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"evaluation registry close is contended"))?;
     let identity=owner.owner_identity();let demand=evaluation_registry_demands(&registry,identity,grant.maximum_copy_bytes)?;
@@ -82,16 +82,16 @@ pub fn retire_cancelled_evaluations_close_step(owner:&neural_engine::SharedRegis
     if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"evaluation registry close exceeds supplied depth").into());}
     if registry.closing_owner==Some(identity){
         if let Some(key)=&mut registry.retiring_key{
-            let step=key.step(grant)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,key.terminal_is_empty(),"original evaluation map key")?;if key.terminal_is_empty(){registry.retiring_key=None;}return Ok(RetainedCloneStep::Progress(step.progress()));
+            let step=key.step(grant);*work+=key.last_turn_work();let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step?,key.terminal_is_empty(),"original evaluation map key")?;if key.terminal_is_empty(){registry.retiring_key=None;}return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(backing)=&mut registry.retiring_backing{
-            let step=backing.step(grant)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,backing.terminal_is_empty(),"original evaluation map arena")?;if backing.terminal_is_empty(){registry.retiring_backing=None;registry.closing_owner=None;}return Ok(RetainedCloneStep::Progress(step.progress()));
+            let step=backing.step(grant);*work+=backing.last_turn_work();let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step?,backing.terminal_is_empty(),"original evaluation map arena")?;if backing.terminal_is_empty(){registry.retiring_backing=None;registry.closing_owner=None;}return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         registry.closing_owner=None;
     }
     if registry.closing_owner.is_some(){return Ok(RetainedCloneStep::Progress(empty));}
     if let Some(retained)=registry.jobs.slot_values_mut().find(|retained|retained.owner_identity==identity&&retained.cancelled&&!retained.close_fields_terminal(false,false)){
-        let step=retained.close_step(grant,false,false)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step,retained.close_fields_terminal(false,false),"original cancelled evaluation")?;return Ok(RetainedCloneStep::Progress(step.progress()));
+        let step=retained.close_step(grant,false,false);*work+=retained.take_work();let step=semio_framework_value::retained_clone::admit_retained_clone_close(grant,step?,retained.close_fields_terminal(false,false),"original cancelled evaluation")?;return Ok(RetainedCloneStep::Progress(step.progress()));
     }
     if registry.admission_owner==Some(identity)&&registry.jobs.is_empty()&&!registry.jobs.terminal_is_empty(){registry.lookup_epoch=registry.lookup_epoch.checked_add(1).expect("original registry backing epoch");registry.admission_owner=None;registry.closing_owner=Some(identity);registry.retiring_backing=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(std::mem::take(&mut registry.jobs)).unwrap_or_else(|(error,_)|panic!("original admitted evaluation backing refused: {error}")));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..empty}));}
     for slot in 0..registry.jobs.slot_count(){

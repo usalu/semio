@@ -40,16 +40,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let(run,generation)=(entry.slot.run,entry.slot.generation);
         let single=entry.slot.state==ToolRunState::Paused;
         let Some(job)=entry.job.as_mut()else{return Ok(())};
-        if job.original_failure.is_some(){return Ok(())}
-        if let Some(descriptor)=job.outcome.as_ref(){
+        if job.original_failure.is_some()||job.origin.continuation().is_some(){return Ok(())}
+        if let Some(descriptor)=job.origin.outcome(){
             if job.outcome_received{
-                let d=RetirementDemand{copy_bytes:size_of::<Option<semio_framework_job::JobOutcomeDescriptor>>(),depth:1,..Default::default()};
-                semio_framework_job::close_original_retained_step(cx,d,|grant|{
-                    let descriptor=job.outcome.as_mut().unwrap();
-                    if !descriptor.is_acknowledged(){return Ok(RetainedCloneStep::Progress(descriptor.acknowledge(grant).progress()))}
-                    job.outcome=None;job.outcome_received=false;
-                    Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
-                })?;return Ok(())
+                job.origin.acknowledge_outcome(cx)?;
+                if job.origin.outcome().is_none(){job.outcome_received=false;}
+                return Ok(())
             }
             let kind=descriptor.kind();
             let interactive:&dyn semio_framework_job::InteractiveJob=match &job.job{ToolRunJobHandle::Plain(job)=>job.as_ref(),ToolRunJobHandle::Retargetable(job)=>job.as_ref()};
@@ -72,15 +68,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             match kind{semio_framework_job::JobOutcomeKind::Complete=>{if purpose==ToolRunJobPurpose::Revalidate{self.complete_tool_run_revalidation()}else{self.complete_tool_run_job(run,generation)}},semio_framework_job::JobOutcomeKind::Cancelled|semio_framework_job::JobOutcomeKind::Fault=>self.fault_tool_run(run,generation),_=>{}}
             return Ok(())
         }
-        let fuel=if single{1}else{semio_framework_job::INTERACTIVE_LANE_FUEL};let deadline=cx.deadline_us();let mut verdict=None;
-        let interactive:&mut dyn semio_framework_job::InteractiveJob=match &mut job.job{ToolRunJobHandle::Plain(job)=>job.as_mut(),ToolRunJobHandle::Retargetable(job)=>job.as_mut()};
-        let stepped=cx.with_original_work_loan(fuel,deadline,|cx|{
-            let outcome=semio_framework_job::drive_step(interactive,cx,TOOL_RUN_JOB_SITE,semio_framework_job::InteractiveStage::InteractiveStep,&mut verdict)?;
-            if let Some(outcome)=outcome{job.outcome=Some(outcome.into_descriptor());}
-            Ok(())
-        });
-        if single&&job.outcome.as_ref().is_some_and(|outcome|!matches!(outcome.kind(),semio_framework_job::JobOutcomeKind::Yield|semio_framework_job::JobOutcomeKind::CheckpointReady{..})){entry.pending_step=false;}
-        if let Err(failure)=stepped{*job.original_failure=Some(failure);self.fault_tool_run(run,generation);}
+        let fuel=if single{1}else{semio_framework_job::INTERACTIVE_LANE_FUEL};let deadline=cx.deadline_us();
+        let stepped=cx.with_original_work_loan(fuel,deadline,|cx|job.drive(cx));
+        if single&&job.outcome().is_some_and(|outcome|!matches!(outcome.kind(),semio_framework_job::JobOutcomeKind::Yield|semio_framework_job::JobOutcomeKind::CheckpointReady{..})){entry.pending_step=false;}
+        let continued=job.origin.continuation().is_some();
+        if let Err(failure)=stepped{*job.original_failure=Some(failure);self.fault_tool_run(run,generation);}else if continued{self.fault_tool_run(run,generation);}
         Ok(())
     }
 

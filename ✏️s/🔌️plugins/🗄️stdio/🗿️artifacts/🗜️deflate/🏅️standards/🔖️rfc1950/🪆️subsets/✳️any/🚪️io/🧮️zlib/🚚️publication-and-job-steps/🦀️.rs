@@ -6,10 +6,9 @@ use super::*;
 //#region DeflateCodec
 //#region 🧵️StreamingEncode
 /// ♻️ Closes the lent publication from the next step's own wallet before encoding resumes.
-pub(super) fn retire_delivered_publication<'a>(publication: &mut Option<Box<Publication>>, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+pub(super) fn retire_delivered_publication<'a>(publication: &mut Option<Box<Publication>>, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
     let Some(active) = publication.as_mut() else { return Ok(None) };
-    let step = match active.close_step(context.retained_grant()) { Ok(step) => step, Err(error) => { context.consume_retained(error.retained_progress())?; return Err(error) } };
-    context.consume_retained(step.progress())?;
+    semio_framework_job::close_original_granted_step(context, |grant| active.close_step(grant))?;
     if active.terminal_is_empty() {
         *publication = None;
     }
@@ -17,7 +16,7 @@ pub(super) fn retire_delivered_publication<'a>(publication: &mut Option<Box<Publ
 }
 
 /// ➡️ One paid unit of the staged publication.
-pub(super) fn drive_publication<'a>(publication: &'a mut Option<Box<Publication>>, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+pub(super) fn drive_publication<'a>(publication: &'a mut Option<Box<Publication>>, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
     context.set_stage("deflate:publish");
     publication.as_mut().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "deflate job has no staged publication"))?.poll(context)
 }
@@ -42,12 +41,12 @@ pub(super) fn publication_demands(publication: &Option<Box<Publication>>, backin
 
 impl DeflateEncodeJob {
     /// 🪜️ The step body; its value refusals are lifted into the original failure at the trait boundary.
-    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_value::ValueError> {
+    fn step_value<'a>(&'a mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
         if self.publication.as_ref().is_some_and(|publication| publication.is_delivered()) {
             return retire_delivered_publication(&mut self.publication, context);
         }
         if context.is_cancelled() {
-            return semio_framework_job::JobOutcomeBorrow::admit_cancelled(context);
+            return Ok(semio_framework_job::JobOutcomeBorrow::admit_cancelled(context)?);
         }
         if self.publication.is_some() {
             return drive_publication(&mut self.publication, context);
@@ -63,7 +62,7 @@ impl DeflateEncodeJob {
             let work = self.process_transition(&literal_codes, &distance_codes);
             context.consume_fuel(work as u64);
             if context.is_cancelled() {
-                return semio_framework_job::JobOutcomeBorrow::admit_cancelled(context);
+                return Ok(semio_framework_job::JobOutcomeBorrow::admit_cancelled(context)?);
             }
             if self.complete {
                 self.stage_commit();
@@ -84,7 +83,7 @@ impl DeflateEncodeJob {
 }
 
 impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
-    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure>{self.step_value(context).map_err(semio_framework_job::OriginalTurnFailure::from)}
+    fn step<'a>(&'a mut self,context:&mut semio_framework_job::StepContext<'_>,_:&mut semio_framework_job::OriginalJobReturnClaim<'_>)->semio_framework_job::InteractiveJobStep<'a>{semio_framework_job::InteractiveJobStep::from_callback(self.step_value(context))}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
         borrow_publication_outcome(&self.publication, descriptor)
@@ -95,7 +94,8 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         semio_framework_job::close_original_granted_step(cx,|grant|{
             use semio_framework_job::InteractiveJobCloseStep;
-            let demand = match self.close_demands() {
+            let mut work = 0u64;
+            let result = (|| -> Result<InteractiveJobCloseStep, semio_framework_value::ValueError> {            let demand = match self.close_demands() {
                 Ok(demand) => demand,
                 Err(error) => return Err(error),
             };
@@ -106,7 +106,7 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
                 return Ok(deflate_close_idle());
             }
             if let Some(publication) = self.publication.as_mut() {
-                let step = publication.close_step(grant)?;
+                let step = { let turn = publication.close_step(grant); work += turn.work; turn.result? };
                 if publication.terminal_is_empty() {
                     self.publication = None;
                 }
@@ -120,6 +120,8 @@ impl semio_framework_job::InteractiveJob for DeflateEncodeJob {
             }
             self.pending = None;
             Ok(deflate_close_receipt(1, 0))
+            })();
+            semio_framework_value::RetainedWorkOutcome { result, work }
         })
     }
 

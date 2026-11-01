@@ -58,6 +58,5 @@ fn component_grammar_semio_matches_the_exact_declared_mutation_language(){
     }
     for text in ["add-node node=1","set-load load=1","set-support node=1","commit-step commit=\"x\"","delete-node id=\"n1\" id=\"n2\"","change-combination-term id=\"c1\" case-id=\"lc1\""]{assert!(!recognizer.recognize(text).unwrap(),"{text}");assert!(Fem3dMutation::parse_op(text).is_err(),"{text}");}
     for text in ["change-combination-term id=\"c1\" case-id=\"lc1\" factor { }","change-combination-term factor { value=2 } case-id=\"lc1\" id=\"c1\""]{assert!(recognizer.recognize(text).unwrap(),"{text}");assert!(Fem3dMutation::parse_op(text).is_ok(),"{text}");}
-    println!("[DEBUG] FEM3d exact one-operation grammar39 payloads and162 refusals, nullable factor, unordered required fields; no artifact prefix or invented commands");
 }
            

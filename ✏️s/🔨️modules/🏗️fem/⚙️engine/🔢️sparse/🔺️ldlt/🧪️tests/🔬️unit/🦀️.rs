@@ -123,7 +123,6 @@ fn numerical_page_ldlt_checkpoint_restores_a_matrix_spanning_several_owner_pages
         if restore.as_ref().is_none_or(LdltRestoreCursor::terminal_is_empty) && restored.as_ref().is_none_or(InteractiveJob::terminal_is_empty) && InteractiveJob::terminal_is_empty(&job) { break; }
     }
     let closed = restore.as_ref().is_none_or(LdltRestoreCursor::terminal_is_empty) && restored.as_ref().is_none_or(InteractiveJob::terminal_is_empty) && InteractiveJob::terminal_is_empty(&job);
-    eprintln!("[DEBUG] LDLT multi-page owner checkpoint pages={pages:?}, write_fault={write_fault}, restore_fault={restore_fault:?}, restored={}, closed={closed}", actual.is_some());
     assert!(closed);
     assert!(!write_fault);
     let mut expected_pages=Vec::new();let mut item=0;let mut owner=0;
@@ -495,7 +494,6 @@ fn numerical_page_ldlt_checkpoint_restores_matrix_across_original_pages() {
         if restore.as_ref().is_none_or(LdltRestoreCursor::terminal_is_empty) && restored.as_ref().is_none_or(InteractiveJob::terminal_is_empty) && InteractiveJob::terminal_is_empty(&job) { break; }
     }
     let closed = restore.as_ref().is_none_or(LdltRestoreCursor::terminal_is_empty) && restored.as_ref().is_none_or(InteractiveJob::terminal_is_empty) && InteractiveJob::terminal_is_empty(&job);
-    eprintln!("[DEBUG] LDLT paged owner checkpoint pages={pages:?}, write_fault={write_fault}, restore_fault={restore_fault:?}, restored={}, closed={closed}", actual.is_some());
     assert!(closed);
     assert!(!write_fault);
     let first = (semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES - NUMERICAL_CHECKPOINT_HEADER_BYTES - 8) / 8;

@@ -197,7 +197,7 @@ fn infer_geometry(request: &ArtifactInferenceExecutionRequest<'_>, context: &dyn
     let host = context.downcast_ref::<GeometryHost>().ok_or_else(|| ArtifactInferenceExecutionError::new("generation3d.geometry.context", "geometry inference requires its instance's geometry host"))?;
     let admitted=host.with(|engine|engine.admit_failure(cx)).map_err(engine_failure)?.map_err(|original|ArtifactInferenceExecutionError::original(original,false))?;
     if let Some(original)=admitted{return Err(ArtifactInferenceExecutionError::original(original,false))}
-    if host.with(GeometryEngine::has_failure).map_err(engine_failure)?{return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:Default::default(),terminal:false})}
+    if host.with(|engine|engine.has_failure()).map_err(engine_failure)?{return Ok(ArtifactInferenceExecutionStep{execution:None,retained_progress:Default::default(),terminal:false})}
     let before=cx.retained_progress();
     if request.cancelled {
         host.cancel().map_err(engine_failure)?;

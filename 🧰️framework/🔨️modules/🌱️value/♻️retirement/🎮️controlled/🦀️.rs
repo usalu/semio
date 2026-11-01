@@ -223,7 +223,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
         if work && body_bytes < minimum_work_bytes && (birth==0 || !self.cursors.get(index).unwrap().allows_admitted_narrow_work()) { return Ok(RetainedCloneStep::Progress(empty)); }
         if birth > grant.maximum_capacity_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let cursor_grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step=self.cursors.get_mut(index).unwrap().close_step(cursor_grant);
+        let step=self.cursors.get_mut(index).ok_or_else(||ValueError::invariant("get_mut target absent"))?.close_step(cursor_grant);
         self.last_work=step.work();
         let (processed, bytes, progressed) = match step {
             RetirementStep::Progress(progress,_) => {
@@ -239,7 +239,7 @@ impl<T: RetireOwned> ControlledRetirement<T> {
             RetirementStep::Bytes(_) => return Err(refusal("retirement body exceeded its admitted release grant")),
             RetirementStep::ProcessedBytes(bytes) if bytes <= grant.maximum_copy_bytes => (bytes, 0, true),
             RetirementStep::ProcessedBytes(_) => return Err(refusal("retirement body exceeded its admitted work grant")),
-            RetirementStep::Complete(_) if self.cursors.get(index).unwrap().terminal_is_empty() => (0, 0, true),
+            RetirementStep::Complete(_) if self.cursors.get(index).ok_or_else(||ValueError::invariant("get target absent"))?.terminal_is_empty() => (0, 0, true),
             RetirementStep::Complete(_) => return Err(refusal("retirement body has no terminal-empty witness")),
             RetirementStep::BudgetExhausted => (0, 0, false),
         };
