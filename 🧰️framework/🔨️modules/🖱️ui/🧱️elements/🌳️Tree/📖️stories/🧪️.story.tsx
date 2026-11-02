@@ -13,7 +13,7 @@ import { Button, ControlDef, ControlTree, ControlTreeFolderSettings, Input, Leve
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "../../../🧪️tests/📚️storybook-types/🟦️.ts";
 import type React from "react";
-import { fireEvent, within } from "@testing-library/react";
+import { fireEvent, waitFor, within } from "@testing-library/dom";
 // #endregion 🔌️Adapters
 
 // 🌳️#region 📜️Tree
@@ -290,38 +290,6 @@ export const Alternatives: Story = {
 
 // #region 🧵️DragAndDrop
 
-const createStoryDataTransfer = () => {
-  const data = new Map<string, string>();
-  const types: string[] = [];
-
-  return {
-    dropEffect: "move",
-    effectAllowed: "all",
-    files: [],
-    items: [],
-    types,
-    clearData: (kind?: string) => {
-      if (kind) {
-        data.delete(kind);
-        const index = types.indexOf(kind);
-        if (index !== -1) {
-          types.splice(index, 1);
-        }
-      } else {
-        data.clear();
-        types.splice(0, types.length);
-      }
-    },
-    getData: (kind: string) => data.get(kind) ?? "",
-    setData: (kind: string, value: string) => {
-      data.set(kind, value);
-      if (!types.includes(kind)) {
-        types.push(kind);
-      }
-    },
-  };
-};
-
 const DragAndDropTreeDemo = () => {
   const paletteItems = reactHostPort.useMemo(
     () => [
@@ -379,17 +347,28 @@ export const DragAndDrop: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const sourceItemLabel = canvas.getByText("Chair");
-    const sourceItem = sourceItemLabel.closest('[role="treeitem"]') as HTMLElement | null;
+    const sourceItem = sourceItemLabel.closest('[data-slot="tree-item-row"]') as HTMLElement | null;
     const targetSection = canvas.getByText("Selection").closest('[data-slot="tree-section-row"]') as HTMLElement | null;
-    const dataTransfer = createStoryDataTransfer() as unknown as DataTransfer;
+    const dataTransfer = new DataTransfer();
 
     if (!sourceItem || !targetSection) throw new Error("Tree drag-and-drop fixture is missing its source or target.");
 
-    fireEvent.dragStart(sourceItem, { dataTransfer });
-    fireEvent.dragOver(targetSection, { dataTransfer });
-    fireEvent.drop(targetSection, { dataTransfer });
+    const handle = sourceItem.querySelector<HTMLElement>('[data-slot="drag-handle"]');
+    if (!handle) throw new Error("Tree drag-and-drop fixture is missing its drag handle.");
+    fireEvent.pointerDown(handle, { button: 0, pointerId: 1 });
+    await waitFor(() => {
+      if (!sourceItem.draggable) throw new Error("Tree drag-and-drop source is not armed.");
+    });
+    fireEvent(sourceItem, new DragEvent("dragstart", { bubbles: true, cancelable: true, dataTransfer }));
+    if (dataTransfer.getData("application/vnd.compose.story.tree-item") !== "palette.chair") throw new Error("Tree drag-and-drop source did not publish its payload.");
+    fireEvent(targetSection, new DragEvent("dragover", { bubbles: true, cancelable: true, dataTransfer }));
+    fireEvent(targetSection, new DragEvent("drop", { bubbles: true, cancelable: true, dataTransfer }));
+    fireEvent(sourceItem, new DragEvent("dragend", { bubbles: true, dataTransfer }));
+    fireEvent.pointerUp(handle, { button: 0, pointerId: 1 });
 
-    if (canvas.getAllByText("Chair").length === 0) throw new Error("Tree drag-and-drop fixture did not retain its source item.");
+    await waitFor(() => {
+      if (canvas.getAllByText("Chair").length !== 2) throw new Error("Tree drag-and-drop fixture did not copy its item into the target section.");
+    });
   },
 };
 

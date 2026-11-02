@@ -5,7 +5,7 @@
 // #region 🔌️Adapters
 import { Mode, createEvenWindowLayout, reactHostPort, uiDataLabel, type WindowLayoutAxisNode, type WindowLayoutStackNode } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { contentThroughGlassPlay, maximizeStackPlay, quadLayoutPlay } from "../../🧱️elements/🎨️Canvas/🧪️tests/🎭️storybook-interaction/🟦️.ts";
+import { contentThroughGlassPlay, maximizeStackPlay, quadLayoutPlay } from "../../🧪️tests/🎯️mode-story-interaction/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // `Mode` mounts each `windows[].children` inside a `mode-dock-stack-body` (level="base") wrapping

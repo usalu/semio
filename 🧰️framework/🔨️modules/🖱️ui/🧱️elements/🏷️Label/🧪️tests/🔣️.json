@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "name": "280px default", "width": 280, "label": 29, "track": 96, "control": 96, "gap": 3.2, "hysteresis": 6.4, "wasStacked": false, "mode": "auto", "stacked": false },
+    { "name": "narrow", "width": 180, "label": 29, "track": 96, "control": 96, "gap": 3.2, "hysteresis": 6.4, "wasStacked": false, "mode": "auto", "stacked": true },
+    { "name": "long translated label", "width": 280, "label": 200, "track": 96, "control": 96, "gap": 3.2, "hysteresis": 6.4, "wasStacked": false, "mode": "auto", "stacked": true },
+    { "name": "wide translated label", "width": 400, "label": 200, "track": 96, "control": 96, "gap": 3.2, "hysteresis": 6.4, "wasStacked": true, "mode": "auto", "stacked": false },
+    { "name": "hysteresis holds", "width": 198, "label": 29, "track": 96, "control": 96, "gap": 3.2, "hysteresis": 6.4, "wasStacked": true, "mode": "auto", "stacked": true },
+    { "name": "inline holds", "width": 198, "label": 29, "track": 96, "control": 96, "gap": 3.2, "hysteresis": 6.4, "wasStacked": false, "mode": "auto", "stacked": false },
+    { "name": "forced stack", "width": 600, "label": 29, "track": 96, "control": 96, "gap": 3.2, "hysteresis": 6.4, "wasStacked": false, "mode": "stacked", "stacked": true },
+    { "name": "forced inline", "width": 100, "label": 29, "track": 96, "control": 96, "gap": 3.2, "hysteresis": 6.4, "wasStacked": true, "mode": "inline", "stacked": false }
+  ]
+}

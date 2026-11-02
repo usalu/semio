@@ -1,0 +1,14 @@
+{
+  "sizeClass": "size-workbench",
+  "textClass": "text-xs",
+  "iconClass": "size-small",
+  "rosterGapClass": "gap-single",
+  "outerPx": 24,
+  "lineBoxPx": 16,
+  "iconPx": 16,
+  "gapPx": 3.2,
+  "cases": [
+    { "name": "table", "borderPx": 1, "interiorPx": 22, "clearancePx": 3 },
+    { "name": "presence", "borderPx": 2, "interiorPx": 20, "clearancePx": 2 }
+  ]
+}

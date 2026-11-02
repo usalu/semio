@@ -1,6 +1,8 @@
 import type { TreeWindowRowExtent } from "@semio-tech/framework-manifest/ui-contract-and-canvas-types";
 import { domSizePx, uiSpacingPx, STYLING_METRICS } from "@semio-tech/ui-styling";
 import * as React from "react";
+import { reactHostPort } from "../../🔌️Ports/⚛️react/🟦️.ts";
+import { TreeContext, indentationLineLen, treeGuideLineStrokeClassName } from "../📏️row-alignment/🟦️.tsx";
 
 /**
  * 🪟️ The materialised slice of a logically {@link TreeDataWindow.total}-long child list: the container's
@@ -332,14 +334,27 @@ export function treeWindowDomAttributes(childWindow: TreeDataWindow | undefined,
   };
 }
 
-/**
- * 🖌️ The blank extent standing in for `rows` unmaterialised rows at one edge of a window. A plain block inside
- * the branch content — no {@link TreeAlignedRow}, so it claims no guide gutter and the branch's own indentation
- * lines paint straight through it — sized at exactly the row pitch so the rows below keep their real index.
- * Zero rows render nothing at all.
- **/
+/** 🪡️ Continue the parent connector through unmaterialised siblings, stopping at the final logical row's center. */
+const TreeWindowSpacerGuide: React.FC<{ edge: "leading" | "trailing"; rowExtent: TreeWindowRowExtent }> = ({ edge, rowExtent }) => {
+  const { level, showLines, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
+  if (!showLines || level === 0) return null;
+  const endInset = edge === "trailing" ? treeWindowRowExtentPx(rowExtent) / 2 : 0;
+  return (
+    <div
+      data-slot="tree-parent-guide"
+      className={`pointer-events-none absolute w-px ${treeGuideLineStrokeClassName}`}
+      style={{ top: direction === "up" ? endInset : 0, bottom: direction === "down" ? endInset : 0, insetInlineStart: `calc(${indentationLineLen(level - 1, indentMultiplier)} - var(--stroke-hairline) / 2)` }}
+    />
+  );
+};
+
+/** 🖌️ Blank extent for unmaterialised rows at the exact declared pitch, retaining parent and ancestor connectors. */
 export function renderTreeWindowSpacer(rows: number, edge: "leading" | "trailing", rowExtent: TreeWindowRowExtent | undefined): React.ReactElement | null {
   if (rows <= 0) return null;
   if (rowExtent === undefined) throw new Error("A virtual Tree spacer requires its window's closed row extent.");
-  return <div key={`tree-window-spacer-${edge}`} data-slot="tree-window-spacer" data-tree-window-spacer={edge} data-tree-window-rows={rows} aria-hidden="true" className="w-full min-w-0 shrink-0" style={{ height: `${rows * treeWindowRowExtentPx(rowExtent)}px` }} />;
+  return (
+    <div key={`tree-window-spacer-${edge}`} data-slot="tree-window-spacer" data-tree-window-spacer={edge} data-tree-window-rows={rows} aria-hidden="true" className="relative w-full min-w-0 shrink-0" style={{ height: `${rows * treeWindowRowExtentPx(rowExtent)}px` }}>
+      <TreeWindowSpacerGuide edge={edge} rowExtent={rowExtent} />
+    </div>
+  );
 }

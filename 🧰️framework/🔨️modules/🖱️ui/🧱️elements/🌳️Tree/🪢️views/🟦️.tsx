@@ -108,7 +108,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       {hasControl && !hasNestedTreeItems ? item.control : null}
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading", childWindow?.rowExtent)}
       {childItems.map((childItem, index) => (
-        <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} windowRowIndex={treeWindowRowIndexOf(childWindow, childItems.length, index, direction)} windowRowTotal={childWindow?.total} windowRowExtent={childWindow?.rowExtent} />
+        <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={(direction === "up" ? index === 0 : index === childItems.length - 1) && spacerRows.trailing === 0} windowRowIndex={treeWindowRowIndexOf(childWindow, childItems.length, index, direction)} windowRowTotal={childWindow?.total} windowRowExtent={childWindow?.rowExtent} />
       ))}
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.leading : spacerRows.trailing, direction === "up" ? "leading" : "trailing", childWindow?.rowExtent)}
       {!isLoading && childItems.length === 0 && item.emptyState && (
@@ -198,7 +198,7 @@ export const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionVi
     >
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.trailing : spacerRows.leading, direction === "up" ? "trailing" : "leading", childWindow?.rowExtent)}
       {items.map((item, index) => (
-        <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={index === items.length - 1} windowRowIndex={treeWindowRowIndexOf(childWindow, items.length, index, direction)} windowRowTotal={childWindow?.total} windowRowExtent={childWindow?.rowExtent} />
+        <TreeDataItemView key={item.id} item={item} section={section} path={[section.id, item.id]} isLastItem={(direction === "up" ? index === 0 : index === items.length - 1) && spacerRows.trailing === 0} windowRowIndex={treeWindowRowIndexOf(childWindow, items.length, index, direction)} windowRowTotal={childWindow?.total} windowRowExtent={childWindow?.rowExtent} />
       ))}
       {renderTreeWindowSpacer(direction === "up" ? spacerRows.leading : spacerRows.trailing, direction === "up" ? "leading" : "trailing", childWindow?.rowExtent)}
       {!isLoading && items.length === 0 && section.emptyState && <HelperRow>{section.emptyState}</HelperRow>}

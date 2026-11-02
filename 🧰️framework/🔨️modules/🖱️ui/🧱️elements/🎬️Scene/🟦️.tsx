@@ -386,7 +386,7 @@ const SceneInner: React.FC<SceneInnerProps> = ({ children, showGrid = true, show
       />
       <ambientLight intensity={1} />
       {children}
-      {showGrid && <Grid infiniteGrid={true} sectionColor={gridColors.sectionColor} cellColor={gridColors.cellColor} />}
+      {showGrid && <Grid infiniteGrid={true} side={THREE.DoubleSide} sectionColor={gridColors.sectionColor} cellColor={gridColors.cellColor} />}
       {showGizmo && <Gizmo onAxisClick={handleGizmoAxisClick} />}
     </>
   );

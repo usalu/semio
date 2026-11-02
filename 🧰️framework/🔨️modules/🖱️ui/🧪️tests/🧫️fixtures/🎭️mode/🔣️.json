@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "quadLabels": ["Overview", "Detail", "Selection", "Context"],
+  "maximizedStacks": 1,
+  "restoredStacks": 2,
+  "flowContent": "Continuous content / Fortlaufender Inhalt",
+  "referenceContent": "Reference / Referenz"
+}

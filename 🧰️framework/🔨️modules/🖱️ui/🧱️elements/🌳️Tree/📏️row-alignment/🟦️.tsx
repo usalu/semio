@@ -75,6 +75,7 @@ const treeAlignedRowStyle = (level: number, multiplier = 1): React.CSSProperties
 
 interface TreeDocumentGutterProps {
   level: number;
+  isLastItem?: boolean;
   showLines: boolean;
   slot?: React.ReactNode;
   connectCurrentLevel?: boolean;
@@ -84,7 +85,7 @@ interface TreeDocumentGutterProps {
   anchorOffsetPx?: number;
 }
 
-const TreeDocumentGutter: React.FC<TreeDocumentGutterProps> = ({ level, showLines, slot, connectCurrentLevel = false, extendBranchStem = false, slotOffsetPx = 0, anchorOffsetPx }) => {
+const TreeDocumentGutter: React.FC<TreeDocumentGutterProps> = ({ level, isLastItem = false, showLines, slot, connectCurrentLevel = false, extendBranchStem = false, slotOffsetPx = 0, anchorOffsetPx }) => {
   const { indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
   const currentGuidePx = indentationLinePx(level, indentMultiplier);
   const parentGuidePx = level > 0 ? indentationLinePx(level - 1, indentMultiplier) : 0;
@@ -105,11 +106,22 @@ const TreeDocumentGutter: React.FC<TreeDocumentGutterProps> = ({ level, showLine
   return (
     <div data-dim data-slot="tree-gutter" className="relative min-h-full" style={{ width: treeGutterWidthLen(level, indentMultiplier), minWidth: treeGutterWidthLen(level, indentMultiplier) }}>
       {showLines && level > 0 && connectCurrentLevel && (
-        <div
-          data-slot="tree-branch-elbow"
-          className={cn("pointer-events-none absolute h-px -translate-y-1/2", treeGuideLineStrokeClassName)}
-          style={{ top: treeGutterAnchorTop(anchorOffsetPx), insetInlineStart: indentationLineLen(level - 1, indentMultiplier), width: `${elbowWidthPx}px` }}
-        />
+        <>
+          <div
+            data-slot="tree-parent-guide"
+            className={cn("pointer-events-none absolute w-px", treeGuideLineStrokeClassName)}
+            style={{
+              top: isLastItem && direction === "up" ? treeGutterAnchorTop(anchorOffsetPx) : 0,
+              bottom: isLastItem && direction === "down" ? `calc(100% - ${treeGutterAnchorTop(anchorOffsetPx)})` : 0,
+              insetInlineStart: `calc(${indentationLineLen(level - 1, indentMultiplier)} - var(--stroke-hairline) / 2)`,
+            }}
+          />
+          <div
+            data-slot="tree-branch-elbow"
+            className={cn("pointer-events-none absolute h-px -translate-y-1/2", treeGuideLineStrokeClassName)}
+            style={{ top: treeGutterAnchorTop(anchorOffsetPx), insetInlineStart: indentationLineLen(level - 1, indentMultiplier), width: `${elbowWidthPx}px` }}
+          />
+        </>
       )}
       {showLines && extendBranchStem && <div data-slot="tree-branch-stem" className={cn("pointer-events-none absolute w-px", treeGuideLineStrokeClassName)} style={branchStemStyle} />}
       {positionedSlot}
@@ -120,6 +132,7 @@ const TreeDocumentGutter: React.FC<TreeDocumentGutterProps> = ({ level, showLine
 interface TreeAlignedRowProps {
   level: number;
   isLastAtLevel: boolean[];
+  isLastItem?: boolean;
   showLines: boolean;
   slot?: React.ReactNode;
   children: React.ReactNode;
@@ -136,6 +149,7 @@ interface TreeAlignedRowProps {
 export const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
   level,
   isLastAtLevel,
+  isLastItem,
   showLines,
   slot,
   children,
@@ -151,7 +165,7 @@ export const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
   const { indentMultiplier } = reactHostPort.useContext(TreeContext);
   return (
     <div data-slot="tree-row-layout" className={cn(treeRowLayoutClassName, align === "start" ? "items-start" : "items-center", className)} style={treeAlignedRowStyle(level, indentMultiplier)}>
-      <TreeDocumentGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} extendBranchStem={extendBranchStem} slotOffsetPx={slotOffsetPx} anchorOffsetPx={anchorOffsetPx} />
+      <TreeDocumentGutter level={level} isLastItem={isLastItem} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} extendBranchStem={extendBranchStem} slotOffsetPx={slotOffsetPx} anchorOffsetPx={anchorOffsetPx} />
       <div data-slot="tree-row-content" className={cn(align === "start" ? "min-w-0 h-full" : treeRowContentClassName, contentChromeClassName, contentClassName)}>
         {children}
       </div>

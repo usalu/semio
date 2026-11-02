@@ -23,6 +23,16 @@ import type { OwnedBuildPlugin } from "../../../🧰️framework/🔨️modules/
 
 export type { AssetDeliveryDeclarationV1 };
 
+/** ⚡️ Prebundle external ports hidden behind excluded workspace package boundaries before the first preview request. */
+export const STORYBOOK_PREVIEW_DEPENDENCIES: readonly string[] = [
+  "react-dom", "@dnd-kit/core", "@dnd-kit/sortable", "@dnd-kit/utilities",
+  "@react-three/fiber", "@xyflow/react", "react-resizable-panels", "pdfjs-dist", "three", "three-mesh-bvh",
+  "three/examples/jsm/loaders/GLTFLoader.js", "three/examples/jsm/renderers/SVGRenderer.js",
+  "three/addons/loaders/OBJLoader.js", "three/addons/controls/OrbitControls.js",
+  "@react-three/drei/web/Select.js",
+  ...["Clone", "Edges", "Fbx", "GizmoHelper", "GizmoViewport", "Gltf", "Grid", "Line", "OrbitControls", "OrthographicCamera", "Outlines", "PerspectiveCamera", "Text", "TransformControls", "shapes"].map(name => `@react-three/drei/core/${name}.js`),
+];
+
 // #region 🔖️ScopeModel
 /** 🗂️ One composable Storybook slice. */
 export type StoryScope = {
@@ -65,10 +75,10 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
       repoRelative("🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript"),
       repoRelative("🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript"),
       repoRelative("🧰️framework/🔨️modules/🖼️assets"),
-      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript"),
+      repoRelative("🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer"),
     ],
     aliases: {
-      "@semio-tech/infinite-canvas-react-renderer": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/🟦️.tsx",
+      "@semio-tech/infinite-canvas-react-renderer": "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/🟦️.tsx",
       "@elements/ui/globals.css": "🧰️framework/🔨️modules/🖱️ui/🌐️globals/🎨️.css",
     },
     storyGlobs: [
@@ -166,12 +176,12 @@ export const HAND_CURATED_SCOPES: readonly StoryScope[] = [
     id: "infinite",
     titlePrefix: "♾️infinite",
     sourceRoots: [
-      repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript"),
+      repoRelative("🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer"),
       repoRelative("🧰️framework/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript"),
       repoRelative("🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets"),
     ],
     aliases: {
-      "@semio-tech/infinite-canvas-react-renderer": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️canvas/🎨️react-renderer/🟦️.tsx",
+      "@semio-tech/infinite-canvas-react-renderer": "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/🟦️.tsx",
     },
     storyGlobs: ["../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📖️stories/**/🧪️.story.tsx"],
   }
@@ -333,5 +343,9 @@ export function buildScopeWatchRoots(activeScopes: readonly StoryScope[], repoRo
 export function isWatchedPathV1(path: string, roots: readonly string[]): boolean {
   const normal = resolve(path);
   return roots.some((root) => normal === root || normal.startsWith(root + sep) || root.startsWith(normal + sep));
+}
+/** 🧱️ Keeps Storybook's global initializer ahead of chunks consuming its external module bindings. */
+export function storybookRuntimeChunk(id: string): string | undefined {
+  return id.replaceAll("\\", "/").endsWith("/storybook/dist/preview/runtime.js") ? "storybook-runtime" : undefined;
 }
 // #endregion 🔖️ScopeResolution

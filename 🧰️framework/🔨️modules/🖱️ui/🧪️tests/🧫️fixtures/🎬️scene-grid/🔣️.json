@@ -1,0 +1,7 @@
+{
+  "surface": "double-sided",
+  "cameras": [
+    { "name": "above", "position": [4, 4, 4], "visible": true },
+    { "name": "below", "position": [4, -4, 4], "visible": true }
+  ]
+}

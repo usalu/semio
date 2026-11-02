@@ -2779,7 +2779,18 @@
         }
       }
     },
+    "prepare-storybook": {
+      "executor": "repo:noop",
+      "dependsOn": ["@semio-tech/ui-styling-tokens:generate", "@semio-tech/assets:build"],
+      "cache": true,
+      "metadata": {
+        "semio": {
+          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+        }
+      }
+    },
     "dev-storybook": {
+      "dependsOn": ["prepare-storybook"],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2801,6 +2812,7 @@
       }
     },
     "dev-storybook-ui": {
+      "dependsOn": ["prepare-storybook"],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2822,6 +2834,7 @@
       }
     },
     "dev-storybook-puzzle": {
+      "dependsOn": ["prepare-storybook"],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2843,6 +2856,7 @@
       }
     },
     "dev-storybook-puzzle-2d": {
+      "dependsOn": ["prepare-storybook"],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2864,6 +2878,7 @@
       }
     },
     "dev-storybook-styling": {
+      "dependsOn": ["prepare-storybook"],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2885,6 +2900,7 @@
       }
     },
     "dev-storybook-puzzle-3d": {
+      "dependsOn": ["prepare-storybook"],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2906,6 +2922,7 @@
       }
     },
     "dev-storybook-puzzle-5d": {
+      "dependsOn": ["prepare-storybook"],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2927,6 +2944,7 @@
       }
     },
     "dev-storybook-framework": {
+      "dependsOn": ["prepare-storybook"],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2948,6 +2966,7 @@
       }
     },
     "dev-storybook-framework-hosts": {
+      "dependsOn": ["prepare-storybook"],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2969,6 +2988,7 @@
       }
     },
     "dev-storybook-framework-os": {
+      "dependsOn": ["prepare-storybook"],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -2990,6 +3010,7 @@
       }
     },
     "dev-storybook-infinite": {
+      "dependsOn": ["prepare-storybook"],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -3011,6 +3032,7 @@
       }
     },
     "dev-storybook-cad": {
+      "dependsOn": ["prepare-storybook"],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -3032,6 +3054,7 @@
       }
     },
     "dev-storybook-animate": {
+      "dependsOn": ["prepare-storybook"],
       "metadata": {
         "semio": {
           "dashboard": {
@@ -3630,9 +3653,28 @@
         }
       }
     },
+    "test-storybook-subjects": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": ["production", "^production", "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/📖️stories/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧪️tests/**/*"],
+      "outputs": [],
+      "options": {
+        "command": "repo tools exec bun -- test ./🧰️framework/🔨️modules/🖱️ui/🧪️tests/📚️story-subject-coverage/🟦️.test.ts"
+      }
+    },
+    "test-storybook-catalog": {
+      "executor": "repo:script",
+      "dependsOn": ["prepare-storybook", "test-storybook-subjects"],
+      "cache": true,
+      "inputs": ["production", "^production", "{workspaceRoot}/.storybook/**/*"],
+      "outputs": [],
+      "options": {
+        "command": "repo tools exec bun -- x vitest run --config .storybook/🧪️tests/🧪️unit-runner/🟦️.ts"
+      }
+    },
     "test-storybook": {
       "executor": "repo:script",
-      "dependsOn": [],
+      "dependsOn": ["prepare-storybook", "test-storybook-catalog"],
       "cache": true,
       "options": {
         "command": "repo ./📜️script.ts test storybook",
@@ -4479,7 +4521,7 @@
     },
     "build-storybook": {
       "executor": "repo:script",
-      "dependsOn": [],
+      "dependsOn": ["prepare-storybook"],
       "options": {
         "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build storybook",
         "env": {

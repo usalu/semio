@@ -1,0 +1,14 @@
+{
+  "cases": [
+    { "name": "Label width", "type": "number", "defaultValue": 240, "initial": "240", "draft": "320", "nextDefault": 480, "reset": "480" },
+    { "name": "Label count", "type": "number", "defaultValue": 4, "initial": "4", "draft": "8", "nextDefault": 12, "reset": "12" },
+    { "name": "zero", "type": "number", "defaultValue": 0, "initial": "0", "draft": "1", "nextDefault": 2, "reset": "2" },
+    { "name": "text", "type": "text", "defaultValue": "Original", "initial": "Original", "draft": "Edited", "nextDefault": "Updated", "reset": "Updated" },
+    { "name": "empty", "type": "text", "initial": "", "draft": "Edited", "nextDefault": "Updated", "reset": "Updated" }
+  ],
+  "lazy": [
+    { "key": "Enter", "accepted": "Accepted", "commits": ["Accepted"] },
+    { "key": "blur", "accepted": "Accepted", "commits": ["Accepted"] },
+    { "key": "Escape", "accepted": "Original", "commits": [] }
+  ]
+}

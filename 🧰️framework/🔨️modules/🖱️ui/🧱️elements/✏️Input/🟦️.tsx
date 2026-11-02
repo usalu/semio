@@ -362,7 +362,7 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
 /**
  * 📦️ Input holds the data fields for a Input record.
  **/
-function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, onFocus, onBlur, onKeyDown, interactionId, id, placeholderId, placeholder, showLabel, mixed, ...props }: InputProps) {
+function Input({ className, type, lazy, value: externalValue, defaultValue, onChange, onLazyChange, onFocus, onBlur, onKeyDown, interactionId, id, placeholderId, placeholder, showLabel, mixed, ...props }: InputProps) {
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const scalarInputValue = (value: string | number | readonly string[] | undefined): string | number => {
     if (typeof value === "number") return value;
@@ -370,10 +370,14 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     if (Array.isArray(value)) return (value as readonly string[]).join(", ");
     return "";
   };
-  const [localValue, setLocalValue] = reactHostPort.useState(type === "number" ? formatNumber(scalarInputValue(externalValue)) : scalarInputValue(externalValue).toString() || "");
+  const isControlled = externalValue !== undefined;
+  const [uncontrolledValue, setUncontrolledValue] = reactHostPort.useState(() => scalarInputValue(defaultValue));
+  const committedValue = isControlled ? scalarInputValue(externalValue) : uncontrolledValue;
+  const [localValue, setLocalValue] = reactHostPort.useState(() => type === "number" ? formatNumber(committedValue) : committedValue.toString());
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
   const [isFocused, setIsFocused] = reactHostPort.useState(false);
   const inputRef = reactHostPort.useRef<HTMLInputElement>(null);
+  const rootRef = reactHostPort.useRef<HTMLDivElement>(null);
   /** 🧾️ Enter key already runs {@link onLazyChange} + blur; skip duplicate commit on the subsequent blur event. */
   const skipLazyBlurCommitRef = reactHostPort.useRef(false);
   const commands = useInteractionCommands();
@@ -389,8 +393,24 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
         : undefined;
 
   reactHostPort.useEffect(() => {
-    if (!isEditing) setLocalValue(type === "number" ? formatNumber(scalarInputValue(externalValue)) : scalarInputValue(externalValue).toString() || "");
-  }, [externalValue, isEditing, type]);
+    if (!isEditing) setLocalValue(type === "number" ? formatNumber(committedValue) : committedValue.toString());
+  }, [committedValue, isEditing, type]);
+
+  reactHostPort.useEffect(() => {
+    if (isControlled) return;
+    const form = inputRef.current?.form ?? (props.form ? document.getElementById(props.form) : rootRef.current?.closest("form"));
+    if (!form) return;
+    const reset = (event: Event) => {
+      queueMicrotask(() => {
+        if (event.defaultPrevented) return;
+        const value = scalarInputValue(defaultValue);
+        setUncontrolledValue(value);
+        setLocalValue(type === "number" ? formatNumber(value) : value.toString());
+      });
+    };
+    form.addEventListener("reset", reset);
+    return () => form.removeEventListener("reset", reset);
+  }, [isControlled, defaultValue, type, props.form, isFocused]);
 
   reactHostPort.useEffect(() => {
     if (isFocused && inputRef.current) {
@@ -401,9 +421,15 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (lazy) {
       setLocalValue(e.target.value);
-    } else if (onChange) {
-      onChange(e);
+    } else {
+      if (!isControlled) setUncontrolledValue(e.target.value);
+      onChange?.(e);
     }
+  };
+
+  const commitLocalValue = () => {
+    if (!isControlled) setUncontrolledValue(localValue);
+    onLazyChange?.(localValue);
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -425,7 +451,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
         onBlur?.(e);
         return;
       }
-      onLazyChange?.(localValue);
+      commitLocalValue();
     }
     onBlur?.(e);
   };
@@ -436,20 +462,20 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
         skipLazyBlurCommitRef.current = true;
-        onLazyChange?.(localValue);
+        commitLocalValue();
         (e.target as HTMLInputElement).blur();
       } else if (e.key === "Escape") {
         skipLazyBlurCommitRef.current = true;
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
-        setLocalValue(type === "number" ? formatNumber(scalarInputValue(externalValue)) : scalarInputValue(externalValue).toString() || "");
+        setLocalValue(type === "number" ? formatNumber(committedValue) : committedValue.toString());
         (e.target as HTMLInputElement).blur();
       }
     }
     onKeyDown?.(e);
   };
 
-  const inputValue = lazy ? localValue : scalarInputValue(externalValue);
+  const inputValue = lazy ? localValue : committedValue;
 
   const inputDisplayValue = type === "number" && !isFocused ? formatNumber(inputValue) : inputValue.toString() || "";
   const showCollapsedDisplay = !!showLabel && !isFocused && isCollapsibleInputType(type);
@@ -458,7 +484,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
   const inputEmptyOpacity = isInPropertyValueColumn && !inputDisplayValue && !isFocused ? 0.6 : 1;
 
   const inputElement = (
-    <div data-slot="input-root" data-detail-panel-control="fill" data-dim className="flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: inputEmptyOpacity, transition: "opacity 150ms" }}>
+    <div ref={rootRef} data-slot="input-root" data-detail-panel-control="fill" data-dim className="flex min-w-0 w-full flex-1 items-stretch" style={{ opacity: inputEmptyOpacity, transition: "opacity 150ms" }}>
       {showCollapsedDisplay ? (
         <CollapsedFieldDisplay
           allowStackedOverflow={allowStackedOverflow}

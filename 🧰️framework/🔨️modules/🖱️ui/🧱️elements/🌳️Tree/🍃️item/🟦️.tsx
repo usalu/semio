@@ -241,6 +241,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         <TreeAlignedRow
           level={level}
           isLastAtLevel={isLastAtLevel}
+          isLastItem={isLastItem}
           showLines={showLines}
           connectCurrentLevel={level > 0}
           extendBranchStem={isExpandable && open && hasChildren}
@@ -377,6 +378,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               <TreeAlignedRow
                 level={level}
                 isLastAtLevel={isLastAtLevel}
+                isLastItem={isLastItem}
                 showLines={showLines}
                 connectCurrentLevel={level > 0}
                 extendBranchStem={open && hasChildren}
@@ -503,7 +505,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
       >
-        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
+        <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} isLastItem={isLastItem} showLines={showLines} connectCurrentLevel={level > 0} contentClassName="min-w-0" contentChromeClassName={itemContentFillClassName}>
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, "file-text", rowEmphasized)}

@@ -14,6 +14,12 @@ import { reactHostPort } from "../🔌️Ports/⚛️react/🟦️.ts";
 // #region 📻️TableAvatar
 type AvatarImageStatus = "loading" | "loaded" | "error";
 
+/** 📏️ Shared readable avatar and overflow-chip dimension. */
+export const tableAvatarSizeClassName = "size-workbench";
+
+/** 🔤️ Shared initials and overflow-chip typography. */
+export const tableAvatarTextClassName = "text-xs";
+
 /** 📻️ Owned native avatar props. */
 export interface TableAvatarProps extends Omit<React.HTMLAttributes<HTMLSpanElement>, "children"> {
   icon?: string | React.ReactNode;
@@ -54,7 +60,7 @@ export const TableAvatar = reactHostPort.forwardRef<HTMLSpanElement, TableAvatar
         "relative flex overflow-hidden rounded-full",
         !hasExplicitSize && "shrink-0",
         !isFullSize && "border",
-        !isSizeClass && !hasExplicitSize && "size-small",
+        !isSizeClass && !hasExplicitSize && tableAvatarSizeClassName,
         className,
         isSelected && "ring-1 ring-[color:var(--active-base)]",
         isHovered && "ring-1 ring-[color:var(--hover-base)]",
@@ -65,7 +71,7 @@ export const TableAvatar = reactHostPort.forwardRef<HTMLSpanElement, TableAvatar
         <img
           key={imageSource}
           data-slot="avatar-image"
-          className="aspect-square size-full"
+          className="aspect-square size-full rounded-full object-cover p-px"
           src={imageSource}
           alt={normalizedName}
           hidden={!imageLoaded}
@@ -79,9 +85,13 @@ export const TableAvatar = reactHostPort.forwardRef<HTMLSpanElement, TableAvatar
         aria-label={normalizedName || undefined}
         hidden={imageLoaded}
         style={fallbackStyle}
-        className={cn("bg-muted flex size-full items-center justify-center rounded-full text-xs", isSelected ? "bg-[color:var(--active-base)] text-[color:var(--active-foreground)]" : isHovered ? "bg-[color:var(--hover-base)]" : "")}
+        className={cn("bg-muted flex size-full items-center justify-center rounded-full", tableAvatarTextClassName, isSelected ? "bg-[color:var(--active-base)] text-[color:var(--active-foreground)]" : isHovered ? "bg-[color:var(--hover-base)]" : "")}
       >
-        {isReactIcon ? icon : initials}
+        {isReactIcon ? (
+          <span data-slot="avatar-icon" className="flex size-small max-h-full max-w-full shrink-0 items-center justify-center [&>*]:size-full [&_svg]:size-full [&_svg]:shrink-0">
+            {icon}
+          </span>
+        ) : initials}
       </span>
     </span>
   );

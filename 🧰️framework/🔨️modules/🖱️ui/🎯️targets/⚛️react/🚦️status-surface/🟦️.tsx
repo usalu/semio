@@ -46,8 +46,8 @@ export interface BadgeProps {
 /** 🏷️ Small tone-colored pill for inline status labels. */
 export function Badge({ id, tone = "neutral", text, icon }: BadgeProps): React.ReactElement {
   return (
-    <span id={id} data-slot="badge" className={cn("inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs font-medium", STATUS_TONE_SURFACE_CLASS[tone])}>
-      {icon ? <span className="inline-flex shrink-0 items-center justify-center size-tiny">{icon}</span> : null}
+    <span id={id} data-slot="badge" className={cn("inline-flex items-center gap-single rounded-full border px-double py-0.5 text-xs font-medium", STATUS_TONE_SURFACE_CLASS[tone])}>
+      {icon ? <span className="inline-flex shrink-0 items-center justify-center size-tiny [&_svg]:size-full">{icon}</span> : null}
       <span className="truncate">{text}</span>
     </span>
   );
